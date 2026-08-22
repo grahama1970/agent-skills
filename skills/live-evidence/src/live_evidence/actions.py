@@ -93,7 +93,12 @@ class ActionEngine:
             accepted.append(candidate)
         if accepted:
             self.journal.append({"kind": "action_candidates_proposed",
-                                 "action_ids": [c.action_id for c in accepted]})
+                                 "action_ids": [c.action_id for c in accepted],
+                                 "candidates": [
+                                     {"action_id": c.action_id, "kind": c.kind,
+                                      "summary": c.summary[:200]}
+                                     for c in accepted
+                                 ]})
         return accepted
 
     def pending(self) -> list[ActionCandidate]:
@@ -248,4 +253,13 @@ def research_warranted(card: Any, verdict: Any, ranked: list) -> bool:
     # returns weak semantic neighbors for almost anything, so "has local
     # sources" is no evidence the web is not the real answer's home. It is
     # only a proposal; the human decides.
-    return verdict is not None and getattr(verdict, "question_type", None) == "research"
+    if verdict is not None and getattr(verdict, "question_type", None) == "research":
+        return True
+    # Deterministic recency floor: cumulative STT windows make the resolver's
+    # type flap when the next question rolls in (observed live: research ->
+    # code within one window). A question about CURRENT external state is
+    # research-shaped regardless of the instantaneous type.
+    query_text = str(getattr(card, "query", "") or "").lower()
+    recency = ("latest", "newest", "most recent", "right now", "current version",
+               "released version", "current pricing", "recent release")
+    return any(marker in query_text for marker in recency)

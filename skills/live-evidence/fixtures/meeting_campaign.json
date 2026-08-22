@@ -1,0 +1,36 @@
+{
+  "schema": "live_evidence.meeting_campaign.v1",
+  "note": "Self-test sessions for goal v2: each session is real audio through the live path with a question oracle derived BEFORE the run. Families name where the answer provably lives.",
+  "sessions": [
+    {
+      "session_id": "sparta-explorer-synthetic",
+      "type": "synthetic",
+      "repos": ["~/workspace/experiments/sparta"],
+      "script": [
+        {"text": "Alright, quick sync on the Sparta Explorer work before the Friday review."},
+        {"text": "First thing. Remind me what the hard rules are in the Sparta project memory index, the read first rules we learned the hard way?"},
+        {"text": "Okay, noted, we will keep those in front of the new contractor."},
+        {"text": "Next question. Can someone find out what the latest released version of the MITRE SPARTA framework is right now, the space attack matrix?"},
+        {"text": "Good. Last one for the code side. Where in our sparta pipeline source code is the QRA generation implemented, which module actually builds the question reasoning answer pairs?"},
+        {"text": "Great, that is everything, thanks everyone, see you Friday."}
+      ],
+      "oracle": [
+        {"id": "memory-hard-rules", "question_tokens": ["sparta", "memory", "rules"], "family": "memory"},
+        {"id": "research-sparta-version", "question_tokens": ["mitre", "sparta", "version"], "family": "research"},
+        {"id": "code-qra-generation", "question_tokens": ["qra", "generation", "pipeline"], "family": "code"}
+      ]
+    },
+    {
+      "session_id": "pinned-coding-interview",
+      "type": "wav",
+      "wav_candidates": [
+        "/mnt/storage12tb/skills/live-evidence/live-youtube-proof/20260816T181309Z/youtube.wav"
+      ],
+      "max_seconds": 108,
+      "fixture_repo": "parentheses",
+      "oracle": [
+        {"id": "code-parentheses", "question_tokens": ["opening", "parentheses", "closing"], "family": "code"}
+      ]
+    }
+  ]
+}

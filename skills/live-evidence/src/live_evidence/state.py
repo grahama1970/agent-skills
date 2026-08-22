@@ -64,6 +64,8 @@ class RuntimeState:
         # underneath it, so every answer is fenced against the revision that
         # asked for it.
         self._active_question_id: str | None = None
+        self._question_last_revision: dict[str, int] = {}
+        self._active_question_text: str = ""
         self._active_question_revision: int = 0
         self._active_question_answered: bool = False
         # Requirement ledger per (question_id, revision), append-only (#1454).
@@ -367,18 +369,47 @@ class RuntimeState:
         - Once a question has been answered, the next candidate opens a NEW
           question id. Otherwise every question in a session collapses into one
           record and each answered card is evicted by the next turn.
+        - A candidate that shares almost no content vocabulary with the active
+          question is a DIFFERENT question, not a correction, even while the
+          active one is unanswered. Without this fork, a meeting that moves to
+          its next question before the previous answer lands absorbs the new
+          topic as a revision and the previous question's only completed card
+          is fenced out as stale (observed live in the Sparta campaign: the
+          hard-rules answer was discarded because the version question had
+          become revision 3 of the same question id).
 
-        Probabilistic multi-thread identity is deliberately out of scope; this
-        rule is temporal, not semantic.
+        The fork test is deterministic token overlap on the resolver's
+        canonical question text; probabilistic thread identity stays out of
+        scope.
         """
 
+        def _content_words(text: str) -> set[str]:
+            return {w for w in "".join(
+                c if c.isalnum() else " " for c in text.lower()
+            ).split() if len(w) > 3}
+
         async with self._lock:
-            if self._active_question_id is None or self._active_question_answered:
+            fork = False
+            if self._active_question_id and not self._active_question_answered:
+                prior = _content_words(self._active_question_text)
+                new = _content_words(normalized_question)
+                if prior and new:
+                    overlap = len(prior & new) / min(len(prior), len(new))
+                    fork = overlap < 0.3
+            if (
+                self._active_question_id is None
+                or self._active_question_answered
+                or fork
+            ):
                 self._active_question_id = uuid4().hex
                 self._active_question_revision = 1
                 self._active_question_answered = False
             else:
                 self._active_question_revision += 1
+            self._active_question_text = normalized_question
+            self._question_last_revision[self._active_question_id] = (
+                self._active_question_revision
+            )
             return self._active_question_id, self._active_question_revision
 
     async def close_question(self) -> None:
@@ -405,22 +436,79 @@ class RuntimeState:
             if card.question_id is None:
                 return None
             if card.question_id != self._active_question_id:
-                return None
-            if card.question_revision != self._active_question_revision:
-                return None
-            # Exactly one active card per question_id: a revision supersedes the
-            # previous answer in place instead of growing the stream.
-            self._cards = [
-                item for item in self._cards if item.question_id != card.question_id
-            ]
-            self._cards.insert(0, card)
-            if len(self._cards) > self._settings.max_cards:
-                pinned = [item for item in self._cards if item.pinned]
-                unpinned = [item for item in self._cards if not item.pinned]
-                self._cards = (pinned + unpinned)[: self._settings.max_cards]
-            # Answered: the next candidate opens a new question rather than
-            # revising this one and evicting the card just published.
-            self._active_question_answered = True
+                # A finished answer for an EARLIER question that was never
+                # superseded within its own revisions still publishes -- as a
+                # background card, without reclaiming the active slot. In a
+                # fast multi-question meeting the next question must not
+                # destroy the previous question's completed answer (observed
+                # live: the Sparta campaign's memory answer was discarded
+                # because the research question had taken the slot).
+                # For a background question the newest COMPLETED answer wins.
+                # Requiring the question's very last authored revision was too
+                # strict: a cumulative-window question keeps revising until the
+                # next question takes the slot, and the only revision whose
+                # solve ever completes may be an earlier one (observed live:
+                # the hard-rules card was authored at rev 1, discarded because
+                # the question had reached rev 4 with no rev-4 solve). The
+                # fence's real job is only that an OLDER completed card never
+                # replaces a NEWER displayed card for the same question.
+                displayed = next(
+                    (item for item in self._cards
+                     if item.question_id == card.question_id), None,
+                )
+                if displayed is None or (
+                    (displayed.question_revision or 0)
+                    <= (card.question_revision or 0)
+                ):
+                    self._cards = [
+                        item for item in self._cards
+                        if item.question_id != card.question_id
+                    ]
+                    self._cards.insert(min(1, len(self._cards)), card)
+                    self._cards = self._cards[: self._settings.max_cards]
+                    snapshot = self._snapshot_unlocked()
+                else:
+                    return None
+                # fall through to broadcast outside the lock
+                background = True
+            elif card.question_revision != self._active_question_revision:
+                # Older-revision completed answer for the ACTIVE question: the
+                # fence's job is that a slower rev-N solve never overwrites a
+                # DISPLAYED rev-N+1 card -- not that a completed answer loses
+                # to an empty slot because a later turn claimed the revision
+                # while this solve was in flight (observed live: rev 3's
+                # hard-rules card discarded because rev 4 had claimed and not
+                # yet solved). Newest completed card wins; a newer revision's
+                # card supersedes it on arrival.
+                displayed = next(
+                    (item for item in self._cards
+                     if item.question_id == card.question_id), None,
+                )
+                if displayed is not None and (
+                    (displayed.question_revision or 0)
+                    > (card.question_revision or 0)
+                ):
+                    return None
+                if (card.question_revision or 0) > self._active_question_revision:
+                    return None
+                background = False
+            else:
+                background = False
+            if not background:
+                # Exactly one active card per question_id: a revision supersedes
+                # the previous answer in place instead of growing the stream.
+                self._cards = [
+                    item for item in self._cards if item.question_id != card.question_id
+                ]
+                self._cards.insert(0, card)
+            if not background:
+                if len(self._cards) > self._settings.max_cards:
+                    pinned = [item for item in self._cards if item.pinned]
+                    unpinned = [item for item in self._cards if not item.pinned]
+                    self._cards = (pinned + unpinned)[: self._settings.max_cards]
+                # Answered: the next candidate opens a new question rather than
+                # revising this one and evicting the card just published.
+                self._active_question_answered = True
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot

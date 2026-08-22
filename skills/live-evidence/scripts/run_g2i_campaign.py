@@ -107,15 +107,17 @@ cat $D/response.json
 
 class Server:
     def __init__(self, work: Path, purpose: str = "meeting", *, live_resolver: bool = True,
-                 policy: dict | None = None, memory_url: str = "http://127.0.0.1:9"):
+                 policy: dict | None = None, memory_url: str = "http://127.0.0.1:9",
+                 repos: str | None = None):
         self.work = work
+        work.mkdir(parents=True, exist_ok=True)
         self.port = free_port()
         self.url = f"http://127.0.0.1:{self.port}"
         self.data_dir = work / "data"
         self.ask_runner, self.ask_counter = write_ask_fixture_runner(work)
         env = {
             **os.environ,
-            "LIVE_EVIDENCE_REPOS": str(PACK / "seeded-workspace"),
+            "LIVE_EVIDENCE_REPOS": repos or str(PACK / "seeded-workspace"),
             "LIVE_EVIDENCE_DATA_DIR": str(self.data_dir),
             "LIVE_EVIDENCE_HTTP_TIMEOUT": "0.5",
             "LIVE_EVIDENCE_PROCESS_TIMEOUT": "6",

@@ -23,7 +23,7 @@ class ExtractiveSummarizer:
     def build(self, query: str, thread: str, sources: list[EvidenceSource]) -> EvidenceCard:
         """Build a supported or explicit insufficient card."""
 
-        selected = sources[:4]
+        selected = _select_with_lane_diversity(sources, 4)
         if not selected:
             return EvidenceCard(
                 query=query,
@@ -61,6 +61,33 @@ class ExtractiveSummarizer:
             sources=selected,
             lanes=lanes,
         )
+
+
+def _select_with_lane_diversity(
+    sources: list[EvidenceSource], limit: int
+) -> list[EvidenceSource]:
+    """Top-ranked sources, but every lane that produced evidence keeps a seat.
+
+    Ripgrep sources carry structural rank bonuses (CURRENT freshness + path
+    locator) that memory recall cannot earn, so four code hits could sweep
+    every card slot even when the question is answered by a memory document
+    (observed live: the Sparta hard-rules card published ripgrep-only while
+    the memory index held the answer as its top recall hit).
+    """
+
+    selected = list(sources[:limit])
+    for source in sources[limit:]:
+        lanes = {item.lane for item in selected}
+        if source.lane in lanes:
+            continue
+        for index in range(len(selected) - 1, -1, -1):
+            candidate = selected[index]
+            if sum(1 for item in selected if item.lane == candidate.lane) > 1:
+                selected[index] = source
+                break
+        else:
+            continue
+    return selected
 
 
 def _sentence(text: str, limit: int) -> str:

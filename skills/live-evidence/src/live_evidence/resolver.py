@@ -66,7 +66,10 @@ PROMPT_HEADER = (
     "  someone stated (kind=fact_check, payload=the claim), an explicit DECISION\n"
     "  or commitment worth remembering (kind=remember_fact, payload=the decision),\n"
     "  or a NAMED file/artifact someone referenced (kind=open_artifact,\n"
-    "  payload=the artifact name). Only propose what was literally said.\n\n"
+    "  payload=the artifact name). A question asking for CURRENT external\n"
+    "  information (latest version, current pricing, recent releases, news)\n"
+    "  is kind=fact_check with payload=the question. Only propose what was\n"
+    "  literally said.\n\n"
     "BUFFER:\n"
 )
 
