@@ -1,0 +1,102 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/persona-dream/fixtures/agentic_eval.json",
+  "run_id": "43bc87d1bc6c",
+  "fixture_sha256": "sha256:adf93c4e7373c115904e744539375c8e881ca2955aa3b6babed468ab7271e60e",
+  "repo": {
+    "sha": "4d83860d50f26e42b7c18b629a4d3215f9a4a41f",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, and the video_plan crew-casting fail-closed gate (anti-bespoking guard)",
+  "claims": {
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, and video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector",
+    "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "full-cycle-live"
+  ],
+  "generated_at": "2026-08-22T22:39:07.957907+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 3,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "full-cycle-live",
+      "type": "positive",
+      "case_id": "43bc87d1bc6c-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "python3",
+        "../scripts/eval_full_cycle.py"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.full_cycle.live"
+      ],
+      "seams": [
+        "pipeline.full_cycle.e2e"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 710704.683,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T220339Z day_ingested dream_spine_pass:cycle_20260822T220341Z journal_rendered journal_spoken:833614b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6\n",
+          "stderr": "",
+          "duration_ms": 691355.693,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "43bc87d1bc6c-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T221510Z day_ingested dream_spine_pass:cycle_20260822T221512Z journal_rendered journal_spoken:783950b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6\n",
+          "stderr": "",
+          "duration_ms": 759631.33,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "43bc87d1bc6c-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T222750Z day_ingested dream_spine_pass:cycle_20260822T222752Z journal_rendered journal_spoken:735822b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6\n",
+          "stderr": "",
+          "duration_ms": 681127.025,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "43bc87d1bc6c-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

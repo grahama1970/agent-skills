@@ -1,6 +1,6 @@
 # Handoff Report: persona-dream
 
-**Timestamp**: 2026-08-22T00:00:00Z
+**Timestamp**: 2026-08-22T22:39:07Z
 **Active Agent**: Claude Fable 5 (Claude Code)
 **Prior file note**: supersedes the 2026-07-29 Codex handoff (issue #1117
 slice, P2.1-P2.3 receipts) — recoverable at
@@ -19,9 +19,11 @@ slice, P2.1-P2.3 receipts) — recoverable at
 
 ## 2. Current State (Doc-Code Alignment)
 
-- **Research phase**: `P2_LIVE_CONTINUITY_CHAIN` (`CURRENT_STATUS.json`,
-  authoritative). Proven: N=5 live-chain reliability pilot (engineering
-  feasibility only). Not proven: the research benefit itself.
+- **Research phase**: `P2_CORRECTED_GOAL_PAIR_PROOF` (`CURRENT_STATUS.json`,
+  authoritative). Proven: one corrected-goal paired proof and a 3-trial live
+  full-cycle eval after #1495/#1496. Not proven: the research benefit itself,
+  human-perceived emotional value, 35-cycle no-restart reliability, or separate
+  mediation by dream versus journal.
 - **The loop is complete and runnable**: as of 2026-08-20 the full cycle has
   run live end to end — day ingest → Tau dream spine (select / frozen
   instruments / frames / VLM observe / phase-13 interpret / phase-14 ToM /
@@ -51,24 +53,27 @@ slice, P2.1-P2.3 receipts) — recoverable at
   non-vacuous via `regressions verify`), pipeline API serves runs + path
   policy 403s, board media stratification (live), dynamic audible
   conversation (live).
-- **Single full-cycle receipts** exist: e.g. run
-  `/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260820T143356Z`
-  (all 7 stages, `carried:6`) and the journal run `embry-journal-20260820`
-  (spoken journal WER 0.104, two carried conversations).
+- **Full-cycle live eval currently passes the focused harness**: receipt
+  `skills/persona-dream/local/proofs/pd-corrected-goal-v1/full-cycle-live-20260822T223907Z/agentic_eval_report.json`
+  (`sha256:24e3fc0f481ae8a2cf1e38104ef7e4179801f8073c913782e5ae212188bb76e0`)
+  reports
+  `readiness=READY`, `case_count=1`, `trial_count=3`, `passed_trials=3/3`,
+  `live_qualified=true`, `mocked=false`, `fixture_backed=true`. The three runs
+  were `eval-full-cycle-20260822T220339Z`,
+  `eval-full-cycle-20260822T221510Z`, and
+  `eval-full-cycle-20260822T222750Z`; each reported `FULL_CYCLE_OK stages=7`,
+  a Tau dream spine pass, ASR-verified spoken journal, memory/artifact write,
+  `conversation:3_pairs_all_voiced`, and `carried:6`.
 
 ## 4. What is Currently Broken / Open
 
-- **End-to-end reliability is the open frontier**: `full-cycle-live` eval
-  measured 1/3 trials passing on 2026-08-20. The two blocks were the
-  pipeline's own fail-closed research gates, not infrastructure:
-  1. recall-instrument gates — `negative_control_absent_top10: false` (the
-     negative-control query semantically leaked into memory top-10; word-level
-     avoidance was fixed in `autonomous_dream_cycle.py`, semantic leakage
-     remains possible) and an unranked recall probe;
-  2. ArcFace identity gate — a storyboard frame's generation failed
-     (`sb_003: generation failed rc=1`).
-  This matches successor issue #1128 (reliability soak). Suite verdict
-  NOT_READY is honest; do not weaken oracles to green it.
+- **End-to-end reliability remains the open frontier**: `full-cycle-live` now
+  has a 3/3 live harness pass on 2026-08-22 after #1495 exposed
+  `run.sh converse-dynamic` and #1496 made recall-instrument outcomes
+  auditable. This is not #1128's 35-cycle no-restart reliability evidence.
+  #1128 remains open because its acceptance bar is 35 immutable terminal rows,
+  stable process identity, Wilson lower bound recomputation, and fail-closed
+  negative controls.
 - **`/api/tau/dream/*`** (story/script draft endpoints the workspace calls)
   has no server implementation anywhere; those UI actions fail.
 - **Blinded listener study**: stimuli must be re-rendered under one identical
@@ -89,10 +94,9 @@ slice, P2.1-P2.3 receipts) — recoverable at
 
 ## 5. Next Steps
 
-1. Raise full-cycle reliability: fix identity-gate frame regeneration (retry
-   or reroll on `generation failed rc=1`) and decide the semantic
-   negative-control policy (embedding-distance check at draft time?), then
-   rerun `full-cycle-live` until READY. This is #1128's evidence.
+1. Decide the next reliability ticket action under `project-watchdog`: #1128
+   needs 35 no-restart cycles and depends on cross-mood identity policy (#1130),
+   while #1130 is still agent-blocked and needs a frozen 36-render matrix.
 2. #1179 listener-stimuli re-render under one normalization; rerun the frozen
    technical screen unchanged; then #1130, #1058.
 3. Optional UX: implement or stub `/api/tau/dream/*` server-side; commit the
