@@ -18,7 +18,8 @@
         "ranking.eligibility_escalation",
         "ranking.response_score",
         "ranking.shortlist_selection",
-        "tailoring.resume_render"
+        "tailoring.resume_render",
+        "self_heal.remediation_wiring"
       ],
       "depends_on": []
     }

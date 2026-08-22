@@ -251,6 +251,31 @@
           "LINKEDIN_SILENT_DROP"
         ]
       }
+    },
+    {
+      "name": "self-heal-files-ticket-wiring",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "seams": [
+        "self_heal.remediation_wiring"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_self_heal_files_ticket.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SELF_HEAL_FILES_TICKET_OK"
+        ],
+        "stderr_excludes": [
+          "SELF_HEAL_CATEGORY_MAP_INVALID",
+          "SELF_HEAL_DAG_INVALID",
+          "SELF_HEAL_NO_FILEABLE_STEP"
+        ]
+      }
     }
   ]
 }
