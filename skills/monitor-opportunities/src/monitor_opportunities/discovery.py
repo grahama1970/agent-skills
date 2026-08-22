@@ -144,6 +144,70 @@ def _load_linkedin_records(path: Path) -> list[dict[str, Any]]:
     return []
 
 
+# LinkedIn's top-applicant collection renders each row as
+# "<title>\n<title> with verification\n<employer>\n<location>", so a capture that
+# reads positionally lands the accessibility echo of the title in `organization`
+# and shifts the real employer down into `location` (#1483). Detect that shift
+# structurally and put each value back in its own field.
+LINKEDIN_VERIFICATION_SUFFIX = " with verification"
+
+
+def _strip_verification_artifact(value: str) -> str:
+    text = value.strip()
+    lowered = text.lower()
+    if lowered.endswith(LINKEDIN_VERIFICATION_SUFFIX):
+        return text[: -len(LINKEDIN_VERIFICATION_SUFFIX)].strip()
+    return text
+
+
+def _is_title_echo(value: str, title: str) -> bool:
+    """True when `value` is the row's title rather than an employer name.
+
+    Only the accessibility echo is an echo: the value is the title itself, or
+    the title plus the trailing verification artifact. A shorter value that
+    merely happens to open the title (employer "Capgemini" under the title
+    "Capgemini Invent - ...") is a real employer, not an echo.
+    """
+    candidate = _strip_verification_artifact(value).lower()
+    normalized_title = title.strip().lower()
+    if not candidate or not normalized_title:
+        return False
+    return candidate == normalized_title
+
+
+def _employer_indistinguishable_from_title(employer: str, title: str) -> bool:
+    """True when a recovered employer cannot be told apart from a title fragment.
+
+    An employer name that opens the role title carries no evidence that the
+    field shift was undone correctly, so the row is dropped rather than emitted
+    with an organization that may still be the title.
+    """
+    candidate = employer.strip().lower()
+    normalized_title = title.strip().lower()
+    return bool(candidate) and normalized_title.startswith(candidate)
+
+
+def _realign_linkedin_row(record: dict[str, Any], title: str, organization: str, location: str) -> tuple[str, str]:
+    """Return (organization, location) with the #1483 field shift undone.
+
+    The employer is taken from an explicit employer field when the capture
+    supplied one; otherwise, when `organization` is only an echo of the title,
+    the value that was shifted into `location` is the real employer and the row
+    carries no usable location.
+    """
+    organization = _strip_verification_artifact(organization)
+    if not _is_title_echo(organization, title):
+        return organization, location
+    for key in ("employer", "company_name", "company", "hiring_organization", "organization_name"):
+        explicit = _strip_verification_artifact(str(record.get(key) or ""))
+        if explicit and not _is_title_echo(explicit, title):
+            return explicit, location
+    shifted = _strip_verification_artifact(location)
+    if shifted and not _is_title_echo(shifted, title) and not _employer_indistinguishable_from_title(shifted, title):
+        return shifted, "Unknown"
+    return "", location
+
+
 def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     raw = path.read_bytes()
     receipt = _base_receipt("A", "linkedin", "Human-supplied LinkedIn evidence", "human_supplied_linkedin")
@@ -191,10 +255,16 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
     for record in records:
         title = str(record.get("title") or record.get("role") or "").strip()
         organization = str(record.get("organization") or record.get("company") or "").strip()
-        if not title or not organization:
-            receipt["limitations"].append("One LinkedIn evidence record lacked title or organization and was not ranked.")
-            continue
         location = str(record.get("location") or record.get("location_display") or "Unknown").strip()
+        organization, location = _realign_linkedin_row(record, title, organization, location)
+        if not title or not organization:
+            receipt["limitations"].append(
+                f"One LinkedIn evidence record lacked a recoverable employer organization and was not ranked: {title[:80]!r}."
+                if title
+                else "One LinkedIn evidence record lacked title or organization and was not ranked."
+            )
+            continue
+        location = location or "Unknown"
         top_candidate = _coerce_bool(
             record.get("top_candidate")
             or record.get("top_candidate_signal")
