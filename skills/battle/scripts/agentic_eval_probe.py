@@ -148,13 +148,39 @@ def _emit_blocked(summary_path: Path, *, suite: str, reason: str, candidates: li
 def _latest_adaptive_lineage_root() -> Path | None:
     candidates: list[Path] = []
     default = Path("/tmp/battle-1199-recovery-20260808T162547Z")
-    if (default / "adaptive-lineage-qualification.json").is_file():
+    if _has_current_exact_chain_receipts(default):
         candidates.append(default)
     for receipt in Path("/tmp").glob("battle-1336-*/adaptive-lineage-qualification.json"):
-        candidates.append(receipt.parent)
+        if _has_current_exact_chain_receipts(receipt.parent):
+            candidates.append(receipt.parent)
+    for receipt in (BATTLE_DIR / "local").glob("**/adaptive-lineage-qualification.json"):
+        if _has_current_exact_chain_receipts(receipt.parent):
+            candidates.append(receipt.parent)
     if not candidates:
         return None
     return max(candidates, key=lambda item: (item / "adaptive-lineage-qualification.json").stat().st_mtime)
+
+
+def _has_current_exact_chain_receipts(root: Path) -> bool:
+    qualification_path = root / "adaptive-lineage-qualification.json"
+    verification_path = root / "adaptive-lineage-verification.json"
+    if not qualification_path.is_file() or not verification_path.is_file():
+        return False
+    try:
+        qualification = _read_json(qualification_path)
+    except (OSError, json.JSONDecodeError):
+        return False
+    if qualification.get("schema") != "battle.adaptive_lineage_goal_qualification.v1":
+        return False
+    source_root = Path(str(qualification.get("source_run_dir") or ""))
+    return all(
+        (source_root / name).is_file()
+        for name in [
+            "campaign-receipt.json",
+            "artifact-integrity-receipt.json",
+            "backend-verification.json",
+        ]
+    )
 
 
 def _adaptive_lineage_proof_root(raw: str | None) -> Path | None:
@@ -164,6 +190,80 @@ def _adaptive_lineage_proof_root(raw: str | None) -> Path | None:
     if env:
         return Path(env)
     return _latest_adaptive_lineage_root()
+
+
+def _regenerate_adaptive_lineage_proof_root(summary_path: Path) -> Path | None:
+    proof_parent = summary_path.parent / "adaptive-lineage-live-exact-chain-fresh"
+    source_root = proof_parent / "source-run"
+    proof_root = proof_parent / "qualification"
+    logs_root = proof_parent / "logs"
+    if proof_parent.exists():
+        shutil.rmtree(proof_parent)
+    source_root.mkdir(parents=True)
+    proof_root.mkdir(parents=True)
+    logs_root.mkdir(parents=True)
+
+    run_id = f"battle-agentic-exact-chain-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+    timeout_s = float(os.environ.get("BATTLE_ADAPTIVE_LINEAGE_TIMEOUT_S", "300"))
+    canary = _run(
+        [
+            str(RUN_SH),
+            "adaptive-red-blue-lineage-canary",
+            "battle-004",
+            "--out",
+            str(source_root),
+            "--run-id",
+            run_id,
+            "--timeout-s",
+            str(timeout_s),
+        ],
+        timeout=int(timeout_s) + 120,
+    )
+    (logs_root / "canary.stdout.txt").write_text(canary.stdout, encoding="utf-8")
+    (logs_root / "canary.stderr.txt").write_text(canary.stderr, encoding="utf-8")
+    if canary.returncode != 0:
+        return None
+
+    verifier = _run(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "verify_adaptive_lineage_backend_run.py"),
+            str(source_root),
+            "--out",
+            str(source_root / "backend-verification.json"),
+        ],
+        timeout=180,
+    )
+    (logs_root / "verifier.stdout.txt").write_text(verifier.stdout, encoding="utf-8")
+    (logs_root / "verifier.stderr.txt").write_text(verifier.stderr, encoding="utf-8")
+    if verifier.returncode != 0:
+        return None
+
+    qualification = _run(
+        [
+            str(RUN_SH),
+            "arena-adaptive-lineage-qualification",
+            "battle-004",
+            "--proof-dir",
+            str(proof_root),
+            "--source-root",
+            str(source_root),
+            "--fresh",
+            "--require-live",
+            "--forbid-mock",
+            "--require-exact-replay",
+        ],
+        timeout=180,
+    )
+    (logs_root / "qualification.stdout.txt").write_text(
+        qualification.stdout, encoding="utf-8"
+    )
+    (logs_root / "qualification.stderr.txt").write_text(
+        qualification.stderr, encoding="utf-8"
+    )
+    if qualification.returncode != 0:
+        return None
+    return proof_root
 
 
 def probe_reactive_round(summary_path: Path) -> int:
@@ -562,15 +662,19 @@ def probe_adaptive_lineage_live_exact_chain(summary_path: Path, *, proof_root: s
         os.environ.get("BATTLE_ADAPTIVE_LINEAGE_PROOF_ROOT", ""),
         "/tmp/battle-1199-recovery-20260808T162547Z",
         "/tmp/battle-1336-*/adaptive-lineage-qualification.json",
+        str(BATTLE_DIR / "local/**/adaptive-lineage-qualification.json"),
+        str(summary_path.parent / "adaptive-lineage-live-exact-chain-fresh"),
     ]
     suite = "adaptive-lineage-live-exact-chain"
     if root is None:
-        return _emit_blocked(
-            summary_path,
-            suite=suite,
-            reason="missing_adaptive_lineage_live_receipt_root",
-            candidates=[item for item in candidates if item],
-        )
+        root = _regenerate_adaptive_lineage_proof_root(summary_path)
+        if root is None:
+            return _emit_blocked(
+                summary_path,
+                suite=suite,
+                reason="unable_to_regenerate_adaptive_lineage_live_receipt_root",
+                candidates=[item for item in candidates if item],
+            )
 
     qualification_path = root / "adaptive-lineage-qualification.json"
     if not qualification_path.is_file():

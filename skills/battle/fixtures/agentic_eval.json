@@ -392,7 +392,7 @@
       "seams": [
         "adaptive_lineage.live_exact_chain"
       ],
-      "timeout_seconds": 120,
+      "timeout_seconds": 900,
       "blocked_when_stdout_contains": [
         "ADAPTIVE_LINEAGE_LIVE_EXACT_CHAIN_BLOCKED"
       ],
