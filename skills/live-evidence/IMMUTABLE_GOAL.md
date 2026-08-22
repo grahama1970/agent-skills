@@ -31,6 +31,15 @@ states, no invented support), every capability stays purpose-gated
 (formal_assessment fails closed on all assistance), and every claim the
 system makes about itself stays receipt-backed.
 
+**Scannability is a requirement, not a style preference.** The human is
+focused on listening to collaborators in a meeting or a code review; a card
+must be absorbable in a glance -- what to say, which source backs it, and
+whether it is current -- without pulling attention from the conversation. A
+technically correct card that demands sustained reading has failed. When
+local evidence is insufficient for a real question, bounded external research
+is PROPOSED automatically (derived query only, human approves the egress) so
+the answer lane is never silently dead.
+
 ## Version-2 Completion Standard
 
 The version-1 proof was a one-time demonstration; version 2 is a daily-use
@@ -43,6 +52,9 @@ standard, judged over real consented sessions rather than a single run:
 - Question-onset-to-usable-card latency measured from when the speaker starts
   the question, not from question settlement; the 95th percentile must let
   the human read the card before the conversation moves on.
+- Blinded card-reading trials: the human identifies the answer and its
+  supporting source from a rendered card in a median of three seconds or
+  less while their attention is on the conversation.
 - Zero assistance events in formal_assessment; zero actions executed without
   approval; zero invented support -- across the whole campaign, failures
   included in the denominator.

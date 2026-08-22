@@ -207,3 +207,29 @@ def _resolve_artifact(reference: str, coordinator: Any) -> dict[str, Any]:
         if matches:
             return {"path": str(matches[0]), "exists": True, "root": str(root_path)}
     return {"path": token, "exists": False, "roots_searched": [str(r) for r in roots]}
+
+
+async def propose_research(coordinator: Any, state: Any, journal: Any, *,
+                           query: str, trigger_event_ids: list[str],
+                           question_id: str, question_revision: int,
+                           policy: CapabilityPolicy) -> None:
+    """(goal v2) Local evidence came up short for a real question: PROPOSE
+    bounded external research with the derived query. The human approves the
+    egress; the raw transcript never leaves the workstation."""
+
+    digest = state.session_policy_digest()
+    if coordinator.actions is None or coordinator.actions._policy_digest != digest:
+        coordinator.actions = ActionEngine(
+            purpose=state.session_purpose(), policy=policy, policy_digest=digest,
+        )
+    coordinator.actions.propose(
+        [{"kind": "fact_check",
+          "summary": f"Research externally: {query[:140]}",
+          "payload": query[:500]}],
+        trigger_event_ids=trigger_event_ids,
+        question_id=question_id, question_revision=question_revision,
+    )
+    for entry in coordinator.actions.journal:
+        await journal.append(state.session_id(), entry.pop("kind"), entry,
+                             policy_digest=digest)
+    coordinator.actions.journal.clear()

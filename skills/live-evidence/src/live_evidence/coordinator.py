@@ -10,6 +10,7 @@ from loguru import logger
 
 from .config import AppSettings, InterviewProfile
 from .models import (
+    CardStatus,
     ClarificationItem,
     EvidenceCard,
     EvidenceSource,
@@ -682,6 +683,15 @@ class EvidenceCoordinator:
             card,
             policy_digest=self._state.session_policy_digest(),
         )
+        if card.status is CardStatus.INSUFFICIENT and policy.external_search:
+            from .actions import propose_research
+
+            await propose_research(
+                self, self._state, self._journal, query=query,
+                trigger_event_ids=list(decision.source_event_ids),
+                question_id=question_id, question_revision=question_revision,
+                policy=policy,
+            )
         if fast_pending:
             outcome = await stream_fast_answer(
                 state=self._state, journal=self._journal, solver=FastSolver(),
@@ -782,16 +792,9 @@ def _bounded_query(raw: str, verdict: ReadinessVerdict | None) -> str:
 
 
 def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
-    """Deprecated: routed on incidental retrieval rather than on the question.
+    """Deprecated fallback: fires on incidental code retrieval. The live path
+    gates on the stage-1 resolver verdict instead."""
 
-    Kept only so existing callers and tests keep importing a defined symbol.
-    The live path now gates on the stage-1 resolver verdict
-    (ReadinessVerdict.may_invoke_ask), because this predicate fired whenever a
-    turn happened to retrieve any code and stayed silent for genuine code
-    questions with no local match. It never inspected the query at all.
-    """
-
-    has_local_code_evidence = any(
+    return any(
         source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources
     )
-    return has_local_code_evidence
