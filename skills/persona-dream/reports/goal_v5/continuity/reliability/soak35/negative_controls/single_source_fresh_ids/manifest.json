@@ -1,0 +1,2011 @@
+{
+  "campaign_id": "PD-CORRECTED-GOAL-V1-soak35",
+  "frozen_manifest_sha256": "sha256:4da3c826f01d8dc1264beac4790b2792a76479a61b0d6f7ba85d18500c655375",
+  "immutable_goal_id": "PD-CORRECTED-GOAL-V1",
+  "planned_cycle_count": 35,
+  "planned_cycles": [
+    {
+      "cycle_id": "fresh-id-only-001",
+      "cycle_index": 1,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:4337913ff6cd0d2222d81d71e50cf5179733fb91fcaf5d6d51adafe32ad50d10"
+      },
+      "pre_state_hash": "sha256:7c417e551390fe6eec33aa02ad6835ac76164d167db45f74c3a5d2424266736e",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760001,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:0eed09609b321b99146f9745e9eeca272c6a6beada79e3a28f07e4b725d6a9ee"
+    },
+    {
+      "cycle_id": "fresh-id-only-002",
+      "cycle_index": 2,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:07d296114a0f287e3cdab2cd64741536bac3f5f721474daa597b0887502ae8b4"
+      },
+      "pre_state_hash": "sha256:5ba29c9a5f0651e989770b936c9bda7f804bedb3771f0e9441b36630348b91c5",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760002,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:f88418e00d807b77cf02972b531aa02d0a08873722746139babcf8655e444bc9"
+    },
+    {
+      "cycle_id": "fresh-id-only-003",
+      "cycle_index": 3,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:87ae351249431cfc1b4b02e5dde03d9c3c81068a81e5b49e311e832dc5c58074"
+      },
+      "pre_state_hash": "sha256:7a19e6dc64787e7bf024b356d359ad44d2dd0d1d750f5ef0f0e8eeb566428b54",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760003,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e6d589c31949af48a5b18d5bc276f3ca4166c258b12114ffe4765b84c6cc37ca"
+    },
+    {
+      "cycle_id": "fresh-id-only-004",
+      "cycle_index": 4,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.12,
+            -0.08
+          ],
+          "expressive_warmth": [
+            -0.22,
+            -0.18
+          ],
+          "guarded_closeness": [
+            0.18,
+            0.22
+          ],
+          "self_disclosure_pressure": [
+            -0.02,
+            0.02
+          ]
+        },
+        "target_hash": "sha256:2305b9450e690b74b389387380e1f71b374ee70ef35bee1f97d5521c85ad137f"
+      },
+      "pre_state_hash": "sha256:2ff112085de62e4466494d7343e8ac8ab76f3814cf112287b7a1970c63bf9fe9",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.1,
+        "expressive_warmth": -0.2,
+        "guarded_closeness": 0.2,
+        "self_disclosure_pressure": 0.0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760004,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:94f1b22def64a9799aa88746b8eea0f19b19f9b0f3c6e76c8380288a6b920778"
+    },
+    {
+      "cycle_id": "fresh-id-only-005",
+      "cycle_index": 5,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:6753d5ac8be1f9bb1172f43e33194cb5f898fa9a7de485d30a18bba0f890becb"
+      },
+      "pre_state_hash": "sha256:d2a8cb00a740f040ea498350f01ccb88048a21fe8c9cdad0e7860e39e71efa2f",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760005,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:370f8269dce38affd095fdc328d284a9b76760227d0e2b049537f6e7fecb28ee"
+    },
+    {
+      "cycle_id": "fresh-id-only-006",
+      "cycle_index": 6,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:93df61c430424072d6638b3842c51be3557d091e07263b3583b01e979601258c"
+      },
+      "pre_state_hash": "sha256:13868b1828906b79987159bebcd7d2fff0077fc56e8c425e7d694d0f28723d18",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760006,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:b544f5ea4336d54c3a7f74d647bcec7bf7bf97982a12cf68a8b39c801c9cd77e"
+    },
+    {
+      "cycle_id": "fresh-id-only-007",
+      "cycle_index": 7,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:7be5c30f018b0670fe1e3e3c175664019aef1879b09c61c130031d8cab988632"
+      },
+      "pre_state_hash": "sha256:e313da0ec17b6b976e3d1133135e9fe47433c3ec50541988d00d03fe6bb71678",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760007,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:a7cde3ea04c3061b27c4be7901450a667de3c9c9cdf0aafa13f235e1c4086bea"
+    },
+    {
+      "cycle_id": "fresh-id-only-008",
+      "cycle_index": 8,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:1d3c0a964324919f91983dfa9e8048a5016e31a37373cfbcaa75e482d38c2365"
+      },
+      "pre_state_hash": "sha256:72a62e480e8ec609eddad9f9b9bff8e2a28e7b468e2831ae61f7ac777f4a0067",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760008,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e0dc80279a4fdf768fb19db548adb2fd58226609ac9a7f9802bab5d615ea33b7"
+    },
+    {
+      "cycle_id": "fresh-id-only-009",
+      "cycle_index": 9,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:672ec1327f69f37d60893b15a396fd756635c464aa8a9aa13d0942fc9c09ebd8"
+      },
+      "pre_state_hash": "sha256:672ec1327f69f37d60893b15a396fd756635c464aa8a9aa13d0942fc9c09ebd8",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760009,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:fc9515ebef9355ded88f0435b940a8e585ae06288995192cf0840cb141db234a"
+    },
+    {
+      "cycle_id": "fresh-id-only-010",
+      "cycle_index": 10,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:d4d4f997eb0d9417604b00761c1385e84c89828bf30305f14f643e9b2bfe3055"
+      },
+      "pre_state_hash": "sha256:372b487484524ddfecee3393f1996f06b878aef26b1da21e381c25cfde1a2d78",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760010,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:06fdce3b3b6b6a09e170ae42f542394ccdfb36d571a03839dc5829d166a03076"
+    },
+    {
+      "cycle_id": "fresh-id-only-011",
+      "cycle_index": 11,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:16599fb055c5b44a29ec9310ac3ed192bc94065ffc0305ac7e0ceb83d815fa7a"
+      },
+      "pre_state_hash": "sha256:e85e75394af36db19ffc07ac8554999e61a482d13bdf1d9b84a79a59739f7ee0",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760011,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:8f26abe2a397f5b73a2e39610bd708615e3b678401a8b21067e44bf850b960b4"
+    },
+    {
+      "cycle_id": "fresh-id-only-012",
+      "cycle_index": 12,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:28fec8554803d147c680aaf05b64cbd7ea517842d876f3ab4476181bddfff4f2"
+      },
+      "pre_state_hash": "sha256:f1a7a9495f8fb82611a654545f629c570381ac5e5c2b716ea870e4feaae10c1a",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760012,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:bfc96efda5696a2f5e213ad9f0957677b93dfef0f9691ae04af4db9a15699d45"
+    },
+    {
+      "cycle_id": "fresh-id-only-013",
+      "cycle_index": 13,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:24aa2469da30e69f7e1151ab189d4d662797005846fdd87561848905f2a26cb4"
+      },
+      "pre_state_hash": "sha256:5e88592cb8d12baf9f7ffc35971199b323de679fc6e99a779161f5c3950ee391",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760013,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:7e5705d9ac4deb248e1ec89f2bfdd4aeda81f38fc9c2cbc6bce7fb91694596de"
+    },
+    {
+      "cycle_id": "fresh-id-only-014",
+      "cycle_index": 14,
+      "expected_transition_class": "expected_block",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "no_state_write",
+        "blocked_reason": "insufficient_bound_evidence"
+      },
+      "pre_state_hash": "sha256:deaff3d654aeb223985248d576500351e0623d5c1a14429f2d51bbe888ccf444",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760014,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:f11437e3fa6e68964adf63a4ebaaaaf04b2bd38f60b992cf0524eb7de28a8ab0"
+    },
+    {
+      "cycle_id": "fresh-id-only-015",
+      "cycle_index": 15,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:dc68b2bccebb3f22208401204b4e485fec35c4fdbf7369dd42a4201d8dcaa32d"
+      },
+      "pre_state_hash": "sha256:0269bdd425cd954a768f9f319d3c5b72111eed3892d6971b8c9fe753586da249",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760015,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:a7c8983e5f96c4c97cf72cae98038648c6df66dd39bb23f1c6a14583b7f92a54"
+    },
+    {
+      "cycle_id": "fresh-id-only-016",
+      "cycle_index": 16,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:0b514d5ed87db04e7f3f4d40147176ed56b007fd5d0033228a40d07d091cb9c0"
+      },
+      "pre_state_hash": "sha256:6e76d0250e9c2ddd9bca783ca92b5a80b55c8d36793bc2f0bcaba474d6db2177",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760016,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:02bb11f7bee5e019e7373245c7f99569b890a9814dfd4d119e7b51b179dc7de7"
+    },
+    {
+      "cycle_id": "fresh-id-only-017",
+      "cycle_index": 17,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:37e283dbc2872761b7759d02014c3c7f5bb693d53e93f90ca66238c42bdfa911"
+      },
+      "pre_state_hash": "sha256:80deee27f66e02f62153cfb868e7304cd57b990606b2f2ef1601dcd77ec0194e",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760017,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:fb71de004dac0c14cde3564127868f97c72579a6dfc943a31a404ade0b78c046"
+    },
+    {
+      "cycle_id": "fresh-id-only-018",
+      "cycle_index": 18,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:aaab07b1df8b2322dc23d9fa4663ec2278b5b11909f12973ebeee5a1504bc482"
+      },
+      "pre_state_hash": "sha256:aaab07b1df8b2322dc23d9fa4663ec2278b5b11909f12973ebeee5a1504bc482",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760018,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:c5d2e869156e181d27254ceb1999deb9720cc21aa3d737b147e53df8f0910179"
+    },
+    {
+      "cycle_id": "fresh-id-only-019",
+      "cycle_index": 19,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.12,
+            -0.08
+          ],
+          "expressive_warmth": [
+            -0.22,
+            -0.18
+          ],
+          "guarded_closeness": [
+            0.18,
+            0.22
+          ],
+          "self_disclosure_pressure": [
+            -0.02,
+            0.02
+          ]
+        },
+        "target_hash": "sha256:9703cc5bcee57bb764c443107370e18d34c01179f0ef0c2b666d82bf4560c617"
+      },
+      "pre_state_hash": "sha256:607e9406c3b34aad393ef28e12ed5a9bcbc03128d8f0fbecfd7adb5db0e05879",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.1,
+        "expressive_warmth": -0.2,
+        "guarded_closeness": 0.2,
+        "self_disclosure_pressure": 0.0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760019,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:17a91e870604bc593cbf0aaaf679f350bd7883493ce9137063aeb4161fc56d59"
+    },
+    {
+      "cycle_id": "fresh-id-only-020",
+      "cycle_index": 20,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:8a83928382a3b3a91b9ec3534bfbd61d3c37feb9f6ba94b533a1645a51bd6cd9"
+      },
+      "pre_state_hash": "sha256:55897af2e3449ca7b7c90e2bba684d50d6d6fdac16d358ca7b3981598595267d",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760020,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:6ff5765590bd25f8d9441407ae2b251726f960c51946cce0075479addb9c10d1"
+    },
+    {
+      "cycle_id": "fresh-id-only-021",
+      "cycle_index": 21,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:efa2ab533d872e9e91c62cdc19e2b0f346894445672f781ec6ca5b93f54f80a7"
+      },
+      "pre_state_hash": "sha256:d68a8985cc6e805b770743c55b9f64a4a5e3f7c62188f75ab22df952316dd5b2",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760021,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:df42b60b36fa1b0ea3e6371a2e5bd7492de34fc988cf855d27e40838d3803054"
+    },
+    {
+      "cycle_id": "fresh-id-only-022",
+      "cycle_index": 22,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:017de7ad7c778a85ed9840d93e08f4d86bc6da9e2e7dbb5b5c10fd8598a167f2"
+      },
+      "pre_state_hash": "sha256:f53d9e233d50b676e9f74eb8655ad1218f8d4e17cca468efc8453bdf9d9a2d17",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760022,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:cd6de0f6178c342af437894f3330829d41e05316b9d6d76856c3981d60f6d991"
+    },
+    {
+      "cycle_id": "fresh-id-only-023",
+      "cycle_index": 23,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:f1ac12e829270b01e66588e60262744c1e1e020969fa46702a3307c1ecce603c"
+      },
+      "pre_state_hash": "sha256:4b0c84c09898190007e79802155cdb0914a4ec71ee759b34b63ddbc6cb56e0a4",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760023,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:2f85417c45ed061e65df4be8f8fe3dbf3e8e7c089dc216ca0bf0a785029128bb"
+    },
+    {
+      "cycle_id": "fresh-id-only-024",
+      "cycle_index": 24,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.12,
+            -0.08
+          ],
+          "expressive_warmth": [
+            -0.22,
+            -0.18
+          ],
+          "guarded_closeness": [
+            0.18,
+            0.22
+          ],
+          "self_disclosure_pressure": [
+            -0.02,
+            0.02
+          ]
+        },
+        "target_hash": "sha256:849f66815af7795a0aae6e93535d0fdef362478811555d7b663da6d1736f3792"
+      },
+      "pre_state_hash": "sha256:af73d77de9ff2f28c7067e50e72f4f0f18a5821b028941117a7b821c7f3041fd",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.1,
+        "expressive_warmth": -0.2,
+        "guarded_closeness": 0.2,
+        "self_disclosure_pressure": 0.0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760024,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:931e5cd00cbd5a7f12ac9faa99fb47423b94d6af705d0e5fceb69aa2f579dd8f"
+    },
+    {
+      "cycle_id": "fresh-id-only-025",
+      "cycle_index": 25,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:122cd9e5a2749982971f34264d55066572e251f9950d9228e667a79d90019835"
+      },
+      "pre_state_hash": "sha256:442278dee371d6a290fc06f1b74fd6f3b99bfebdffb76a99bbced3739015084d",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760025,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:df2e49a1a2bd4b6dc796185dc9a8612981b2ce41bd9d923995a9e0fda4106056"
+    },
+    {
+      "cycle_id": "fresh-id-only-026",
+      "cycle_index": 26,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:427daf83c56956bf624982870eba73affb0e0e9803b551a1f2f81afc0a93ec99"
+      },
+      "pre_state_hash": "sha256:55ba789947dbf1043a244f40e024511a0e85ec0e7035e875641548a486fd47ad",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760026,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:7c965f3cd3de8f0ba7f65e4a95511af7c60eef09f6acc75674ccc0179d4a80b2"
+    },
+    {
+      "cycle_id": "fresh-id-only-027",
+      "cycle_index": 27,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:e9eece1198c606ecd9f68baf509c23909499a809ba8ef265189ea604c3da39e8"
+      },
+      "pre_state_hash": "sha256:e9eece1198c606ecd9f68baf509c23909499a809ba8ef265189ea604c3da39e8",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760027,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:ddc57c27db5b7088540c8035a2df0faa692e41963b1e021e513ca5aa57456b38"
+    },
+    {
+      "cycle_id": "fresh-id-only-028",
+      "cycle_index": 28,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:e84dbec5aa0330b7f2d4a6e4ed7659c6ac1694e769a8933194ab1d0394b6c851"
+      },
+      "pre_state_hash": "sha256:695dfc9f45022df2b4ee175a8f4fb3d5e9d457490293e3cbd45ecf4f6ef5a063",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760028,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:123bcf26f91226b8aa8592538f810693a8b98a2106323006e0935792e3fa586f"
+    },
+    {
+      "cycle_id": "fresh-id-only-029",
+      "cycle_index": 29,
+      "expected_transition_class": "expected_block",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "no_state_write",
+        "blocked_reason": "insufficient_bound_evidence"
+      },
+      "pre_state_hash": "sha256:476457ca705868787091396e9208d1244db0a9d97025c87c5fef3466676c6a06",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760029,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:4e38b5fba5e82f63649bffc463df124a1fd595ce45cd1bfdd0f83564af00f323"
+    },
+    {
+      "cycle_id": "fresh-id-only-030",
+      "cycle_index": 30,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:07d296114a0f287e3cdab2cd64741536bac3f5f721474daa597b0887502ae8b4"
+      },
+      "pre_state_hash": "sha256:5ba29c9a5f0651e989770b936c9bda7f804bedb3771f0e9441b36630348b91c5",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": true,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760030,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:f88418e00d807b77cf02972b531aa02d0a08873722746139babcf8655e444bc9"
+    },
+    {
+      "cycle_id": "fresh-id-only-031",
+      "cycle_index": 31,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:1bbf884bac4aaed1ea1ae196288f57f793a47391d6b625fd16cb4e3ba618fb7d"
+      },
+      "pre_state_hash": "sha256:0f93c527027afff41f63026875c03667ef592a4a44996f89113de8826df9281c",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760031,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:9243733781d53126b01da25f1c5f74dc4c04a397ef18bbc66359757f4805ca1c"
+    },
+    {
+      "cycle_id": "fresh-id-only-032",
+      "cycle_index": 32,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:9738efc98678186707b5b40d02e4110061e132542bfe5b563d163fe33c2cc8a0"
+      },
+      "pre_state_hash": "sha256:7e48465f853e32bd224a28824f28de4b2396af92b39c2347291a7dbfbb54b508",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760032,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:bfecb69711ce44d5ff0e6e2618e4d9655e1d3cff556ac9b1fde3e2656993f5c6"
+    },
+    {
+      "cycle_id": "fresh-id-only-033",
+      "cycle_index": 33,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:52e6cda4ef48a0be0e5b08c79aa4cf1f9c0cfc5031037ea002e2bdf403b49c95"
+      },
+      "pre_state_hash": "sha256:46730bfaeb618c9782f09f6251b70375fb23237c7dbbf5b8912b65cba502fcc8",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760033,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:511b4a6db046f08c985961607153d1ae7f5292d53607e40efb3de79cd346b0fa"
+    },
+    {
+      "cycle_id": "fresh-id-only-034",
+      "cycle_index": 34,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:75c3658a3685771724ea88df9511ffe2938c330bd39093260bc52d353b4bd8cb"
+      },
+      "pre_state_hash": "sha256:75c3658a3685771724ea88df9511ffe2938c330bd39093260bc52d353b4bd8cb",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760034,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:f766a9ab74f91962b4fc445043ea5b5edbcb5b74d84e59ef668d429944681837"
+    },
+    {
+      "cycle_id": "fresh-id-only-035",
+      "cycle_index": 35,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:6753d5ac8be1f9bb1172f43e33194cb5f898fa9a7de485d30a18bba0f890becb"
+      },
+      "pre_state_hash": "sha256:d2a8cb00a740f040ea498350f01ccb88048a21fe8c9cdad0e7860e39e71efa2f",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": true,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760035,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:370f8269dce38affd095fdc328d284a9b76760227d0e2b049537f6e7fecb28ee"
+    }
+  ],
+  "preflight_side_effects": {
+    "canonical_write_attempts": 0,
+    "provider_calls": 0
+  },
+  "schema": "persona_dream.soak35.source_diversity_manifest.v1"
+}

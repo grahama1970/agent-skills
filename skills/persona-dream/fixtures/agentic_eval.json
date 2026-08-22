@@ -294,6 +294,33 @@
       }
     },
     {
+      "name": "soak35-source-transition-preflight",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.soak35_source_transition_preflight"
+      ],
+      "seams": [
+        "continuity.soak35.preflight"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "bash ../run.sh validate-soak35-preflight --manifest ../reports/goal_v5/continuity/reliability/soak35/SOURCE_DIVERSITY_MANIFEST.json --policy ../reports/goal_v5/continuity/reliability/soak35/TRANSITION_POLICY.json --output /tmp/persona-dream-soak35-preflight-eval.json --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_SOAK35_PREFLIGHT",
+          "\"planned_cycles\": 35",
+          "\"unique_source_lineage_groups\": 8",
+          "\"canonical_write_attempts\": 0",
+          "\"provider_calls\": 0"
+        ]
+      }
+    },
+    {
       "name": "corrected-goal-pair-blocks-without-live-artifacts",
       "type": "adversarial",
       "real_world": true,
@@ -350,6 +377,14 @@
       }
     },
     {
+      "id": "persona_dream.soak35_source_transition_preflight",
+      "description": "The 35-cycle reliability soak is gated by a frozen source-dream diversity and normalized state-transition preflight with typed negative controls and zero provider/canonical-write side effects.",
+      "criticality": "critical",
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.ux.workspace_renders",
       "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
       "criticality": "critical",
@@ -397,6 +432,14 @@
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
+      ]
+    },
+    {
+      "seam_id": "continuity.soak35.preflight",
+      "seam_type": "reliability_gate",
+      "criticality": "critical",
+      "required_evidence": [
+        "fault_injected_deterministic"
       ]
     },
     {

@@ -29,6 +29,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parent.parent
 DEFAULT_OUT_DIR = ROOT / "reports/goal_v5/continuity/reliability"
+DEFAULT_PREFLIGHT_RECEIPT = DEFAULT_OUT_DIR / "soak35/PREFLIGHT_RECEIPT.json"
 DEFAULT_CYCLES = 5
 SYSTEMIC_FAILURE_LIMIT = 3
 
@@ -42,6 +43,7 @@ def _load(name: str):
 
 
 live_chain_receipt = _load("live_chain_receipt")
+validate_soak35_preflight = _load("validate_soak35_preflight")
 
 
 def utc_now() -> str:
@@ -337,7 +339,13 @@ def wilson_interval(successes: int, n: int, z: float = 1.96) -> dict[str, float 
     }
 
 
-def aggregate(cycle_receipts: list[dict[str, Any]], out_dir: Path, *, campaign_id: str) -> dict[str, Any]:
+def aggregate(
+    cycle_receipts: list[dict[str, Any]],
+    out_dir: Path,
+    *,
+    campaign_id: str,
+    preflight_receipt: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     cycle_rows: list[dict[str, Any]] = []
     gate_counts: dict[str, dict[str, int]] = {}
     seen_ids: set[str] = set()
@@ -431,6 +439,7 @@ def aggregate(cycle_receipts: list[dict[str, Any]], out_dir: Path, *, campaign_i
             "all_cycle_receipts_recomputed": True,
             "cycle_receipt_count": len(cycle_rows),
         },
+        "source_transition_preflight": preflight_receipt,
         "claims": {
             "proves": [
                 "N=5 pilot outcomes are preserved without hiding failed cycles",
@@ -488,6 +497,13 @@ def validate_aggregate(path: Path) -> dict[str, Any]:
         failures.append("duplicate_accepted_effect_count")
     if doc.get("every_failure_deterministically_classified") is not True:
         failures.append("unclassified_failure")
+    preflight = doc.get("source_transition_preflight")
+    if preflight:
+        receipt_path = REPO_ROOT / preflight.get("receipt", DEFAULT_PREFLIGHT_RECEIPT)
+        try:
+            validate_soak35_preflight.validate_preflight_receipt(receipt_path)
+        except Exception as exc:  # noqa: BLE001 - fail closed with concrete reason
+            failures.append(f"source_transition_preflight_invalid:{type(exc).__name__}:{exc}")
     if failures:
         doc["status"] = "BLOCKED_LIVE_CHAIN_RELIABILITY_PILOT"
         doc["validation_failures"] = failures
@@ -499,6 +515,19 @@ def run_campaign(args: argparse.Namespace) -> dict[str, Any]:
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     campaign_id = args.campaign_id or f"live_chain_reliability_{compact_ts()}"
+    preflight_receipt = None
+    if args.require_preflight or args.cycles >= 35:
+        preflight_receipt = validate_soak35_preflight.validate_preflight_receipt(args.preflight_receipt)
+        preflight_receipt = {
+            "status": preflight_receipt["status"],
+            "receipt": rel(args.preflight_receipt),
+            "manifest": preflight_receipt["manifest"],
+            "manifest_sha256": preflight_receipt["manifest_sha256"],
+            "policy": preflight_receipt["policy"],
+            "policy_sha256": preflight_receipt["policy_sha256"],
+            "counts": preflight_receipt["counts"],
+            "claims": preflight_receipt["claims"],
+        }
     receipts: list[dict[str, Any]] = []
     failure_signatures: dict[str, int] = {}
     systemic_block_active: str | None = None
@@ -545,7 +574,7 @@ def run_campaign(args: argparse.Namespace) -> dict[str, Any]:
             if failure_signatures[signature] >= SYSTEMIC_FAILURE_LIMIT:
                 systemic_block_active = signature
 
-    aggregate_doc = aggregate(receipts, out_dir, campaign_id=campaign_id)
+    aggregate_doc = aggregate(receipts, out_dir, campaign_id=campaign_id, preflight_receipt=preflight_receipt)
     (out_dir / "SHA256SUMS.txt").write_text(
         "".join(
             f"{sha_file(out_dir / f'cycle_{row['cycle_index']:03d}' / 'RECEIPT.json').removeprefix('sha256:')}  cycle_{row['cycle_index']:03d}/RECEIPT.json\n"
@@ -564,6 +593,8 @@ def main() -> int:
     parser.add_argument("--recognition-python", type=Path, default=live_chain_receipt.DEFAULT_RECOGNITION_PYTHON)
     parser.add_argument("--cycles", type=int, default=DEFAULT_CYCLES)
     parser.add_argument("--campaign-id")
+    parser.add_argument("--preflight-receipt", type=Path, default=DEFAULT_PREFLIGHT_RECEIPT)
+    parser.add_argument("--require-preflight", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     if args.cycles <= 0:

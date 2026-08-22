@@ -31,6 +31,7 @@ Commands:
   check-current-state-consistency  Static check: current-state surfaces must not contradict named receipts
   validate-operational-goal Validate the corrected operational goal/status pin
   validate-corrected-goal-manifest Validate the PD-CORRECTED-GOAL-V1 sealed manifest
+  validate-soak35-preflight Validate the frozen source/transition diversity preflight for the 35-cycle soak
   validate-emotion-lineage Validate paired run emotion lineage artifacts
   validate-answer-invariance Validate paired run answer-body invariance
   validate-chatterbox-delivery Validate paired run Chatterbox delivery artifacts
@@ -901,6 +902,9 @@ case "$COMMAND" in
     ;;
   validate-corrected-goal-manifest)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_corrected_goal_manifest.py" "$@"
+    ;;
+  validate-soak35-preflight)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_soak35_preflight.py" "$@"
     ;;
   validate-emotion-lineage)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_emotion_lineage.py" "$@"

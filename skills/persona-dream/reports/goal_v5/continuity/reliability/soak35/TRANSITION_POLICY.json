@@ -1,0 +1,37 @@
+{
+  "campaign_id": "PD-CORRECTED-GOAL-V1-soak35",
+  "classifications": {
+    "DISTINCT_STATE_TRANSITION": "materially different accepted bounded state transition",
+    "EXACT_REPLAY": "same accepted source and same transition from the same pre-state",
+    "EXPECTED_BLOCK": "planned rejected row that remains visible in the denominator",
+    "STATE_EQUIVALENT_DUPLICATE": "different ids but same normalized transition and materially identical source lineage",
+    "VALID_NO_OP": "evidence yields no bounded state change and no state write",
+    "VALID_REPEATED_RENDER_CONTROL": "explicit repeated synthesis control with no new state write"
+  },
+  "fingerprint": {
+    "allowed_mutable_dimensions": [
+      "guarded_closeness",
+      "expressive_warmth",
+      "conflict_tolerance",
+      "self_disclosure_pressure"
+    ],
+    "excluded_fields": [
+      "cycle_id",
+      "cycle_index",
+      "created_at",
+      "session_mood_text_seed_cell"
+    ],
+    "source_evidence_fields": [
+      "evidence_class",
+      "refs"
+    ]
+  },
+  "minimums": {
+    "heldout_answer_texts": 3,
+    "mood_or_arc_bias_regions": 4,
+    "normalized_transition_fingerprints": 8,
+    "planned_cycles": 35,
+    "source_lineage_groups": 8
+  },
+  "schema": "persona_dream.soak35.transition_policy.v1"
+}

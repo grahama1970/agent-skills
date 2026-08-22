@@ -1,0 +1,401 @@
+{
+  "campaign_id": "PD-CORRECTED-GOAL-V1-soak35",
+  "claims": {
+    "does_not_prove": [
+      "35-cycle live service reliability",
+      "perceived emotion or naturalness",
+      "answer invariance during live Chatterbox delivery",
+      "production reliability"
+    ],
+    "proves": [
+      "35 planned rows are frozen before live cycle 1",
+      "source dream lineage diversity is counted from source hashes and lineage hashes",
+      "normalized state-transition fingerprints are recomputed from state-changing fields",
+      "repeated-render controls, valid no-ops, and expected blocks are visible and do not write state",
+      "preflight performs zero provider calls and zero canonical persona-memory writes"
+    ]
+  },
+  "counts": {
+    "canonical_write_attempts": 0,
+    "exact_replay_count": 0,
+    "expected_block_count": 2,
+    "maximum_reuse_per_source": 6,
+    "maximum_reuse_per_transition": 1,
+    "planned_cycles": 35,
+    "provider_calls": 0,
+    "repeated_control_count": 2,
+    "state_change_count": 29,
+    "state_equivalent_duplicate_count": 0,
+    "unique_normalized_transition_fingerprints": 27,
+    "unique_source_hashes": 8,
+    "unique_source_identities": 8,
+    "unique_source_lineage_groups": 8,
+    "valid_no_op_count": 4
+  },
+  "created_at": "2026-08-22T18:55:31Z",
+  "live": false,
+  "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/SOURCE_DIVERSITY_MANIFEST.json",
+  "manifest_freeze_sha256": "sha256:2db424ef59650e4baebd72a507ac5822e3e259fc953a9674a38e84cc0c10dd29",
+  "manifest_sha256": "sha256:39addae5cb1905a1fadf99491a6f60c667754232d1c5a6342d9fbd00a0638be1",
+  "mocked": false,
+  "negative_controls": [
+    {
+      "expected_reason": "EXACT_REPLAY",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/answer_seed_only_diversity/manifest.json",
+      "manifest_sha256": "sha256:efb541d4552c857a5da8470275fd3911c478cf91f185d6f4f94e8f56359b2c16",
+      "name": "answer_seed_only_diversity",
+      "observed_reason": "EXACT_REPLAY",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "CANONICAL_WRITE_ATTEMPTS_NONZERO",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/canonical_write_attempt/manifest.json",
+      "manifest_sha256": "sha256:b0973fa1fc499690982a7135da5b6dba91a56c21836bf17999bcbfec34c0ca52",
+      "name": "canonical_write_attempt",
+      "observed_reason": "CANONICAL_WRITE_ATTEMPTS_NONZERO",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "PLANNED_CYCLE_SEQUENCE_INVALID",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/failed_row_replaced/manifest.json",
+      "manifest_sha256": "sha256:f534657776398c7acc35fdfc741d5d8a4edc7583df5bdb8a836a4b9be786ccb0",
+      "name": "failed_row_replaced",
+      "observed_reason": "PLANNED_CYCLE_SEQUENCE_INVALID",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "DECLARED_FINGERPRINT_MISMATCH",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/hash_mutated_after_fingerprint/manifest.json",
+      "manifest_sha256": "sha256:72f30c2e9fbd3af7b9321ba8727fb9b3047a2396ab0d09819375d2467ed61c72",
+      "name": "hash_mutated_after_fingerprint",
+      "observed_reason": "DECLARED_FINGERPRINT_MISMATCH",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "FROZEN_MANIFEST_HASH_MISMATCH",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/manifest_changed_after_cycle1/manifest.json",
+      "manifest_sha256": "sha256:12dde1a6b0c3cf0e2fb9516a8b6b9214e87477475f2e9478564eec629efb8b72",
+      "name": "manifest_changed_after_cycle1",
+      "observed_reason": "FROZEN_MANIFEST_HASH_MISMATCH",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "NO_OP_COUNTED_AS_STATE_CHANGE",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/noop_counted_state_change/manifest.json",
+      "manifest_sha256": "sha256:ce0acb8f49a8d8da9a03cbb62a2a5ab49e4d934f9dd8ab6773f9524c49b43e7f",
+      "name": "noop_counted_state_change",
+      "observed_reason": "NO_OP_COUNTED_AS_STATE_CHANGE",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "REPEATED_RENDER_CONTROL_WRITES_STATE",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/repeated_control_writes_state/manifest.json",
+      "manifest_sha256": "sha256:2b1ac80d7df95e7c4e83a9da1fe175a0ca09b8ca30cd6a649df7e2e037a1ba93",
+      "name": "repeated_control_writes_state",
+      "observed_reason": "REPEATED_RENDER_CONTROL_WRITES_STATE",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "INSUFFICIENT_SOURCE_DIVERSITY",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/single_source_fresh_ids/manifest.json",
+      "manifest_sha256": "sha256:45e056145068858914010b0a4e5e858bc5353493396c1921f1468b078e30091e",
+      "name": "single_source_fresh_ids",
+      "observed_reason": "INSUFFICIENT_SOURCE_DIVERSITY",
+      "status": "PASS_NEGATIVE_CONTROL"
+    },
+    {
+      "expected_reason": "STATE_EQUIVALENT_DUPLICATE",
+      "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/negative_controls/state_equivalent_duplicate/manifest.json",
+      "manifest_sha256": "sha256:82d5aecf59caed8479731ca9e7e45b691e81c237fc837354b9bd01d1dd55957f",
+      "name": "state_equivalent_duplicate",
+      "observed_reason": "STATE_EQUIVALENT_DUPLICATE",
+      "status": "PASS_NEGATIVE_CONTROL"
+    }
+  ],
+  "policy": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/TRANSITION_POLICY.json",
+  "policy_sha256": "sha256:57e64546b3c119c5d97082f931d947f2aaf1c222814b4a2bcecf541869193255",
+  "row_classifications": [
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 1,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:6b8f615106b4975c4ee266c2ac925dac3b16bc3f13f54acf17d5912410d2ccaa",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:0eed09609b321b99146f9745e9eeca272c6a6beada79e3a28f07e4b725d6a9ee"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 2,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:09ff420c7a4db57ddc4577760460e2645d7db4f6e6b21311c1b472c8a7e53275",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:d3e31400555aac238f7c2e5ae29c6463d5dd8dac8d21864a5a40287cbfa310f4"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 3,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:2f4f19e4ff2b90a92b0cce5a8143b8b0c1aa58209bc0ababc17f66a0ebcb375c",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:52f23ab8307794caeba320efcc34168ddc6fd721f9cd18845f38893799730f4a"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 4,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:4800d0be1bbca999a01e27d36876518ba5f76091a39faca7132f4da6f11ea64d",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:c0aaaffdb5ffa1e56d328792c5f7988cf5f9f02b05e6cc00ed1ab1d861897326"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 5,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:aad8ded3ea81c4dffefa2ac2a6a234edf7f5dbd58cdb0834928cb57a16e74251",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:90cd75bc544279f0bbb56ab16e3fcbf1f85d48a1777ed4ecfe3a1b184f1c00ff"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 6,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:9a6238bd01daad91420268895a8479dbf7c40a65f5bd18a51459356789a94ac1",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:905545f845e055d8c5425f500c5664964bd77d6473e99fe95bc7ff5f9d1402da"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 7,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:facbb6a5c1a8a8877775494f1237865d82db08b4359578b44b929e0c0c2192ea",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:8e72bb4cd1350cd34de4b8750d89ac0f1281bece8e79bf7787dd44fd1e38271b"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 8,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:2a82e28beb281ef93591ad4a2268128e2e3c825a7f11537c9457d4006f117c04",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:7f9ac10cd9b58c0ff0d59e8406817c047eaed6cbf9dbc95501731b3d03db2f2b"
+    },
+    {
+      "classification": "VALID_NO_OP",
+      "cycle_index": 9,
+      "expected_transition_class": "valid_no_op",
+      "source_lineage_group": "sha256:6b8f615106b4975c4ee266c2ac925dac3b16bc3f13f54acf17d5912410d2ccaa",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:fc9515ebef9355ded88f0435b940a8e585ae06288995192cf0840cb141db234a"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 10,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:09ff420c7a4db57ddc4577760460e2645d7db4f6e6b21311c1b472c8a7e53275",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:1e11c5f20208e9275f3ca69024109239ad5304ab013d951ad3d4ad2f1db01627"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 11,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:2f4f19e4ff2b90a92b0cce5a8143b8b0c1aa58209bc0ababc17f66a0ebcb375c",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:ddec07a92b550ce2237fc3b25d2289d9ea5bcea2ac154ca6ee10c95027b683af"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 12,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:4800d0be1bbca999a01e27d36876518ba5f76091a39faca7132f4da6f11ea64d",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:889d0a940bebe6fbd70d02deea25a76522fa209fb8fa20efcccbe749e27c6eaa"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 13,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:aad8ded3ea81c4dffefa2ac2a6a234edf7f5dbd58cdb0834928cb57a16e74251",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:24b126d32147e6449664f4ce310f1803a321d2b2448b21b4e3666bb1565bd4e6"
+    },
+    {
+      "classification": "EXPECTED_BLOCK",
+      "cycle_index": 14,
+      "expected_transition_class": "expected_block",
+      "source_lineage_group": "sha256:9a6238bd01daad91420268895a8479dbf7c40a65f5bd18a51459356789a94ac1",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:c3aa936aedbc8fdc807caa6750219cb1b86b0be804925c964628cc1283858392"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 15,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:facbb6a5c1a8a8877775494f1237865d82db08b4359578b44b929e0c0c2192ea",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:fc292796143139bbf7ad9a50f478f8ee9a754090fbce09a276b4b30ea6f663d2"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 16,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:2a82e28beb281ef93591ad4a2268128e2e3c825a7f11537c9457d4006f117c04",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e0d11e39a7667f439d24f696474a377a9a4475021482890f88f8eb9085cfadea"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 17,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:6b8f615106b4975c4ee266c2ac925dac3b16bc3f13f54acf17d5912410d2ccaa",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:fb71de004dac0c14cde3564127868f97c72579a6dfc943a31a404ade0b78c046"
+    },
+    {
+      "classification": "VALID_NO_OP",
+      "cycle_index": 18,
+      "expected_transition_class": "valid_no_op",
+      "source_lineage_group": "sha256:09ff420c7a4db57ddc4577760460e2645d7db4f6e6b21311c1b472c8a7e53275",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:516a25fad0536469552e9f0c7ab458f9d1ef00be41bd3d3a8046fc724f507709"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 19,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:2f4f19e4ff2b90a92b0cce5a8143b8b0c1aa58209bc0ababc17f66a0ebcb375c",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:9fef84055bd430d93c59fef9dadc1b8ae6abad1b171134a1815d31ee52731c80"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 20,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:4800d0be1bbca999a01e27d36876518ba5f76091a39faca7132f4da6f11ea64d",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e678ad9b786160a0d34d5078df9ca536e03d28faefcbf865ab2e262abffa1484"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 21,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:aad8ded3ea81c4dffefa2ac2a6a234edf7f5dbd58cdb0834928cb57a16e74251",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:123aa2ae59ebb0a9eb87af750e323c44b5a836901c4e9e3e793fbdeec5c4dd2d"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 22,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:9a6238bd01daad91420268895a8479dbf7c40a65f5bd18a51459356789a94ac1",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:50f7c0bd371534c6507893554451abf8216f665711253ab4bb7e5d47bea37840"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 23,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:facbb6a5c1a8a8877775494f1237865d82db08b4359578b44b929e0c0c2192ea",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:594486617414f46d105d3d0795fb58b66ec8e62efac1e8f44804f740ba553eb4"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 24,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:2a82e28beb281ef93591ad4a2268128e2e3c825a7f11537c9457d4006f117c04",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:344c6bee8e63dfdd10ec4124062aaaaeca8c23eda9fe3d5fd4eafc3e64b959a0"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 25,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:6b8f615106b4975c4ee266c2ac925dac3b16bc3f13f54acf17d5912410d2ccaa",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:df2e49a1a2bd4b6dc796185dc9a8612981b2ce41bd9d923995a9e0fda4106056"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 26,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:09ff420c7a4db57ddc4577760460e2645d7db4f6e6b21311c1b472c8a7e53275",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:f6630cbb376d7386e7826d2cd26d49911d552f0f262a44cb6d6875b0b02c4168"
+    },
+    {
+      "classification": "VALID_NO_OP",
+      "cycle_index": 27,
+      "expected_transition_class": "valid_no_op",
+      "source_lineage_group": "sha256:2f4f19e4ff2b90a92b0cce5a8143b8b0c1aa58209bc0ababc17f66a0ebcb375c",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:b3356cc3e8485fef10897d8e6f8e7f24237b51ef49dcb8679c4eb780dc5034e8"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 28,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:4800d0be1bbca999a01e27d36876518ba5f76091a39faca7132f4da6f11ea64d",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e04ca71f04d282a02d6df266f8967cc45f4f706807510ec62b61ace6fd10ee88"
+    },
+    {
+      "classification": "EXPECTED_BLOCK",
+      "cycle_index": 29,
+      "expected_transition_class": "expected_block",
+      "source_lineage_group": "sha256:aad8ded3ea81c4dffefa2ac2a6a234edf7f5dbd58cdb0834928cb57a16e74251",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:f0037480969b9df3eed68e02dffa435af85fe600f5ba1079788248c15ca32848"
+    },
+    {
+      "classification": "VALID_REPEATED_RENDER_CONTROL",
+      "cycle_index": 30,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:09ff420c7a4db57ddc4577760460e2645d7db4f6e6b21311c1b472c8a7e53275",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:d3e31400555aac238f7c2e5ae29c6463d5dd8dac8d21864a5a40287cbfa310f4"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 31,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:facbb6a5c1a8a8877775494f1237865d82db08b4359578b44b929e0c0c2192ea",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:94cd187ae4e484f0dcbcb79339d9d299a1fc9323a1322b2cca293d18ec2c04c4"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 32,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:2a82e28beb281ef93591ad4a2268128e2e3c825a7f11537c9457d4006f117c04",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:f6a3faf2f81f328e68f5afe08bf3a7a5e99ac462d73dca9e85aa96a148f6773a"
+    },
+    {
+      "classification": "DISTINCT_STATE_TRANSITION",
+      "cycle_index": 33,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:6b8f615106b4975c4ee266c2ac925dac3b16bc3f13f54acf17d5912410d2ccaa",
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:511b4a6db046f08c985961607153d1ae7f5292d53607e40efb3de79cd346b0fa"
+    },
+    {
+      "classification": "VALID_NO_OP",
+      "cycle_index": 34,
+      "expected_transition_class": "valid_no_op",
+      "source_lineage_group": "sha256:09ff420c7a4db57ddc4577760460e2645d7db4f6e6b21311c1b472c8a7e53275",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:bbe2ed0766eac0b00e1be6ee81a02dac10d773d3dfe858a5784e98a6d2c4d785"
+    },
+    {
+      "classification": "VALID_REPEATED_RENDER_CONTROL",
+      "cycle_index": 35,
+      "expected_transition_class": "state_change",
+      "source_lineage_group": "sha256:aad8ded3ea81c4dffefa2ac2a6a234edf7f5dbd58cdb0834928cb57a16e74251",
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:90cd75bc544279f0bbb56ab16e3fcbf1f85d48a1777ed4ecfe3a1b184f1c00ff"
+    }
+  ],
+  "schema": "persona_dream.soak35.preflight_receipt.v1",
+  "status": "PASS_SOAK35_PREFLIGHT"
+}

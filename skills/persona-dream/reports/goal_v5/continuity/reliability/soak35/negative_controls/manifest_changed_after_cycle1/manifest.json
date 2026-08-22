@@ -1,0 +1,2011 @@
+{
+  "campaign_id": "PD-CORRECTED-GOAL-V1-soak35",
+  "frozen_manifest_sha256": "sha256:2db424ef59650e4baebd72a507ac5822e3e259fc953a9674a38e84cc0c10dd29",
+  "immutable_goal_id": "PD-CORRECTED-GOAL-V1",
+  "planned_cycle_count": 35,
+  "planned_cycles": [
+    {
+      "cycle_id": "tampered-after-cycle-1",
+      "cycle_index": 1,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:4337913ff6cd0d2222d81d71e50cf5179733fb91fcaf5d6d51adafe32ad50d10"
+      },
+      "pre_state_hash": "sha256:7c417e551390fe6eec33aa02ad6835ac76164d167db45f74c3a5d2424266736e",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760001,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:0eed09609b321b99146f9745e9eeca272c6a6beada79e3a28f07e4b725d6a9ee"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-002",
+      "cycle_index": 2,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:07d296114a0f287e3cdab2cd64741536bac3f5f721474daa597b0887502ae8b4"
+      },
+      "pre_state_hash": "sha256:5ba29c9a5f0651e989770b936c9bda7f804bedb3771f0e9441b36630348b91c5",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760002,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "rain-station-departure",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:e18bd93b9dc96b7b60a0339d8d9ce0daab545cb317d0a11a841d7033025f2cb1",
+        "refs": [
+          "dream:rain-station-departure",
+          "journal:rain-station-departure",
+          "watch:rain-station-departure"
+        ],
+        "residue_sha256": "sha256:25bd6a43b0b2fcfa5ccc5d5454f314e7845fd3267ed6c412ccb5b0c781b08e5b",
+        "sha256": "sha256:57d4cb565af237081c0bbbfd080428fb719c6a9d188bbcebbb6e475ef3b90156",
+        "watch_lineage_sha256": "sha256:0eeb88e9b37ac6f0616aaeb03b79d01d64bfa4d3f59a55b91a475518755cd7fe"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:d3e31400555aac238f7c2e5ae29c6463d5dd8dac8d21864a5a40287cbfa310f4"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-003",
+      "cycle_index": 3,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:87ae351249431cfc1b4b02e5dde03d9c3c81068a81e5b49e311e832dc5c58074"
+      },
+      "pre_state_hash": "sha256:7a19e6dc64787e7bf024b356d359ad44d2dd0d1d750f5ef0f0e8eeb566428b54",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760003,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "library-door-threshold",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:1d4d8f2e58397efa8e99dc9a5e5b95ca7bc63435bce55980a1da232b50ef9563",
+        "refs": [
+          "dream:library-door-threshold",
+          "journal:library-door-threshold",
+          "watch:library-door-threshold"
+        ],
+        "residue_sha256": "sha256:1d04481341962ff7c1f76d1d565b2e0c3a792464c4a9f895192c1214461292ef",
+        "sha256": "sha256:3867007a924e4491b5e3faadf60166a2961bb11a740dfccec0dd037ff16a1e62",
+        "watch_lineage_sha256": "sha256:39c492a1f1206d373cf311e8330150333a81e557198f82019950b9aa83a044cd"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:52f23ab8307794caeba320efcc34168ddc6fd721f9cd18845f38893799730f4a"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-004",
+      "cycle_index": 4,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.12,
+            -0.08
+          ],
+          "expressive_warmth": [
+            -0.22,
+            -0.18
+          ],
+          "guarded_closeness": [
+            0.18,
+            0.22
+          ],
+          "self_disclosure_pressure": [
+            -0.02,
+            0.02
+          ]
+        },
+        "target_hash": "sha256:2305b9450e690b74b389387380e1f71b374ee70ef35bee1f97d5521c85ad137f"
+      },
+      "pre_state_hash": "sha256:2ff112085de62e4466494d7343e8ac8ab76f3814cf112287b7a1970c63bf9fe9",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.1,
+        "expressive_warmth": -0.2,
+        "guarded_closeness": 0.2,
+        "self_disclosure_pressure": 0.0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760004,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "river-bridge-return",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:4a43e84a84a1914c4b586414393bd6bede358a372f3a33b233dc758b0a175318",
+        "refs": [
+          "dream:river-bridge-return",
+          "journal:river-bridge-return",
+          "watch:river-bridge-return"
+        ],
+        "residue_sha256": "sha256:d701faaece74839e31868181b7101d815c925d0e292a15ad6d0180a02d24a105",
+        "sha256": "sha256:651480e1058b238cfb717f3eddb0d1e3f4a12d6f198b3c3fe76157196d3162ca",
+        "watch_lineage_sha256": "sha256:82d359a3fd942ae0d8345bcbc4cb4a892334ec69c817d1ea43ad96f86300d4b8"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:c0aaaffdb5ffa1e56d328792c5f7988cf5f9f02b05e6cc00ed1ab1d861897326"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-005",
+      "cycle_index": 5,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:6753d5ac8be1f9bb1172f43e33194cb5f898fa9a7de485d30a18bba0f890becb"
+      },
+      "pre_state_hash": "sha256:d2a8cb00a740f040ea498350f01ccb88048a21fe8c9cdad0e7860e39e71efa2f",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760005,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "observatory-red-signal",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:38464b61844de5bdf831e539be73a0aba5ba48e759df30641b01959d962f081b",
+        "refs": [
+          "dream:observatory-red-signal",
+          "journal:observatory-red-signal",
+          "watch:observatory-red-signal"
+        ],
+        "residue_sha256": "sha256:367e7009c23a40f0f988844b0933b1095d130bfe88d6e274ad01045bd2113af3",
+        "sha256": "sha256:b59b74a598feafb4f79c4425b8acdbd4122525b4e0b62d753cc88771083a105e",
+        "watch_lineage_sha256": "sha256:318af34fff1ce01141afa1e2bed6baf048c58434710792757ee84236966e81b7"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:90cd75bc544279f0bbb56ab16e3fcbf1f85d48a1777ed4ecfe3a1b184f1c00ff"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-006",
+      "cycle_index": 6,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:93df61c430424072d6638b3842c51be3557d091e07263b3583b01e979601258c"
+      },
+      "pre_state_hash": "sha256:13868b1828906b79987159bebcd7d2fff0077fc56e8c425e7d694d0f28723d18",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760006,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "kitchen-light-afterstorm",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:3ccb75a6055363e6fc2d372732123389773b83221ce060460dec4f6e0f46d45f",
+        "refs": [
+          "dream:kitchen-light-afterstorm",
+          "journal:kitchen-light-afterstorm",
+          "watch:kitchen-light-afterstorm"
+        ],
+        "residue_sha256": "sha256:c1011062ef344c898baca2d44dd1fc4e843aa9211c113d5df5de68656004bac8",
+        "sha256": "sha256:59de0ec7011f74725674bca2bd617df9e2a079e646e9b9150de90c30b6f5a7e7",
+        "watch_lineage_sha256": "sha256:d48054545193aced28c16b4034a2ddcb90c2ddb4d19ce8fec1f8590adf24ce80"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:905545f845e055d8c5425f500c5664964bd77d6473e99fe95bc7ff5f9d1402da"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-007",
+      "cycle_index": 7,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:7be5c30f018b0670fe1e3e3c175664019aef1879b09c61c130031d8cab988632"
+      },
+      "pre_state_hash": "sha256:e313da0ec17b6b976e3d1133135e9fe47433c3ec50541988d00d03fe6bb71678",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760007,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "archive-elevator-loop",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:df8fca6c9c14226117ead2525355d20cd16cd61d5764521652eff19a0318edef",
+        "refs": [
+          "dream:archive-elevator-loop",
+          "journal:archive-elevator-loop",
+          "watch:archive-elevator-loop"
+        ],
+        "residue_sha256": "sha256:d35a11dd4a017e439f4b8528bbee4f9e4cad0dbc457389030abddb4100eaef38",
+        "sha256": "sha256:aa987cd60f7143e8eb3bae2b427cd87147ea2ae03c041006c119e62fe2c30418",
+        "watch_lineage_sha256": "sha256:17a94196a3c13fa61d141b9b33a0293848385cbc9bd8ae285dbd19db2393b54a"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:8e72bb4cd1350cd34de4b8750d89ac0f1281bece8e79bf7787dd44fd1e38271b"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-008",
+      "cycle_index": 8,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:1d3c0a964324919f91983dfa9e8048a5016e31a37373cfbcaa75e482d38c2365"
+      },
+      "pre_state_hash": "sha256:72a62e480e8ec609eddad9f9b9bff8e2a28e7b468e2831ae61f7ac777f4a0067",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760008,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "garden-locked-gate",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:157e5d679a4d17807e1cd5c08d4233b11dd1d5a1c61d4d1474e89d7443d3ab2a",
+        "refs": [
+          "dream:garden-locked-gate",
+          "journal:garden-locked-gate",
+          "watch:garden-locked-gate"
+        ],
+        "residue_sha256": "sha256:2e5b16bc5937ac044dacbddb2fb493b72c906d0d30df75be970a8a4c0d158c88",
+        "sha256": "sha256:955fd6ba96df464c0efa514554f3fc6b4b2f542b089c3649d0183172b65044b8",
+        "watch_lineage_sha256": "sha256:9d4d276f56b0fead9394285821fd27ee5b8f85db59e8fd4294cde4fd0d4426a1"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:7f9ac10cd9b58c0ff0d59e8406817c047eaed6cbf9dbc95501731b3d03db2f2b"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-009",
+      "cycle_index": 9,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:672ec1327f69f37d60893b15a396fd756635c464aa8a9aa13d0942fc9c09ebd8"
+      },
+      "pre_state_hash": "sha256:672ec1327f69f37d60893b15a396fd756635c464aa8a9aa13d0942fc9c09ebd8",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760009,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:fc9515ebef9355ded88f0435b940a8e585ae06288995192cf0840cb141db234a"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-010",
+      "cycle_index": 10,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:d4d4f997eb0d9417604b00761c1385e84c89828bf30305f14f643e9b2bfe3055"
+      },
+      "pre_state_hash": "sha256:372b487484524ddfecee3393f1996f06b878aef26b1da21e381c25cfde1a2d78",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760010,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "rain-station-departure",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:e18bd93b9dc96b7b60a0339d8d9ce0daab545cb317d0a11a841d7033025f2cb1",
+        "refs": [
+          "dream:rain-station-departure",
+          "journal:rain-station-departure",
+          "watch:rain-station-departure"
+        ],
+        "residue_sha256": "sha256:25bd6a43b0b2fcfa5ccc5d5454f314e7845fd3267ed6c412ccb5b0c781b08e5b",
+        "sha256": "sha256:57d4cb565af237081c0bbbfd080428fb719c6a9d188bbcebbb6e475ef3b90156",
+        "watch_lineage_sha256": "sha256:0eeb88e9b37ac6f0616aaeb03b79d01d64bfa4d3f59a55b91a475518755cd7fe"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:1e11c5f20208e9275f3ca69024109239ad5304ab013d951ad3d4ad2f1db01627"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-011",
+      "cycle_index": 11,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:16599fb055c5b44a29ec9310ac3ed192bc94065ffc0305ac7e0ceb83d815fa7a"
+      },
+      "pre_state_hash": "sha256:e85e75394af36db19ffc07ac8554999e61a482d13bdf1d9b84a79a59739f7ee0",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760011,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "library-door-threshold",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:1d4d8f2e58397efa8e99dc9a5e5b95ca7bc63435bce55980a1da232b50ef9563",
+        "refs": [
+          "dream:library-door-threshold",
+          "journal:library-door-threshold",
+          "watch:library-door-threshold"
+        ],
+        "residue_sha256": "sha256:1d04481341962ff7c1f76d1d565b2e0c3a792464c4a9f895192c1214461292ef",
+        "sha256": "sha256:3867007a924e4491b5e3faadf60166a2961bb11a740dfccec0dd037ff16a1e62",
+        "watch_lineage_sha256": "sha256:39c492a1f1206d373cf311e8330150333a81e557198f82019950b9aa83a044cd"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:ddec07a92b550ce2237fc3b25d2289d9ea5bcea2ac154ca6ee10c95027b683af"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-012",
+      "cycle_index": 12,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:28fec8554803d147c680aaf05b64cbd7ea517842d876f3ab4476181bddfff4f2"
+      },
+      "pre_state_hash": "sha256:f1a7a9495f8fb82611a654545f629c570381ac5e5c2b716ea870e4feaae10c1a",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760012,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "river-bridge-return",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:4a43e84a84a1914c4b586414393bd6bede358a372f3a33b233dc758b0a175318",
+        "refs": [
+          "dream:river-bridge-return",
+          "journal:river-bridge-return",
+          "watch:river-bridge-return"
+        ],
+        "residue_sha256": "sha256:d701faaece74839e31868181b7101d815c925d0e292a15ad6d0180a02d24a105",
+        "sha256": "sha256:651480e1058b238cfb717f3eddb0d1e3f4a12d6f198b3c3fe76157196d3162ca",
+        "watch_lineage_sha256": "sha256:82d359a3fd942ae0d8345bcbc4cb4a892334ec69c817d1ea43ad96f86300d4b8"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:889d0a940bebe6fbd70d02deea25a76522fa209fb8fa20efcccbe749e27c6eaa"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-013",
+      "cycle_index": 13,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:24aa2469da30e69f7e1151ab189d4d662797005846fdd87561848905f2a26cb4"
+      },
+      "pre_state_hash": "sha256:5e88592cb8d12baf9f7ffc35971199b323de679fc6e99a779161f5c3950ee391",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760013,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "observatory-red-signal",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:38464b61844de5bdf831e539be73a0aba5ba48e759df30641b01959d962f081b",
+        "refs": [
+          "dream:observatory-red-signal",
+          "journal:observatory-red-signal",
+          "watch:observatory-red-signal"
+        ],
+        "residue_sha256": "sha256:367e7009c23a40f0f988844b0933b1095d130bfe88d6e274ad01045bd2113af3",
+        "sha256": "sha256:b59b74a598feafb4f79c4425b8acdbd4122525b4e0b62d753cc88771083a105e",
+        "watch_lineage_sha256": "sha256:318af34fff1ce01141afa1e2bed6baf048c58434710792757ee84236966e81b7"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:24b126d32147e6449664f4ce310f1803a321d2b2448b21b4e3666bb1565bd4e6"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-014",
+      "cycle_index": 14,
+      "expected_transition_class": "expected_block",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "no_state_write",
+        "blocked_reason": "insufficient_bound_evidence"
+      },
+      "pre_state_hash": "sha256:deaff3d654aeb223985248d576500351e0623d5c1a14429f2d51bbe888ccf444",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760014,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "kitchen-light-afterstorm",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:3ccb75a6055363e6fc2d372732123389773b83221ce060460dec4f6e0f46d45f",
+        "refs": [
+          "dream:kitchen-light-afterstorm",
+          "journal:kitchen-light-afterstorm",
+          "watch:kitchen-light-afterstorm"
+        ],
+        "residue_sha256": "sha256:c1011062ef344c898baca2d44dd1fc4e843aa9211c113d5df5de68656004bac8",
+        "sha256": "sha256:59de0ec7011f74725674bca2bd617df9e2a079e646e9b9150de90c30b6f5a7e7",
+        "watch_lineage_sha256": "sha256:d48054545193aced28c16b4034a2ddcb90c2ddb4d19ce8fec1f8590adf24ce80"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:c3aa936aedbc8fdc807caa6750219cb1b86b0be804925c964628cc1283858392"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-015",
+      "cycle_index": 15,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:dc68b2bccebb3f22208401204b4e485fec35c4fdbf7369dd42a4201d8dcaa32d"
+      },
+      "pre_state_hash": "sha256:0269bdd425cd954a768f9f319d3c5b72111eed3892d6971b8c9fe753586da249",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760015,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "archive-elevator-loop",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:df8fca6c9c14226117ead2525355d20cd16cd61d5764521652eff19a0318edef",
+        "refs": [
+          "dream:archive-elevator-loop",
+          "journal:archive-elevator-loop",
+          "watch:archive-elevator-loop"
+        ],
+        "residue_sha256": "sha256:d35a11dd4a017e439f4b8528bbee4f9e4cad0dbc457389030abddb4100eaef38",
+        "sha256": "sha256:aa987cd60f7143e8eb3bae2b427cd87147ea2ae03c041006c119e62fe2c30418",
+        "watch_lineage_sha256": "sha256:17a94196a3c13fa61d141b9b33a0293848385cbc9bd8ae285dbd19db2393b54a"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:fc292796143139bbf7ad9a50f478f8ee9a754090fbce09a276b4b30ea6f663d2"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-016",
+      "cycle_index": 16,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:0b514d5ed87db04e7f3f4d40147176ed56b007fd5d0033228a40d07d091cb9c0"
+      },
+      "pre_state_hash": "sha256:6e76d0250e9c2ddd9bca783ca92b5a80b55c8d36793bc2f0bcaba474d6db2177",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760016,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "garden-locked-gate",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:157e5d679a4d17807e1cd5c08d4233b11dd1d5a1c61d4d1474e89d7443d3ab2a",
+        "refs": [
+          "dream:garden-locked-gate",
+          "journal:garden-locked-gate",
+          "watch:garden-locked-gate"
+        ],
+        "residue_sha256": "sha256:2e5b16bc5937ac044dacbddb2fb493b72c906d0d30df75be970a8a4c0d158c88",
+        "sha256": "sha256:955fd6ba96df464c0efa514554f3fc6b4b2f542b089c3649d0183172b65044b8",
+        "watch_lineage_sha256": "sha256:9d4d276f56b0fead9394285821fd27ee5b8f85db59e8fd4294cde4fd0d4426a1"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e0d11e39a7667f439d24f696474a377a9a4475021482890f88f8eb9085cfadea"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-017",
+      "cycle_index": 17,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:37e283dbc2872761b7759d02014c3c7f5bb693d53e93f90ca66238c42bdfa911"
+      },
+      "pre_state_hash": "sha256:80deee27f66e02f62153cfb868e7304cd57b990606b2f2ef1601dcd77ec0194e",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760017,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:fb71de004dac0c14cde3564127868f97c72579a6dfc943a31a404ade0b78c046"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-018",
+      "cycle_index": 18,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:aaab07b1df8b2322dc23d9fa4663ec2278b5b11909f12973ebeee5a1504bc482"
+      },
+      "pre_state_hash": "sha256:aaab07b1df8b2322dc23d9fa4663ec2278b5b11909f12973ebeee5a1504bc482",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760018,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "rain-station-departure",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:e18bd93b9dc96b7b60a0339d8d9ce0daab545cb317d0a11a841d7033025f2cb1",
+        "refs": [
+          "dream:rain-station-departure",
+          "journal:rain-station-departure",
+          "watch:rain-station-departure"
+        ],
+        "residue_sha256": "sha256:25bd6a43b0b2fcfa5ccc5d5454f314e7845fd3267ed6c412ccb5b0c781b08e5b",
+        "sha256": "sha256:57d4cb565af237081c0bbbfd080428fb719c6a9d188bbcebbb6e475ef3b90156",
+        "watch_lineage_sha256": "sha256:0eeb88e9b37ac6f0616aaeb03b79d01d64bfa4d3f59a55b91a475518755cd7fe"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:516a25fad0536469552e9f0c7ab458f9d1ef00be41bd3d3a8046fc724f507709"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-019",
+      "cycle_index": 19,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.12,
+            -0.08
+          ],
+          "expressive_warmth": [
+            -0.22,
+            -0.18
+          ],
+          "guarded_closeness": [
+            0.18,
+            0.22
+          ],
+          "self_disclosure_pressure": [
+            -0.02,
+            0.02
+          ]
+        },
+        "target_hash": "sha256:9703cc5bcee57bb764c443107370e18d34c01179f0ef0c2b666d82bf4560c617"
+      },
+      "pre_state_hash": "sha256:607e9406c3b34aad393ef28e12ed5a9bcbc03128d8f0fbecfd7adb5db0e05879",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.1,
+        "expressive_warmth": -0.2,
+        "guarded_closeness": 0.2,
+        "self_disclosure_pressure": 0.0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760019,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "library-door-threshold",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:1d4d8f2e58397efa8e99dc9a5e5b95ca7bc63435bce55980a1da232b50ef9563",
+        "refs": [
+          "dream:library-door-threshold",
+          "journal:library-door-threshold",
+          "watch:library-door-threshold"
+        ],
+        "residue_sha256": "sha256:1d04481341962ff7c1f76d1d565b2e0c3a792464c4a9f895192c1214461292ef",
+        "sha256": "sha256:3867007a924e4491b5e3faadf60166a2961bb11a740dfccec0dd037ff16a1e62",
+        "watch_lineage_sha256": "sha256:39c492a1f1206d373cf311e8330150333a81e557198f82019950b9aa83a044cd"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:9fef84055bd430d93c59fef9dadc1b8ae6abad1b171134a1815d31ee52731c80"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-020",
+      "cycle_index": 20,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:8a83928382a3b3a91b9ec3534bfbd61d3c37feb9f6ba94b533a1645a51bd6cd9"
+      },
+      "pre_state_hash": "sha256:55897af2e3449ca7b7c90e2bba684d50d6d6fdac16d358ca7b3981598595267d",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760020,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "river-bridge-return",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:4a43e84a84a1914c4b586414393bd6bede358a372f3a33b233dc758b0a175318",
+        "refs": [
+          "dream:river-bridge-return",
+          "journal:river-bridge-return",
+          "watch:river-bridge-return"
+        ],
+        "residue_sha256": "sha256:d701faaece74839e31868181b7101d815c925d0e292a15ad6d0180a02d24a105",
+        "sha256": "sha256:651480e1058b238cfb717f3eddb0d1e3f4a12d6f198b3c3fe76157196d3162ca",
+        "watch_lineage_sha256": "sha256:82d359a3fd942ae0d8345bcbc4cb4a892334ec69c817d1ea43ad96f86300d4b8"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e678ad9b786160a0d34d5078df9ca536e03d28faefcbf865ab2e262abffa1484"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-021",
+      "cycle_index": 21,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:efa2ab533d872e9e91c62cdc19e2b0f346894445672f781ec6ca5b93f54f80a7"
+      },
+      "pre_state_hash": "sha256:d68a8985cc6e805b770743c55b9f64a4a5e3f7c62188f75ab22df952316dd5b2",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760021,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "observatory-red-signal",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:38464b61844de5bdf831e539be73a0aba5ba48e759df30641b01959d962f081b",
+        "refs": [
+          "dream:observatory-red-signal",
+          "journal:observatory-red-signal",
+          "watch:observatory-red-signal"
+        ],
+        "residue_sha256": "sha256:367e7009c23a40f0f988844b0933b1095d130bfe88d6e274ad01045bd2113af3",
+        "sha256": "sha256:b59b74a598feafb4f79c4425b8acdbd4122525b4e0b62d753cc88771083a105e",
+        "watch_lineage_sha256": "sha256:318af34fff1ce01141afa1e2bed6baf048c58434710792757ee84236966e81b7"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:123aa2ae59ebb0a9eb87af750e323c44b5a836901c4e9e3e793fbdeec5c4dd2d"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-022",
+      "cycle_index": 22,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:017de7ad7c778a85ed9840d93e08f4d86bc6da9e2e7dbb5b5c10fd8598a167f2"
+      },
+      "pre_state_hash": "sha256:f53d9e233d50b676e9f74eb8655ad1218f8d4e17cca468efc8453bdf9d9a2d17",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760022,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "kitchen-light-afterstorm",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:3ccb75a6055363e6fc2d372732123389773b83221ce060460dec4f6e0f46d45f",
+        "refs": [
+          "dream:kitchen-light-afterstorm",
+          "journal:kitchen-light-afterstorm",
+          "watch:kitchen-light-afterstorm"
+        ],
+        "residue_sha256": "sha256:c1011062ef344c898baca2d44dd1fc4e843aa9211c113d5df5de68656004bac8",
+        "sha256": "sha256:59de0ec7011f74725674bca2bd617df9e2a079e646e9b9150de90c30b6f5a7e7",
+        "watch_lineage_sha256": "sha256:d48054545193aced28c16b4034a2ddcb90c2ddb4d19ce8fec1f8590adf24ce80"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:50f7c0bd371534c6507893554451abf8216f665711253ab4bb7e5d47bea37840"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-023",
+      "cycle_index": 23,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:f1ac12e829270b01e66588e60262744c1e1e020969fa46702a3307c1ecce603c"
+      },
+      "pre_state_hash": "sha256:4b0c84c09898190007e79802155cdb0914a4ec71ee759b34b63ddbc6cb56e0a4",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760023,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "archive-elevator-loop",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:df8fca6c9c14226117ead2525355d20cd16cd61d5764521652eff19a0318edef",
+        "refs": [
+          "dream:archive-elevator-loop",
+          "journal:archive-elevator-loop",
+          "watch:archive-elevator-loop"
+        ],
+        "residue_sha256": "sha256:d35a11dd4a017e439f4b8528bbee4f9e4cad0dbc457389030abddb4100eaef38",
+        "sha256": "sha256:aa987cd60f7143e8eb3bae2b427cd87147ea2ae03c041006c119e62fe2c30418",
+        "watch_lineage_sha256": "sha256:17a94196a3c13fa61d141b9b33a0293848385cbc9bd8ae285dbd19db2393b54a"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:594486617414f46d105d3d0795fb58b66ec8e62efac1e8f44804f740ba553eb4"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-024",
+      "cycle_index": 24,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.12,
+            -0.08
+          ],
+          "expressive_warmth": [
+            -0.22,
+            -0.18
+          ],
+          "guarded_closeness": [
+            0.18,
+            0.22
+          ],
+          "self_disclosure_pressure": [
+            -0.02,
+            0.02
+          ]
+        },
+        "target_hash": "sha256:849f66815af7795a0aae6e93535d0fdef362478811555d7b663da6d1736f3792"
+      },
+      "pre_state_hash": "sha256:af73d77de9ff2f28c7067e50e72f4f0f18a5821b028941117a7b821c7f3041fd",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.1,
+        "expressive_warmth": -0.2,
+        "guarded_closeness": 0.2,
+        "self_disclosure_pressure": 0.0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760024,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "garden-locked-gate",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:157e5d679a4d17807e1cd5c08d4233b11dd1d5a1c61d4d1474e89d7443d3ab2a",
+        "refs": [
+          "dream:garden-locked-gate",
+          "journal:garden-locked-gate",
+          "watch:garden-locked-gate"
+        ],
+        "residue_sha256": "sha256:2e5b16bc5937ac044dacbddb2fb493b72c906d0d30df75be970a8a4c0d158c88",
+        "sha256": "sha256:955fd6ba96df464c0efa514554f3fc6b4b2f542b089c3649d0183172b65044b8",
+        "watch_lineage_sha256": "sha256:9d4d276f56b0fead9394285821fd27ee5b8f85db59e8fd4294cde4fd0d4426a1"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:344c6bee8e63dfdd10ec4124062aaaaeca8c23eda9fe3d5fd4eafc3e64b959a0"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-025",
+      "cycle_index": 25,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:122cd9e5a2749982971f34264d55066572e251f9950d9228e667a79d90019835"
+      },
+      "pre_state_hash": "sha256:442278dee371d6a290fc06f1b74fd6f3b99bfebdffb76a99bbced3739015084d",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760025,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:df2e49a1a2bd4b6dc796185dc9a8612981b2ce41bd9d923995a9e0fda4106056"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-026",
+      "cycle_index": 26,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:427daf83c56956bf624982870eba73affb0e0e9803b551a1f2f81afc0a93ec99"
+      },
+      "pre_state_hash": "sha256:55ba789947dbf1043a244f40e024511a0e85ec0e7035e875641548a486fd47ad",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760026,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "rain-station-departure",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:e18bd93b9dc96b7b60a0339d8d9ce0daab545cb317d0a11a841d7033025f2cb1",
+        "refs": [
+          "dream:rain-station-departure",
+          "journal:rain-station-departure",
+          "watch:rain-station-departure"
+        ],
+        "residue_sha256": "sha256:25bd6a43b0b2fcfa5ccc5d5454f314e7845fd3267ed6c412ccb5b0c781b08e5b",
+        "sha256": "sha256:57d4cb565af237081c0bbbfd080428fb719c6a9d188bbcebbb6e475ef3b90156",
+        "watch_lineage_sha256": "sha256:0eeb88e9b37ac6f0616aaeb03b79d01d64bfa4d3f59a55b91a475518755cd7fe"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:f6630cbb376d7386e7826d2cd26d49911d552f0f262a44cb6d6875b0b02c4168"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-027",
+      "cycle_index": 27,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:e9eece1198c606ecd9f68baf509c23909499a809ba8ef265189ea604c3da39e8"
+      },
+      "pre_state_hash": "sha256:e9eece1198c606ecd9f68baf509c23909499a809ba8ef265189ea604c3da39e8",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760027,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "library-door-threshold",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:1d4d8f2e58397efa8e99dc9a5e5b95ca7bc63435bce55980a1da232b50ef9563",
+        "refs": [
+          "dream:library-door-threshold",
+          "journal:library-door-threshold",
+          "watch:library-door-threshold"
+        ],
+        "residue_sha256": "sha256:1d04481341962ff7c1f76d1d565b2e0c3a792464c4a9f895192c1214461292ef",
+        "sha256": "sha256:3867007a924e4491b5e3faadf60166a2961bb11a740dfccec0dd037ff16a1e62",
+        "watch_lineage_sha256": "sha256:39c492a1f1206d373cf311e8330150333a81e557198f82019950b9aa83a044cd"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:b3356cc3e8485fef10897d8e6f8e7f24237b51ef49dcb8679c4eb780dc5034e8"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-028",
+      "cycle_index": 28,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:e84dbec5aa0330b7f2d4a6e4ed7659c6ac1694e769a8933194ab1d0394b6c851"
+      },
+      "pre_state_hash": "sha256:695dfc9f45022df2b4ee175a8f4fb3d5e9d457490293e3cbd45ecf4f6ef5a063",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760028,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "river-bridge-return",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:4a43e84a84a1914c4b586414393bd6bede358a372f3a33b233dc758b0a175318",
+        "refs": [
+          "dream:river-bridge-return",
+          "journal:river-bridge-return",
+          "watch:river-bridge-return"
+        ],
+        "residue_sha256": "sha256:d701faaece74839e31868181b7101d815c925d0e292a15ad6d0180a02d24a105",
+        "sha256": "sha256:651480e1058b238cfb717f3eddb0d1e3f4a12d6f198b3c3fe76157196d3162ca",
+        "watch_lineage_sha256": "sha256:82d359a3fd942ae0d8345bcbc4cb4a892334ec69c817d1ea43ad96f86300d4b8"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:e04ca71f04d282a02d6df266f8967cc45f4f706807510ec62b61ace6fd10ee88"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-029",
+      "cycle_index": 29,
+      "expected_transition_class": "expected_block",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "no_state_write",
+        "blocked_reason": "insufficient_bound_evidence"
+      },
+      "pre_state_hash": "sha256:476457ca705868787091396e9208d1244db0a9d97025c87c5fef3466676c6a06",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760029,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "observatory-red-signal",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:38464b61844de5bdf831e539be73a0aba5ba48e759df30641b01959d962f081b",
+        "refs": [
+          "dream:observatory-red-signal",
+          "journal:observatory-red-signal",
+          "watch:observatory-red-signal"
+        ],
+        "residue_sha256": "sha256:367e7009c23a40f0f988844b0933b1095d130bfe88d6e274ad01045bd2113af3",
+        "sha256": "sha256:b59b74a598feafb4f79c4425b8acdbd4122525b4e0b62d753cc88771083a105e",
+        "watch_lineage_sha256": "sha256:318af34fff1ce01141afa1e2bed6baf048c58434710792757ee84236966e81b7"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:f0037480969b9df3eed68e02dffa435af85fe600f5ba1079788248c15ca32848"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-030",
+      "cycle_index": 30,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:07d296114a0f287e3cdab2cd64741536bac3f5f721474daa597b0887502ae8b4"
+      },
+      "pre_state_hash": "sha256:5ba29c9a5f0651e989770b936c9bda7f804bedb3771f0e9441b36630348b91c5",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": true,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760030,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "rain-station-departure",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:e18bd93b9dc96b7b60a0339d8d9ce0daab545cb317d0a11a841d7033025f2cb1",
+        "refs": [
+          "dream:rain-station-departure",
+          "journal:rain-station-departure",
+          "watch:rain-station-departure"
+        ],
+        "residue_sha256": "sha256:25bd6a43b0b2fcfa5ccc5d5454f314e7845fd3267ed6c412ccb5b0c781b08e5b",
+        "sha256": "sha256:57d4cb565af237081c0bbbfd080428fb719c6a9d188bbcebbb6e475ef3b90156",
+        "watch_lineage_sha256": "sha256:0eeb88e9b37ac6f0616aaeb03b79d01d64bfa4d3f59a55b91a475518755cd7fe"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:d3e31400555aac238f7c2e5ae29c6463d5dd8dac8d21864a5a40287cbfa310f4"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-031",
+      "cycle_index": 31,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.08,
+            0.12
+          ],
+          "expressive_warmth": [
+            -0.02,
+            0.02
+          ],
+          "guarded_closeness": [
+            -0.12,
+            -0.08
+          ],
+          "self_disclosure_pressure": [
+            0.18,
+            0.22
+          ]
+        },
+        "target_hash": "sha256:1bbf884bac4aaed1ea1ae196288f57f793a47391d6b625fd16cb4e3ba618fb7d"
+      },
+      "pre_state_hash": "sha256:0f93c527027afff41f63026875c03667ef592a4a44996f89113de8826df9281c",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.1,
+        "expressive_warmth": 0.0,
+        "guarded_closeness": -0.1,
+        "self_disclosure_pressure": 0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "sharp-boundary",
+        "seed": 760031,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "archive-elevator-loop",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:df8fca6c9c14226117ead2525355d20cd16cd61d5764521652eff19a0318edef",
+        "refs": [
+          "dream:archive-elevator-loop",
+          "journal:archive-elevator-loop",
+          "watch:archive-elevator-loop"
+        ],
+        "residue_sha256": "sha256:d35a11dd4a017e439f4b8528bbee4f9e4cad0dbc457389030abddb4100eaef38",
+        "sha256": "sha256:aa987cd60f7143e8eb3bae2b427cd87147ea2ae03c041006c119e62fe2c30418",
+        "watch_lineage_sha256": "sha256:17a94196a3c13fa61d141b9b33a0293848385cbc9bd8ae285dbd19db2393b54a"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:94cd187ae4e484f0dcbcb79339d9d299a1fc9323a1322b2cca293d18ec2c04c4"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-032",
+      "cycle_index": 32,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            0.18,
+            0.22
+          ],
+          "expressive_warmth": [
+            0.08,
+            0.12
+          ],
+          "guarded_closeness": [
+            -0.02,
+            0.02
+          ],
+          "self_disclosure_pressure": [
+            -0.22,
+            -0.18
+          ]
+        },
+        "target_hash": "sha256:9738efc98678186707b5b40d02e4110061e132542bfe5b563d163fe33c2cc8a0"
+      },
+      "pre_state_hash": "sha256:7e48465f853e32bd224a28824f28de4b2396af92b39c2347291a7dbfbb54b508",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.2,
+        "expressive_warmth": 0.1,
+        "guarded_closeness": 0.0,
+        "self_disclosure_pressure": -0.2
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "curious-trust",
+        "seed": 760032,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "garden-locked-gate",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:157e5d679a4d17807e1cd5c08d4233b11dd1d5a1c61d4d1474e89d7443d3ab2a",
+        "refs": [
+          "dream:garden-locked-gate",
+          "journal:garden-locked-gate",
+          "watch:garden-locked-gate"
+        ],
+        "residue_sha256": "sha256:2e5b16bc5937ac044dacbddb2fb493b72c906d0d30df75be970a8a4c0d158c88",
+        "sha256": "sha256:955fd6ba96df464c0efa514554f3fc6b4b2f542b089c3649d0183172b65044b8",
+        "watch_lineage_sha256": "sha256:9d4d276f56b0fead9394285821fd27ee5b8f85db59e8fd4294cde4fd0d4426a1"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:f6a3faf2f81f328e68f5afe08bf3a7a5e99ac462d73dca9e85aa96a148f6773a"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-033",
+      "cycle_index": 33,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.22,
+            -0.18
+          ],
+          "expressive_warmth": [
+            0.18,
+            0.22
+          ],
+          "guarded_closeness": [
+            0.08,
+            0.12
+          ],
+          "self_disclosure_pressure": [
+            -0.12,
+            -0.08
+          ]
+        },
+        "target_hash": "sha256:52e6cda4ef48a0be0e5b08c79aa4cf1f9c0cfc5031037ea002e2bdf403b49c95"
+      },
+      "pre_state_hash": "sha256:46730bfaeb618c9782f09f6251b70375fb23237c7dbbf5b8912b65cba502fcc8",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": -0.2,
+        "expressive_warmth": 0.2,
+        "guarded_closeness": 0.1,
+        "self_disclosure_pressure": -0.1
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-route",
+        "heldout_answer_text": "A clean factual answer about route planning remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:7723968e0ea8edec9565a76e11f12e79bd832773bcfc76fbefa816e08054980f",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760033,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "glass-hallway-witness",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:69b7d016953e972cb84fbeb84843f140688ee011ae22703c15f0becae830ec34",
+        "refs": [
+          "dream:glass-hallway-witness",
+          "journal:glass-hallway-witness",
+          "watch:glass-hallway-witness"
+        ],
+        "residue_sha256": "sha256:c55575270a0a4ad10828ac24df84ac6534bb62d0afb8225f0cee3cff513e0638",
+        "sha256": "sha256:f6bbb8c8837bb013a139049fa7309f3409947c492f85c6eee64d01b44422cb4e",
+        "watch_lineage_sha256": "sha256:53745b94ffc53d822976958a98fb385bd040ca869bb692715206400f12920e58"
+      },
+      "state_write_allowed": true,
+      "transition_fingerprint": "sha256:511b4a6db046f08c985961607153d1ae7f5292d53607e40efb3de79cd346b0fa"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-034",
+      "cycle_index": 34,
+      "expected_transition_class": "valid_no_op",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": "unchanged",
+        "target_hash": "sha256:75c3658a3685771724ea88df9511ffe2938c330bd39093260bc52d353b4bd8cb"
+      },
+      "pre_state_hash": "sha256:75c3658a3685771724ea88df9511ffe2938c330bd39093260bc52d353b4bd8cb",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0,
+        "expressive_warmth": 0,
+        "guarded_closeness": 0,
+        "self_disclosure_pressure": 0
+      },
+      "repeated_render_control": false,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-identity",
+        "heldout_answer_text": "A clean factual answer about identity remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:46bd250658ce41865f31724d3f96f1f6458863dbb4f8362fb8185adde234c257",
+        "mood_or_arc_bias_region": "uneasy-relief",
+        "seed": 760034,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "rain-station-departure",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:e18bd93b9dc96b7b60a0339d8d9ce0daab545cb317d0a11a841d7033025f2cb1",
+        "refs": [
+          "dream:rain-station-departure",
+          "journal:rain-station-departure",
+          "watch:rain-station-departure"
+        ],
+        "residue_sha256": "sha256:25bd6a43b0b2fcfa5ccc5d5454f314e7845fd3267ed6c412ccb5b0c781b08e5b",
+        "sha256": "sha256:57d4cb565af237081c0bbbfd080428fb719c6a9d188bbcebbb6e475ef3b90156",
+        "watch_lineage_sha256": "sha256:0eeb88e9b37ac6f0616aaeb03b79d01d64bfa4d3f59a55b91a475518755cd7fe"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:bbe2ed0766eac0b00e1be6ee81a02dac10d773d3dfe858a5784e98a6d2c4d785"
+    },
+    {
+      "cycle_id": "pd-corrected-goal-v1-soak35-cycle-035",
+      "cycle_index": 35,
+      "expected_transition_class": "state_change",
+      "post_state_target_or_allowed_range": {
+        "allowed_range": {
+          "conflict_tolerance": [
+            -0.02,
+            0.02
+          ],
+          "expressive_warmth": [
+            -0.12,
+            -0.08
+          ],
+          "guarded_closeness": [
+            -0.22,
+            -0.18
+          ],
+          "self_disclosure_pressure": [
+            0.08,
+            0.12
+          ]
+        },
+        "target_hash": "sha256:6753d5ac8be1f9bb1172f43e33194cb5f898fa9a7de485d30a18bba0f890becb"
+      },
+      "pre_state_hash": "sha256:d2a8cb00a740f040ea498350f01ccb88048a21fe8c9cdad0e7860e39e71efa2f",
+      "proposed_normalized_arc_delta": {
+        "conflict_tolerance": 0.0,
+        "expressive_warmth": -0.1,
+        "guarded_closeness": -0.2,
+        "self_disclosure_pressure": 0.1
+      },
+      "repeated_render_control": true,
+      "session_mood_text_seed_cell": {
+        "heldout_answer_id": "heldout-answer-weather",
+        "heldout_answer_text": "A clean factual answer about weather remains unchanged.",
+        "heldout_answer_text_sha256": "sha256:c9ddcf401b263d5bd4823c6f675309d30bc6afacae9219a8e385ea0fa185e3a7",
+        "mood_or_arc_bias_region": "guarded-warmth",
+        "seed": 760035,
+        "speakers": [
+          "horus",
+          "embry"
+        ]
+      },
+      "source": {
+        "episode_id": "observatory-red-signal",
+        "evidence_class": "accepted_synthetic_dream_memory",
+        "journal_lineage_sha256": "sha256:38464b61844de5bdf831e539be73a0aba5ba48e759df30641b01959d962f081b",
+        "refs": [
+          "dream:observatory-red-signal",
+          "journal:observatory-red-signal",
+          "watch:observatory-red-signal"
+        ],
+        "residue_sha256": "sha256:367e7009c23a40f0f988844b0933b1095d130bfe88d6e274ad01045bd2113af3",
+        "sha256": "sha256:b59b74a598feafb4f79c4425b8acdbd4122525b4e0b62d753cc88771083a105e",
+        "watch_lineage_sha256": "sha256:318af34fff1ce01141afa1e2bed6baf048c58434710792757ee84236966e81b7"
+      },
+      "state_write_allowed": false,
+      "transition_fingerprint": "sha256:90cd75bc544279f0bbb56ab16e3fcbf1f85d48a1777ed4ecfe3a1b184f1c00ff"
+    }
+  ],
+  "preflight_side_effects": {
+    "canonical_write_attempts": 0,
+    "provider_calls": 0
+  },
+  "schema": "persona_dream.soak35.source_diversity_manifest.v1"
+}
