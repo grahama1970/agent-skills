@@ -1,0 +1,12 @@
+{
+  "closing_duration_ratio": 1.075581,
+  "duration_ratio": 2.224176,
+  "failures": [],
+  "live": true,
+  "metrics": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/chatterbox_delivery.metrics.json",
+  "mocked": false,
+  "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z",
+  "schema": "persona_dream.chatterbox_delivery_validation.v1",
+  "speech_rate_ratio": 0.764328,
+  "status": "PASS_CHATTERBOX_DELIVERY"
+}

@@ -1,0 +1,12 @@
+{
+  "answer_text": "[sigh] It feels unsettled tonight. Embry should keep synthetic dreams marked as synthetic, preserve the answer body, and let only the delivery carry temporary conflict. I can carry that ache without treating it as evidence.",
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.15,
+  "asr_verify": true,
+  "label": "treatment_embry_opening",
+  "use_blessed_qra_cache": false,
+  "voice_delivery": {
+    "pace": "slow"
+  }
+}

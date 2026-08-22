@@ -1,0 +1,13 @@
+{
+  "answer_text": "Stay with the same answer body. What changes in your mood, if anything?",
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.15,
+  "asr_verify": true,
+  "label": "treatment_horus_close",
+  "ref_audio": "/work/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+  "use_blessed_qra_cache": false,
+  "voice_delivery": {
+    "pace": "neutral"
+  }
+}

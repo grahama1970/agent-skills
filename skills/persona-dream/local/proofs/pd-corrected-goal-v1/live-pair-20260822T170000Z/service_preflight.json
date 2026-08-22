@@ -1,0 +1,106 @@
+{
+  "chatterbox": {
+    "engine": "chatterbox_turbo",
+    "live": true,
+    "mocked": false,
+    "model_loaded": true,
+    "ok": true
+  },
+  "live": true,
+  "mocked": false,
+  "neutral_render": {
+    "affect_effect": {
+      "applied": false,
+      "backend": "chatterbox_turbo",
+      "derived_knobs": null,
+      "knob_source": null,
+      "reason": "no_affect_requested_default_turbo_render",
+      "schema": "chatterbox.affect_effect.v1"
+    },
+    "asr": {
+      "failed_gates": [],
+      "gate": {
+        "candidate_accepted": false,
+        "gate": {
+          "failed_gates": [
+            "wer_within_limit"
+          ],
+          "ok": false,
+          "repeated_ngram_hits": [],
+          "wer": 0.2857
+        },
+        "live": true,
+        "mocked": false,
+        "schema": "persona_dream.corrected_goal_chatterbox_asr_candidate.v1",
+        "status": "PASS_ASR_TRANSCRIPT_PRESENT",
+        "strict_gate_ok": false,
+        "text": "Persona Dream Service Pre-Flight, Neutral Audio Render",
+        "wer": 0.2857
+      },
+      "literal_tag_token_count": 0,
+      "live": true,
+      "mocked": false,
+      "schema": "persona_dream.corrected_goal_asr.v1",
+      "status": "PASS_ASR",
+      "text": "Persona Dream Service Pre-Flight, Neutral Audio Render"
+    },
+    "audio": "service_preflight_neutral.wav",
+    "audio_sha256": "sha256:cd0b98450a29f57da55910419c7d44bb92b8b4e80d8dbeca1ff5e52450bf3d08",
+    "duration_ms": 3240.0,
+    "elapsed_seconds": 4.17,
+    "engine": "chatterbox_turbo",
+    "label": "service_preflight_neutral",
+    "pace_effect": {
+      "applied": false,
+      "applied_render_count": 0,
+      "duration_seconds": {
+        "input": 0,
+        "output": 0
+      },
+      "input_duration_seconds": 0,
+      "mechanism": "phase_vocoder_time_stretch",
+      "output_duration_seconds": 0,
+      "reason": "pace_effect_unavailable",
+      "render_count": 0,
+      "requested_pace": "neutral",
+      "schema": "chatterbox.pace_effect.v1",
+      "scope": "batch",
+      "tempo_factor": 1.0,
+      "tempo_source": "requested_pace"
+    },
+    "request": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/service_preflight_neutral.request.json",
+    "request_sha256": "sha256:c1c2597dc0810a2430261f27da6b3722404c400a8fee25bca3536a673687ce6f",
+    "response": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/service_preflight_neutral.response.json",
+    "response_sha256": "sha256:ebac4d8b583d860d17873e42343bd8e23f83f2b2f185bce3873a645a06e2a113",
+    "speech_rate_wps": 2.160494,
+    "tag_handling": {
+      "accepted_tags": [
+        "[clear throat]",
+        "[sigh]",
+        "[shush]",
+        "[cough]",
+        "[groan]",
+        "[sniff]",
+        "[gasp]",
+        "[chuckle]",
+        "[laugh]"
+      ],
+      "applied_tags": [],
+      "backend": "chatterbox_turbo",
+      "dedicated_tag_channel": "native_event_tags_on_tag_consuming_backend",
+      "detected_tags": [],
+      "inline_text_tag_behavior": "consumed_natively_on_tag_consuming_backend__literal_text_on_other_backends",
+      "requested_tags": [],
+      "schema": "chatterbox.tag_handling.v1",
+      "tag_consuming_backends": [
+        "chatterbox_turbo"
+      ],
+      "tags_interpreted": false,
+      "tags_interpreted_reason": "no_event_tags_in_text__backend_chatterbox_turbo_would_consume_them",
+      "unknown_tag_behavior": "synthesized_as_literal_text"
+    },
+    "text": "Persona Dream service preflight: neutral audio render."
+  },
+  "schema": "persona_dream.corrected_goal_service_preflight.v1",
+  "status": "PASS_SERVICE_PREFLIGHT"
+}

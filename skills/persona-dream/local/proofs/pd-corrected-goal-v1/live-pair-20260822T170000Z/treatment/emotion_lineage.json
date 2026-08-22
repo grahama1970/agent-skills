@@ -1,0 +1,15 @@
+{
+  "audio_sha256": "sha256:c9f8500b2eec07be3cfca6ca8256d314a348b063f84ac5efba3bf85fab0fc3c9",
+  "chatterbox_render_request_sha256": "sha256:5e16a70132f2e0625257453ee3376ad097d33e054723431a9db388cb4955b36b",
+  "conflict_id": "conflict_pd_corrected_goal_v1",
+  "dream_packet_sha256": "sha256:209de62f7e0e19cac20edd37c58a7b5b2235bbebc87b9f273846d3bd67d002d1",
+  "dream_residue_sha256": "sha256:97dcbc77195e53662f34a62468f71a6f90f1206a8df908e454054d8e8013e7ec",
+  "embry_emotional_frame_turn_id": "treatment_embry_2",
+  "horus_challenge_turn_id": "treatment_horus_2",
+  "identity_core_digest": "sha256:ad03d8f174a94aa9c72c8b7bd631fd61ceca133e287408a346e97930c1d6dca5",
+  "journal_sha256": "sha256:c51e0646da1280ac670302e504a0baa9109f4156ded36fab1a3111d3730a8248",
+  "live": true,
+  "mocked": false,
+  "schema": "persona_dream.corrected_goal_emotion_lineage.v1",
+  "session_mood_event_id": "treatment_dream_journal_mood_v1"
+}

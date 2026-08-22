@@ -34,6 +34,7 @@ Commands:
   validate-emotion-lineage Validate paired run emotion lineage artifacts
   validate-answer-invariance Validate paired run answer-body invariance
   validate-chatterbox-delivery Validate paired run Chatterbox delivery artifacts
+  corrected-goal-live-pair Produce the live PD-CORRECTED-GOAL-V1 paired Chatterbox artifacts
   corrected-goal-pair Validate/install the sealed paired proof target and refuse missing live artifacts
   adjudicate-corrected-goal Emit the fail-closed corrected-goal receipt
   check-tau-routing-boundary  Static check: only /tau may reach /scillm (fails on un-sanctioned direct scillm calls)
@@ -909,6 +910,9 @@ case "$COMMAND" in
     ;;
   validate-chatterbox-delivery)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_chatterbox_delivery.py" "$@"
+    ;;
+  corrected-goal-live-pair)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_corrected_goal_live_pair.py" "$@"
     ;;
   corrected-goal-pair)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_corrected_goal_pair.py" "$@"

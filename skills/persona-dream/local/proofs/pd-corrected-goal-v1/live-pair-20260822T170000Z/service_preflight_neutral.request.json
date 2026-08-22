@@ -1,0 +1,12 @@
+{
+  "answer_text": "Persona Dream service preflight: neutral audio render.",
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.15,
+  "asr_verify": true,
+  "label": "service_preflight_neutral",
+  "use_blessed_qra_cache": false,
+  "voice_delivery": {
+    "pace": "neutral"
+  }
+}

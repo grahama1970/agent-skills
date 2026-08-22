@@ -1,0 +1,25 @@
+{
+  "failed_gates": [],
+  "gate": {
+    "candidate_accepted": true,
+    "gate": {
+      "failed_gates": [],
+      "ok": true,
+      "repeated_ngram_hits": [],
+      "wer": 0.15
+    },
+    "live": true,
+    "mocked": false,
+    "schema": "persona_dream.corrected_goal_chatterbox_asr_candidate.v1",
+    "status": "PASS_ASR_TRANSCRIPT_PRESENT",
+    "strict_gate_ok": true,
+    "text": "Embrace should keep synthetic dreams march a synthetic preserve the answer body and let only the delivery carry temporary conflict",
+    "wer": 0.15
+  },
+  "literal_tag_token_count": 0,
+  "live": true,
+  "mocked": false,
+  "schema": "persona_dream.corrected_goal_asr.v1",
+  "status": "PASS_ASR",
+  "text": "Embrace should keep synthetic dreams march a synthetic preserve the answer body and let only the delivery carry temporary conflict"
+}

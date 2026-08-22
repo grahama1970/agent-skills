@@ -27,6 +27,7 @@ def main() -> int:
     parser.add_argument("--require-control-null-conflict", action="store_true")
     parser.add_argument("--require-treatment-complete-chain", action="store_true")
     parser.add_argument("--forbid-durable-identity-mutation", action="store_true")
+    parser.add_argument("--live-artifacts", action="store_true")
     args = parser.parse_args()
 
     manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
@@ -78,7 +79,7 @@ def main() -> int:
         "run_root": str(run_root),
         "failures": failures,
         "mocked": False,
-        "live": False,
+        "live": bool(args.live_artifacts),
     }
     print(json.dumps(receipt, indent=2, sort_keys=True))
     return 0 if not failures else 1

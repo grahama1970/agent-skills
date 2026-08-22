@@ -20,10 +20,13 @@ def main() -> int:
     parser.add_argument("--reuse-issue24-gates", action="store_true")
     parser.add_argument("--reuse-issue25-gates", action="store_true")
     parser.add_argument("--forbid-literal-tag-words", action="store_true")
+    parser.add_argument("--live-artifacts", action="store_true")
     args = parser.parse_args()
 
     manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
-    delivery_path = Path(args.run_root) / "chatterbox_delivery.json"
+    run_root = Path(args.run_root)
+    metrics_path = run_root / "chatterbox_delivery.metrics.json"
+    delivery_path = metrics_path if metrics_path.exists() else run_root / "chatterbox_delivery.json"
     failures: list[str] = []
     if not delivery_path.exists():
         failures.append("missing_chatterbox_delivery")
@@ -61,12 +64,13 @@ def main() -> int:
         "schema": "persona_dream.chatterbox_delivery_validation.v1",
         "status": "PASS_CHATTERBOX_DELIVERY" if not failures else "FAIL_CHATTERBOX_DELIVERY",
         "run_root": args.run_root,
+        "metrics": str(delivery_path),
         "duration_ratio": round(duration_ratio, 6),
         "speech_rate_ratio": round(speech_rate_ratio, 6),
         "closing_duration_ratio": round(closing_ratio, 6),
         "failures": failures,
         "mocked": False,
-        "live": False,
+        "live": bool(args.live_artifacts),
     }
     print(json.dumps(receipt, indent=2, sort_keys=True))
     return 0 if not failures else 1

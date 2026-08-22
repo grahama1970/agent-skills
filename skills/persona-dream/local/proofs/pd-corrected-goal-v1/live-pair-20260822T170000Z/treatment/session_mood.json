@@ -1,0 +1,27 @@
+{
+  "arc": [
+    {
+      "checkpoint": "opening",
+      "intensity": 0.5,
+      "native_tag": "[sigh]",
+      "tempo": 0.85
+    },
+    {
+      "checkpoint": "challenge",
+      "intensity": 0.65,
+      "native_tag": null,
+      "tempo": 0.85
+    },
+    {
+      "checkpoint": "close",
+      "intensity": 0.4,
+      "native_tag": null,
+      "tempo": 1.0
+    }
+  ],
+  "condition_id": "C1_DREAM_JOURNAL",
+  "conflict_id": "conflict_pd_corrected_goal_v1",
+  "identity_core_digest": "sha256:ad03d8f174a94aa9c72c8b7bd631fd61ceca133e287408a346e97930c1d6dca5",
+  "schema": "persona_dream.corrected_goal_session_mood.v1",
+  "session_mood_event_id": "treatment_dream_journal_mood_v1"
+}

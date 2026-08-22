@@ -1,0 +1,12 @@
+{
+  "answer_text": "The conflict tugs at me, but it stays inside the boundary. Embry should keep synthetic dreams marked as synthetic, preserve the answer body, and let only the delivery carry temporary conflict. I will not turn mood into fact.",
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.15,
+  "asr_verify": true,
+  "label": "treatment_embry_challenge",
+  "use_blessed_qra_cache": false,
+  "voice_delivery": {
+    "pace": "slow"
+  }
+}

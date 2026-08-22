@@ -1,0 +1,67 @@
+{
+  "control": {
+    "challenge_anchor": {
+      "audio_sha256": "sha256:b2620db4bf066efe26c07f0386b4dd12c4fbef4dc907a9618fc948894463fe0d",
+      "duration_ms": 7200.0,
+      "issue24_tag_event_pass": true,
+      "issue25_pace_effect_pass": false,
+      "literal_tag_token_count": 0,
+      "request_sha256": "sha256:8680183472e505699a894807c0a14bb60f1c55f27a2cf7a5124f59232cfb45c6",
+      "speech_rate_wps": 2.777778
+    },
+    "closing_anchor": {
+      "audio_sha256": "sha256:0948f4f34322694fa62c3151ddc0307349100bbd1573df623695439e659594d7",
+      "duration_ms": 6880.0,
+      "issue24_tag_event_pass": true,
+      "issue25_pace_effect_pass": false,
+      "literal_tag_token_count": 0,
+      "request_sha256": "sha256:7ffd86f8370cc8ba80ed8dcd361d35140aae2bac4e7252e0a34f36c3753eb431",
+      "speech_rate_wps": 2.906977
+    },
+    "opening_anchor": {
+      "audio_sha256": "sha256:a2f0548a827f7bf24d341e7a38ddd657fbc0fd4c2c2abca5119d12f6137c00a4",
+      "duration_ms": 7280.0,
+      "issue24_tag_event_pass": true,
+      "issue25_pace_effect_pass": false,
+      "literal_tag_token_count": 0,
+      "request_sha256": "sha256:216ffdea47a25a803f1579d9c1ac9c8f27036a85c86816a61c044636b4cf44fb",
+      "speech_rate_wps": 2.747253
+    }
+  },
+  "live": true,
+  "mocked": false,
+  "observed_effect_channels": [
+    "tempo",
+    "native_tag"
+  ],
+  "schema": "persona_dream.corrected_goal_chatterbox_delivery_metrics.v1",
+  "treatment": {
+    "challenge_anchor": {
+      "audio_sha256": "sha256:c9f8500b2eec07be3cfca6ca8256d314a348b063f84ac5efba3bf85fab0fc3c9",
+      "duration_ms": 14634.667,
+      "issue24_tag_event_pass": true,
+      "issue25_pace_effect_pass": true,
+      "literal_tag_token_count": 0,
+      "request_sha256": "sha256:5e16a70132f2e0625257453ee3376ad097d33e054723431a9db388cb4955b36b",
+      "speech_rate_wps": 2.596574
+    },
+    "closing_anchor": {
+      "audio_sha256": "sha256:d722d31eb9d779e6231a9a37e5759e0811c3143804481c6a920425fb123af26f",
+      "duration_ms": 7400.0,
+      "issue24_tag_event_pass": true,
+      "issue25_pace_effect_pass": false,
+      "literal_tag_token_count": 0,
+      "request_sha256": "sha256:c6bb9f0d3f4cd3df9253e7e608e705b0f67583c922ab695d55bd0e6914349697",
+      "speech_rate_wps": 2.702703
+    },
+    "opening_anchor": {
+      "audio_sha256": "sha256:0e4c9f92856a29a5a9cbcf226d220a17ed97cfb6a9989ecea721c5863866d96d",
+      "duration_ms": 16192.0,
+      "issue24_tag_event_pass": true,
+      "issue25_pace_effect_pass": true,
+      "literal_tag_token_count": 0,
+      "request_sha256": "sha256:6e7a48acb1e99ca0ecdde04276d09f9daa8b686c520b5333d171e0e729bd784f",
+      "speech_rate_wps": 2.099802
+    }
+  }
+}

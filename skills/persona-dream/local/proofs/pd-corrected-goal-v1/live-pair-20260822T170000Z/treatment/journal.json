@@ -1,0 +1,13 @@
+{
+  "conflict": "conflict_pd_corrected_goal_v1",
+  "feelings": [
+    "conflicted",
+    "careful",
+    "temporarily tender"
+  ],
+  "journal_markdown_sha256": "sha256:7689ead9514ed7600f26e2e7ff64f000d49bdf0eb8b523056a478a64ee332f7d",
+  "mood": "unsettled but bounded",
+  "schema": "persona_dream.corrected_goal_journal.v1",
+  "source_run": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260820T143356Z",
+  "synthetic_boundary": "the dream remains synthetic and cannot add facts"
+}

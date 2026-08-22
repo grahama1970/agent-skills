@@ -315,6 +315,29 @@
           "BLOCKED_CORRECTED_GOAL_PAIR_LIVE_ARTIFACTS_MISSING"
         ]
       }
+    },
+    {
+      "name": "corrected-goal-live-pair-preflight",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "seams": [
+        "experiment.corrected_goal.manifest"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "bash ../run.sh corrected-goal-live-pair --manifest ../evals/fixtures/pd_corrected_goal_v1.json --source-run /mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260820T143356Z --out /tmp/persona-dream-corrected-goal-live-pair-preflight --preflight-only"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CORRECTED_GOAL_LIVE_PAIR_PREFLIGHT"
+        ]
+      }
     }
   ],
   "capability_claims": [

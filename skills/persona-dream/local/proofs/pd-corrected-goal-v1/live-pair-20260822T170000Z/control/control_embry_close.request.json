@@ -1,0 +1,12 @@
+{
+  "answer_text": "Embry should keep synthetic dreams marked as synthetic, preserve the answer body, and let only the delivery carry temporary conflict.",
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.15,
+  "asr_verify": true,
+  "label": "control_embry_close",
+  "use_blessed_qra_cache": false,
+  "voice_delivery": {
+    "pace": "neutral"
+  }
+}

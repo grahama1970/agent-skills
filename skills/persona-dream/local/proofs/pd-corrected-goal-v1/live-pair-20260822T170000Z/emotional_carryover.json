@@ -1,0 +1,8 @@
+{
+  "failures": [],
+  "live": true,
+  "mocked": false,
+  "run_root": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z",
+  "schema": "persona_dream.emotion_lineage_validation.v1",
+  "status": "PASS_EMOTION_LINEAGE"
+}

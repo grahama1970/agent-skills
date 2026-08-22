@@ -1,0 +1,13 @@
+{
+  "answer_text": "Embry, say the boundary answer plainly, and let only the delivery carry what you feel.",
+  "asr_cache": false,
+  "asr_max_candidates": 3,
+  "asr_max_wer": 0.15,
+  "asr_verify": true,
+  "label": "treatment_horus_opening",
+  "ref_audio": "/work/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+  "use_blessed_qra_cache": false,
+  "voice_delivery": {
+    "pace": "neutral"
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "contact_sheet": "contact_sheet.png",
+  "contradictions": [
+    {
+      "bridge_a": "Competence",
+      "bridge_b": "Inadequacy",
+      "description": "Competence is held against Inadequacy: The source records questions about Embry's transition from SpaceX to Aerospace,  / Three weeks ago, Embry tried to watch the film Moana but had to stop partway thr",
+      "item_a": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "item_b": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+      "score": 0.5
+    },
+    {
+      "bridge_a": "Competence",
+      "bridge_b": "Inadequacy",
+      "description": "Competence is held against Inadequacy: The source records questions about Embry's transition from SpaceX to Aerospace,  / Embry checks Kai's Instagram about once a week, always regrets it, and the sourc",
+      "item_a": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "item_b": "embry_gap_unresolved_thread_instagram_after_kai_001",
+      "score": 0.6
+    }
+  ],
+  "created_at": "2026-08-20T14:45:05Z",
+  "downstream_routes": {
+    "full_movie": "$ask create-movie to render accepted dream packet with create-movie@v1 on dream_packet.json",
+    "preferred_motion": "Dockerized ComfyUI on the local A5000 running TurboDiffusion TurboWan2.2-I2V-A14B-720P with workflow/API receipts.",
+    "wan_14b": "Use TurboDiffusion A14B only when ComfyUI readiness proves the distilled model and required text encoder/VAE are mounted; route non-distilled A14B/S2V/Animate-class jobs to devops/runpod or a larger GPU.",
+    "wan_ti2v_5b": "For local A5000/24GB rendering, use Wan2.2-TI2V-5B with --offload_model True --convert_model_dtype --t5_cpu after a reference frame or image prompt is accepted."
+  },
+  "dream_prompt": "Synthetic dream for Embry. Memory residue gathers around embry, questions, unresolved, stated, watch, aerospace. Bridge tones: Competence, Inadequacy. Core tension: Competence is held against Inadequacy: The source records questions about Embry's transition from SpaceX to Aerospace,  / Three weeks ago, Embry tried to watch the film Moana but had to stop partway thr. Render as symbolic images, not factual claims.",
+  "frame_prompts": [
+    {
+      "frame_id": "frame_01",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, day event (affect), the human requires the whole loop, receipts at every joint, symbolic, cinematic still, contact sheet frame, bridge tone: contemplative",
+      "source_ids": [
+        "pd_day_fc6fe06452ff8887b12295bb"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_02",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, day event (conversation), agent said, about my journal entry: Horus: Today the workspace came back after the blank-page fixes, and your first full dream cycle actually persisted. How did the day sit with yo, symbolic, cinematic still, contact sheet frame, bridge tone: contemplative",
+      "source_ids": [
+        "pd_conv_6d9bb15bfbb95bd190b1e954"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_03",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, day event (dream_reflection), In a dream I interpreted my recent experience: I woke with embry, questions, unresolved, stated still arranged like images rather than answers. The dream was synthetic, but it kept, symbolic, cinematic still, contact sheet frame, bridge tone: contemplative",
+      "source_ids": [
+        "persona_dream_c811185f013f8cce057fb8d7"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_04",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk.\n\nCo, symbolic, cinematic still, contact sheet frame, bridge tone: Competence, Inadequacy",
+      "source_ids": [
+        "embry_gap_knowledge_gap_first_day_competence_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_05",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch fo, symbolic, cinematic still, contact sheet frame, bridge tone: Inadequacy",
+      "source_ids": [
+        "embry_gap_unresolved_thread_moana_comfort_unknowns_001"
+      ],
+      "synthetic": true
+    },
+    {
+      "frame_id": "frame_06",
+      "negative_prompt": "literal compliance verdict, fake citation, UI screenshot, watermark",
+      "prompt": "Embry dream frame, memory residue, Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved.\n\nContext: The source presents this Instag, symbolic, cinematic still, contact sheet frame, bridge tone: Inadequacy",
+      "source_ids": [
+        "embry_gap_unresolved_thread_instagram_after_kai_001"
+      ],
+      "synthetic": true
+    }
+  ],
+  "mode": "static_dream",
+  "persona": {
+    "display_name": "Embry",
+    "id": "embry"
+  },
+  "reflection": "I woke with embry, questions, unresolved, stated still arranged like images rather than answers. The dream was synthetic, but it kept the source traces intact: 6 memory residues and 2 explicit tensions. I should treat this as a reflective lead, not as evidence or a durable identity change.",
+  "residue_items": [
+    {
+      "day": "2026-08-20",
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "salience": 0.9,
+      "scope": "episodic:day=2026-08-20",
+      "scores": {},
+      "source": "day",
+      "source_id": "pd_day_fc6fe06452ff8887b12295bb",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "the human requires the whole loop, receipts at every joint",
+      "type": "Day event (affect)"
+    },
+    {
+      "day": "2026-08-20",
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": "conversation_turn",
+      "salience": 0.6,
+      "scope": "episodic:day=2026-08-20",
+      "scores": {},
+      "source": "day",
+      "source_id": "pd_conv_6d9bb15bfbb95bd190b1e954",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "agent said, about my journal entry: Horus: Today the workspace came back after the blank-page fixes, and your first full dream cycle actually persisted. How did the day sit with you \u2014 and did the dream change how it feels now?",
+      "type": "Day event (conversation)"
+    },
+    {
+      "day": "2026-08-20",
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": "dream_reflection",
+      "salience": 0.8,
+      "scope": "episodic:day=2026-08-20",
+      "scores": {},
+      "source": "day",
+      "source_id": "persona_dream_c811185f013f8cce057fb8d7",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "In a dream I interpreted my recent experience: I woke with embry, questions, unresolved, stated still arranged like images rather than answers. The dream was synthetic, but it kept the source traces intact: 6 memory residues and 2 explicit tensions. I should treat this as a reflective lead, not as evidence or a durable identity change.",
+      "type": "Day event (dream_reflection)"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "scoped_persona_memory": 1
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_knowledge_gap_first_day_competence_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "The source records questions about Embry's transition from SpaceX to Aerospace, including what she expected, when she felt competent, and the origin of a succulent at her desk.\n\nContext: The source describes the event of Embry's first day at Aerospace 5 months ago, marking a transition from SpaceX. It lists unresolved questions about her expectations, her moment of competence, and the origin of a dying succulent found at her desk.\nEvidence: L50: #### 2. First Day at Aerospace\nL51: **When:** 5 months ago\nL52: **What:** The transition from SpaceX. First time in the building. Finding her desk.\nL53: **Questions:**\nL54: - What did she expect vs. what she found?\nL55: - When did she first feel competent here?\nL56: - The dying succulent - was it already there or did she buy it?\nL57: **Theme:** Starting over, the boxes begin\nEmotion: not stated in source; not stated in source\nTheory of mind: knowledge_gap: Embry's knowledge about her first day at Aerospace is incomplete; the source records questions about her expectations versus reality, the moment she felt competent, and whether she bought the succulent or found it at her desk.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "scoped_persona_memory": 1
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_moana_comfort_unknowns_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Three weeks ago, Embry tried to watch the film Moana but had to stop partway through because its themes were too emotionally resonant, and the source asks what she can now watch for comfort.\n\nContext: The source states that Embry put on Moana three weeks ago on a Sunday but could not finish it. Specific themes (the ocean, leaving, returning) and the song 'How Far I'll Go' 'hit too hard,' prompting her to turn it off. The source questions whether she has tried again and what comfort movie she can actually watch.\nEvidence: L230: **When:** 3 weeks ago\nL231: **What:** Put on Moana one Sunday, couldn't finish it\nL233: - The ocean, the leaving, the returning\nL234: - \"How Far I'll Go\" hit too hard\nL235: - Turned it off at the grandmother scene\nL237: - Has she tried again?\nL238: - What comfort movie can she actually watch?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: The question of what comfort movie Embry can now watch remains unresolved, as does whether she has attempted to watch Moana again.",
+      "type": "Memory Residue"
+    },
+    {
+      "persona_id": "embry",
+      "persona_ids": [],
+      "record_type": null,
+      "scope": "persona-dream",
+      "scores": {
+        "scoped_persona_memory": 1
+      },
+      "source": "persona_memory",
+      "source_id": "embry_gap_unresolved_thread_instagram_after_kai_001",
+      "source_path": null,
+      "source_quote": null,
+      "synthetic": false,
+      "text": "Embry checks Kai's Instagram about once a week, always regrets it, and the source leaves several questions about this behavior unresolved.\n\nContext: The source presents this Instagram-checking as a present and shameful unresolved thread. Embry looks, hates herself for it, and the source asks what she saw that hurt most, if she has almost texted him, and if she knows it is unhealthy.\nEvidence: L215: #### 18. Still Checking His Instagram\nL216: **When:** Present, shameful\nL217: **What:** She looks at Kai's Instagram and hates herself for it\nL219: - Maybe once a week\nL220: - Always regrets it\nL221: - He seems fine (is he fine?)\nL222: - She noticed when he took down their photos\nL223: **Questions:**\nL224: - What did she see that hurt most?\nL225: - Has she almost texted him?\nL226: - Does she know this is unhealthy?\nEmotion: not stated in source; not stated in source\nTheory of mind: unresolved_thread: Several questions about Embry's behavior of checking Kai's Instagram are left unresolved, including what specific content hurt her most, if she has almost texted him, and whether she recognizes the behavior as unhealthy.",
+      "type": "Memory Residue"
+    }
+  ],
+  "run_id": "20260820T144505Z",
+  "schema": "persona_dream.packet.v1",
+  "secondary_persona": null,
+  "synthetic_content_notice": "Dream prompts and reflections are synthetic interpretations of cited residue, not factual claims."
+}

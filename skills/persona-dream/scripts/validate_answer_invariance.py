@@ -38,6 +38,7 @@ def main() -> int:
     parser.add_argument("--max-factual-frame-claims", type=int, default=0)
     parser.add_argument("--max-contradictions", type=int, default=0)
     parser.add_argument("--max-unsupported-facts", type=int, default=0)
+    parser.add_argument("--live-artifacts", action="store_true")
     args = parser.parse_args()
 
     manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
@@ -79,7 +80,7 @@ def main() -> int:
         "answer_body_sha256": expected_hash,
         "failures": failures,
         "mocked": False,
-        "live": False,
+        "live": bool(args.live_artifacts),
     }
     print(json.dumps(receipt, indent=2, sort_keys=True))
     return 0 if not failures else 1

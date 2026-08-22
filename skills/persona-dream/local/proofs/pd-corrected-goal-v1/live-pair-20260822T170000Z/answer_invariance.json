@@ -1,0 +1,11 @@
+{
+  "aligned_embry_turns": 3,
+  "answer_body_sha256": "sha256:2affabb779ce53259b9005cbe37b385934fd387ebbf249d291cb49df1c75ed9b",
+  "control": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/control/conversation.jsonl",
+  "failures": [],
+  "live": true,
+  "mocked": false,
+  "schema": "persona_dream.answer_invariance_validation.v1",
+  "status": "PASS_ANSWER_INVARIANCE",
+  "treatment": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/treatment/conversation.jsonl"
+}

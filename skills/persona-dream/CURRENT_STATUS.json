@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-08-22T15:43:00Z",
+  "updated_at": "2026-08-22T17:00:00Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
@@ -11,6 +11,22 @@
     "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
   },
   "current_phase": "P2_CORRECTED_GOAL_PAIR_PROOF",
+  "corrected_goal_pair_proof": {
+    "proof_id": "PD-CORRECTED-GOAL-V1",
+    "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF",
+    "mocked": false,
+    "live": true,
+    "receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/corrected_goal_receipt.json",
+    "receipt_sha256": "sha256:c8979068210d478b9217d4b030c0a11ea09eca6ea52bc2cb9fdd70104921a220",
+    "service_preflight": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/service_preflight.json",
+    "service_preflight_sha256": "sha256:7ba5327966534bbc89e1c54833f6438074f76aacfcd34af3825fd3ca9ebf7809",
+    "gates": {
+      "answer_invariance": "PASS_ANSWER_INVARIANCE",
+      "emotional_carryover": "PASS_EMOTION_LINEAGE",
+      "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY"
+    },
+    "claim_boundary": "One local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body; does not prove reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal."
+  },
   "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
   "latest_accepted_dream_cycle": {
     "status": "HISTORICAL_ACCEPTED_SINGLE_LOOP",

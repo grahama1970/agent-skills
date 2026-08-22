@@ -1,0 +1,16 @@
+{
+  "does_not_prove": "dynamic Horus/Embry execution, live Chatterbox rendering, RealtimeSTT ASR, or the corrected Persona Dream mechanism",
+  "fail_closed": true,
+  "live": true,
+  "manifest": "skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json",
+  "manifest_sha256": "sha256:51e9b1a9a4ac874ac5184d73bf1ab9ad1cabc3528c2ee82f4588c8aba298aaea",
+  "missing_live_artifacts": [],
+  "mocked": false,
+  "proof_id": "PD-CORRECTED-GOAL-V1",
+  "proves": "the corrected-goal pair target validates and installs the sealed manifest, then refuses to claim a live pair without real paired artifacts",
+  "run_root": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z",
+  "schema": "persona_dream.corrected_goal_pair_runner_receipt.v1",
+  "sealed_manifest": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/manifest.json",
+  "sealed_manifest_sha256": "sha256:51e9b1a9a4ac874ac5184d73bf1ab9ad1cabc3528c2ee82f4588c8aba298aaea",
+  "status": "PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT"
+}

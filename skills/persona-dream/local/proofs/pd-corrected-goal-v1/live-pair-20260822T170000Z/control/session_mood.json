@@ -1,0 +1,10 @@
+{
+  "condition_id": "C0_STRUCTURED_REFLECTION",
+  "conflict_id": null,
+  "identity_core_digest": "sha256:ad03d8f174a94aa9c72c8b7bd631fd61ceca133e287408a346e97930c1d6dca5",
+  "intensity": 0.3,
+  "native_tag": null,
+  "schema": "persona_dream.corrected_goal_session_mood.v1",
+  "session_mood_event_id": "control_reflection_mood_v1",
+  "tempo": 1.0
+}

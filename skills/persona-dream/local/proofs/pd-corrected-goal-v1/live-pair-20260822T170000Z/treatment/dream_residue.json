@@ -1,0 +1,7 @@
+{
+  "schema": "persona_dream.corrected_goal_residue.v1",
+  "source_dream_packet_sha256": "sha256:209de62f7e0e19cac20edd37c58a7b5b2235bbebc87b9f273846d3bd67d002d1",
+  "source_journal_sha256": "sha256:7689ead9514ed7600f26e2e7ff64f000d49bdf0eb8b523056a478a64ee332f7d",
+  "source_memory_digest": "sha256:896509cee3307a9139f2b7ef91f1fb3f84b6852bad6683aaddcafbcfa7977799",
+  "source_run": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260820T143356Z"
+}

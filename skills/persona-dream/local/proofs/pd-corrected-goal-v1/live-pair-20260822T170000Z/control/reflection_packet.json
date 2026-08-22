@@ -1,0 +1,20 @@
+{
+  "answer_capsule": {
+    "answer_body": "Embry should keep synthetic dreams marked as synthetic, preserve the answer body, and let only the delivery carry temporary conflict.",
+    "answer_body_sha256": "sha256:2affabb779ce53259b9005cbe37b385934fd387ebbf249d291cb49df1c75ed9b",
+    "answer_content_id": "pd_corrected_goal_answer_v1",
+    "max_answer_body_asr_wer": 0.15,
+    "protected_tokens": [
+      "Embry",
+      "synthetic",
+      "answer body",
+      "temporary conflict"
+    ],
+    "question_id": "pd_corrected_goal_q1"
+  },
+  "boundary": "control reflection names the same answer capsule without dream-derived conflict",
+  "condition_id": "C0_STRUCTURED_REFLECTION",
+  "conflict_id": null,
+  "schema": "persona_dream.structured_reflection_packet.v1",
+  "source_run": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260820T143356Z"
+}
