@@ -29,7 +29,20 @@
       "max_seconds": 108,
       "fixture_repo": "parentheses",
       "oracle": [
-        {"id": "code-parentheses", "question_tokens": ["opening", "parentheses", "closing"], "family": "code"}
+        {"id": "code-parentheses", "question_tokens": ["parentheses", "minimum", "remove"], "family": "code"}
+      ]
+    },
+    {
+      "session_id": "youtube-two-sum",
+      "type": "wav",
+      "note": "Public NeetCode Two Sum walkthrough (youtu.be/KLlXCFG5TnA), first 150s; oracle derived from its auto-captions before the run: the spoken problem asks for the two values summing to the target and their indices.",
+      "wav_candidates": [
+        "/mnt/storage12tb/skills/live-evidence/meeting-campaign/assets/twosum-150s.wav"
+      ],
+      "max_seconds": 150,
+      "fixture_repo": "parentheses",
+      "oracle": [
+        {"id": "code-two-sum", "question_tokens": ["sum", "target", "indices"], "family": "code"}
       ]
     }
   ]

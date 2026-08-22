@@ -117,8 +117,21 @@ def run_session(session: dict[str, Any], out_dir: Path) -> dict[str, Any]:
         invocation = oracle_mod.run_bridge(
             bridge_args, backend_url=server.url, source_wav=wav, output_dir=out_dir,
         )
-        time.sleep(30)  # let late resolver/solver work land
-        journal_path = next(server.data_dir.glob("*/session.jsonl"), None)
+        # Let late resolver/solver work land: the last question often arrives
+        # in the final flushed at stream end, so wait for the journal to
+        # QUIESCE (no growth for 12s) instead of a fixed sleep that races the
+        # in-flight solve (observed live: the QRA card lost to a 30s cutoff).
+        journal_path = None
+        deadline = time.monotonic() + 90
+        last_size, quiet_since = -1, time.monotonic()
+        while time.monotonic() < deadline:
+            journal_path = next(server.data_dir.glob("*/session.jsonl"), None)
+            size = journal_path.stat().st_size if journal_path else 0
+            if size != last_size:
+                last_size, quiet_since = size, time.monotonic()
+            elif time.monotonic() - quiet_since >= 12:
+                break
+            time.sleep(2)
         rows = [json.loads(line) for line in journal_path.read_text().splitlines()] \
             if journal_path else []
     finally:
@@ -145,13 +158,15 @@ def score_session(session: dict[str, Any], rows: list[dict[str, Any]],
     for expected in session["oracle"]:
         tokens = [t.lower() for t in expected["question_tokens"]]
         onset = None
+        question_events: list[dict[str, Any]] = []
         for r in rows:
             if r.get("kind") != "transcript":
                 continue
             text = str(r["payload"].get("text") or "").lower()
             if sum(1 for t in tokens if t in text) >= 2:
-                onset = r
-                break
+                if onset is None:
+                    onset = r
+                question_events.append(r)
         matched_card = None
         for r in cards:
             blob = (str(r["payload"].get("query") or "") + " "
@@ -187,13 +202,22 @@ def score_session(session: dict[str, Any], rows: list[dict[str, Any]],
                     s.get("path") for s in matched_card["payload"].get("sources") or [])
             detail = f"lanes={sorted(lanes)}"
         latency = None
+        latency_from_speech_end = None
         if onset is not None and matched_card is not None:
+            def _t(row: dict[str, Any]) -> float:
+                return datetime.fromisoformat(
+                    str(row["payload"]["created_at"]).replace("Z", "+00:00")
+                ).timestamp()
+
             try:
-                t0 = datetime.fromisoformat(
-                    str(onset["payload"]["created_at"]).replace("Z", "+00:00")).timestamp()
-                t1 = datetime.fromisoformat(
-                    str(matched_card["payload"]["created_at"]).replace("Z", "+00:00")).timestamp()
-                latency = round(t1 - t0, 2)
+                t1 = _t(matched_card)
+                latency = round(t1 - _t(onset), 2)
+                # Speech-end proxy: the LAST transcript event that still
+                # carries the question and precedes card publication -- the
+                # closest observable moment to the speaker finishing the ask.
+                ends = [_t(e) for e in question_events if _t(e) <= t1]
+                if ends:
+                    latency_from_speech_end = round(t1 - max(ends), 2)
             except Exception:
                 latency = None
         results.append({
@@ -202,6 +226,7 @@ def score_session(session: dict[str, Any], rows: list[dict[str, Any]],
             "card_matched": matched_card is not None or family == "research",
             "family_correct": family_ok,
             "onset_to_card_s": latency,
+            "speech_end_to_card_s": latency_from_speech_end,
             "detail": detail,
         })
 
@@ -241,7 +266,8 @@ def main() -> int:
         reports.append(report)
         for q in report.get("questions", []):
             print(f"  {q['id']}: detected={q['question_detected']} "
-                  f"family_ok={q['family_correct']} onset_to_card={q['onset_to_card_s']}s {q['detail']}")
+                  f"family_ok={q['family_correct']} onset_to_card={q['onset_to_card_s']}s "
+                  f"speech_end_to_card={q['speech_end_to_card_s']}s {q['detail']}")
         print(f"  -> {report['status']}")
     overall = {
         "schema": "live_evidence.meeting_campaign_report.v1",

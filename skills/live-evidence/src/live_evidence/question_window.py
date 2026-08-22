@@ -22,6 +22,25 @@ from .models import (
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 from .trigger import QUESTION_LEADS, extract_thread, tokenize
 
+# Marker phrases that, in combination (>=2), identify a spoken problem
+# statement that carries its question declaratively.
+PROBLEM_STATEMENT_MARKERS = (
+    "we're given",
+    "we are given",
+    "you're given",
+    "you are given",
+    "given an ",
+    "given a ",
+    "we want to",
+    "we need to",
+    "your task",
+    "the task is",
+    "find the",
+    "return the",
+    "implement a",
+    "write a function",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class WindowOutcome:
@@ -158,6 +177,15 @@ class QuestionWindowBuilder:
             return f"watch-term:{matched_term}"
         if is_question:
             return "question"
+        # Declarative problem statements: a code walkthrough or task briefing
+        # states its question without interrogative form ("we're given an
+        # input array ... we want to find the two values ... return the
+        # indices"). Two or more marker phrases open the gate; the stage-1
+        # resolver stays the authority on whether anything is answerable, so
+        # this only widens what it gets to judge.
+        markers = sum(1 for marker in PROBLEM_STATEMENT_MARKERS if marker in lower_text)
+        if markers >= 2:
+            return "problem_statement"
         return None
 
     def _spans(self, joined_text: str) -> list[EventSpan]:

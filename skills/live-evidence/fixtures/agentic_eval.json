@@ -748,6 +748,7 @@
         "stdout_contains": [
           "== session sparta-explorer-synthetic",
           "== session pinned-coding-interview",
+          "== session youtube-two-sum",
           "campaign: PASS"
         ]
       },

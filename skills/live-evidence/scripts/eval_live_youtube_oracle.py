@@ -120,46 +120,9 @@ def write_profile(path: Path) -> None:
 
 
 def write_repo(repo: Path) -> None:
-    repo.mkdir(parents=True)
-    (repo / "valid_parentheses.py").write_text(
-        "\n".join(
-            [
-                "def is_valid_parentheses(text: str) -> bool:",
-                "    balance = 0",
-                "    for char in text:",
-                "        if char == '(':",
-                "            balance += 1",
-                "        elif char == ')':",
-                "            if balance == 0:",
-                "                return False",
-                "            balance -= 1",
-                "    return balance == 0",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    (repo / "remove_invalid_parentheses.py").write_text(
-        "\n".join(
-            [
-                "def remove_invalid_parentheses(text: str) -> str:",
-                "    chars = list(text)",
-                "    stack: list[int] = []",
-                "    for index, char in enumerate(chars):",
-                "        if char == '(':",
-                "            stack.append(index)",
-                "        elif char == ')' and stack:",
-                "            stack.pop()",
-                "        elif char == ')':",
-                "            chars[index] = ''",
-                "    while stack:",
-                "        chars[stack.pop()] = ''",
-                "    return ''.join(chars)",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
+    """Copy the committed code-fixture repo (fixtures/code-fixture-repo)."""
+
+    shutil.copytree(Path(__file__).resolve().parents[1] / "fixtures" / "code-fixture-repo", repo)
 
 
 def write_ask_fixture_runner(path: Path, run_dir: Path, log_path: Path) -> Path:
