@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, and the video_plan crew-casting fail-closed gate (anti-bespoking guard)",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, and the Chatterbox affect-validation claim-boundary registry consumer",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, and video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, and Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
@@ -441,6 +441,29 @@
       }
     },
     {
+      "name": "chatterbox-affect-validation-registry-contract-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.chatterbox_affect_validation_registry_consumer"
+      ],
+      "seams": [
+        "continuity.chatterbox_affect_validation_registry"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_affect_validation_registry.py ../tests/test_session_mood_chatterbox_live.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "18 passed"
+        ]
+      }
+    },
+    {
       "name": "session-mood-recognition-status-contract-tests",
       "type": "positive",
       "real_world": true,
@@ -639,6 +662,14 @@
       }
     },
     {
+      "id": "persona_dream.chatterbox_affect_validation_registry_consumer",
+      "description": "Persona Dream records Chatterbox backend/profile/range registry matches and refuses perceived-emotion claims unless a hash-bound registry entry exactly permits the recorded scope.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.ux.workspace_renders",
       "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
       "criticality": "critical",
@@ -742,6 +773,14 @@
       "seam_id": "continuity.session_mood.voice_recognition_status",
       "seam_type": "status_propagation_contract",
       "criticality": "important",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "continuity.chatterbox_affect_validation_registry",
+      "seam_type": "claim_boundary_contract",
+      "criticality": "critical",
       "required_evidence": [
         "deterministic"
       ]

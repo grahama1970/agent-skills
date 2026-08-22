@@ -774,6 +774,7 @@ def run_chain(args: argparse.Namespace) -> dict:
                         "engine": result["engine"],
                         "audio_sha256": result["finished_response_audio_snapshot_sha256"],
                         "asr_gate": result["asr_gate"],
+                        "affect_validation": result.get("affect_validation"),
                     }
                     for idx, result in enumerate(live_receipt["render_results"])
                 ],

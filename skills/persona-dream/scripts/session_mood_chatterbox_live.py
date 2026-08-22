@@ -32,6 +32,7 @@ def _load(name: str):
 
 session_mood_binding = _load("session_mood_binding")
 embry_voice_reference = _load("embry_voice_reference")
+affect_validation_registry = _load("affect_validation_registry")
 
 #: Host-side authorized voice recorded in receipts.
 REF_AUDIO = embry_voice_reference.AUTHORIZED_EMBRY_REFERENCE
@@ -71,6 +72,18 @@ def post_json(url: str, payload: dict, timeout: float = 240.0) -> dict:
                                  headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read())
+
+
+def get_json(url: str, timeout: float = 10.0) -> dict:
+    with urllib.request.urlopen(url, timeout=timeout) as resp:
+        return json.loads(resp.read())
+
+
+def chatterbox_health_snapshot() -> dict:
+    try:
+        return get_json(f"{CHATTERBOX}/health")
+    except Exception as exc:  # noqa: BLE001 - renderer receipts must stay fail-open for missing registry/health
+        return {"status": "UNAVAILABLE", "error": f"{type(exc).__name__}: {exc}"}
 
 
 def snapshot_finished_audio(turn_id: str, response: dict, *, out_dir: Path) -> dict:
@@ -159,7 +172,8 @@ def collect_accepted_asr(response: dict) -> list[dict]:
     return collected
 
 
-def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
+def render_turn(turn: dict, *, label: str, out_dir: Path, health: dict | None = None,
+                registry_path: Path | None = None) -> dict:
     request = {
         "answer_text": turn["answer_text"],
         "label": label,
@@ -182,6 +196,8 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
     response = post_json(f"{CHATTERBOX}/synthesize-batch", request)
     elapsed = round(time.time() - started, 3)
     response_path.write_text(json.dumps(response, indent=2) + "\n")
+    request_sha256 = "sha256:" + _sha(request)
+    response_sha256 = "sha256:" + _sha(response)
     engine = response.get("engine") or response.get("chunk_engine") or response.get("asr_engine")
     first_chunk = (response.get("chunks") or [{}])[0]
     accepted = collect_accepted_asr(response)
@@ -205,13 +221,21 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
             f"accepted_candidates={[(i['candidate_index'], i['variant']) for i in accepted]!r}"
         )
     audio_snapshot = snapshot_finished_audio(turn["turn_id"], response, out_dir=out_dir)
+    affect_validation = affect_validation_registry.evaluate(
+        voice_delivery=turn["voice_delivery"],
+        request_sha256=request_sha256,
+        response_sha256=response_sha256,
+        response=response,
+        health=health,
+        registry_path=registry_path,
+    )
     return {
         "turn_id": turn["turn_id"],
         "label": label,
         "request_path": str(request_path),
-        "request_sha256": "sha256:" + _sha(request),
+        "request_sha256": request_sha256,
         "response_path": str(response_path),
-        "response_sha256": "sha256:" + _sha(response),
+        "response_sha256": response_sha256,
         "elapsed_seconds": elapsed,
         "engine": engine,
         "cache_material_engine": response.get("cache_material_engine"),
@@ -231,11 +255,14 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
         "finished_wav_sha256": response.get("finished_wav_sha256") or finished_metrics.get("sha256"),
         "finished_wav_duration_seconds": (response.get("finished_wav_duration_seconds")
                                           or finished_metrics.get("duration_seconds")),
+        "affect_validation": affect_validation,
     }
 
 
-def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str]) -> dict:
+def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str],
+             registry_path: Path | None = None) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
+    health = chatterbox_health_snapshot()
     binding = session_mood_binding.bind_session(persona, session_id=session_id)
     for idx, text in enumerate(turns, start=1):
         session_mood_binding.add_turn(binding, text, turn_id=f"turn_{idx:03d}")
@@ -243,7 +270,9 @@ def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str]) 
     render_results = []
     for turn in binding["turns"]:
         label = f"persona-dream-{session_id}-{turn['turn_id']}"
-        render_results.append(render_turn(turn, label=label, out_dir=out_dir))
+        render_results.append(
+            render_turn(turn, label=label, out_dir=out_dir, health=health, registry_path=registry_path)
+        )
     receipt = {
         "schema": "persona_dream.session_mood_chatterbox_live_receipt.v1",
         "created_at": utc_now(),
@@ -251,6 +280,7 @@ def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str]) 
         "mocked": False,
         "live": True,
         "endpoint": f"POST {CHATTERBOX}/synthesize-batch",
+        "chatterbox_health": health,
         # Which voice produced this audio, provable after the fact (#1070).
         "conditioning_reference": {
             "path": format_receipt_path(REF_AUDIO),
@@ -279,6 +309,10 @@ def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str]) 
             ]
         },
     }
+    claim_failures = affect_validation_registry.validate_receipt_claim_boundary(receipt)
+    if claim_failures:
+        receipt["status"] = "BLOCKED_SESSION_MOOD_CHATTERBOX_LIVE"
+        receipt["claim_boundary_failures"] = claim_failures
     receipt_path = out_dir / "RECEIPT.json"
     receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
     return receipt
@@ -289,6 +323,7 @@ def main() -> int:
     parser.add_argument("--persona", default="embry")
     parser.add_argument("--session-id", default="p2_3_session_mood_chatterbox")
     parser.add_argument("--out-dir", type=Path, required=True)
+    parser.add_argument("--affect-validation-registry", type=Path)
     parser.add_argument("--turn", action="append", default=[])
     args = parser.parse_args()
     turns = args.turn or [
@@ -297,7 +332,8 @@ def main() -> int:
         "The boundary remains clear.",
     ]
     receipt = run_live(args.persona, session_id=args.session_id,
-                       out_dir=args.out_dir, turns=turns)
+                       out_dir=args.out_dir, turns=turns,
+                       registry_path=args.affect_validation_registry)
     print(json.dumps({
         "status": receipt["status"],
         "session_id": receipt["binding"]["session_id"],

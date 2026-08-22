@@ -402,6 +402,7 @@ def aggregate(
                 },
                 "recognition": recognition_summary(receipt),
                 "content_invariance": content_summary(receipt),
+                "affect_validation": affect_validation_summary(receipt),
             }
         )
 
@@ -475,6 +476,31 @@ def content_summary(receipt: dict[str, Any]) -> dict[str, Any] | None:
                 "asr_ok_count": sum(1 for turn in turns if (turn.get("asr_gate") or {}).get("ok") is True),
                 "engines": sorted({turn.get("engine") for turn in turns}),
             }
+    return None
+
+
+def affect_validation_summary(receipt: dict[str, Any]) -> dict[str, Any] | None:
+    for stage in receipt.get("stages") or []:
+        if stage.get("name") != "session_mood_live_chatterbox":
+            continue
+        turns = stage.get("turns") or []
+        dispositions: dict[str, int] = {}
+        claim_levels: dict[str, int] = {}
+        perceptual_claims = 0
+        for turn in turns:
+            row = turn.get("affect_validation") or {}
+            disposition = str(row.get("validation_disposition") or "MISSING")
+            claim_level = str(row.get("claim_level") or "MISSING")
+            dispositions[disposition] = dispositions.get(disposition, 0) + 1
+            claim_levels[claim_level] = claim_levels.get(claim_level, 0) + 1
+            if claim_level == "PERCEPTUALLY_VALIDATED_FOR_RECORDED_SCOPE":
+                perceptual_claims += 1
+        return {
+            "turn_count": len(turns),
+            "validation_dispositions": dispositions,
+            "claim_levels": claim_levels,
+            "perceptual_validation_claim_count": perceptual_claims,
+        }
     return None
 
 

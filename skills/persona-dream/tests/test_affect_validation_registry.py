@@ -1,0 +1,212 @@
+import json
+import importlib.util
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+avr = _load("affect_validation_registry")
+
+
+VOICE_DELIVERY = {
+    "schema": "persona_dream.voice_delivery.v1",
+    "tone": "firm_boundary",
+    "pace": "measured",
+    "intensity": 0.7,
+    "valence": -0.4,
+    "emotion_realization": "audible",
+    "required_engine": "chatterbox_base",
+    "mapping_profile_id": "firm_boundary",
+    "mapping_profile_version": "tone-map-v1",
+}
+
+RESPONSE = {
+    "engine": "chatterbox_base",
+    "requested_tone": "firm_boundary",
+    "normalized_tone": "firm_boundary",
+    "voice_delivery": {"tone_was_normalized": False},
+    "emotion_knobs": {"exaggeration": 0.82, "cfg_weight": 0.41},
+    "affect_effect": {"applied": True, "receipt": "sha256:effect"},
+}
+
+HEALTH = {
+    "engine": "chatterbox_turbo",
+    "supported_backends": ["chatterbox_base_affect", "chatterbox_turbo"],
+    "supported_params": ["temperature", "top_p"],
+    "voice_backends": {
+        "chatterbox_base_affect": {
+            "revision": "base-affect-rev-1",
+            "profile": "tone-calibrated",
+        },
+        "other_backend": {
+            "revision": "other-rev-1",
+            "profile": "not-embry",
+        },
+    },
+    "tone_calibration": {"firm_boundary": {"intensity": 0.7, "valence": -0.4}},
+}
+
+
+def _evaluate(tmp_path: Path, registry: dict | None = None, *, delivery: dict | None = None,
+              response: dict | None = None, health: dict | None = None) -> dict:
+    registry_path = None
+    if registry is not None:
+        registry_path = tmp_path / "registry.json"
+        registry_path.write_text(json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return avr.evaluate(
+        voice_delivery=delivery or VOICE_DELIVERY,
+        request_sha256="sha256:req",
+        response_sha256="sha256:resp",
+        response=response or RESPONSE,
+        health=health or HEALTH,
+        registry_path=registry_path,
+    )
+
+
+def _entry(base: dict, **overrides) -> dict:
+    entry = {
+        "entry_id": "embry-firm-boundary-v1",
+        "backend_id": base["backend_id"],
+        "backend_revision": base["backend_revision"],
+        "backend_capability_digest": base["backend_capability_digest"],
+        "mapping_profile_id": base["mapping_profile_id"],
+        "mapping_profile_version": base["mapping_profile_version"],
+        "speaker_scope": base["speaker_scope"],
+        "language": base["language"],
+        "validated_tones": ["firm_boundary"],
+        "validated_ranges": {
+            "intensity": {"min": 0.4, "max": 0.9},
+            "valence": {"min": -0.8, "max": -0.1},
+        },
+        "validation_disposition": "VALIDATED",
+    }
+    entry.update(overrides)
+    return entry
+
+
+def _registry(*entries: dict, **overrides) -> dict:
+    doc = {
+        "schema": avr.REGISTRY_SCHEMA,
+        "entries": list(entries),
+    }
+    doc.update(overrides)
+    return doc
+
+
+def test_missing_registry_keeps_technical_claim_but_not_perception(tmp_path):
+    got = _evaluate(tmp_path)
+
+    assert got["validation_disposition"] == "REGISTRY_MISSING"
+    assert got["claim_level"] == "TECHNICALLY_APPLIED"
+    assert got["perceptual_validation"] == "NOT_TESTED"
+    assert got["claim_boundary"]["persona_dream_authors_perceptual_verdict"] is False
+
+
+def test_exact_validated_backend_profile_range_match_allows_perceptual_claim(tmp_path):
+    base = _evaluate(tmp_path)
+    got = _evaluate(tmp_path, _registry(_entry(base)))
+
+    assert got["validation_disposition"] == "VALIDATED"
+    assert got["claim_level"] == "PERCEPTUALLY_VALIDATED_FOR_RECORDED_SCOPE"
+    assert got["registry_backend_profile_range_match"]["matched"] is True
+    assert avr.validate_receipt_claim_boundary({
+        "schema": "persona_dream.session_mood_chatterbox_live_receipt.v1",
+        "render_results": [{"affect_validation": got}],
+    }) == []
+
+
+def test_validated_with_range_limit_inside_range_allows_recorded_scope(tmp_path):
+    base = _evaluate(tmp_path)
+    entry = _entry(base, validation_disposition="VALIDATED_WITH_RANGE_LIMIT")
+    got = _evaluate(tmp_path, _registry(entry))
+
+    assert got["validation_disposition"] == "VALIDATED_WITH_RANGE_LIMIT"
+    assert got["claim_level"] == "PERCEPTUALLY_VALIDATED_FOR_RECORDED_SCOPE"
+
+
+@pytest.mark.parametrize(
+    "entry_patch,expected_failure",
+    [
+        ({"backend_id": "other_backend"}, "backend_id"),
+        ({"backend_revision": "old-revision"}, "backend_revision"),
+        ({"backend_capability_digest": "sha256:not-this"}, "backend_capability_digest"),
+        ({"mapping_profile_version": "old-map"}, "mapping_profile_version"),
+    ],
+)
+def test_registry_mismatch_prevents_perceptual_inheritance(tmp_path, entry_patch, expected_failure):
+    base = _evaluate(tmp_path)
+    got = _evaluate(tmp_path, _registry(_entry(base, **entry_patch)))
+
+    assert got["validation_disposition"] == "EXPERIMENTAL"
+    assert got["claim_level"] == "TECHNICALLY_APPLIED"
+    assert expected_failure in got["registry_backend_profile_range_match"]["failure_reasons"]
+
+
+def test_request_outside_validated_range_stays_experimental(tmp_path):
+    base = _evaluate(tmp_path)
+    delivery = {**VOICE_DELIVERY, "intensity": 0.99}
+    got = _evaluate(tmp_path, _registry(_entry(base)), delivery=delivery)
+
+    assert got["validation_disposition"] == "EXPERIMENTAL"
+    assert got["claim_level"] == "TECHNICALLY_APPLIED"
+    assert "intensity:outside_range" in got["registry_backend_profile_range_match"]["failure_reasons"]
+
+
+def test_rejected_profile_blocks_perceptual_claim(tmp_path):
+    base = _evaluate(tmp_path)
+    got = _evaluate(tmp_path, _registry(_entry(base, validation_disposition="REJECTED")))
+
+    assert got["validation_disposition"] == "REJECTED"
+    assert got["claim_level"] == "REQUESTED_ONLY"
+    assert got["registry_backend_profile_range_match"]["matched"] is True
+
+
+def test_registry_sha_mutation_fails_closed(tmp_path):
+    base = _evaluate(tmp_path)
+    got = _evaluate(tmp_path, _registry(_entry(base), registry_sha256="sha256:stale"))
+
+    assert got["validation_disposition"] == "REGISTRY_MISMATCH"
+    assert got["claim_level"] == "TECHNICALLY_APPLIED"
+    assert got["registry_backend_profile_range_match"]["failure_reasons"] == ["registry_sha256"]
+
+
+def test_one_backend_cannot_inherit_another_backend_entry(tmp_path):
+    base = _evaluate(tmp_path)
+    inherited = _entry(base, backend_id="other_backend", backend_revision="other-rev-1")
+    got = _evaluate(tmp_path, _registry(inherited))
+
+    assert got["validation_disposition"] == "EXPERIMENTAL"
+    assert got["claim_level"] == "TECHNICALLY_APPLIED"
+    assert "backend_id" in got["registry_backend_profile_range_match"]["failure_reasons"]
+
+
+def test_requested_only_when_controls_not_technically_applied(tmp_path):
+    response = {**RESPONSE, "emotion_knobs": None, "affect_effect": {"applied": False}}
+    got = _evaluate(tmp_path, response=response)
+
+    assert got["validation_disposition"] == "REGISTRY_MISSING"
+    assert got["claim_level"] == "REQUESTED_ONLY"
+    assert got["claim_boundary"]["technical_application_observed"] is False
+
+
+def test_receipt_boundary_rejects_fabricated_perceptual_claim(tmp_path):
+    got = _evaluate(tmp_path)
+    got["claim_level"] = "PERCEPTUALLY_VALIDATED_FOR_RECORDED_SCOPE"
+
+    failures = avr.validate_receipt_claim_boundary({
+        "schema": "persona_dream.session_mood_chatterbox_live_receipt.v1",
+        "render_results": [{"affect_validation": got}],
+    })
+
+    assert "turn_0:perceptual_claim_without_validated_disposition" in failures
+    assert "turn_0:perceptual_claim_without_exact_registry_match" in failures

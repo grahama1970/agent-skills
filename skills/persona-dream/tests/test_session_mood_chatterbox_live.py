@@ -80,6 +80,9 @@ def test_render_turn_snapshots_finished_audio(monkeypatch, tmp_path):
     assert got["finished_response_audio_resolved_source"] == str(source_audio)
     assert got["finished_response_audio_snapshot"] == str(snapshot)
     assert got["finished_response_audio_snapshot_sha256"] == "sha256:" + expected_sha
+    assert got["affect_validation"]["validation_disposition"] == "REGISTRY_MISSING"
+    assert got["affect_validation"]["claim_level"] == "TECHNICALLY_APPLIED"
+    assert got["affect_validation"]["perceptual_validation"] == "NOT_TESTED"
     assert seen["asr_max_wer"] == 0.0
     assert seen["asr_max_candidates"] == 3
     assert seen["ref_audio"] == live_mod.REQUEST_REF_AUDIO
