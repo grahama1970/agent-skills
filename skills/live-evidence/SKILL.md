@@ -26,6 +26,8 @@ composes:
   - ingest-code
   - brave-search
   - dogpile
+  - debugger
+  - surf
 complies:
   - best-practices-skills
   - best-practices-python
@@ -49,6 +51,38 @@ disciplines:
 Live Evidence lets the human stay in the conversation. It listens locally,
 assembles stable speaker turns, and retrieves compact evidence cards instead of
 generating a second conversation to read.
+
+## Capability map (receipt-backed, 31-case suite)
+
+Every row below is guarded by at least one live agentic-eval case; the full
+suite last ran READY with all cases passing twice.
+
+| Capability | Mechanism |
+| --- | --- |
+| Live audio -> card | PipeWire -> Docker RealtimeSTT (CUDA, CPU fallback on OOM) -> stage-1 resolver -> retrieval -> revision-fenced card |
+| Stage-1 readiness | direct streaming SciLLM gate; canonical question authors the card (2-11s) |
+| Stage-2 fast answer | streaming solver into the published card: p50 0.9s / p95 2.2s to first content, receipt journaled per answer; `$ask tau-dag` is the escalation path |
+| Requirement ledger (#1454) | blocking clarifications hold the solver at zero; exactly-once per revision; amendable |
+| Session purposes (#1449) | frozen backend-enforced capability policies; digest bound to every artifact |
+| Briefing packs | pre-call talking points stem-matched live against the transcript; surfaced openings cite their trigger events; refused in formal_assessment |
+| Action lane (#1475) | resolver-proposed fact_check / remember_fact / open_artifact; human-approved, destination-readback receipts |
+| Clause provenance (#1476) | clause -> source mapping with digests recomputed per call; mutated sources render invalidated |
+| Rubric coverage (#1452/#1474) | model authors coverage over live transcripts; deterministic floor verifies every binding; no scores ever |
+| Debugger lane (#1450) | read-only breakpoint proofs via the sibling debugger skill, independently validated, CAS-fenced cards |
+| Review dossier (#1451) | evidence-linked post-interview claims with click-to-seek media |
+| Rehearsal (#1453) | practice-only chatterbox voice loop with hash-bound receipts and echo redaction |
+| Speaker turns (#1477) | deterministic turn ids + anonymous slots + journaled manual correction; diarization deliberately deferred |
+
+## Briefing packs
+
+Load a `live_evidence.briefing_pack.v1` before a call
+(`POST /api/briefing/load`): each point carries opening-trigger groups
+(word-start stem matching), the hook to say, the story behind it, and
+optionally the question to ask. During the call every final transcript event
+is matched zero-latency over a rolling window; a hit surfaces the point in
+the HUD's Openings panel WITH the heard terms and the exact trigger events,
+then cools down for two minutes. A recognition assist, never a script.
+`fixtures/briefing_straive.json` is the shipped example pack.
 
 ## Operating contract
 

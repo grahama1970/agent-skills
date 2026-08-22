@@ -29,6 +29,11 @@ to recite.
 - Append-only local session journal; raw audio is not retained.
 - The UI Stop control propagates to the listener process and ends audio capture.
 - Ripgrep output is deadline- and match-bounded so a broad term cannot flood the interview surface.
+- Fast streaming answers: first content at p50 0.9s / p95 2.2s after a question settles, with a journaled receipt (model, latency, response digest) per answer.
+- Briefing packs: pre-call talking points surfaced live when the conversation opens a door, bound to the exact heard phrase (see SKILL.md).
+- Evidence-triggered actions (fact-check / remember / open artifact), human-approved with destination readbacks.
+- Clause-level provenance: every answer clause maps to retrieved sources, recomputed per view; mutated sources render as invalidated.
+- Interviewer-assist rubric coverage, post-interview review dossiers, read-only debugger proofs, and a practice-only voice rehearsal loop -- each purpose-gated in the backend.
 
 ## Session purposes (#1449)
 
