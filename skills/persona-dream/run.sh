@@ -186,6 +186,7 @@ Commands:
   run-reliability-surface  Validate PCTOM-R Gate 8 repeated, perturbed, and fault-injected reliability surface
   run-causal-replay  Validate PCTOM-R Gate 9 causal replay and failure localization
   live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
+  converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
   validate-blinded-listener-study  Validate stimulus hashes/ASR and human-response readiness
   analyze-blinded-listener-study  Analyze completed human listener responses with signed interpretation
@@ -812,6 +813,9 @@ case "$COMMAND" in
     ;;
   carry-conversation)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/carry_conversation.py" "$@"
+    ;;
+  converse-dynamic)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/dynamic_conversation.py" "$@"
     ;;
   append-conversation)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/append_conversation.py" "$@"

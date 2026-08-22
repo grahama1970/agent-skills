@@ -242,6 +242,33 @@
       "timeout_seconds": 900
     },
     {
+      "name": "converse-dynamic-runsh-wrapper",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.conversation.runsh_surface"
+      ],
+      "seams": [
+        "runsh.converse_dynamic"
+      ],
+      "command": [
+        "bash",
+        "../run.sh",
+        "converse-dynamic",
+        "--help"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "dynamic_conversation.py",
+          "--run-dir RUN_DIR",
+          "--opening-topic OPENING_TOPIC"
+        ]
+      }
+    },
+    {
       "name": "full-cycle-live",
       "type": "positive",
       "real_world": true,
@@ -566,6 +593,14 @@
       }
     },
     {
+      "id": "persona_dream.conversation.runsh_surface",
+      "description": "The documented run.sh command surface exposes converse-dynamic and dispatches it to the dynamic Horus/Embry conversation CLI instead of falling through to usage.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.conversation.audible_two_agent",
       "description": "Horus and Embry hold a DYNAMIC audible conversation: each Horus turn drafted live by Tau from her journal and the transcript (proven by Tau receipt provenance and conditioned-on-reply oracles), spoken in his own voice; both roles voiced first-class in conversation.jsonl with tone + sha256-bound audio.",
       "criticality": "critical",
@@ -646,6 +681,14 @@
       "criticality": "high",
       "required_evidence": [
         "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "runsh.converse_dynamic",
+      "seam_type": "command_surface",
+      "criticality": "important",
+      "required_evidence": [
+        "deterministic"
       ]
     },
     {
