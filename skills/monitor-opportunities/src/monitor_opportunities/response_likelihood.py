@@ -31,7 +31,7 @@ W_LOWCOMP = 0.20
 W_LOCAL = 0.25
 # A LinkedIn "top applicant" is a strong reply signal (LinkedIn tells the poster
 # you rank in the top pool); Easy Apply is a low-friction lane worth a small nudge.
-W_TOPCAND = 0.35
+W_TOPCAND = 0.0
 W_EASYAPPLY = 0.10
 _WNY_WORKPLACES = frozenset({"WNY_HYBRID", "WNY_ONSITE"})
 # Graded geo: Buffalo hybrid is the hard-constraint ideal; WNY onsite next;
