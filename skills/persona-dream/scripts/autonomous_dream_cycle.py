@@ -413,6 +413,68 @@ def build_instruments(adapter, sel: dict, out: Path) -> dict:
     return instruments
 
 
+def recall_item_summaries(items: list[dict], *, limit: int) -> list[dict]:
+    """Stable receipt projection for Memory recall rows.
+
+    Memory recall order is an observed fact from the service. Preserve the
+    returned rank and enough row identity to audit a gate later without relying
+    on a second live recall that may see a changed index.
+    """
+    summaries: list[dict] = []
+    for idx, item in enumerate(items[:limit], 1):
+        text = str(item.get("retrieval_text") or item.get("solution") or item.get("text") or "")
+        summaries.append({
+            "rank": idx,
+            "_key": item.get("_key"),
+            "score": item.get("score"),
+            "kind": item.get("kind"),
+            "persona_id": item.get("persona_id"),
+            "tags": sorted(str(tag) for tag in (item.get("tags") or [])),
+            "text_sha256": sha256_text(text) if text else None,
+            "text_preview": text[:160],
+        })
+    return summaries
+
+
+def rank_key(summaries: list[dict], key: str) -> int | None:
+    for row in summaries:
+        if row.get("_key") == key:
+            return int(row["rank"])
+    return None
+
+
+def evaluate_recall_instruments(instruments: dict, dream_key: str, recall_post=post) -> dict:
+    probe_rows: dict[str, list[dict]] = {}
+    ranks: dict[str, int | None] = {}
+    for i, probe in enumerate(instruments["probes"]):
+        label = f"probe_{i+1}"
+        items = recall_post("/recall", {
+            "q": probe,
+            "k": 20,
+            "collections": ["persona_memory"],
+            "tags": [],
+        }).get("items") or []
+        rows = recall_item_summaries(items, limit=20)
+        probe_rows[label] = rows
+        ranks[label] = rank_key(rows, dream_key)
+
+    n_items = recall_post("/recall", {
+        "q": instruments["negative_control"],
+        "k": 10,
+        "collections": ["persona_memory"],
+        "tags": [],
+    }).get("items") or []
+    negative_rows = recall_item_summaries(n_items, limit=10)
+    negative_rank = rank_key(negative_rows, dream_key)
+    return {
+        "recall_probe_ranks": ranks,
+        "recall_probe_results": probe_rows,
+        "negative_control_results": negative_rows,
+        "negative_control_dream_rank": negative_rank,
+        "negative_control_absent_top10": negative_rank is None,
+    }
+
+
 def compose_and_render(adapter, phase_c, subgate, profile, sel: dict, out: Path) -> dict:
     reading = "\n\n".join(
         f"## {k}\n{d.get('retrieval_text')}" for k, d in sel["docs"].items())
@@ -785,15 +847,9 @@ def main() -> int:
     m2 = pm.m2_grounding(p15, manifest["key"], out, persona_id, dream_id)
     m3 = pm.m3_distinction(adapter, dream_doc["_key"])
     m4 = pm.m4_identity(p15, manifest["key"], out / "anchor_snapshot.json")
-    ranks = {}
-    for i, probe in enumerate(instruments["probes"]):
-        items = post("/recall", {"q": probe, "k": 20,
-                                 "collections": ["persona_memory"], "tags": []}).get("items") or []
-        keys = [it.get("_key") for it in items]
-        ranks[f"probe_{i+1}"] = (keys.index(dream_doc["_key"]) + 1) if dream_doc["_key"] in keys else None
-    n_items = post("/recall", {"q": instruments["negative_control"], "k": 10,
-                               "collections": ["persona_memory"], "tags": []}).get("items") or []
-    n1_pass = dream_doc["_key"] not in [it.get("_key") for it in n_items[:10]]
+    recall_eval = evaluate_recall_instruments(instruments, dream_doc["_key"])
+    ranks = recall_eval["recall_probe_ranks"]
+    n1_pass = recall_eval["negative_control_absent_top10"]
 
     # 8. voice weights on the NEW dream. --arc-voice conditions the spoken line on
     #    the persona's accumulated arc_state (Continuity Ledger) so the voice
@@ -829,6 +885,9 @@ def main() -> int:
                         ("literal_occurrence_status", "record_class", "passed")},
         "anchors_unchanged": m4.get("passed"),
         "recall_probe_ranks": ranks,
+        "recall_probe_results": recall_eval["recall_probe_results"],
+        "negative_control_results": recall_eval["negative_control_results"],
+        "negative_control_dream_rank": recall_eval["negative_control_dream_rank"],
         "negative_control_absent_top10": n1_pass,
         "voice_weights_receipt": str(out / "voice_weights/dream_voice_weights_receipt.v1.json") if voice_ok else None,
         "human_touches": 0,
