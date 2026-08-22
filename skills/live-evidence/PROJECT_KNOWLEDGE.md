@@ -53,5 +53,5 @@
 
 ## Infrastructure State
 
-- Suite: 31 cases; last full 30-case run READY with 60/60 trials (le-30-final); case 31 (briefing) runner-verified PASS 2/2.
+- Suite: 32 cases; last full 30-case run READY with 60/60 trials (le-30-final); case 31 (briefing) runner-verified PASS 2/2; case 32 (meeting-campaign-goal-v2) green at meeting-campaign/20260822T191307Z — real chatterbox-rendered Sparta meeting + pinned interview wav through the live audio path, all three card families correct, onset-to-card 20-22s (synthetic) / ~109s (interview wav question position). The campaign forced three product fixes now landed: newest-completed-card-wins publication fences, deterministic question forking (<30% vocabulary overlap opens a new question id), and lane-diversity card-source selection.
 - Known environment coupling: chatterbox on :8018 (rehearsal + voice evals), memory on :8601, SciLLM proxy on :4001 (key from the container, not the drifted shell export), surf-controlled Chrome for browser rungs. Each absence reports BLOCKED/unresolved, never a fake pass.
