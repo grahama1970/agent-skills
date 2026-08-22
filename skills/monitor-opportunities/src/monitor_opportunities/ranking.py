@@ -140,6 +140,11 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
     if workplace == "ONSITE_ELSEWHERE":
         return "REJECT_RELOCATION_REQUIRED", ["posting body requires on-site outside Buffalo/WNY"]
     if workplace == "AMBIGUOUS":
+        # A LinkedIn top-applicant role is high-value (Graham ranks in the top
+        # pool) and must not be buried in human-review just because its location
+        # string is ambiguous — surface it as eligible so it reaches the report.
+        if candidate.get("top_candidate_evidence"):
+            return "ELIGIBLE_TOP_APPLICANT", ["LinkedIn top applicant — surfaced despite ambiguous location"]
         return "HUMAN_REVIEW_LOCATION_AMBIGUOUS", ["location cannot be disambiguated"]
     return "REJECT_LOCATION", [f"unsupported workplace_type={workplace!r}"]
 
@@ -161,7 +166,11 @@ def _score(candidate: dict[str, Any]) -> dict[str, Any]:
     seniority = round(float(candidate.get("seniority_score", candidate.get("fit_score", 0.0))) * 100, 3)
     role = round(float(candidate.get("fit_score", 0.0)) * 100, 3)
     source = 20 if candidate.get("source_receipt_id") else 0
-    total = (mandate * 1_000_000) + (seniority * 10_000) + (role * 1_000) + geo + source
+    # LinkedIn top-applicant status is a strong reply signal: among comparable
+    # roles it should win a shortlist slot. Ranks just under mandate fit so it
+    # breaks ties decisively without overriding a genuinely better-fit role.
+    top_candidate = 500_000 if candidate.get("top_candidate_evidence") else 0
+    total = (mandate * 1_000_000) + top_candidate + (seniority * 10_000) + (role * 1_000) + geo + source
     return {
         "mandate_fit": mandate,
         "seniority_ownership": seniority,

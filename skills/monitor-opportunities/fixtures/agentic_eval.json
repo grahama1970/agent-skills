@@ -462,6 +462,28 @@
           "SHOULD_BE_HUMAN_REQUIRED"
         ]
       }
+    },
+    {
+      "name": "top-applicant-shortlisted",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_top_applicant_shortlisted.py\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TOP_APPLICANT_SHORTLISTED_OK"
+        ],
+        "stderr_excludes": [
+          "TOP_APPLICANT_ESCALATED",
+          "TOP_APPLICANT_NOT_PRIORITIZED",
+          "BUFFALO_TOP_NOT_ELIGIBLE"
+        ]
+      }
     }
   ]
 }

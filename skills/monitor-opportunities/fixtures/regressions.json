@@ -176,6 +176,36 @@
       },
       "status": "ACTIVE",
       "notes": "New-capability safety guard; live terminal submit not re-run (would be a real application). Modal structure confirmed live 2026-08-22."
+    },
+    {
+      "regression_id": "top-applicant-shortlist-escalation-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "Found by a complete run: top-applicant roles reached discovery but the selection layer dropped them. Ambiguous-location top-applicant roles escalated to HUMAN_REVIEW_LOCATION_AMBIGUOUS (excluded from shortlist), and ranking.py's mandate-only score never rewarded top-applicant status, so the morning report led with cold remote and zero top-applicant/Buffalo roles.",
+        "root_cause": "_eligibility escalated AMBIGUOUS to human-review regardless of top_candidate; _score had no top_candidate term.",
+        "correct_behavior": "top-applicant + ambiguous location => ELIGIBLE_TOP_APPLICANT (shortlistable); _score adds a top_candidate bonus so top-applicant out-selects equal-fit cold remote; verified live: fixed shortlist leads with 7 top-applicant roles (2 Buffalo), was 0."
+      },
+      "threatens": {
+        "capability": "eligibility_and_ranking",
+        "seams": [
+          "ranking.eligibility_escalation",
+          "ranking.shortlist_selection"
+        ]
+      },
+      "retained_case": "top-applicant-shortlisted",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_top_applicant_shortlisted.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "TOP_APPLICANT_ESCALATED",
+        "observed_pre_fix": "top-applicant AMBIGUOUS -> HUMAN_REVIEW_LOCATION_AMBIGUOUS; shortlist 8/8 remote, 0 top-applicant"
+      },
+      "status": "ACTIVE",
+      "notes": "Escalation-error fix. Guard exercises real _eligibility + _score."
     }
   ]
 }
