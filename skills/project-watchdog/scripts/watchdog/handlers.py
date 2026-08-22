@@ -636,18 +636,17 @@ def handle_ticket_repair(
     creator = config.repair_creator(project)
     reviewer = config.repair_reviewer(project)
     result["seats"] = {"creator": creator, "reviewer": reviewer}
-    if creator == reviewer:
-        result.update(
-            {
-                "ok": False,
-                "status": "BLOCKED",
-                "summary": (
-                    f"creator and reviewer are both {creator!r}. A model reviewing its own "
-                    f"work is not review; configure repair_reviewer to a different family."
-                ),
-            }
-        )
-        log_event(run_id, "repair_seats_identical", issue=issue_number, seat=creator)
+    # The reviewer must be an INDEPENDENT second opinion (different provider) AND
+    # able to run the ticket's live proof (not a browser chat). Fail loudly here
+    # rather than dispatch a review that shares the creator's blind spots or a
+    # browser seat that cannot execute the proof (which failed silently as
+    # "$ask tau-dag failed" — agent-skills#1484).
+    try:
+        config.assert_cross_provider_seats(creator, reviewer)
+    except config.SeatIndependenceError as exc:
+        result.update({"ok": False, "status": "BLOCKED", "summary": str(exc)})
+        log_event(run_id, "repair_seats_not_independent", issue=issue_number,
+                  creator=creator, reviewer=reviewer, reason=str(exc))
         return result
 
     ask_run = config.ask_run_sh()

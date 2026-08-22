@@ -161,6 +161,67 @@ def _repair_seat(project: dict[str, Any] | None, key: str, env: str, default: st
     return os.environ.get(env, "").strip() or default
 
 
+class SeatIndependenceError(ValueError):
+    """Creator and reviewer resolve to the same provider — no second opinion."""
+
+
+#: Provider of each repair seat. The reviewer exists to be an INDEPENDENT second
+#: opinion; a reviewer that shares the creator's provider reviews its own family's
+#: work (observed: gpt-5.5-high == `codex exec --model gpt-5.5`, both OpenAI; and
+#: webgpt is browser ChatGPT, also OpenAI). A reviewer must also be able to RUN
+#: the ticket's live proof — a browser seat cannot execute code in the worktree.
+_SEAT_PROVIDER = {
+    "codex": "openai",
+    "webgpt": "openai",
+    "webgrok": "xai",
+    "webclaude": "anthropic",
+}
+_BROWSER_SEATS = {"webgpt", "webclaude", "webgrok"}
+
+
+def seat_provider(seat: str) -> str:
+    s = seat.strip().lower()
+    if s in _SEAT_PROVIDER:
+        return _SEAT_PROVIDER[s]
+    if s.startswith("gpt") or s.startswith("o1") or s.startswith("o3") or "codex" in s:
+        return "openai"
+    if s.startswith("claude") or s.startswith("opus") or s.startswith("sonnet") or s.startswith("haiku"):
+        return "anthropic"
+    if s.startswith("grok"):
+        return "xai"
+    if s.startswith("gemini"):
+        return "google"
+    return "unknown"
+
+
+def seat_can_run_code(seat: str) -> bool:
+    """A reviewer must execute the ticket's live proof; a browser chat cannot."""
+    return seat.strip().lower() not in _BROWSER_SEATS
+
+
+def assert_cross_provider_seats(creator: str, reviewer: str) -> None:
+    """Fail loudly if the reviewer is not an independent, code-running second seat."""
+    cp, rp = seat_provider(creator), seat_provider(reviewer)
+    if cp == rp:
+        raise SeatIndependenceError(
+            f"repair creator {creator!r} and reviewer {reviewer!r} are both provider {cp!r}; "
+            "the reviewer must be a DIFFERENT provider to be an independent second opinion."
+        )
+    if not seat_can_run_code(reviewer):
+        raise SeatIndependenceError(
+            f"repair reviewer {reviewer!r} is a browser seat and cannot run the ticket's live "
+            "proof in the worktree; the reviewer must be a locally-executing handler."
+        )
+
+
+def repair_seats(project: dict[str, Any] | None = None) -> tuple[str, str]:
+    """Resolve (creator, reviewer), enforcing cross-provider + code-running review."""
+    creator = repair_creator(project)
+    reviewer = repair_reviewer(project)
+    assert_cross_provider_seats(creator, reviewer)
+    return creator, reviewer
+
+
 def login_shell() -> str:
     """The shell cron runs the tick through."""
     configured = os.environ.get("PROJECT_WATCHDOG_LOGIN_SHELL", "").strip()

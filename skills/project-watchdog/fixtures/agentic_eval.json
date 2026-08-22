@@ -469,6 +469,30 @@
           "stays inside the period"
         ]
       }
+    },
+    {
+      "name": "repair-seat-independence",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "watchdog.repair_seats"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_seat_independence.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SEAT_INDEPENDENCE_OK"
+        ],
+        "stderr_excludes": [
+          "SAME_PROVIDER_ACCEPTED",
+          "BROWSER_REVIEWER_ACCEPTED"
+        ]
+      }
     }
   ]
 }
