@@ -1,0 +1,9 @@
+{
+  "cfg_weight": 0.33,
+  "exaggeration": 1.155,
+  "label": "pd-cross-mood-firm_boundary_discouraged_negative_high__care_answer__seed_113002",
+  "ref_audio": "/data/embry_ref.wav",
+  "seed": 113002,
+  "temperature": 0.7,
+  "text": "I can feel careful and present while I explain the point. The content remains unchanged, even when the voice carries conflict."
+}

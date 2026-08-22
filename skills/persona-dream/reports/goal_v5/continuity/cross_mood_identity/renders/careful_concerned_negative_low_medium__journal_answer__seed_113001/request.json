@@ -1,0 +1,9 @@
+{
+  "cfg_weight": 0.41,
+  "exaggeration": 0.795,
+  "label": "pd-cross-mood-careful_concerned_negative_low_medium__journal_answer__seed_113001",
+  "ref_audio": "/data/embry_ref.wav",
+  "seed": 113001,
+  "temperature": 0.7,
+  "text": "The journal says the dream left pressure in the room, but I still give the same clean answer without turning the dream into a literal event."
+}

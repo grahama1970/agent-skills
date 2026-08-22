@@ -118,6 +118,29 @@
       }
     },
     {
+      "name": "cross-mood-identity-matrix-contract",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.cross_mood_identity_matrix"
+      ],
+      "seams": [
+        "continuity.cross_mood_identity"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "D=$(mktemp -d /tmp/persona-dream-cross-mood-contract.XXXXXX); bash ../run.sh cross-mood-identity-matrix --out-dir \"$D\" --preregister-only --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CROSS_MOOD_IDENTITY_PREREGISTERED"
+        ]
+      }
+    },
+    {
       "name": "dream-workspace-ssr-render",
       "type": "positive",
       "real_world": true,
@@ -673,6 +696,15 @@
       }
     },
     {
+      "id": "persona_dream.cross_mood_identity_matrix",
+      "description": "Embry speaker identity can be preregistered, rendered, and scored across a frozen 4 mood x 3 text x 3 seed matrix with calibration-derived identity thresholds and adversarial comparisons.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
       "id": "persona_dream.full_cycle.live",
       "description": "One complete persona-dream run start to finish in a fresh run dir: day ingest, Tau dream spine (select/instrument/observe/interpret/ToM/persist with exact re-read + dream journal), tone-annotated day journal, ASR-verified spoken journal, memory write, artifact store, a 3-pair fully audible dynamic Horus/Embry conversation about the dream, the day, and her mood (every turn tone + sha256-bound audio), and carry-back into memory with read-back equality.",
       "criticality": "critical",
@@ -712,6 +744,15 @@
       "criticality": "important",
       "required_evidence": [
         "deterministic"
+      ]
+    },
+    {
+      "seam_id": "continuity.cross_mood_identity",
+      "seam_type": "speaker_identity_matrix",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
       ]
     },
     {

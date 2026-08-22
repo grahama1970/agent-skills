@@ -1,0 +1,9 @@
+{
+  "cfg_weight": 0.41,
+  "exaggeration": 0.795,
+  "label": "pd-cross-mood-careful_concerned_negative_low_medium__boundary_answer__seed_113002",
+  "ref_audio": "/data/embry_ref.wav",
+  "seed": 113002,
+  "temperature": 0.7,
+  "text": "I can answer clearly while keeping the boundary intact. The factual answer stays the same, and only my delivery carries the mood."
+}

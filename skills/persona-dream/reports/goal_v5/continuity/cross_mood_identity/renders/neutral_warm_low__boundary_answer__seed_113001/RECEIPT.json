@@ -1,0 +1,128 @@
+{
+  "adversarial_reference_hashes": [
+    {
+      "bytes": 960078,
+      "exists": true,
+      "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+      "sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65"
+    },
+    {
+      "bytes": 288078,
+      "exists": true,
+      "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+      "sha256": "sha256:66b5b7518b86fc91546d469087cb9a2a616f2e8867b5f1dbd4c0aea62fe357f4"
+    }
+  ],
+  "answer_text_sha256": "sha256:55d9cae7f589fcda1ffed47eb39e7f25a58e79d9cb9f79250b473ac238d4f00f",
+  "asr": {
+    "base_url": "http://127.0.0.1:2022",
+    "live": true,
+    "mocked": false,
+    "ok": false,
+    "transcript": "keeping the boundary intact. The factual answer stays the same and only my delivery carries the mood.",
+    "wer": 0.227273
+  },
+  "audio": {
+    "bytes": 351438,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113001/audio.wav",
+    "sha256": "sha256:31fb1b6649011930e38e45beb44b579f696fca3d4730914951a53f5d09a7f803"
+  },
+  "base_model_load_seconds": 11.421,
+  "elapsed_seconds": null,
+  "embry_vs_adversarial_margin_floor": 0.180581,
+  "engine": "chatterbox_base",
+  "failed_gates": [
+    "quality:asr_text_exact"
+  ],
+  "identity_failed_gates": [],
+  "identity_floor": 0.880928,
+  "mapping_version": "persona_dream.cross_mood_identity.mapping.v1",
+  "paired_answer_text_sha256": "sha256:55d9cae7f589fcda1ffed47eb39e7f25a58e79d9cb9f79250b473ac238d4f00f",
+  "params": {
+    "cfg_weight": 0.5,
+    "exaggeration": 0.615,
+    "temperature": 0.7
+  },
+  "quality_failed_gates": [
+    "asr_text_exact"
+  ],
+  "reference_audio": {
+    "bytes": 960078,
+    "exists": true,
+    "path": "skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav",
+    "sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098"
+  },
+  "reference_sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098",
+  "region_id": "neutral_warm_low",
+  "region_label": "neutral or warm / low intensity",
+  "render_id": "neutral_warm_low__boundary_answer__seed_113001",
+  "request": {
+    "bytes": 345,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113001/request.json",
+    "sha256": "sha256:3374005181cc1d0ecf325a02085512cd3b7c916eec42510d1be0107187c3b945"
+  },
+  "request_sha256": "sha256:dd66757bfd8aa8aed2e7c30e9afc7d7af7b945e0f146ad2f9a4f1c3179a35d63",
+  "response": {
+    "bytes": 1673,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113001/response.json",
+    "sha256": "sha256:dbf3df391a35c3d133488cff2f93dbae54060bdb7a0b36ac4953e32eb7e72e42"
+  },
+  "response_ok": true,
+  "response_sha256": "sha256:b4831c60005417ed11d9647673225ca60f7f22a7cbe4726e95826e791d44d0bd",
+  "reused_existing_render": true,
+  "seed": 113001,
+  "source_audio": "/home/graham/workspace/experiments/chatterbox/logs/pd-cross-mood-neutral_warm_low__boundary_answer__seed_113001.wav",
+  "speaker": {
+    "adversarial_similarities": [
+      {
+        "audio": {
+          "bytes": 960078,
+          "exists": true,
+          "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+          "sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65"
+        },
+        "similarity_to_target": 0.507506
+      },
+      {
+        "audio": {
+          "bytes": 288078,
+          "exists": true,
+          "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+          "sha256": "sha256:66b5b7518b86fc91546d469087cb9a2a616f2e8867b5f1dbd4c0aea62fe357f4"
+        },
+        "similarity_to_target": 0.518533
+      }
+    ],
+    "best_adversarial_similarity": 0.518533,
+    "embry_similarity": 0.88175,
+    "embry_vs_adversarial_margin": 0.363217
+  },
+  "status": "PASS_MACHINE_IDENTITY_RENDER",
+  "technical_screen_receipt": {
+    "bytes": 3044,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+    "sha256": "sha256:a8c7286aea6502741db36bb748b1ecf5118180d298ca24f160e2fac3d3c44aca"
+  },
+  "technical_screen_status": "PASS_STIMULUS_TECHNICAL_SCREEN",
+  "text_id": "boundary_answer",
+  "trustworthy_duration": {
+    "min_seconds": 3.0,
+    "ok": true,
+    "seconds": 7.32
+  },
+  "voice_delivery": {
+    "emotion_realization": "audible",
+    "intensity": 0.35,
+    "pace": "measured",
+    "required_engine": "chatterbox_base",
+    "schema": "persona_dream.voice_delivery.v1",
+    "tone": "neutral_warm",
+    "use_base_emotion": true,
+    "valence": 0.2
+  },
+  "voice_delivery_sha256": "sha256:6ebf392f412cc66ff1de5a28a481d0bfcf20c50db09b88d896d968b4ea0ee270"
+}

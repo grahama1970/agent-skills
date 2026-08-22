@@ -190,6 +190,7 @@ Commands:
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
   render-blinded-listener-stimuli Render all target stimuli with one Chatterbox normalization policy
   validate-blinded-listener-study  Validate stimulus hashes/ASR and human-response readiness
+  cross-mood-identity-matrix Render and score the frozen Embry cross-mood identity matrix
   analyze-blinded-listener-study  Analyze completed human listener responses with signed interpretation
   validate-sparta-arc-bias-handoff Validate the SPARTA consumer contract for session_arc_bias
   check-pipeline-contract  Validate the canonical executable dream spine contract
@@ -857,6 +858,12 @@ case "$COMMAND" in
     ;;
   validate-blinded-listener-study)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_blinded_listener_study.py" "$@"
+    ;;
+  cross-mood-identity-matrix)
+    # Uses live Chatterbox seed-capable /synthesize-emotion plus the speaker
+    # recognition lane; run under the Chatterbox voice lane interpreter.
+    exec "${CHATTERBOX_VENV_PYTHON:-/home/graham/workspace/experiments/chatterbox/.venv/bin/python}" \
+      "${SCRIPT_DIR}/scripts/cross_mood_identity_matrix.py" "$@"
     ;;
   analyze-blinded-listener-study)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/analyze_blinded_listener_study.py" "$@"

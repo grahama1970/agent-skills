@@ -1,0 +1,47 @@
+{
+  "audio": "/out/pd-cross-mood-firm_boundary_discouraged_negative_high__care_answer__seed_113001.wav",
+  "audio_metrics": {
+    "bytes": 437838,
+    "channels": 1,
+    "codec_name": "pcm_s16le",
+    "duration_seconds": 9.12,
+    "exists": true,
+    "ffprobe": {
+      "cmd": [
+        "ffprobe",
+        "-hide_banner",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration,size",
+        "-show_entries",
+        "stream=codec_name,sample_rate,channels",
+        "-of",
+        "json",
+        "/out/pd-cross-mood-firm_boundary_discouraged_negative_high__care_answer__seed_113001.wav"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"9.120000\",\n        \"size\": \"437838\"\n    }\n}\n"
+    },
+    "ffprobe_size": 437838,
+    "path": "/out/pd-cross-mood-firm_boundary_discouraged_negative_high__care_answer__seed_113001.wav",
+    "sample_rate": 24000,
+    "sha256": "0f8237610befb933fa4bab7346dabbe61454df1d33e2af6edd5fc337294483a2"
+  },
+  "base_model_load_seconds": 11.421,
+  "engine": "chatterbox_base",
+  "generation_seconds": 5.947,
+  "honors_exaggeration_cfg_weight": true,
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "params": {
+    "cfg_weight": 0.33,
+    "exaggeration": 1.155,
+    "temperature": 0.7
+  },
+  "reference_audio": "/data/embry_ref.wav",
+  "requested_device": "cuda",
+  "text": "I can feel careful and present while I explain the point. The content remains unchanged, even when the voice carries conflict."
+}

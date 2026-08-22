@@ -1,0 +1,47 @@
+{
+  "audio": "/out/pd-cross-mood-calibration_neutral__seed_213003.wav",
+  "audio_metrics": {
+    "bytes": 474318,
+    "channels": 1,
+    "codec_name": "pcm_s16le",
+    "duration_seconds": 9.88,
+    "exists": true,
+    "ffprobe": {
+      "cmd": [
+        "ffprobe",
+        "-hide_banner",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration,size",
+        "-show_entries",
+        "stream=codec_name,sample_rate,channels",
+        "-of",
+        "json",
+        "/out/pd-cross-mood-calibration_neutral__seed_213003.wav"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"9.880000\",\n        \"size\": \"474318\"\n    }\n}\n"
+    },
+    "ffprobe_size": 474318,
+    "path": "/out/pd-cross-mood-calibration_neutral__seed_213003.wav",
+    "sample_rate": 24000,
+    "sha256": "70e030d10ea19cd330ca06e73c20ee5af01e372671dc018c5d78a50ade12f3ef"
+  },
+  "base_model_load_seconds": 11.421,
+  "engine": "chatterbox_base",
+  "generation_seconds": 6.703,
+  "honors_exaggeration_cfg_weight": true,
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "params": {
+    "cfg_weight": 0.5,
+    "exaggeration": 0.615,
+    "temperature": 0.7
+  },
+  "reference_audio": "/data/embry_ref.wav",
+  "requested_device": "cuda",
+  "text": "This neutral calibration sentence is separate from the target matrix. It checks whether the authorized Embry reference remains recognizable before any mood cells are scored."
+}

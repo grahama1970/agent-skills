@@ -1,0 +1,594 @@
+{
+  "created_at": "2026-08-22T23:24:20Z",
+  "schema": "persona_dream.cross_mood_identity.manifest.v1",
+  "target_rows": [
+    {
+      "audio": {
+        "bytes": 351438,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113001/audio.wav",
+        "sha256": "sha256:31fb1b6649011930e38e45beb44b579f696fca3d4730914951a53f5d09a7f803"
+      },
+      "failed_gates": [
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113001/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__boundary_answer__seed_113001",
+      "seed": 113001,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 424398,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113002/audio.wav",
+        "sha256": "sha256:a69030212173ade5f4a87615fc110549a0805126fe40919de62f8ff28baf0a03"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113002/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__boundary_answer__seed_113002",
+      "seed": 113002,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 393678,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113003/audio.wav",
+        "sha256": "sha256:8a42fc65da2510f6b8a9982b3e1306673bac941f00552344d4d7ad9aa55e3565"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__boundary_answer__seed_113003/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__boundary_answer__seed_113003",
+      "seed": 113003,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 376398,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113001/audio.wav",
+        "sha256": "sha256:efe3eb217ab265fac9fc399b7a7fc4a0bd868161a5bfed1a37d840978318f023"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113001/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__journal_answer__seed_113001",
+      "seed": 113001,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 374478,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113002/audio.wav",
+        "sha256": "sha256:3ad2c72b631d9db78e8d15f69e52964777d042537bf3447b69cc1c4c889f9d21"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113002/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__journal_answer__seed_113002",
+      "seed": 113002,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 393678,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113003/audio.wav",
+        "sha256": "sha256:43ed68b15d3d788e0a651378641c3173d61f16b4a274909578f324dfeda28b92"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113003/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__journal_answer__seed_113003",
+      "seed": 113003,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 410958,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__care_answer__seed_113001/audio.wav",
+        "sha256": "sha256:f064660a40dcfce3b9cb0ad3dc16d2f5691d287345400800fd66a03537dddead"
+      },
+      "failed_gates": [
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__care_answer__seed_113001/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__care_answer__seed_113001",
+      "seed": 113001,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 347598,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__care_answer__seed_113002/audio.wav",
+        "sha256": "sha256:ab5adedacef9c892313ec7c4cb7b82317cda04ca913a8fd7baaeae99ef23a760"
+      },
+      "failed_gates": [
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__care_answer__seed_113002/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__care_answer__seed_113002",
+      "seed": 113002,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 382158,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__care_answer__seed_113003/audio.wav",
+        "sha256": "sha256:bb8077448c1af6046c0a41f000ef642ec7d95cf8ffdc7b7c58c7db8ee49fcc7f"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__care_answer__seed_113003/RECEIPT.json",
+      "region_id": "neutral_warm_low",
+      "render_id": "neutral_warm_low__care_answer__seed_113003",
+      "seed": 113003,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 1920078,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__boundary_answer__seed_113001/audio.wav",
+        "sha256": "sha256:fb011858d6a18423d662850ced71096b4a275de6b4cf9fb24040b1f4aec5e9a1"
+      },
+      "failed_gates": [
+        "embry_similarity_floor",
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__boundary_answer__seed_113001/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__boundary_answer__seed_113001",
+      "seed": 113001,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 378318,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__boundary_answer__seed_113002/audio.wav",
+        "sha256": "sha256:a1508d40d58aca231b6bb8fbfc3787cb00bae44c1df452f0396cfc4c858f8a7a"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__boundary_answer__seed_113002/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__boundary_answer__seed_113002",
+      "seed": 113002,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 410958,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__boundary_answer__seed_113003/audio.wav",
+        "sha256": "sha256:717b688958cf5376ff664abd5c5eb69f53d76a9d190f62a51477b09630e7f558"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__boundary_answer__seed_113003/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__boundary_answer__seed_113003",
+      "seed": 113003,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 324558,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__journal_answer__seed_113001/audio.wav",
+        "sha256": "sha256:4a2bdf092c2d2f45f0a022d5a42f664e009d885816482409b56139c14631476b"
+      },
+      "failed_gates": [
+        "embry_similarity_floor",
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__journal_answer__seed_113001/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__journal_answer__seed_113001",
+      "seed": 113001,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 385998,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__journal_answer__seed_113002/audio.wav",
+        "sha256": "sha256:9e867c97353ba53f84b23b710e71455996b3f39bafb7a9c3f4c02aa8a29a5c38"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__journal_answer__seed_113002/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__journal_answer__seed_113002",
+      "seed": 113002,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 376398,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__journal_answer__seed_113003/audio.wav",
+        "sha256": "sha256:a408bec49bc8dad1ace6fca7024821435a0c493e10d15b707f5908444a003685"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__journal_answer__seed_113003/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__journal_answer__seed_113003",
+      "seed": 113003,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 395598,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__care_answer__seed_113001/audio.wav",
+        "sha256": "sha256:4b395f40e79d65fec92b5bc19b0eef51ff027bc2c41036c2da94e5d5e4128843"
+      },
+      "failed_gates": [
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__care_answer__seed_113001/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__care_answer__seed_113001",
+      "seed": 113001,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 443598,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__care_answer__seed_113002/audio.wav",
+        "sha256": "sha256:757cafcc320412f0290f03b2cacf0dd8aa2b2a39936289dad529658da2d78322"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__care_answer__seed_113002/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__care_answer__seed_113002",
+      "seed": 113002,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 401358,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__care_answer__seed_113003/audio.wav",
+        "sha256": "sha256:21efd8c9524b683345b21a7c74e74d2822a84de190eca3c38ebca3a09f0ae7ac"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/careful_concerned_negative_low_medium__care_answer__seed_113003/RECEIPT.json",
+      "region_id": "careful_concerned_negative_low_medium",
+      "render_id": "careful_concerned_negative_low_medium__care_answer__seed_113003",
+      "seed": 113003,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 433998,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__boundary_answer__seed_113001/audio.wav",
+        "sha256": "sha256:1a2e6b484b15ae344107ca732b27c53171f2c540a908e10dce32ef9e441bdca0"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__boundary_answer__seed_113001/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__boundary_answer__seed_113001",
+      "seed": 113001,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 424398,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__boundary_answer__seed_113002/audio.wav",
+        "sha256": "sha256:24d6f83377b7195cf95abe2d8ced0d38d3f5065482061adfabdbef4e04d7429b"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__boundary_answer__seed_113002/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__boundary_answer__seed_113002",
+      "seed": 113002,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 439758,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__boundary_answer__seed_113003/audio.wav",
+        "sha256": "sha256:43690a04eeadafbfddf447eddf7be604656718a325cadfc3e0bc66a39f88e2b5"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__boundary_answer__seed_113003/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__boundary_answer__seed_113003",
+      "seed": 113003,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 385998,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__journal_answer__seed_113001/audio.wav",
+        "sha256": "sha256:c3b47b56983249e902d55ebbb96cb573e1c238662dcf6dbc62d6be22d4435177"
+      },
+      "failed_gates": [
+        "embry_similarity_floor",
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__journal_answer__seed_113001/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__journal_answer__seed_113001",
+      "seed": 113001,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 324558,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__journal_answer__seed_113002/audio.wav",
+        "sha256": "sha256:70eb6be054bc09f5abf620f5859132303c3a0ebaef77efbb814f2b5b7dde4bfc"
+      },
+      "failed_gates": [
+        "embry_similarity_floor",
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__journal_answer__seed_113002/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__journal_answer__seed_113002",
+      "seed": 113002,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 314958,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__journal_answer__seed_113003/audio.wav",
+        "sha256": "sha256:98817b6f15bc93f681b73c62221ee2effff3817931e6553be2fa9e883b80f840"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__journal_answer__seed_113003/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__journal_answer__seed_113003",
+      "seed": 113003,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 437838,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__care_answer__seed_113001/audio.wav",
+        "sha256": "sha256:0f8237610befb933fa4bab7346dabbe61454df1d33e2af6edd5fc337294483a2"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__care_answer__seed_113001/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__care_answer__seed_113001",
+      "seed": 113001,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 370638,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__care_answer__seed_113002/audio.wav",
+        "sha256": "sha256:b261feddb39337346981863a202e38a5619fe203564e6bb4782d189026476817"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__care_answer__seed_113002/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__care_answer__seed_113002",
+      "seed": 113002,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 378318,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__care_answer__seed_113003/audio.wav",
+        "sha256": "sha256:8d068dac009e1a806d8edb3c6f0bc99edc11bc2ff95308f00530d8000f7658f5"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/firm_boundary_discouraged_negative_high__care_answer__seed_113003/RECEIPT.json",
+      "region_id": "firm_boundary_discouraged_negative_high",
+      "render_id": "firm_boundary_discouraged_negative_high__care_answer__seed_113003",
+      "seed": 113003,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 357198,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__boundary_answer__seed_113001/audio.wav",
+        "sha256": "sha256:507d0060dea2505b6f013ab79d7ef34c6a37144ceb8101fdb84ba61a65987eed"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__boundary_answer__seed_113001/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__boundary_answer__seed_113001",
+      "seed": 113001,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 362958,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__boundary_answer__seed_113002/audio.wav",
+        "sha256": "sha256:beae122d6e37d074f5e862efa86568050a355d40f83dd5a35da2f62b8792efa9"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__boundary_answer__seed_113002/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__boundary_answer__seed_113002",
+      "seed": 113002,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 401358,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__boundary_answer__seed_113003/audio.wav",
+        "sha256": "sha256:0ff8e26a489ef513bd2ad6928fd994f5b096fe4c05581eab81b6dfb224117399"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__boundary_answer__seed_113003/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__boundary_answer__seed_113003",
+      "seed": 113003,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "boundary_answer"
+    },
+    {
+      "audio": {
+        "bytes": 357198,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__journal_answer__seed_113001/audio.wav",
+        "sha256": "sha256:c65ef817eb36b41a9d21a8aa7a70e06a1ddc850c815a737549991476c9d1eb4b"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__journal_answer__seed_113001/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__journal_answer__seed_113001",
+      "seed": 113001,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 334158,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__journal_answer__seed_113002/audio.wav",
+        "sha256": "sha256:7c6524326fade9f6678781efc2b2eb9ddd76bc1fe6658e5e33b1ae7f213e240f"
+      },
+      "failed_gates": [],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__journal_answer__seed_113002/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__journal_answer__seed_113002",
+      "seed": 113002,
+      "status": "PASS_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 347598,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__journal_answer__seed_113003/audio.wav",
+        "sha256": "sha256:f31209a8a3bd5a372122f4ccbbcc71449dea15baa29626b548934b5aa25608d9"
+      },
+      "failed_gates": [
+        "embry_similarity_floor",
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__journal_answer__seed_113003/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__journal_answer__seed_113003",
+      "seed": 113003,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "journal_answer"
+    },
+    {
+      "audio": {
+        "bytes": 410958,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__care_answer__seed_113001/audio.wav",
+        "sha256": "sha256:941542a294b9ba1cc8c71f9a6a50850ad22253d588c20790e92c35f6ba2e8935"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__care_answer__seed_113001/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__care_answer__seed_113001",
+      "seed": 113001,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 324558,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__care_answer__seed_113002/audio.wav",
+        "sha256": "sha256:48d2c0b8640bdcefe2b204f50874b231821e6dce9501bbf2942ec573a1bc37dd"
+      },
+      "failed_gates": [
+        "embry_similarity_floor",
+        "quality:asr_text_exact"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__care_answer__seed_113002/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__care_answer__seed_113002",
+      "seed": 113002,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    },
+    {
+      "audio": {
+        "bytes": 368718,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__care_answer__seed_113003/audio.wav",
+        "sha256": "sha256:c83866beb48df317e503465813a68b738d1fe1217e0b54a2c2ce53eb0f4a181a"
+      },
+      "failed_gates": [
+        "embry_similarity_floor"
+      ],
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/positive_high__care_answer__seed_113003/RECEIPT.json",
+      "region_id": "positive_high",
+      "render_id": "positive_high__care_answer__seed_113003",
+      "seed": 113003,
+      "status": "BLOCKED_MACHINE_IDENTITY_RENDER",
+      "text_id": "care_answer"
+    }
+  ]
+}

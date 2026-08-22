@@ -1,0 +1,9 @@
+{
+  "cfg_weight": 0.5,
+  "exaggeration": 0.615,
+  "label": "pd-cross-mood-calibration_neutral__seed_213002",
+  "ref_audio": "/data/embry_ref.wav",
+  "seed": 213002,
+  "temperature": 0.7,
+  "text": "This neutral calibration sentence is separate from the target matrix. It checks whether the authorized Embry reference remains recognizable before any mood cells are scored."
+}

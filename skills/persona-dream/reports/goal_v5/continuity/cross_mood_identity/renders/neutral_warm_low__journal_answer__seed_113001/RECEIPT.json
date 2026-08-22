@@ -1,0 +1,124 @@
+{
+  "adversarial_reference_hashes": [
+    {
+      "bytes": 960078,
+      "exists": true,
+      "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+      "sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65"
+    },
+    {
+      "bytes": 288078,
+      "exists": true,
+      "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+      "sha256": "sha256:66b5b7518b86fc91546d469087cb9a2a616f2e8867b5f1dbd4c0aea62fe357f4"
+    }
+  ],
+  "answer_text_sha256": "sha256:fa5c135973c3d4257ceb5454b18e8e5a3f7c1150fa44523a30f7ced08669d7b7",
+  "asr": {
+    "base_url": "http://127.0.0.1:2022",
+    "live": true,
+    "mocked": false,
+    "ok": true,
+    "transcript": "The journal says the dream left pressure in the room, but I still give the same clean answer\n without turning the dream into a literal event.",
+    "wer": 0.0
+  },
+  "audio": {
+    "bytes": 376398,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113001/audio.wav",
+    "sha256": "sha256:efe3eb217ab265fac9fc399b7a7fc4a0bd868161a5bfed1a37d840978318f023"
+  },
+  "base_model_load_seconds": 11.421,
+  "elapsed_seconds": null,
+  "embry_vs_adversarial_margin_floor": 0.180581,
+  "engine": "chatterbox_base",
+  "failed_gates": [],
+  "identity_failed_gates": [],
+  "identity_floor": 0.880928,
+  "mapping_version": "persona_dream.cross_mood_identity.mapping.v1",
+  "paired_answer_text_sha256": "sha256:fa5c135973c3d4257ceb5454b18e8e5a3f7c1150fa44523a30f7ced08669d7b7",
+  "params": {
+    "cfg_weight": 0.5,
+    "exaggeration": 0.615,
+    "temperature": 0.7
+  },
+  "quality_failed_gates": [],
+  "reference_audio": {
+    "bytes": 960078,
+    "exists": true,
+    "path": "skills/persona-dream/voice_clone_candidates/embry_kling_clone_candidate.wav",
+    "sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098"
+  },
+  "reference_sha256": "sha256:4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098",
+  "region_id": "neutral_warm_low",
+  "region_label": "neutral or warm / low intensity",
+  "render_id": "neutral_warm_low__journal_answer__seed_113001",
+  "request": {
+    "bytes": 355,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113001/request.json",
+    "sha256": "sha256:7c32ebb8eaffc0e84ced6063e94a22a03c8a3e1fbc3c15d52901827027a86dd3"
+  },
+  "request_sha256": "sha256:48e72b109692d68376100285f8d385ad577c0215906a8619be3b5a5a8868abc9",
+  "response": {
+    "bytes": 1682,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/renders/neutral_warm_low__journal_answer__seed_113001/response.json",
+    "sha256": "sha256:c8b964d85e70d2fb3009eaa6346d152ac8540d1412813cd4fcf425ef4c949bce"
+  },
+  "response_ok": true,
+  "response_sha256": "sha256:92909d7695e30889e12c08bd69c8e690424e476845b27695c238ed7e86b5216f",
+  "reused_existing_render": true,
+  "seed": 113001,
+  "source_audio": "/home/graham/workspace/experiments/chatterbox/logs/pd-cross-mood-neutral_warm_low__journal_answer__seed_113001.wav",
+  "speaker": {
+    "adversarial_similarities": [
+      {
+        "audio": {
+          "bytes": 960078,
+          "exists": true,
+          "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/kai_kling_chatterbox_reference_30s.wav",
+          "sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65"
+        },
+        "similarity_to_target": 0.534328
+      },
+      {
+        "audio": {
+          "bytes": 288078,
+          "exists": true,
+          "path": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/horus_v2_agent_ref_6s.wav",
+          "sha256": "sha256:66b5b7518b86fc91546d469087cb9a2a616f2e8867b5f1dbd4c0aea62fe357f4"
+        },
+        "similarity_to_target": 0.475325
+      }
+    ],
+    "best_adversarial_similarity": 0.534328,
+    "embry_similarity": 0.916415,
+    "embry_vs_adversarial_margin": 0.382087
+  },
+  "status": "PASS_MACHINE_IDENTITY_RENDER",
+  "technical_screen_receipt": {
+    "bytes": 3044,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+    "sha256": "sha256:a8c7286aea6502741db36bb748b1ecf5118180d298ca24f160e2fac3d3c44aca"
+  },
+  "technical_screen_status": "PASS_STIMULUS_TECHNICAL_SCREEN",
+  "text_id": "journal_answer",
+  "trustworthy_duration": {
+    "min_seconds": 3.0,
+    "ok": true,
+    "seconds": 7.84
+  },
+  "voice_delivery": {
+    "emotion_realization": "audible",
+    "intensity": 0.35,
+    "pace": "measured",
+    "required_engine": "chatterbox_base",
+    "schema": "persona_dream.voice_delivery.v1",
+    "tone": "neutral_warm",
+    "use_base_emotion": true,
+    "valence": 0.2
+  },
+  "voice_delivery_sha256": "sha256:6ebf392f412cc66ff1de5a28a481d0bfcf20c50db09b88d896d968b4ea0ee270"
+}

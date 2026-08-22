@@ -1,0 +1,47 @@
+{
+  "audio": "/out/pd-cross-mood-neutral_warm_low__journal_answer__seed_113002.wav",
+  "audio_metrics": {
+    "bytes": 374478,
+    "channels": 1,
+    "codec_name": "pcm_s16le",
+    "duration_seconds": 7.8,
+    "exists": true,
+    "ffprobe": {
+      "cmd": [
+        "ffprobe",
+        "-hide_banner",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration,size",
+        "-show_entries",
+        "stream=codec_name,sample_rate,channels",
+        "-of",
+        "json",
+        "/out/pd-cross-mood-neutral_warm_low__journal_answer__seed_113002.wav"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"7.800000\",\n        \"size\": \"374478\"\n    }\n}\n"
+    },
+    "ffprobe_size": 374478,
+    "path": "/out/pd-cross-mood-neutral_warm_low__journal_answer__seed_113002.wav",
+    "sample_rate": 24000,
+    "sha256": "3ad2c72b631d9db78e8d15f69e52964777d042537bf3447b69cc1c4c889f9d21"
+  },
+  "base_model_load_seconds": 11.421,
+  "engine": "chatterbox_base",
+  "generation_seconds": 4.975,
+  "honors_exaggeration_cfg_weight": true,
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "params": {
+    "cfg_weight": 0.5,
+    "exaggeration": 0.615,
+    "temperature": 0.7
+  },
+  "reference_audio": "/data/embry_ref.wav",
+  "requested_device": "cuda",
+  "text": "The journal says the dream left pressure in the room, but I still give the same clean answer without turning the dream into a literal event."
+}

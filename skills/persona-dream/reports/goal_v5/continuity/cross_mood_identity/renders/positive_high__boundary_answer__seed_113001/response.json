@@ -1,0 +1,47 @@
+{
+  "audio": "/out/pd-cross-mood-positive_high__boundary_answer__seed_113001.wav",
+  "audio_metrics": {
+    "bytes": 357198,
+    "channels": 1,
+    "codec_name": "pcm_s16le",
+    "duration_seconds": 7.44,
+    "exists": true,
+    "ffprobe": {
+      "cmd": [
+        "ffprobe",
+        "-hide_banner",
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration,size",
+        "-show_entries",
+        "stream=codec_name,sample_rate,channels",
+        "-of",
+        "json",
+        "/out/pd-cross-mood-positive_high__boundary_answer__seed_113001.wav"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"7.440000\",\n        \"size\": \"357198\"\n    }\n}\n"
+    },
+    "ffprobe_size": 357198,
+    "path": "/out/pd-cross-mood-positive_high__boundary_answer__seed_113001.wav",
+    "sample_rate": 24000,
+    "sha256": "507d0060dea2505b6f013ab79d7ef34c6a37144ceb8101fdb84ba61a65987eed"
+  },
+  "base_model_load_seconds": 11.421,
+  "engine": "chatterbox_base",
+  "generation_seconds": 4.656,
+  "honors_exaggeration_cfg_weight": true,
+  "live": true,
+  "mocked": false,
+  "ok": true,
+  "params": {
+    "cfg_weight": 0.5,
+    "exaggeration": 1.092,
+    "temperature": 0.7
+  },
+  "reference_audio": "/data/embry_ref.wav",
+  "requested_device": "cuda",
+  "text": "I can answer clearly while keeping the boundary intact. The factual answer stays the same, and only my delivery carries the mood."
+}
