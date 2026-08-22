@@ -1,13 +1,53 @@
-# Immutable Goal: Live Evidence Live Coding Interview Proof
+# Immutable Goal: Live Evidence Follows Any Meeting
+
+Goal version 2 (human goal change, Graham, 2026-08-22). Version 1 -- the live
+coding interview proof -- is ACHIEVED and remains the floor: its primary
+proof, completion criteria, and non-success cases below stay binding as
+regression requirements. Version 2 states what the product is FOR.
 
 ## Outcome
 
-Live Evidence must prove it can follow a consented live coding interview or
-technical conversation, detect interviewer questions while the discussion is
-happening, and surface scannable answer cards or notifications that cite
-relevant code and research solutions for the human to use in real time.
+Live Evidence must follow ANY consented live meeting -- client calls, sales
+and hiring conversations, technical discussions, research reviews, interviews
+-- and, while the discussion is happening, surface scannable source-bound
+cards of three families:
 
-## Primary Proof
+1. **Research cards**: bounded external research (Brave/Dogpile-derived, never
+   the raw transcript) when the conversation needs facts beyond local
+   evidence.
+2. **Memory-recall cards**: relevant prior knowledge from Graph Memory --
+   past decisions, salient facts, contacts, project history -- recalled
+   because the conversation touched it.
+3. **Code cards**: relevant local source, indexed symbols, and solved code
+   answers when the conversation is technical.
+
+Plus the meeting assists that make the cards usable in real time: briefing
+packs that surface prepared talking points when the conversation opens a
+door, and human-approved actions (fact-check this claim, remember this
+decision, open the named artifact) proven by destination readback.
+
+Every card stays evidence-bound (concrete locators, honest insufficient
+states, no invented support), every capability stays purpose-gated
+(formal_assessment fails closed on all assistance), and every claim the
+system makes about itself stays receipt-backed.
+
+## Version-2 Completion Standard
+
+The version-1 proof was a one-time demonstration; version 2 is a daily-use
+standard, judged over real consented sessions rather than a single run:
+
+- A frozen-build field campaign of at least 20 real consented sessions
+  (meetings, calls, technical discussions) in which all three card families
+  fire where the conversation warranted them, with human usefulness labels
+  captured per card.
+- Question-onset-to-usable-card latency measured from when the speaker starts
+  the question, not from question settlement; the 95th percentile must let
+  the human read the card before the conversation moves on.
+- Zero assistance events in formal_assessment; zero actions executed without
+  approval; zero invented support -- across the whole campaign, failures
+  included in the denominator.
+
+## Primary Proof (version-1 floor, achieved and binding)
 
 Run a real technical interview or equivalent coding-interview segment through
 the desktop audio path:
