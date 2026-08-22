@@ -94,10 +94,10 @@ MIN_SEPARATION = 0.05
 #:   4.16s -> 0.8720  (ceiling 0.9150, deficit 0.043)
 #:   9.80s -> 0.8981  (ceiling 0.9676, deficit 0.070)
 #:
-#: Absolute similarity is dominated by CLIP DURATION, not by engine fidelity. A
-#: fixed floor therefore mislabels a short clip of the right speaker as the
-#: wrong speaker. The floor is now the same-speaker ceiling AT THE CLIP'S OWN
-#: DURATION, minus the largest deficit the engine actually showed.
+#: Report-only diagnostic floor: the same-speaker ceiling AT THE CLIP'S OWN
+#: DURATION, minus the largest deficit the engine actually showed. #1493 showed
+#: the preregistered fixed 0.75 Embry threshold separates current positives from
+#: adversarial voices, so this floor is no longer the runtime identity gate.
 MAX_ENGINE_DEFICIT = 0.16
 
 #: Below this, the measurement itself is not trustworthy: at 1.48s the engine's
@@ -105,6 +105,11 @@ MAX_ENGINE_DEFICIT = 0.16
 #: verdict from that little audio asserts more than the embedding supports, so
 #: the gate refuses to certify identity rather than guessing.
 MIN_TRUSTWORTHY_SECONDS = 3.0
+
+
+def passes_identity_gate(row: dict[str, Any]) -> bool:
+    """Runtime Embry identity gate for a long-enough genuine render."""
+    return row.get("passes_threshold") is True
 
 
 def utc_now() -> str:
@@ -360,10 +365,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                     row["similarity_to_embry"] >= row["duration_aware_floor"]
                 )
             row["long_enough_to_judge"] = seconds >= MIN_TRUSTWORTHY_SECONDS
+            row["identity_gate"] = "fixed_min_embry_similarity"
+            row["passes_identity_gate"] = passes_identity_gate(row)
         if any(not row.get("long_enough_to_judge") for row in genuine_rows):
             failed_gates.append("renders_long_enough_to_judge_identity")
         if any(
-            row.get("passes_duration_aware_floor") is False for row in genuine_rows
+            row.get("passes_identity_gate") is False for row in genuine_rows
         ):
             failed_gates.append("all_renders_recognized_as_embry")
         if any(not row["below_ceiling"] for row in adversarial_rows):
@@ -387,6 +394,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "min_embry_similarity": MIN_EMBRY_SIMILARITY,
             "max_adversarial_similarity": MAX_ADVERSARIAL_SIMILARITY,
             "min_separation": MIN_SEPARATION,
+            "identity_gate": "fixed_min_embry_similarity",
+            "duration_aware_floor": "report_only",
             "note": "Fixed before any score was computed; not tuned to observed values.",
         },
         "reference_audio": artifact(reference),
@@ -450,9 +459,11 @@ def main() -> int:
             floor = row.get("duration_aware_floor")
             verdict = (
                 "ok"
-                if row.get("passes_duration_aware_floor", row["passes_threshold"])
-                else "BELOW DURATION-AWARE FLOOR"
+                if row.get("passes_identity_gate", row["passes_threshold"])
+                else "BELOW FIXED EMBRY THRESHOLD"
             )
+            if row.get("passes_duration_aware_floor") is False:
+                verdict += ", below duration-aware report floor"
             if not row.get("long_enough_to_judge", True):
                 verdict += f", TOO SHORT TO JUDGE (<{MIN_TRUSTWORTHY_SECONDS}s)"
             print(

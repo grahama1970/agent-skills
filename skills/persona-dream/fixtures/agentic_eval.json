@@ -483,6 +483,29 @@
           "BLOCKED_RECOGNITION_POLICY_HOLDOUT_AUDIT"
         ]
       }
+    },
+    {
+      "name": "session-mood-recognition-fixed-threshold-policy",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.session_mood_recognition_status_contract"
+      ],
+      "seams": [
+        "continuity.session_mood.voice_recognition_policy"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_session_mood_voice_recognition_policy.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
     }
   ],
   "capability_claims": [
