@@ -4783,3 +4783,17 @@ def test_claude_handler_is_agentic_scillm_not_webclaude():
     assert xhigh.reasoning_downgrade_reason is None
     sonnet = resolve_scillm_model_route("claude-sonnet-4-6")
     assert sonnet.model == "claude-sonnet-4-6" and sonnet.provider == "anthropic"
+
+
+def test_claude_fable_low_worker_uses_scillm_not_direct_claude_cli() -> None:
+    """Fable is a Tau/SciLLM lane, not a bare Claude CLI model.
+
+    Regression guard for a live failure where the worker dispatched
+    `claude-fable-low` through `claude -p --model claude-fable`, which Claude
+    Code rejected before provider execution.
+    """
+    assert tau_roundtable_worker._is_direct_claude_cli_handler("claude-fable-low") is False
+    assert tau_roundtable_worker._is_direct_claude_cli_handler("claude-fable-5") is False
+    assert tau_roundtable_worker._is_direct_claude_cli_handler("claude-sonnet-4-6-medium") is False
+    assert tau_roundtable_worker._is_direct_claude_cli_handler("claude-opus-5-medium") is True
+    assert tau_roundtable_worker._is_direct_claude_cli_handler("opus-5-medium") is True

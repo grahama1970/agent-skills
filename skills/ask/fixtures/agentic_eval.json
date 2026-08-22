@@ -604,6 +604,30 @@
       }
     },
     {
+      "name": "claude-fable-low-worker-dispatches-through-scillm",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest -q tests/test_tau_dag.py -k claude_fable_low_worker_uses_scillm_not_direct_claude_cli"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stdout_excludes": [
+          "claude-code:unrecognized_model",
+          "--model claude-fable",
+          "\"claude-fable\" is not a model",
+          "handler_execution_failed"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
       "name": "webclaude-is-never-preferred-over-the-local-lane",
       "type": "adversarial",
       "real_world": true,

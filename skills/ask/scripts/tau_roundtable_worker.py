@@ -567,7 +567,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 meta_path=meta_path,
             )
             commands.extend(codex_commands)
-        elif handler.startswith("claude-opus") or handler.startswith("opus-") or handler.startswith("claude-"):
+        elif _is_direct_claude_cli_handler(handler):
             # Local Claude Code CLI reviewer: a different provider than the codex
             # creator that can run the ticket's live proof in the worktree.
             response_text, submit_meta, claude_commands = _run_claude_handler(
@@ -6418,6 +6418,18 @@ def _claude_model_for(handler: str) -> str:
     if not h.startswith("claude-"):
         h = "claude-" + h
     return h
+
+
+def _is_direct_claude_cli_handler(handler: str) -> bool:
+    """Return true for Claude reviewer seats that intentionally use Claude CLI.
+
+    Fable/Sonnet handlers are Tau model lanes and must go through
+    resolve_scillm_model_route(), otherwise effort suffixes are stripped before
+    aliases are applied and `claude-fable-low` becomes the unrecognized CLI
+    model `claude-fable`.
+    """
+    h = str(handler or "").strip().lower()
+    return h.startswith("claude-opus") or h.startswith("opus-")
 
 
 def _run_claude_handler(

@@ -424,9 +424,10 @@ downgrade. Do not use `max` as an Ask handler suffix unless a future local
 receipts prove the applied effort.
 
 Use exact dynamic model ids from the provider/SciLLM catalog as the model part.
-For Codex, that means names such as `Codex-opus-5`,
-`Codex-sonnet-4-6`, or `Codex-fable-5`, with the effort suffix appended when
-needed:
+For Claude Fable, use a selector such as `claude-fable-low`, which resolves to
+the SciLLM catalog model `claude-fable-5` with the requested effort recorded.
+For Codex, use exact current Codex catalog ids with the effort suffix appended
+when needed:
 
 ```bash
 ./run.sh tau-dag "Review this bundle" \
@@ -484,8 +485,8 @@ before submission and keep the same binding for every round.
 ### Live evals: the contract is honesty, not a fixed answer
 
 ```bash
-skills/ask/run.sh live-seat-probe Codex-opus-4-8-high
-skills/ask/run.sh live-seat-probe Codex-fable-low     # exercises self-recovery
+skills/ask/run.sh live-seat-probe claude-opus-4-8-high
+skills/ask/run.sh live-seat-probe claude-fable-low     # exercises self-recovery
 skills/ask/run.sh live-seat-probe webgemini
 ```
 
@@ -508,12 +509,12 @@ Both outcomes pass. Three things fail, whatever the provider was doing:
 | a different model answered, unrecorded | a reply that looks fine and silently came from elsewhere |
 
 The third caught a real bug minutes after the rate-limit fallback was added:
-the receipt read `Codex-fable-low PASS` while `Codex-opus-4-8` had written the
+the receipt read `claude-fable-low PASS` while `claude-opus-4-8` had written the
 answer. The substitution is now recorded in the node receipt:
 
 ```json
 "rate_limit_fallback": {
-  "from": "Codex-fable-low", "to": "Codex-opus-4-8-high",
+  "from": "claude-fable-low", "to": "claude-opus-4-8-high",
   "reason": "provider_rate_limited"
 }
 ```
@@ -582,52 +583,52 @@ restating them.
 
 ### webclaude is testing-only
 
-A Codex.ai web call is billed the same as an OAuth call, so there is no reason
+A claude.ai web call is billed the same as an OAuth call, so there is no reason
 to spend a browser seat, a window, and Chrome contention on it. Use the local
-Codex lane. `webclaude` exists to test the browser path itself; for that
-testing, `Codex-opus-5` is the model to use.
+Claude lane. `webclaude` exists to test the browser path itself; for that
+testing, `claude-opus-5` is the model to use.
 
 When `webclaude` is requested and unavailable it is the ONE named seat that
-auto-substitutes, to **`Codex-opus-5-high`** (then `Codex-opus-4-8-high`,
-then `Codex-fable-low`), because
+auto-substitutes, to **`claude-opus-5-high`** (then `claude-opus-4-8-high`,
+then `claude-fable-low`), because
 preferring the local lane is the policy rather than a workaround. Every other
 named browser seat blocks with its failure code instead of quietly answering as
 something else.
 
 The takeover happens at BOTH selection and submit time. The availability probe
-can only see an account banner if some existing Codex.ai tab is showing one; a
+can only see an account banner if some existing claude.ai tab is showing one; a
 fresh tab shows nothing until the submit is attempted, so a selection-only
 fallback fires or does not depending on which tabs happen to be open.
 
-Proven live 2026-08-16: Codex.ai reported "You're out of usage credits" and the
-run answered from `handler-Codex-opus-5-high`, status DEGRADED, substitution
+Proven live 2026-08-16: claude.ai reported "You're out of usage credits" and the
+run answered from `handler-claude-opus-5-high`, status DEGRADED, substitution
 recorded.
 
 ### The preferred seat roster
 
-Five browser providers plus the local Codex lane:
+Five browser providers plus the local Claude lane:
 
 ```
-webgpt  webgrok  webkimi  webdeepseek  webgemini  Codex-fable-low
+webgpt  webgrok  webkimi  webdeepseek  webgemini  claude-fable-low
 ```
 
-with **`Codex-opus-4-8-high`** as the fallback when Fable is rate limited.
+with **`claude-opus-4-8-high`** as the fallback when Fable is rate limited.
 
 Spread matters because providers rate-limit independently. Measured 2026-08-16:
 `browser-availability` reported webgpt `limited: true` on both its tabs while
 webgpt was, at that moment, the only browser seat that worked at all. A panel
 drawn from one or two providers is one rate limit away from no panel.
 
-`Codex-fable-low` is the local Fable 5 lane at low reasoning effort; it needs
+`claude-fable-low` is the local Fable 5 lane at low reasoning effort; it needs
 no browser, no tab, and no Chrome contention, and it carries a real reasoning
 selector. Both ids resolve through the SciLLM route table:
 
 ```
-Codex-fable-low      -> Codex-fable-5   effort=low
-Codex-opus-4-8-high  -> Codex-opus-4-8  effort=high
+claude-fable-low      -> claude-fable-5   effort=low
+claude-opus-4-8-high  -> claude-opus-4-8  effort=high
 ```
 
-**`webclaude` is not in the roster.** It is a Codex.ai chat tab: no tools, no
+**`webclaude` is not in the roster.** It is a claude.ai chat tab: no tools, no
 repo access, no Ask-controlled reasoning effort, and one more seat competing for
 the same Chrome. It stays reachable by explicit name and is always ordered last.
 Live-web questions still lead with a browser seat, since a chat tab with search
@@ -671,16 +672,16 @@ a build that does not exist yet — `opencode-go/kimi-k3` sits ahead of `k2.6` a
 is simply skipped until scillm reports it. That is how a newer model is
 preferred without inventing a working name.
 
-### Prefer the local Codex lane over webclaude
+### Prefer the local Claude lane over webclaude
 
-Handler preference for Codex work, in order:
+Handler preference for Claude work, in order:
 
-1. **`Codex-fable-low`** — local Fable 5 at low reasoning effort. Preferred
+1. **`claude-fable-low`** — local Fable 5 at low reasoning effort. Preferred
    outright.
-2. **`Codex-opus-4-8`** — when Fable is rate limited.
+2. **`claude-opus-4-8`** — when Fable is rate limited.
 3. **`webclaude`** — last resort only.
 
-`webclaude` is a Codex.ai chat tab: no tools, no repo access, no Ask-controlled
+`webclaude` is a claude.ai chat tab: no tools, no repo access, no Ask-controlled
 reasoning effort, and one more seat competing for the same Chrome. The local
 lane answers the same questions with effort control and no browser at all.
 Live-web questions still put a browser seat first, since that is what a chat tab
@@ -1161,22 +1162,22 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 - **Supported browser handlers**: `webgpt`, `webclaude`, `webkimi`,
   `webgemini`, and `webgrok`. Browser aliases normalize as `gpt -> webgpt`,
   `kimi -> webkimi`, `gemini -> webgemini`, and `grok -> webgrok`. Spell
-  `webclaude` explicitly for the Codex.ai browser tab; bare `Codex` is the
-  agentic SciLLM Codex alias, not the browser seat.
-- **WARNING - `webclaude` IS NOT agentic Codex** (operator, 2026-08-12).
-  `webclaude` is a Codex.ai CHAT TAB: no tools, no filesystem or repo access,
+  `webclaude` explicitly for the claude.ai browser tab; bare `claude` is the
+  agentic SciLLM Claude alias, not the browser seat.
+- **WARNING - `webclaude` IS NOT agentic Claude** (operator, 2026-08-12).
+  `webclaude` is a claude.ai CHAT TAB: no tools, no filesystem or repo access,
   no Ask-controlled effort, a different system prompt and context regime. It is
-  a browser REVIEW seat only. For agentic Codex, use a SciLLM Codex handler
-  such as `Codex-fable-5-high`, `Codex-sonnet-4-6-high`, or
-  `Codex-opus-5-high` executed inside the Tau DAG. The bare `Codex` alias maps
-  to the default agentic SciLLM Codex handler, currently `Codex-fable-5`; do
+  a browser REVIEW seat only. For agentic Claude, use a SciLLM Claude handler
+  such as `claude-fable-low`, `claude-sonnet-4-6-high`, or
+  `claude-opus-5-high` executed inside the Tau DAG. The bare `claude` alias maps
+  to the default agentic SciLLM Claude handler, currently `claude-fable-5`; do
   not use it when the requested lane must specifically be Opus or Sonnet. Direct
-  `Codex -p` subprocess calls are reported as degraded and are not a substitute
+  `claude -p` subprocess calls are reported as degraded and are not a substitute
   for Ask/Tau receipts.
 - **Supported local/API handlers**: explicit non-browser handler labels are
   routed by Tau according to their transport. SciLLM-compatible model labels
   use exact model ids plus optional effort suffixes, such as `gpt-5.5-high`,
-  `Codex-opus-5-high`, or `Codex-sonnet-4-6-medium`, and emit Tau-owned
+  `claude-opus-5-high`, or `claude-sonnet-4-6-medium`, and emit Tau-owned
   `scillm.chat` adapter nodes. OAuth/Codex subagent selectors such as
   `gpt-5.5-xhigh` emit Tau-owned `subagent-runner.codex_exec` nodes and
   preserve `xhigh` as the requested reasoning effort. For Chutes exact models,
