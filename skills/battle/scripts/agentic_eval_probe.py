@@ -752,6 +752,631 @@ def probe_receipt_pixi_replay(summary_path: Path) -> int:
     )
 
 
+def probe_orchestrator_overnight_resume_report(summary_path: Path) -> int:
+    out_root = summary_path.parent / "orchestrator-overnight-resume-report"
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    storage = out_root / "storage"
+    storage.mkdir(parents=True)
+    env = {"BATTLE_STORAGE_ROOT": str(storage)}
+    battle_id = "battle_agentic_orchestrator"
+
+    from battle_skill import resume_runtime
+    from battle_skill import state as state_module
+    from battle_skill.config import OVERNIGHT_CHECKPOINT_INTERVAL, OVERNIGHT_ROUNDS
+    from battle_skill.state import BattleState
+
+    old_state_dir = state_module.BATTLES_DIR
+    old_resume_dir = resume_runtime.BATTLES_DIR
+    try:
+        battles_dir = storage / "battles"
+        state_module.BATTLES_DIR = battles_dir
+        resume_runtime.BATTLES_DIR = battles_dir
+        state = BattleState(
+            battle_id=battle_id,
+            target_path=str(out_root / "target"),
+            max_rounds=OVERNIGHT_ROUNDS,
+            current_round=7,
+            status="running",
+        )
+        state.last_checkpoint = _utc()
+        state.save()
+    finally:
+        state_module.BATTLES_DIR = old_state_dir
+        resume_runtime.BATTLES_DIR = old_resume_dir
+
+    status_proc = _run_in([str(RUN_SH), "status"], cwd=REPO_ROOT, timeout=60, env=env)
+    report_proc = _run_in([str(RUN_SH), "report", battle_id], cwd=REPO_ROOT, timeout=60, env=env)
+    stop_proc = _run_in([str(RUN_SH), "stop", battle_id], cwd=REPO_ROOT, timeout=60, env=env)
+    for name, proc in {
+        "status": status_proc,
+        "report": report_proc,
+        "stop": stop_proc,
+    }.items():
+        (out_root / f"{name}.stdout.txt").write_text(proc.stdout, encoding="utf-8")
+        (out_root / f"{name}.stderr.txt").write_text(proc.stderr, encoding="utf-8")
+        if proc.returncode != 0:
+            raise AssertionError(f"battle {name} command failed: {proc.stderr}")
+
+    report_path = storage / "reports" / f"{battle_id}.md"
+    if "Battle Status" not in status_proc.stdout:
+        raise AssertionError("battle status output did not render the status table")
+    if not report_path.is_file() or report_path.stat().st_size < 200:
+        raise AssertionError("battle report command did not write a substantive report")
+
+    old_state_dir = state_module.BATTLES_DIR
+    old_resume_dir = resume_runtime.BATTLES_DIR
+    calls = 0
+    try:
+        state_module.BATTLES_DIR = storage / "battles"
+        resume_runtime.BATTLES_DIR = storage / "battles"
+
+        class _NoopResumeOrchestrator:
+            def __init__(self, loaded: BattleState) -> None:
+                self.state = loaded
+                self.battle_id = loaded.battle_id
+
+            def run(self) -> BattleState:
+                nonlocal calls
+                calls += 1
+                self.state.status = "completed"
+                self.state.current_round += 1
+                self.state.save()
+                return self.state
+
+        def factory(loaded: BattleState) -> _NoopResumeOrchestrator:
+            return _NoopResumeOrchestrator(loaded)
+
+        first_resume = resume_runtime.resume_battle_once(
+            battle_id,
+            request_id="agentic-resume-once",
+            orchestrator_factory=factory,
+        )
+        duplicate_resume = resume_runtime.resume_battle_once(
+            battle_id,
+            request_id="agentic-resume-once",
+            orchestrator_factory=factory,
+        )
+    finally:
+        state_module.BATTLES_DIR = old_state_dir
+        resume_runtime.BATTLES_DIR = old_resume_dir
+
+    if first_resume.get("status") != "APPLIED":
+        raise AssertionError(f"resume did not apply once: {first_resume}")
+    if duplicate_resume.get("status") != "DUPLICATE_IGNORED":
+        raise AssertionError(f"duplicate resume was not ignored: {duplicate_resume}")
+    if calls != 1:
+        raise AssertionError(f"resume orchestrator ran {calls} times, expected once")
+    if OVERNIGHT_ROUNDS != 1000 or OVERNIGHT_CHECKPOINT_INTERVAL != 50:
+        raise AssertionError("overnight constants drifted from documented contract")
+
+    resume_receipt_path = (
+        storage / "battles" / f"{battle_id}_control" / "resume" / "agentic-resume-once.json"
+    )
+    return _emit(
+        summary_path,
+        _summary(
+            suite="orchestrator-overnight-resume-report",
+            live="local_battle_state_status_report_stop_resume_receipts",
+            checks=[
+                {
+                    "name": "status_report_stop_resume_duplicate_guard",
+                    "status": "PASS",
+                    "battle_id": battle_id,
+                    "overnight_rounds": OVERNIGHT_ROUNDS,
+                    "checkpoint_interval": OVERNIGHT_CHECKPOINT_INTERVAL,
+                    "resume_calls": calls,
+                }
+            ],
+            artifacts={
+                "state": str(storage / "battles" / f"{battle_id}.json"),
+                "report": str(report_path),
+                "resume_receipt": str(resume_receipt_path),
+                "status_stdout": str(out_root / "status.stdout.txt"),
+                "stop_stdout": str(out_root / "stop.stdout.txt"),
+            },
+            claims_proves=[
+                "status, report, stop, and idempotent resume operate against the same Battle state store",
+                "overnight constants remain 1000 rounds and checkpoint interval 50",
+            ],
+            claims_does_not_prove=[
+                "a real 1000-round overnight campaign",
+                "fresh Red/Blue provider quality during resume",
+            ],
+        ),
+    )
+
+
+def probe_digital_twin_non_docker_modes(summary_path: Path) -> int:
+    out_root = summary_path.parent / "digital-twin-non-docker-modes"
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    from battle_skill import digital_twin as digital_twin_module
+    from battle_skill.digital_twin import DigitalTwin
+    from battle_skill.state import TwinMode
+
+    old_worktrees = digital_twin_module.WORKTREES_DIR
+    try:
+        digital_twin_module.WORKTREES_DIR = out_root / "worktrees"
+        source_copy = out_root / "copy-source"
+        source_copy.mkdir()
+        (source_copy / "app.py").write_text("VALUE = 'source'\n", encoding="utf-8")
+        (source_copy / ".git").mkdir()
+        (source_copy / ".git" / "ignored").write_text("do-not-copy\n", encoding="utf-8")
+        copy_twin = DigitalTwin(str(source_copy), "battle-agentic-copy", mode=TwinMode.COPY)
+        if not copy_twin.setup():
+            raise AssertionError("copy mode setup failed")
+        assert copy_twin.blue_worktree is not None
+        assert copy_twin.arena_worktree is not None
+        (copy_twin.blue_worktree / "app.py").write_text("VALUE = 'blue'\n", encoding="utf-8")
+        if (source_copy / "app.py").read_text(encoding="utf-8") != "VALUE = 'source'\n":
+            raise AssertionError("copy mode mutated source workspace")
+        if (copy_twin.blue_worktree / ".git").exists():
+            raise AssertionError("copy mode copied source .git directory")
+
+        git_source = out_root / "git-source"
+        git_source.mkdir()
+        (git_source / "app.py").write_text("VALUE = 'git-source'\n", encoding="utf-8")
+        for command in (
+            ["git", "init"],
+            ["git", "config", "user.email", "battle-agentic@example.invalid"],
+            ["git", "config", "user.name", "Battle Agentic Eval"],
+            ["git", "add", "app.py"],
+            ["git", "commit", "-m", "seed"],
+        ):
+            proc = _run_in(command, cwd=git_source, timeout=60)
+            if proc.returncode != 0:
+                raise AssertionError(f"git setup failed for {command}: {proc.stderr}")
+        git_twin = DigitalTwin(str(git_source), "battle-agentic-git", mode=TwinMode.GIT_WORKTREE)
+        if not git_twin.setup():
+            raise AssertionError("git_worktree mode setup failed")
+        assert git_twin.blue_worktree is not None
+        assert git_twin.arena_worktree is not None
+        (git_twin.blue_worktree / "app.py").write_text("VALUE = 'blue-git'\n", encoding="utf-8")
+        if not git_twin.sync_blue_to_arena():
+            raise AssertionError("git_worktree dirty sync to arena failed")
+        if (git_twin.arena_worktree / "app.py").read_text(encoding="utf-8") != "VALUE = 'blue-git'\n":
+            raise AssertionError("git_worktree arena did not receive Blue patch")
+        if (git_source / "app.py").read_text(encoding="utf-8") != "VALUE = 'git-source'\n":
+            raise AssertionError("git_worktree mode mutated source workspace")
+
+        firmware = out_root / "firmware.bin"
+        firmware.write_bytes(b"BATTLE-FIRMWARE")
+        qemu_twin = DigitalTwin(str(firmware), "battle-agentic-qemu", mode=None)
+        if qemu_twin.mode != TwinMode.QEMU:
+            raise AssertionError("firmware suffix did not select QEMU mode")
+    finally:
+        digital_twin_module.WORKTREES_DIR = old_worktrees
+
+    return _emit(
+        summary_path,
+        _summary(
+            suite="digital-twin-non-docker-modes",
+            live="local_filesystem_git_worktree_copy_qemu_detection",
+            checks=[
+                {
+                    "name": "copy_git_worktree_and_qemu_detection",
+                    "status": "PASS",
+                    "copy_source_unchanged": True,
+                    "git_source_unchanged": True,
+                    "qemu_firmware_detected": True,
+                }
+            ],
+            artifacts={
+                "copy_blue": str(out_root / "worktrees" / "battle-agentic-copy" / "blue" / "app.py"),
+                "git_arena": str(out_root / "worktrees" / "battle-agentic-git" / "arena" / "app.py"),
+                "firmware": str(firmware),
+            },
+            claims_proves=[
+                "copy mode isolates Red/Blue/Arena without copying .git",
+                "git_worktree mode keeps the source repository unchanged while syncing Blue changes to Arena",
+                "firmware targets select QEMU mode by suffix",
+            ],
+            claims_does_not_prove=[
+                "QEMU boot execution inside Docker",
+                "arbitrary embedded firmware toolchain support",
+            ],
+        ),
+    )
+
+
+def probe_swarm_throughput_envelope(summary_path: Path) -> int:
+    out_root = summary_path.parent / "swarm-throughput-envelope"
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    positive = _run(
+        [
+            str(RUN_SH),
+            "prove-unbounded-swarm-execution",
+            "--out",
+            str(out_root / "positive"),
+            "--worker-count",
+            "4",
+            "--min-concurrent-observed",
+            "2",
+            "--per-worker-timeout-s",
+            "30",
+        ],
+        timeout=180,
+    )
+    (out_root / "positive.stdout.txt").write_text(positive.stdout, encoding="utf-8")
+    (out_root / "positive.stderr.txt").write_text(positive.stderr, encoding="utf-8")
+    if positive.returncode != 0:
+        raise AssertionError("swarm positive proof failed: " + positive.stderr)
+    receipt_path = out_root / "positive" / "unbounded-swarm-execution-proof.json"
+    receipt = _read_json(receipt_path)
+    _assert_status(receipt, receipt_path)
+    if int(receipt.get("max_concurrent_observed") or 0) < 2:
+        raise AssertionError("swarm receipt did not observe required concurrency")
+
+    negative = _run(
+        [
+            str(RUN_SH),
+            "prove-unbounded-swarm-execution",
+            "--out",
+            str(out_root / "negative"),
+            "--worker-count",
+            "2",
+            "--min-concurrent-observed",
+            "3",
+            "--per-worker-timeout-s",
+            "10",
+        ],
+        timeout=60,
+    )
+    (out_root / "negative.stdout.txt").write_text(negative.stdout, encoding="utf-8")
+    (out_root / "negative.stderr.txt").write_text(negative.stderr, encoding="utf-8")
+    if negative.returncode == 0:
+        raise AssertionError("swarm impossible concurrency threshold unexpectedly passed")
+
+    return _emit(
+        summary_path,
+        _summary(
+            suite="swarm-throughput-envelope",
+            live="local_docker_dynamic_swarm_execution",
+            checks=[
+                {
+                    "name": "docker_swarm_concurrency_and_invalid_threshold",
+                    "status": "PASS",
+                    "worker_count": receipt.get("worker_count"),
+                    "max_concurrent_observed": receipt.get("max_concurrent_observed"),
+                    "negative_exit_code": negative.returncode,
+                }
+            ],
+            artifacts={
+                "swarm_receipt": str(receipt_path),
+                "positive_stdout": str(out_root / "positive.stdout.txt"),
+                "negative_stderr": str(out_root / "negative.stderr.txt"),
+            },
+            claims_proves=[
+                "Battle can schedule a configurable Docker swarm beyond fixed two-worker fixtures",
+                "invalid concurrency thresholds fail before producing false PASS receipts",
+            ],
+            claims_does_not_prove=[
+                "production cluster autoscaling",
+                "Tau provider execution inside every worker",
+            ],
+        ),
+    )
+
+
+def _write_positive_production_receipts(root: Path) -> dict[str, Path]:
+    containerized = root / "containerized.json"
+    production_infra = root / "production-infrastructure.json"
+    production_ws = root / "production-websocket.json"
+    swarm = root / "swarm.json"
+    now = _utc()
+    _write_json(
+        containerized,
+        {
+            "schema": "battle.containerized_deployment_smoke.v1",
+            "status": "PASS",
+            "mocked": False,
+            "live": "containerized_http_sse_websocket_adapter_plus_vite_preview",
+            "commit": "agentic-eval-positive-readiness",
+            "counts": {
+                "pr8_failed": 0,
+                "test_interactions_failed": 0,
+                "test_interactions_warned": 0,
+                "visual_findings": 0,
+            },
+            "proofs": {
+                "backend_live_transport_receipt": "backend.json",
+                "pr8_live_transport_summary": "summary.json",
+                "test_interactions_results": "results.json",
+                "visual_findings": "visual-findings.jsonl",
+                "screenshot": "screenshot.png",
+            },
+            "processes": {
+                "api_pid": 1111,
+                "vite_pid": 2222,
+                "api_port": 3101,
+                "vite_port": 5173,
+            },
+            "backend": {
+                "health_status": 200,
+                "rounds_status": 200,
+                "sse_event_count": 3,
+                "sse_sequence_monotonic": True,
+                "sse_ids": [1, 2, 3],
+                "websocket_message_count": 3,
+                "websocket_sequence_monotonic": True,
+                "websocket_ids": [1, 2, 3],
+                "bad_resume_statuses": {
+                    "future_last_event_id": 400,
+                    "negative_last_event_id": 400,
+                    "non_integer_last_event_id": 400,
+                },
+            },
+            "frontend": {
+                "visual_findings": [],
+                "pr8_failed": 0,
+                "test_interactions_failed": 0,
+                "test_interactions_warned": 0,
+                "screenshots": ["screen.png"],
+                "trace_path": "trace.zip",
+            },
+            "created_at": now,
+        },
+    )
+    _write_json(
+        production_infra,
+        {
+            "schema": "battle.production_infrastructure_deployment_proof.v1",
+            "status": "PASS",
+            "mocked": False,
+            "live": "production_infrastructure_deployment",
+            "target": {
+                "environment": "production",
+                "frontend_url": "https://battle.example.com",
+                "backend_health_url": "https://battle.example.com/health",
+                "websocket_url": "wss://battle.example.com/live",
+                "commit": "agentic-eval-positive-readiness",
+                "release_id": "battle-agentic-eval",
+            },
+            "rollback_ref": "battle-agentic-rollback",
+            "teardown_ref": "battle-agentic-teardown",
+            "secret_source": "external-secret-manager",
+            "evidence": {
+                "frontend_https_response": {"status_code": 200},
+                "backend_health_response": {"status_code": 200},
+                "websocket_connectivity": {"connected": True},
+                "tls_certificate": {"valid": True},
+                "dns_resolution": {"resolves": True},
+                "ingress_route": {"status": "PASS"},
+                "secret_configuration": {"source": "production-secret-manager"},
+            },
+            "created_at": now,
+        },
+    )
+    _write_json(
+        production_ws,
+        {
+            "schema": "battle.production_websocket_transport_proof.v1",
+            "status": "PASS",
+            "mocked": False,
+            "live": "production_websocket_tls_auth_fanout_reconnect",
+            "websocket_url": "wss://battle.example.com/live",
+            "auth": {"required": True, "rejected_without_token": True},
+            "fanout": {"clients": 2, "messages_per_client": [3, 3]},
+            "reconnect": {"last_event_id_respected": True},
+            "created_at": now,
+        },
+    )
+    _write_json(
+        swarm,
+        {
+            "schema": "battle.unbounded_swarm_execution_proof.v1",
+            "status": "PASS",
+            "mocked": False,
+            "live": "local_docker_dynamic_swarm_execution",
+            "worker_count": 4,
+            "completed_worker_count": 4,
+            "failed_worker_count": 0,
+            "max_concurrent_observed": 4,
+            "min_concurrent_required": 2,
+            "worker_receipts": ["worker-0.json", "worker-1.json"],
+            "created_at": now,
+        },
+    )
+    return {
+        "containerized": containerized,
+        "production_infra": production_infra,
+        "production_ws": production_ws,
+        "swarm": swarm,
+    }
+
+
+def probe_production_positive_readiness(summary_path: Path) -> int:
+    out_root = summary_path.parent / "production-positive-readiness"
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    receipts_dir = out_root / "receipts"
+    receipts_dir.mkdir(parents=True)
+    receipts = _write_positive_production_receipts(receipts_dir)
+    positive = _run(
+        [
+            str(RUN_SH),
+            "validate-production-readiness",
+            "--out",
+            str(out_root / "positive"),
+            "--containerized-receipt",
+            str(receipts["containerized"]),
+            "--production-infrastructure-receipt",
+            str(receipts["production_infra"]),
+            "--production-websocket-receipt",
+            str(receipts["production_ws"]),
+            "--unbounded-swarm-receipt",
+            str(receipts["swarm"]),
+        ],
+        timeout=120,
+    )
+    (out_root / "positive.stdout.txt").write_text(positive.stdout, encoding="utf-8")
+    (out_root / "positive.stderr.txt").write_text(positive.stderr, encoding="utf-8")
+    if positive.returncode != 0:
+        raise AssertionError("positive production readiness contract failed: " + positive.stderr)
+    readiness_path = out_root / "positive" / "production-readiness-contract.json"
+    readiness = _read_json(readiness_path)
+    _assert_status(readiness, readiness_path)
+
+    broken_infra = receipts_dir / "broken-production-infrastructure.json"
+    broken = _read_json(receipts["production_infra"])
+    broken["target"]["websocket_url"] = "ws://localhost:3101/live"
+    _write_json(broken_infra, broken)
+    negative = _run(
+        [
+            str(RUN_SH),
+            "validate-production-readiness",
+            "--out",
+            str(out_root / "negative"),
+            "--containerized-receipt",
+            str(receipts["containerized"]),
+            "--production-infrastructure-receipt",
+            str(broken_infra),
+            "--production-websocket-receipt",
+            str(receipts["production_ws"]),
+            "--unbounded-swarm-receipt",
+            str(receipts["swarm"]),
+        ],
+        timeout=120,
+    )
+    (out_root / "negative.stdout.txt").write_text(negative.stdout, encoding="utf-8")
+    (out_root / "negative.stderr.txt").write_text(negative.stderr, encoding="utf-8")
+    if negative.returncode == 0:
+        raise AssertionError("invalid production URL unexpectedly passed readiness")
+
+    return _emit(
+        summary_path,
+        _summary(
+            suite="production-positive-readiness",
+            live="production_readiness_contract_validator_with_external_receipt_shapes",
+            checks=[
+                {
+                    "name": "positive_and_invalid_external_receipts",
+                    "status": "PASS",
+                    "positive_status": readiness.get("status"),
+                    "negative_exit_code": negative.returncode,
+                }
+            ],
+            artifacts={
+                "readiness_receipt": str(readiness_path),
+                "containerized_receipt": str(receipts["containerized"]),
+                "production_infrastructure_receipt": str(receipts["production_infra"]),
+                "production_websocket_receipt": str(receipts["production_ws"]),
+                "negative_stderr": str(out_root / "negative.stderr.txt"),
+            },
+            claims_proves=[
+                "production readiness can pass only when all required positive receipt classes are present",
+                "localhost/non-WSS production infrastructure receipts fail closed",
+            ],
+            claims_does_not_prove=[
+                "that battle.example.com is a deployed Battle instance",
+                "fresh production WebSocket fanout against a real public endpoint",
+            ],
+        ),
+    )
+
+
+def probe_pixi_gameplay_video(summary_path: Path) -> int:
+    out_root = summary_path.parent / "pixi-gameplay-video"
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    build = _run_in(["npm", "run", "build"], cwd=SPECTATOR_DIR, timeout=180)
+    (out_root / "build.stdout.txt").write_text(build.stdout, encoding="utf-8")
+    (out_root / "build.stderr.txt").write_text(build.stderr, encoding="utf-8")
+    if build.returncode != 0:
+        raise AssertionError("spectator build failed before Pixi gameplay video proof")
+
+    port = _free_local_port()
+    host = f"http://127.0.0.1:{port}"
+    server = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "http.server",
+            str(port),
+            "--bind",
+            "127.0.0.1",
+            "-d",
+            "dist",
+        ],
+        cwd=SPECTATOR_DIR,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        _wait_for_http(host)
+        proof = _run_in(
+            ["node", "scripts/prove-battle-pixi-gameplay-video.mjs"],
+            cwd=SPECTATOR_DIR,
+            timeout=120,
+            env={
+                "BATTLE_HOST": host,
+                "BATTLE_PIXI_GAMEPLAY_OUT_DIR": str(out_root),
+            },
+        )
+    finally:
+        server.terminate()
+        try:
+            stdout, stderr = server.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            server.kill()
+            stdout, stderr = server.communicate(timeout=5)
+        (out_root / "server.stdout.txt").write_text(stdout or "", encoding="utf-8")
+        (out_root / "server.stderr.txt").write_text(stderr or "", encoding="utf-8")
+
+    (out_root / "gameplay-video.stdout.txt").write_text(proof.stdout, encoding="utf-8")
+    (out_root / "gameplay-video.stderr.txt").write_text(proof.stderr, encoding="utf-8")
+    if proof.returncode != 0:
+        raise AssertionError("Pixi gameplay video proof failed")
+    receipt_path = out_root / "pixi-gameplay-video-proof.json"
+    receipt = _read_json(receipt_path)
+    _assert_status(receipt, receipt_path)
+    video_path = Path(str(receipt.get("video_path") or ""))
+    if not video_path.is_file() or video_path.stat().st_size < 5000:
+        raise AssertionError("Pixi gameplay video artifact is missing or too small")
+    for key in ("play_advanced", "pause_stopped", "scrub_reset_works", "scrub_jump_works"):
+        if receipt.get(key) is not True:
+            raise AssertionError(f"Pixi gameplay check {key} did not pass")
+
+    return _emit(
+        summary_path,
+        _summary(
+            suite="pixi-gameplay-video",
+            live="local_http_static_bundle_playwright_video_pixi_gameplay",
+            checks=[
+                {
+                    "name": "play_pause_resume_scrub_video",
+                    "status": "PASS",
+                    "video_bytes": video_path.stat().st_size,
+                    "host": host,
+                }
+            ],
+            artifacts={
+                "proof_receipt": str(receipt_path),
+                "video": str(video_path),
+                "loaded_screenshot": str(out_root / "screenshots" / "loaded.png"),
+                "playing_screenshot": str(out_root / "screenshots" / "playing.png"),
+                "scrubbed_screenshot": str(out_root / "screenshots" / "scrubbed.png"),
+            },
+            claims_proves=[
+                "browser-rendered Pixi replay records video while play, pause, resume, and scrub controls change replay state",
+                "runtime console/page errors were absent during the gameplay capture",
+            ],
+            claims_does_not_prove=[
+                "full visual design acceptance",
+                "production route availability",
+            ],
+        ),
+    )
+
+
 def probe_production_fail_closed(summary_path: Path) -> int:
     with tempfile.TemporaryDirectory(prefix="battle-agentic-prod-") as raw:
         root = Path(raw)
@@ -947,6 +1572,18 @@ def main() -> int:
             )
         if args.suite == "adaptive-lineage-live-exact-chain":
             return probe_adaptive_lineage_live_exact_chain(args.summary, proof_root=args.proof_root)
+        if args.suite == "adaptive-lineage-same-run-backend-contracts":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=[
+                    "test_adaptive_red_blue_lineage_canary_contract.py",
+                    "test_adaptive_lineage_backend_verifier.py",
+                    "test_adaptive_memory_canary_contract.py",
+                    "test_adaptive_selection_memory_contract.py",
+                    "test_orchestrator_judge_boundary.py",
+                ],
+            )
         if args.suite == "memory-lineage-contracts":
             return probe_pytest_contracts(
                 args.summary,
@@ -958,10 +1595,61 @@ def main() -> int:
                     "test_adaptive_evidence_contract.py",
                 ],
             )
+        if args.suite == "memory-team-learning-contracts":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=[
+                    "test_adaptive_memory_canary_contract.py",
+                    "test_adaptive_selection_memory_contract.py",
+                    "test_adaptive_memory_ablation_contract.py",
+                    "test_adaptive_evidence_contract.py",
+                    "test_adaptive_lineage_memory.py",
+                ],
+            )
+        if args.suite == "tau-provider-handoff-contracts":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=[
+                    "test_child_tau_dag_private_boundary.py",
+                    "test_live_tau_child_dag_canary_contract.py",
+                    "test_live_specimen_provider_wiring.py",
+                    "test_child_dag_node_adapter.py",
+                ],
+            )
+        if args.suite == "research-host-only-ingress-contracts":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=[
+                    "test_source_bearing_research_gate.py",
+                    "test_live_specimen_provider_wiring.py",
+                ],
+            )
+        if args.suite == "monitor-human-interjection-contracts":
+            return probe_pytest_contracts(
+                args.summary,
+                suite=args.suite,
+                tests=[
+                    "test_human_interjection_contract.py",
+                    "test_runtime_pause_after_round.py",
+                ],
+            )
         if args.suite == "transport":
             return probe_transport(args.summary)
         if args.suite == "receipt-pixi-replay":
             return probe_receipt_pixi_replay(args.summary)
+        if args.suite == "orchestrator-overnight-resume-report":
+            return probe_orchestrator_overnight_resume_report(args.summary)
+        if args.suite == "digital-twin-non-docker-modes":
+            return probe_digital_twin_non_docker_modes(args.summary)
+        if args.suite == "swarm-throughput-envelope":
+            return probe_swarm_throughput_envelope(args.summary)
+        if args.suite == "pixi-gameplay-video":
+            return probe_pixi_gameplay_video(args.summary)
+        if args.suite == "production-positive-readiness":
+            return probe_production_positive_readiness(args.summary)
         if args.suite == "production-fail-closed":
             return probe_production_fail_closed(args.summary)
         raise SystemExit(f"unknown suite: {args.suite}")
