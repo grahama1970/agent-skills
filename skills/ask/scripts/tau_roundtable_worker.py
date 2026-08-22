@@ -567,6 +567,17 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 meta_path=meta_path,
             )
             commands.extend(codex_commands)
+        elif handler.startswith("claude-opus") or handler.startswith("opus-") or handler.startswith("claude-"):
+            # Local Claude Code CLI reviewer: a different provider than the codex
+            # creator that can run the ticket's live proof in the worktree.
+            response_text, submit_meta, claude_commands = _run_claude_handler(
+                args,
+                prompt_path=prompt_path,
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+            )
+            commands.extend(claude_commands)
         elif handler in HANDLER_SUBMIT_COMMANDS:
             project = args.browser_oracle_project or handler
             resolve = _run_cmd(
@@ -6385,6 +6396,88 @@ def _run_codex_handler(
         "codex_returncode": proc.returncode,
         "duration_seconds": round(duration, 3),
         "diff_bytes": len(diff.stdout or ""),
+        "finished_at": _now(),
+    }
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return response, meta, commands
+
+
+def _claude_model_for(handler: str) -> str:
+    """Map a claude/opus seat name to a Claude CLI model id.
+
+    'claude-opus-5-medium' / 'opus-5-medium' -> 'claude-opus-5'. The reasoning
+    suffix is advisory; the Claude CLI selects reasoning by model.
+    """
+    h = handler.strip().lower()
+    for suffix in ("-medium", "-high", "-low", "-xhigh", "-max"):
+        if h.endswith(suffix):
+            h = h[: -len(suffix)]
+            break
+    if h in ("opus-5", "claude-opus-5"):
+        return "claude-opus-5"
+    if not h.startswith("claude-"):
+        h = "claude-" + h
+    return h
+
+
+def _run_claude_handler(
+    args: argparse.Namespace,
+    *,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+) -> tuple[str, dict[str, Any], list[dict[str, Any]]]:
+    """Run the local Claude Code CLI as a code-running reviewer seat.
+
+    A DIFFERENT provider from the codex creator, and — unlike a browser seat —
+    it runs locally so it can execute the ticket's live proof in the worktree
+    (agent-skills#1484). Reviews rather than mutates: no diff is required.
+    """
+    workspace = Path(args.codex_workspace).expanduser() if getattr(args, "codex_workspace", None) else Path.cwd()
+    model = _claude_model_for(args.handler)
+    claude_cmd = [
+        "claude",
+        "-p",
+        "--model",
+        model,
+        "--output-format",
+        "text",
+        "--dangerously-skip-permissions",
+    ]
+    prompt_text = prompt_path.read_text(encoding="utf-8")
+    started = time.monotonic()
+    proc = subprocess.run(
+        claude_cmd,
+        input=prompt_text,
+        capture_output=True,
+        text=True,
+        timeout=args.timeout,
+        cwd=str(workspace) if workspace.is_dir() else None,
+    )
+    duration = time.monotonic() - started
+    commands = [
+        {
+            "command": claude_cmd,
+            "returncode": proc.returncode,
+            "duration_seconds": round(duration, 3),
+            "stdout_excerpt": (proc.stdout or "")[-1500:],
+            "stderr_excerpt": (proc.stderr or "")[-800:],
+        }
+    ]
+    if proc.returncode != 0:
+        raise RuntimeError(f"claude review failed rc={proc.returncode}: {(proc.stderr or proc.stdout)[-500:]}")
+    response = (proc.stdout or "").strip()
+    if not response:
+        raise RuntimeError("claude_no_output: reviewer produced no response")
+    raw_path.write_text(response + "\n", encoding="utf-8")
+    response_path.write_text(response, encoding="utf-8")
+    meta = {
+        "schema": "ask.claude_handler_meta.v1",
+        "model": model,
+        "workspace": str(workspace),
+        "claude_returncode": proc.returncode,
+        "duration_seconds": round(duration, 3),
         "finished_at": _now(),
     }
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
