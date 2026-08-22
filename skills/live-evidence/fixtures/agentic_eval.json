@@ -637,7 +637,8 @@
           "open_artifact resolves the cited file to a real path: PASS",
           "stale candidate is fenced and journaled, not executed: PASS",
           "formal_assessment proposes zero candidates (backend-journaled): PASS",
-          "action lane: PASS"
+          "action lane: PASS",
+          "insufficient local evidence auto-proposes bounded external research: PASS"
         ]
       },
       "notes": "#1475: one action_candidate.v1 envelope, resolver-proposed (single ambient authority), human-approved execution with destination readbacks: live memory keyed readback, real artifact path, live Brave fact-check or honest unresolved.",
