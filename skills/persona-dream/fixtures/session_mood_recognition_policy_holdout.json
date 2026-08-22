@@ -1,0 +1,137 @@
+{
+  "schema": "persona_dream.session_mood_recognition_policy_holdout.v1",
+  "created_at": "2026-08-22T20:50:00Z",
+  "purpose": "Checksum-pinned report-only holdout audit before any runtime recognition policy change.",
+  "corpus_root": "skills/persona-dream/reports/goal_v5/continuity/reliability",
+  "policy": {
+    "fixed_threshold": 0.75,
+    "runtime_policy_change_authorized": false
+  },
+  "disputed_positives": [
+    {
+      "label": "accepted_candidate_readback_cycle_019_render2",
+      "receipt": "soak35_accepted_candidate_readback/cycle_019/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:8a8182d0a663aa3a61cc7e2a962d0351576457d3e8a21483d1f2a1490f4a0d28",
+      "render_index": 2,
+      "audio_sha256": "sha256:ab36f4babe8594504d1fdd350f448a6a685024078f5be22ccda7e60569f53fdb",
+      "seconds": 5.131,
+      "similarity_to_embry": 0.767638,
+      "duration_aware_floor": 0.772462,
+      "separation": 0.134492
+    },
+    {
+      "label": "repaired_measured_pace_cycle_003_render3",
+      "receipt": "soak35_repaired_measured_pace/cycle_003/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:eb288755cc252cc0e9324c1d7079baa6fc55db894901b54b0fce78bdd20a38e7",
+      "render_index": 3,
+      "audio_sha256": "sha256:37b6982ee65b2aca31e94a6287cb211f221814b29f1e115e6185c33d2cc04abf",
+      "seconds": 5.611,
+      "similarity_to_embry": 0.763833,
+      "duration_aware_floor": 0.774093,
+      "separation": 0.130687
+    },
+    {
+      "label": "repaired_measured_pace_cycle_021_render3",
+      "receipt": "soak35_repaired_measured_pace/cycle_021/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:3959b1ecab8743a5df134fcf2cd1d4e48256d068a179820757bb9e382180595b",
+      "render_index": 3,
+      "audio_sha256": "sha256:3ed107ad7ec9528b79586d97858eeb9a8779784a438c831613370cc5bc541f28",
+      "seconds": 4.907,
+      "similarity_to_embry": 0.759092,
+      "duration_aware_floor": 0.763957,
+      "separation": 0.125946
+    },
+    {
+      "label": "structured_recognition_status_cycle_001_render1",
+      "receipt": "soak35_structured_recognition_status/cycle_001/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:914135b1d45b1475344eab89465e841525e756e091232111193e6ba8a8c555d0",
+      "render_index": 1,
+      "audio_sha256": "sha256:f87e168772c06a96399f6bbe390dd59585916a44f55518e3cfa72cb0c5e944c8",
+      "seconds": 5.483,
+      "similarity_to_embry": 0.765845,
+      "duration_aware_floor": 0.774093,
+      "separation": 0.132699
+    },
+    {
+      "label": "structured_recognition_status_cycle_013_render1",
+      "receipt": "soak35_structured_recognition_status/cycle_013/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:249b67ff66648d5c730025758cd419526c618107b8344f68f2dc4881aa8101cd",
+      "render_index": 1,
+      "audio_sha256": "sha256:7837639a1678cf75e4896734e20c55a058bca2951746ca29f55bf76862a63bc9",
+      "seconds": 4.907,
+      "similarity_to_embry": 0.7639,
+      "duration_aware_floor": 0.771094,
+      "separation": 0.130754
+    },
+    {
+      "label": "structured_recognition_status_cycle_021_render2",
+      "receipt": "soak35_structured_recognition_status/cycle_021/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:41fbd4d527bd51464faae86fc866b66feecd3ae53e245ec0c6cbd13082279450",
+      "render_index": 2,
+      "audio_sha256": "sha256:aeb76ebc3471aed8c7c76736eedc4c51bd846c44deffaaef276ba2e56b4c9b0f",
+      "seconds": 6.741,
+      "similarity_to_embry": 0.770638,
+      "duration_aware_floor": 0.779838,
+      "separation": 0.137492
+    }
+  ],
+  "clear_positives": [
+    {
+      "label": "structured_recognition_status_cycle_020_render2",
+      "receipt": "soak35_structured_recognition_status/cycle_020/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:8bef1039b3bf8f0f87f4087bce668be0bc9ad1f6c66634c72870a1252b316a60",
+      "render_index": 2,
+      "audio_sha256": "sha256:ede4060afddc1171642aace15aa1c184f82d3217897d11b0bc204a93ccce18c3",
+      "seconds": 5.429,
+      "similarity_to_embry": 0.779593,
+      "duration_aware_floor": 0.77642,
+      "separation": 0.146447
+    },
+    {
+      "label": "structured_recognition_status_cycle_015_render3",
+      "receipt": "soak35_structured_recognition_status/cycle_015/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:a45a87c5153db4d028bac03a7004a54ce01ba724024b5a02690d9d7c96e91e9e",
+      "render_index": 3,
+      "audio_sha256": "sha256:30e3c2629ab0bdccaa4a41eca45dd93bc04f33763f9af8c53244e10fbaae16a3",
+      "seconds": 5.525,
+      "similarity_to_embry": 0.785882,
+      "duration_aware_floor": 0.771042,
+      "separation": 0.152736
+    },
+    {
+      "label": "structured_recognition_status_cycle_002_render3",
+      "receipt": "soak35_structured_recognition_status/cycle_002/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:0c3d49830c567c9bcce240c4f096b860952a0f470dafa54a1fad06c1e55b88f2",
+      "render_index": 3,
+      "audio_sha256": "sha256:868d7dd13c9e852712940f25cc6ea79896451b6a327ce3e701c6e060188495b4",
+      "seconds": 5.088,
+      "similarity_to_embry": 0.791125,
+      "duration_aware_floor": 0.77118,
+      "separation": 0.157979
+    }
+  ],
+  "adversarial_negatives": [
+    {
+      "label": "kai_reference_from_structured_cycle_001",
+      "receipt": "soak35_structured_recognition_status/cycle_001/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:914135b1d45b1475344eab89465e841525e756e091232111193e6ba8a8c555d0",
+      "adversarial_index": 1,
+      "audio_sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65",
+      "similarity_to_embry": 0.633146
+    },
+    {
+      "label": "horus_reference_from_structured_cycle_001",
+      "receipt": "soak35_structured_recognition_status/cycle_001/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:914135b1d45b1475344eab89465e841525e756e091232111193e6ba8a8c555d0",
+      "adversarial_index": 2,
+      "audio_sha256": "sha256:66b5b7518b86fc91546d469087cb9a2a616f2e8867b5f1dbd4c0aea62fe357f4",
+      "similarity_to_embry": 0.478377
+    }
+  ],
+  "does_not_authorize": [
+    "runtime threshold change",
+    "duration-aware floor removal",
+    "answer-invariance relaxation",
+    "ASR gate relaxation"
+  ]
+}

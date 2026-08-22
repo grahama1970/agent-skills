@@ -451,6 +451,38 @@
           "FAIL "
         ]
       }
+    },
+    {
+      "name": "session-mood-recognition-policy-heldout-separation",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.session_mood_recognition_status_contract"
+      ],
+      "seams": [
+        "continuity.session_mood.voice_recognition_policy_holdout"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "python3 ../scripts/audit_recognition_floor_margins.py --root ../reports/goal_v5/continuity/reliability --policy-holdout ../fixtures/session_mood_recognition_policy_holdout.json --out /tmp/persona-dream-recognition-policy-heldout-separation.report.json --report-only"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_RECOGNITION_POLICY_HOLDOUT_AUDIT",
+          "runtime_policy_changed=false",
+          "disputed_positive_count=6",
+          "disputed_positive_fixed_pass_count=6",
+          "fixed_0_75_adversarial_false_accept_count=0",
+          "decision=ELIGIBLE_FIXED_0_75"
+        ],
+        "stdout_not_contains": [
+          "FAIL ",
+          "BLOCKED_RECOGNITION_POLICY_HOLDOUT_AUDIT"
+        ]
+      }
     }
   ],
   "capability_claims": [
