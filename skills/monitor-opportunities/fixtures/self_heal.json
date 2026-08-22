@@ -1,0 +1,256 @@
+{
+  "version": 2,
+  "skill": "monitor-opportunities",
+  "trials": 2,
+  "proof_scope": "monitor-opportunities deterministic regression guards (self-heal cron)",
+  "claims": {
+    "proves": "each committed regression guard passes on the current code",
+    "does_not_prove": "the full nightly pipeline or live provider behavior"
+  },
+  "cases": [
+    {
+      "name": "resume-not-a-stub-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_resume_not_stub.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RESUME_COMPOSED_OK"
+        ],
+        "stderr_excludes": [
+          "RESUME_STUB_REGRESSION"
+        ]
+      },
+      "seams": [
+        "tailoring.resume_render"
+      ]
+    },
+    {
+      "name": "eligibility-field-classifier-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_field_classifier.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FIELD_CLASSIFIER_OK"
+        ],
+        "stderr_excludes": [
+          "RE_ASK_REGRESSION",
+          "CLEARANCE_MISCLASSIFIED",
+          "REQUIRED_CAPTURE_REGRESSION"
+        ]
+      },
+      "seams": [
+        "ats.field_classification",
+        "ats.form_capture"
+      ]
+    },
+    {
+      "name": "top-candidate-survives-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_top_candidate_survives.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TOP_CANDIDATE_OK"
+        ],
+        "stderr_excludes": [
+          "TOP_CANDIDATE_DROPPED",
+          "TOP_CANDIDATE_NO_BOOST"
+        ]
+      },
+      "seams": [
+        "discovery.linkedin_evidence_merge"
+      ]
+    },
+    {
+      "name": "response-hardening-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_response_hardening.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RESPONSE_HARDENING_OK"
+        ],
+        "stderr_excludes": [
+          "TOP_CANDIDATE_NO_EFFECT",
+          "EASY_APPLY_NO_EFFECT",
+          "GEO_ORDER_REGRESSION",
+          "BUFFALO_TOP_BURIED"
+        ]
+      },
+      "seams": [
+        "ranking.response_score"
+      ]
+    },
+    {
+      "name": "linkedin-easy-apply-safety",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_linkedin_easy_apply.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LINKEDIN_EASY_APPLY_SAFE"
+        ],
+        "stderr_excludes": [
+          "GATE_ACCEPTED_BAD_PROMOTION",
+          "BLANK_REQUIRED_NOT_BLOCKED",
+          "SHOULD_BE_HUMAN_REQUIRED"
+        ]
+      },
+      "seams": [
+        "ats.linkedin_easy_apply"
+      ]
+    },
+    {
+      "name": "top-applicant-shortlisted",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_top_applicant_shortlisted.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TOP_APPLICANT_SHORTLISTED_OK"
+        ],
+        "stderr_excludes": [
+          "TOP_APPLICANT_ESCALATED",
+          "TOP_APPLICANT_NOT_PRIORITIZED",
+          "BUFFALO_TOP_NOT_ELIGIBLE"
+        ]
+      },
+      "seams": [
+        "ranking.eligibility_escalation",
+        "ranking.shortlist_selection"
+      ]
+    },
+    {
+      "name": "ashby-prefill-not-blank",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_ashby_prefill.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASHBY_PREFILL_OK"
+        ],
+        "stderr_excludes": [
+          "NO_PREFILL_BEFORE_SUBMIT",
+          "BLANK_FREE_TEXT_NOT_BLOCKED",
+          "CLEARANCE_NOT_ATTESTED"
+        ]
+      },
+      "seams": [
+        "ats.ashby_prefill"
+      ]
+    },
+    {
+      "name": "linkedin-org-parse",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "discovery.linkedin_org_parse"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_linkedin_org_parse.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LINKEDIN_ORG_PARSE_OK"
+        ],
+        "stderr_excludes": [
+          "LINKEDIN_ORG_MISPARSE"
+        ]
+      }
+    },
+    {
+      "name": "linkedin-org-not-board",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "discovery.linkedin_org_parse"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_linkedin_org_not_board.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LINKEDIN_ORG_NOT_BOARD_OK"
+        ],
+        "stderr_excludes": [
+          "LINKEDIN_ORG_IS_BOARD"
+        ]
+      }
+    },
+    {
+      "name": "linkedin-no-silent-drop",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "discovery.linkedin_org_parse"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_linkedin_no_silent_drop.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LINKEDIN_NO_SILENT_DROP_OK"
+        ],
+        "stderr_excludes": [
+          "LINKEDIN_SILENT_DROP"
+        ]
+      }
+    }
+  ]
+}
