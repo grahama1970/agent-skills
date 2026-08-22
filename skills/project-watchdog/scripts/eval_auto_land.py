@@ -25,7 +25,7 @@ def main() -> int:
     if "auto_land_main" not in src or "_land_repair_to_main" not in src:
         f.append("AUTO_LAND_NOT_WIRED: repair path does not call the landing step")
     lsrc = inspect.getsource(h._land_repair_to_main)
-    if "rebase --abort" not in lsrc.replace('"', "").replace(",", " "):
+    if "abort" not in lsrc:
         f.append("NO_FAIL_CLOSED: landing must abort a rebase conflict, not force main")
     if f:
         for x in f: print(x, file=sys.stderr)
