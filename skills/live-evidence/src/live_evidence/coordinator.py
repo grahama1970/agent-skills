@@ -10,7 +10,6 @@ from loguru import logger
 
 from .config import AppSettings, InterviewProfile
 from .models import (
-    CardStatus,
     ClarificationItem,
     EvidenceCard,
     EvidenceSource,
@@ -683,8 +682,9 @@ class EvidenceCoordinator:
             card,
             policy_digest=self._state.session_policy_digest(),
         )
-        if card.status is CardStatus.INSUFFICIENT and policy.external_search:
-            from .actions import propose_research
+        from .actions import propose_research, research_warranted
+
+        if policy.external_search and research_warranted(card, verdict, ranked):
 
             await propose_research(
                 self, self._state, self._journal, query=query,

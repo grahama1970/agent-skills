@@ -233,3 +233,19 @@ async def propose_research(coordinator: Any, state: Any, journal: Any, *,
         await journal.append(state.session_id(), entry.pop("kind"), entry,
                              policy_digest=digest)
     coordinator.actions.journal.clear()
+
+
+def research_warranted(card: Any, verdict: Any, ranked: list) -> bool:
+    """(goal v2) External research is proposed when local evidence failed OR
+    the question is research-shaped with no memory-lane support -- spurious
+    ripgrep matches on filler words must not silence the research lane."""
+
+    from .models import CardStatus
+
+    if card.status is CardStatus.INSUFFICIENT:
+        return True
+    # Research-type questions always get the offer: a live memory service
+    # returns weak semantic neighbors for almost anything, so "has local
+    # sources" is no evidence the web is not the real answer's home. It is
+    # only a proposal; the human decides.
+    return verdict is not None and getattr(verdict, "question_type", None) == "research"

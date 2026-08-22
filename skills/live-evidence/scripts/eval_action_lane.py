@@ -214,6 +214,26 @@ def main() -> int:
             check("stale candidate is fenced and journaled, not executed", False,
                   "no second-round remember candidate to fence")
 
+        # goal v2: an insufficient local-evidence answer auto-PROPOSES
+        # bounded external research (derived query, approval-gated).
+        server.post_final(50, "What is the current market share of the Zig programming language in embedded aerospace firmware?")
+        research = None
+        deadline = time.monotonic() + 90
+        while time.monotonic() < deadline:
+            _, body = campaign.http("GET", f"{server.url}/api/actions/pending")
+            research = next((c for c in body.get("pending") or []
+                             if c["kind"] == "fact_check"
+                             and "Research externally" in c.get("summary", "")), None)
+            if research:
+                break
+            time.sleep(1)
+        check(
+            "insufficient local evidence auto-proposes bounded external research",
+            research is not None and research.get("trigger_event_ids")
+            and len(research.get("payload") or "") <= 500,
+            f"summary={str((research or {}).get('summary'))[:80]}",
+        )
+
         # 4. formal_assessment proposes zero.
         formal = campaign.Server(campaign.import_tmp("action-formal"),
                                  purpose="formal_assessment", live_resolver=True)
