@@ -329,13 +329,19 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         organization = str(record.get("organization") or record.get("company") or "").strip()
         location = str(record.get("location") or record.get("location_display") or "Unknown").strip()
         organization, location = _realign_linkedin_row(record, title, organization, location)
-        if not title or not organization:
+        if not title:
             receipt["limitations"].append(
-                f"One LinkedIn evidence record lacked a recoverable employer organization and was not ranked: {title[:80]!r}."
-                if title
-                else "One LinkedIn evidence record lacked title or organization and was not ranked."
+                "One LinkedIn evidence record lacked a title and could not be ranked."
             )
             continue
+        if not organization:
+            # A top-applicant role must still reach ranking when its employer cannot be
+            # parsed; surface it with an unknown organization instead of discarding it.
+            organization = "Unknown"
+            receipt["limitations"].append(
+                f"One LinkedIn evidence record lacked a recoverable employer organization and was "
+                f"ranked with organization marked unknown: {title[:80]!r}."
+            )
         location = location or "Unknown"
         top_candidate = _coerce_bool(
             record.get("top_candidate")
