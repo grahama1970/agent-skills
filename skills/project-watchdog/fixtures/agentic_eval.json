@@ -494,6 +494,31 @@
           "BROWSER_REVIEWER_ACCEPTED"
         ]
       }
+    },
+    {
+      "name": "auto-land-main-alpha",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "watchdog.auto_land"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_auto_land.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "AUTO_LAND_OK"
+        ],
+        "stderr_excludes": [
+          "AUTO_LAND_NOT_WIRED",
+          "NO_FAIL_CLOSED",
+          "DEFAULT_NOT_OFF"
+        ]
+      }
     }
   ]
 }

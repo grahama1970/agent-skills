@@ -249,6 +249,20 @@ def assert_cross_provider_seats(creator: str, reviewer: str) -> None:
         )
 
 
+def auto_land_main(project: dict[str, Any] | None = None) -> bool:
+    """Whether a reviewer-passed repair lands directly on main for this project.
+
+    Operator rule: while a project is alpha / pre-stable, `main` is the single
+    branch and stays directly pushable — the branch-and-await-human-review dance
+    is the stable-project workflow, not the alpha one. When true, a repair that
+    the reviewer passed is rebased onto origin/main and pushed to main, and the
+    ticket is closed, instead of being left as a branch awaiting a human. The
+    reviewer verdict (which checked the ticket's live proof) is the gate."""
+    if project and project.get("auto_land_main") is not None:
+        return bool(project["auto_land_main"])
+    return os.environ.get("PROJECT_WATCHDOG_AUTO_LAND_MAIN", "").strip().lower() in ("1", "true", "yes")
+
+
 def repair_seats(project: dict[str, Any] | None = None) -> tuple[str, str]:
     """Resolve (creator, reviewer), enforcing cross-provider + code-running review."""
     creator = repair_creator(project)

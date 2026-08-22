@@ -605,6 +605,31 @@ def issue_goal_hash(repo: str, issue_number: int) -> str:
     return f"sha256:{digest}"
 
 
+def _land_repair_to_main(worktree: Path, run_id: str, issue_number: int) -> tuple[bool, list[dict[str, Any]]]:
+    """Rebase the reviewer-passed repair branch onto origin/main and push to main.
+
+    Alpha-project policy (operator): main is the single directly-pushable branch.
+    Fails closed on any git error (a rebase conflict aborts and leaves the branch
+    for a human) so a bad landing never corrupts main.
+    """
+    cmds: list[dict[str, Any]] = []
+    fetch = run_cmd(["git", "fetch", "origin", "main"], cwd=worktree, timeout_s=60)
+    cmds.append(fetch)
+    if fetch["exit_code"] != 0:
+        return False, cmds
+    rebase = run_cmd(["git", "rebase", "origin/main"], cwd=worktree, timeout_s=180)
+    cmds.append(rebase)
+    if rebase["exit_code"] != 0:
+        cmds.append(run_cmd(["git", "rebase", "--abort"], cwd=worktree, timeout_s=60))
+        log_event(run_id, "auto_land_rebase_conflict", issue=issue_number)
+        return False, cmds
+    push = run_cmd(["git", "push", "origin", "HEAD:main"], cwd=worktree, timeout_s=120)
+    cmds.append(push)
+    landed = push["exit_code"] == 0
+    log_event(run_id, "auto_land_to_main", issue=issue_number, landed=landed)
+    return landed, cmds
+
+
 def handle_ticket_repair(
     run_id: str,
     receipt_dir: Path,
@@ -859,6 +884,30 @@ def handle_ticket_repair(
                               remove=[config.LEASE_LABEL])
         )
         return result
+
+    # Alpha projects (operator rule): a reviewer-passed repair lands directly on
+    # main -- main is the single directly-pushable branch until a project is
+    # stable-reliable, so the branch-and-await-human dance is skipped here.
+    if config.auto_land_main(project):
+        landed, land_cmds = _land_repair_to_main(repair_worktree, run_id, issue_number)
+        result["commands"].extend(land_cmds)
+        if landed:
+            result["commands"].append(
+                github.issue_edit(repo, issue_number, add=[config.DONE_LABEL], remove=[config.LEASE_LABEL])
+            )
+            result["commands"].append(
+                github.issue_comment(
+                    repo, issue_number,
+                    "Project Watchdog: reviewer passed; repair landed directly on main "
+                    "(alpha project, main is the single branch). Closing.",
+                )
+            )
+            result["commands"].append(github.issue_close(repo, issue_number, reason="completed"))
+            result.update({"ok": True, "status": "LANDED",
+                           "summary": f"$ask tau-dag repair for {repo}#{issue_number} passed review and landed on main"})
+            log_event(run_id, "handle_ticket_repair_finish", issue=issue_number, ok=True, landed=True)
+            return result
+        # Landing failed (e.g. rebase conflict): fall through to await-review.
 
     # Mark the repair done and stop routing it. The ticket stays OPEN because the
     # work has not landed -- it is a branch awaiting review -- but leaving it

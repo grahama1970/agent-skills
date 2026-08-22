@@ -225,7 +225,8 @@
         "kind": "none",
         "note": "skills run from source; individual skill services (if any) restart per their own contract",
         "proof_needs_restart": false
-      }
+      },
+      "auto_land_main": true
     },
     {
       "project_id": "pi-mono",
