@@ -484,6 +484,28 @@
           "BUFFALO_TOP_NOT_ELIGIBLE"
         ]
       }
+    },
+    {
+      "name": "ashby-prefill-not-blank",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_ashby_prefill.py\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASHBY_PREFILL_OK"
+        ],
+        "stderr_excludes": [
+          "NO_PREFILL_BEFORE_SUBMIT",
+          "BLANK_FREE_TEXT_NOT_BLOCKED",
+          "CLEARANCE_NOT_ATTESTED"
+        ]
+      }
     }
   ]
 }

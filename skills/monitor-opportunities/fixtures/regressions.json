@@ -206,6 +206,35 @@
       },
       "status": "ACTIVE",
       "notes": "Escalation-error fix. Guard exercises real _eligibility + _score."
+    },
+    {
+      "regression_id": "ashby-blank-submit-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "commit_ashby_application captured the form and clicked Submit but never filled identity fields or uploaded the resume -- it would submit a blank form. The real Unstructured apply only worked because it was filled by hand.",
+        "root_cause": "the commit function called form_capture then adapter.submit with no prefill/upload step.",
+        "correct_behavior": "prefill identity from the answer bank, upload the resume, resolve attested screening (clearance/work-auth), then submit; a genuinely unanswerable required free-text field blocks."
+      },
+      "threatens": {
+        "capability": "ats_submit",
+        "seams": [
+          "ats.ashby_prefill"
+        ]
+      },
+      "retained_case": "ashby-prefill-not-blank",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_ashby_prefill.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "NO_PREFILL_BEFORE_SUBMIT",
+        "observed_pre_fix": "commit_ashby_application had no _prefill_ashby call; would submit blank"
+      },
+      "status": "ACTIVE",
+      "notes": "Ashby blank-submit fix."
     }
   ]
 }

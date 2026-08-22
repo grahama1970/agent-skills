@@ -17,7 +17,9 @@
   "work_authorization": {
     "authorized_us": "Yes",
     "require_sponsorship": "No",
-    "citizenship": "US citizen"
+    "citizenship": "US citizen",
+    "security_clearance": "No",
+    "security_clearance_note": "Graham-attested 2026-08-22: worked on ITAR projects but holds no security clearance; ITAR access is not a clearance (brave-search confirmed)."
   },
   "eeo": {
     "policy": "answer_truthfully",
