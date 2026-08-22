@@ -4,13 +4,13 @@
   "trials": 2,
   "eval_tier": "compliance",
   "live": true,
-  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, and an explicit fail-closed adaptive-lineage exact-chain receipt gate",
+  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
   "claims": {
     "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
-    "does_not_prove": "fresh paid-provider adaptive-lineage qualification, arbitrary target exploitability, production staging route availability, production WebSocket TLS/auth/fanout, or full visual design acceptance"
+    "does_not_prove": "fresh paid-provider adaptive-lineage qualification, arbitrary target exploitability, overnight scheduler/resume/report behavior, non-Docker digital twin modes, general Tau/provider Red/Blue handoffs, live team Memory promotion/isolation, research-ingress boundaries, positive production staging route availability, production WebSocket TLS/auth/fanout, Pixi gameplay video acceptance, or full visual design acceptance"
   },
   "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
-  "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout, and full visual design acceptance",
+  "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout, overnight scheduler/resume/report behavior, non-Docker digital twin modes, general Tau/provider Red/Blue handoffs, live team Memory promotion/isolation, research-ingress boundaries, same-run authorized adaptive Battle backend lineage, swarm throughput, monitor human interjection, Pixi gameplay video acceptance, and full visual design acceptance",
   "capability_claims": [
     {
       "id": "battle.authorization.fail_closed",
@@ -114,6 +114,95 @@
       "description": "Production readiness does not pass without required local and external staging receipts",
       "criticality": "critical",
       "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.orchestrator.overnight_resume_report",
+      "description": "The long-running Battle loop checkpoints, resumes, stops, reports, and preserves status across a multi-round or overnight run",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.digital_twin.non_docker_modes",
+      "description": "Advertised git_worktree, copy, and QEMU/firmware digital twin modes isolate execution and emit receipts with dynamic target toolchain identity",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.tau_subagent.provider_handoff",
+      "description": "General Red/Blue Tau handoffs use public-only scenario inputs, provider-authored artifacts, and fail closed when provider/authorship evidence is missing",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.memory.team_learning",
+      "description": "Team-isolated Memory writes, recalls, promotions, nonpromotions, and negative evidence are live and cannot leak opponent-private state",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.research.host_only_ingress",
+      "description": "Dogpile/Brave/GitHub research receipts seed Red/Blue strategy from the host side without granting target-container network or host execution",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.adaptive_lineage.same_run_backend",
+      "description": "A same-run authorized Battle emits Red, Blue, Judge, scorekeeper, adaptive lineage, and Memory promotion/nonpromotion receipts for one parent-child selection loop",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.swarm.throughput_envelope",
+      "description": "Dynamic Docker-backed swarm execution proves worker concurrency and timeout controls beyond fixed two-worker fixtures",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.monitor.human_interjection",
+      "description": "The monitor accepts schema-valid human interjections only through the backend contract and fails closed when orchestration handling is absent",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
+      "id": "battle.pixi.gameplay_video_acceptance",
+      "description": "Pixi replay gameplay is captured in browser video/screenshots showing play, pause, resume, scrub or restart, motion, nonblank rendering, and no runtime errors",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "battle.production.positive_readiness",
+      "description": "Production readiness passes only with positive route, auth, rollback, teardown, WebSocket fanout, and deployment-alignment receipts",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
         "adversarial_live_e2e": true
       }
     }
@@ -284,6 +373,151 @@
         "production readiness passes without route/auth/rollback/teardown receipts"
       ],
       "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "orchestrator.overnight_resume_report",
+      "claim_id": "battle.orchestrator.overnight_resume_report",
+      "seam_type": "restart/resume/idempotency",
+      "criticality": "critical",
+      "failure_modes": [
+        "overnight run cannot checkpoint or resume",
+        "status/report/stop commands do not reflect the active battle receipts"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "digital_twin.non_docker_modes",
+      "claim_id": "battle.digital_twin.non_docker_modes",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": [
+        "git_worktree or copy mode mutates the host workspace",
+        "QEMU/firmware mode is advertised without executable isolation proof",
+        "target language or toolchain identity is omitted from receipts"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "tau_subagent.provider_handoff",
+      "claim_id": "battle.tau_subagent.provider_handoff",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "Red or Blue sees private oracle material",
+        "provider-authored artifacts are accepted without live authorship evidence",
+        "Battle calls the model provider directly instead of consuming Tau receipts"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "memory.team_learning",
+      "claim_id": "battle.memory.team_learning",
+      "seam_type": "persistent state/database/index",
+      "criticality": "critical",
+      "failure_modes": [
+        "Red can recall Blue-private state or Blue can recall Red-private state",
+        "memory promotion is recorded without Judge-backed evidence",
+        "negative evidence is dropped instead of retained"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "research.host_only_ingress",
+      "claim_id": "battle.research.host_only_ingress",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "important",
+      "failure_modes": [
+        "research receipts seed strategy without source attribution",
+        "target containers receive network access by default",
+        "untrusted repository code executes on the host"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.same_run_backend",
+      "claim_id": "battle.adaptive_lineage.same_run_backend",
+      "seam_type": "multi-agent/orchestration",
+      "criticality": "critical",
+      "failure_modes": [
+        "adaptive child selection is derived from static fixtures",
+        "same-run Red/Blue/Judge/scorekeeper/Memory receipts are not bound together",
+        "lineage promotion ignores Judge or scorekeeper evidence"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "swarm.throughput_envelope",
+      "claim_id": "battle.swarm.throughput_envelope",
+      "seam_type": "process/concurrency",
+      "criticality": "important",
+      "failure_modes": [
+        "worker count is fixed to small fixtures",
+        "concurrency or timeout controls are not receipt-backed"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "monitor.human_interjection",
+      "claim_id": "battle.monitor.human_interjection",
+      "seam_type": "browser/UI transport",
+      "criticality": "important",
+      "failure_modes": [
+        "monitor accepts local preview interjections as orchestration truth",
+        "invalid human interjection mutates battle state"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "pixi.gameplay_video_acceptance",
+      "claim_id": "battle.pixi.gameplay_video_acceptance",
+      "seam_type": "browser/UI rendering",
+      "criticality": "important",
+      "failure_modes": [
+        "Pixi canvas is blank or dead while DOM checks pass",
+        "play/pause/resume/scrub controls do not change visible replay state",
+        "video evidence is missing or stale"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "production.positive_readiness",
+      "claim_id": "battle.production.positive_readiness",
+      "seam_type": "deployment/runtime",
+      "criticality": "critical",
+      "failure_modes": [
+        "production readiness has only fail-closed negative evidence",
+        "route/auth/rollback/teardown/WebSocket fanout receipts are absent"
+      ],
+      "required_evidence": [
+        "live_e2e",
         "adversarial_live_e2e"
       ]
     }

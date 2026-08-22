@@ -12,6 +12,13 @@ The skill is designed for adversarial security work, not generic task routing:
 Red finds and proves vulnerabilities; Blue patches or hardens; the orchestrator
 tracks rounds, scores, termination conditions, and reports.
 
+Battle is not a PixiJS game. The PixiJS code under [`spectator/`](spectator/) is
+a replay and spectator layer for receipts emitted by the backend. Core readiness
+comes from authorized Red/Blue orchestration, isolated execution, Judge and
+scorekeeper receipts, adaptive lineage, and memory-backed learning. A replay
+proof is useful evidence that the receipts are inspectable; it is not the
+product center and cannot substitute for backend proof.
+
 Agents must treat [`SKILL.md`](SKILL.md) as the runtime contract. This README is
 the human/operator guide.
 
@@ -32,6 +39,36 @@ Regenerate it with:
 
 Older goal files and handoffs are historical unless their claims appear in
 `CURRENT_STATUS.json`.
+
+## Agentic Eval Coverage Boundary
+
+The committed agentic eval fixture now intentionally distinguishes declared
+coverage from missing Battle feature coverage. `agentic-evals coverage show
+skills/battle` is the audit command for the declared seams; a READY result only
+means every declared critical seam has a covering case. It does not cover a
+feature until that feature has a `capability_claim`, a `seam`, and at least one
+case with an oracle that can fail.
+
+Current covered seams include authorization fail-closed behavior, the local
+Docker reactive Judge round, Red/Judge/Blue visibility, scorekeeper authority,
+adaptive-lineage contract guards, exact-chain adaptive lineage, memory-lineage
+contracts, same-run transport safety, receipt-backed Pixi replay, and staging
+fail-closed behavior.
+
+Missing evals that must not be silently counted as ready:
+
+| Feature surface | Missing agentic eval |
+|---|---|
+| Overnight Battle loop | Multi-round `battle --overnight` scheduler, checkpoint, resume, stop, status, and report case with receipt readback. |
+| Digital twins beyond local Docker | `git_worktree`, `copy`, and QEMU/firmware isolation cases, plus dynamic target-language/toolchain selection. |
+| Tau/provider subagents | General Red/Blue Tau handoff and provider-authorship cases outside the narrow recovered exact-chain proof. |
+| Team memory and learning | Live Memory write/recall/promotion/nonpromotion with team isolation and negative-evidence retention. |
+| Research ingress | Dogpile/Brave/GitHub research receipt ingestion with host-only research and no target-container network leakage. |
+| Adaptive lineage backend | Same-run authorized Red/Blue/Judge/scorekeeper/memory lineage case that proves child selection from actual battle evidence. |
+| Swarm/throughput | Dynamic worker-count and concurrency envelope case for more than the fixed small-worker fixtures. |
+| PixiJS replay gameplay | Browser video/screenshot case for play, pause, resume, scrub/restart, and nonblank moving replay from the same receipt source. |
+| Monitor/human interjection | Schema-valid human interjection through the production monitor contract, fail-closed when backend handling is absent. |
+| Production deployment | Positive production readiness case with route, auth, rollback, teardown, and WebSocket fanout receipts. |
 
 ## How Battle Works
 

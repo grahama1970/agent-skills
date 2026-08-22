@@ -1,13 +1,25 @@
 # Battle Adaptive Lineage Goal (Immutable)
 
+## Operator Clarification (2026-08-22)
+
+This immutable goal is not "finish a PixiJS game." The controlling goal is a
+working adaptive Battle backend: an authorized Red/Blue security competition can
+spawn, evaluate, select, and continue parent/child lineage from real
+Judge-backed receipts, scorekeeper evidence, and memory promotion or
+nonpromotion decisions.
+
+PixiJS is a replay/spectator artifact. It is required only to make the receipts
+inspectable and understandable. Replay polish cannot replace backend proof, and
+backend adaptive lineage must not be treated as blocked on PixiJS polish beyond
+truthful receipt inspectability.
+
 > Scope note: this is a **separate immutable goal** from `GOAL.md` (the BATTLE-004
 > race-spectator cockpit). That goal still stands for the race view. This goal
-> governs **one canonical adaptive Battle** whose sole job is to prove — in both
-> backend and UX — that adaptive lineage works as expected, with a **finished**
-> interface and **proper PixiJS sprites**. Where this goal and `GOAL.md` overlap
-> on the same surface, the receipt-truth and anti-fake-density invariants of both
-> apply; this goal additionally re-authorizes the interface-completion and sprite
-> work that `GOAL.md`'s "agent is no longer UI owner" boundary had frozen.
+> governs **one canonical adaptive Battle** whose job is to prove backend
+> adaptive lineage first and then replay that same evidence honestly. Where this
+> goal and `GOAL.md` overlap on the same surface, the receipt-truth and
+> anti-fake-density invariants of both apply. The spectator must not invent
+> lineage truth, but PixiJS polish is not the core Battle product.
 
 ## Current State Addendum (2026-07-28)
 
@@ -55,11 +67,10 @@ above.
 
 ## One-line
 
-A single canonical Battle demonstrates end to end that adaptive lineage works:
-the backend emits a **live, non-mocked** four-specimen qualification receipt, and
-the **finished** spectator renders that exact receipt — proper PixiJS sprites,
-honest `LIVE` badge, and the real selection decision — at
-`http://localhost:3002/#battle`.
+A single canonical Battle demonstrates that adaptive lineage works when the
+backend emits **live, non-mocked** Red/Blue/Judge/scorekeeper/memory-bound
+parent/child lineage receipts and the spectator replays those exact receipts
+without inventing truth.
 
 ## Canonical Subject Lock
 
@@ -87,16 +98,21 @@ honest `LIVE` badge, and the real selection decision — at
 
 Produce and keep reproducible **one** adaptive Battle in which:
 
-1. the backend generates a live, independently-auditable adaptive-lineage
-   qualification receipt for `battle-004`, and
-2. the spectator UI at `#battle` renders that receipt as a finished interface —
-   the `G0 -> {G1-A, G1-B} -> G2` comparison with operators, changed AST
-   dimensions, novelty, and the selected-vs-runner-up decision — using proper
-   themed PixiJS sprites and an honest live/recorded proof badge.
+1. the backend runs an authorized `battle-004` adaptive lineage loop that binds
+   Red/Blue parent and child generation, Judge replay, scorekeeper authority,
+   and memory promotion or nonpromotion into auditable receipts;
+2. the adaptive decision is derived from same-run Battle evidence, not static UI
+   fixtures, self-certification, or post-hoc narrative; and
+3. the spectator UI at `#battle`/PixiJS replays that same receipt set with an
+   honest live/recorded proof badge and no invented lineage truth.
 
 The UI must reflect the backend. A stale deployment that does not contain the
 current adaptive-lineage code is a goal failure, not an acceptable "it works in
 tests" state.
+
+PixiJS is acceptance evidence for receipt inspectability, not the core closure
+criterion. The immutable goal remains unmet if backend Red/Blue/Judge/
+scorekeeper/memory lineage is not proven, even when the replay looks good.
 
 ## Backend Acceptance (the proof)
 

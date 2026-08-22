@@ -1,7 +1,32 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-08-03 by agent
+**Last updated:** 2026-08-22 by agent
 **Status:** Active development
+
+## Current Status Addendum (2026-08-22)
+
+Purpose boundary clarified by the human: Battle is a Red/Blue security
+competition orchestrator and adaptive-learning backend. PixiJS is only a fun
+replay/spectator surface for Battle receipts; it is not the product center.
+Adaptive lineage means backend parent/child Red/Blue evidence generated,
+judged, scored, and promoted or rejected from receipts. Do not treat PixiJS
+gameplay or sprite polish as proof that Battle works.
+
+Current proof boundary: V13/exact-chain and the 2026-08-22 Pixi replay video
+prove narrow receipt/replay slices. They do not prove an overnight working
+Battle. The next core gate is a same-run authorized Battle receipt chain:
+Red/Blue generation, Judge replay, scorekeeper authority, adaptive
+parent/child selection, and memory promotion or nonpromotion, with PixiJS
+rendering that same chain only as replay evidence.
+
+Agentic eval audit: `skills/battle/fixtures/agentic_eval.json` had 13 declared
+seams and 9 cases, so `agentic-evals coverage show skills/battle` reported
+READY for declared seams only. Missing feature coverage must be explicit:
+overnight scheduler/resume/report, non-Docker digital twins (`git_worktree`,
+`copy`, QEMU/firmware), general Tau/provider Red/Blue handoffs, live team
+memory isolation/promotion, research ingress, same-run adaptive Battle backend
+lineage, swarm throughput, monitor human interjection, Pixi gameplay video
+acceptance, and positive production readiness.
 
 ## Current Status Addendum (2026-08-03)
 

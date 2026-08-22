@@ -50,6 +50,22 @@ disciplines:
 
 Pits a Red Team (attack) against a Blue Team (defense) in a long-running competitive loop. Each team leverages all `.pi/skills` to attack or defend a target codebase.
 
+## Purpose Boundary
+
+Battle's purpose is the Red/Blue security competition backend: authorized target
+setup, isolated execution, Red attack generation, Blue defense generation,
+independent Judge replay, scorekeeper receipts, adaptive lineage, and durable
+learning. Adaptive lineage is a backend learning loop that spawns, evaluates,
+selects, and promotes or rejects child Red/Blue evidence from Judge-backed
+receipts.
+
+PixiJS is only a spectator/replay surface for Battle receipts. A PixiJS pass
+proves that recorded receipts can be inspected in a fun replay; it does not
+prove the Battle orchestrator, provider-driven subagents, Docker/QEMU isolation,
+overnight scheduler, scorekeeper, or memory learning works. Do not close core
+Battle readiness from PixiJS evidence alone, and do not block backend adaptive
+lineage on replay polish beyond truthful receipt inspectability.
+
 ## Architecture
 
 Production Battle is an orchestration skill, not a large bespoke security
