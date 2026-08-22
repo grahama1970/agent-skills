@@ -1,0 +1,15 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1479,
+  "unit": {
+    "command": "python3 -m py_compile skills/persona-dream/scripts/run_corrected_goal_live_pair.py skills/persona-dream/scripts/validate_answer_invariance.py skills/persona-dream/scripts/validate_emotion_lineage.py skills/persona-dream/scripts/validate_chatterbox_delivery.py",
+    "exit_code": 0
+  },
+  "e2e": {
+    "command": "skills/persona-dream/run.sh corrected-goal-pair --manifest skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json --out skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z --require-live --forbid-mocked",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/corrected_goal_receipt.json"
+  }
+}
