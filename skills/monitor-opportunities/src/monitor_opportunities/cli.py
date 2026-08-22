@@ -1538,6 +1538,123 @@ def apply_command(
     raise typer.Exit(code=2)
 
 
+def _merge_linkedin_top_candidate(base_path: Path, other_path: Path) -> int:
+    """Merge one LinkedIn evidence stream into another, preserving top_candidate.
+
+    Picking only the higher-row-count file dropped the top-applicant stream and
+    its ``top_candidate`` flags. This merges the other stream's opportunities in:
+    a matching (title, organization) row inherits ``top_candidate`` if EITHER
+    stream flags it; unmatched rows are appended with their flag intact.
+    """
+    try:
+        base = json.loads(base_path.read_text(encoding="utf-8"))
+        other = json.loads(other_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return 0
+    base_rows = base.get("opportunities")
+    if not isinstance(base_rows, list):
+        return 0
+    index = {(r.get("title"), r.get("organization")): r for r in base_rows if isinstance(r, dict)}
+    merged = 0
+    for row in other.get("opportunities", []) or []:
+        if not isinstance(row, dict):
+            continue
+        key = (row.get("title"), row.get("organization"))
+        existing = index.get(key)
+        if existing is not None:
+            if row.get("top_candidate"):
+                existing["top_candidate"] = True
+                merged += 1
+        else:
+            base_rows.append(row)
+            merged += 1
+    # A file-level top_candidate:true (whole page is the top-applicant collection)
+    # applies to every row it contributed.
+    if other.get("top_candidate"):
+        base["top_candidate"] = base.get("top_candidate") or True
+    base_path.write_text(json.dumps(base, indent=1), encoding="utf-8")
+    return merged
+
+
+@app.command("commit-ashby")
+def commit_ashby_command(
+    tab_id: str = typer.Option(..., "--tab-id", help="surf tab id already on the live Ashby application page."),
+    candidate_id: str = typer.Option(..., "--candidate-id", help="Ranked candidate id; keys the duplicate-submission ledger."),
+    site: str = typer.Option("jobs.ashbyhq.com", "--site"),
+    posting_id: str = typer.Option(..., "--posting-id"),
+    url: str = typer.Option(..., "--url"),
+    allow_duplicate: bool = typer.Option(False, "--allow-duplicate", help="Override the already-applied guard (default: refuse)."),
+    resume: Path = typer.Option(..., "--resume", exists=True, dir_okay=False, readable=True),
+    promotion: Path = typer.Option(..., "--promotion", exists=True, dir_okay=False, readable=True,
+                                   help="Scoped human promotion receipt: ats_form_submit:ashby:<site>."),
+    human_answers: Path | None = typer.Option(None, "--human-answers", exists=True, dir_okay=False, readable=True,
+                                              help="JSON map of human-supplied answers for required human_required fields (e.g. clearance)."),
+) -> None:
+    """Submit one live Ashby application through the gated receipt chain.
+
+    Requires a scoped human promotion and refuses to submit while any required
+    human_required field (e.g. clearance) is unanswered. The effect state comes
+    from a DOM read-back of the provider confirmation, never a self-report.
+    """
+    _configure_logging()
+    from .ats.ashby_apply import AshbyApplyError, commit_ashby_application
+
+    answers = read_json(human_answers) if human_answers else {}
+    try:
+        receipt = commit_ashby_application(
+            tab_id=tab_id,
+            candidate_id=candidate_id,
+            site=site,
+            posting_id=posting_id,
+            url=url,
+            resume_path=resume,
+            promotion=read_json(promotion),
+            human_answers=answers,
+            allow_duplicate=allow_duplicate,
+        )
+    except AshbyApplyError as exc:
+        _fail(ContractError("ASHBY_COMMIT_REFUSED", str(exc)))
+    except Exception as exc:  # noqa: BLE001
+        _fail(ContractError("ASHBY_COMMIT_FAILED", repr(exc)))
+    typer.echo(json.dumps({"status": receipt["state"], **receipt}, indent=2, sort_keys=True))
+
+
+@app.command("commit-linkedin")
+def commit_linkedin_command(
+    tab_id: str = typer.Option(..., "--tab-id", help="surf tab id on the LinkedIn job page (authenticated session)."),
+    candidate_id: str = typer.Option(..., "--candidate-id"),
+    posting_id: str = typer.Option(..., "--posting-id"),
+    apply_url: str = typer.Option(..., "--apply-url"),
+    promotion: Path = typer.Option(..., "--promotion", exists=True, dir_okay=False, readable=True,
+                                   help="Scoped human promotion receipt: ats_form_submit:linkedin:linkedin.com."),
+    allow_duplicate: bool = typer.Option(False, "--allow-duplicate"),
+) -> None:
+    """Auto-submit one LinkedIn Easy Apply through the gated receipt chain.
+
+    Fills only known-answerable required fields (identity + answer-bank
+    eligibility); any unrecognized required screening question stops with
+    NEEDS_HUMAN and is surfaced to Graham -- never auto-answered. COMMITTED only
+    after reading LinkedIn's 'application was sent' confirmation back.
+    """
+    _configure_logging()
+    from .ats.linkedin_easy_apply import LinkedInEasyApplyError, commit_linkedin_easy_apply
+
+    try:
+        receipt = commit_linkedin_easy_apply(
+            tab_id=tab_id,
+            candidate_id=candidate_id,
+            posting_id=posting_id,
+            apply_url=apply_url,
+            promotion=read_json(promotion),
+            allow_duplicate=allow_duplicate,
+        )
+    except LinkedInEasyApplyError as exc:
+        _fail(ContractError("LINKEDIN_COMMIT_REFUSED", str(exc)))
+    except Exception as exc:  # noqa: BLE001
+        _fail(ContractError("LINKEDIN_COMMIT_FAILED", repr(exc)))
+    typer.echo(json.dumps({"status": receipt["state"], **receipt}, indent=2, sort_keys=True))
+
+
 @app.command("memory-sync")
 def memory_sync(
     run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
@@ -1765,6 +1882,11 @@ def nightly(
     linkedin_candidates = [r for r in (adv_receipt, li_receipt) if r.get("evidence_path")]
     linkedin_candidates.sort(key=lambda r: int(r.get("opportunities_captured") or 0), reverse=True)
     linkedin_evidence = linkedin_candidates[0].get("evidence_path") if linkedin_candidates else None
+    # Merge the OTHER LinkedIn stream in rather than discarding it: picking only
+    # the higher-row-count file silently dropped every top-applicant row (with
+    # its top_candidate=True flag), so Graham's top-candidate roles never ranked.
+    for other in linkedin_candidates[1:]:
+        _merge_linkedin_top_candidate(Path(linkedin_evidence), Path(other["evidence_path"]))
 
     # LinkedIn Premium low-competition pass: same searches with f_EA=true (Under
     # 10 applicants), extracted via aria-labels. Rows carry the premium signals

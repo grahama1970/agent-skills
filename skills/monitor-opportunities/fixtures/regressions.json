@@ -1,0 +1,181 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "skill": "monitor-opportunities",
+  "regressions": [
+    {
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "The nightly tailoring path (tailoring.py _tailor_posting) wrote resume.txt / resume.docx containing only a claim-highlights delta (\"Target role:\" + \"Selected claims:\" + claim sentences, ~400 bytes) instead of composing the active ATS base resume + claim-bound highlights. The artifact that would have been uploaded to an employer was a 6-line claim list, not a resume.",
+        "discovered_during": "Live apply prep for opportunity candidate:a:2c336a19739a65ce (Unstructured, AI Engineer - Public Sector).",
+        "root_cause": "tailoring.py builds the resume from selected claim wordings only and never reads config/resume_source.json base_markdown. The correct composer (resume_artifact.build_variant_markdown = base + targeted highlights) is not on the nightly path.",
+        "correct_behavior": "The rendered per-opportunity resume must contain the ATS base resume sections (SUMMARY, CORE SKILLS, PROFESSIONAL EXPERIENCE) plus claim-bound targeted highlights."
+      },
+      "threatens": {
+        "capability": "claim_bound_tailoring",
+        "seams": [
+          "tailoring.resume_render"
+        ]
+      },
+      "retained_case": "resume-not-a-stub-regression",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_resume_not_stub.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "RESUME_STUB_REGRESSION",
+        "observed_pre_fix": "exit 1; bytes=400; base_sections_present=[]"
+      },
+      "status": "ACTIVE",
+      "notes": "Guard drives the real _tailor_posting renderer on a fixture posting and fails when the resume lacks >=2 base sections or is under 1500 bytes. Remains failing until the nightly tailoring path composes the base resume.",
+      "regression_id": "resume-stub-2026-08-22"
+    },
+    {
+      "regression_id": "eligibility-reask-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "Ashby _field_kind classified citizenship-derived eligibility questions ('authorized to work','sponsorship') as human_required, so the skill re-asked the human for answers already attested in the answer bank (US citizen -> Yes / No).",
+        "root_cause": "'authorized to work' and 'sponsorship' were in the human_required keyword list in ats/ashby.py._field_kind.",
+        "correct_behavior": "work-auth/sponsorship resolve from answer_bank (answer_bank_choice); only genuinely variable fields (clearance/EEO/salary) stay human_required."
+      },
+      "threatens": {
+        "capability": "claim_bound_tailoring",
+        "seams": [
+          "ats.field_classification"
+        ]
+      },
+      "retained_case": "eligibility-field-classifier-regression",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_field_classifier.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "RE_ASK_REGRESSION",
+        "observed_pre_fix": "old _field_kind returned human_required for work-auth/sponsorship (verified by keyword-list membership)"
+      },
+      "status": "ACTIVE",
+      "notes": "Guard exercises real _field_kind on the exact incident labels. NOTE: code was fixed before the guard was retained, so a live re-run now PASSES; fail-before-fix was established at fix time by the keyword-list membership."
+    },
+    {
+      "regression_id": "clearance-required-miscapture-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "Ashby form capture read the required 'security clearance' question as optional (req=False) because it only checked the input attr / asterisk, not Ashby's _required label CSS class. A live submit failed on the blank required field.",
+        "root_cause": "_ASHBY_FIELD_JS required-detection omitted the label _required class.",
+        "correct_behavior": "required is also true when the label/heading carries a _required CSS class; verified live: clearance req=True after fix."
+      },
+      "threatens": {
+        "capability": "claim_bound_tailoring",
+        "seams": [
+          "ats.form_capture"
+        ]
+      },
+      "retained_case": "eligibility-field-classifier-regression",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_field_classifier.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "REQUIRED_CAPTURE_REGRESSION",
+        "observed_pre_fix": "_ASHBY_FIELD_JS lacked reqClass/_required detection; clearance captured req=False"
+      },
+      "status": "ACTIVE",
+      "notes": "Tripwire asserts _ASHBY_FIELD_JS retains the _required class detection. Live-verified: fresh capture shows clearance req=True."
+    },
+    {
+      "regression_id": "top-candidate-dropped-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "Nightly kept only the higher-row-count LinkedIn evidence file (advanced-search) and discarded the top-applicant file, throwing away every top_candidate=True flag. 0 of 11 top-applicant roles reached ranking; the 0.93 fit boost never fired.",
+        "root_cause": "cli.py picked linkedin_candidates[0] by opportunities_captured instead of merging streams.",
+        "correct_behavior": "merge all LinkedIn streams preserving top_candidate (OR on matching title+org); top-applicant roles rank with fit>=0.93."
+      },
+      "threatens": {
+        "capability": "eligibility_and_ranking",
+        "seams": [
+          "discovery.linkedin_evidence_merge"
+        ]
+      },
+      "retained_case": "top-candidate-survives-regression",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_top_candidate_survives.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "TOP_CANDIDATE_DROPPED",
+        "observed_pre_fix": "0 of 11 top-applicant candidates reached candidates.jsonl; all had top_candidate_evidence=False"
+      },
+      "status": "ACTIVE",
+      "notes": "Guard runs the real merge+emit path. Code fixed at retention time; fail-before-fix established by the discard-by-row-count logic."
+    },
+    {
+      "regression_id": "response-hardening-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "Response ranking ignored top_candidate and easy_apply entirely and treated geo as binary (WNY hybrid==onsite, remote=0), so Buffalo top-applicant roles ranked below cold remote roles.",
+        "root_cause": "response_likelihood.score_opportunity had no W_TOPCAND/W_EASYAPPLY terms and used a binary local flag.",
+        "correct_behavior": "top-applicant and Easy Apply are first-class drivers; geo is graded WNY_HYBRID>WNY_ONSITE>REMOTE; Buffalo top-applicant outranks cold remote of equal fit."
+      },
+      "threatens": {
+        "capability": "eligibility_and_ranking",
+        "seams": [
+          "ranking.response_score"
+        ]
+      },
+      "retained_case": "response-hardening-regression",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_response_hardening.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "TOP_CANDIDATE_NO_EFFECT",
+        "observed_pre_fix": "top_candidate/easy_apply had zero score effect; WNY_ONSITE==WNY_HYBRID"
+      },
+      "status": "ACTIVE",
+      "notes": "Guard exercises real score_opportunity invariants for the four hardened signals."
+    },
+    {
+      "regression_id": "linkedin-easy-apply-safety-2026-08-22",
+      "incident": {
+        "date": "2026-08-22",
+        "summary": "New capability: authorized LinkedIn Easy Apply auto-submit. Guards that it never fabricates a screening answer or submits a blank required field, and enforces the scoped promotion gate.",
+        "root_cause": "n/a (new-capability guard).",
+        "correct_behavior": "work-auth/sponsorship answerable from answer bank; salary/clearance/experience/free-text human_required; any required field empty after filling -> NEEDS_HUMAN, never submit; scoped promotion required."
+      },
+      "threatens": {
+        "capability": "ats_submit",
+        "seams": [
+          "ats.linkedin_easy_apply"
+        ]
+      },
+      "retained_case": "linkedin-easy-apply-safety",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_linkedin_easy_apply.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "BLANK_REQUIRED_NOT_BLOCKED",
+        "observed_pre_fix": "capability did not exist; guard defines the safety contract"
+      },
+      "status": "ACTIVE",
+      "notes": "New-capability safety guard; live terminal submit not re-run (would be a real application). Modal structure confirmed live 2026-08-22."
+    }
+  ]
+}

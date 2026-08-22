@@ -137,21 +137,34 @@ def _write_docx(path: Path, lines: list[str]) -> None:
         _writestr_deterministic(docx, "word/document.xml", document)
 
 
-def _validate_no_prohibited_delta(lines: list[str], approved_texts: set[str]) -> list[str]:
+def _validate_no_prohibited_delta(
+    lines: list[str], approved_texts: set[str], base_texts: set[str] | None = None
+) -> list[str]:
+    """Every content line must be an approved claim wording or a verbatim base
+    resume line. The base resume is the human-approved baseline presentation, so
+    its lines are pre-approved; anything else is a minted factual delta."""
+    base_texts = base_texts or set()
     prohibited = []
     for line in lines:
         if line.startswith(("Target role:", "Selected claims:")):
             continue
-        if line and line not in approved_texts:
-            prohibited.append(line)
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if line in approved_texts or stripped in base_texts:
+            continue
+        prohibited.append(line)
     return prohibited
 
 
-def _line_kind(line: str, approved_texts: set[str]) -> str:
+def _line_kind(line: str, approved_texts: set[str], base_texts: set[str] | None = None) -> str:
+    base_texts = base_texts or set()
     if line in approved_texts:
         return "approved_claim"
     if line.startswith("Target role:"):
         return "target_language"
+    if line.strip() in base_texts:
+        return "base_resume"
     return "presentation"
 
 
@@ -167,7 +180,18 @@ def _tailor_posting(posting: dict[str, Any], claims_path: Path, out_dir: Path) -
             raise ValueError(f"missing approved claim: {key}")
         selected.append(claim)
 
-    lines = [
+    # Compose the human-approved ATS base resume, then append the claim-bound
+    # targeted highlights. Emitting only the highlights delta produced a stub
+    # resume (incident 2026-08-22); the base resume is the presentation baseline.
+    skill_dir = Path(__file__).resolve().parents[2]
+    source = read_json(skill_dir / "config" / "resume_source.json")
+    base_path = Path(source["base_markdown"])
+    if not base_path.exists():
+        raise ValueError(f"BASE_RESUME_MISSING:{base_path}")
+    base_lines = base_path.read_text(encoding="utf-8").splitlines()
+    base_texts = {line.strip() for line in base_lines if line.strip()}
+
+    highlight_lines = [
         f"Target role: {posting['title']}",
         "Selected claims:",
     ]
@@ -176,7 +200,7 @@ def _tailor_posting(posting: dict[str, Any], claims_path: Path, out_dir: Path) -
     approved_texts = set()
     for claim in selected:
         wording = claim["wordings"][0]
-        lines.append(wording["text"])
+        highlight_lines.append(wording["text"])
         approved_texts.add(wording["text"])
         claim_refs.append(
             {
@@ -191,11 +215,12 @@ def _tailor_posting(posting: dict[str, Any], claims_path: Path, out_dir: Path) -
             }
         )
 
-    prohibited = _validate_no_prohibited_delta(lines, approved_texts)
+    lines = base_lines + ["", *highlight_lines]
+    prohibited = _validate_no_prohibited_delta(lines, approved_texts, base_texts)
     if prohibited:
         raise ValueError(f"prohibited factual delta: {prohibited}")
     for line in lines:
-        kind = _line_kind(line, approved_texts)
+        kind = _line_kind(line, approved_texts, base_texts)
         refs = []
         if kind == "approved_claim":
             for claim in selected:

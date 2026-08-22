@@ -628,7 +628,10 @@ _LINKEDIN_EXTRACT_JS = (
     "var uniq=[]; for(var j=0;j<lines.length;j++){ if(lines[j]!==lines[j-1]) uniq.push(lines[j]); }"
     "var title=uniq[0]||''; if(!title||seen[title]) continue; seen[title]=1;"
     "var a=cards[i].querySelector(\"a[href*='/jobs/view/'], a[href*='currentJobId']\");"
-    "out.push({title:title, company:uniq[1]||'', location:uniq[2]||'', href:a?a.href.split('?')[0]:null});"
+    # Easy Apply badge: LinkedIn's one-click lane, shown as a card label or a
+    # button aria-label. Detect either so the ranker can reward the fast path.
+    "var ea=/easy apply/i.test(cards[i].innerText)||!!cards[i].querySelector('[aria-label*=\"Easy Apply\" i], button[aria-label*=\"Easy Apply\" i]');"
+    "out.push({title:title, company:uniq[1]||'', location:uniq[2]||'', href:a?a.href.split('?')[0]:null, easy_apply:ea});"
     "}"
     "return JSON.stringify(out);"
     "})()"

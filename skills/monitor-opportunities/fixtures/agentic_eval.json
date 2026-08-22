@@ -354,6 +354,114 @@
       },
       "proves": "The morning interview builds questions from the newest REAL retained nightly run and writes dispositions through the append-only decision ledger with idempotency intact.",
       "does_not_prove": "That the human actually reviews digests, or identity-confirmation contact writes when the memory daemon is down."
+    },
+    {
+      "name": "resume-not-a-stub-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_resume_not_stub.py\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RESUME_COMPOSED_OK"
+        ],
+        "stderr_excludes": [
+          "RESUME_STUB_REGRESSION"
+        ]
+      }
+    },
+    {
+      "name": "eligibility-field-classifier-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_field_classifier.py\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FIELD_CLASSIFIER_OK"
+        ],
+        "stderr_excludes": [
+          "RE_ASK_REGRESSION",
+          "CLEARANCE_MISCLASSIFIED",
+          "REQUIRED_CAPTURE_REGRESSION"
+        ]
+      }
+    },
+    {
+      "name": "top-candidate-survives-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_top_candidate_survives.py\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TOP_CANDIDATE_OK"
+        ],
+        "stderr_excludes": [
+          "TOP_CANDIDATE_DROPPED",
+          "TOP_CANDIDATE_NO_BOOST"
+        ]
+      }
+    },
+    {
+      "name": "response-hardening-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_response_hardening.py\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RESPONSE_HARDENING_OK"
+        ],
+        "stderr_excludes": [
+          "TOP_CANDIDATE_NO_EFFECT",
+          "EASY_APPLY_NO_EFFECT",
+          "GEO_ORDER_REGRESSION",
+          "BUFFALO_TOP_BURIED"
+        ]
+      }
+    },
+    {
+      "name": "linkedin-easy-apply-safety",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_linkedin_easy_apply.py\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LINKEDIN_EASY_APPLY_SAFE"
+        ],
+        "stderr_excludes": [
+          "GATE_ACCEPTED_BAD_PROMOTION",
+          "BLANK_REQUIRED_NOT_BLOCKED",
+          "SHOULD_BE_HUMAN_REQUIRED"
+        ]
+      }
     }
   ]
 }

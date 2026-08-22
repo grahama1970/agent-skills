@@ -29,7 +29,25 @@ W_WARM = 0.45
 W_TRIGGER = 0.30
 W_LOWCOMP = 0.20
 W_LOCAL = 0.25
+# A LinkedIn "top applicant" is a strong reply signal (LinkedIn tells the poster
+# you rank in the top pool); Easy Apply is a low-friction lane worth a small nudge.
+W_TOPCAND = 0.35
+W_EASYAPPLY = 0.10
 _WNY_WORKPLACES = frozenset({"WNY_HYBRID", "WNY_ONSITE"})
+# Graded geo: Buffalo hybrid is the hard-constraint ideal; WNY onsite next;
+# credible remote is acceptable (partial credit, never zero); onsite-elsewhere
+# is rejected before ranking so it never reaches here.
+_GEO_WEIGHT = {"WNY_HYBRID": 1.0, "WNY_ONSITE": 0.85, "REMOTE": 0.3}
+
+
+def _local_weight(opp: dict[str, Any]) -> float:
+    if opp.get("local_standout"):
+        return 1.0
+    return _GEO_WEIGHT.get(str(opp.get("workplace_type") or ""), 0.0)
+
+
+def _is_top_candidate(opp: dict[str, Any]) -> bool:
+    return bool(opp.get("top_candidate") or opp.get("top_candidate_evidence"))
 
 
 def _channel_competition(source: str, channels: dict[str, Any]) -> float:
@@ -86,15 +104,31 @@ def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = Non
     low_comp = 1.0 - float(competition)
     # Local standout: a DARPA/AI-caliber architect is rare in WNY, so Buffalo
     # on-site/hybrid roles get noticed. Fit still gates it (mandate-first).
-    local = 1.0 if (opp.get("local_standout") or str(opp.get("workplace_type") or "") in _WNY_WORKPLACES) else 0.0
+    local = _local_weight(opp)
+    top_cand = 1.0 if _is_top_candidate(opp) else 0.0
+    easy_apply = 1.0 if opp.get("easy_apply") else 0.0
 
-    raw = BASE + W_WARM * warm + W_TRIGGER * trigger + W_LOWCOMP * low_comp + W_LOCAL * local
+    raw = (
+        BASE
+        + W_WARM * warm
+        + W_TRIGGER * trigger
+        + W_LOWCOMP * low_comp
+        + W_LOCAL * local
+        + W_TOPCAND * top_cand
+        + W_EASYAPPLY * easy_apply
+    )
     score = round(fit * raw, 4)
 
-    has_driver = warm >= 0.5 or trigger >= 0.5 or low_comp >= 0.6 or local >= 1.0
+    has_driver = warm >= 0.5 or trigger >= 0.5 or low_comp >= 0.6 or local >= 0.85 or top_cand >= 1.0
     reasons: list[str] = []
+    if top_cand >= 1.0:
+        reasons.append("LinkedIn top applicant: you rank in the top pool for this role — recruiters see that, so your reply odds are high")
     if local >= 1.0:
-        reasons.append("Buffalo/WNY local: a DARPA/AI-caliber architect is rare here — you get noticed, and you can meet in person")
+        reasons.append("Buffalo/WNY hybrid: a DARPA/AI-caliber architect is rare here — you get noticed, and you can meet in person")
+    elif local >= 0.85:
+        reasons.append("Buffalo/WNY onsite: local presence is a standout advantage here")
+    if easy_apply >= 1.0:
+        reasons.append("Easy Apply: low-friction one-click application — you can apply in seconds")
     if warm >= 0.5:
         reasons.append("warm path: a network connection can refer you in (referral >> cold form)")
     if trigger >= 0.5:
@@ -113,7 +147,8 @@ def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = Non
         "organization": opp.get("organization"),
         "title": opp.get("title"),
         "response_score": score,
-        "drivers": {"fit": fit, "warm_path": warm, "trigger": trigger, "low_competition": round(low_comp, 2), "local": local},
+        "drivers": {"fit": fit, "warm_path": warm, "trigger": trigger, "low_competition": round(low_comp, 2),
+                    "local": local, "top_candidate": top_cand, "easy_apply": easy_apply},
         "why_it_responds": reasons,
     }
 

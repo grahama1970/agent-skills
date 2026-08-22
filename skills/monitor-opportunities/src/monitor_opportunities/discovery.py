@@ -251,6 +251,10 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         if record.get("warm_path"):
             payload["warm_path"] = float(record["warm_path"])
             payload["warm_path_via"] = str(record.get("warm_path_via") or "LinkedIn: connection works here")
+        # Easy Apply = LinkedIn's one-click lane. A row-level signal the response
+        # ranker rewards and the morning report surfaces as a fast-apply option.
+        if _coerce_bool(record.get("easy_apply") or record.get("easy_apply_signal")):
+            payload["easy_apply"] = True
         payload["candidate_id"] = _candidate_id("candidate:a:linkedin", payload)
         candidates.append(payload)
     return receipt, candidates

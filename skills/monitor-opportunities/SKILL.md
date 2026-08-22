@@ -73,9 +73,28 @@ disciplines:
 
 ## Immutable goal
 
-> **Daily top opportunities that are highly targeted, delivered in an interactive
-> report/interview, with human-authorized application preparation using a custom
-> targeted resume given the algorithm likely employed by the employer or client.**
+> **monitor-opportunities does the grunt work of the daily job and consulting
+> search; Graham only reviews our collaboration and approves. Each day it
+> discovers, ranks, and surfaces the most-targeted opportunities — Buffalo/WNY
+> first, then credible remote — and surfaces where Graham is a LinkedIn top
+> applicant or a role offers quick (Easy) apply. On Graham's authorization
+> (per-opportunity, or standing for a class such as "top-candidate" or
+> "quick-apply" roles), the agent performs the entire application end-to-end:
+> tailoring a truthful custom resume to the employer's likely screening
+> algorithm, answering only from Graham's attested facts, and submitting on
+> employer ATS and LinkedIn Easy Apply — with duplicate protection and an
+> openable receipt for every action. Graham authorizes; the agent executes.
+> Nothing is fabricated, and no required answer without a truthful basis is ever
+> submitted — any genuine screening question is surfaced to Graham, never
+> guessed.**
+
+> **Standing authorization (Graham, 2026-08-22):** the agent MAY auto-submit
+> applications — on employer ATS and via LinkedIn Easy Apply — where Graham is a
+> top candidate or a role is quick-apply, under his authorization. This
+> supersedes the earlier `linkedin_automation = PERMANENTLY_FORBIDDEN` stance for
+> Easy Apply, driven through Graham's own authenticated session; Graham has
+> accepted the LinkedIn ToS / account risk. LinkedIn remains read-only for
+> discovery everywhere else (no scraping, connecting, or messaging).
 
 Operationally, “algorithm likely employed” means an evidence-backed
 `screening_interface_profile`: observed ATS/provider host, observed form fields and file

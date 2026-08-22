@@ -73,3 +73,81 @@ class SurfSubmitAdapter:
         if any(marker in lowered for marker in CONFIRMATION_MARKERS[self.provider]):
             return {"state": "COMMITTED", "provider_confirmation": f"reconciled-{reservation_id}"}
         return {"state": "INDETERMINATE", "detail": "confirmation still absent"}
+
+
+# Verified live 2026-08-22 against jobs.ashbyhq.com: submit control text is
+# "Submit Application"; success screen reads "successfully submitted".
+ASHBY_CONFIRMATION_MARKERS = (
+    "successfully submitted",
+    "application success",
+    "we'll contact you",
+)
+
+
+class AshbySubmitAdapter:
+    """Submit an already-prefilled Ashby application in the human's own tab.
+
+    Ashby is a React SPA behind reCAPTCHA. This adapter clicks the visible
+    "Submit Application" control, OS-clicks the reCAPTCHA checkbox coordinate
+    when present (surf `pointer.dispatch --transport os`), and reads the effect
+    back from the live DOM. It never solves an escalated image challenge and
+    never answers a human_required field -- an unresolved required field or a
+    challenge yields INDETERMINATE so the reconciliation gate owns the retry.
+    """
+
+    def __init__(self, *, tab_id: str, surf_run: Path = SURF_RUN_DEFAULT) -> None:
+        self.tab_id = tab_id
+        self.provider = "ashby"
+        self.surf_run = surf_run
+
+    def _js(self, script: str, timeout: int = 90) -> str:
+        with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as handle:
+            handle.write(script)
+            path = handle.name
+        return _surf(self.surf_run, "js", "--tab-id", self.tab_id, "--file", path, timeout=timeout)
+
+    def _page_text(self) -> str:
+        return json.loads(self._js("document.body.innerText.slice(0,6000)"))
+
+    def _submit_still_present(self) -> bool:
+        return json.loads(self._js(
+            "JSON.stringify(/submit application/i.test(document.body.innerText))"
+        ))
+
+    def _validation_errors(self) -> list[str]:
+        return json.loads(self._js(
+            "JSON.stringify([].slice.call(document.querySelectorAll('[role=alert]'))"
+            ".map(function(e){return (e.innerText||'').replace(/\\s+/g,' ').slice(0,120);})"
+            ".filter(function(t){return /missing|required|invalid|correction/i.test(t);}).slice(0,6))"
+        ))
+
+    def submit(self, plan: dict[str, Any], idempotency_key: str) -> dict[str, Any]:
+        click = (
+            "(function(){var b=[].slice.call(document.querySelectorAll('button'))"
+            ".filter(function(e){return /submit application/i.test((e.innerText||'').trim());});"
+            "if(!b.length)return 'SUBMIT_NOT_FOUND';b[0].click();return 'CLICKED';})()"
+        )
+        if json.loads(self._js(click)) != "CLICKED":
+            return {"state": "INDETERMINATE", "detail": "SUBMIT_NOT_FOUND"}
+        _surf(self.surf_run, "wait", "6")
+
+        page = self._page_text()
+        lowered = page.lower()
+        if any(marker in lowered for marker in ASHBY_CONFIRMATION_MARKERS) and not self._submit_still_present():
+            return {
+                "state": "COMMITTED",
+                "provider_confirmation": f"ashby:{plan.get('posting_id')}:{idempotency_key}",
+                "confirmation_excerpt": page[:300],
+            }
+        errors = self._validation_errors()
+        if errors:
+            # A blank required (human_required) field or a rejected value: the
+            # human must resolve it -- never auto-answered, never retried blind.
+            return {"state": "BLOCKED", "detail": "validation_errors", "errors": errors}
+        return {"state": "INDETERMINATE", "detail": "no confirmation and no error surfaced", "page_excerpt": page[:300]}
+
+    def reconcile(self, reservation_id: str) -> dict[str, Any]:
+        page = self._page_text().lower()
+        if any(marker in page for marker in ASHBY_CONFIRMATION_MARKERS):
+            return {"state": "COMMITTED", "provider_confirmation": f"reconciled-{reservation_id}"}
+        return {"state": "INDETERMINATE", "detail": "confirmation still absent"}
