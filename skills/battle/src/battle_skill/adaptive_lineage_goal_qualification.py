@@ -1,3 +1,9 @@
+"""adaptive_lineage_goal_qualification - battle_skill.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import hashlib
