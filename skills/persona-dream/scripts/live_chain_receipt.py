@@ -337,6 +337,102 @@ def _recognition_render_paths(live_receipt: Path) -> tuple[list[Path], list[str]
     return paths, failures
 
 
+RECOGNITION_RECEIPT_SCHEMA = "persona_dream.session_mood_voice_recognition.v1"
+RECOGNITION_DOMAIN_BLOCKED_STATUS = "BLOCKED_SESSION_MOOD_VOICE_RECOGNITION"
+
+
+class RecognitionDomainBlocked(RuntimeError):
+    """A structured recognition gate failure, not a failure to run recognition.
+
+    The recognition subprocess exits non-zero whenever a preregistered gate
+    fails, but it still writes a complete, valid receipt. That case is a domain
+    result and is propagated verbatim; BLOCKED_RECOGNITION_COMMAND_FAILED stays
+    reserved for a missing, unreadable, malformed, unrecognized, or
+    crash-before-receipt child.
+    """
+
+    def __init__(self, detail: dict) -> None:
+        self.detail = detail
+        super().__init__(
+            "BLOCKED_RECOGNITION_DOMAIN_GATE:"
+            f"{detail['status']}:{json.dumps(detail, sort_keys=True)}"
+        )
+
+
+def _recognition_score_rows(rows: Any, keys: tuple[str, ...]) -> list[dict]:
+    out: list[dict] = []
+    for row in rows or []:
+        if not isinstance(row, dict):
+            continue
+        summary = {key: row.get(key) for key in keys if key in row}
+        audio = row.get("audio")
+        if isinstance(audio, dict):
+            summary["audio_path"] = audio.get("path")
+            summary["audio_sha256"] = audio.get("sha256")
+        out.append(summary)
+    return out
+
+
+def structured_recognition_block(path: Path, proc: subprocess.CompletedProcess) -> dict | None:
+    """Return a propagatable domain block, or None if the child result is not one."""
+    try:
+        doc = load_json(path)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(doc, dict):
+        return None
+    if doc.get("schema") != RECOGNITION_RECEIPT_SCHEMA:
+        return None
+    if doc.get("status") != RECOGNITION_DOMAIN_BLOCKED_STATUS:
+        return None
+    if doc.get("mocked") is not False:
+        return None
+    failed_gates = doc.get("failed_gates")
+    if not isinstance(failed_gates, list) or not failed_gates:
+        return None
+    if not all(isinstance(gate, str) for gate in failed_gates):
+        return None
+    return {
+        "status": doc["status"],
+        "propagated_from_child_receipt": True,
+        "path": rel(path),
+        "sha256": sha_file(path),
+        "schema": doc["schema"],
+        "engine": doc.get("engine"),
+        "mocked": doc.get("mocked"),
+        "live": doc.get("live"),
+        "created_at": doc.get("created_at"),
+        "failed_gates": failed_gates,
+        "preregistered_thresholds": doc.get("preregistered_thresholds"),
+        "separation": doc.get("separation"),
+        "backend_error": doc.get("backend_error"),
+        "reference_provenance": doc.get("reference_provenance"),
+        "within_speaker_baseline": doc.get("within_speaker_baseline"),
+        "genuine_renders": _recognition_score_rows(
+            doc.get("genuine_renders"),
+            (
+                "seconds",
+                "similarity_to_embry",
+                "similarity_to_authorized_reference",
+                "similarity_to_conditioning_reference",
+                "duration_aware_floor",
+                "long_enough_to_judge",
+                "passes_threshold",
+                "passes_duration_aware_floor",
+            ),
+        ),
+        "adversarial_voices": _recognition_score_rows(
+            doc.get("adversarial_voices"),
+            ("seconds", "similarity_to_embry", "below_ceiling"),
+        ),
+        "child_process": {
+            "returncode": proc.returncode,
+            "stdout_tail": (proc.stdout or "")[-1000:],
+            "stderr_tail": (proc.stderr or "")[-1000:],
+        },
+    }
+
+
 def run_recognition(live_receipt: Path, out: Path, python: Path) -> dict:
     cmd = [
         str(python),
@@ -349,6 +445,9 @@ def run_recognition(live_receipt: Path, out: Path, python: Path) -> dict:
     ]
     proc = subprocess.run(cmd, cwd=REPO_ROOT, text=True, capture_output=True, check=False)
     if proc.returncode != 0:
+        detail = structured_recognition_block(out, proc)
+        if detail is not None:
+            raise RecognitionDomainBlocked(detail)
         raise RuntimeError(
             "BLOCKED_RECOGNITION_COMMAND_FAILED:"
             f"rc={proc.returncode}:stdout={proc.stdout[-1000:]}:stderr={proc.stderr[-1000:]}"

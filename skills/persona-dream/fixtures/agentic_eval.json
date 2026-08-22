@@ -344,6 +344,34 @@
       }
     },
     {
+      "name": "session-mood-recognition-status-contract-tests",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.session_mood_recognition_status_contract"
+      ],
+      "seams": [
+        "continuity.session_mood.voice_recognition_status"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "set -euo pipefail\nREPO_ROOT=\"$(cd ../../.. && pwd)\"\nexport REPO_ROOT\npython3 - <<'PY_CONTRACT_EOF'\n\"\"\"Deterministic contract check: recognition status propagation in live_chain_receipt.\n\nDrives run_recognition() with a stubbed child interpreter so the parent's\nwrapping path is exercised on real artifacts, with no Chatterbox, no GPU and no\nMemory traffic.\n\"\"\"\nimport importlib.util\nimport json\nimport os\nimport stat\nimport subprocess\nimport sys\nimport tempfile\nfrom pathlib import Path\n\nREPO = Path(os.environ[\"REPO_ROOT\"]).resolve()\nMOD = REPO / \"skills/persona-dream/scripts/live_chain_receipt.py\"\nREAL_BLOCKED = REPO / (\n    \"skills/persona-dream/reports/goal_v5/continuity/reliability/\"\n    \"soak35_accepted_candidate_readback/cycle_019/voice_recognition/RECEIPT.json\"\n)\n\nspec = importlib.util.spec_from_file_location(\"live_chain_receipt\", MOD)\nlcr = importlib.util.module_from_spec(spec)\nsys.modules[\"live_chain_receipt\"] = lcr\nspec.loader.exec_module(lcr)\n\nfailures = []\n\n\ndef check(name, cond, detail=\"\"):\n    print((\"PASS \" if cond else \"FAIL \") + name + ((\" :: \" + detail) if detail and not cond else \"\"))\n    if not cond:\n        failures.append(name)\n\n\ndef stub(body: str) -> Path:\n    path = Path(tempfile.mkdtemp(prefix=\"pd-stub-\")) / \"stub-python\"\n    path.write_text(\n        \"#!/usr/bin/env python3\\n\"\n        \"import sys, pathlib\\n\"\n        \"args = sys.argv[1:]\\n\"\n        \"out = pathlib.Path(args[args.index('--out') + 1])\\n\"\n        \"out.parent.mkdir(parents=True, exist_ok=True)\\n\"\n        + body\n        + \"\\nsys.stderr.write('stub stderr tail\\\\n')\\nsys.exit(1)\\n\",\n        encoding=\"utf-8\",\n    )\n    path.chmod(path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)\n    return path\n\n\ndef run(body):\n    out = Path(tempfile.mkdtemp(prefix=\"pd-out-\")) / \"voice_recognition\" / \"RECEIPT.json\"\n    try:\n        lcr.run_recognition(REPO / \"does-not-matter.json\", out, stub(body))\n    except BaseException as exc:  # noqa: BLE001 - the exception IS the contract\n        return exc\n    raise AssertionError(\"run_recognition did not raise on a non-zero child\")\n\n\nreal = json.loads(REAL_BLOCKED.read_text(encoding=\"utf-8\"))\ncheck(\"real_artifact_is_domain_blocked\", real[\"status\"] == \"BLOCKED_SESSION_MOOD_VOICE_RECOGNITION\")\ncheck(\"real_artifact_failed_gate\", real[\"failed_gates\"] == [\"all_renders_recognized_as_embry\"], str(real[\"failed_gates\"]))\ncheck(\"real_artifact_backend_error_null\", real[\"backend_error\"] is None)\n\n# 1. valid structured domain block -> propagated, not COMMAND_FAILED\nexc = run(f\"out.write_text({json.dumps(json.dumps(real))}, encoding='utf-8')\")\nDomainBlocked = getattr(lcr, \"RecognitionDomainBlocked\", None)\ncheck(\"domain_block_type\", DomainBlocked is not None and isinstance(exc, DomainBlocked), type(exc).__name__)\nmsg = str(exc)\ncheck(\"domain_block_not_command_failed\", \"BLOCKED_RECOGNITION_COMMAND_FAILED\" not in msg)\ncheck(\"domain_block_status_in_message\", \"BLOCKED_SESSION_MOOD_VOICE_RECOGNITION\" in msg)\ncheck(\"domain_block_stage_token_preserved\", \"BLOCKED_RECOGNITION\" in msg)\nd = getattr(exc, \"detail\", {})\ncheck(\"detail_status\", d.get(\"status\") == \"BLOCKED_SESSION_MOOD_VOICE_RECOGNITION\")\ncheck(\"detail_failed_gates\", d.get(\"failed_gates\") == [\"all_renders_recognized_as_embry\"])\ncheck(\"detail_min_threshold\", (d.get(\"preregistered_thresholds\") or {}).get(\"min_embry_similarity\") == 0.75)\ncheck(\"detail_separation\", d.get(\"separation\") == real[\"separation\"])\ncheck(\"detail_backend_error_key\", \"backend_error\" in d and d[\"backend_error\"] is None)\ncheck(\"detail_child_returncode\", (d.get(\"child_process\") or {}).get(\"returncode\") == 1)\ncheck(\"detail_child_stderr_tail\", \"stub stderr tail\" in (d.get(\"child_process\") or {}).get(\"stderr_tail\", \"\"))\nscores = d.get(\"genuine_renders\") or []\ncheck(\"detail_per_render_count\", len(scores) == len(real[\"genuine_renders\"]))\ncheck(\"detail_per_render_similarity\", any(r.get(\"similarity_to_embry\") == 0.767638 for r in scores))\ncheck(\"detail_duration_aware_floor\", [r.get(\"duration_aware_floor\") for r in scores] == [r.get(\"duration_aware_floor\") for r in real[\"genuine_renders\"]] and 0.772462 in [r.get(\"duration_aware_floor\") for r in scores])\ncheck(\"detail_render_gate_flags\", any(r.get(\"passes_duration_aware_floor\") is False for r in scores))\nadv = d.get(\"adversarial_voices\") or []\ncheck(\"detail_adversarial_scores\", len(adv) == len(real[\"adversarial_voices\"]) and all(\"similarity_to_embry\" in r for r in adv))\ncheck(\"detail_receipt_sha256\", str(d.get(\"sha256\", \"\")).startswith(\"sha256:\"))\ncheck(\"detail_marked_propagated\", d.get(\"propagated_from_child_receipt\") is True)\n\n# 2..n. everything else stays COMMAND_FAILED\nmocked = dict(real, mocked=True)\npassing = dict(real, status=\"PASS_SESSION_MOOD_VOICE_RECOGNITION\", failed_gates=[])\nunknown = dict(real, status=\"BLOCKED_SOMETHING_ELSE\")\nnoschema = {k: v for k, v in real.items() if k != \"schema\"}\nnogates = dict(real, failed_gates=[])\nnegatives = {\n    \"missing_receipt\": \"pass\",\n    \"malformed_receipt\": \"out.write_text('{not json', encoding='utf-8')\",\n    \"unreadable_receipt\": \"out.write_bytes(b'\\\\xff\\\\xfe\\\\x00garbage')\",\n    \"wrong_schema\": f\"out.write_text({json.dumps(json.dumps(noschema))}, encoding='utf-8')\",\n    \"mocked_receipt\": f\"out.write_text({json.dumps(json.dumps(mocked))}, encoding='utf-8')\",\n    \"unrecognized_status\": f\"out.write_text({json.dumps(json.dumps(unknown))}, encoding='utf-8')\",\n    \"passing_status_with_nonzero_exit\": f\"out.write_text({json.dumps(json.dumps(passing))}, encoding='utf-8')\",\n    \"blocked_without_failed_gates\": f\"out.write_text({json.dumps(json.dumps(nogates))}, encoding='utf-8')\",\n}\nfor name, body in negatives.items():\n    exc = run(body)\n    check(\n        f\"command_failed_reserved_for_{name}\",\n        type(exc) is RuntimeError and str(exc).startswith(\"BLOCKED_RECOGNITION_COMMAND_FAILED:\"),\n        f\"{type(exc).__name__}:{str(exc)[:120]}\",\n    )\n\n# invariants: nothing about thresholds, floors, ASR or the gate itself moved\nrec_src = (REPO / \"skills/persona-dream/scripts/session_mood_voice_recognition.py\").read_text(encoding=\"utf-8\")\ncheck(\"recognition_thresholds_unchanged\", \"MIN_EMBRY_SIMILARITY = 0.75\" in rec_src and \"MIN_REFERENCE_PROVENANCE_SIMILARITY = 0.75\" in rec_src, \"threshold literal not found\")\ncheck(\"recognition_gate_still_enforced\", 'failed_gates.append(\"all_renders_recognized_as_embry\")' in rec_src)\nlcr_src = MOD.read_text(encoding=\"utf-8\")\ncheck(\"parent_still_validates_pass_receipts\", 'raise ValueError(\"BLOCKED_RECOGNITION_RECEIPT_FAILED\")' in lcr_src)\n\nprint(json.dumps({\"failures\": failures}, sort_keys=True))\nif failures:\n    sys.exit(1)\nprint(\"RECOGNITION_STATUS_CONTRACT_OK\")\nPY_CONTRACT_EOF\n"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RECOGNITION_STATUS_CONTRACT_OK",
+          "PASS domain_block_status_in_message",
+          "PASS command_failed_reserved_for_missing_receipt"
+        ],
+        "stdout_not_contains": [
+          "FAIL "
+        ]
+      }
+    },
+    {
       "name": "corrected-goal-pair-blocks-without-live-artifacts",
       "type": "adversarial",
       "real_world": true,
@@ -416,6 +444,14 @@
       }
     },
     {
+      "id": "persona_dream.session_mood_recognition_status_contract",
+      "description": "A valid structured BLOCKED_SESSION_MOOD_VOICE_RECOGNITION receipt from the recognition subprocess is propagated into the live-chain block with its failed gates, per-render scores, thresholds, duration-aware floor, separation, adversarial scores, backend_error and child exit metadata; BLOCKED_RECOGNITION_COMMAND_FAILED stays reserved for missing, malformed, unreadable, unrecognized or crash-before-receipt children.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.ux.workspace_renders",
       "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
       "criticality": "critical",
@@ -476,6 +512,14 @@
     {
       "seam_id": "continuity.session_mood.delivery",
       "seam_type": "delivery_contract",
+      "criticality": "important",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "continuity.session_mood.voice_recognition_status",
+      "seam_type": "status_propagation_contract",
       "criticality": "important",
       "required_evidence": [
         "deterministic"
