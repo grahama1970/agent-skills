@@ -1,247 +1,116 @@
-# Handoff Report: Persona Dream
+# Handoff Report: persona-dream
 
-**Timestamp:** 2026-07-29T18:25:00Z
-**Active Agent:** Codex
-**Repository:** `grahama1970/agent-skills`
-**Target Branch:** `main`
-**Worktree Used:** `/home/graham/workspace/experiments/agent-skills-issue1117-persona-dream-main`
-**Base Commit Before This Slice:** `cdf8f91425e29ecfb92806ab47ef3fb40a361cc7`
-**Immutable Goal:** `NOT_MET`
+**Timestamp**: 2026-08-22T00:00:00Z
+**Active Agent**: Claude Fable 5 (Claude Code)
+**Prior file note**: supersedes the 2026-07-29 Codex handoff (issue #1117
+slice, P2.1-P2.3 receipts) — recoverable at
+`git show 675e9334ed:skills/persona-dream/local/HANDOFF.md`.
 
 ## 1. Project Overview
 
-- **Ecosystem:** Python skill in `agent-skills`, with receipt-backed continuity,
-  Memory/Tau/Watch/Kling historical lanes, and Chatterbox voice integration.
-- **Core Purpose:** Build and verify Embry as a persistent persona whose
-  explicitly synthetic dreams produce bounded, provenance-linked changes in
-  self-narrative, arc state, session mood, and voice while preserving identity,
-  factual competence, answer content, and synthetic-versus-literal boundaries.
-- **Current Phase:** `P2_LIVE_CONTINUITY_CHAIN`.
-- **Current Truth:** `skills/persona-dream/CURRENT_STATUS.json`.
+- **Ecosystem**: Python 3.12 (uv, Typer, run.sh CLI) + React/Vite UX surfaces;
+  Tau executes the dream spine as a receipt-gated DAG; Chatterbox (docker,
+  :8018) renders voice; whisper container does ASR; memory daemon behind the
+  sparta explorer API (:3001).
+- **Core Purpose**: determine, through preregistered fail-closed experiments,
+  whether provenance-bound synthetic dreaming adds measurable value over direct
+  memory/reflection while preserving identity. "No" is a valid answer. See
+  `GOAL.md` (immutable) and `CURRENT_STATUS.json` (machine-readable state).
 
 ## 2. Current State (Doc-Code Alignment)
 
-- **P2.1-P2.3:** Continuity ledger hardening, deterministic session-mood
-  binding, and live Chatterbox mood rendering are implemented and receipted.
-- **P2.4 backend preflight:** Passed under the Chatterbox voice-lane interpreter
-  with `resemblyzer` available.
-- **P2.4 recognition scoring:** Passed after rendering longer 4.68-6.0s
-  session-mood turns. The earlier short 1.76-2.16s renders remain useful
-  historical evidence, but they were too short for the identity gate.
-- **P2 joined live-chain receipt:** Passed for cycle
-  `live_chain_20260729t130950z` at
-  `reports/goal_v5/continuity/live_chain/RECEIPT.json`. Issue #1117 repaired
-  its presentation fields so `selected_before_first_turn` is sequence-derived
-  (`mood_bound_seq=0`, `first_turn_seq=1`) while equal second-granularity
-  timestamps are recorded separately as inconclusive.
-- **Session arc-bias artifact:** Passed under the re-scoped #1057 Persona
-  Dream ownership boundary at
-  `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`. Persona Dream
-  publishes numeric deltas only; SPARTA owns production conversation-service
-  consumption.
-- **SPARTA arc-bias handoff contract:** Passed at
-  `reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json`. This
-  publishes the machine-checkable SPARTA consumer target and binds the exact
-  `session_arc_bias.v1` source hash.
-- **SPARTA local live arc-bias consumption:** Passed in the SPARTA repository at
-  `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716`, receipt
-  `artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json`,
-  SHA-256
-  `sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813`.
-  The receipt is `mocked=false`, `live=true`, and shows the local live SPARTA
-  API consumed the current Persona Dream `session_arc_bias.v1` artifact before
-  turn 1, kept the same artifact across three turns, preserved canonical answer
-  text, preserved tone category, and used neutral fallback when no artifact was
-  supplied.
-- **Five-cycle reliability pilot:** Passed under #1041 at
-  `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with 5
-  attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted
-  effects, and Wilson 95% lower bound 0.565509.
-> **STOP — do not collect human ratings.** The four stimuli below were later
-> found technically confounded by
-> `reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json`,
-> which BLOCKS them. #1179 owns the re-render under one identical
-> loudness-normalization policy. Collecting responses against the current
-> stimuli produces data that cannot be interpreted, and the readiness bullets
-> below describe the state BEFORE that screen. They are retained as history, not
-> as an instruction.
-
-- **Blinded listener-study readiness:** Four preregistered Chatterbox stimuli
-  are restored under `reports/goal_v5/continuity/blinded_listener_study/stimuli/`
-  and validated by
-  `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`.
-  All four hashes match the preregistration, live ASR returns WER 0.0 for all
-  four, the rater response schema/instructions are present, empty/malformed
-  rater rows are rejected, and the remaining failed gate is
-  `human_responses_complete`.
-- **Blinded listener-study rater page:** A static collection surface now exists
-  at `reports/goal_v5/continuity/blinded_listener_study/rater_page.html`, with
-  receipt
-  `reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json`
-  and SHA-256
-  `sha256:8026000a080add6f63df81cf90c9b8522bed442c0f28b91647555ca2bed67bce`.
-  It copies the four WAVs into `blinded_stimuli/S01.wav` through `S04.wav`,
-  avoids condition-labelled audio paths in the HTML, and emits
-  schema-compatible JSONL for `responses.jsonl`. This is a Persona Dream
-  evaluation-collection artifact, not SPARTA production UX and not perceptual
-  proof.
-- **Blinded listener-study analysis guard:** The analysis receipt at
-  `reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json` now fails
-  closed with `BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS` until
-  `human_responses_complete` and `signed_human_interpretation_missing` are
-  cleared. Receipt SHA-256:
-  `sha256:e052a9ccc250ce31f6d72fe31004f42b3fa97f6e3deadfb036b1fdd1212f5f89`.
-- **Status boundary:** P2.4 recognition proof and the SPARTA local live receipt
-  do not prove perceived emotion, naturalness, human listener recognition,
-  deployed SPARTA production behavior beyond the local live API receipt,
-  production reliability beyond an N=5 pilot, or PCTOM-R benefit.
-- **Issue #1117 durability repair:** `CURRENT_STATUS.json` no longer cites `/tmp`
-  evidence paths for the agentic-eval fixture output or rater-page screenshot;
-  durable copies live under
-  `reports/goal_v5/continuity/sanity_evidence/`.
+- **Research phase**: `P2_LIVE_CONTINUITY_CHAIN` (`CURRENT_STATUS.json`,
+  authoritative). Proven: N=5 live-chain reliability pilot (engineering
+  feasibility only). Not proven: the research benefit itself.
+- **The loop is complete and runnable**: as of 2026-08-20 the full cycle has
+  run live end to end — day ingest → Tau dream spine (select / frozen
+  instruments / frames / VLM observe / phase-13 interpret / phase-14 ToM /
+  persist with exact re-read / dream journal) → tone-annotated day journal →
+  ASR-verified spoken `journal.wav` → memory write + artifact store →
+  multi-turn fully audible dynamic Horus/Embry conversation → carry-back.
+- **Conversation contract**: `horus` is a first-class voiced role
+  (`scripts/append_conversation.py` refuses embry OR horus turns without tone
+  + rendered audio; sha256-bound in `conversation.jsonl`). Dialogue is
+  generated per turn (`scripts/dynamic_conversation.py`, `run.sh
+  converse-dynamic`): Horus drafts via Tau conditioned on her journal + live
+  transcript, speaks with `horus_v2_agent_ref_6s.wav`; Embry replies through
+  the gated `speak_reply` path.
+- **UI**: pipeline workspace (11 phases) mounts at `http://127.0.0.1:5173/#dream`
+  (`ux/app`, `npm run dev` + `npm run dev:dream-api` for the :8791 API host;
+  vite proxies `/api/projects/dream`→8791, `/api/memory`→3001, `/api`→8790
+  journal FastAPI via `uv run --extra ux python ux/server.py`). Residue board
+  draws a seeded stratified image/video/audio/text sample from live memory.
 
 ## 3. What is Working Well
 
-- `./run.sh check-current-state-consistency --strict` returned
-  `PASS_CURRENT_STATE_CONSISTENT` before this slice.
-- Longer live Chatterbox render receipt:
-  `reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json`
-  with `live=true`, `mocked=false`, three `chatterbox_base` turns, WER `0.0`,
-  and durations `4.68`, `4.8`, and `6.0` seconds.
-- Recognition receipt:
-  `reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`
-  with `status=PASS_SESSION_MOOD_VOICE_RECOGNITION`, `engine=resemblyzer`,
-  failed gates `[]`, Embry similarities `0.872906`, `0.841573`, `0.842233`,
-  and impostor separation `0.208427`.
-- Joined live-chain receipt:
-  `reports/goal_v5/continuity/live_chain/RECEIPT.json` with
-  `status=PASS_PERSONA_DREAM_LIVE_CHAIN`, `mocked=false`, `live=true`, receipt
-  SHA-256 `sha256:e414712551e43d727996b065ca250b2221bbbf60824d6fbbeae3a177e144e2fd`,
-  side-effect counters `{accepted dream writes: 1, journal writes: 1, ledger arc
-  deltas: 1, live Chatterbox turns: 3}`, and 13/13 negative controls blocked.
-- Live-chain Chatterbox leg:
-  `reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json` with
-  `chatterbox_base`, WER `0.0`, `0.0`, `0.0`, and durations `5.32`, `5.24`,
-  `4.64` seconds.
-- Live-chain recognition leg:
-  `reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json` with
-  `PASS_SESSION_MOOD_VOICE_RECOGNITION`, failed gates `[]`, Embry similarities
-  `0.850468`, `0.872958`, `0.793123`, and separation `0.159977`.
-- Session arc-bias receipt:
-  `reports/goal_v5/continuity/session_arc_bias/RECEIPT.json` with
-  `PASS_SESSION_ARC_BIAS_RECEIPT`, artifact SHA-256
-  `sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152`,
-  source dream `live_chain_20260729t130950z`, ledger epoch `2`,
-  arc delta `arc_1_55a79f6ef25f`, `intensity_delta=0.18`,
-  `valence_delta=-0.18`, `emits_tone=false`, and 7/7 negative controls blocked.
-- SPARTA arc-bias handoff receipt:
-  `reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json` with
-  `PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT`, receipt SHA-256
-  `sha256:722c0b605c39611df553b354593fb0867275aa4780e1d0b04dc9c6404ea6530c`,
-  contract
-  `reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json`,
-  contract SHA-256
-  `sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df`,
-  and 7/7 negative controls blocked.
-- SPARTA local live arc-bias consumption receipt:
-  `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716`
-  `artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json`
-  with `PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED`, receipt SHA-256
-  `sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813`,
-  `mocked=false`, `live=true`, current Persona Dream session-arc-bias artifact
-  SHA-256
-  `sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152`,
-  contract SHA-256
-  `sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df`,
-  `arc_bias_applied_before_first_turn=true`,
-  `same_arc_bias_artifact_all_turns=true`,
-  `answer_text_unchanged=true`,
-  `tone_category_unchanged_by_arc_bias=true`, `neutral_fallback_checked=true`,
-  and failures `[]`. This proves local live API consumption only; it does not
-  prove human perception or deployed production behavior beyond the local API.
-- Reliability aggregate receipt:
-  `reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json` with
-  `PASS_LIVE_CHAIN_RELIABILITY_PILOT`, SHA-256
-  `sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f`,
-  campaign id `live_chain_reliability_20260729t133501z`, 5/5 cycle receipts
-  passed, duplicate accepted effects `0`, and Wilson 95% lower bound `0.565509`.
-- Blinded listener-study validation receipt:
-  `reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
-  with `PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS`, SHA-256
-  `sha256:c5d6c01e4f4db0fb7f1a4a5c1535c316d666665c541753b6c4f8db46f162e7fa`,
-  stimulus hashes matched `4/4`, live ASR WER `0.0/0.0/0.0/0.0`, and human
-  responses `0/20 valid`. `RESPONSE_SCHEMA.json` is
-  `sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e`;
-  `RATER_INSTRUCTIONS.md` is
-  `sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5`.
-- `session_mood_chatterbox_live.py` now sends Chatterbox the service-visible
-  `/data/embry_ref.wav` path while the receipt records the host-side authorized
-  reference path and SHA-256. This avoids the `reference_audio_outside_allowed_roots`
-  failure seen from fresh worktrees.
-- `session_mood_voice_recognition.py` now records repo-contained artifacts with
-  repo-relative paths instead of temporary worktree absolute paths.
-- #1117 focused proof in this slice:
-  - `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_live_chain_receipt.py -q`
-    -> `9 passed`
-  - `./skills/persona-dream/run.sh check-current-state-consistency --strict --json`
-    -> `PASS_CURRENT_STATE_CONSISTENT`, `mismatch_count=0`
+- **Eval suite** (`fixtures/agentic_eval.json`, 12 cases; run with
+  `~/.claude/skills/agentic-evals/run.sh run fixtures/agentic_eval.json`):
+  five critical capability claims, all live-path, dead services report
+  BLOCKED not FAIL. Four claims PROVEN as of 2026-08-20: workspace renders
+  (SSR guard + fail-before-fix proof in `fixtures/regressions.json`, verified
+  non-vacuous via `regressions verify`), pipeline API serves runs + path
+  policy 403s, board media stratification (live), dynamic audible
+  conversation (live).
+- **Single full-cycle receipts** exist: e.g. run
+  `/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260820T143356Z`
+  (all 7 stages, `carried:6`) and the journal run `embry-journal-20260820`
+  (spoken journal WER 0.104, two carried conversations).
 
-## 4. What is Currently Broken
+## 4. What is Currently Broken / Open
 
-- **Deployed production service not proven beyond local live receipt:** Session
-  mood is proven in the deterministic receipt runner, Persona Dream publishes
-  the arc-bias artifact and SPARTA consumer handoff contract, and SPARTA has a
-  local live API consumption receipt. There is still no deployed-production
-  claim beyond that local receipt.
-- **Perception not proven:** The listener-study stimuli are ready, but
-  `responses.jsonl` has 0/20 valid human responses and there is no signed human
-  interpretation record. The analysis receipt now enforces that boundary.
-- **PCTOM-R benefit unproven:** The machinery remains strong, but no
-  confidence-bounded counterfactual-dreaming planning advantage has been shown.
-- **Reliability boundary:** The five-cycle engineering pilot passed, but this is
-  not production reliability and does not cover a larger campaign or restart
-  recovery.
+- **End-to-end reliability is the open frontier**: `full-cycle-live` eval
+  measured 1/3 trials passing on 2026-08-20. The two blocks were the
+  pipeline's own fail-closed research gates, not infrastructure:
+  1. recall-instrument gates — `negative_control_absent_top10: false` (the
+     negative-control query semantically leaked into memory top-10; word-level
+     avoidance was fixed in `autonomous_dream_cycle.py`, semantic leakage
+     remains possible) and an unranked recall probe;
+  2. ArcFace identity gate — a storyboard frame's generation failed
+     (`sb_003: generation failed rc=1`).
+  This matches successor issue #1128 (reliability soak). Suite verdict
+  NOT_READY is honest; do not weaken oracles to green it.
+- **`/api/tau/dream/*`** (story/script draft endpoints the workspace calls)
+  has no server implementation anywhere; those UI actions fail.
+- **Blinded listener study**: stimuli must be re-rendered under one identical
+  normalization (#1179) before any human collection (#1058). Ordered next
+  steps live in `CURRENT_STATUS.json.next_step`.
+- **Environment traps** (each cost real time on 2026-08-19/20):
+  - `uv sync --extra ux` prunes the other extra — reinstall identity deps with
+    `uv pip install insightface==0.7.3 onnxruntime==1.19.2` (NOT `-e .[identity]`);
+    `./run.sh doctor` catches this.
+  - The `whisper` docker container silently exiting makes Chatterbox reject
+    every ASR candidate with an in-container DNS error; symptom is
+    `BLOCKED_JOURNAL_AUDIO` / `asr_transcript_missing…`. `docker start whisper`.
+  - `~/node_modules` symlinks to pi-mono and leaks a second React into
+    anything without its own copy (eval bundlers pin aliases for this).
+  - `ui/src` is `@ts-nocheck`: tsc catches nothing there; the SSR render eval
+    is the guard. Concurrent lanes share this checkout's git index — stage
+    narrowly and verify what landed.
 
 ## 5. Next Steps
 
-1. Collect the 20 human responses for the blinded Chatterbox listener study,
-   append them to `responses.jsonl`, and add `SIGNED_INTERPRETATION.json`; do
-   not substitute an LLM/self-rating.
-2. Rerun `./run.sh analyze-blinded-listener-study --json` and require it to
-   clear `human_responses_complete` and
-   `signed_human_interpretation_missing`.
-3. Return to PCTOM-R condition-benefit work such as issue `#1008` only after an
-   explicit operator reprioritization or after the voice/perception gate is
-   receipted.
+1. Raise full-cycle reliability: fix identity-gate frame regeneration (retry
+   or reroll on `generation failed rc=1`) and decide the semantic
+   negative-control policy (embedding-distance check at draft time?), then
+   rerun `full-cycle-live` until READY. This is #1128's evidence.
+2. #1179 listener-stimuli re-render under one normalization; rerun the frozen
+   technical screen unchanged; then #1130, #1058.
+3. Optional UX: implement or stub `/api/tau/dream/*` server-side; commit the
+   ux-lab registry surface entry if still uncommitted.
 
 ## 6. Project Context for Success
 
-- **Primary status file:** `skills/persona-dream/CURRENT_STATUS.json`
-- **Goal contract:** `skills/persona-dream/GOAL.md`
-- **Research log:** `skills/persona-dream/PROJECT_KNOWLEDGE.md`
-- **Skill contract:** `skills/persona-dream/SKILL.md`
-- **Current-state gate:** `skills/persona-dream/scripts/check_current_state_consistency.py`
-- **Live render script:** `skills/persona-dream/scripts/session_mood_chatterbox_live.py`
-- **Recognition script:** `skills/persona-dream/scripts/session_mood_voice_recognition.py`
-- **Long render receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json`
-- **Long recognition receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json`
-- **Joined live-chain receipt:** `skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json`
-- **Session arc-bias receipt:** `skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json`
-- **SPARTA arc-bias handoff receipt:** `skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json`
-- **SPARTA local live arc-bias consumption receipt:** `grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716:artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json`
-- **Reliability aggregate receipt:** `skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json`
-- **Listener-study readiness receipt:** `skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json`
-- **Listener-study analysis receipt:** `skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json`
-
-Use this claim boundary:
-
-```text
-Persona Dream remains in P2_LIVE_CONTINUITY_CHAIN. The joined
-accepted-dream-to-live-chain receipt passes, Persona Dream publishes a
-session_arc_bias artifact and SPARTA consumer handoff contract, SPARTA has a
-local live API receipt consuming that artifact, and an N=5 live-chain
-reliability pilot passes. The immutable Embry continuity goal remains NOT_MET
-until human perceptual emotion/identity evidence is receipted; deployed
-production behavior beyond the local live API, production reliability, and
-PCTOM-R benefit remain explicitly unproven.
-```
+- **Key files**: `run.sh` (every entrypoint; `dream`, `converse-dynamic`,
+  `speak-journal`, `doctor`), `scripts/autonomous_dream_cycle.py`,
+  `scripts/dynamic_conversation.py`, `scripts/speak_reply.py`,
+  `scripts/append_conversation.py`, `scripts/eval_full_cycle.py`,
+  `ui/src/DreamWorkspace.tsx` (+ `ux/app`), `fixtures/agentic_eval.json`,
+  `fixtures/regressions.json`, `PROJECT_KNOWLEDGE.md` (2026-08-19 entry has
+  the full incident forensics), `CURRENT_STATUS.json`, `GOAL.md`.
+- **Recent commits** (all on origin/main): `675e9334ed` full-cycle eval,
+  `774bf570ac` dynamic first-class-voiced conversation, `9ad1843f89` audible
+  conversation eval + instruments fix, `9a8d8bd388` workspace eval guards,
+  `6f8ef3028b` workspace mount + blank-page fixes + stratified board.
+- **Discipline**: every claim needs a named receipt read back from disk;
+  stage receipts over exit codes; BLOCKED is not FAIL; never assert from a
+  tool's own success response.
