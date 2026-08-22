@@ -112,6 +112,53 @@ def resolve_audio_path(source: str) -> Path | None:
     return None
 
 
+def accepted_candidate(verification: dict) -> dict:
+    """Return the ASR candidate the service actually accepted for a chunk.
+
+    Chatterbox renders up to ``asr_max_candidates`` variants and accepts the
+    first one that clears its own gate, leaving the rejected variants in the
+    payload. Reading ``candidates[0]`` blindly compared a *discarded* render
+    against ``answer_text`` and raised BLOCKED_CHATTERBOX_ASR_TEXT_DRIFT for
+    audio that was never delivered (#1489: soak35 cycles 017 and 033 both had
+    ``accepted_candidate_index: 2`` with an exact, wer 0.0 accepted transcript).
+    """
+    candidates = verification.get("candidates") or []
+    index = verification.get("accepted_candidate_index")
+    if index is None:
+        if not candidates:
+            raise RuntimeError("BLOCKED_CHATTERBOX_ASR_CANDIDATES_MISSING:no_candidates")
+        return candidates[0]
+    for candidate in candidates:
+        if candidate.get("candidate_index") == index:
+            return candidate
+    raise RuntimeError(
+        f"BLOCKED_CHATTERBOX_ASR_ACCEPTED_CANDIDATE_MISSING:accepted_candidate_index={index}"
+    )
+
+
+def collect_accepted_asr(response: dict) -> list[dict]:
+    """Per-chunk view of the accepted render: transcript, gate, variant, audio."""
+    chunks = response.get("chunks") or []
+    if not chunks:
+        raise RuntimeError("BLOCKED_CHATTERBOX_ASR_CHUNKS_MISSING:no_chunks")
+    collected = []
+    for position, chunk in enumerate(chunks):
+        verification = chunk.get("asr_verification") or {}
+        candidate = accepted_candidate(verification)
+        asr = candidate.get("asr") or {}
+        collected.append({
+            "chunk_position": position,
+            "chunk_text": chunk.get("text"),
+            "candidate_index": candidate.get("candidate_index"),
+            "variant": candidate.get("variant"),
+            "candidate_count": verification.get("candidate_count", len(verification.get("candidates") or [])),
+            "transcript": asr.get("transcript"),
+            "gate": verification.get("accepted_gate") or asr.get("gate") or {},
+            "audio": (candidate.get("synthesis") or {}).get("audio"),
+        })
+    return collected
+
+
 def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
     request = {
         "answer_text": turn["answer_text"],
@@ -137,23 +184,25 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
     response_path.write_text(json.dumps(response, indent=2) + "\n")
     engine = response.get("engine") or response.get("chunk_engine") or response.get("asr_engine")
     first_chunk = (response.get("chunks") or [{}])[0]
-    asr_verification = first_chunk.get("asr_verification") or {}
-    first_candidate = ((asr_verification.get("candidates") or [{}])[0])
-    asr_gate = (response.get("asr_gate")
-                or asr_verification.get("accepted_gate")
-                or (first_candidate.get("asr") or {}).get("gate")
-                or {})
+    accepted = collect_accepted_asr(response)
+    asr_gate = response.get("asr_gate") or accepted[0]["gate"]
     asr_transcript = (response.get("asr_transcript")
-                      or (first_candidate.get("asr") or {}).get("transcript"))
+                      or " ".join(item["transcript"] or "" for item in accepted).strip())
     finished_metrics = response.get("finished_response_metrics") or {}
     if engine != "chatterbox_base":
         raise RuntimeError(f"BLOCKED_CHATTERBOX_ENGINE_IGNORES_CONTROLS:{engine}")
+    for item in accepted:
+        if item["gate"].get("ok") is not True:
+            raise RuntimeError(f"BLOCKED_CHATTERBOX_ASR_GATE:{item['gate']}")
     if asr_gate.get("ok") is not True:
         raise RuntimeError(f"BLOCKED_CHATTERBOX_ASR_GATE:{asr_gate}")
+    # Exact match, unchanged. The comparison target is now the render that was
+    # actually accepted and delivered, not a rejected sibling candidate (#1489).
     if _normalize_text(asr_transcript) != _normalize_text(turn["answer_text"]):
         raise RuntimeError(
             "BLOCKED_CHATTERBOX_ASR_TEXT_DRIFT:"
-            f"expected={turn['answer_text']!r}:actual={asr_transcript!r}"
+            f"expected={turn['answer_text']!r}:actual={asr_transcript!r}:"
+            f"accepted_candidates={[(i['candidate_index'], i['variant']) for i in accepted]!r}"
         )
     audio_snapshot = snapshot_finished_audio(turn["turn_id"], response, out_dir=out_dir)
     return {
@@ -176,6 +225,7 @@ def render_turn(turn: dict, *, label: str, out_dir: Path) -> dict:
                           or first_chunk.get("emotion_knobs")),
         "asr_transcript": asr_transcript,
         "asr_gate": asr_gate,
+        "asr_accepted_candidates": accepted,
         "finished_response_audio": response.get("finished_response_audio"),
         **audio_snapshot,
         "finished_wav_sha256": response.get("finished_wav_sha256") or finished_metrics.get("sha256"),
@@ -216,6 +266,7 @@ def run_live(persona: str, *, session_id: str, out_dir: Path, turns: list[str]) 
                 "deterministic session_mood voice_delivery reached live Chatterbox /synthesize-batch",
                 "all rendered turns used chatterbox_base",
                 "ASR accepted all rendered turns under the Chatterbox gate",
+                "exact ASR readback was compared against the accepted candidate render",
                 "answer_text stayed unchanged before render"
             ],
             "does_not_prove": [
