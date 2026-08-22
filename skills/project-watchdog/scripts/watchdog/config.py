@@ -198,24 +198,27 @@ def seat_provider(seat: str) -> str:
         return _SEAT_PROVIDER[s]
     if s.startswith("oc-"):
         return _OC_FAMILY_PROVIDER.get(s[3:].split("-")[0], "opencode")
-    if s == "codex" or "codex" in s:
-        return "openai"
-    if s.startswith("gpt") or s.startswith("o1") or s.startswith("o3"):
-        return "openai"
-    if s.startswith("claude") or s.startswith("opus") or s.startswith("sonnet") or s.startswith("haiku"):
+    # `Codex-<model>` is a SciLLM route prefix, NOT the OpenAI Codex CLI: the
+    # provider is the MODEL family after it (Codex-opus-5 -> anthropic).
+    m = s[len("codex-"):] if s.startswith("codex-") else s
+    if m.startswith(("opus", "sonnet", "haiku", "claude", "fable")):
         return "anthropic"
-    if s.startswith("grok"):
+    if m.startswith(("gpt", "o1", "o3")) or m == "codex":
+        return "openai"
+    if m.startswith("grok"):
         return "xai"
-    if s.startswith("gemini"):
+    if m.startswith("gemini"):
         return "google"
+    if m.startswith("deepseek"):
+        return "deepseek"
     return "unknown"
 
 
 def seat_uses_codex_exec(seat: str) -> bool:
-    """True if the seat runs through the Codex CLI (codex, or gpt-*/Codex-* via
-    `codex exec --model`). Rejected: the Codex harness is hobbled/inferior."""
-    s = seat.strip().lower()
-    return s == "codex" or s.startswith(_CODEX_EXEC_SEATS_PREFIXES)
+    """True ONLY for the bare local Codex CLI coder lane (`codex`). SciLLM model
+    handlers such as `Codex-opus-5-high` or `gpt-5.5-high` are Tau/SciLLM nodes,
+    not the local codex subprocess, and are allowed."""
+    return seat.strip().lower() == "codex"
 
 
 def seat_can_run_code(seat: str) -> bool:

@@ -219,7 +219,7 @@
         "The repository is currently very dirty; watchdog mutation should require a clean-worktree policy or explicit dirty-worktree handling."
       ],
       "repair_creator": "oc-deepseek",
-      "repair_reviewer": "claude-opus-5-medium",
+      "repair_reviewer": "Codex-opus-5-medium",
       "ticket_repair_timeout_s": 10800,
       "service": {
         "kind": "none",
