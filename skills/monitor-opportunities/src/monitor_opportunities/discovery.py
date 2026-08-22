@@ -1728,3 +1728,40 @@ def sweep(
     write_jsonl(out_dir / "candidates.jsonl", sorted(candidates, key=lambda row: row["candidate_id"]))
     write_json(out_dir / "lane-summaries.json", lane_summaries)
     return manifest
+
+def _merge_linkedin_top_candidate(base_path: Path, other_path: Path) -> int:
+    """Merge one LinkedIn evidence stream into another, preserving top_candidate.
+
+    Picking only the higher-row-count file dropped the top-applicant stream and
+    its ``top_candidate`` flags. This merges the other stream's opportunities in:
+    a matching (title, organization) row inherits ``top_candidate`` if EITHER
+    stream flags it; unmatched rows are appended with their flag intact.
+    """
+    try:
+        base = json.loads(base_path.read_text(encoding="utf-8"))
+        other = json.loads(other_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return 0
+    base_rows = base.get("opportunities")
+    if not isinstance(base_rows, list):
+        return 0
+    index = {(r.get("title"), r.get("organization")): r for r in base_rows if isinstance(r, dict)}
+    merged = 0
+    for row in other.get("opportunities", []) or []:
+        if not isinstance(row, dict):
+            continue
+        key = (row.get("title"), row.get("organization"))
+        existing = index.get(key)
+        if existing is not None:
+            if row.get("top_candidate"):
+                existing["top_candidate"] = True
+                merged += 1
+        else:
+            base_rows.append(row)
+            merged += 1
+    # A file-level top_candidate:true (whole page is the top-applicant collection)
+    # applies to every row it contributed.
+    if other.get("top_candidate"):
+        base["top_candidate"] = base.get("top_candidate") or True
+    base_path.write_text(json.dumps(base, indent=1), encoding="utf-8")
+    return merged

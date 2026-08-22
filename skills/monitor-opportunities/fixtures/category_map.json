@@ -1,0 +1,25 @@
+{
+  "schema": "agentic_evals.category_map.v1",
+  "repo": "grahama1970/agent-skills",
+  "map_version": "1",
+  "categories": {
+    "regression-guards": {
+      "category_id": "agentic-evals:monitor-opportunities:regression-guards",
+      "label": "eval-cat-regression-guards",
+      "defect": "any monitor-opportunities feature regresses (resume render, field classification, ranking, ats/linkedin apply)",
+      "expected": "every deterministic regression guard passes",
+      "seams": [
+        "ats.ashby_prefill",
+        "ats.field_classification",
+        "ats.form_capture",
+        "ats.linkedin_easy_apply",
+        "discovery.linkedin_evidence_merge",
+        "ranking.eligibility_escalation",
+        "ranking.response_score",
+        "ranking.shortlist_selection",
+        "tailoring.resume_render"
+      ],
+      "depends_on": []
+    }
+  }
+}

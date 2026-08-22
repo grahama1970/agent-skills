@@ -22,8 +22,10 @@ from pathlib import Path
 SKILL_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_DIR / "src"))
 
-from monitor_opportunities.cli import _merge_linkedin_top_candidate  # noqa: E402
-from monitor_opportunities.discovery import _linkedin_evidence_candidates  # noqa: E402
+from monitor_opportunities.discovery import (  # noqa: E402
+    _linkedin_evidence_candidates,
+    _merge_linkedin_top_candidate,
+)
 
 # Advanced-search stream: many rows, no top-candidate signal.
 BASE = {"source": "linkedin_advanced_search", "opportunities": [

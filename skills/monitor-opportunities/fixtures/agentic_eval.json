@@ -363,7 +363,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_resume_not_stub.py\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_resume_not_stub.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -373,7 +373,10 @@
         "stderr_excludes": [
           "RESUME_STUB_REGRESSION"
         ]
-      }
+      },
+      "seams": [
+        "tailoring.resume_render"
+      ]
     },
     {
       "name": "eligibility-field-classifier-regression",
@@ -383,7 +386,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_field_classifier.py\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_field_classifier.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -395,7 +398,11 @@
           "CLEARANCE_MISCLASSIFIED",
           "REQUIRED_CAPTURE_REGRESSION"
         ]
-      }
+      },
+      "seams": [
+        "ats.field_classification",
+        "ats.form_capture"
+      ]
     },
     {
       "name": "top-candidate-survives-regression",
@@ -405,7 +412,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_top_candidate_survives.py\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_top_candidate_survives.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -416,7 +423,10 @@
           "TOP_CANDIDATE_DROPPED",
           "TOP_CANDIDATE_NO_BOOST"
         ]
-      }
+      },
+      "seams": [
+        "discovery.linkedin_evidence_merge"
+      ]
     },
     {
       "name": "response-hardening-regression",
@@ -426,7 +436,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_response_hardening.py\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_response_hardening.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -439,7 +449,10 @@
           "GEO_ORDER_REGRESSION",
           "BUFFALO_TOP_BURIED"
         ]
-      }
+      },
+      "seams": [
+        "ranking.response_score"
+      ]
     },
     {
       "name": "linkedin-easy-apply-safety",
@@ -449,7 +462,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_linkedin_easy_apply.py\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_linkedin_easy_apply.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -461,7 +474,10 @@
           "BLANK_REQUIRED_NOT_BLOCKED",
           "SHOULD_BE_HUMAN_REQUIRED"
         ]
-      }
+      },
+      "seams": [
+        "ats.linkedin_easy_apply"
+      ]
     },
     {
       "name": "top-applicant-shortlisted",
@@ -471,7 +487,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_top_applicant_shortlisted.py\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_top_applicant_shortlisted.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -483,7 +499,11 @@
           "TOP_APPLICANT_NOT_PRIORITIZED",
           "BUFFALO_TOP_NOT_ELIGIBLE"
         ]
-      }
+      },
+      "seams": [
+        "ranking.eligibility_escalation",
+        "ranking.shortlist_selection"
+      ]
     },
     {
       "name": "ashby-prefill-not-blank",
@@ -493,7 +513,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && python3 \"$repo/skills/monitor-opportunities/scripts/eval_ashby_prefill.py\""
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_ashby_prefill.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -505,7 +525,10 @@
           "BLANK_FREE_TEXT_NOT_BLOCKED",
           "CLEARANCE_NOT_ATTESTED"
         ]
-      }
+      },
+      "seams": [
+        "ats.ashby_prefill"
+      ]
     }
   ]
 }
