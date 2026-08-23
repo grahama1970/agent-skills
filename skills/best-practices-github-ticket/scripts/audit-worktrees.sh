@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
     cat <<'EOF'
 Usage:
-  audit-worktrees.sh [--repo PATH] [--json]
+  audit-worktrees.sh [--repo PATH] [--json] [--scope-path PATH ...]
 
 Audits registered git worktrees for ticket lifecycle safety. It never deletes
 anything. The command fails closed when it finds:
@@ -13,11 +13,14 @@ anything. The command fails closed when it finds:
   - dirty secondary worktrees
 
 The primary repository worktree is not counted as a dirty secondary worktree.
+When --scope-path is provided, dirty secondary worktrees only fail the audit
+when their dirty files overlap one of those repository-relative paths.
 EOF
 }
 
 repo="."
 as_json=0
+declare -a scope_paths=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -29,6 +32,11 @@ while [[ $# -gt 0 ]]; do
         --json)
             as_json=1
             shift
+            ;;
+        --scope-path)
+            [[ $# -ge 2 ]] || { echo "ERROR: --scope-path requires PATH" >&2; exit 2; }
+            scope_paths+=("${2#./}")
+            shift 2
             ;;
         --help|-h)
             usage
@@ -56,10 +64,50 @@ tmp_count=0
 detached_count=0
 prunable_count=0
 dirty_secondary_count=0
+dirty_secondary_ignored_count=0
 declare -a tmp_paths=()
 declare -a prunable_paths=()
 declare -a dirty_paths=()
+declare -a dirty_ignored_paths=()
 declare -a detached_paths=()
+
+path_overlaps_scope() {
+    local changed="${1#./}"
+    local scope
+    if [[ "${#scope_paths[@]}" -eq 0 ]]; then
+        return 0
+    fi
+    for scope in "${scope_paths[@]}"; do
+        scope="${scope#./}"
+        scope="${scope%/}"
+        [[ -n "$scope" ]] || continue
+        if [[ "$changed" == "$scope" || "$changed" == "$scope/"* || "$scope" == "$changed/"* ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+dirty_worktree_overlaps_scope() {
+    local wt="$1"
+    local line changed
+    if [[ "${#scope_paths[@]}" -eq 0 ]]; then
+        return 0
+    fi
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        changed="${line:3}"
+        changed="${changed#\"}"
+        changed="${changed%\"}"
+        if [[ "$changed" == *" -> "* ]]; then
+            if path_overlaps_scope "${changed%% -> *}" || path_overlaps_scope "${changed##* -> }"; then
+                return 0
+            fi
+        elif path_overlaps_scope "$changed"; then
+            return 0
+        fi
+    done < <(git -C "$wt" status --porcelain 2>/dev/null || true)
+    return 1
+}
 
 flush_record() {
     [[ -n "${path:-}" ]] || return 0
@@ -79,8 +127,13 @@ flush_record() {
     fi
     if [[ "$path" != "$repo_root" && -d "$path" ]]; then
         if [[ -n "$(git -C "$path" status --porcelain 2>/dev/null || true)" ]]; then
-            dirty_secondary_count=$((dirty_secondary_count + 1))
-            dirty_paths+=("$path")
+            if dirty_worktree_overlaps_scope "$path"; then
+                dirty_secondary_count=$((dirty_secondary_count + 1))
+                dirty_paths+=("$path")
+            else
+                dirty_secondary_ignored_count=$((dirty_secondary_ignored_count + 1))
+                dirty_ignored_paths+=("$path")
+            fi
         fi
     fi
 }
@@ -130,20 +183,28 @@ json_array() {
 }
 
 if [[ "$as_json" == "1" ]]; then
-    printf '{"ok":%s,"repo":"%s","total":%d,"tmp":%d,"detached":%d,"prunable":%d,"dirty_secondary":%d,' \
+    printf '{"ok":%s,"repo":"%s","total":%d,"tmp":%d,"detached":%d,"prunable":%d,"dirty_secondary":%d,"dirty_secondary_ignored":%d,' \
         "$ok" "$(printf '%s' "$repo_root" | sed 's/\\/\\\\/g; s/"/\\"/g')" \
-        "$total" "$tmp_count" "$detached_count" "$prunable_count" "$dirty_secondary_count"
-    printf '"tmp_paths":'
+        "$total" "$tmp_count" "$detached_count" "$prunable_count" "$dirty_secondary_count" "$dirty_secondary_ignored_count"
+    printf '"scope_paths":'
+    json_array "${scope_paths[@]}"
+    printf ',"tmp_paths":'
     json_array "${tmp_paths[@]}"
     printf ',"prunable_paths":'
     json_array "${prunable_paths[@]}"
     printf ',"dirty_secondary_paths":'
     json_array "${dirty_paths[@]}"
+    printf ',"dirty_secondary_ignored_paths":'
+    json_array "${dirty_ignored_paths[@]}"
     printf '}\n'
 else
     printf 'repo: %s\n' "$repo_root"
-    printf 'total=%d tmp=%d detached=%d prunable=%d dirty_secondary=%d\n' \
-        "$total" "$tmp_count" "$detached_count" "$prunable_count" "$dirty_secondary_count"
+    printf 'total=%d tmp=%d detached=%d prunable=%d dirty_secondary=%d dirty_secondary_ignored=%d\n' \
+        "$total" "$tmp_count" "$detached_count" "$prunable_count" "$dirty_secondary_count" "$dirty_secondary_ignored_count"
+    if [[ "${#scope_paths[@]}" -gt 0 ]]; then
+        printf 'scope paths:\n'
+        printf '  %s\n' "${scope_paths[@]}"
+    fi
     if (( tmp_count > 0 )); then
         printf 'tmp worktrees:\n'
         printf '  %s\n' "${tmp_paths[@]}"
@@ -155,6 +216,10 @@ else
     if (( dirty_secondary_count > 0 )); then
         printf 'dirty secondary worktrees:\n'
         printf '  %s\n' "${dirty_paths[@]}"
+    fi
+    if (( dirty_secondary_ignored_count > 0 )); then
+        printf 'dirty secondary worktrees outside scope:\n'
+        printf '  %s\n' "${dirty_ignored_paths[@]}"
     fi
 fi
 

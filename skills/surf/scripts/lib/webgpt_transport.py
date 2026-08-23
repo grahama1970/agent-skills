@@ -224,6 +224,8 @@ def _transport_state(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Pa
 
 
 def _needs_attention_code(state: str, meta: dict[str, Any], raw_path: Path | None, meta_path: Path | None) -> str | None:
+    if state == "prepared_prompt_only":
+        return "NEEDS_ATTENTION: browser_submit_not_accepted"
     if state == "missing_response_artifacts":
         return "NEEDS_ATTENTION: missing_webgpt_transport_artifacts"
     if state == "missing_sentinel" and (raw_path is None or meta_path is None):
@@ -295,6 +297,7 @@ def build_recovery(
         do_not_do.append("do_not_treat_focus_drift_as_transport_failure_when_sentinel_matches")
     elif state == "prepared_prompt_only":
         reason = reason or "Prompt was prepared but not submitted to ChatGPT."
+        needs_attention = needs_attention or "NEEDS_ATTENTION: browser_submit_not_accepted"
         tab_args = f"--tab-id {requested_tab_id}" if requested_tab_id else (
             f"--url {requested_url}" if requested_url else "--create-tab"
         )

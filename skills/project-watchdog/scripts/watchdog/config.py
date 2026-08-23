@@ -98,6 +98,10 @@ def lock_dir() -> Path:
     return state_root() / "lock"
 
 
+def execution_lock_root() -> Path:
+    return state_root() / "execution-locks"
+
+
 def state_path() -> Path:
     """Where mutable watchdog state actually lives.
 

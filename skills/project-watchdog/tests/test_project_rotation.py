@@ -792,6 +792,130 @@ def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkey
     assert receipt["issue_scans"][0]["excluded_issues"]["target_busy"] == [1411]
 
 
+def test_scheduler_short_lock_allows_unrelated_target_tick(tmp_path, monkeypatch):
+    import json as _json
+    from itertools import count
+    from watchdog import commands, config  # noqa: PLC0415
+
+    root = tmp_path / "state-root"
+    projects_path = tmp_path / "projects.json"
+    state_path = root / "state.json"
+    root.mkdir(parents=True)
+    projects_path.write_text(_json.dumps({
+        "projects": [{"project_id": "agent-skills", "repo": "o/agent-skills"}]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {"agent-skills": {"state": "active"}},
+    }))
+    issue_one = _issue(1, "skills/ask")
+    issue_one["watchdog_action"] = "ticket_repair"
+    issue_one["watchdog_targets"] = ["skills/ask"]
+    issue_two = _issue(2, "skills/ticket")
+    issue_two["watchdog_action"] = "ticket_repair"
+    issue_two["watchdog_targets"] = ["skills/ticket"]
+    handled: list[int] = []
+    nested_rcs: list[int] = []
+    seq = count(1)
+
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, only_issue=None, apply=False):
+        commands.registry.LAST_SCAN.clear()
+        commands.registry.LAST_SCAN.update({
+            "scanned": 1,
+            "excluded": {},
+            "excluded_issues": {},
+            "dependency_unblocks": [],
+        })
+        return [issue_two if only_issue == 2 else issue_one]
+
+    def fake_handle(run_id, receipt_dir, project, issue, *, apply):
+        handled.append(int(issue["number"]))
+        assert not config.lock_dir().exists(), "scheduler lock must be released before dispatch"
+        if int(issue["number"]) == 1:
+            nested_rcs.append(commands.tick(
+                apply=True, project_id="agent-skills", max_tickets=1, only_issue=2
+            ))
+        return {"ok": True, "status": "COMPLETED", "issue_number": int(issue["number"])}
+
+    monkeypatch.setattr(config, "state_root", lambda: root)
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(config, "tick_would_enter_quiet_hours", lambda: False)
+    monkeypatch.setattr(commands, "timestamp", lambda: f"20260823T1752{next(seq):02d}Z")
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "handle_issue", fake_handle)
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
+
+    rc = commands.tick(apply=True, project_id="agent-skills", max_tickets=1, only_issue=1)
+
+    assert rc == 0
+    assert nested_rcs == [0]
+    assert handled == [1, 2]
+
+
+def test_scheduler_execution_lock_blocks_overlapping_target_tick(tmp_path, monkeypatch):
+    import json as _json
+    from itertools import count
+    from watchdog import commands, config  # noqa: PLC0415
+
+    root = tmp_path / "state-root"
+    projects_path = tmp_path / "projects.json"
+    state_path = root / "state.json"
+    root.mkdir(parents=True)
+    projects_path.write_text(_json.dumps({
+        "projects": [{"project_id": "agent-skills", "repo": "o/agent-skills"}]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {"agent-skills": {"state": "active"}},
+    }))
+    issue_one = _issue(1, "skills/ask")
+    issue_one["watchdog_action"] = "ticket_repair"
+    issue_one["watchdog_targets"] = ["skills/ask"]
+    issue_two = _issue(2, "skills/ask")
+    issue_two["watchdog_action"] = "ticket_repair"
+    issue_two["watchdog_targets"] = ["skills/ask"]
+    handled: list[int] = []
+    nested_rcs: list[int] = []
+    seq = count(1)
+
+    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, only_issue=None, apply=False):
+        commands.registry.LAST_SCAN.clear()
+        commands.registry.LAST_SCAN.update({
+            "scanned": 1,
+            "excluded": {},
+            "excluded_issues": {},
+            "dependency_unblocks": [],
+        })
+        return [issue_two if only_issue == 2 else issue_one]
+
+    def fake_handle(run_id, receipt_dir, project, issue, *, apply):
+        handled.append(int(issue["number"]))
+        assert not config.lock_dir().exists(), "scheduler lock must be released before dispatch"
+        if int(issue["number"]) == 1:
+            nested_rcs.append(commands.tick(
+                apply=True, project_id="agent-skills", max_tickets=1, only_issue=2
+            ))
+        return {"ok": True, "status": "COMPLETED", "issue_number": int(issue["number"])}
+
+    monkeypatch.setattr(config, "state_root", lambda: root)
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(config, "tick_would_enter_quiet_hours", lambda: False)
+    monkeypatch.setattr(commands, "timestamp", lambda: f"20260823T1753{next(seq):02d}Z")
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "handle_issue", fake_handle)
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
+
+    rc = commands.tick(apply=True, project_id="agent-skills", max_tickets=1, only_issue=1)
+
+    assert rc == 0
+    assert nested_rcs == [0]
+    assert handled == [1]
+
+
 # --- runtime state must not live in the repository ---------------------------
 
 

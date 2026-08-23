@@ -31,18 +31,20 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from loguru import logger
 
 from . import config, github, registry, streaks
 from .core import (
+    acquire_execution_lock,
     acquire_lock,
     base_receipt,
     finish,
     load_json,
     lock_holder_alive,
     log_event,
+    release_execution_lock,
     release_lock,
     run_cmd,
     timestamp,
@@ -176,14 +178,22 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
             return finish(run_id, receipt_dir, receipt, 0, persist=False)
         receipt.update({"ok": False, "status": "BLOCKED", "errors": ["lock already held"]})
         return finish(run_id, receipt_dir, receipt, 1, persist=False)
+    scheduler_lock_held = True
+
+    def release_scheduler_lock() -> None:
+        nonlocal scheduler_lock_held
+        if scheduler_lock_held:
+            release_lock()
+            scheduler_lock_held = False
+
     try:
         _test_hold_lock_if_requested(run_id)
         return _tick_locked(
             run_id, receipt_dir, apply=apply, project_id=project_id, max_tickets=max_tickets,
-            only_issue=only_issue,
+            only_issue=only_issue, release_scheduler_lock=release_scheduler_lock,
         )
     finally:
-        release_lock()
+        release_scheduler_lock()
 
 
 #: State keys a tick owns. Everything else in the document belongs to the
@@ -367,6 +377,7 @@ def _tick_locked(
     project_id: str,
     max_tickets: int,
     only_issue: int | None = None,
+    release_scheduler_lock: Callable[[], None] | None = None,
 ) -> int:
     receipt = base_receipt(run_id, receipt_dir, apply)
     state = load_json(config.state_path())
@@ -654,6 +665,7 @@ def _tick_locked(
     # and the 302.8s maximum is a measurement, not a bound.
     deadline = tick_deadline_seconds()
     started = time.monotonic()
+    dispatch_plan: list[dict[str, Any]] = []
     for index, issue in enumerate(issues[:max_tickets]):
         if defer_for_deadline(index, time.monotonic() - started, deadline):
             receipt["deadline_deferred"] = [int(i["number"]) for i in issues[index:max_tickets]]
@@ -663,9 +675,38 @@ def _tick_locked(
                 deadline_seconds=deadline, deferred=receipt["deadline_deferred"],
             )
             break
-        receipt["handled_issues"].append(
-            handle_issue(run_id, receipt_dir, project, issue, apply=apply)
-        )
+        targets = set(str(t) for t in issue.get("watchdog_targets") or registry.issue_targets(issue))
+        execution_lock = acquire_execution_lock(run_id, targets) if apply else None
+        if apply and execution_lock is None:
+            receipt["handled_issues"].append(
+                {
+                    "action": "ticket_repair",
+                    "issue_number": int(issue["number"]),
+                    "repo": registry.project_repo(project),
+                    "ok": True,
+                    "status": "SKIPPED",
+                    "stop_reason": "execution_lock_held",
+                    "targets": sorted(targets),
+                }
+            )
+            continue
+        dispatch_plan.append({"issue": issue, "targets": sorted(targets), "lock": execution_lock})
+
+    if dispatch_plan and release_scheduler_lock is not None:
+        receipt["scheduler_lock_released_before_dispatch"] = True
+        release_scheduler_lock()
+
+    for entry in dispatch_plan:
+        issue = entry["issue"]
+        execution_lock = entry.get("lock")
+        try:
+            result = handle_issue(run_id, receipt_dir, project, issue, apply=apply)
+            result.setdefault("execution_lock_targets", entry["targets"])
+            if execution_lock is not None:
+                result.setdefault("execution_lock", str(execution_lock))
+            receipt["handled_issues"].append(result)
+        finally:
+            release_execution_lock(execution_lock)
     receipt["handled_count"] = len(receipt["handled_issues"])
     receipt["ok"] = all(item.get("ok") for item in receipt["handled_issues"])
     receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"

@@ -449,6 +449,44 @@
       }
     },
     {
+      "name": "scheduler-short-lock-allows-unrelated-targets",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -vv skills/project-watchdog/tests/test_project_rotation.py::test_scheduler_short_lock_allows_unrelated_target_tick"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "test_scheduler_short_lock_allows_unrelated_target_tick PASSED"
+        ]
+      },
+      "notes": "Proof for agent-skills#1508: while issue #1 is still inside handle_issue for skills/ask, a nested tick can acquire the released scheduler lock and dispatch issue #2 for skills/ticket."
+    },
+    {
+      "name": "scheduler-execution-lock-blocks-overlapping-targets",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -vv skills/project-watchdog/tests/test_project_rotation.py::test_scheduler_execution_lock_blocks_overlapping_target_tick"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "test_scheduler_execution_lock_blocks_overlapping_target_tick PASSED"
+        ]
+      },
+      "notes": "Proof for agent-skills#1508: while issue #1 holds the execution lock for skills/ask, a nested tick for issue #2 on skills/ask returns without entering handle_issue."
+    },
+    {
       "name": "overlapping-applied-ticks-skip-live",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

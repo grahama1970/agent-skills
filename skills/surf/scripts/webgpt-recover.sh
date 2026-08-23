@@ -79,17 +79,52 @@ claim_raw="${claim_fields[4]:-}"
 claim_meta="${claim_fields[5]:-}"
 
 if [[ "$claim_available" != "1" || -z "$claim_tab_id" || -z "$claim_sentinel" ]]; then
-  python3 - "$recovery_json" <<'PY'
+  python3 - "$recovery_json" "$artifact_dir" <<'PY'
 import json
 import pathlib
 import sys
 
 payload = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+artifact_dir = pathlib.Path(sys.argv[2])
 payload["schema"] = "surf.webgpt_recover_finalize.v1"
 payload["finalize_attempted"] = False
-payload["finalize_reason"] = "no_claim_available"
+if payload.get("state") == "prepared_prompt_only":
+    packet_path = artifact_dir / "browser-recovery-packet.json"
+    payload.update(
+        {
+            "status": "NEEDS_ATTENTION",
+            "ok": False,
+            "terminal": True,
+            "failure_code": "browser_submit_not_accepted",
+            "submitted_to_chatgpt": False,
+            "prepared_prompt_is_transport_proof": False,
+            "auto_retry_blocked_reason": "browser_prepared_prompt_requires_attachment_preserving_resubmit",
+            "finalize_reason": "prepared_prompt_not_submitted_to_chatgpt",
+            "recovery_packet_path": str(packet_path),
+        }
+    )
+    payload["evidence"] = {
+        "artifact_dir": str(artifact_dir),
+        "state": payload.get("state"),
+        "response_meta_path": payload.get("response_meta_path"),
+        "response_raw_path": payload.get("response_raw_path"),
+    }
+    packet_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+else:
+    payload["finalize_reason"] = "no_claim_available"
 print(json.dumps(payload, indent=2))
 PY
+  if python3 - "$recovery_json" <<'PY'
+import json
+import pathlib
+import sys
+payload = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+raise SystemExit(0 if payload.get("state") == "prepared_prompt_only" else 1)
+PY
+  then
+    python3 "$TRANSPORT_PY" write-summary --artifact-dir "$artifact_dir" >/dev/null 2>&1 || true
+    exit 0
+  fi
   exit 3
 fi
 

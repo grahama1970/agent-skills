@@ -1205,6 +1205,31 @@
       "notes": "2026-08-19 hardening: flags after the question are now refused by run.sh itself (error [shortcut_flags_after_question]) before any compile or preflight, after five --attach-file flags were silently sent to webgpt as prompt words and zero files attached (requested_attachment_paths=[] in the node receipt). Previously this case only proved the downstream path-preflight caught the /tmp path; now the refusal is explicit and named."
     },
     {
+      "name": "webgpt-prepared-prompt-recovery-terminates-or-submits",
+      "type": "adversarial",
+      "real_world": true,
+      "supports_claims": [
+        "ask.recovery.webgpt_prepared_prompt_failclosed"
+      ],
+      "seams": [
+        "browser.prepared_prompt_recovery"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/surf --with pytest python -m pytest -vv skills/surf/tests/test_webgpt_transport.py -k recover_finalize_prepared_prompt_writes_terminal_packet"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "test_recover_finalize_prepared_prompt_writes_terminal_packet"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic",
+      "notes": "Proof for agent-skills#1507: a WebGPT lane with only prepared_prompt/submitted_to_chatgpt=false artifacts is terminal under surf webgpt.recover --finalize. The command writes browser-recovery-packet.json with status NEEDS_ATTENTION/failure_code browser_submit_not_accepted and never treats prepared_prompt as transport proof."
+    },
+    {
       "name": "incident-missing-sentinel-recovers-via-provider-extract",
       "type": "adversarial",
       "real_world": true,
@@ -1681,6 +1706,14 @@
       ]
     },
     {
+      "id": "ask.recovery.webgpt_prepared_prompt_failclosed",
+      "criticality": "critical",
+      "description": "A WebGPT prepared prompt that was not accepted by ChatGPT terminates with a browser_submit_not_accepted recovery packet instead of leaving a stale RUNNING/prepared_prompt-only round.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
       "id": "ask.classifier.transport_vs_provider",
       "criticality": "critical",
       "description": "Lock contention, provider capacity, and context-length refusals classify to distinct failure codes with distinct recovery instructions.",
@@ -1798,6 +1831,19 @@
       "failure_modes": [
         "a completed answer in the tab is abandoned and the round resubmitted",
         "a generic page read replaces the provider extractor"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "browser.prepared_prompt_recovery",
+      "claim_id": "ask.recovery.webgpt_prepared_prompt_failclosed",
+      "seam_type": "transport_recovery_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "prepared_prompt/submitted_to_chatgpt=false is treated as successful delivery",
+        "surf webgpt.recover --finalize returns a non-terminal prepared_prompt_only state without a recovery packet"
       ],
       "required_evidence": [
         "fault_injected_deterministic"

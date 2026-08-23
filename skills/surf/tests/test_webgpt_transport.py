@@ -124,6 +124,83 @@ def test_transport_summary_prepared_prompt_preserves_attachment_in_retry(tmp_pat
     assert recover["next_command"] == summary["next_command"]
 
 
+def test_recover_finalize_prepared_prompt_writes_terminal_packet(tmp_path: Path) -> None:
+    round_dir = tmp_path / "round-prepared-finalize"
+    round_dir.mkdir(parents=True)
+    sentinel = "<<<WEBGPT_DONE:prepared-finalize>>>"
+    submitted = round_dir / "response.md.submitted.md"
+    submitted.write_text("Prepared prompt body\n", encoding="utf-8")
+    receipt = {
+        "schema": "surf.webgpt_submit_receipt.v1",
+        "status": "prepared_prompt",
+        "submitted_to_chatgpt": False,
+        "sentinel": sentinel,
+        "requested_tab_id": "837363305",
+        "submitted_output": str(submitted),
+        "output": str(round_dir / "02_response.md"),
+        "raw_output": str(round_dir / "02_response.raw.md"),
+        "meta_output": str(round_dir / "02_response.meta.json"),
+    }
+    (round_dir / "02_response.receipt.json").write_text(
+        json.dumps(receipt, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (round_dir / "webgpt_inflight.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_inflight.v1",
+                "status": "prepared_prompt",
+                "submitted_to_chatgpt": False,
+                "sentinel": sentinel,
+                "requested_tab_id": "837363305",
+                "recovery_command": f"surf webgpt.recover --artifact-dir {round_dir} --finalize",
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(WEBGPT_RECOVER),
+            "--artifact-dir",
+            str(round_dir),
+            "--finalize",
+            "--timeout",
+            "1",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["schema"] == "surf.webgpt_recover_finalize.v1"
+    assert payload["state"] == "prepared_prompt_only"
+    assert payload["status"] == "NEEDS_ATTENTION"
+    assert payload["terminal"] is True
+    assert payload["failure_code"] == "browser_submit_not_accepted"
+    assert payload["submitted_to_chatgpt"] is False
+    assert payload["prepared_prompt_is_transport_proof"] is False
+    assert payload["finalize_attempted"] is False
+    assert payload["finalize_reason"] == "prepared_prompt_not_submitted_to_chatgpt"
+    assert payload["auto_retry_blocked_reason"] == "browser_prepared_prompt_requires_attachment_preserving_resubmit"
+    assert "webgpt.submit" in payload["next_command"]
+    assert not (round_dir / "webgpt-recover-attempts").exists()
+
+    packet_path = round_dir / "browser-recovery-packet.json"
+    assert payload["recovery_packet_path"] == str(packet_path)
+    assert json.loads(packet_path.read_text(encoding="utf-8")) == payload
+    summary = json.loads((round_dir / "webgpt_transport_summary.json").read_text(encoding="utf-8"))
+    assert summary["final_transport_state"] == "prepared_prompt_only"
+    assert summary["submitted_to_chatgpt"] is False
+    assert summary["needs_attention"] == "NEEDS_ATTENTION: browser_submit_not_accepted"
+
+
 def test_transport_summary_completed_with_focus_drift() -> None:
     tmp = Path("/tmp/surf-transport-test-focus-drift")
     tmp.mkdir(parents=True, exist_ok=True)

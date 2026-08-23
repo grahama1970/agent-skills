@@ -29,6 +29,7 @@ Failure modes
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import signal
@@ -222,7 +223,45 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def acquire_lock(run_id: str) -> bool:
     """Take the single-tick lock, reclaiming it when the holder is stale."""
-    lock = config.lock_dir()
+    return _acquire_dir_lock(config.lock_dir(), run_id, {})
+
+
+def execution_lock_key(targets: set[str] | list[str] | tuple[str, ...]) -> str:
+    """Stable filesystem-safe key for one target set."""
+    normalized = sorted({str(target).strip().rstrip("/") for target in targets if str(target).strip()})
+    if not normalized:
+        normalized = ["__unknown__"]
+    digest = hashlib.sha256("\n".join(normalized).encode("utf-8")).hexdigest()[:16]
+    label = normalized[0].replace("/", "_").replace(":", "_")[:80]
+    return f"{label}-{digest}"
+
+
+def acquire_execution_lock(run_id: str, targets: set[str] | list[str] | tuple[str, ...]) -> Path | None:
+    """Take a per-target execution lock for a selected repair lane."""
+    key = execution_lock_key(targets)
+    lock = config.execution_lock_root() / key
+    normalized = sorted({str(target).strip().rstrip("/") for target in targets if str(target).strip()})
+    if _acquire_dir_lock(lock, run_id, {"targets": normalized, "kind": "execution"}):
+        return lock
+    return None
+
+
+def release_execution_lock(lock: Path | None) -> None:
+    if lock is not None:
+        _remove_lock(lock)
+
+
+def execution_lock_holder_alive(lock: Path) -> bool:
+    owner_path = lock / "owner.json"
+    try:
+        owner = json.loads(owner_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError) as exc:
+        logger.error("could not read execution lock owner: {}", exc)
+        return False
+    return _owner_pid_alive(owner)
+
+
+def _acquire_dir_lock(lock: Path, run_id: str, extra_owner_fields: dict[str, Any]) -> bool:
     try:
         lock.mkdir(parents=True)
     except FileExistsError:
@@ -235,7 +274,13 @@ def acquire_lock(run_id: str) -> bool:
             return False
     (lock / "owner.json").write_text(
         json.dumps(
-            {"run_id": run_id, "pid": os.getpid(), "ts": timestamp(), "epoch": time.time()},
+            {
+                "run_id": run_id,
+                "pid": os.getpid(),
+                "ts": timestamp(),
+                "epoch": time.time(),
+                **extra_owner_fields,
+            },
             indent=2,
         )
         + "\n",

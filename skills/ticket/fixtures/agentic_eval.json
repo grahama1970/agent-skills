@@ -52,6 +52,24 @@
           "HUMAN_FIRST_SUBJECTED"
         ]
       }
+    },
+    {
+      "name": "close-audit-ignores-unrelated-dirty-worktrees",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && ./scripts/eval_close_audit_path_scope.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLOSE_AUDIT_PATH_SCOPED_OK"
+        ]
+      }
     }
   ]
 }

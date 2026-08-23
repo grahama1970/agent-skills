@@ -109,7 +109,40 @@ require_file() {
     [[ -s "$file" ]] || die "$label file is empty: $file"
 }
 
+issue_target_paths() {
+    local issue="$1"
+    [[ "$DRY_RUN" == "1" ]] && return 0
+    need_gh
+    local body
+    body="$(gh issue view "$issue" "${repo_args[@]}" --json body --jq '.body')"
+    TICKET_BODY="$body" python3 - <<'PY'
+import os
+import re
+
+text = os.environ.get("TICKET_BODY", "")
+paths: list[str] = []
+for line in text.splitlines():
+    stripped = line.strip()
+    match = re.match(r"(?i)^(?:[-*]\s*)?(?:target|scoped files|scoped-files|source-scope)\s*:\s*(.+)$", stripped)
+    if not match:
+        continue
+    value = match.group(1).strip().strip("`")
+    for part in re.split(r"[,;]", value):
+        path = part.strip().strip("`").strip()
+        if not path or path.lower() in {"none", "n/a", "unknown"}:
+            continue
+        if re.match(r"^[A-Za-z0-9._/@:+-]+$", path):
+            paths.append(path.rstrip("/"))
+seen = set()
+for path in paths:
+    if path not in seen:
+        seen.add(path)
+        print(path)
+PY
+}
+
 audit_worktrees_for_retention() {
+    local issue="${1:-}"
     [[ "$DRY_RUN" == "1" ]] && return 0
     if [[ "${GH_TICKET_SKIP_WORKTREE_AUDIT:-}" == "1" ]]; then
         echo "WARN skipping worktree retention audit because GH_TICKET_SKIP_WORKTREE_AUDIT=1" >&2
@@ -121,7 +154,15 @@ audit_worktrees_for_retention() {
     fi
     local repo_root
     repo_root="$(git rev-parse --show-toplevel)"
-    "$SCRIPT_DIR/audit-worktrees.sh" --repo "$repo_root" --json >&2 || die \
+    local -a scope_args=()
+    local target
+    if [[ -n "$issue" ]]; then
+        while IFS= read -r target; do
+            [[ -n "$target" ]] || continue
+            scope_args+=(--scope-path "$target")
+        done < <(issue_target_paths "$issue" || true)
+    fi
+    "$SCRIPT_DIR/audit-worktrees.sh" --repo "$repo_root" --json "${scope_args[@]}" >&2 || die \
         "worktree retention audit failed; commit, remove, or explicitly retain flagged secondary worktrees before releasing/closing the ticket"
 }
 
@@ -348,7 +389,7 @@ cmd_block() {
         run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label blocked:upstream
     fi
     if [[ "$release" == "1" ]]; then
-        audit_worktrees_for_retention
+        audit_worktrees_for_retention "$issue"
     fi
     run_gh gh issue edit "$issue" "${repo_args[@]}" --add-label maintainer-blocked --add-label needs-human
     if [[ "$release" == "1" ]]; then
@@ -419,7 +460,7 @@ cmd_release() {
     [[ -n "$agent" ]] || die "release requires --agent"
     [[ -n "$reason" ]] || die "release requires --reason FILE"
     require_file "reason" "$reason"
-    audit_worktrees_for_retention
+    audit_worktrees_for_retention "$issue"
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$reason"
     run_gh gh issue edit "$issue" "${repo_args[@]}" --remove-label maintainer-active
     json_ok release issue "$issue" agent "$agent" reason "$reason"
@@ -465,7 +506,7 @@ cmd_close() {
     require_file "proof" "$proof"
     [[ -z "$review" ]] || require_file "review" "$review"
     assert_ticket_closable "$issue"
-    audit_worktrees_for_retention
+    audit_worktrees_for_retention "$issue"
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$proof"
     if [[ -n "$review" ]]; then
         run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$review"
@@ -502,7 +543,7 @@ cmd_close_duplicate() {
     require_file "proof" "$proof"
     [[ -z "$review" ]] || require_file "review" "$review"
     assert_ticket_closable "$issue"
-    audit_worktrees_for_retention
+    audit_worktrees_for_retention "$issue"
     run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$proof"
     if [[ -n "$review" ]]; then
         run_gh gh issue comment "$issue" "${repo_args[@]}" --body-file "$review"
