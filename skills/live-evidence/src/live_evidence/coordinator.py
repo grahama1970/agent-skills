@@ -63,6 +63,9 @@ class EvidenceCoordinator:
         self.settings = settings  # public: action lane memory_url (#1475)
         self.actions = None  # ActionEngine, lazily bound to the session policy
         self.briefing = None  # BriefingMatcher when a pack is loaded
+        # Repo basenames this meeting is about; feeds memory project-affinity
+        # ranking so cross-project recall noise cannot outscore its knowledge.
+        self._repo_scope = {p.name.casefold() for p in settings.repo_roots}
         self._question_window = QuestionWindowBuilder(profile)
         self._memory = MemoryEvidenceClient(settings, profile)
         self._ripgrep = RipgrepEvidenceClient(settings, profile)
@@ -78,12 +81,9 @@ class EvidenceCoordinator:
         self._solved_revisions: set[tuple[str, int]] = set()
         self._held: dict[tuple[str, int], dict] = {}
         # Text the assistant is currently speaking aloud (#1453). The mic path
-        # hears our own TTS and labels it "interviewer"; without suppression
-        # Embry's monologue becomes a question candidate and pollutes the
-        # window -- observed live: the "redirect" card after a barge-in was
-        # Embry's own breakpoint explanation. We KNOW what we are saying, so
-        # transcript events that substantially match it are journaled as
-        # assistant echo and never enter the question path.
+        # hears our own TTS and labels it "interviewer"; transcript events that
+        # substantially match what we are saying are journaled as assistant
+        # echo and never enter the question path.
         self._assistant_utterances: list[str] = []
 
     async def accept_transcript(self, event: TranscriptEvent) -> None:
@@ -261,7 +261,7 @@ class EvidenceCoordinator:
         query = held["query"]
         seeded_query = f"{query}\n{answers_block}" if answers_block else query
         sources = held["sources"]
-        ranked = rank_sources(sources, query, self._profile)
+        ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
         if policy.candidate_answer_generation:
             await self._state.set_lane(
                 RetrievalLane.ASK, LaneState.RUNNING, "Solving after clarification"
@@ -274,7 +274,7 @@ class EvidenceCoordinator:
                 latency_ms=ask_result.latency_ms,
                 result_count=len(ask_result.sources),
             )
-            ranked = rank_sources([*sources, *ask_result.sources], query, self._profile)
+            ranked = rank_sources([*sources, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
         card = self._summarizer.build(query, held["thread"], ranked)
         verdict = held.get("verdict")
         if verdict is not None and verdict.clarifying_questions:
@@ -393,7 +393,7 @@ class EvidenceCoordinator:
                 latency_ms=result.latency_ms,
                 result_count=len(result.sources),
             )
-            sources = rank_sources(result.sources, request.query, self._profile)
+            sources = rank_sources(result.sources, request.query, self._profile, repo_scope=self._repo_scope)
         elif request.lane is RetrievalLane.RIPGREP:
             await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Manual current-source search")
             result = await self._ripgrep.retrieve(request.query)
@@ -404,7 +404,7 @@ class EvidenceCoordinator:
                 latency_ms=result.latency_ms,
                 result_count=len(result.sources),
             )
-            sources = rank_sources(result.sources, request.query, self._profile)
+            sources = rank_sources(result.sources, request.query, self._profile, repo_scope=self._repo_scope)
         elif request.lane is RetrievalLane.ASK:
             await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Manual Ask code solution")
             result = await self._ask.solve(request.query, [])
@@ -415,7 +415,7 @@ class EvidenceCoordinator:
                 latency_ms=result.latency_ms,
                 result_count=len(result.sources),
             )
-            sources = rank_sources(result.sources, request.query, self._profile)
+            sources = rank_sources(result.sources, request.query, self._profile, repo_scope=self._repo_scope)
         else:
             await self._state.set_lane(RetrievalLane.MEMORY, LaneState.RUNNING, "Manual memory search")
             result = await self._memory.retrieve(request.query)
@@ -426,7 +426,7 @@ class EvidenceCoordinator:
                 latency_ms=result.latency_ms,
                 result_count=len(result.sources),
             )
-            sources = rank_sources(result.sources, request.query, self._profile)
+            sources = rank_sources(result.sources, request.query, self._profile, repo_scope=self._repo_scope)
         card = self._summarizer.build(request.query, thread, sources)
         card = card.model_copy(update={"policy_digest": self._state.session_policy_digest()})
         snapshot = await self._state.add_card(card)
@@ -512,7 +512,7 @@ class EvidenceCoordinator:
             )
             sources.extend(ripgrep_result.sources)
 
-        ranked = rank_sources(sources, query, self._profile)
+        ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
 
         # When the resolver is unreachable or unconfigured we cannot judge
         # readiness at all, which is different from judging "not ready". Falling
@@ -618,7 +618,7 @@ class EvidenceCoordinator:
                     latency_ms=ask_result.latency_ms,
                     result_count=len(ask_result.sources),
                 )
-                ranked = rank_sources([*sources, *ask_result.sources], query, self._profile)
+                ranked = rank_sources([*sources, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
         elif verdict is not None:
             # A judged "not ready" holds the solver back and says why, so the
             # HUD never shows a confident answer to a truncated question.
@@ -711,7 +711,7 @@ class EvidenceCoordinator:
                 # Escalation: the receipt-heavy $ask path answers instead.
                 ask_result = await self._ask.solve(query, ranked[:4])
                 if ask_result.ok and ask_result.sources:
-                    merged = rank_sources([*ranked, *ask_result.sources], query, self._profile)
+                    merged = rank_sources([*ranked, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
                     await self._state.publish_card_fenced(
                         card.model_copy(update={"sources": merged[:8]})
                     )

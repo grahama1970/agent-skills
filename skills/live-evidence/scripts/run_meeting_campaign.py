@@ -68,8 +68,15 @@ def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
         if not wav.is_file():
             raise RuntimeError(f"chatterbox produced no wav for line {index}")
         pieces.append(wav)
-    # 0.8s silence matching the first piece's format
-    subprocess.run(["sox", str(pieces[0]), str(silence), "trim", "0", "0.8", "vol", "0"],
+    # 2.5s silence between lines, matching the first piece's format. Real
+    # agenda questions ("Next question ...", "Last one for the code side ...")
+    # carry natural pauses; chatterbox renders each line tightly, and 0.8s
+    # sits below RealtimeSTT's VAD finalization threshold, so three questions
+    # buffered into one cumulative window and the resolver authored a single
+    # merged canonical question (observed live: version+QRA merged, QRA lost).
+    # 2.5s reliably exceeds any reasonable post-speech silence and forces a
+    # clean final between questions -- more realistic, not a looser oracle.
+    subprocess.run(["sox", str(pieces[0]), str(silence), "trim", "0", "2.5", "vol", "0"],
                    check=True, capture_output=True)
     out = work / "session.wav"
     interleaved: list[str] = []
@@ -79,18 +86,35 @@ def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
     return out
 
 
-def run_session(session: dict[str, Any], out_dir: Path) -> dict[str, Any]:
+def capture_live_session(
+    session: dict[str, Any], out_dir: Path
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Render/play one session through the real live path and return its journal.
+
+    Shared by the token-family campaign scorer (score_session) and the
+    agentic answer-similarity eval (eval_transcript_meeting): both must run
+    through the IDENTICAL chatterbox -> PipeWire -> Docker STT -> resolver ->
+    retrieval path, so the capture half lives here once. Returns
+    (journal_rows, bridge_invocation); a BLOCKED session raises RuntimeError.
+    """
+
     out_dir.mkdir(parents=True, exist_ok=True)
     work = out_dir / "work"
     work.mkdir(exist_ok=True)
     if session["type"] == "synthetic":
         wav = synthesize_script(session["script"], work)
-        max_seconds = 20.0 + 6.0 * len(session["script"])
+        # Budget from the ACTUAL rendered duration plus a tail: guessing from
+        # line count under-budgeted once the inter-line silence grew and the
+        # capture stopped mid-question (the QRA line was cut to "Where in our
+        # Spark--"). soxi -D is the real length; +18s covers late solve work.
+        rendered = float(subprocess.run(
+            ["soxi", "-D", str(wav)], check=True, capture_output=True, text=True
+        ).stdout.strip())
+        max_seconds = rendered + 18.0
     else:
         wav = next((Path(c) for c in session["wav_candidates"] if Path(c).is_file()), None)
         if wav is None:
-            return {"session_id": session["session_id"], "status": "BLOCKED",
-                    "reason": "no stored wav available"}
+            raise RuntimeError("no stored wav available")
         max_seconds = float(session.get("max_seconds") or 108)
 
     repo_paths = [str(Path(r).expanduser()) for r in session.get("repos") or []]
@@ -121,23 +145,42 @@ def run_session(session: dict[str, Any], out_dir: Path) -> dict[str, Any]:
         # in the final flushed at stream end, so wait for the journal to
         # QUIESCE (no growth for 12s) instead of a fixed sleep that races the
         # in-flight solve (observed live: the QRA card lost to a 30s cutoff).
+        # A solve journals nothing between its ledger opening and its card, so
+        # size-quiescence alone still races the last in-flight answer. Wait
+        # until every OPENED question has a card or an explicit discard, then
+        # a short idle, capped hard at 120s.
         journal_path = None
-        deadline = time.monotonic() + 90
+        rows: list[dict[str, Any]] = []
+        deadline = time.monotonic() + 120
         last_size, quiet_since = -1, time.monotonic()
         while time.monotonic() < deadline:
             journal_path = next(server.data_dir.glob("*/session.jsonl"), None)
             size = journal_path.stat().st_size if journal_path else 0
             if size != last_size:
                 last_size, quiet_since = size, time.monotonic()
-            elif time.monotonic() - quiet_since >= 12:
+            rows = [json.loads(line) for line in journal_path.read_text().splitlines()] \
+                if journal_path else []
+            opened = {r["payload"].get("question_id") for r in rows
+                      if r.get("kind") == "requirement_ledger_opened"}
+            settled = {r["payload"].get("question_id") for r in rows
+                       if r.get("kind") == "evidence_card"
+                       or "discard" in str(r.get("kind"))}
+            if not (opened - settled) and time.monotonic() - quiet_since >= 8:
                 break
             time.sleep(2)
-        rows = [json.loads(line) for line in journal_path.read_text().splitlines()] \
-            if journal_path else []
     finally:
         oracle_mod.destroy_virtual_sink(sink)
         server.close()
 
+    return rows, invocation
+
+
+def run_session(session: dict[str, Any], out_dir: Path) -> dict[str, Any]:
+    try:
+        rows, invocation = capture_live_session(session, out_dir)
+    except RuntimeError as exc:
+        return {"session_id": session["session_id"], "status": "BLOCKED",
+                "reason": str(exc)}
     return score_session(session, rows, invocation, out_dir)
 
 

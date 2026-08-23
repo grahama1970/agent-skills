@@ -8,6 +8,8 @@ only if it remains source-bound and receipt-gated.
 
 from __future__ import annotations
 
+import re
+
 from .models import (
     CardStatus,
     EvidenceCard,
@@ -91,10 +93,18 @@ def _select_with_lane_diversity(
 
 
 def _sentence(text: str, limit: int) -> str:
+    # Strip leading markdown header/emphasis noise so the answer opens on the
+    # document's actual content, not its title ("# SPARTA Project Memory Index
+    # ## READ FIRST"). Without this the extractive answer was a bare header.
     clean = " ".join(text.split())
+    clean = re.sub(r"(?:^|(?<= ))#{1,6}\s*", "", clean)
+    clean = clean.lstrip("#*>-— \t")
     if len(clean) <= limit:
         return clean
-    boundaries = [clean.rfind(mark, 0, limit) for mark in (". ", "; ", ": ", " — ")]
+    # " — " (em-dash) is deliberately NOT a boundary: it joins phrases inside a
+    # heading ("READ FIRST — HARD RULES") and cutting there returned the header
+    # alone (caught by the agentic transcript eval on the SPARTA rules card).
+    boundaries = [clean.rfind(mark, 0, limit) for mark in (". ", "; ", ": ")]
     boundary = max(boundaries)
     if boundary >= int(limit * 0.55):
         return clean[: boundary + 1].strip()

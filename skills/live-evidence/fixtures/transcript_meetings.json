@@ -1,0 +1,43 @@
+{
+  "schema": "live_evidence.transcript_meeting.v1",
+  "note": "Goal-v2 agentic eval. Each meeting is a COMPLETE speaker transcript authored/collected in advance; its questions and expected answers are extracted from that transcript BEFORE the run. The transcript is synthesized turn-by-turn through the live chatterbox -> PipeWire -> Docker STT -> resolver -> retrieval path in real time, and each produced card is judged for SEMANTIC SIMILARITY to the expected answer by an agentic judge (SciLLM), not token overlap. A card that is technically on-topic but does not convey the expected answer fails.",
+  "meetings": [
+    {
+      "meeting_id": "sparta-standup-invented",
+      "source": "invented multi-speaker Sparta Explorer standup",
+      "repos": ["~/workspace/experiments/sparta"],
+      "transcript": [
+        {"speaker": "Lead", "text": "Alright, quick standup on the Sparta Explorer work before the Friday review. Let's keep it tight."},
+        {"speaker": "Contractor", "text": "Sounds good. I just joined the project this week so I want to make sure I don't repeat old mistakes."},
+        {"speaker": "Lead", "text": "Good instinct. Remind me, what are the hard rules — the read-first rules we learned the hard way — recorded in the Sparta project memory index?"},
+        {"speaker": "Engineer", "text": "Let me pull those up so the new contractor has them front and center."},
+        {"speaker": "Contractor", "text": "While you do that — can someone find out what the latest released version of the MITRE SPARTA framework is right now, the space attack matrix? I want to cite the current one."},
+        {"speaker": "Lead", "text": "Yeah, we should confirm the current version rather than guess. Last thing on the code side: where in our Sparta pipeline source code is the QRA generation implemented — which module actually builds the question, reasoning, answer pairs?"},
+        {"speaker": "Engineer", "text": "Great, that covers it. Thanks everyone, see you Friday."}
+      ],
+      "oracle": [
+        {
+          "id": "memory-hard-rules",
+          "family": "memory",
+          "question": "What are the hard read-first rules in the Sparta project memory index?",
+          "match_tokens": ["hard", "rules", "sparta"],
+          "expected_answer": "The read-first hard rules from the SPARTA Project Memory Index: never skim a SKILL.md — read the entire SKILL.md cover to cover before running any command, because skimming caused a long failure spiral; treat these as non-negotiable constraints learned the hard way."
+        },
+        {
+          "id": "research-sparta-version",
+          "family": "research",
+          "question": "What is the latest released version of the MITRE SPARTA space attack matrix?",
+          "match_tokens": ["latest", "version", "sparta"],
+          "expected_answer": "A bounded external-research action should be proposed for approval, because the current released version of MITRE SPARTA is time-sensitive external information the local memory and code lanes cannot authoritatively answer."
+        },
+        {
+          "id": "code-qra-generation",
+          "family": "code",
+          "question": "Where in the Sparta pipeline source code is QRA generation implemented?",
+          "match_tokens": ["qra", "generation", "pipeline"],
+          "expected_answer": "A card citing the specific module/file in the sparta repository that builds the question-reasoning-answer (QRA) pairs, with a concrete source path from the current checkout."
+        }
+      ]
+    }
+  ]
+}

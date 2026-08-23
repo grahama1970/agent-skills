@@ -406,15 +406,23 @@ def _memory_label(item: dict[str, Any], profile: str) -> str:
 
 
 def _memory_excerpt(item: dict[str, Any]) -> str:
+    # Content-bearing fields first. `retrieval_text`/`summary` are often a
+    # generated one-line LABEL ("Knowledge from local Claude Code memory file:
+    # MEMORY.md (project: experiments-sparta)") while the real body lives in
+    # `playbook`; reading the label first produced cards that named the right
+    # document but conveyed none of its content (the SPARTA hard-rules card
+    # answered about a publication boundary instead of the read-first rules,
+    # caught by the agentic transcript eval). Body wins; label is the fallback.
     text = _first_text(
         item,
         "solution",
         "answer",
-        "retrieval_text",
-        "text",
+        "playbook",
         "content",
-        "summary",
+        "text",
         "problem",
+        "retrieval_text",
+        "summary",
     )
     if text:
         return text
