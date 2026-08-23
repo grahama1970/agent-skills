@@ -218,6 +218,76 @@ esac
     assert sentinel not in output.read_text(encoding="utf-8")
     invocation_text = calls.read_text(encoding="utf-8")
     assert "chatgpt.extract" in invocation_text
+
+
+def test_submit_closes_duplicate_expect_url_tabs_after_exact_tab_resolution(tmp_path: Path) -> None:
+    sentinel = "<<<WEBGPT_DONE:duplicate-tab-guard>>>"
+    conversation_url = "https://chatgpt.com/c/11111111-1111-1111-1111-111111111111"
+    request = tmp_path / "request.md"
+    output = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    calls = tmp_path / "calls.log"
+    fake_run = tmp_path / "run.sh"
+    request.write_text("answer once\n", encoding="utf-8")
+    fake_run.write_text(
+        f'''#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(calls)!r}
+case "${{1:-}}" in
+  tab.list)
+    if [[ "${{2:-}}" == "--json" ]]; then
+      printf '[{{"id":"837352334","title":"Wanted","url":"{conversation_url}"}},{{"id":"837352335","title":"Duplicate","url":"{conversation_url}"}}]\\n'
+    else
+      printf '837352334\\tWanted\\t{conversation_url}\\n'
+      printf '837352335\\tDuplicate\\t{conversation_url}\\n'
+    fi
+    ;;
+  tab.close)
+    exit 0
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"999","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    printf 'cdp-ok\\n'
+    ;;
+  chatgpt)
+    printf 'answer\\n{sentinel}\\n'
+    printf 'Tab ID: 837352334\\nResponseSource: assistant-dom\\n' >&2
+    ;;
+  *)
+    printf 'unexpected command: %s\\n' "$*" >&2
+    exit 99
+    ;;
+esac
+''',
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+
+    proc = subprocess.run(
+        [
+            "bash", str(SUBMIT), "--input", str(request), "--output", str(output),
+            "--meta-output", str(meta), "--sentinel", sentinel, "--tab-id", "837352334",
+            "--expect-url", conversation_url, "--no-activate", "--timeout", "5",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        capture_output=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    invocation_text = calls.read_text(encoding="utf-8")
+    assert "tab.close 837352335" in invocation_text
+    assert "tab.close 837352334" not in invocation_text
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["requested_tab_id"] == "837352334"
+    assert payload["controlled_tab_id"] == "837352334"
     assert "tab.new" not in invocation_text
     assert "key Enter" not in invocation_text
 

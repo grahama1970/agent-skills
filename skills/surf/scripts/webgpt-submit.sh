@@ -258,26 +258,44 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
   fi
 fi
 
-# Close duplicate tabs with the same conversation URL.
-# The tab-id is canonical; other tabs sharing the same URL are stale duplicates
-# that cause identity preflight failures.
-if [[ -n "${requested_tab_id:-}" && -n "${target_url:-}" ]]; then
+close_duplicate_chatgpt_tabs() {
+  local keep_tab="$1"
+  local identity_url="$2"
+  if [[ -z "$keep_tab" || -z "$identity_url" ]]; then
+    return 0
+  fi
+  # Only prune concrete conversations. Provider roots such as
+  # https://chatgpt.com/ are common and not evidence of duplicate content.
+  if [[ "$identity_url" != *"chatgpt.com/c/"* && "$identity_url" != *"chatgpt.com/"*"/c/"* ]]; then
+    return 0
+  fi
   tab_list_json="$("$RUN_SH" tab.list --json 2>/dev/null || true)"
   if [[ -n "$tab_list_json" ]]; then
-    echo "$tab_list_json" | python3 -c "
-import json, sys
-tabs = json.load(sys.stdin)
-target = '${target_url}'
-keep = '${requested_tab_id}'
+    dup_ids="$(TAB_LIST_JSON="$tab_list_json" python3 - "$SCRIPT_DIR" "$identity_url" "$keep_tab" <<'PY' 2>/dev/null || true
+import json
+import os
+import sys
+
+sys.path.insert(0, sys.argv[1] + "/lib")
+from resolve_webgpt_tab import normalize_chatgpt_url, same_conversation_route  # noqa: E402
+
+tabs = json.loads(os.environ.get("TAB_LIST_JSON") or "[]")
+target = normalize_chatgpt_url(sys.argv[2])
+keep = "".join(ch for ch in sys.argv[3] if ch.isdigit())
 for t in tabs:
-    tid = str(t.get('id',''))
-    if tid != keep and t.get('url','') == target:
+    tid = str(t.get("id", ""))
+    url = str(t.get("url", ""))
+    if tid and tid != keep and (
+        normalize_chatgpt_url(url) == target or same_conversation_route(url, target)
+    ):
         print(tid)
-" 2>/dev/null | while read dup_id; do
+PY
+)"
+    while IFS= read -r dup_id; do
       [[ -n "$dup_id" ]] && "$RUN_SH" tab.close "$dup_id" >/dev/null 2>&1 || true
-    done
+    done <<< "$dup_ids"
   fi
-fi
+}
 
 if [[ "$sentinel" == "auto" || -z "$sentinel" ]]; then
   rand="$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
@@ -1129,6 +1147,8 @@ fi
 # this second write records the actual intended controlled tab when available.
 write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
 write_inflight_marker "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
+
+close_duplicate_chatgpt_tabs "${requested_tab_id:-}" "${expect_url:-${target_url:-}}"
 
 if [[ -n "${requested_tab_id:-}" ]]; then
   surf_tab_lock_path="/tmp/surf-webgpt-tab-${requested_tab_id}.lock"
