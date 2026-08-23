@@ -4641,6 +4641,16 @@ def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[s
     if "prior_handler_receipts_not_ready" in haystack:
         return "prior_handler_receipts_not_ready"
     if (
+        "unknown model" in haystack
+        or "not_found_error" in haystack
+        or "model not found" in haystack
+        or "model is not supported" in haystack
+        or "model  is not supported" in haystack
+        or "model_not_available" in haystack
+        or ("model:" in haystack and "404" in haystack)
+    ):
+        return "scillm_model_not_found"
+    if (
         "http 401" in haystack
         or "invalid api key" in haystack
         or "authentication_error" in haystack
@@ -4652,13 +4662,6 @@ def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[s
         or "please pass a valid api key" in haystack
     ):
         return "scillm_auth_invalid_api_key"
-    if (
-        "unknown model" in haystack
-        or "not_found_error" in haystack
-        or "model not found" in haystack
-        or ("model:" in haystack and "404" in haystack)
-    ):
-        return "scillm_model_not_found"
     if "http 502" in haystack or "all groups exhausted" in haystack or "router_error" in haystack:
         return "scillm_provider_route_failed"
     if "subagent-runner" in haystack:

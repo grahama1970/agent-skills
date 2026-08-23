@@ -2490,6 +2490,89 @@ def test_roundtable_scillm_valid_api_key_message_classifies_as_auth_failure(tmp_
     assert "$ticket to $ask at agent-skills@main" in recovery["ticket_instruction"]
 
 
+def test_roundtable_scillm_model_unsupported_401_classifies_as_model_route_failure(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "Run the oc-deepseek repair lane."}) + "\n", encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-oc-deepseek"
+
+    class UnsupportedModelHandler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            self.send_response(401)
+            self.send_header("content-type", "application/json")
+            self.end_headers()
+            payload = {
+                "error": {
+                    "message": (
+                        "All groups exhausted for model='oc-deepseek' "
+                        "(chain=['opencode-go/deepseek-v4-flash']): Error code: 401 - "
+                        "{'type': 'error', 'error': {'type': 'ModelError', "
+                        "'message': 'Model  is not supported'}}"
+                    ),
+                    "type": "router_error",
+                    "code": 401,
+                }
+            }
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), UnsupportedModelHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+                "--node-id",
+                "handler-oc-deepseek",
+                "--handler",
+                "oc-deepseek",
+                "--topology",
+                "concurrent",
+                "--workflow-mode",
+                "roundtable",
+                "--request-file",
+                str(request_path),
+                "--artifact-dir",
+                str(artifact_dir),
+                "--surf-run",
+                "/bin/false",
+                "--browser-oracle-run",
+                "/bin/false",
+                "--scillm-base-url",
+                base_url,
+                "--scillm-api-key",
+                "sk-dev-proxy-123",
+                "--timeout",
+                "3",
+            ],
+            input=json.dumps({"goal": {"goal_hash": "sha256:test"}}),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "handler-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["failure_code"] == "scillm_model_not_found"
+    assert recovery["failure_code"] == "scillm_model_not_found"
+    assert recovery["provider_diagnosis"]["http_status"] == 401
+    assert recovery["provider_diagnosis"]["routed_model"] == "oc-deepseek"
+    assert recovery["provider_diagnosis"]["provider_chain"] == ["opencode-go/deepseek-v4-flash"]
+    assert recovery["auto_retry_blocked_reason"] == "provider_route_requires_model_or_provider_repair"
+    assert "available model id" in recovery["fallback_instruction"]
+    assert "SCILLM_PROXY_KEY=<configured proxy key>" not in recovery["next_command"]
+
+
 def test_roundtable_join_emits_degraded_receipt_with_failed_seat_recovery_packet(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(

@@ -264,6 +264,30 @@
       }
     },
     {
+      "name": "oc-provider-model-unsupported-401-is-not-auth",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest tests/test_tau_dag.py::test_roundtable_scillm_model_unsupported_401_classifies_as_model_route_failure -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "supports_claims": [
+        "ask.classifier.transport_vs_provider"
+      ],
+      "seams": [
+        "classifier.failure_codes"
+      ]
+    },
+    {
       "name": "a-tracked-path-can-never-be-declared-synthetic",
       "type": "adversarial",
       "real_world": true,
