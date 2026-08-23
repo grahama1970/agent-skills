@@ -240,6 +240,10 @@ PY
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_transcript_meeting.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-surface-selection)
+    shift
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_surface_selection.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-review-dossier)
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_review_dossier.py" "$SCRIPT_DIR" "$@"
