@@ -151,6 +151,28 @@
       }
     },
     {
+      "name": "ticket-repair-refuses-answer-only-creator-before-lease",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_ticket_repair_refuses_answer_only_creator_before_lease",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
       "name": "unknown-project-fails-closed-and-names-it",
       "type": "negative",
       "command": [

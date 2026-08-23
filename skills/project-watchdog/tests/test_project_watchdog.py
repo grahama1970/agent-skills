@@ -546,8 +546,8 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
         "repo": TAU_REPO,
         "worktree": str(_clean_worktree(tmp_path)),
         "runner_kind": "tau-command-loop",
-        "repair_creator": "gpt-5.5-high",
-        "repair_reviewer": "claude-opus-5-medium",
+        "repair_creator": "oc-deepseek",
+        "repair_reviewer": "claude-fable-low",
         "ticket_repair_timeout_s": 10800,
     }
     issue = _issue(9, labels=["agent-work"])
@@ -579,7 +579,7 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     # Authored in a worktree of the lane's own making, never the registered
     # checkout: that one is a human's working tree.
     workspace = argv[argv.index("--handler-workspace") + 1]
-    assert workspace.startswith("gpt-5.5-high=")
+    assert workspace.startswith("oc-deepseek=")
     assert str(tmp_path) != workspace.split("=", 1)[1]
     assert "repair-worktrees" in workspace
     assert argv[1] == "tau-dag"
@@ -588,13 +588,36 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     assert "--execute" in argv and "--allow-provider-calls" in argv
     assert argv[argv.index("--execution-timeout-seconds") + 1] == "3600"
     # The creator seat mutates and needs a workspace; the reviewer seat does not.
-    assert "claude-opus-5-medium" in argv
+    assert "claude-fable-low" in argv
     # $ask fails preflight without an immutable goal, before any handler runs.
     goal = argv[argv.index("--immutable-goal") + 1]
     assert "#9" in goal and "Do not weaken or delete a test" in goal
 
     task = (tmp_path / "repair-task.md").read_text(encoding="utf-8")
     assert "VERDICT: PASS" in task, "the reviewer seat must be asked for a verdict"
+
+
+def test_ticket_repair_refuses_answer_only_creator_before_lease(tmp_path) -> None:
+    project = {
+        "project_id": "pdf_oxide",
+        "repo": "grahama1970/pdf_oxide",
+        "worktree": str(_clean_worktree(tmp_path)),
+        "repair_creator": "gpt-5.5-high",
+        "repair_reviewer": "claude-fable-low",
+    }
+    issue = _issue(32, labels=["agent-work"])
+    issue["watchdog_action"] = "ticket_repair"
+    with (
+        mock.patch.object(handlers.github, "issue_comment") as comment,
+        mock.patch.object(handlers.github, "issue_edit") as edit,
+        mock.patch.object(handlers, "run_cmd") as dispatched,
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "not a locally-executing coding lane" in result["summary"]
+    assert not comment.called
+    assert not edit.called
+    assert not dispatched.called
 
 
 # --------------------------------------------------------------------------- #
@@ -664,7 +687,7 @@ def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path)
     """
     project = {
         "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
-        "repair_creator": "gpt-5.5-high", "repair_reviewer": "claude-opus-5-medium",
+        "repair_creator": "oc-deepseek", "repair_reviewer": "claude-fable-low",
         "auto_land_main": True,
     }
     issue = _issue(1499, labels=["agent-work"], body=(
@@ -675,8 +698,8 @@ def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path)
     issue["watchdog_action"] = "ticket_repair"
     ask_dir = tmp_path / "ask" / "run-1" / "node-artifacts"
     for handler, text in (
-        ("gpt-5.5-high", "## Position\n\nNEEDS_ATTENTION - no tools in this session.\n"),
-        ("claude-opus-5-medium", "The proof failed; the second attempt is still running.\n"),
+        ("oc-deepseek", "## Position\n\nNEEDS_ATTENTION - no tools in this session.\n"),
+        ("claude-fable-low", "The proof failed; the second attempt is still running.\n"),
     ):
         node = ask_dir / handlers.repair_node_id(handler)
         node.mkdir(parents=True)
@@ -930,7 +953,7 @@ def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
     with mock.patch.object(handlers, "run_cmd") as dispatched:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "BLOCKED"
-    assert "not review" in result["summary"]
+    assert "Codex CLI" in result["summary"]
     assert not dispatched.called
 
 

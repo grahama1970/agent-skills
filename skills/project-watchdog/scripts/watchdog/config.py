@@ -228,6 +228,21 @@ def seat_can_run_code(seat: str) -> bool:
     return s not in _BROWSER_SEATS and not s.startswith("web")
 
 
+def seat_can_author_repair(seat: str) -> bool:
+    """A creator must be a workspace-mutating local coding lane.
+
+    API/model handlers such as ``gpt-5.5-high`` can answer, but recent live
+    pdf_oxide runs showed they returned "no repository or shell access" instead
+    of editing the repair worktree. Refuse them before leasing.
+    """
+    s = seat.strip().lower()
+    if s.startswith("oc-"):
+        return True
+    if s == "claude" or s.startswith("claude-"):
+        return True
+    return False
+
+
 def assert_cross_provider_seats(creator: str, reviewer: str) -> None:
     """Fail loudly if the seats are codex, same-provider, or a non-code reviewer."""
     for role, seat in (("creator", creator), ("reviewer", reviewer)):
@@ -236,6 +251,11 @@ def assert_cross_provider_seats(creator: str, reviewer: str) -> None:
                 f"repair {role} {seat!r} runs through the Codex CLI (codex exec); the Codex "
                 "harness is not used. Use a local `claude` seat or an OpenCode Go `oc-*` seat."
             )
+    if not seat_can_author_repair(creator):
+        raise SeatIndependenceError(
+            f"repair creator {creator!r} is not a locally-executing coding lane; "
+            "use an OpenCode Go `oc-*` seat or the local `claude` lane."
+        )
     cp, rp = seat_provider(creator), seat_provider(reviewer)
     if cp == rp:
         raise SeatIndependenceError(
