@@ -615,6 +615,88 @@
       }
     },
     {
+      "name": "corrected-goal-live-pair-gate-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "seams": [
+        "experiment.corrected_goal.manifest"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "set -euo pipefail\ncd ../../..\nMANIFEST=\"$(find skills/persona-dream/evals -name pd_corrected_goal_v1.json -print -quit)\"\ntest -n \"$MANIFEST\"\nSOURCE_ROOT=\"skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z\"\nRUN_ROOT=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-run\"\nPAIR_OUT=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json\"\nREADBACK=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json\"\nrm -rf \"$RUN_ROOT\"\ncp -a \"$SOURCE_ROOT\" \"$RUN_ROOT\"\nbash skills/persona-dream/run.sh corrected-goal-pair --manifest \"$MANIFEST\" --out \"$RUN_ROOT\" --require-live --forbid-mocked > \"$PAIR_OUT\"\nbash skills/persona-dream/run.sh adjudicate-corrected-goal --manifest \"$MANIFEST\" --run-root \"$RUN_ROOT\" --out \"$READBACK\" --fail-closed\npython3 - <<'PY'\nimport json\nfrom pathlib import Path\npair = json.loads(Path('/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json').read_text(encoding='utf-8'))\nreceipt = json.loads(Path('/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json').read_text(encoding='utf-8'))\nassert pair['status'] == 'PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT'\nassert pair['mocked'] is False\nassert pair['live'] is True\nassert pair['missing_live_artifacts'] == []\nassert receipt['status'] == 'PASS_CORRECTED_GOAL_PAIRED_PROOF'\nassert receipt['mocked'] is False\nassert receipt['live'] is True\nassert receipt['failures'] == []\nassert receipt['gate_statuses']['answer_invariance'] == 'PASS_ANSWER_INVARIANCE'\nassert receipt['gate_statuses']['emotional_carryover'] == 'PASS_EMOTION_LINEAGE'\nassert receipt['gate_statuses']['chatterbox_delivery'] == 'PASS_CHATTERBOX_DELIVERY'\nprint(pair['status'])\nprint('CORRECTED_GOAL_LIVE_PAIR_GATE_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json",
+            "json_pointer": "/status",
+            "equals": "PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT"
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "json_pointer": "/status",
+            "equals": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "json_pointer": "/failures",
+            "equals": []
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "json_pointer": "/gate_statuses/answer_invariance",
+            "equals": "PASS_ANSWER_INVARIANCE"
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "json_pointer": "/gate_statuses/emotional_carryover",
+            "equals": "PASS_EMOTION_LINEAGE"
+          },
+          {
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "json_pointer": "/gate_statuses/chatterbox_delivery",
+            "equals": "PASS_CHATTERBOX_DELIVERY"
+          }
+        ],
+        "stdout_contains": [
+          "PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT",
+          "PASS_CORRECTED_GOAL_PAIRED_PROOF",
+          "CORRECTED_GOAL_LIVE_PAIR_GATE_READBACK_OK"
+        ],
+        "stdout_not_contains": [
+          "BLOCKED_CORRECTED_GOAL_PAIRED_PROOF",
+          "BLOCKED_CORRECTED_GOAL_PAIR_LIVE_ARTIFACTS_MISSING"
+        ]
+      }
+    },
+    {
       "name": "session-mood-recognition-floor-margin-audit",
       "type": "positive",
       "real_world": true,
