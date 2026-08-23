@@ -419,6 +419,33 @@ def open_ticket_labels(repo: str) -> set[str]:
         return set()
 
 
+def _repair_target(fixture: str, step: dict[str, Any]) -> str:
+    """The path scope handed to the repair creator as its allowed edit surface.
+
+    A remediation category can bundle many seams (the monitor-opportunities
+    'regression-guards' category owns ten). apply_plan used to pass only
+    step['seams'][0], which fenced the creator to one arbitrary seam
+    (e.g. 'ats.ashby_prefill') while the actual failing guard lived elsewhere
+    (e.g. response_likelihood.py) — the creator could not touch the file it
+    needed and the reviewer returned NEEDS_ATTENTION (incident 2026-08-22,
+    agent-skills#1490). The correct scope for a whole-skill regression category
+    is the skill directory itself, derived from the fixture path
+    (.../skills/<name>/fixtures/<f>.json -> skills/<name>), so the creator may
+    edit any file the guards cover. Falls back to the category_id when the
+    fixture is not under a skills/<name>/fixtures/ path.
+    """
+    parts = Path(fixture).parts
+    if "skills" in parts:
+        i = parts.index("skills")
+        if i + 1 < len(parts):
+            return f"skills/{parts[i + 1]}"
+    if "fixtures" in parts:
+        i = parts.index("fixtures")
+        if i >= 1:
+            return parts[i - 1]
+    return str(step["category_id"])
+
+
 def _proof_command(step: dict[str, Any], fixture: str) -> str:
     return (
         f"run.sh remediate {fixture} --map <category_map> after the fix: the "
@@ -452,10 +479,13 @@ def apply_plan(
         argv = [
             str(_TICKET_RUN), "bug",
             f"agentic-evals category {step['category_id']}: {step['defect']}",
-            "--target", (step["seams"][0] if step["seams"] else step["category_id"]),
+            "--target", _repair_target(fixture, step),
             "--observed",
             f"{len(step['failing_cases'])} failing eval cases in category "
-            f"{step['category_id']}: {', '.join(step['failing_cases'][:8])}",
+            f"{step['category_id']}: {', '.join(step['failing_cases'][:8])}. "
+            f"Seams covered: {', '.join(step['seams']) or '(none declared)'}. "
+            f"Reproduce and fix wherever the failing guard's assertion is violated; "
+            f"the seam list is guidance, not a single-file fence.",
             "--expected", step["expected"] or step["defect"],
             "--repro", f"run.sh run {fixture} --only-category {step['category_id']}",
             "--proof", _proof_command(step, fixture),
