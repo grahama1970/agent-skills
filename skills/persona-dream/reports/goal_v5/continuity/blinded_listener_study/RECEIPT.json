@@ -9,7 +9,7 @@
     ],
     "proves": []
   },
-  "created_at": "2026-08-23T13:21:19Z",
+  "created_at": "2026-08-23T22:10:13Z",
   "design_version": "v2",
   "failed_gates": [
     "human_responses_complete",
@@ -262,7 +262,7 @@
     "bytes": 6202,
     "exists": true,
     "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json",
-    "sha256": "sha256:c3c4498d6c8b48d56a1d9b053cc85a359fb01c79ad8a05cefd8d3a1bc63f7218"
+    "sha256": "sha256:bec7cd9c046cf8291bb87c842a468fd2bf1da2dc1197f318a999771fcc7bee82"
   },
   "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study"
 }

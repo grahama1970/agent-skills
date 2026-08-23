@@ -183,7 +183,7 @@
       "human_collection_permitted": true
     },
     "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:9d8c5c66aa3f6c1609c1a3a0a25ddc734984abb8ff16a2761fc20eb51eff8dd1",
+    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:d57d8e8a6f2e442444a5c327c3c13bb59ab40f5b04976475159bf6817842e50e",
     "latest_blinded_listener_study_analysis": {
       "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
       "mocked": false,
@@ -550,7 +550,7 @@
       "status": "AWAITING_HUMAN_LISTENER_COLLECTION",
       "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness; v2 design (per-rater counterbalancing, intention-to-treat primary, independent attention check) preregistered under #1126",
       "receipt": "reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-      "receipt_sha256": "sha256:9d8c5c66aa3f6c1609c1a3a0a25ddc734984abb8ff16a2761fc20eb51eff8dd1",
+      "receipt_sha256": "sha256:d57d8e8a6f2e442444a5c327c3c13bb59ab40f5b04976475159bf6817842e50e",
       "valid_human_responses": "0/20",
       "sample_count": 0,
       "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
