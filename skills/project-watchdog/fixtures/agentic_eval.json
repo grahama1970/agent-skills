@@ -362,6 +362,29 @@
       }
     },
     {
+      "name": "oc-chat-repair-creator-is-refused",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_oc_chat_creator_is_refused_before_ask_dispatch",
+        "../tests/test_project_watchdog.py::test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "a-failed-lease-stops-the-dispatch",
       "type": "adversarial",
       "command": [

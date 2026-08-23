@@ -181,9 +181,10 @@ _SEAT_PROVIDER = {
 _BROWSER_SEATS = {"webgpt", "webclaude", "webgrok"}
 
 
-#: OpenCode Go seat (`oc-<family>`) -> provider family. A non-codex coding
-#: harness running open models; distinct provider from the codex/OpenAI creator
-#: and from the Anthropic reviewer.
+#: OpenCode Go chat seat (`oc-<family>`) -> provider family. These are useful
+#: model/review lanes, but they are not workspace-authoring repair creators.
+#: Repo-changing OpenCode work needs the explicit OpenCode serve/transport
+#: surface, not an `oc-*` chat handler with a Codex workspace bolted on.
 _OC_FAMILY_PROVIDER = {
     "deepseek": "deepseek", "ds": "deepseek",
     "glm": "zhipu", "kimi": "moonshot", "minimax": "minimax",
@@ -225,16 +226,14 @@ def seat_uses_codex_exec(seat: str) -> bool:
 
 def seat_can_run_code(seat: str) -> bool:
     """A reviewer must execute the ticket's live proof; a browser chat cannot.
-    OpenCode Go (`oc-*`) and the local `claude` CLI run code; browser seats don't."""
+    OpenCode Go chat (`oc-*`) and browser seats do not run shell commands."""
     s = seat.strip().lower()
-    return s not in _BROWSER_SEATS and not s.startswith("web")
+    return not (s in _BROWSER_SEATS or s.startswith("web") or s.startswith("oc-"))
 
 
 def seat_can_author_repair(seat: str) -> bool:
     """A creator must be able to author through the Tau repair workspace route."""
     s = seat.strip().lower()
-    if s.startswith("oc-"):
-        return True
     if s.startswith("gpt-") or s.startswith("codex-"):
         return True
     if s == "claude" or s.startswith("claude-"):
@@ -248,13 +247,15 @@ def assert_cross_provider_seats(creator: str, reviewer: str) -> None:
         if seat_uses_codex_exec(seat):
             raise SeatIndependenceError(
                 f"repair {role} {seat!r} runs through the Codex CLI (codex exec); the Codex "
-                "harness is not used. Use a local `claude` seat or an OpenCode Go `oc-*` seat."
+                "harness is not used. Use a workspace-capable model seat such as `gpt-5.5-high` "
+                "or the local `claude` lane."
             )
     if not seat_can_author_repair(creator):
         raise SeatIndependenceError(
             f"repair creator {creator!r} is not a Tau repair authoring lane; "
-            "use a Tau-routed model seat such as `gpt-5.5-high`, an OpenCode Go `oc-*` "
-            "seat, or the local `claude` lane."
+            "use a workspace-capable model seat such as `gpt-5.5-high` or the local `claude` "
+            "lane. `oc-*` is a chat/review route unless a separate OpenCode serve/transport "
+            "authoring lane is configured."
         )
     cp, rp = seat_provider(creator), seat_provider(reviewer)
     if cp == rp:

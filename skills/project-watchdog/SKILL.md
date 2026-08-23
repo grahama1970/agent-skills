@@ -327,6 +327,12 @@ Two seats, deliberately different model families (`repair_creator`,
 spots is a second pass, not a second opinion, so identical seats are refused
 before dispatch.
 
+Repair creators must be workspace-authoring lanes. `oc-*`/`opencode-go/*` are
+SciLLM OpenCode Go chat/review routes; they must not be given
+`--handler-workspace` and treated as Codex CLI models. Repo-changing OpenCode
+work needs a separate OpenCode serve/transport authoring lane with its own
+receipt contract.
+
 Each repair is authored in a worktree of its own, created from `origin/main`
 per dispatch under the state root. The registered checkout is a human's working
 tree; authoring there builds on whatever it happens to hold. It is still

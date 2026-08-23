@@ -714,7 +714,7 @@ def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path)
     """
     project = {
         "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
-        "repair_creator": "oc-deepseek", "repair_reviewer": "claude-fable-low",
+        "repair_creator": "gpt-5.5-high", "repair_reviewer": "claude-fable-low",
         "auto_land_main": True,
     }
     issue = _issue(1499, labels=["agent-work"], body=(
@@ -725,7 +725,7 @@ def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path)
     issue["watchdog_action"] = "ticket_repair"
     ask_dir = tmp_path / "ask" / "run-1" / "node-artifacts"
     for handler, text in (
-        ("oc-deepseek", "## Position\n\nNEEDS_ATTENTION - no tools in this session.\n"),
+        ("gpt-5.5-high", "## Position\n\nNEEDS_ATTENTION - no tools in this session.\n"),
         ("claude-fable-low", "The proof failed; the second attempt is still running.\n"),
     ):
         node = ask_dir / handlers.repair_node_id(handler)
@@ -981,6 +981,24 @@ def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "BLOCKED"
     assert "Codex CLI" in result["summary"]
+    assert not dispatched.called
+
+
+def test_oc_chat_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
+    project = {
+        "project_id": "sparta",
+        "repo": "grahama1970/sparta",
+        "worktree": str(_clean_worktree(tmp_path)),
+        "repair_creator": "oc-deepseek",
+        "repair_reviewer": "claude-opus-5-medium",
+    }
+    issue = _issue(85, labels=["agent-work"], body="type: bug\ntarget: src/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    with mock.patch.object(handlers, "run_cmd") as dispatched:
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "not a Tau repair authoring lane" in result["summary"]
+    assert "oc-*" in result["summary"]
     assert not dispatched.called
 
 
