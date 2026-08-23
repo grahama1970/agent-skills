@@ -1,8 +1,8 @@
 {
   "battle_id": "battle-004",
   "campaign": {
-    "campaign_clock_id": "battle-agentic-exact-chain-20260822T234200Z-clock",
-    "elapsed_seconds": 136.002395,
+    "campaign_clock_id": "battle-agentic-exact-chain-20260823T143002Z-clock",
+    "elapsed_seconds": 142.422531,
     "generation_count": 2,
     "generation_ids": [
       1,
@@ -47,8 +47,8 @@
         "red-g1",
         "blue-g1"
       ],
-      "elapsed_seconds": 57.684572,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0001",
+      "elapsed_seconds": 48.114042,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0001",
       "event_type": "judge_verdict",
       "generation": 1,
       "lane_id": null,
@@ -58,21 +58,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-        "sha256": "b0458174f44392828dd999c25feb0ff0c37a88e258b5d897ee180dea38b16b8d",
+        "sha256": "f7021d5db97badc1d51bc82ecf8917e45ad9579552d7519f1aa26ce1c2425793",
         "status": "PASS",
         "verdict": "BLUE_SUCCESS"
       },
       "scope": "generation_pair",
       "seq": 1,
-      "source_created_at": "2026-08-22T23:42:58Z",
+      "source_created_at": "2026-08-23T14:30:51Z",
       "team": null
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 57.686102,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0002",
+      "elapsed_seconds": 48.116011,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0002",
       "event_type": "parent_observation_materialized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -80,23 +80,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "ec7fe96ad2a25c57b74efd7a207f1dc0a5fcfe4c171db1714c66a421a9b88caf",
+        "sha256": "ad4f65922c441b8933e7d0a1cfb7dcba436320a38c3f5003a19d76b0908ee2db",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 2,
-      "source_created_at": "2026-08-22T23:42:58Z",
+      "source_created_at": "2026-08-23T14:30:51Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 57.686905,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0003",
+      "elapsed_seconds": 48.116846,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0003",
       "event_type": "fitness_materialized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -109,23 +109,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "2d7bc5ab144e7c14341f49ad27d86525c9d8870bd207c97d39d5925b56d14757",
+        "sha256": "49a94bf65760f1e43a513987b14d70583b43e790a753d503442c4716bd21e0ba",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 3,
-      "source_created_at": "2026-08-22T23:42:58Z",
+      "source_created_at": "2026-08-23T14:30:51Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 57.687693,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0004",
+      "elapsed_seconds": 48.117573,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0004",
       "event_type": "parent_observation_materialized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -133,23 +133,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "84396c595dfb59c17fa869d517767adc18f09bc22b62816a7314fdf6e82fe8a2",
+        "sha256": "942ec0ae3f1d316608caeeb9d49abe6f03be89cecb6038d9f1468d8fd00d57de",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 4,
-      "source_created_at": "2026-08-22T23:42:58Z",
+      "source_created_at": "2026-08-23T14:30:51Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 57.688439,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0005",
+      "elapsed_seconds": 48.118355,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0005",
       "event_type": "fitness_materialized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -162,23 +162,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "eb935f322b3793cf52f2ef8824fcd1f6789d9d4a4db3bdf51dc5e1bb19b5e265",
+        "sha256": "27f2619311826515ecdcbee3f6130b6926f64546de00e77a54efc3af10aacfee",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 5,
-      "source_created_at": "2026-08-22T23:42:58Z",
+      "source_created_at": "2026-08-23T14:30:51Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 78.247308,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0006",
+      "elapsed_seconds": 72.862445,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0006",
       "event_type": "spawn_requested",
       "generation": 1,
       "lane_id": "red-g1",
@@ -186,23 +186,23 @@
         "requested_action": "SPAWN_CHILD"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "1f60e770ed5d1a4ae175b6d09a84e0c8ae4b928d24e0d091dedf1b76bd25d087",
+        "sha256": "ad262f85a8c72f68c81d4f91aed7981a7656711802823ef50aba7663d049be4c",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 6,
-      "source_created_at": "2026-08-22T23:43:18Z",
+      "source_created_at": "2026-08-23T14:31:16Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 78.248462,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0007",
+      "elapsed_seconds": 72.8634,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0007",
       "event_type": "spawn_requested",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -210,23 +210,23 @@
         "requested_action": "SPAWN_CHILD"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "0b9c6662ad31bef857e09fc410b7a8e0a92ead94ef45d69865a4bc7083688a36",
+        "sha256": "5d86bb82c1f46b8367329a15e21297810d0c6409c927c39a71d7a4141c169182",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 7,
-      "source_created_at": "2026-08-22T23:43:18Z",
+      "source_created_at": "2026-08-23T14:31:16Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g1"
       ],
-      "elapsed_seconds": 78.24973,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0008",
+      "elapsed_seconds": 72.864382,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0008",
       "event_type": "spawn_authorized",
       "generation": 1,
       "lane_id": "red-g1",
@@ -234,23 +234,23 @@
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "4d0ed0cd6c18bb3543b122af1af17c7df00b04f952eabb7d254d7c3e3bb20b76",
+        "sha256": "0260eff89b67858d5782382683f52076ed95c295ffb465640bde5186640f9223",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 8,
-      "source_created_at": "2026-08-22T23:43:18Z",
+      "source_created_at": "2026-08-23T14:31:16Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g1"
       ],
-      "elapsed_seconds": 78.250389,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0009",
+      "elapsed_seconds": 72.864954,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0009",
       "event_type": "spawn_authorized",
       "generation": 1,
       "lane_id": "blue-g1",
@@ -258,23 +258,23 @@
         "decision": "ALLOWED_EVALUATED_PARENT"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "0577b978705ffdd793ba0b66fdaf742cb2ecea197fb34dd259fb87fd1ee154e6",
+        "sha256": "0a3518e517c9182754a3a2f2b882e895eaf6ca5810af634d0a931be4c5718a3e",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 9,
-      "source_created_at": "2026-08-22T23:43:18Z",
+      "source_created_at": "2026-08-23T14:31:16Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 78.252052,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0010",
+      "elapsed_seconds": 72.866087,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0010",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -282,23 +282,23 @@
         "packet_id": "battle-004-red-generation-2-knowledge"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-knowledge-packet",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-knowledge-packet",
         "schema": "battle.adaptive_team_knowledge_packet.v1",
-        "sha256": "8bc0b38ab5df25d8060751ccca363288b717cdeddaab7515bcf8cdb5cf082b32",
+        "sha256": "b6e5be80641477812dc645115875b96bf606a05b66fb1a32b614a531787aed0c",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 10,
-      "source_created_at": "2026-08-22T23:43:18Z",
+      "source_created_at": "2026-08-23T14:31:16Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 78.252734,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0011",
+      "elapsed_seconds": 72.866607,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0011",
       "event_type": "knowledge_packet_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -306,23 +306,23 @@
         "packet_id": "battle-004-blue-generation-2-knowledge"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-knowledge-packet",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-knowledge-packet",
         "schema": "battle.adaptive_team_knowledge_packet.v1",
-        "sha256": "dcfd88d3d5a410bd51a47a689e0f569553b73c3461fc58cf82c894f993b199b2",
+        "sha256": "bc4a7ae4ac145d050591558e6aec95e0a34945cdf2d9ca9fdc29ab8164e87362",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 11,
-      "source_created_at": "2026-08-22T23:43:18Z",
+      "source_created_at": "2026-08-23T14:31:16Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 87.959823,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0012",
+      "elapsed_seconds": 82.325577,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0012",
       "event_type": "child_research_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -332,21 +332,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "tau.external_research_receipt.v1",
-        "sha256": "f96d2b6220a7ce3b54420b1040f9fa80bcaf3b1bc51e8bd0c6c128d82ac1deda",
+        "sha256": "f17bfa2fe10c3d2bc40c42da7cb96ccec50b6821652d44075beb73c5d534536b",
         "status": null,
         "verdict": null
       },
       "scope": "lane",
       "seq": 12,
-      "source_created_at": "2026-08-22T23:43:28Z",
+      "source_created_at": "2026-08-23T14:31:25Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 87.960456,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0013",
+      "elapsed_seconds": 82.326422,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0013",
       "event_type": "child_research_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -356,13 +356,13 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "tau.external_research_receipt.v1",
-        "sha256": "77f0a8d40725e9820b531bf9ca9fb259cf1a117d435fef2b0c4469ca37b8a10d",
+        "sha256": "bc76a98528e624ff2303059ae15c9ff9b70bd4482afca028133b6e941888ee25",
         "status": null,
         "verdict": null
       },
       "scope": "lane",
       "seq": 13,
-      "source_created_at": "2026-08-22T23:43:28Z",
+      "source_created_at": "2026-08-23T14:31:25Z",
       "team": "blue"
     },
     {
@@ -370,8 +370,8 @@
         "red-g2",
         "blue-g2"
       ],
-      "elapsed_seconds": 135.993251,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0014",
+      "elapsed_seconds": 142.413725,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0014",
       "event_type": "judge_verdict",
       "generation": 2,
       "lane_id": null,
@@ -381,21 +381,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-        "sha256": "ece61790ac917a457e429d1a43b74cef7b1e441042da12edc676b7a057884da1",
+        "sha256": "cce8018f9bd95f42619537feffcb989941cb5be556289df14e354e17ae4e218c",
         "status": "PASS",
         "verdict": "BLUE_SUCCESS"
       },
       "scope": "generation_pair",
       "seq": 14,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": null
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 135.994983,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0015",
+      "elapsed_seconds": 142.415184,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0015",
       "event_type": "child_knowledge_acknowledged",
       "generation": 2,
       "lane_id": "red-g2",
@@ -403,21 +403,21 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.inherited_knowledge_acknowledgement.v1",
-        "sha256": "c5a6bc018d796278aeee81c4560dbd5f083327d610e7db1f53f51b0356a94ba8",
+        "sha256": "95d9af20202af1e97e6e8d736d151d3a7bda0e755cfe4cca16f2109efa21ff9e",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 15,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 135.995513,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0016",
+      "elapsed_seconds": 142.415805,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0016",
       "event_type": "child_knowledge_acknowledged",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -425,69 +425,69 @@
       "receipt_ref": {
         "receipt_id": null,
         "schema": "battle.inherited_knowledge_acknowledgement.v1",
-        "sha256": "47cbaae609545a762534b766f9b0dfbee974034ecfd6c91da27a1172c99bade5",
+        "sha256": "e1080c0c2849f88e9f8246a9c3f2d2e2ce23668046f007fd78c40c85fe5a7fd4",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 16,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 135.996318,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0017",
+      "elapsed_seconds": 142.416798,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0017",
       "event_type": "genome_mutated",
       "generation": 2,
       "lane_id": "red-g2",
       "payload": {
-        "semantic_change_count": 23
+        "semantic_change_count": 27
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-g2-delta",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-g2-delta",
         "schema": "battle.semantic_genome_delta.v1",
-        "sha256": "6053da7dc2b0f99bc153cc8b3161683cd0e40ba1fbfbe27d9189eb0261748213",
+        "sha256": "0105d918622665c611beda44bb71739bb26f671eac81b61ee6a6b34e2ec76c8a",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 17,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 135.99721,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0018",
+      "elapsed_seconds": 142.417629,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0018",
       "event_type": "genome_mutated",
       "generation": 2,
       "lane_id": "blue-g2",
       "payload": {
-        "semantic_change_count": 23
+        "semantic_change_count": 28
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-g2-delta",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-g2-delta",
         "schema": "battle.semantic_genome_delta.v1",
-        "sha256": "dd497d7cb606ee907fd7935c55fd385225b3a77be133e03c9dfb935be9e2cab1",
+        "sha256": "35c692b0750406547b3bcdfcf45d58489b626afc4faec64bc7f3ac090f5594a2",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 18,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 135.997975,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0019",
+      "elapsed_seconds": 142.418361,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0019",
       "event_type": "generation_observation_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -495,23 +495,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g2-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g2-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "b2816bfee8ca52e29f8c0eafd4864cbb22fd40a9d8f9ab0b0b732d9414fdf6ce",
+        "sha256": "c182184b1418664a915005a8e1673923fe425a8bf1a2889f33bd1b9925afbc5d",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 19,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "red-g2"
       ],
-      "elapsed_seconds": 135.998658,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0020",
+      "elapsed_seconds": 142.418965,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0020",
       "event_type": "fitness_materialized",
       "generation": 2,
       "lane_id": "red-g2",
@@ -524,23 +524,23 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g2-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g2-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "9163b166583271940c85f87b3ef8d134b5303f722435afc17eae50473d21d3d8",
+        "sha256": "df56f5082e5b4c99985d8480346ecf1eb1d812c83674845f2cf6bca0d5660552",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 20,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "red"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 135.99936,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0021",
+      "elapsed_seconds": 142.419549,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0021",
       "event_type": "generation_observation_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -548,23 +548,23 @@
         "judge_verdict": "BLUE_SUCCESS"
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g2-observation",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g2-observation",
         "schema": "battle.generation_observation_receipt.v1",
-        "sha256": "d4cff61604c80a2da26a5acfe8f75dc3627bb855ac522e0eea160d898e2c00f6",
+        "sha256": "18fdfbc3bfa885da72209b5e4fdb85179917aa92f0d426347de1e8789c090ef7",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 21,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "blue"
     },
     {
       "affected_lane_ids": [
         "blue-g2"
       ],
-      "elapsed_seconds": 136.000089,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0022",
+      "elapsed_seconds": 142.420289,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0022",
       "event_type": "fitness_materialized",
       "generation": 2,
       "lane_id": "blue-g2",
@@ -577,15 +577,15 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g2-fitness",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g2-fitness",
         "schema": "battle.fitness_vector.v1",
-        "sha256": "7a21fda34e84863623c85dd5cb435cd6ed03c21ae37c9a07326aa6ff694090bd",
+        "sha256": "76cd19f9f777dde486fd711488ae5887623dbc0456e327f5b1a527cd20d0608f",
         "status": "PASS",
         "verdict": null
       },
       "scope": "lane",
       "seq": 22,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": "blue"
     },
     {
@@ -595,8 +595,8 @@
         "red-g1",
         "red-g2"
       ],
-      "elapsed_seconds": 136.000772,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0023",
+      "elapsed_seconds": 142.420953,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0023",
       "event_type": "selection_decision",
       "generation": null,
       "lane_id": null,
@@ -605,15 +605,15 @@
         "red_selected_generation": 2
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-selection",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-selection",
         "schema": "battle.adaptive_selection_receipt.v1",
-        "sha256": "f79110c0d44fc01118131a55c2e4c18d8e10b871a99f1daabeed0d75df1ace77",
+        "sha256": "def9b53ca093e5890385ede25f72a5f92fd85641619b3438ac1f35b06c05e235",
         "status": "PASS",
         "verdict": null
       },
       "scope": "campaign",
       "seq": 23,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": null
     },
     {
@@ -623,8 +623,8 @@
         "red-g1",
         "red-g2"
       ],
-      "elapsed_seconds": 136.002395,
-      "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0024",
+      "elapsed_seconds": 142.422531,
+      "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0024",
       "event_type": "memory_evaluation",
       "generation": null,
       "lane_id": null,
@@ -635,15 +635,15 @@
         ]
       },
       "receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-memory-evaluation",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-memory-evaluation",
         "schema": "battle.memory_promotion_evaluation.v1",
-        "sha256": "7c48b261a947e2f46485603a86f369db3ffeae8316cbecd35826ace01d6920c0",
+        "sha256": "38c9b19ffec0e11b1f83c9d5d82477cc940172f6a92f635a93f89bfe4988f503",
         "status": "PASS",
         "verdict": null
       },
       "scope": "campaign",
       "seq": 24,
-      "source_created_at": "2026-08-22T23:44:16Z",
+      "source_created_at": "2026-08-23T14:32:25Z",
       "team": null
     }
   ],
@@ -657,7 +657,7 @@
         "variant_id": "v13-shared-runner"
       },
       "display_name": "RED G1 PARENT",
-      "end_elapsed_seconds": 136.002395,
+      "end_elapsed_seconds": 142.422531,
       "generation": 1,
       "lane_id": "red-g1",
       "parent_lane_id": null,
@@ -666,20 +666,20 @@
       "visible_from_elapsed_seconds": 0.0
     },
     {
-      "active_from_elapsed_seconds": 87.959823,
+      "active_from_elapsed_seconds": 82.325577,
       "actor_visual": {
         "cosmetic_only": true,
         "semantic_authority": false,
         "variant_id": "v13-shared-runner"
       },
       "display_name": "RED G2 CHILD",
-      "end_elapsed_seconds": 136.002395,
+      "end_elapsed_seconds": 142.422531,
       "generation": 2,
       "lane_id": "red-g2",
       "parent_lane_id": "red-g1",
       "role": "child",
       "team": "red",
-      "visible_from_elapsed_seconds": 78.24973
+      "visible_from_elapsed_seconds": 72.864382
     },
     {
       "active_from_elapsed_seconds": 0.0,
@@ -689,7 +689,7 @@
         "variant_id": "v13-shared-runner"
       },
       "display_name": "BLUE G1 PARENT",
-      "end_elapsed_seconds": 136.002395,
+      "end_elapsed_seconds": 142.422531,
       "generation": 1,
       "lane_id": "blue-g1",
       "parent_lane_id": null,
@@ -698,28 +698,28 @@
       "visible_from_elapsed_seconds": 0.0
     },
     {
-      "active_from_elapsed_seconds": 87.960456,
+      "active_from_elapsed_seconds": 82.326422,
       "actor_visual": {
         "cosmetic_only": true,
         "semantic_authority": false,
         "variant_id": "v13-shared-runner"
       },
       "display_name": "BLUE G2 CHILD",
-      "end_elapsed_seconds": 136.002395,
+      "end_elapsed_seconds": 142.422531,
       "generation": 2,
       "lane_id": "blue-g2",
       "parent_lane_id": "blue-g1",
       "role": "child",
       "team": "blue",
-      "visible_from_elapsed_seconds": 78.250389
+      "visible_from_elapsed_seconds": 72.864954
     }
   ],
   "lineage_edges": [
     {
       "authorized_receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "4d0ed0cd6c18bb3543b122af1af17c7df00b04f952eabb7d254d7c3e3bb20b76",
+        "sha256": "0260eff89b67858d5782382683f52076ed95c295ffb465640bde5186640f9223",
         "status": "PASS",
         "verdict": null
       },
@@ -728,20 +728,20 @@
       "edge_kind": "spawn",
       "parent_lane_id": "red-g1",
       "requested_receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "1f60e770ed5d1a4ae175b6d09a84e0c8ae4b928d24e0d091dedf1b76bd25d087",
+        "sha256": "ad262f85a8c72f68c81d4f91aed7981a7656711802823ef50aba7663d049be4c",
         "status": "PASS",
         "verdict": null
       },
       "team": "red",
-      "visible_from_elapsed_seconds": 78.24973
+      "visible_from_elapsed_seconds": 72.864382
     },
     {
       "authorized_receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-spawn-policy-decision",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-spawn-policy-decision",
         "schema": "battle.adaptive_spawn_policy_decision.v1",
-        "sha256": "0577b978705ffdd793ba0b66fdaf742cb2ecea197fb34dd259fb87fd1ee154e6",
+        "sha256": "0a3518e517c9182754a3a2f2b882e895eaf6ca5810af634d0a931be4c5718a3e",
         "status": "PASS",
         "verdict": null
       },
@@ -750,14 +750,14 @@
       "edge_kind": "spawn",
       "parent_lane_id": "blue-g1",
       "requested_receipt_ref": {
-        "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-parent-spawn-request",
+        "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-parent-spawn-request",
         "schema": "battle.adaptive_spawn_request.v1",
-        "sha256": "0b9c6662ad31bef857e09fc410b7a8e0a92ead94ef45d69865a4bc7083688a36",
+        "sha256": "5d86bb82c1f46b8367329a15e21297810d0c6409c927c39a71d7a4141c169182",
         "status": "PASS",
         "verdict": null
       },
       "team": "blue",
-      "visible_from_elapsed_seconds": 78.250389
+      "visible_from_elapsed_seconds": 72.864954
     }
   ],
   "live_source": "adaptive_red_blue_lineage_v2",
@@ -774,9 +774,9 @@
         "edges": [
           {
             "authorized_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-spawn-policy-decision",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-spawn-policy-decision",
               "schema": "battle.adaptive_spawn_policy_decision.v1",
-              "sha256": "0577b978705ffdd793ba0b66fdaf742cb2ecea197fb34dd259fb87fd1ee154e6",
+              "sha256": "0a3518e517c9182754a3a2f2b882e895eaf6ca5810af634d0a931be4c5718a3e",
               "status": "PASS",
               "verdict": null
             },
@@ -785,22 +785,22 @@
             "edge_kind": "spawn",
             "parent_lane_id": "blue-g1",
             "requested_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-parent-spawn-request",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-parent-spawn-request",
               "schema": "battle.adaptive_spawn_request.v1",
-              "sha256": "0b9c6662ad31bef857e09fc410b7a8e0a92ead94ef45d69865a4bc7083688a36",
+              "sha256": "5d86bb82c1f46b8367329a15e21297810d0c6409c927c39a71d7a4141c169182",
               "status": "PASS",
               "verdict": null
             },
             "team": "blue",
-            "visible_from_elapsed_seconds": 78.250389
+            "visible_from_elapsed_seconds": 72.864954
           }
         ],
         "nodes": [
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "eb935f322b3793cf52f2ef8824fcd1f6789d9d4a4db3bdf51dc5e1bb19b5e265",
+              "sha256": "27f2619311826515ecdcbee3f6130b6926f64546de00e77a54efc3af10aacfee",
               "status": "PASS",
               "verdict": null
             },
@@ -809,9 +809,9 @@
             "lane_id": "blue-g1",
             "mutation_operator": "ROOT",
             "observation_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "84396c595dfb59c17fa869d517767adc18f09bc22b62816a7314fdf6e82fe8a2",
+              "sha256": "942ec0ae3f1d316608caeeb9d49abe6f03be89cecb6038d9f1468d8fd00d57de",
               "status": "PASS",
               "verdict": null
             },
@@ -819,9 +819,9 @@
             "role": "parent",
             "selection_disposition": "NOT_SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "f79110c0d44fc01118131a55c2e4c18d8e10b871a99f1daabeed0d75df1ace77",
+              "sha256": "def9b53ca093e5890385ede25f72a5f92fd85641619b3438ac1f35b06c05e235",
               "status": "PASS",
               "verdict": null
             },
@@ -829,26 +829,26 @@
           },
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g2-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g2-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "7a21fda34e84863623c85dd5cb435cd6ed03c21ae37c9a07326aa6ff694090bd",
+              "sha256": "76cd19f9f777dde486fd711488ae5887623dbc0456e327f5b1a527cd20d0608f",
               "status": "PASS",
               "verdict": null
             },
             "generation": 2,
             "genome_delta_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-g2-delta",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-g2-delta",
               "schema": "battle.semantic_genome_delta.v1",
-              "sha256": "dd497d7cb606ee907fd7935c55fd385225b3a77be133e03c9dfb935be9e2cab1",
+              "sha256": "35c692b0750406547b3bcdfcf45d58489b626afc4faec64bc7f3ac090f5594a2",
               "status": "PASS",
               "verdict": null
             },
             "lane_id": "blue-g2",
             "mutation_operator": "semantic_genome_delta",
             "observation_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g2-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g2-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "d4cff61604c80a2da26a5acfe8f75dc3627bb855ac522e0eea160d898e2c00f6",
+              "sha256": "18fdfbc3bfa885da72209b5e4fdb85179917aa92f0d426347de1e8789c090ef7",
               "status": "PASS",
               "verdict": null
             },
@@ -856,9 +856,9 @@
             "role": "child",
             "selection_disposition": "SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "f79110c0d44fc01118131a55c2e4c18d8e10b871a99f1daabeed0d75df1ace77",
+              "sha256": "def9b53ca093e5890385ede25f72a5f92fd85641619b3438ac1f35b06c05e235",
               "status": "PASS",
               "verdict": null
             },
@@ -871,9 +871,9 @@
         "edges": [
           {
             "authorized_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-spawn-policy-decision",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-spawn-policy-decision",
               "schema": "battle.adaptive_spawn_policy_decision.v1",
-              "sha256": "4d0ed0cd6c18bb3543b122af1af17c7df00b04f952eabb7d254d7c3e3bb20b76",
+              "sha256": "0260eff89b67858d5782382683f52076ed95c295ffb465640bde5186640f9223",
               "status": "PASS",
               "verdict": null
             },
@@ -882,22 +882,22 @@
             "edge_kind": "spawn",
             "parent_lane_id": "red-g1",
             "requested_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-parent-spawn-request",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-parent-spawn-request",
               "schema": "battle.adaptive_spawn_request.v1",
-              "sha256": "1f60e770ed5d1a4ae175b6d09a84e0c8ae4b928d24e0d091dedf1b76bd25d087",
+              "sha256": "ad262f85a8c72f68c81d4f91aed7981a7656711802823ef50aba7663d049be4c",
               "status": "PASS",
               "verdict": null
             },
             "team": "red",
-            "visible_from_elapsed_seconds": 78.24973
+            "visible_from_elapsed_seconds": 72.864382
           }
         ],
         "nodes": [
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "2d7bc5ab144e7c14341f49ad27d86525c9d8870bd207c97d39d5925b56d14757",
+              "sha256": "49a94bf65760f1e43a513987b14d70583b43e790a753d503442c4716bd21e0ba",
               "status": "PASS",
               "verdict": null
             },
@@ -906,9 +906,9 @@
             "lane_id": "red-g1",
             "mutation_operator": "ROOT",
             "observation_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "ec7fe96ad2a25c57b74efd7a207f1dc0a5fcfe4c171db1714c66a421a9b88caf",
+              "sha256": "ad4f65922c441b8933e7d0a1cfb7dcba436320a38c3f5003a19d76b0908ee2db",
               "status": "PASS",
               "verdict": null
             },
@@ -916,9 +916,9 @@
             "role": "parent",
             "selection_disposition": "NOT_SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "f79110c0d44fc01118131a55c2e4c18d8e10b871a99f1daabeed0d75df1ace77",
+              "sha256": "def9b53ca093e5890385ede25f72a5f92fd85641619b3438ac1f35b06c05e235",
               "status": "PASS",
               "verdict": null
             },
@@ -926,26 +926,26 @@
           },
           {
             "fitness_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g2-fitness",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g2-fitness",
               "schema": "battle.fitness_vector.v1",
-              "sha256": "9163b166583271940c85f87b3ef8d134b5303f722435afc17eae50473d21d3d8",
+              "sha256": "df56f5082e5b4c99985d8480346ecf1eb1d812c83674845f2cf6bca0d5660552",
               "status": "PASS",
               "verdict": null
             },
             "generation": 2,
             "genome_delta_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-g2-delta",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-g2-delta",
               "schema": "battle.semantic_genome_delta.v1",
-              "sha256": "6053da7dc2b0f99bc153cc8b3161683cd0e40ba1fbfbe27d9189eb0261748213",
+              "sha256": "0105d918622665c611beda44bb71739bb26f671eac81b61ee6a6b34e2ec76c8a",
               "status": "PASS",
               "verdict": null
             },
             "lane_id": "red-g2",
             "mutation_operator": "semantic_genome_delta",
             "observation_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g2-observation",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g2-observation",
               "schema": "battle.generation_observation_receipt.v1",
-              "sha256": "b2816bfee8ca52e29f8c0eafd4864cbb22fd40a9d8f9ab0b0b732d9414fdf6ce",
+              "sha256": "c182184b1418664a915005a8e1673923fe425a8bf1a2889f33bd1b9925afbc5d",
               "status": "PASS",
               "verdict": null
             },
@@ -953,9 +953,9 @@
             "role": "child",
             "selection_disposition": "SELECTED",
             "selection_receipt_ref": {
-              "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-selection",
+              "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-selection",
               "schema": "battle.adaptive_selection_receipt.v1",
-              "sha256": "f79110c0d44fc01118131a55c2e4c18d8e10b871a99f1daabeed0d75df1ace77",
+              "sha256": "def9b53ca093e5890385ede25f72a5f92fd85641619b3438ac1f35b06c05e235",
               "status": "PASS",
               "verdict": null
             },
@@ -971,8 +971,8 @@
       "NO_PROMOTION",
       "NO_PROMOTION"
     ],
-    "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-memory-evaluation",
-    "sha256": "7c48b261a947e2f46485603a86f369db3ffeae8316cbecd35826ace01d6920c0"
+    "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-memory-evaluation",
+    "sha256": "38c9b19ffec0e11b1f83c9d5d82477cc940172f6a92f635a93f89bfe4988f503"
   },
   "proof_mode": "receipt_backed_fixture",
   "provenance": {
@@ -983,156 +983,156 @@
   },
   "receipt_refs": [
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "ec7fe96ad2a25c57b74efd7a207f1dc0a5fcfe4c171db1714c66a421a9b88caf",
+      "sha256": "ad4f65922c441b8933e7d0a1cfb7dcba436320a38c3f5003a19d76b0908ee2db",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "84396c595dfb59c17fa869d517767adc18f09bc22b62816a7314fdf6e82fe8a2",
+      "sha256": "942ec0ae3f1d316608caeeb9d49abe6f03be89cecb6038d9f1468d8fd00d57de",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g2-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "b2816bfee8ca52e29f8c0eafd4864cbb22fd40a9d8f9ab0b0b732d9414fdf6ce",
+      "sha256": "c182184b1418664a915005a8e1673923fe425a8bf1a2889f33bd1b9925afbc5d",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g2-observation",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g2-observation",
       "schema": "battle.generation_observation_receipt.v1",
-      "sha256": "d4cff61604c80a2da26a5acfe8f75dc3627bb855ac522e0eea160d898e2c00f6",
+      "sha256": "18fdfbc3bfa885da72209b5e4fdb85179917aa92f0d426347de1e8789c090ef7",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "2d7bc5ab144e7c14341f49ad27d86525c9d8870bd207c97d39d5925b56d14757",
+      "sha256": "49a94bf65760f1e43a513987b14d70583b43e790a753d503442c4716bd21e0ba",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "eb935f322b3793cf52f2ef8824fcd1f6789d9d4a4db3bdf51dc5e1bb19b5e265",
+      "sha256": "27f2619311826515ecdcbee3f6130b6926f64546de00e77a54efc3af10aacfee",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g2-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "9163b166583271940c85f87b3ef8d134b5303f722435afc17eae50473d21d3d8",
+      "sha256": "df56f5082e5b4c99985d8480346ecf1eb1d812c83674845f2cf6bca0d5660552",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g2-fitness",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g2-fitness",
       "schema": "battle.fitness_vector.v1",
-      "sha256": "7a21fda34e84863623c85dd5cb435cd6ed03c21ae37c9a07326aa6ff694090bd",
+      "sha256": "76cd19f9f777dde486fd711488ae5887623dbc0456e327f5b1a527cd20d0608f",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-parent-spawn-request",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "1f60e770ed5d1a4ae175b6d09a84e0c8ae4b928d24e0d091dedf1b76bd25d087",
+      "sha256": "ad262f85a8c72f68c81d4f91aed7981a7656711802823ef50aba7663d049be4c",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-parent-spawn-request",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-parent-spawn-request",
       "schema": "battle.adaptive_spawn_request.v1",
-      "sha256": "0b9c6662ad31bef857e09fc410b7a8e0a92ead94ef45d69865a4bc7083688a36",
+      "sha256": "5d86bb82c1f46b8367329a15e21297810d0c6409c927c39a71d7a4141c169182",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-g1-g2-delta",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "6053da7dc2b0f99bc153cc8b3161683cd0e40ba1fbfbe27d9189eb0261748213",
+      "sha256": "0105d918622665c611beda44bb71739bb26f671eac81b61ee6a6b34e2ec76c8a",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-g1-g2-delta",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-g1-g2-delta",
       "schema": "battle.semantic_genome_delta.v1",
-      "sha256": "dd497d7cb606ee907fd7935c55fd385225b3a77be133e03c9dfb935be9e2cab1",
+      "sha256": "35c692b0750406547b3bcdfcf45d58489b626afc4faec64bc7f3ac090f5594a2",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-selection",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-selection",
       "schema": "battle.adaptive_selection_receipt.v1",
-      "sha256": "f79110c0d44fc01118131a55c2e4c18d8e10b871a99f1daabeed0d75df1ace77",
+      "sha256": "def9b53ca093e5890385ede25f72a5f92fd85641619b3438ac1f35b06c05e235",
       "status": "PASS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-memory-evaluation",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-memory-evaluation",
       "schema": "battle.memory_promotion_evaluation.v1",
-      "sha256": "7c48b261a947e2f46485603a86f369db3ffeae8316cbecd35826ace01d6920c0",
+      "sha256": "38c9b19ffec0e11b1f83c9d5d82477cc940172f6a92f635a93f89bfe4988f503",
       "status": "PASS"
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "b0458174f44392828dd999c25feb0ff0c37a88e258b5d897ee180dea38b16b8d",
+      "sha256": "f7021d5db97badc1d51bc82ecf8917e45ad9579552d7519f1aa26ce1c2425793",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-spawn-policy-decision",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "4d0ed0cd6c18bb3543b122af1af17c7df00b04f952eabb7d254d7c3e3bb20b76",
+      "sha256": "0260eff89b67858d5782382683f52076ed95c295ffb465640bde5186640f9223",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-spawn-policy-decision",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-spawn-policy-decision",
       "schema": "battle.adaptive_spawn_policy_decision.v1",
-      "sha256": "0577b978705ffdd793ba0b66fdaf742cb2ecea197fb34dd259fb87fd1ee154e6",
+      "sha256": "0a3518e517c9182754a3a2f2b882e895eaf6ca5810af634d0a931be4c5718a3e",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-red-knowledge-packet",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-red-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "8bc0b38ab5df25d8060751ccca363288b717cdeddaab7515bcf8cdb5cf082b32",
+      "sha256": "b6e5be80641477812dc645115875b96bf606a05b66fb1a32b614a531787aed0c",
       "status": "PASS",
       "verdict": null
     },
     {
-      "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-blue-knowledge-packet",
+      "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-blue-knowledge-packet",
       "schema": "battle.adaptive_team_knowledge_packet.v1",
-      "sha256": "dcfd88d3d5a410bd51a47a689e0f569553b73c3461fc58cf82c894f993b199b2",
+      "sha256": "bc4a7ae4ac145d050591558e6aec95e0a34945cdf2d9ca9fdc29ab8164e87362",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "f96d2b6220a7ce3b54420b1040f9fa80bcaf3b1bc51e8bd0c6c128d82ac1deda",
+      "sha256": "f17bfa2fe10c3d2bc40c42da7cb96ccec50b6821652d44075beb73c5d534536b",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "tau.external_research_receipt.v1",
-      "sha256": "77f0a8d40725e9820b531bf9ca9fb259cf1a117d435fef2b0c4469ca37b8a10d",
+      "sha256": "bc76a98528e624ff2303059ae15c9ff9b70bd4482afca028133b6e941888ee25",
       "status": null,
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-      "sha256": "ece61790ac917a457e429d1a43b74cef7b1e441042da12edc676b7a057884da1",
+      "sha256": "cce8018f9bd95f42619537feffcb989941cb5be556289df14e354e17ae4e218c",
       "status": "PASS",
       "verdict": "BLUE_SUCCESS"
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "c5a6bc018d796278aeee81c4560dbd5f083327d610e7db1f53f51b0356a94ba8",
+      "sha256": "95d9af20202af1e97e6e8d736d151d3a7bda0e755cfe4cca16f2109efa21ff9e",
       "status": "PASS",
       "verdict": null
     },
     {
       "receipt_id": null,
       "schema": "battle.inherited_knowledge_acknowledgement.v1",
-      "sha256": "47cbaae609545a762534b766f9b0dfbee974034ecfd6c91da27a1172c99bade5",
+      "sha256": "e1080c0c2849f88e9f8246a9c3f2d2e2ce23668046f007fd78c40c85fe5a7fd4",
       "status": "PASS",
       "verdict": null
     }
@@ -1149,7 +1149,7 @@
     "sprite_identity_is_cosmetic_only": true,
     "time_authority": "event.elapsed_seconds_is_receipt_commit_time"
   },
-  "run_id": "battle-agentic-exact-chain-20260822T234200Z",
+  "run_id": "battle-agentic-exact-chain-20260823T143002Z",
   "schema": "battle.normalized_adaptive_lineage_fixture.v1",
   "scoreboard": {
     "blue_score": 2,
@@ -1164,12 +1164,12 @@
     "inputs": [
       {
         "blue_delta": 1,
-        "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0001",
+        "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0001",
         "generation": 1,
         "receipt_ref": {
           "receipt_id": null,
           "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-          "sha256": "b0458174f44392828dd999c25feb0ff0c37a88e258b5d897ee180dea38b16b8d",
+          "sha256": "f7021d5db97badc1d51bc82ecf8917e45ad9579552d7519f1aa26ce1c2425793",
           "status": "PASS",
           "verdict": "BLUE_SUCCESS"
         },
@@ -1178,12 +1178,12 @@
       },
       {
         "blue_delta": 1,
-        "event_id": "battle-agentic-exact-chain-20260822T234200Z-event-0014",
+        "event_id": "battle-agentic-exact-chain-20260823T143002Z-event-0014",
         "generation": 2,
         "receipt_ref": {
           "receipt_id": null,
           "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-          "sha256": "ece61790ac917a457e429d1a43b74cef7b1e441042da12edc676b7a057884da1",
+          "sha256": "cce8018f9bd95f42619537feffcb989941cb5be556289df14e354e17ae4e218c",
           "status": "PASS",
           "verdict": "BLUE_SUCCESS"
         },
@@ -1198,8 +1198,8 @@
   },
   "selection": {
     "improvement_claimed": false,
-    "receipt_id": "battle-agentic-exact-chain-20260822T234200Z-selection",
-    "sha256": "f79110c0d44fc01118131a55c2e4c18d8e10b871a99f1daabeed0d75df1ace77",
+    "receipt_id": "battle-agentic-exact-chain-20260823T143002Z-selection",
+    "sha256": "def9b53ca093e5890385ede25f72a5f92fd85641619b3438ac1f35b06c05e235",
     "teams": {
       "blue": {
         "component_comparison": [
@@ -1219,8 +1219,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "eb935f322b3793cf52f2ef8824fcd1f6789d9d4a4db3bdf51dc5e1bb19b5e265",
-        "generation_2_fitness_receipt_sha256": "7a21fda34e84863623c85dd5cb435cd6ed03c21ae37c9a07326aa6ff694090bd",
+        "generation_1_fitness_receipt_sha256": "27f2619311826515ecdcbee3f6130b6926f64546de00e77a54efc3af10aacfee",
+        "generation_2_fitness_receipt_sha256": "76cd19f9f777dde486fd711488ae5887623dbc0456e327f5b1a527cd20d0608f",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null
@@ -1243,8 +1243,8 @@
             ]
           }
         ],
-        "generation_1_fitness_receipt_sha256": "2d7bc5ab144e7c14341f49ad27d86525c9d8870bd207c97d39d5925b56d14757",
-        "generation_2_fitness_receipt_sha256": "9163b166583271940c85f87b3ef8d134b5303f722435afc17eae50473d21d3d8",
+        "generation_1_fitness_receipt_sha256": "49a94bf65760f1e43a513987b14d70583b43e790a753d503442c4716bd21e0ba",
+        "generation_2_fitness_receipt_sha256": "df56f5082e5b4c99985d8480346ecf1eb1d812c83674845f2cf6bca0d5660552",
         "retention_decision": "GENERATION_2_SELECTED",
         "selected_generation": 2,
         "tie_break_reason": null

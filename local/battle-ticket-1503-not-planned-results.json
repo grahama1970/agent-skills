@@ -1,0 +1,15 @@
+{
+  "schema": "agent_skills.ticket_closure_evidence.v1",
+  "issue": 1503,
+  "unit": {
+    "command": "jq '{readiness,outcome_counts,trial_count}' /tmp/battle-immutable-gap-eval-20260823.json",
+    "exit_code": 0
+  },
+  "e2e": {
+    "command": "skills/agentic-evals/run.sh run skills/battle/fixtures/agentic_eval.json --case adaptive-lineage-live-exact-chain --case receipt-backed-pixi-replay-browser-proof --case pixi-gameplay-video-acceptance --output /tmp/battle-immutable-gap-eval-20260823.json --timeout-seconds 1800 --report-only",
+    "exit_code": 0,
+    "mocked": false,
+    "live": true,
+    "artifact": "/tmp/battle-immutable-gap-eval-20260823.json"
+  }
+}

@@ -241,7 +241,33 @@ Three artifacts, all required, none optional:
    artifact that closes the "looks unfinished" gap; deterministic tests alone do
    not satisfy it.
 
-## Completion Criteria — MET (evidence per line)
+## Current Readiness Override (2026-08-23)
+
+The immutable goal remains the same, but the current project state must be
+reported as **NOT_MET** until fresh, durable receipts satisfy the Primary Proof
+section above.
+
+The historical July acceptance record below is useful recovery evidence, not a
+current completion claim. On 2026-08-23 the named durable receipt
+`local/adaptive-live-proof-1784396246/adaptive-lineage-qualification.json` was
+missing; only `local/adaptive-live-proof-1784396246/run.log` remained. The
+generated `CURRENT_STATUS.json` also explicitly marks
+`full_adaptive_improvement_proven` as unsupported and
+`adaptive_lineage_effect` as partial/open.
+
+Therefore agents must not stop at the old MET block. The next acceptable closure
+path is:
+
+1. regenerate a fresh durable `arena-adaptive-lineage-qualification battle-004`
+   receipt under `skills/battle/local/`;
+2. normalize that same receipt into the Pixi replay fixture with truthful
+   `data_source`;
+3. run the Battle agentic-evals coverage for adaptive lineage and Pixi replay;
+4. capture fresh browser/Pixi proof from the same receipt set; and
+5. regenerate `CURRENT_STATUS.json` so the status, goal doc, receipts, and
+   tickets agree.
+
+## Historical Completion Evidence — Recovery Only
 
 - [x] Adaptive backend and Tau recognizer fix **committed** — `origin/main`
       `9ac0b5438` (battle-only commits); Tau fix committed on
@@ -270,7 +296,8 @@ Three artifacts, all required, none optional:
       `child_tau_dag_private_boundary`, `proof_card_fixture_contract` — fail on the
       merge-base and are unrelated to this goal.)
 
-**GOAL STATUS: MET** — 2026-07-18, verified end to end.
+**HISTORICAL STATUS: ACCEPTED ON 2026-07-18. CURRENT STATUS: NOT_MET UNTIL
+REGENERATED WITH DURABLE RECEIPTS.**
 
 ## Allowed Scope
 
