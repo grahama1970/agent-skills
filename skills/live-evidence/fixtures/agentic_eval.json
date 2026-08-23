@@ -854,82 +854,6 @@
       "notes": "ADVERSARIAL gate for the gpt-5.5 relevance filtering agent. Each case runs in its own isolated server, posted STT-free over HTTP so the result reflects the filter, not RealtimeSTT variance. The suppression cases are chosen to PASS the deterministic question-window trigger -- they carry a '?', a question lead, or a Sparta watch-term -- so only the agent's judgment can stop them: 'can we push this to Friday?' (logistics), 'can everyone hear me?' (social), a statement mentioning the project, and a bare rhetorical must each be suppressed with a surface=false decision, while two genuine questions must surface. Suppression is scoped to question-worthiness, NOT evidence strength, so a real question with thin retrieval still surfaces (an earlier evidence-strength suppression dropped a real memory question). Needs memory :8601, the sparta repo, and SciLLM."
     },
     {
-      "name": "schedule-action-wiring",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-schedule-action"
-      ],
-      "timeout_seconds": 300,
-      "infra_blocked_when": [
-        "server did not come up",
-        "INFRA_BLOCKED"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "scheduling request proposes a schedule action: PASS",
-          "schedule action does NOT auto-write a calendar: PASS",
-          "a non-scheduling question proposes no schedule action: PASS",
-          "schedule action: PASS"
-        ]
-      },
-      "notes": "Wires the live-evidence action lane to the ops-google-calendar skill. A heard scheduling request ('can we push the Sparta review to Friday?') proposes a kind=schedule action_candidate routed to ops-google-calendar, PROPOSE-ONLY -- it never auto-writes a calendar (execution needs human approval via the API plus the calendar skill's own --confirm, and OAuth). Actions are proposed independent of the card gate, so a logistics turn whose evidence card is suppressed by the filtering agent still proposes the schedule action. A control question proposes no schedule action. Proof boundary: proves the proposal + routing and the no-auto-write safety; live calendar execution needs the human's Google OAuth (see ops-google-calendar). Needs memory :8601, the sparta repo, and SciLLM."
-    },
-    {
-      "name": "compose-action-wiring",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-compose-action"
-      ],
-      "timeout_seconds": 300,
-      "infra_blocked_when": [
-        "server did not come up",
-        "INFRA_BLOCKED",
-        "scillm_transport:TimeoutError"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "visualization request proposes a compose action: PASS",
-          "compose action does NOT auto-run the skill DAG: PASS",
-          "a non-visualization question proposes no compose action: PASS",
-          "compose action: PASS"
-        ]
-      },
-      "notes": "Multi-skill composition: an analytical/visual request ('pull our latest coverage metrics and graph them as a bar chart') proposes a kind=compose action_candidate whose plan is a Tau DAG over brave-search -> analytics -> create-figure (derived from the skills' declared composes/provides valence shells). PROPOSE-ONLY: fetch+compute+render is expensive and outward-facing, so the plan is proposed and a human approves running the DAG; nothing auto-executes. Independent of the card gate. A non-visualization question proposes no compose action. Proof boundary: proves the proposal + plan + no-auto-run; running the DAG and rendering the D3/React figure is the human-approved next step (tau + analytics + create-figure). Needs memory :8601, the sparta repo, and SciLLM."
-    },
-    {
-      "name": "research-lane-selection",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-research-lane"
-      ],
-      "timeout_seconds": 300,
-      "infra_blocked_when": [
-        "server did not come up",
-        "INFRA_BLOCKED",
-        "scillm_transport:TimeoutError"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "deep/comparative research routes to dogpile: PASS",
-          "quick current-fact research routes to brave: PASS",
-          "research lane: PASS"
-        ]
-      },
-      "notes": "External research picks the right skill by question shape: a deep/comparative question ('deep dive comparing approaches to RAG in the literature') routes to /dogpile (the deep aggregator over web/code/papers/videos); a quick current-fact question ('latest released version of MITRE SPARTA') routes to /brave-search. The lane is a deterministic first-class field (research_lane) on EVERY proposed fact_check candidate -- whether the resolver authored it or the research auto-proposal did -- and the fact_check executor routes to that lane. Still propose-only (human approves the egress; the raw transcript never leaves). Needs memory :8601, the sparta repo, and SciLLM."
-    },
-    {
       "name": "compose-render-figure",
       "type": "positive",
       "real_world": true,
@@ -939,7 +863,9 @@
         "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-compose-render"
       ],
       "timeout_seconds": 400,
-      "infra_blocked_when": ["INFRA_BLOCKED"],
+      "infra_blocked_when": [
+        "INFRA_BLOCKED"
+      ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -950,28 +876,6 @@
         ]
       },
       "notes": "Execute half of the compose feature: the render node produces a REAL D3 figure from a metrics table via the create-figure skill (verified by bytes on disk, ~28KB PDF, not a mock). _extract_metrics parses a spoken 'label number' table ('coverage 72, supply chain 58, freshness 91'); render_composition writes it to JSON and calls create-figure metrics --type bar. No numeric metrics -> nothing rendered, reported gracefully. Pairs with compose-action-wiring (the propose half). Needs the create-figure skill."
-    },
-    {
-      "name": "episodic-archive-handoff",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-episodic-archive"
-      ],
-      "timeout_seconds": 400,
-      "infra_blocked_when": ["INFRA_BLOCKED"],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "transcript is well-formed (system + heard turns + card answers): PASS",
-          "archiver handoff returns an honest status: PASS",
-          "ARCHIVED is never claimed without turns actually stored: PASS",
-          "episodic archive: PASS"
-        ]
-      },
-      "notes": "A finished meeting archives into episodic memory for later recall. Live Evidence builds a transcript from the journal (heard turns -> user messages, surfaced cards -> assistant messages) and hands it to the episodic-archiver skill; POST /api/session/archive triggers it. Contract is honesty, not a fixed outcome (like the /ask seat probes): the archiver either STORES turns (ARCHIVED, inserted>0) or NAMES why it did not (embedding/LLM service down -> INFRA_BLOCKED). A receipt claiming ARCHIVED without inserting anything, or a malformed transcript, fails. Storage needs the memory embedding + LLM services up; the transcript build + handoff (Live Evidence's responsibility) is always gated."
     }
   ]
 }
