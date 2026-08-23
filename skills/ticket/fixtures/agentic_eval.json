@@ -20,6 +20,19 @@
       }
     },
     {
+      "name": "depends-on-renders-machine-readable-blocker",
+      "type": "positive",
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh maintenance 'depends-on eval' --target skills/ticket --invariant 'dependency marker is rendered' --cleanup 'preview only' --scoped-files skills/ticket --proof 'cd /home/graham/workspace/experiments/agent-skills && skills/agentic-evals/run.sh run skills/ticket/fixtures/agentic_eval.json --case depends-on-renders-machine-readable-blocker --output /tmp/ticket_depends_on_eval.json shows READY' --route backend_python_or_skill_runtime --depends-on grahama1970/pdf_oxide#31 > /tmp/ticket_depends_on_preview.out && grep -q 'blocked-by: grahama1970/pdf_oxide#31' /tmp/ticket_depends_on_preview.out && grep -q 'depends_on: grahama1970/pdf_oxide#31' /tmp/ticket_depends_on_preview.out"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
       "name": "routable-requires-agentic-eval",
       "type": "adversarial",
       "real_world": true,

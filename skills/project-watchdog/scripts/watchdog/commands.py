@@ -381,6 +381,7 @@ def _tick_locked(
     skipped: list[dict[str, Any]] = []
     project = None
     issues: list[dict[str, Any]] = []
+    issue_scans: list[dict[str, Any]] = []
 
     for candidate in candidates:
         cid = str(candidate.get("project_id"))
@@ -427,11 +428,20 @@ def _tick_locked(
                 candidate,
                 busy,
                 skip_issue_numbers={int(e["issue_number"]) for e in reclaimed},
+                apply=apply,
             )
         except (RuntimeError, ValueError) as exc:
             skipped.append({"project_id": cid, "reason": f"issue_scan_failed: {exc}"})
             logger.error("issue scan failed for project {}: {}", cid, exc)
             continue
+        scan = {
+            "project_id": cid,
+            "repo": registry.project_repo(candidate),
+            "scanned": registry.LAST_SCAN.get("scanned", 0),
+            "excluded": registry.LAST_SCAN.get("excluded", {}),
+            "excluded_issues": registry.LAST_SCAN.get("excluded_issues", {}),
+        }
+        issue_scans.append(scan)
         if only_issue is not None:
             # Targeted repair (agent-skills#1456): lease ONLY the named issue.
             # If it is not routable right now, refuse without leasing anything
@@ -465,6 +475,13 @@ def _tick_locked(
             )
             continue
         project, issues = candidate, found
+        receipt["issue_scans"] = issue_scans
+        receipt["excluded_counts"] = scan["excluded"]
+        receipt["excluded_issues"] = scan["excluded_issues"]
+        receipt["excluded_issue_refs"] = {
+            reason: [f"{scan['repo']}#{number}" for number in numbers]
+            for reason, numbers in scan["excluded_issues"].items()
+        }
         receipt["lease_staleness"] = candidate_staleness
         receipt["reclaimed_leases"] = reclaimed
         if not apply and stale:
@@ -482,6 +499,7 @@ def _tick_locked(
         "selected": None if project is None else str(project.get("project_id")),
         "skipped": skipped,
     }
+    receipt.setdefault("issue_scans", issue_scans)
 
     # No repair work anywhere. Before calling the tick idle, check whether any
     # recent closure needs reviewing: closing a ticket is a claim that the work

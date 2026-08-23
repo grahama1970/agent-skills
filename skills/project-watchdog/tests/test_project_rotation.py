@@ -358,6 +358,110 @@ def test_stale_lease_skip_reason_is_machine_readable(monkeypatch):
     assert registry.LAST_SCAN["excluded_issues"]["stale_lease"] == [7]
 
 
+# --- cross-repo dependency routing -------------------------------------------
+#
+# `$ticket` writes `depends_on` / `blocked-by` so watchdog can hold downstream
+# tickets until upstream tickets have shipped. The first implementation only
+# rendered the marker; dispatch ignored it.
+
+
+def _dependency_issue(num=31, labels=None, body=None):
+    return {
+        "number": num,
+        "title": "dependent",
+        "body": body if body is not None else "target: skills/project-watchdog\n",
+        "labels": [{"name": name} for name in (labels or ["agent-work"])],
+        "url": f"https://github.test/issues/{num}",
+    }
+
+
+def _fake_dependency_scan(issue: dict, *, upstream_state="OPEN", comments=None, fail_ref=False):
+    def run_cmd(cmd, timeout_s=None):
+        import json as _json
+
+        if cmd[1:3] == ["issue", "list"]:
+            return {"exit_code": 0, "stdout": _json.dumps([issue]), "stderr": ""}
+        if cmd[1:3] == ["issue", "view"] and cmd[-1] == "comments":
+            payload = {"comments": [{"body": body} for body in (comments or [])]}
+            return {"exit_code": 0, "stdout": _json.dumps(payload), "stderr": ""}
+        if cmd[1:3] == ["issue", "view"] and "state,stateReason" in cmd:
+            if fail_ref:
+                return {"exit_code": 1, "stdout": "", "stderr": "not found"}
+            payload = {"state": upstream_state, "stateReason": "COMPLETED"}
+            return {"exit_code": 0, "stdout": _json.dumps(payload), "stderr": ""}
+        raise AssertionError(cmd)
+
+    return run_cmd
+
+
+def test_open_dependency_blocks_dispatch(monkeypatch):
+    issue = _dependency_issue(
+        body="""target: skills/project-watchdog
+
+## Dependencies
+
+- blocked-by: grahama1970/pdf_oxide#31
+depends_on: grahama1970/pdf_oxide#31
+"""
+    )
+    monkeypatch.setattr(registry, "run_cmd", _fake_dependency_scan(issue, upstream_state="OPEN"))
+
+    routable = registry.list_routable_issues(
+        "t", {"repo": "o/agent-skills", "worktree": "/tmp/wt"}
+    )
+
+    assert routable == []
+    assert registry.LAST_SCAN["excluded"]["dependency_open"] == 1
+    assert registry.LAST_SCAN["excluded_issues"]["dependency_open"] == [31]
+
+
+def test_closed_dependency_clears_hold_labels_and_routes(monkeypatch):
+    issue = _dependency_issue(
+        labels=["agent-work", "blocked:upstream", "maintainer-blocked", "needs-human"],
+    )
+    monkeypatch.setattr(
+        registry,
+        "run_cmd",
+        _fake_dependency_scan(
+            issue,
+            upstream_state="CLOSED",
+            comments=["blocked-by: grahama1970/pdf_oxide#31"],
+        ),
+    )
+    calls = []
+
+    def issue_edit(repo, issue_number, *, add=None, remove=None):
+        calls.append({"repo": repo, "issue": issue_number, "add": add, "remove": remove})
+        return {"exit_code": 0, "stdout": "", "stderr": ""}
+
+    monkeypatch.setattr(registry.github, "issue_edit", issue_edit)
+
+    routable = registry.list_routable_issues(
+        "t", {"repo": "o/agent-skills", "worktree": "/tmp/wt"}, apply=True
+    )
+
+    assert [row["number"] for row in routable] == [31]
+    assert routable[0]["watchdog_dependencies"]["status"] == "resolved"
+    assert calls == [{
+        "repo": "o/agent-skills",
+        "issue": 31,
+        "add": None,
+        "remove": ["blocked:upstream", "maintainer-blocked", "needs-human"],
+    }]
+
+
+def test_unreadable_dependency_fails_closed(monkeypatch):
+    issue = _dependency_issue(body="target: skills/project-watchdog\ndepends_on: no/ref#1\n")
+    monkeypatch.setattr(registry, "run_cmd", _fake_dependency_scan(issue, fail_ref=True))
+
+    routable = registry.list_routable_issues(
+        "t", {"repo": "o/agent-skills", "worktree": "/tmp/wt"}
+    )
+
+    assert routable == []
+    assert registry.LAST_SCAN["excluded"]["dependency_unreadable"] == 1
+
+
 # --- a silent no-op tick is the failure this watchdog exists to prevent -------
 #
 # Both no-project-serviceable paths reported ok:True / exit 0, so a fleet where
@@ -472,7 +576,10 @@ def test_strict_project_tick_does_not_fall_through_to_another_project(tmp_path, 
         def as_receipt_block(self):
             return {"project_id": "tau", "consecutive_ticks": 1}
 
-    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None):
+    def fake_list(
+        run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
+        apply=False,
+    ):
         scanned.append(str(candidate["project_id"]))
         registry.LAST_SCAN.clear()
         registry.LAST_SCAN.update({
@@ -525,7 +632,10 @@ def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
     scanned: list[str] = []
     captured: dict = {}
 
-    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None):
+    def fake_list(
+        run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
+        apply=False,
+    ):
         scanned.append(str(candidate["project_id"]))
         registry.LAST_SCAN.clear()
         registry.LAST_SCAN.update({
@@ -578,7 +688,10 @@ def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkey
     }))
     captured: dict = {}
 
-    def fake_list(run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None):
+    def fake_list(
+        run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
+        apply=False,
+    ):
         registry.LAST_SCAN.clear()
         registry.LAST_SCAN.update({
             "scanned": 5,

@@ -32,7 +32,7 @@ from typing import Any
 
 from loguru import logger
 
-from . import config
+from . import config, github
 from .core import log_event, run_cmd
 
 
@@ -222,6 +222,8 @@ def list_routable_issues(
     busy: set[str] | None = None,
     *,
     skip_issue_numbers: set[int] | None = None,
+    skip_issue_reasons: dict[int, str] | None = None,
+    apply: bool = False,
 ) -> list[dict[str, Any]]:
     """Return open issues this watchdog is permitted to route, in listing order.
 
@@ -257,10 +259,19 @@ def list_routable_issues(
     has_lane = project_has_repair_lane(project)
     busy_now = set(busy or ())
     skip_now = set(skip_issue_numbers or ())
+    skip_reasons = dict(skip_issue_reasons or {})
     for issue in issues:
         if int(issue["number"]) in skip_now:
-            excluded.setdefault("lease_reclaimed_this_tick", []).append(int(issue["number"]))
+            reason = skip_reasons.get(int(issue["number"]), "lease_reclaimed_this_tick")
+            excluded.setdefault(reason, []).append(int(issue["number"]))
             continue
+        dep = dependency_gate(run_id, repo, issue, apply=apply)
+        if dep["status"] in {"open", "unreadable", "unblock_failed"}:
+            excluded.setdefault(str(dep["reason"]), []).append(int(issue["number"]))
+            issue["watchdog_dependencies"] = dep
+            continue
+        if dep["status"] == "resolved":
+            issue["watchdog_dependencies"] = dep
         action, reason = classify_issue_with_reason(issue)
         if action is None:
             excluded.setdefault(reason or "unknown", []).append(int(issue["number"]))
@@ -304,6 +315,171 @@ def list_routable_issues(
     LAST_SCAN["excluded"] = {reason: len(nums) for reason, nums in sorted(excluded.items())}
     LAST_SCAN["excluded_issues"] = {reason: nums for reason, nums in sorted(excluded.items())}
     return routable
+
+
+_GITHUB_REF = re.compile(r"^[^/\s]+/[^#\s]+#[0-9]+$")
+_BLOCKED_BY_LINE = re.compile(r"(?im)^\s*(?:[-*]\s*)?blocked-by:\s*(.+?)\s*$")
+_DEPENDS_ON_LINE = re.compile(r"(?im)^\s*depends_on:\s*(.+?)\s*$")
+
+
+def _dependency_refs_from_text(text: str) -> list[str]:
+    refs: list[str] = []
+    for match in _BLOCKED_BY_LINE.finditer(text or ""):
+        refs.extend(part.strip() for part in match.group(1).split(",") if part.strip())
+    for match in _DEPENDS_ON_LINE.finditer(text or ""):
+        refs.extend(part.strip() for part in match.group(1).split(",") if part.strip())
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for ref in refs:
+        if ref not in seen:
+            seen.add(ref)
+            ordered.append(ref)
+    return ordered
+
+
+def _comment_dependency_refs(run_id: str, repo: str, issue_number: int) -> list[str]:
+    result = run_cmd(
+        ["gh", "issue", "view", str(issue_number), "--repo", repo, "--json", "comments"],
+        timeout_s=60,
+    )
+    log_event(
+        run_id,
+        "dependency_comment_scan",
+        repo=repo,
+        issue=issue_number,
+        exit_code=result.get("exit_code"),
+    )
+    if result.get("exit_code") != 0:
+        raise RuntimeError(f"dependency comment scan failed: {result.get('stderr')}")
+    payload = json.loads(result.get("stdout") or "{}")
+    refs: list[str] = []
+    for comment in payload.get("comments", []):
+        refs.extend(_dependency_refs_from_text(str(comment.get("body") or "")))
+    return refs
+
+
+def issue_dependency_refs(run_id: str, repo: str, issue: dict[str, Any]) -> list[str]:
+    """Machine-readable upstream issue refs declared by ``$ticket``."""
+    refs = _dependency_refs_from_text(str(issue.get("body") or ""))
+    labels = {str(label.get("name")) for label in issue.get("labels", [])}
+    if config.UPSTREAM_BLOCKED_LABEL in labels:
+        refs.extend(_comment_dependency_refs(run_id, repo, int(issue["number"])))
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for ref in refs:
+        if ref not in seen:
+            seen.add(ref)
+            ordered.append(ref)
+    return ordered
+
+
+def _upstream_issue_state(run_id: str, ref: str) -> dict[str, Any]:
+    if not _GITHUB_REF.match(ref):
+        raise RuntimeError(f"malformed dependency reference: {ref}")
+    repo, raw_number = ref.split("#", 1)
+    result = run_cmd(
+        [
+            "gh",
+            "issue",
+            "view",
+            raw_number,
+            "--repo",
+            repo,
+            "--json",
+            "state,stateReason",
+        ],
+        timeout_s=60,
+    )
+    log_event(
+        run_id,
+        "dependency_issue_state",
+        dependency=ref,
+        exit_code=result.get("exit_code"),
+    )
+    if result.get("exit_code") != 0:
+        raise RuntimeError(f"dependency state unreadable for {ref}: {result.get('stderr')}")
+    payload = json.loads(result.get("stdout") or "{}")
+    return {
+        "ref": ref,
+        "state": str(payload.get("state") or "").upper(),
+        "stateReason": str(payload.get("stateReason") or "").upper(),
+    }
+
+
+def _dependency_resolved(row: dict[str, Any]) -> bool:
+    if row["state"] != "CLOSED":
+        return False
+    return row["stateReason"] not in {"NOT_PLANNED", "DUPLICATE"}
+
+
+def _remove_dependency_hold_labels(issue: dict[str, Any]) -> None:
+    labels = [
+        label for label in issue.get("labels", [])
+        if str(label.get("name")) not in config.DEPENDENCY_HOLD_LABELS
+    ]
+    issue["labels"] = labels
+
+
+def dependency_gate(
+    run_id: str,
+    repo: str,
+    issue: dict[str, Any],
+    *,
+    apply: bool = False,
+) -> dict[str, Any]:
+    """Skip tickets whose upstream ``depends_on`` refs have not closed yet."""
+    labels = {str(label.get("name")) for label in issue.get("labels", [])}
+    try:
+        refs = issue_dependency_refs(run_id, repo, issue)
+    except RuntimeError as exc:
+        if config.UPSTREAM_BLOCKED_LABEL in labels:
+            return {"status": "unreadable", "reason": "dependency_unreadable", "error": str(exc)}
+        return {"status": "none", "refs": []}
+    if not refs:
+        if config.UPSTREAM_BLOCKED_LABEL in labels:
+            return {
+                "status": "unreadable",
+                "reason": "dependency_unreadable",
+                "error": "blocked:upstream label is present but no blocked-by refs were found",
+            }
+        return {"status": "none", "refs": []}
+    try:
+        states = [_upstream_issue_state(run_id, ref) for ref in refs]
+    except RuntimeError as exc:
+        return {"status": "unreadable", "reason": "dependency_unreadable", "refs": refs, "error": str(exc)}
+    unresolved = [row for row in states if not _dependency_resolved(row)]
+    if unresolved:
+        return {
+            "status": "open",
+            "reason": "dependency_open",
+            "refs": refs,
+            "unresolved": unresolved,
+        }
+    removed = sorted(config.DEPENDENCY_HOLD_LABELS & labels)
+    result: dict[str, Any] = {
+        "status": "resolved",
+        "reason": "dependency_resolved",
+        "refs": refs,
+        "resolved": states,
+        "removed_labels": removed,
+        "applied": False,
+    }
+    if removed and apply:
+        command = github.issue_edit(repo, int(issue["number"]), remove=removed)
+        result["command"] = command
+        if command.get("exit_code") != 0:
+            result.update(
+                {
+                    "status": "unblock_failed",
+                    "reason": "dependency_unblock_failed",
+                    "error": command.get("stderr"),
+                }
+            )
+            return result
+        result["applied"] = True
+    if removed:
+        _remove_dependency_hold_labels(issue)
+    return result
 
 
 def _parse_github_time(value: str | None) -> datetime | None:

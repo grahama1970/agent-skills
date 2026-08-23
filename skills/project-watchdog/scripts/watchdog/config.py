@@ -360,6 +360,13 @@ TAU_ACTIVE_GOAL_HASH = "sha256:" + "1" * 64
 LEASE_LABEL = "agent-active"
 BLOCKED_LABEL = "agent-blocked"
 
+#: A downstream ticket is parked until every machine-readable upstream
+#: ``blocked-by`` / ``depends_on`` reference has closed. ``ticket block
+#: --blocked-by`` writes this label plus human-hold labels; watchdog may clear
+#: only this dependency hold after it proves the upstream issue state.
+UPSTREAM_BLOCKED_LABEL = "blocked:upstream"
+DEPENDENCY_HOLD_LABELS = frozenset({UPSTREAM_BLOCKED_LABEL, "maintainer-blocked", "needs-human"})
+
 #: Applied when a repair finished and left a branch for review. The ticket stays
 #: open -- the work has not landed -- but it must stop being routable, or cron
 #: re-dispatches it every tick and each dispatch resets the branch over the last

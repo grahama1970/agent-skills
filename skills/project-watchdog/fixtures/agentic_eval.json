@@ -62,6 +62,30 @@
       }
     },
     {
+      "name": "dependency-gate-holds-and-unblocks-depends-on",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_rotation.py::test_open_dependency_blocks_dispatch",
+        "../tests/test_project_rotation.py::test_closed_dependency_clears_hold_labels_and_routes",
+        "../tests/test_project_rotation.py::test_unreadable_dependency_fails_closed",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ]
+      }
+    },
+    {
       "name": "unknown-project-fails-closed-and-names-it",
       "type": "negative",
       "command": [
