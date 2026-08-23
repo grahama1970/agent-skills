@@ -594,6 +594,24 @@
       }
     },
     {
+      "name": "gpt55-high-workspace-handler-routes-to-codex-exec",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest -q tests/test_tau_dag.py::test_high_handler_with_workspace_compiles_to_codex_exec_workspace tests/test_tau_dag.py::test_tau_worker_dispatches_workspace_bound_gpt55_high_through_codex_exec"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "every-roster-browser-seat-has-a-fresh-url",
       "type": "adversarial",
       "real_world": true,

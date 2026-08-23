@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import threading
@@ -750,6 +751,36 @@ def test_supported_high_api_handler_still_compiles_to_scillm(tmp_path: Path) -> 
     )
     command = command_spec["command"]
     assert command[command.index("--handler") + 1] == "gpt-5.5-high"
+    assert "--codex-workspace" not in command
+
+
+def test_high_handler_with_workspace_compiles_to_codex_exec_workspace(tmp_path: Path) -> None:
+    workspace = tmp_path / "repair-worktree"
+    workspace.mkdir()
+    request = infer_compile_input(
+        "Ask gpt-5.5-high to repair the scoped files.",
+        repo="local/ask",
+        target="workspace-handler-route",
+        immutable_goal="The requested handler route can edit the bound repair worktree.",
+        handlers=["gpt-5.5-high"],
+        handler_workspaces=[f"gpt-5.5-high={workspace}"],
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-gpt-5-5-high", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--handler") + 1] == "gpt-5.5-high"
+    assert command[command.index("--codex-workspace") + 1] == str(workspace)
+    assert command[command.index("--subagent-model") + 1] == "gpt-5.5"
+    assert command[command.index("--subagent-reasoning-effort") + 1] == "high"
+    assert command[command.index("--subagent-requested-model") + 1] == "gpt-5.5-high"
 
 
 def test_non_browser_handler_timeout_uses_explicit_execution_budget(tmp_path: Path) -> None:
@@ -893,6 +924,93 @@ raise SystemExit(0)
     meta = json.loads((artifact_dir / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["transport"] == "subagent-runner.codex_exec"
     assert meta["reasoning_effort"] == "xhigh"
+
+
+def test_tau_worker_dispatches_workspace_bound_gpt55_high_through_codex_exec(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "Edit the workspace."}) + "\n", encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-gpt-5-5-high"
+    workspace = tmp_path / "repair-worktree"
+    workspace.mkdir()
+    subprocess.run(["git", "init", "-q", str(workspace)], check=True)
+    (workspace / "README.md").write_text("before\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(workspace), "add", "README.md"], check=True)
+    subprocess.run(
+        ["git", "-C", str(workspace), "commit", "-q", "-m", "init"],
+        check=True,
+        env={**os.environ, "GIT_AUTHOR_NAME": "Test", "GIT_AUTHOR_EMAIL": "test@example.com",
+             "GIT_COMMITTER_NAME": "Test", "GIT_COMMITTER_EMAIL": "test@example.com"},
+    )
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    fake_codex = fake_bin / "codex"
+    fake_codex.write_text(
+        """#!/usr/bin/env python3
+import pathlib
+import sys
+args = sys.argv[1:]
+out = pathlib.Path(args[args.index("-o") + 1])
+(pathlib.Path.cwd() / "README.md").write_text("after\\n", encoding="utf-8")
+out.write_text("changed README\\n", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
+    fake_codex.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{fake_bin}:{os.environ.get('PATH', '')}")
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-gpt-5-5-high",
+            "--handler",
+            "gpt-5.5-high",
+            "--topology",
+            "sequential",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+            "--subagent-model",
+            "gpt-5.5",
+            "--subagent-reasoning-effort",
+            "high",
+            "--subagent-requested-model",
+            "gpt-5.5-high",
+            "--codex-workspace",
+            str(workspace),
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        input=json.dumps({"goal": {"goal_hash": "sha256:test"}}),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["provider_receipt"]["provider_transport"] == "$codex-cli"
+    assert receipt["provider_receipt"]["transport"] == "codex.exec"
+    assert receipt["provider_receipt"]["model"] == "gpt-5.5"
+    assert receipt["provider_receipt"]["requested_model"] == "gpt-5.5-high"
+    meta = json.loads((artifact_dir / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["transport"] == "codex.exec"
+    assert meta["workspace"] == str(workspace)
+    assert "after" in subprocess.check_output(["git", "-C", str(workspace), "diff"], text=True)
 
 
 def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_path: Path) -> None:

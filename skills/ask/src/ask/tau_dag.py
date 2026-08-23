@@ -2827,6 +2827,7 @@ def _write_roundtable_command_spec(
     model_preference = str(handler_policy.get("model_preference") or "")
     if model_preference:
         command.extend(["--browser-model-preference", model_preference])
+    handler_workspace = _handler_workspace(input, handler)
     if str(handler_policy.get("transport") or "") == "subagent-runner.codex_exec":
         model_policy = handler_policy.get("model_policy") if isinstance(handler_policy.get("model_policy"), dict) else {}
         command.extend(
@@ -2841,13 +2842,26 @@ def _write_roundtable_command_spec(
                 str(model_policy.get("requested_model") or handler_policy.get("requested_model") or handler),
             ]
         )
-    if handler == "codex":
-        workspace = _handler_workspace(input, handler)
-        if not workspace:
+    if handler_workspace:
+        model_policy = handler_policy.get("model_policy") if isinstance(handler_policy.get("model_policy"), dict) else {}
+        route_policy = model_policy or _model_policy(handler)
+        command.extend(
+            [
+                "--subagent-model",
+                str(route_policy.get("model") or handler),
+                "--subagent-reasoning-effort",
+                str(route_policy.get("reasoning_effort") or "high"),
+                "--subagent-requested-model",
+                str(route_policy.get("requested_model") or handler),
+                "--codex-workspace",
+                handler_workspace,
+            ]
+        )
+    elif handler == "codex":
+        if not handler_workspace:
             raise TauDagError(
                 "codex handler requires --handler-workspace codex=/path/to/worktree"
             )
-        command.extend(["--codex-workspace", workspace])
     for evidence in node.get("required_evidence", []):
         command.extend(["--evidence", str(evidence)])
     payload = {

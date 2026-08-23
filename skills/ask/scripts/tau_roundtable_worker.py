@@ -549,7 +549,16 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         ]
         if prior_failures:
             raise RuntimeError("prior_handler_receipts_not_ready: " + "; ".join(prior_failures))
-        if _is_subagent_handler_args(args):
+        if str(getattr(args, "codex_workspace", "") or "").strip():
+            response_text, submit_meta, codex_commands = _run_codex_handler(
+                args,
+                prompt_path=prompt_path,
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+            )
+            commands.extend(codex_commands)
+        elif _is_subagent_handler_args(args):
             response_text, submit_meta, subagent_commands = _run_subagent_handler(
                 args,
                 prompt_path=prompt_path,
@@ -6239,6 +6248,8 @@ def _provider_transport_for_args(args: argparse.Namespace, handler: str) -> str:
         return "$surf"
     if _is_direct_claude_cli_handler(handler):
         return "$claude-cli"
+    if str(getattr(args, "codex_workspace", "") or "").strip():
+        return "$codex-cli"
     if _is_subagent_handler_args(args):
         return "$subagent-runner"
     return "$scillm"
@@ -6249,6 +6260,8 @@ def _transport_for_args(args: argparse.Namespace, handler: str) -> str:
         return HANDLER_SUBMIT_COMMANDS[handler]
     if _is_direct_claude_cli_handler(handler):
         return "claude.cli"
+    if str(getattr(args, "codex_workspace", "") or "").strip():
+        return "codex.exec"
     if _is_subagent_handler_args(args):
         return "subagent-runner.codex_exec"
     return "scillm.chat"
@@ -6423,11 +6436,16 @@ def _run_codex_handler(
         raise RuntimeError(f"codex workspace is not a git worktree: {workspace}")
     commands: list[dict[str, Any]] = []
     final_message_path = raw_path
+    model = str(getattr(args, "subagent_model", "") or "gpt-5.5").strip()
+    requested_model = str(getattr(args, "subagent_requested_model", "") or args.handler).strip()
+    reasoning_effort = str(getattr(args, "subagent_reasoning_effort", "") or "high").strip()
     codex_cmd = [
         "codex",
         "exec",
+        "--model",
+        model,
         "-c",
-        'model_reasoning_effort="high"',
+        f'model_reasoning_effort="{reasoning_effort}"',
         "-c",
         "features.hooks=false",
         "--ignore-user-config",
@@ -6515,6 +6533,14 @@ def _run_codex_handler(
     meta = {
         "schema": "ask.codex_handler_meta.v1",
         "workspace": str(workspace),
+        "handler": args.handler,
+        "requested_handler": requested_model,
+        "requested_model": requested_model,
+        "model": model,
+        "reasoning_effort": reasoning_effort,
+        "requested_reasoning_effort": reasoning_effort,
+        "transport": "codex.exec",
+        "provider_transport": "$codex-cli",
         "codex_returncode": proc.returncode,
         "duration_seconds": round(duration, 3),
         "diff_bytes": len(diff.stdout or ""),
