@@ -169,11 +169,41 @@ def main() -> int:
         if not any(c.get("source_provider") == "workday" for c in wd_out if c.get("located_via") == "linkedin"):
             failures.append("WORKDAY_NO_PROMOTE: a resolvable Workday WNY role was not promoted")
 
+    # 7. Search-based coordinate resolver: parse coordinates and promote with one
+    #    targeted call, incl. a non-guessable site name.
+    from monitor_opportunities.readback import parse_workday_url  # noqa: E402
+
+    if parse_workday_url("https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite") != {
+        "workday_tenant": "nvidia", "workday_dc": "wd5", "workday_site": "NVIDIAExternalCareerSite"}:
+        failures.append("WORKDAY_URL_PARSE_WRONG: non-standard Workday site name not parsed")
+
+    def _search_fn(q):
+        return ["https://roswellpark.wd5.myworkdayjobs.com/ExternalCareers"]
+
+    resolved_out, _ = promote_linkedin_locators(
+        [_locator("srch", "Roswell Park Comprehensive Cancer Center", "Computational Scientist", "WNY_ONSITE")],
+        live_ats_probe(_WdClient(), adapters=[_workday_candidates], search_fn=_search_fn),
+    )
+    if not any(c.get("source_provider") == "workday" for c in resolved_out if c.get("located_via") == "linkedin"):
+        failures.append("SEARCH_RESOLVER_NO_PROMOTE: resolved Workday coordinates did not promote the locator")
+
+    # 8. WNY reserved slot: a lower-fit eligible WNY role must claim a top-N slot.
+    from monitor_opportunities.ranking import _select_with_wny_reserve  # noqa: E402
+
+    def _cand(org, geo, total):
+        return {"candidate_id": org, "organization": org, "title": "x",
+                "workplace_type": geo, "score_components": {"total": total}}
+    adm = [_cand(f"R{i}", "REMOTE", 900 - i) for i in range(8)] + [_cand("Buffalo", "WNY_ONSITE", 400)]
+    adm.sort(key=lambda r: -r["score_components"]["total"])
+    sl = _select_with_wny_reserve(adm, 8)
+    if not any(c["organization"] == "Buffalo" for c in sl):
+        failures.append("WNY_RESERVE_NOT_APPLIED: a lower-fit eligible WNY role did not claim a reserved slot")
+
     if failures:
         for f in failures:
             print(f, file=sys.stderr)
         return 1
-    print(f"WNY_LINKEDIN_READBACK_OK: cross-ref + live-fetch (incl. Workday) promote WNY locators, "
+    print(f"WNY_LINKEDIN_READBACK_OK: cross-ref + live-fetch (Workday incl. search-resolved) promote WNY, "
           f"surfaced-pending otherwise, non-WNY untouched ({len(receipts)} readback attempts)")
     return 0
 

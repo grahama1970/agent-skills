@@ -1331,11 +1331,15 @@ def _workday_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[d
     body, per-request failures swallowed. Most WNY employers (Roswell Park, Moog,
     PwC, Voya) publish on Workday, which the greenhouse/lever/ashby readers miss.
     """
-    tenant = re.sub(r"[^a-z0-9]", "", str(target["slug"]).lower())
+    tenant = re.sub(r"[^a-z0-9]", "", str(target.get("workday_tenant") or target["slug"]).lower())
     receipt = _base_receipt("A", "workday", target["name"], "employer_ats")
     receipt["required_source_id"] = "workday"
     receipt["channel"] = "api"
-    sites = list(dict.fromkeys([tenant, *(_WORKDAY_SITE_HINTS)]))
+    # Explicit coordinates (from a resolved myworkdayjobs URL) mean exactly one
+    # request; otherwise fall back to the bounded enumeration matrix.
+    explicit = target.get("workday_dc") and target.get("workday_site")
+    datacenters = (str(target["workday_dc"]),) if explicit else _WORKDAY_DATACENTERS
+    sites = [str(target["workday_site"])] if explicit else list(dict.fromkeys([tenant, *(_WORKDAY_SITE_HINTS)]))
     # Search by the locator title so the specific posting is returned rather than
     # an arbitrary page of a large board (Roswell Park has 130 postings).
     body = {"appliedFacets": {}, "limit": _registry_limit(target, 20), "offset": 0,
@@ -1344,7 +1348,7 @@ def _workday_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[d
     postings: list[dict[str, Any]] = []
     resolved_host = ""
     resolved_site = ""
-    for dc in _WORKDAY_DATACENTERS:
+    for dc in datacenters:
         host = f"{tenant}.{dc}.myworkdayjobs.com"
         for site in sites:
             url = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"

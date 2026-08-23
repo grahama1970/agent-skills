@@ -1458,6 +1458,7 @@
         "decision": {
           "enum": [
             "LOCATOR_ONLY",
+            "PENDING_PRIMARY_VERIFICATION",
             "ATTEND_MEETUP",
             "WATCH_MEETUP",
             "SKIP_MEETUP",

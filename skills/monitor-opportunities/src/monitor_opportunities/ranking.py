@@ -190,6 +190,50 @@ def _score(candidate: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_WNY_WORKPLACES = frozenset({"WNY_HYBRID", "WNY_ONSITE"})
+
+
+def _wny_reserved_slots(limit: int) -> int:
+    """How many shortlist slots to guarantee for eligible WNY roles. Buffalo is
+    the hard-constraint, highest-priority geography, so it must be visible in the
+    actionable top-N even when higher-fit remote roles exist -- without ranking a
+    weak WNY role above a strong one (the reserve is filled by best-fit WNY)."""
+    raw = os.environ.get("MONITOR_WNY_RESERVED_SLOTS")
+    if raw:
+        try:
+            return max(0, min(int(raw), limit))
+        except ValueError:
+            pass
+    return min(2, limit)
+
+
+def _select_with_wny_reserve(admitted_opportunities: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    """Fit-ranked shortlist with up to N slots reserved for the best-fit eligible
+    WNY roles. The reserved WNY roles are the top of the (already fit-sorted) WNY
+    subset; remaining slots fill from the overall fit order. When no WNY role is
+    eligible the result is identical to plain fit-ranked truncation."""
+    reserve = _wny_reserved_slots(limit)
+    if reserve <= 0:
+        return admitted_opportunities[:limit]
+    wny = [r for r in admitted_opportunities if r.get("workplace_type") in _WNY_WORKPLACES]
+    reserved = wny[:reserve]
+    reserved_ids = {r["candidate_id"] for r in reserved}
+    filler = [r for r in admitted_opportunities if r["candidate_id"] not in reserved_ids]
+    # Fill the non-reserved slots by overall fit, then place the reserved WNY
+    # roles, and re-sort the whole shortlist by fit so the list still reads in
+    # rank order (the reserve guarantees inclusion, not a fixed position).
+    combined = filler[: max(0, limit - len(reserved))] + reserved
+    combined.sort(
+        key=lambda row: (
+            -row["score_components"]["total"],
+            row.get("organization", ""),
+            row.get("title", ""),
+            row["candidate_id"],
+        )
+    )
+    return combined[:limit]
+
+
 def _is_source_intel_candidate(candidate: dict[str, Any]) -> bool:
     """Rows that inform human sourcing must not consume application shortlist slots."""
 
@@ -408,7 +452,7 @@ def rank(discovery_run: Path, limit: int, out_dir: Path,
     )
     admitted_opportunities = [row for row in admitted if not _is_source_intel_candidate(row)]
     admitted_source_intel = [row for row in admitted if _is_source_intel_candidate(row)]
-    shortlist = admitted_opportunities[:limit]
+    shortlist = _select_with_wny_reserve(admitted_opportunities, limit)
     source_intel_limit = _source_intel_limit(limit)
     source_intel_shortlist = _diverse_source_intel_shortlist(
         admitted_source_intel,

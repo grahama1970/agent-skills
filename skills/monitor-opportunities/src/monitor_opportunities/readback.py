@@ -196,11 +196,54 @@ def slug_variants(org: str) -> list[str]:
 AtsAdapter = Callable[[Any, dict[str, Any]], tuple[dict[str, Any], list[dict[str, Any]]]]
 
 
+_WORKDAY_URL = re.compile(
+    r"https?://(?P<tenant>[a-z0-9][a-z0-9-]*)\.(?P<dc>wd\d+)\.myworkdayjobs\.com/"
+    r"(?:(?P<locale>[a-z]{2}-[A-Z]{2})/)?(?P<site>[^/?#]+)",
+    re.IGNORECASE,
+)
+
+# A search function returns candidate result URLs (or free text containing them)
+# for a query. Injected so the resolver is testable without a live search.
+SearchFn = Callable[[str], list[str]]
+
+
+def parse_workday_url(url: str) -> "dict[str, str] | None":
+    """Parse a myworkdayjobs.com URL into exact CXS coordinates."""
+    m = _WORKDAY_URL.search(url or "")
+    if not m:
+        return None
+    site = m.group("site")
+    # A job-detail URL segment is not a site; those live under /job/... which the
+    # regex already excludes by matching the first path segment. Guard the common
+    # non-site first segments.
+    if site.lower() in {"job", "jobs", "wday"}:
+        return None
+    return {"workday_tenant": m.group("tenant").lower(), "workday_dc": m.group("dc").lower(),
+            "workday_site": site}
+
+
+def resolve_workday_coordinates(org: str, search_fn: SearchFn) -> "dict[str, str] | None":
+    """Find an employer's exact Workday coordinates via search, replacing blind
+    enumeration with one targeted CXS call. Returns None when no myworkdayjobs URL
+    is found (the caller falls back to enumeration or leaves the role pending)."""
+    for query in (f"{org} careers site:myworkdayjobs.com", f'"{org}" myworkdayjobs'):
+        try:
+            urls = search_fn(query) or []
+        except Exception:  # noqa: BLE001 - search failure is not a readback failure
+            continue
+        for url in urls:
+            coords = parse_workday_url(url)
+            if coords:
+                return coords
+    return None
+
+
 def live_ats_probe(
     client: Any,
     *,
     max_slugs: int = 5,
     adapters: "list[AtsAdapter] | None" = None,
+    search_fn: "SearchFn | None" = None,
 ) -> AtsProbe:
     """A primary-source probe that actively fetches the employer's own ATS board.
 
@@ -220,9 +263,31 @@ def live_ats_probe(
         )
         adapters = [_greenhouse_candidates, _lever_candidates, _ashby_candidates, _workday_candidates]
 
+    workday_adapter = None
+    if search_fn is not None:
+        for a in adapters:
+            if getattr(a, "__name__", "") == "_workday_candidates":
+                workday_adapter = a
+                break
+
     def probe(locator: dict[str, Any]) -> list[dict[str, Any]]:
         org = str(locator.get("organization") or "")
         results: list[dict[str, Any]] = []
+        # Targeted Workday: resolve exact coordinates via search and make one CXS
+        # call instead of enumerating tenant x dc x site. High yield, one request.
+        if workday_adapter is not None:
+            coords = resolve_workday_coordinates(org, search_fn)
+            if coords:
+                target = {"slug": coords["workday_tenant"], "name": org,
+                          "search_text": locator.get("title") or "", **coords}
+                try:
+                    receipt, cands = workday_adapter(client, target)
+                    if receipt.get("result_status") == "MATCHES":
+                        results.extend(cands)
+                except Exception:  # noqa: BLE001
+                    pass
+            if results:
+                return results
         for slug in slug_variants(org)[:max_slugs]:
             target = {"slug": slug, "name": org, "search_text": locator.get("title") or ""}
             for adapter in adapters:

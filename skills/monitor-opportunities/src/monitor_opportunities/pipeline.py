@@ -258,6 +258,25 @@ def _is_github_intelligence(candidate: dict[str, Any]) -> bool:
     return candidate.get("source_provider") == "github_repo_intelligence"
 
 
+def _brave_workday_search(query: str) -> list[str]:
+    """Return result URLs for a query via the brave-search skill, for Workday
+    coordinate resolution. Best-effort and bounded: any failure returns []."""
+    import re as _re
+    import subprocess as _sp
+
+    run_sh = Path(__file__).resolve().parents[4] / "skills" / "brave-search" / "run.sh"
+    if not run_sh.exists():
+        return []
+    try:
+        out = _sp.run(
+            [str(run_sh), "web", query, "--count", "5"],
+            capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, _sp.SubprocessError):
+        return []
+    return _re.findall(r"https?://[^\s\"'\\]+", out.stdout or "")
+
+
 def _is_report_opportunity(candidate: dict[str, Any]) -> bool:
     return (
         not _is_linkedin_locator(candidate)
@@ -1148,7 +1167,7 @@ def run_stage0(
 
         _readback_client = httpx.Client(timeout=httpx.Timeout(8.0), follow_redirects=True)
         try:
-            ranking_probe = live_ats_probe(_readback_client)
+            ranking_probe = live_ats_probe(_readback_client, search_fn=_brave_workday_search)
             ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir, ats_probe=ranking_probe)
         finally:
             _readback_client.close()
