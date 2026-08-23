@@ -361,7 +361,7 @@
         "cwd": "/home/graham/workspace/experiments/sparta",
         "requires_start_handoff": false
       },
-      "repair_creator": "gpt-5.5-high",
+      "repair_creator": "oc-deepseek",
       "repair_reviewer": "claude-opus-5-medium",
       "allowed_agents": [
         "project-or-harness-verifier",
@@ -369,7 +369,7 @@
         "human"
       ],
       "notes": [
-        "ticket_repair via $ask tau-dag; fixer gpt-5.5-high, reviewer claude-opus-5-medium."
+        "ticket_repair via $ask tau-dag; fixer oc-deepseek, reviewer claude-opus-5-medium."
       ],
       "service": {
         "kind": "systemd",
