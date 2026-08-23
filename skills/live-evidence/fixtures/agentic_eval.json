@@ -852,6 +852,31 @@
         ]
       },
       "notes": "ADVERSARIAL gate for the gpt-5.5 relevance filtering agent. Each case runs in its own isolated server, posted STT-free over HTTP so the result reflects the filter, not RealtimeSTT variance. The suppression cases are chosen to PASS the deterministic question-window trigger -- they carry a '?', a question lead, or a Sparta watch-term -- so only the agent's judgment can stop them: 'can we push this to Friday?' (logistics), 'can everyone hear me?' (social), a statement mentioning the project, and a bare rhetorical must each be suppressed with a surface=false decision, while two genuine questions must surface. Suppression is scoped to question-worthiness, NOT evidence strength, so a real question with thin retrieval still surfaces (an earlier evidence-strength suppression dropped a real memory question). Needs memory :8601, the sparta repo, and SciLLM."
+    },
+    {
+      "name": "schedule-action-wiring",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-schedule-action"
+      ],
+      "timeout_seconds": 300,
+      "infra_blocked_when": [
+        "server did not come up",
+        "INFRA_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "scheduling request proposes a schedule action: PASS",
+          "schedule action does NOT auto-write a calendar: PASS",
+          "a non-scheduling question proposes no schedule action: PASS",
+          "schedule action: PASS"
+        ]
+      },
+      "notes": "Wires the live-evidence action lane to the ops-google-calendar skill. A heard scheduling request ('can we push the Sparta review to Friday?') proposes a kind=schedule action_candidate routed to ops-google-calendar, PROPOSE-ONLY -- it never auto-writes a calendar (execution needs human approval via the API plus the calendar skill's own --confirm, and OAuth). Actions are proposed independent of the card gate, so a logistics turn whose evidence card is suppressed by the filtering agent still proposes the schedule action. A control question proposes no schedule action. Proof boundary: proves the proposal + routing and the no-auto-write safety; live calendar execution needs the human's Google OAuth (see ops-google-calendar). Needs memory :8601, the sparta repo, and SciLLM."
     }
   ]
 }

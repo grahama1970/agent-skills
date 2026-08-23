@@ -208,6 +208,27 @@ class EvidenceCoordinator:
         )
         return reordered, bool(receipt.get("surface", True))
 
+    async def _propose_actions(self, verdict, decision, question_id: str,
+                               question_revision: int, policy) -> None:
+        """Propose resolver action candidates (propose-only; human approves via
+        the API), independent of the card gate."""
+        if verdict is None or not verdict.action_candidates:
+            return
+        from .actions import ActionEngine
+        digest = self._state.session_policy_digest()
+        if self.actions is None or self.actions._policy_digest != digest:
+            self.actions = ActionEngine(purpose=self._state.session_purpose(),
+                                        policy=policy, policy_digest=digest)
+        proposed = self.actions.propose(
+            verdict.action_candidates,
+            trigger_event_ids=list(decision.source_event_ids),
+            question_id=question_id, question_revision=question_revision,
+        )
+        for entry in self.actions.journal:
+            await self._journal.append(self._state.session_id(), entry.pop("kind"),
+                                       entry, policy_digest=digest)
+        self.actions.journal.clear()
+
     def register_assistant_utterance(self, text: str) -> None:
         """Record text the assistant is about to speak, for echo suppression."""
 
@@ -521,6 +542,13 @@ class EvidenceCoordinator:
             sources.extend(ripgrep_result.sources)
 
         ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
+
+        # Actions are a SEPARATE output from cards: a logistics turn ("push to
+        # Friday") proposes a schedule action even when its card is suppressed,
+        # so propose actions BEFORE the card-surface gate.
+        policy = self._state.session_policy()
+        await self._propose_actions(verdict, decision, question_id, question_revision, policy)
+
         ranked, surface = await self._surface_order(query, decision.thread, ranked)
         if not surface:
             # Filtering agent judged this turn not card-worthy (rhetorical,
@@ -531,7 +559,6 @@ class EvidenceCoordinator:
             return
 
         # No resolver -> cannot judge readiness; fall back to the legacy predicate.
-        policy = self._state.session_policy()
         may_ask = (
             verdict.may_invoke_ask
             if verdict is not None
@@ -576,34 +603,6 @@ class EvidenceCoordinator:
         if (question_id, question_revision) in self._solved_revisions:
             # At most one automatic solver run per accepted revision.
             may_ask = False
-
-        if verdict is not None and verdict.action_candidates:
-            # (#1475) resolver action candidates: propose-only; execution needs
-            # explicit human approval via the API.
-            from .actions import ActionEngine
-
-            digest = self._state.session_policy_digest()
-            if self.actions is None or self.actions._policy_digest != digest:
-                self.actions = ActionEngine(
-                    purpose=self._state.session_purpose(),
-                    policy=policy,
-                    policy_digest=digest,
-                )
-            proposed = self.actions.propose(
-                verdict.action_candidates,
-                trigger_event_ids=list(decision.source_event_ids),
-                question_id=question_id,
-                question_revision=question_revision,
-            )
-            for entry in self.actions.journal:
-                await self._journal.append(
-                    self._state.session_id(), entry.pop("kind"), entry,
-                    policy_digest=digest,
-                )
-            self.actions.journal.clear()
-            if proposed:
-                logger.info("action candidates proposed: {}",
-                            [c.kind for c in proposed])
 
         fast_pending = False
         if may_ask:

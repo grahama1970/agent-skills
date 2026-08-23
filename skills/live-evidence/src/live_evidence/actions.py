@@ -29,7 +29,7 @@ class ActionCandidate(BaseModel):
         validation_alias="schema", serialization_alias="schema",
     )
     action_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
-    kind: Literal["fact_check", "remember_fact", "open_artifact"]
+    kind: Literal["fact_check", "remember_fact", "open_artifact", "schedule"]
     summary: str = Field(min_length=1, max_length=600)
     payload: str = Field(min_length=1, max_length=2_000)
     trigger_event_ids: list[str] = Field(min_length=1, max_length=16)
@@ -74,10 +74,10 @@ class ActionEngine:
         accepted: list[ActionCandidate] = []
         for raw in raw_candidates[:6]:
             kind = str(raw.get("kind") or "")
-            if kind not in {"fact_check", "remember_fact", "open_artifact"}:
+            if kind not in {"fact_check", "remember_fact", "open_artifact", "schedule"}:
                 continue
             payload = str(raw.get("payload") or raw.get("claim") or raw.get("fact")
-                          or raw.get("artifact") or "").strip()
+                          or raw.get("artifact") or raw.get("request") or "").strip()
             if not payload:
                 continue
             candidate = ActionCandidate(
@@ -178,6 +178,17 @@ class ActionEngine:
             receipt.update({"fact_id": fact.fact_id, "readback_ok": ok, "detail": detail[:300]})
             candidate.status = "executed" if ok else "unresolved"
 
+        elif candidate.kind == "schedule":
+            # Route the heard scheduling request to ops-google-calendar. This is
+            # PROPOSE-ONLY: a calendar write is outward-facing and needs a
+            # concrete datetime plus OAuth plus the human's --confirm, none of
+            # which this path assumes. We route the request and read back the
+            # destination's status; the actual calendar change is a separate
+            # explicit step in ops-google-calendar. Status stays 'unresolved'
+            # because nothing is written here.
+            receipt.update(_route_to_calendar(candidate.payload))
+            candidate.status = "unresolved"
+
         elif candidate.kind == "open_artifact":
             if not self._policy.retrieve_local_evidence:
                 candidate.status = "rejected_by_policy"
@@ -193,6 +204,33 @@ class ActionEngine:
         self.journal.append({"kind": "action_executed", "action_id": candidate.action_id,
                              "status": candidate.status, "receipt": receipt})
         return candidate
+
+
+def _route_to_calendar(request: str) -> dict[str, Any]:
+    """Route a spoken scheduling request to the ops-google-calendar skill and
+    read back its status. Read-only: proves the destination is wired without
+    writing a calendar. The concrete reschedule/create + --confirm is a
+    separate human step in that skill."""
+
+    import json as _json
+    import subprocess
+
+    runner = Path(__file__).resolve().parents[3] / "ops-google-calendar" / "run.sh"
+    result: dict[str, Any] = {"destination": "ops-google-calendar",
+                              "request": request[:500], "resolution": "proposed"}
+    if not runner.is_file():
+        result.update({"routed": False, "reason": "ops-google-calendar not installed"})
+        return result
+    try:
+        proc = subprocess.run([str(runner), "status", "--json"],
+                              capture_output=True, text=True, timeout=60)
+        status = _json.loads(proc.stdout or "{}")
+        result.update({"routed": True,
+                       "calendar_status": status.get("status"),
+                       "calendar_authenticated": status.get("authenticated")})
+    except Exception as exc:  # noqa: BLE001 -- routing failures are reported, not raised
+        result.update({"routed": False, "reason": f"{type(exc).__name__}: {exc}"})
+    return result
 
 
 def _resolve_artifact(reference: str, coordinator: Any) -> dict[str, Any]:
