@@ -337,6 +337,27 @@ def test_reclaimed_issue_is_not_redispatched_in_the_same_tick(monkeypatch):
     assert registry.LAST_SCAN["excluded_issues"]["lease_reclaimed_this_tick"] == [7]
 
 
+def test_targeted_issue_does_not_let_earlier_issue_claim_its_target(monkeypatch):
+    first = _issue(32, "scripts/pdf_lab")
+    second = _issue(31, "scripts/pdf_lab")
+
+    def run_cmd(cmd, timeout_s=None):
+        import json as _json
+        return {"exit_code": 0, "stdout": _json.dumps([first, second]), "stderr": ""}
+
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+
+    routable = registry.list_routable_issues(
+        "t",
+        {"repo": "o/r", "worktree": "/tmp/wt"},
+        only_issue=31,
+    )
+
+    assert [i["number"] for i in routable] == [31]
+    assert registry.LAST_SCAN["excluded_issues"]["not_targeted_issue"] == [32]
+    assert "target_busy" not in registry.LAST_SCAN["excluded"]
+
+
 def test_stale_lease_skip_reason_is_machine_readable(monkeypatch):
     issue = _live_shaped_lease()
     issue["labels"] = [{"name": "agent-work"}, {"name": "maintainer-active"}]
@@ -578,7 +599,7 @@ def test_strict_project_tick_does_not_fall_through_to_another_project(tmp_path, 
 
     def fake_list(
         run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
-        apply=False,
+        only_issue=None, apply=False,
     ):
         scanned.append(str(candidate["project_id"]))
         registry.LAST_SCAN.clear()
@@ -634,7 +655,7 @@ def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
 
     def fake_list(
         run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
-        apply=False,
+        only_issue=None, apply=False,
     ):
         scanned.append(str(candidate["project_id"]))
         registry.LAST_SCAN.clear()
@@ -690,7 +711,7 @@ def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkey
 
     def fake_list(
         run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
-        apply=False,
+        only_issue=None, apply=False,
     ):
         registry.LAST_SCAN.clear()
         registry.LAST_SCAN.update({

@@ -223,6 +223,7 @@ def list_routable_issues(
     *,
     skip_issue_numbers: set[int] | None = None,
     skip_issue_reasons: dict[int, str] | None = None,
+    only_issue: int | None = None,
     apply: bool = False,
 ) -> list[dict[str, Any]]:
     """Return open issues this watchdog is permitted to route, in listing order.
@@ -261,24 +262,28 @@ def list_routable_issues(
     skip_now = set(skip_issue_numbers or ())
     skip_reasons = dict(skip_issue_reasons or {})
     for issue in issues:
-        if int(issue["number"]) in skip_now:
-            reason = skip_reasons.get(int(issue["number"]), "lease_reclaimed_this_tick")
-            excluded.setdefault(reason, []).append(int(issue["number"]))
+        issue_number = int(issue["number"])
+        if only_issue is not None and issue_number != int(only_issue):
+            excluded.setdefault("not_targeted_issue", []).append(issue_number)
+            continue
+        if issue_number in skip_now:
+            reason = skip_reasons.get(issue_number, "lease_reclaimed_this_tick")
+            excluded.setdefault(reason, []).append(issue_number)
             continue
         dep = dependency_gate(run_id, repo, issue, apply=apply)
         if dep["status"] in {"open", "unreadable", "unblock_failed"}:
-            excluded.setdefault(str(dep["reason"]), []).append(int(issue["number"]))
+            excluded.setdefault(str(dep["reason"]), []).append(issue_number)
             issue["watchdog_dependencies"] = dep
             continue
         if dep["status"] == "resolved":
             issue["watchdog_dependencies"] = dep
         action, reason = classify_issue_with_reason(issue)
         if action is None:
-            excluded.setdefault(reason or "unknown", []).append(int(issue["number"]))
+            excluded.setdefault(reason or "unknown", []).append(issue_number)
             continue
         targets = issue_targets(issue)
         if targets_are_blocked(targets, busy_now):
-            excluded.setdefault("target_busy", []).append(int(issue["number"]))
+            excluded.setdefault("target_busy", []).append(issue_number)
             continue
         if action == "ticket_repair" and not has_lane:
             # The project exposes no Tau DAG repair lane, so this issue is not

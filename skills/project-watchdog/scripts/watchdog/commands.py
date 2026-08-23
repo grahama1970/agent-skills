@@ -428,6 +428,7 @@ def _tick_locked(
                 candidate,
                 busy,
                 skip_issue_numbers={int(e["issue_number"]) for e in reclaimed},
+                only_issue=only_issue,
                 apply=apply,
             )
         except (RuntimeError, ValueError) as exc:
