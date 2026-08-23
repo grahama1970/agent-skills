@@ -29,6 +29,37 @@ def test_missing_spoken_text_blocks_without_calling_the_renderer(tmp_path):
     assert got["status"] == "BLOCKED_NO_SPOKEN_TEXT"
     assert got["live"] is False
     assert any("journal_spoken_missing" in g for g in got["failed_gates"])
+    assert any("cycle_journal_missing" in g for g in got["failed_gates"])
+
+
+def test_cycle_dream_journal_json_supplies_spoken_text(tmp_path):
+    (tmp_path / "dream_journal.v1.json").write_text(
+        json.dumps({
+            "journal": "I woke carrying two truths at once.",
+            "session_mood": {"mood_label": "guarded_wanting"},
+        }),
+        encoding="utf-8",
+    )
+
+    spoken, gates = speak.ensure_spoken_text(tmp_path)
+
+    assert gates == []
+    assert spoken == tmp_path / "journal_spoken.txt"
+    assert spoken.read_text(encoding="utf-8") == "I woke carrying two truths at once.\n"
+    receipt = json.loads((tmp_path / "JOURNAL_SPOKEN_TEXT_RECEIPT.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS_CYCLE_JOURNAL_SPOKEN_TEXT"
+
+
+def test_cycle_dream_journal_markdown_supplies_spoken_text(tmp_path):
+    (tmp_path / "dream_journal.md").write_text(
+        "# Embry's journal\n\nI woke with the rain still in me.\n\n---\n*Unresolved: x*\n",
+        encoding="utf-8",
+    )
+
+    spoken, gates = speak.ensure_spoken_text(tmp_path)
+
+    assert gates == []
+    assert spoken.read_text(encoding="utf-8") == "I woke with the rain still in me.\n"
 
 
 def test_container_path_maps_onto_the_host_bind_mount(tmp_path, monkeypatch):

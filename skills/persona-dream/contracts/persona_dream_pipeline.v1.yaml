@@ -1,0 +1,296 @@
+schema: persona_dream.pipeline.v1
+status: RETIRED_REFERENCE_NOT_CANONICAL
+superseded_by: contracts/dream_spine.v1.yaml
+retired_reason: >
+  Historical phase/evidence taxonomy retained for reference only. The executable
+  Persona Dream cognition spine is contracts/dream_spine.v1.yaml and now
+  terminates at spoken_journal for #1344.
+purpose: >
+  Canonical machine-readable Persona Dream phase contract. README explains the
+  research purpose; SKILL.md owns runtime behavior; this file owns phase IDs,
+  phase names, evidence boundaries, side-effect classes, and gate vocabulary.
+
+evidence_classes:
+  - historical_memory
+  - present_event
+  - dream_intention
+  - rendered_dream_observation
+  - persona_interpretation
+  - tom_inference
+  - durable_persona_change
+
+workstreams:
+  A:
+    name: Pipeline contract
+    meaning: Freeze phase ownership, inputs, outputs, gates, evidence classes, invalidation rules, side effects, claims, and non-claims.
+    required_artifact: contracts/persona_dream_pipeline.v1.yaml
+  B:
+    name: Phase 10 reproducibility
+    meaning: Prove the provider contract is deterministic from the same frozen inputs.
+    required_artifact: reports/pipeline-complete/phase_10_provider_contract/phase10_reproducibility_receipt.json
+  E:
+    name: Ephemeral media publication
+    meaning: Publish only locked provider inputs, prove public fetchability, and prove teardown before any paid provider call.
+    required_artifacts:
+      - provider_media_publication_receipt.json
+      - provider_media_probe_receipt.json
+      - provider_media_teardown_receipt.json
+
+global_forbidden_claims:
+  - provider_ready_without_provider_schema_and_media_and_authorization
+  - submitted_without_paid_call_authorization
+  - watched_without_returned_media_and_watch_receipts
+  - persisted_without_memory_owned_receipts
+  - persona_changed_without_create_persona_promotion
+
+phases:
+  "01":
+    name: Idea and Memory Residue
+    owner: persona-dream
+    question: What is the persona dreaming about, and which memories support it?
+    evidence_class: historical_memory
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: []
+    pass_statuses: [PASS_IDEA_MEMORY_RESIDUE]
+    non_claims: [story_contract, provider_ready, watched_dream]
+    invalidated_by: [persona_snapshot_change, memory_residue_change, present_event_change]
+    next_allowed_phase: "02"
+  "02":
+    name: Story
+    owner: persona-dream
+    question: What bounded story emerges from accepted residue?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [story_contract.json]
+    pass_statuses: [PASS_STORY_CONTRACT]
+    non_claims: [script_ready, provider_ready]
+    invalidated_by: [phase01_change]
+    next_allowed_phase: "03"
+  "03":
+    name: Crew
+    owner: persona-dream
+    question: Who has creative authority over this dream?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [creative_authority_receipts]
+    pass_statuses: [PASS_CREW_SELECTION]
+    non_claims: [canonical_persona_change]
+    invalidated_by: [phase01_change, phase02_change]
+    next_allowed_phase: "04"
+  "04":
+    name: Contact Sheets
+    owner: persona-dream
+    question: Which characters, props, and environments must remain visually stable?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [contact_sheet_build_receipt.json]
+    pass_statuses: [PASS_CONTACT_SHEETS]
+    non_claims: [provider_media_publication, identity_truth]
+    invalidated_by: [phase01_change, phase02_change, phase03_change, reference_change]
+    next_allowed_phase: "05"
+  "05":
+    name: Voices
+    owner: persona-dream
+    question: How should each persona sound without confusing voice expression with psychology?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [voice_candidate_bundle.json, voice_selection_receipt.json]
+    pass_statuses: [PASS_VOICE_SELECTION]
+    non_claims: [provider_voice_id_ready, paid_voice_clone]
+    invalidated_by: [speaker_change, script_change, voice_reference_change]
+    next_allowed_phase: "06"
+  "06":
+    name: Script
+    owner: persona-dream
+    question: How does story intent become timed action and dialogue?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [script_contract.json, timed_transcript.json]
+    pass_statuses: [PASS_SCRIPT_CONTRACT]
+    non_claims: [visual_truth, provider_ready]
+    invalidated_by: [phase02_change, phase03_change, phase04_change, phase05_change]
+    next_allowed_phase: "07"
+  "07":
+    name: Storyboard
+    owner: persona-dream
+    question: What must each shot visibly contain, and has it passed visual review?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [storyboard_packet.json, visual_review_receipt.json, panel_repair_gate_receipt.json]
+    pass_statuses: [PASS_PANEL_REVIEWED, PASS_STORYBOARD]
+    non_claims: [provider_media_publication, provider_submit]
+    invalidated_by: [phase02_change, phase04_change, phase06_change, visual_reference_change]
+    next_allowed_phase: "08"
+  "08":
+    name: Media Lock
+    owner: persona-dream
+    question: Which accepted visual assets are frozen for provider-facing use?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [storyboard_media_lock_manifest.json]
+    pass_statuses: [PASS_MEDIA_LOCK]
+    non_claims: [public_url, provider_ready, provider_submit]
+    invalidated_by: [phase07_change, accepted_frame_hash_change]
+    next_allowed_phase: "09"
+  "09":
+    name: Video Provider
+    owner: persona-dream
+    question: Which provider best fits the accepted scene, and why?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs:
+      - video_provider_scorecard.v1.json
+      - video_provider_packet/video_provider_packet.json
+      - provider_registry_refresh_receipt.v1.json
+    pass_statuses: [PASS_PROVIDER_SELECTION_DRY_RUN]
+    non_claims: [provider_schema_acceptance, public_url, paid_authorization, provider_submit]
+    invalidated_by: [phase08_change, provider_registry_change, provider_docs_ttl_expired]
+    next_allowed_phase: "10"
+  "10":
+    name: Provider Contract
+    canonical_route: "#dream/distillation"
+    route_aliases: ["#dream/review", "#dream/provider-contract"]
+    owner: persona-dream
+    question: Exactly what would be sent, against which endpoint and contract?
+    evidence_class: dream_intention
+    side_effect_class: local_write_only
+    network_allowed: false
+    provider_calls_allowed: 0
+    required_outputs:
+      - phase10_provider_contract_receipt.json
+      - panel_distillation_contract.json
+      - final_provider_payload_by_panel.json
+      - provider_payload_field_mapping.json
+      - provider_payload_omitted_context.json
+    pass_statuses: [PASS_PHASE10_PROVIDER_CONTRACT_DRY_RUN_WITH_LIVE_BLOCKERS]
+    non_claims:
+      - live_fal_schema_acceptance
+      - provider_accessible_media_publication
+      - paid_authorization
+      - provider_submit
+      - provider_return
+    invalidated_by: [phase09_change, media_lock_hash_change, provider_schema_change, provider_payload_change]
+    next_allowed_phase: "11"
+  "11":
+    name: Submit and Return
+    owner: persona-dream
+    question: Can one authorized provider call produce a valid returned dream artifact?
+    evidence_class: dream_intention
+    side_effect_class: [public_media_exposure, external_provider_call, paid_call]
+    provider_calls_allowed: 1
+    required_approvals:
+      - publication_authorized
+      - manual_payload_acceptance
+      - paid_call_authorized
+    required_outputs:
+      - provider_media_publication_receipt.json
+      - provider_media_probe_receipt.json
+      - provider_media_teardown_receipt.json
+      - provider_submit_receipt.json
+      - provider_return_receipt.json
+      - provider_return_ffprobe.json
+    pass_statuses: [PASS_PROVIDER_RETURN]
+    non_claims: [watched_dream, interpreted_dream, memory_persisted]
+    invalidated_by: [phase10_change, public_url_hash_mismatch, ttl_expired]
+    next_allowed_phase: "12"
+  "12":
+    name: Watch Observation
+    owner: watch
+    question: What is actually visible, audible, spoken, absent, or changed?
+    evidence_class: rendered_dream_observation
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [dream_observation_packet.json]
+    pass_statuses: [PASS_DREAM_OBSERVATION]
+    non_claims: [psychological_interpretation, memory_persisted]
+    invalidated_by: [phase11_return_change]
+    next_allowed_phase: "13"
+  "13":
+    name: Persona Self-Interpretation
+    owner: persona-dream
+    question: What might the observed dream mean against grounded memories?
+    evidence_class: persona_interpretation
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [dream_self_interpretation.json]
+    pass_statuses: [PASS_SELF_INTERPRETATION]
+    non_claims: [accepted_tom_state, durable_persona_change]
+    invalidated_by: [phase12_change, source_memory_change]
+    next_allowed_phase: "14"
+  "14":
+    name: Theory of Mind Validation
+    owner: memory
+    question: Which proposed belief, fear, desire, trust, or relationship states are grounded?
+    evidence_class: tom_inference
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs: [tom_candidates.json, accepted_tom.json]
+    pass_statuses: [PASS_TOM_VALIDATION]
+    non_claims: [durable_persona_change]
+    invalidated_by: [phase13_change, contradiction_found]
+    next_allowed_phase: "15"
+  "15":
+    name: Memory, Graph, and Qdrant Persistence
+    owner: memory
+    question: Can the accepted synthetic dream be stored and retrieved without becoming false history?
+    evidence_class: tom_inference
+    side_effect_class: [memory_write, graph_write, qdrant_write]
+    provider_calls_allowed: 0
+    required_outputs:
+      - dream_memory_record.json
+      - graph_edge_write_receipt.json
+      - qdrant_embedding_receipt.json
+    pass_statuses: [PASS_DREAM_MEMORY]
+    non_claims: [durable_persona_change, behavior_changed]
+    invalidated_by: [phase14_change, memory_write_failure, qdrant_sync_failure]
+    next_allowed_phase: "16"
+  "16":
+    name: Recall and Behavior Evaluation
+    owner: persona-dream
+    question: Does the persona later use the dream appropriately while remaining itself?
+    evidence_class: durable_persona_change
+    side_effect_class: local_write_only
+    provider_calls_allowed: 0
+    required_outputs:
+      - dream_recall_receipt.json
+      - persona_before_after_evaluation.json
+      - chatterbox_behavior_receipt.json
+    pass_statuses: [PASS_PERSONA_BEHAVIOR]
+    non_claims: [unreviewed_durable_persona_update]
+    invalidated_by: [phase15_change, identity_probe_regression]
+    next_allowed_phase: null
+
+publication_backend:
+  name: tailscale_funnel
+  scope: phase11_canary_only
+  type: ephemeral_publication_backend
+  default_origin: loopback_static_http_server
+  allowed_ports: [443, 8443, 10000]
+  required_authorizations:
+    - publication_authorized
+  separate_authorizations:
+    - paid_call_authorized
+  required_receipts:
+    - provider_media_publication_receipt.json
+    - provider_media_probe_receipt.json
+    - provider_media_teardown_receipt.json
+  required_truth_after_publication_without_submit:
+    provider_live: false
+    actual_provider_call_attempts: 0
+    submitted: false
+    provider_ready: false
+    live_submit_ready: false
+  non_claims:
+    - durable_hosting
+    - provider_fetch_proven
+    - provider_submit_ready
+    - provider_return

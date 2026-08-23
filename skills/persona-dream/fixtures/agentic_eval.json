@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
@@ -721,9 +721,60 @@
           "BLOCKED_MULTIMODAL_ABLATION_RESULT"
         ]
       }
+    },
+    {
+      "name": "cycle-journal-spoken-spine-contract-tests",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.cycle_journal_spoken_spine_contract"
+      ],
+      "seams": [
+        "pipeline.cycle_journal_to_spoken_journal"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "D=/tmp/persona-dream-spoken-spine-eval-agentic; rm -rf \"$D\"; mkdir -p \"$D\"; export D; uv run --project .. pytest ../tests/test_speak_journal.py ../tests/test_run_dream_pipeline.py ../tests/test_pipeline_contract_and_phase10_reproducibility.py -q && bash ../run.sh check-pipeline-contract --json --receipt-out \"$D/pipeline_contract_receipt.json\" && bash ../run.sh dream-spec --run-dir \"$D/run\" --persona embry --idea 'kai and what I never said' --timeout-seconds 120 --out \"$D/dag-spec.json\" && python3 - <<'PY'\nimport json\nimport os\nfrom pathlib import Path\nroot = Path(os.environ['D'])\ncontract = json.loads((root / 'pipeline_contract_receipt.json').read_text(encoding='utf-8'))\nspec = json.loads((root / 'dag-spec.json').read_text(encoding='utf-8'))\nassert contract['status'] == 'PASS_PERSONA_DREAM_PIPELINE_CONTRACT'\nassert contract['terminal_step'] == 'spoken_journal'\nassert 'journal.wav' in contract['produced_artifacts']\nassert 'JOURNAL_SPOKEN_TEXT_RECEIPT.json' in contract['produced_artifacts']\nassert not contract['active_competing_contracts']\nnodes = spec['nodes']\nassert [node['node_id'] for node in nodes] == ['dream_cycle', 'journal_entry', 'spoken_journal']\nfinal = nodes[-1]\nargv = final['command']\nassert '--command' in argv and argv[argv.index('--command') + 1] == 'speak-journal'\nproduces = argv[argv.index('--produces') + 1]\nassert 'journal.wav' in produces\nassert 'journal_spoken.txt' in produces\nprint('CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-spoken-spine-eval-agentic/pipeline_contract_receipt.json",
+            "json_pointer": "/terminal_step",
+            "equals": "spoken_journal"
+          },
+          {
+            "path": "/tmp/persona-dream-spoken-spine-eval-agentic/dag-spec.json",
+            "json_pointer": "/nodes/2/node_id",
+            "equals": "spoken_journal"
+          }
+        ],
+        "stdout_contains": [
+          "14 passed",
+          "\"terminal_step\": \"spoken_journal\"",
+          "CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK"
+        ],
+        "stdout_not_contains": [
+          "BLOCKED_PERSONA_DREAM_PIPELINE_CONTRACT",
+          "BLOCKED_COMPETING_ACTIVE_PIPELINE_CONTRACT"
+        ]
+      }
     }
   ],
   "capability_claims": [
+    {
+      "id": "persona_dream.cycle_journal_spoken_spine_contract",
+      "description": "The executable Persona Dream spine carries the autonomous cycle journal into a spoken_journal terminal node without requiring generate-lane dream_packet artifacts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    },
     {
       "id": "persona_dream.corrected_goal_manifest",
       "description": "The corrected operational goal and PD-CORRECTED-GOAL-V1 sealed manifest are pinned with deterministic fail-closed validators before any live paired run can be claimed.",
@@ -1014,6 +1065,15 @@
       "seam_type": "end_to_end_pipeline",
       "criticality": "critical",
       "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "pipeline.cycle_journal_to_spoken_journal",
+      "seam_type": "pipeline_spine",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
         "live_e2e"
       ]
     }

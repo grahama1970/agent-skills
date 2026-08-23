@@ -65,6 +65,8 @@ def _active_competing_contracts(canonical_path: Path) -> list[str]:
             continue
         schema = str(data.get("schema") or "")
         status = str(data.get("status") or "")
+        if status == "RETIRED_REFERENCE_NOT_CANONICAL":
+            continue
         if schema.startswith("persona_dream.pipeline") or status == PASS_STATUS:
             competing.append(str(path))
     return competing
@@ -75,6 +77,16 @@ def _retired_references() -> list[dict[str, str]]:
     if not ARCHIVE_CONTRACT_DIR.is_dir():
         return references
     for path in sorted(ARCHIVE_CONTRACT_DIR.glob("*.yaml")):
+        try:
+            data = _load_yaml(path)
+        except Exception:
+            continue
+        if str(data.get("status") or "") == "RETIRED_REFERENCE_NOT_CANONICAL":
+            references.append({
+                "path": str(path.resolve()),
+                "superseded_by": str(data.get("superseded_by") or ""),
+            })
+    for path in sorted(ACTIVE_CONTRACT_DIR.glob("*.yaml")):
         try:
             data = _load_yaml(path)
         except Exception:
@@ -95,8 +107,8 @@ def check_pipeline_contract(path: Path = DEFAULT_CONTRACT) -> dict[str, Any]:
     if data.get("schema") != "persona_dream.dream_spine.v1":
         blockers.append("BLOCKED_SCHEMA_NOT_DREAM_SPINE_V1")
 
-    if data.get("terminates_at") != "journal_entry":
-        blockers.append("BLOCKED_TERMINAL_NODE_NOT_JOURNAL_ENTRY")
+    if data.get("terminates_at") != "spoken_journal":
+        blockers.append("BLOCKED_TERMINAL_NODE_NOT_SPOKEN_JOURNAL")
 
     steps = data.get("steps")
     if not isinstance(steps, list) or not steps:
@@ -130,6 +142,8 @@ def check_pipeline_contract(path: Path = DEFAULT_CONTRACT) -> dict[str, Any]:
         blockers.append("BLOCKED_LAST_STEP_DOES_NOT_MATCH_TERMINATES_AT")
     if "dream_journal.md" not in produced_artifacts:
         blockers.append("BLOCKED_JOURNAL_MARKDOWN_NOT_DECLARED")
+    if "journal.wav" not in produced_artifacts:
+        blockers.append("BLOCKED_JOURNAL_AUDIO_NOT_DECLARED")
 
     competing_contracts = _active_competing_contracts(path)
     if competing_contracts:

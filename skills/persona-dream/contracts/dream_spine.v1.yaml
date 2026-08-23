@@ -24,33 +24,29 @@
 schema: persona_dream.dream_spine.v1
 version: 1
 
-terminates_at: journal_entry
+terminates_at: spoken_journal
 # The run dir IS the cycle dir: reports/goal_v3/cycles/<cycle_id>. Both
 # autonomous-dream-cycle and write-dream-journal hardcode that location.
 #
 # TWO LANES, AND THIS IS THE COGNITION ONE.
 #
-#   cycle lane (here)  autonomous-dream-cycle -> write-dream-journal
+#   cycle lane (here)  autonomous-dream-cycle -> write-dream-journal -> speak-journal
 #                      Rich cognition: ToM validation, certified persistence,
 #                      identity subgates, instruments frozen pre-dream.
 #                      write-dream-journal emits BOTH dream_journal.v1.json and
 #                      dream_journal.md, so rendering is already included.
-#                      HAS NO SPEECH PATH.
+#                      speak-journal derives journal_spoken.txt from the cycle
+#                      journal when the generate-lane renderer is absent, then
+#                      writes journal.wav and JOURNAL_AUDIO_RECEIPT.json.
 #
 #   generate lane      generate -> render-journal-entry -> speak-journal
 #                      Produces dream_packet.json and contradiction_report.json,
 #                      which render/speak both require, plus journal_spoken.txt.
 #                      HAS speech, lacks the cognition.
 #
-# render-journal-entry and speak-journal were in this spine until they were run:
-# both fail here because the cycle writes neither dream_packet.json nor
-# contradiction_report.json. They are not spine steps for this lane, and wiring
-# them as if they were only produced a pipeline that could not finish.
-#
-# KNOWN GAP: a cycle-lane dream cannot currently be spoken. Bridging it means
-# either teaching speak-journal to read dream_journal.md, or having the cycle
-# emit the two artifacts the generate lane's renderer expects. That is a design
-# decision about which lane owns voice, not a wiring fix.
+# render-journal-entry remains a generate-lane renderer. The cognition spine
+# does not fabricate dream_packet.json or contradiction_report.json for speech;
+# voice consumes the cycle journal as the authoritative source of the reflection.
 optional_branches:
   video: "steps 6-38 of the legacy ledger; branches off dream_packet"
 
@@ -82,6 +78,16 @@ steps:
     produces: [dream_journal.v1.json, dream_journal.md]
     proves: she wrote an entry conforming to persona_journal.v1
     does_not_prove: that the entry is true of events
+
+  - id: spoken_journal
+    name: Spoken Journal
+    command: speak-journal
+    run_dir_arg: "--run-dir"
+    args: []
+    produces: [journal_spoken.txt, JOURNAL_SPOKEN_TEXT_RECEIPT.json, journal.wav,
+               JOURNAL_AUDIO_RECEIPT.json]
+    proves: the cycle-lane journal text was rendered to a hash-bound spoken journal artifact
+    does_not_prove: that the requested tone was perceptually achieved or accepted by a human listener
 
 
 # Artifacts a run directory may hold that no step produces. Anything else found

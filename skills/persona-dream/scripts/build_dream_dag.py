@@ -68,8 +68,8 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         "goal_id": "persona-dream-spine",
         "goal_version": 1,
         "summary": (
-            "Produce a dream from memory residue and journal it. Terminates at "
-            "the journal entry; the video lane is an optional branch and "
+            "Produce a dream from memory residue, journal it, and speak the "
+            "journal. Terminates at the spoken journal; the video lane is an optional branch and "
             "conversation is a downstream consumer, not a step."
         ),
         "completion_criteria": [

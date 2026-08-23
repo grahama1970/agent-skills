@@ -24,6 +24,7 @@ import hashlib
 import json
 import os
 import shutil
+import re
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,6 +39,7 @@ CHATTERBOX_OUT_HOST_ROOT = Path(
                    "/home/graham/workspace/experiments/chatterbox/logs")
 )
 DEFAULT_REF_AUDIO = "/data/embry_ref.wav"
+MARKDOWN_FOOTER = re.compile(r"\n---\n.*", re.DOTALL)
 
 
 def utc_now() -> str:
@@ -61,6 +63,12 @@ def sha_file(path: Path) -> str:
 
 def sha_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _clean_markdown_journal(text: str) -> str:
+    text = MARKDOWN_FOOTER.sub("", text).strip()
+    lines = [line for line in text.splitlines() if not line.lstrip().startswith("#")]
+    return "\n".join(lines).strip()
 
 
 def _load_sibling(name: str):
@@ -96,17 +104,70 @@ def post_json(url: str, payload: dict[str, Any], timeout: int = 900) -> dict[str
         return json.loads(resp.read().decode("utf-8"))
 
 
+def ensure_spoken_text(run_dir: Path) -> tuple[Path | None, list[str]]:
+    """Ensure cycle-lane journals have the text artifact the speech lane needs."""
+    spoken_path = run_dir / "journal_spoken.txt"
+    if spoken_path.is_file():
+        return spoken_path, []
+
+    gates: list[str] = []
+    journal_json = run_dir / "dream_journal.v1.json"
+    journal_md = run_dir / "dream_journal.md"
+    text = ""
+    source = None
+    if journal_json.is_file():
+        payload = json.loads(journal_json.read_text(encoding="utf-8"))
+        text = str(payload.get("journal") or "").strip()
+        source = journal_json
+        if not text:
+            gates.append(f"dream_journal_json_missing_journal:{rel(journal_json)}")
+    if not text and journal_md.is_file():
+        text = _clean_markdown_journal(journal_md.read_text(encoding="utf-8"))
+        source = journal_md
+    if not text:
+        gates.append(f"journal_spoken_missing:{rel(spoken_path)}")
+        if not journal_json.is_file() and not journal_md.is_file():
+            gates.append("cycle_journal_missing:dream_journal.v1.json|dream_journal.md")
+        return None, gates
+
+    spoken_path.write_text(text.strip() + "\n", encoding="utf-8")
+    receipt = {
+        "schema": "persona_dream.cycle_journal_spoken_text_receipt.v1",
+        "created_at": utc_now(),
+        "status": "PASS_CYCLE_JOURNAL_SPOKEN_TEXT",
+        "mocked": False,
+        "live": False,
+        "source": rel(source) if source else None,
+        "journal_spoken": rel(spoken_path),
+        "spoken_text_sha256": sha_text(text.strip()),
+        "claims": {
+            "proves": [
+                "the cycle-lane dream journal can supply the text consumed by the speech lane"
+            ],
+            "does_not_prove": [
+                "audio rendering",
+                "perceived emotion",
+                "that requested tone was achieved",
+            ],
+        },
+    }
+    (run_dir / "JOURNAL_SPOKEN_TEXT_RECEIPT.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return spoken_path, []
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     run_dir = Path(args.run_dir)
-    spoken_path = run_dir / "journal_spoken.txt"
+    spoken_path, text_gates = ensure_spoken_text(run_dir)
     failed: list[str] = []
 
-    if not spoken_path.is_file():
+    if spoken_path is None or not spoken_path.is_file():
         return {
             "schema": "persona_dream.journal_audio_receipt.v1",
             "created_at": utc_now(), "status": "BLOCKED_NO_SPOKEN_TEXT",
             "mocked": False, "live": False, "run_dir": rel(run_dir),
-            "failed_gates": [f"journal_spoken_missing:{rel(spoken_path)}"],
+            "failed_gates": text_gates or [f"journal_spoken_missing:{rel(run_dir / 'journal_spoken.txt')}"],
         }
 
     spoken = spoken_path.read_text(encoding="utf-8").strip()
@@ -118,6 +179,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if cpath.is_file():
         contradictions = json.loads(cpath.read_text(encoding="utf-8")).get("contradictions") or []
     mood_label = args.mood_label
+    if not mood_label:
+        journal = run_dir / "dream_journal.v1.json"
+        if journal.is_file():
+            payload = json.loads(journal.read_text(encoding="utf-8"))
+            sm = payload.get("session_mood")
+            if isinstance(sm, dict):
+                mood_label = sm.get("mood_label")
     if not mood_label:
         packet = run_dir / "dream_packet.json"
         if packet.is_file():
@@ -181,6 +249,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "audio": rel(dest) if dest.is_file() else None,
         "audio_sha256": sha_file(dest) if dest.is_file() else None,
         "audio_bytes": dest.stat().st_size if dest.is_file() else 0,
+        "cycle_journal_spoken_text_receipt": rel(run_dir / "JOURNAL_SPOKEN_TEXT_RECEIPT.json")
+        if (run_dir / "JOURNAL_SPOKEN_TEXT_RECEIPT.json").is_file() else None,
         "engine": engine,
         "persona_mood_label": mapping["persona_mood_label"],
         "dominant_tension_axis": mapping["dominant_tension_axis"],
