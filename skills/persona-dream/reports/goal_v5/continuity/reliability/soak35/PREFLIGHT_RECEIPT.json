@@ -32,7 +32,7 @@
     "unique_source_lineage_groups": 8,
     "valid_no_op_count": 4
   },
-  "created_at": "2026-08-22T18:55:31Z",
+  "created_at": "2026-08-23T00:12:51Z",
   "live": false,
   "manifest": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/SOURCE_DIVERSITY_MANIFEST.json",
   "manifest_freeze_sha256": "sha256:2db424ef59650e4baebd72a507ac5822e3e259fc953a9674a38e84cc0c10dd29",
