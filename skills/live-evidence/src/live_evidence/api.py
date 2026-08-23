@@ -130,6 +130,21 @@ def _register_api_routes(
     async def stop_session() -> AppSnapshot:
         return await state.stop_session()
 
+    @app.post("/api/session/archive")
+    async def archive_session_endpoint() -> dict[str, Any]:
+        """Archive the finished meeting into episodic memory for later recall.
+        Human-triggered: builds a transcript from the journal and hands it to
+        episodic-archiver. Returns the archive receipt (honest status)."""
+        import json as _json
+        import tempfile
+        from .episodic import archive_session
+
+        journal_path = next(settings.data_dir.glob("*/session.jsonl"), None)
+        rows = [_json.loads(line) for line in journal_path.read_text().splitlines()] \
+            if journal_path else []
+        return archive_session(state.session_id() or "no-session", rows,
+                               Path(tempfile.mkdtemp(prefix="le-episodic-")))
+
     @app.post("/api/questions/{question_id}/clarifications/{clarification_id}/answer")
     async def answer_clarification(
         question_id: str, clarification_id: str, request: ClarificationAnswerRequest

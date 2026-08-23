@@ -206,8 +206,17 @@ class ActionEngine:
             # in what order) but do not run the heavy DAG: fetching + computing
             # + rendering is expensive and outward-facing, so the plan is
             # proposed and a human approves execution (a Tau DAG) separately.
+            import tempfile
+
             receipt.update(_plan_composition(candidate.payload))
-            candidate.status = "unresolved"
+            metrics = _extract_metrics(candidate.payload)
+            if metrics:
+                render = render_composition(
+                    metrics, Path(tempfile.mkdtemp(prefix="le-figure-")))
+                receipt["render"] = render
+                candidate.status = "executed" if render.get("ok") else "unresolved"
+            else:
+                candidate.status = "unresolved"
 
         elif candidate.kind == "open_artifact":
             if not self._policy.retrieve_local_evidence:
@@ -251,6 +260,57 @@ def _route_to_calendar(request: str) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001 -- routing failures are reported, not raised
         result.update({"routed": False, "reason": f"{type(exc).__name__}: {exc}"})
     return result
+
+
+def _extract_metrics(request: str) -> dict[str, float]:
+    """Parse 'label number' pairs a speaker stated ('coverage 72, supply chain
+    58, freshness 91'). The full DAG's analytics node produces this table; when
+    the numbers are spoken outright we can render directly."""
+
+    import re
+
+    metrics: dict[str, float] = {}
+    for label, value in re.findall(
+            r"([A-Za-z][A-Za-z ]{1,28}?)\s+(\d+(?:\.\d+)?)\b", request):
+        key = " ".join(label.split()).strip().title()
+        if key and key.lower() not in ("q", "the", "a"):
+            metrics[key] = float(value)
+    return metrics
+
+
+def render_composition(metrics: dict[str, float], out_dir: Path, *,
+                       title: str = "Meeting metrics", chart: str = "bar") -> dict[str, Any]:
+    """Run the final node of a compose DAG: render a real figure from a metrics
+    table via the create-figure skill (D3). Returns {ok, figure_path, bytes}.
+    This is the render step; the fetch (brave-search) and aggregate (analytics)
+    nodes feed the table. No metrics -> nothing rendered (reported, not raised)."""
+
+    import json as _json
+    import subprocess
+
+    numeric = {str(k): float(v) for k, v in metrics.items()
+               if isinstance(v, (int, float))}
+    if not numeric:
+        return {"ok": False, "reason": "no numeric metrics to plot"}
+    runner = Path(__file__).resolve().parents[3] / "create-figure" / "run.sh"
+    if not runner.is_file():
+        return {"ok": False, "reason": "create-figure not installed"}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    data_file = out_dir / "metrics.json"
+    figure = out_dir / "figure.pdf"
+    data_file.write_text(_json.dumps(numeric), encoding="utf-8")
+    try:
+        proc = subprocess.run(
+            [str(runner), "metrics", "--input", str(data_file), "--output",
+             str(figure), "--type", chart, "--title", title[:80]],
+            capture_output=True, text=True, timeout=240)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "reason": f"{type(exc).__name__}: {exc}"}
+    produced = figure.is_file() and figure.stat().st_size > 0
+    return {"ok": produced, "figure_path": str(figure) if produced else None,
+            "bytes": figure.stat().st_size if produced else 0,
+            "renderer": "create-figure", "chart": chart,
+            "reason": None if produced else (proc.stderr or proc.stdout)[:300]}
 
 
 def _plan_composition(request: str) -> dict[str, Any]:
