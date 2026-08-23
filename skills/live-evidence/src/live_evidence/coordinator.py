@@ -156,8 +156,7 @@ class EvidenceCoordinator:
             source_event_ids=tuple(span.event_id for span in candidate.source_spans),
         )
         # Claim the revision this retrieval answers BEFORE dispatching it, so a
-        # slow result is recognised as stale at publish time (a later turn bumps
-        # the revision) instead of overwriting a newer answer.
+        # slow result is recognised as stale at publish time, not overwriting.
         question_id, question_revision = await self._state.revise_question(decision.query)
         await self._state.set_thread(decision.thread)
         task = asyncio.create_task(self._retrieve(decision, question_id, question_revision))
@@ -194,10 +193,12 @@ class EvidenceCoordinator:
 
     async def _surface_order(
         self, query: str, thread: str, ranked: list[EvidenceSource]
-    ) -> list[EvidenceSource]:
-        """A fast model decides what to surface; rank is only the gatherer."""
-        if not SurfaceSelector.enabled() or len(ranked) < 2:
-            return ranked
+    ) -> tuple[list[EvidenceSource], bool]:
+        """Filtering agent decides whether to surface a card and orders its
+        evidence. Returns (ordered sources, surface); surface=False suppresses
+        an irrelevant/non-question turn. Fail-open."""
+        if not SurfaceSelector.enabled() or not ranked:
+            return ranked, True
         reordered, receipt = await asyncio.to_thread(
             self._selector.order, query, thread, ranked
         )
@@ -205,7 +206,7 @@ class EvidenceCoordinator:
             self._state.session_id(), "surface_selection", receipt,
             policy_digest=self._state.session_policy_digest(),
         )
-        return reordered
+        return reordered, bool(receipt.get("surface", True))
 
     def register_assistant_utterance(self, text: str) -> None:
         """Record text the assistant is about to speak, for echo suppression."""
@@ -520,10 +521,16 @@ class EvidenceCoordinator:
             sources.extend(ripgrep_result.sources)
 
         ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
-        ranked = await self._surface_order(query, decision.thread, ranked)
+        ranked, surface = await self._surface_order(query, decision.thread, ranked)
+        if not surface:
+            # Filtering agent judged this turn not card-worthy (rhetorical,
+            # greeting, logistics, bare project mention) or its evidence
+            # irrelevant; suppress to keep the HUD scannable.
+            await self._state.set_lane(RetrievalLane.ASK, LaneState.IDLE,
+                                       "Suppressed: not card-worthy")
+            return
 
-        # No resolver means we cannot judge readiness (different from "not
-        # ready"); fall back to the legacy predicate so offline runs still work.
+        # No resolver -> cannot judge readiness; fall back to the legacy predicate.
         policy = self._state.session_policy()
         may_ask = (
             verdict.may_invoke_ask
@@ -538,9 +545,7 @@ class EvidenceCoordinator:
                 RetrievalLane.ASK, LaneState.DISABLED, "Disabled by session policy"
             )
 
-        # (#1454) Requirement ledger for this revision: each blocking clarifier
-        # is an UNRESOLVED entry, each default an ASSUMED one; completeness is
-        # judged by the resolver and this ledger, never by punctuation.
+        # (#1454) Requirement ledger: blocking clarifier -> UNRESOLVED, default -> ASSUMED.
         entries = build_requirement_entries(
             question_id, question_revision, query, decision, verdict
         )
@@ -660,9 +665,8 @@ class EvidenceCoordinator:
         )
         snapshot = await self._state.publish_card_fenced(card)
         if snapshot is None:
-            # The question moved on while this ran. Keep the work as an audit
-            # event rather than discarding it silently, and never let it reach
-            # the active card.
+            # The question moved on while this ran; keep the work as an audit
+            # event rather than discarding it silently.
             await self._journal.append(
                 self._state.session_id(),
                 "evidence_card_discarded_stale_revision",
@@ -742,10 +746,8 @@ class EvidenceCoordinator:
 
 
 # A sentence is question-shaped if it ends in '?' OR in a spoken tag question
-# ("... come before closing, right" / "... correct"). Live STT drops terminal
-# punctuation nondeterministically -- one oracle trial transcribed the same
-# clip with almost no '?' at all -- and tag questions are how interviewers
-# actually confirm constraints aloud.
+# ("... right" / "... correct"): live STT drops terminal punctuation
+# nondeterministically, and tag questions confirm constraints aloud.
 _QUESTION_SENTENCE_RE = re.compile(
     r"([^.?!]{8,}(?:\?|,\s*(?:right|correct|okay|yes)\b[.?!]?))", re.IGNORECASE
 )
@@ -772,10 +774,8 @@ def _bounded_query(raw: str, verdict: ReadinessVerdict | None) -> str:
         if canonical:
             return canonical[:220]
     # Accumulate trailing question sentences newest-first within the budget,
-    # not just the last one: a spoken turn is often a primary question followed
-    # by a confirmation tail ("What makes X valid? Y comes before Z, right?"),
-    # and keeping only the tail drops the actual question -- caught by
-    # eval_real_stt_window when a last-sentence-only fallback shipped here.
+    # not just the last one: a turn is often a primary question plus a
+    # confirmation tail, and keeping only the tail drops the actual question.
     sentences = _QUESTION_SENTENCE_RE.findall(" ".join(raw.split()))
     picked: list[str] = []
     total = 0

@@ -38,13 +38,23 @@ DEFAULT_EFFORT = "low"
 MAX_CANDIDATES = 10
 
 PROMPT = (
-    "You decide which retrieved evidence a live meeting assistant should "
-    "surface to answer the CURRENT question. Judge relevance to the question "
-    "and the conversation, not surface keyword overlap: prefer the source that "
-    "actually answers it, and demote generic file matches (licenses, notices, "
-    "readmes, fixtures) that merely mention the topic.\n"
-    "Reply with ONLY a JSON array of candidate ids (integers), most relevant "
-    "first. Include every id exactly once.\n\n"
+    "You are the filtering agent for a live meeting assistant. A candidate "
+    "utterance was detected and evidence retrieved. You make two decisions.\n\n"
+    "1. SURFACE (the gate): is this a genuine, answerable question or request "
+    "for information that a human would want an evidence card for? Set "
+    "surface=false ONLY for turns that are not real questions -- a rhetorical "
+    "aside ('right?', 'make sense?'), a greeting or standup framing, a "
+    "social/logistics remark ('can everyone hear me', 'move this to Friday'), a "
+    "plain statement, a bare mention of a project name, or an incomplete "
+    "half-formed fragment. A genuine question ALWAYS surfaces, even when the "
+    "retrieved evidence is thin or weak -- a thin answer is the card's problem, "
+    "not a reason to hide that the question was asked. When unsure, surface.\n\n"
+    "2. ORDER: if surfacing, order the candidate ids most-relevant-first by "
+    "MEANING, not keyword overlap -- put the source that actually answers the "
+    "question first and demote generic file matches (licenses, notices, "
+    "readmes, fixtures, unrelated tests) that merely mention the topic.\n\n"
+    "Reply with ONLY JSON: {\"surface\": true|false, \"order\": [ids], "
+    "\"reason\": \"<one sentence>\"}\n\n"
 )
 
 
@@ -73,11 +83,19 @@ class SurfaceSelector:
     def order(
         self, query: str, thread: str, sources: list[EvidenceSource]
     ) -> tuple[list[EvidenceSource], dict[str, Any]]:
-        """Return (reordered sources, receipt). Fail-open to the input order."""
+        """Decide whether to surface a card and, if so, order its evidence.
+
+        Returns (reordered sources, receipt). receipt["surface"] is the gate:
+        False means suppress the card (an irrelevant/non-question turn).
+        Fail-open on every failure path: an unreachable or unparseable selector
+        keeps surface=True and the input order, so the card path never goes
+        dark because the gate could not run.
+        """
 
         receipt: dict[str, Any] = {"mode": "surface_selector", "model": self._model,
-                                   "effort": self._effort, "applied": False}
-        if len(sources) < 2:
+                                   "effort": self._effort, "applied": False,
+                                   "surface": True}
+        if not sources:
             return sources, receipt
         key = resolver_key()
         if not key:
@@ -116,18 +134,22 @@ class SurfaceSelector:
             with urllib.request.urlopen(request, timeout=self._timeout_s) as response:
                 data = json.loads(response.read().decode("utf-8"))
             content = (data.get("choices") or [{}])[0].get("message", {}).get("content") or ""
-            order = _parse_order(content, len(pool))
+            decision = _parse_decision(content, len(pool))
         except Exception as exc:  # noqa: BLE001 -- fail-open on any transport error
             receipt["error"] = f"{type(exc).__name__}: {exc}"
-            logger.warning("surface selector failed ({}); keeping deterministic order", exc)
+            logger.warning("surface selector failed ({}); surfacing with input order", exc)
             return sources, receipt
         receipt["elapsed_s"] = round(time.monotonic() - start, 3)
-        if order is None:
-            receipt["error"] = "unparseable_order"
+        if decision is None:
+            receipt["error"] = "unparseable_decision"
             return sources, receipt
-        reordered = [pool[i] for i in order] + sources[MAX_CANDIDATES:]
         receipt["applied"] = True
-        receipt["order"] = order
+        receipt["surface"] = decision["surface"]
+        receipt["reason"] = decision["reason"]
+        if not decision["surface"]:
+            return sources, receipt
+        receipt["order"] = decision["order"]
+        reordered = [pool[i] for i in decision["order"]] + sources[MAX_CANDIDATES:]
         return reordered, receipt
 
 
@@ -149,23 +171,27 @@ def _balanced_pool(sources: list[EvidenceSource], cap: int) -> list[EvidenceSour
     return pool
 
 
-def _parse_order(content: str, count: int) -> list[int] | None:
-    start, end = content.find("["), content.rfind("]")
+def _parse_decision(content: str, count: int) -> dict[str, Any] | None:
+    """Parse {"surface": bool, "order": [ids], "reason": str}. None if unusable."""
+
+    start, end = content.find("{"), content.rfind("}")
     if start == -1 or end == -1:
         return None
     try:
         raw = json.loads(content[start:end + 1])
     except json.JSONDecodeError:
         return None
-    seen: list[int] = []
-    for value in raw:
-        if isinstance(value, int) and 0 <= value < count and value not in seen:
-            seen.append(value)
-    if not seen:
+    if not isinstance(raw, dict) or "surface" not in raw:
         return None
-    # Append any candidate the model dropped, preserving its original position,
-    # so no gathered evidence is silently lost by a short model reply.
+    surface = bool(raw.get("surface"))
+    reason = str(raw.get("reason") or "")
+    order: list[int] = []
+    for value in raw.get("order") or []:
+        if isinstance(value, int) and 0 <= value < count and value not in order:
+            order.append(value)
+    # Append any candidate the model dropped, preserving original position, so
+    # no gathered evidence is silently lost when the card does surface.
     for index in range(count):
-        if index not in seen:
-            seen.append(index)
-    return seen
+        if index not in order:
+            order.append(index)
+    return {"surface": surface, "order": order, "reason": reason}
