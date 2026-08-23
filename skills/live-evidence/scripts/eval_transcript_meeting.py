@@ -105,6 +105,8 @@ def score_meeting(meeting: dict[str, Any], rows: list[dict[str, Any]],
     transcript = [r["payload"] for r in rows if r.get("kind") == "transcript"]
     proposal_blob = json.dumps(
         [r["payload"] for r in rows if r.get("kind") == "action_candidates_proposed"]).lower()
+    surfaced_points = {r["payload"].get("point_id")
+                       for r in rows if r.get("kind") == "briefing_point_surfaced"}
 
     results = []
     for item in meeting["oracle"]:
@@ -112,6 +114,18 @@ def score_meeting(meeting: dict[str, Any], rows: list[dict[str, Any]],
         detected = any(
             sum(1 for t in tokens if t.lower() in str(e.get("text") or "").lower()) >= 2
             for e in transcript)
+        if item["family"] == "briefing":
+            # Leading-a-presentation capability: the expected talking point
+            # surfaced when the transcript opened its door. No answer to judge
+            # -- surfacing the right point at the right moment IS the outcome.
+            surfaced = item["point_id"] in surfaced_points
+            results.append({
+                "id": item["id"], "family": "briefing", "detected": detected,
+                "card_matched": surfaced, "answer_similar": surfaced,
+                "reason": f"talking point '{item['point_id']}' "
+                          + ("surfaced" if surfaced else "did not surface"),
+            })
+            continue
         if item["family"] == "research":
             has_proposal = "fact_check" in proposal_blob and any(
                 t.lower() in proposal_blob for t in tokens[:2])
@@ -163,13 +177,17 @@ def main() -> int:
     spec = json.loads((root / "fixtures" / "transcript_meetings.json").read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_root = OUT_ROOT / stamp
+    only = {a for a in sys.argv[2:] if not a.startswith("-")}
     reports = []
     for meeting in spec["meetings"]:
-        print(f"== meeting {meeting['meeting_id']}")
+        if only and meeting["meeting_id"] not in only:
+            continue
+        print(f"== meeting {meeting['meeting_id']} [{meeting.get('scenario', '')}]")
         session = {
             "session_id": meeting["meeting_id"], "type": "synthetic",
             "repos": meeting.get("repos") or [],
             "fixture_repo": meeting.get("fixture_repo"),
+            "briefing_pack": meeting.get("briefing_pack"),
             "script": [{"text": turn["text"]} for turn in meeting["transcript"]],
         }
         try:

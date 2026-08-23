@@ -753,6 +753,30 @@
         ]
       },
       "notes": "Goal v2 self-test: a chatterbox-rendered synthetic Sparta meeting plus the pinned interview wav, both through the real PipeWire null-sink -> Docker RealtimeSTT -> resolver -> retrieval path, scored per card family (memory / research / code) against oracles derived before the run, with question-onset-to-card latency recorded. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM."
+    },
+    {
+      "name": "transcript-meeting-client-pitch-agentic",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-transcript-meeting client-pitch-straive"
+      ],
+      "timeout_seconds": 600,
+      "infra_blocked_when": [
+        "server did not come up",
+        "chatterbox produced no wav",
+        "INFRA_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "client meeting / leading a presentation",
+          "transcript meeting: PASS"
+        ]
+      },
+      "notes": "Scenario-based agentic transcript eval (Graham's design, 2026-08-23): a COMPLETE speaker transcript, questions/expected outcomes extracted in advance, played through chatterbox in real time down the live path; each produced card judged for SEMANTIC SIMILARITY by an agentic SciLLM judge, not token overlap. This CLIENT-MEETING scenario exercises the briefing-pack capability (talking points surface as the client opens doors) and passes reliably. The sibling standup scenario (sparta-standup-invented) is a stricter memory/code/research diagnostic that currently exposes retrieval-ranking and STT-segmentation gaps (see PROJECT_KNOWLEDGE) and is NOT yet a passing gate. Add scenarios (code interview, pitchdeck presentation) as fixture entries in transcript_meetings.json."
     }
   ]
 }

@@ -3,7 +3,29 @@
   "note": "Goal-v2 agentic eval. Each meeting is a COMPLETE speaker transcript authored/collected in advance; its questions and expected answers are extracted from that transcript BEFORE the run. The transcript is synthesized turn-by-turn through the live chatterbox -> PipeWire -> Docker STT -> resolver -> retrieval path in real time, and each produced card is judged for SEMANTIC SIMILARITY to the expected answer by an agentic judge (SciLLM), not token overlap. A card that is technically on-topic but does not convey the expected answer fails.",
   "meetings": [
     {
+      "meeting_id": "client-pitch-straive",
+      "scenario": "client meeting / leading a presentation",
+      "source": "invented Straive-side client conversation; briefing pack surfaces the human's prepared talking points as the client opens doors",
+      "briefing_pack": "briefing_straive.json",
+      "repos": [],
+      "transcript": [
+        {"speaker": "Client", "text": "Thanks for making time. Let me frame where we are: the core of what we do now is helping enterprises operationalize AI, getting them from pilots and POCs into production."},
+        {"speaker": "Client", "text": "A big growth area for us is agentic AI, multi-agent orchestration with proper monitoring and auditability."},
+        {"speaker": "Client", "text": "One thing we always probe with partners: how do you handle evaluation and testing of agent systems, how do you deal with hallucinations in production?"},
+        {"speaker": "Client", "text": "Many of our clients are in regulated, compliance-heavy industries, so audit trails matter a great deal."},
+        {"speaker": "Client", "text": "That covers our side. Do you have any questions for us?"}
+      ],
+      "oracle": [
+        {"id": "brief-operationalize", "family": "briefing", "point_id": "operationalization", "match_tokens": ["operationalize", "pilots", "production"]},
+        {"id": "brief-agentic", "family": "briefing", "point_id": "agentic-verification", "match_tokens": ["agentic", "multi-agent", "orchestration"]},
+        {"id": "brief-evals", "family": "briefing", "point_id": "verification-differentiator", "match_tokens": ["evaluation", "testing", "hallucinations"]},
+        {"id": "brief-compliance", "family": "briefing", "point_id": "governance-compliance", "match_tokens": ["regulated", "compliance", "audit"]},
+        {"id": "brief-why-me", "family": "briefing", "point_id": "why-me-question", "match_tokens": ["questions", "for", "us"]}
+      ]
+    },
+    {
       "meeting_id": "sparta-standup-invented",
+      "scenario": "team working meeting / standup",
       "source": "invented multi-speaker Sparta Explorer standup",
       "repos": ["~/workspace/experiments/sparta"],
       "transcript": [

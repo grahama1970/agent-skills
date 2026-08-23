@@ -129,6 +129,13 @@ def capture_live_session(
                              memory_url="http://127.0.0.1:8601",
                              repos=repos or None)
 
+    # A client-meeting / leading-a-presentation scenario loads a briefing pack
+    # so talking points surface as the other side opens a door -- a different
+    # capability mix than a Q&A standup, exercised through the same live path.
+    if session.get("briefing_pack"):
+        pack = json.loads((SKILL / "fixtures" / session["briefing_pack"]).read_text())
+        campaign.http("POST", f"{server.url}/api/briefing/load", pack)
+
     sink = f"le-campaign-{server.port}"
     oracle_mod.create_virtual_sink(sink)
     try:
