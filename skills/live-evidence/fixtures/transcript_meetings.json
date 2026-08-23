@@ -24,6 +24,24 @@
       ]
     },
     {
+      "meeting_id": "live-standup-monitored",
+      "scenario": "live monitored meeting (chatterbox TTS + RealtimeSTT)",
+      "source": "invented Sparta standup, STT-robust: two well-separated questions (memory + research), load-bearing ones not at the tail where the final flush truncates; a filler turn follows the last question",
+      "repos": ["~/workspace/experiments/sparta"],
+      "transcript": [
+        {"speaker": "Lead", "text": "Morning everyone. Quick monitored standup on the Sparta Explorer work."},
+        {"speaker": "Lead", "text": "First question for the group. Remind me what the hard rules are — the read first rules we learned the hard way — recorded in the Sparta project memory index?"},
+        {"speaker": "Engineer", "text": "Right, good to keep those in front of the new contractor."},
+        {"speaker": "Lead", "text": "Second question. Can someone confirm what the latest released version of the MITRE SPARTA framework is right now, the space attack matrix?"},
+        {"speaker": "Engineer", "text": "I will chase that down and post it in the channel after this."},
+        {"speaker": "Lead", "text": "Perfect. That is all I had for the standup today, thanks everyone."}
+      ],
+      "oracle": [
+        {"id": "memory-hard-rules", "family": "memory", "question": "What are the hard read-first rules in the Sparta project memory index?", "match_tokens": ["hard", "rules", "sparta"], "expected_answer": "The read-first hard rules from the SPARTA Project Memory Index: never skim a SKILL.md — read the entire SKILL.md cover to cover before running any command, treated as non-negotiable constraints learned the hard way."}
+      ],
+      "oracle_note": "Gates on the memory-recall card surfaced through the full live audio path (the reliably-green core capability). The second spoken question (MITRE version) is kept in the transcript so the assistant is monitoring a realistic multi-question meeting, but the research-proposal family is NOT gated here because its live-audio detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically (STT-free) by eval_action_lane."
+    },
+    {
       "meeting_id": "sparta-standup-invented",
       "scenario": "team working meeting / standup",
       "source": "invented multi-speaker Sparta Explorer standup",

@@ -802,6 +802,30 @@
         ]
       },
       "notes": "Regression gate for AGENTIC CARD SURFACING: the gpt-5.5 low-reasoning selector must float the answering memory doc above deterministic ripgrep noise, and end-to-end (question posted over HTTP to bypass STT variance) the surfaced card must cite the sparta project memory and its answer be judged semantically similar to the expected read-first rules. Fails if a change re-lets deterministic ripgrep noise win or re-pins recall to one project (both root-caused and fixed 2026-08-23). Deliberately STT-free so it isolates the selector/retrieval regression from the separate STT-segmentation flake."
+    },
+    {
+      "name": "live-monitored-meeting-agentic",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-transcript-meeting live-standup-monitored"
+      ],
+      "timeout_seconds": 600,
+      "infra_blocked_when": [
+        "server did not come up",
+        "chatterbox produced no wav",
+        "INFRA_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "live monitored meeting (chatterbox TTS + RealtimeSTT)",
+          "transcript meeting: PASS"
+        ]
+      },
+      "notes": "LIVE MONITORED MEETING end-to-end: an invented Sparta standup rendered turn-by-turn by the live chatterbox server, played through a PipeWire null sink, transcribed by Docker RealtimeSTT (GPU), and answered down the full resolver -> retrieval -> gpt-5.5 surface selector -> card path. The memory-recall card is judged SEMANTICALLY SIMILAR to the expected read-first rules by an agentic SciLLM judge -- the real live-audio card-surfacing capability, gated. The meeting also carries a second spoken question so the assistant is monitoring a realistic multi-question call, but the gate is the memory card because live-audio research-proposal detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically by eval_action_lane instead. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM. The denser sparta-standup-invented and meeting-campaign scenarios remain diagnostics that still expose the STT segmentation flake."
     }
   ]
 }
