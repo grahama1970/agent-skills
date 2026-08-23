@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 import re
@@ -838,6 +839,25 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 }
             )
         ok = bool(response_text.strip())
+        requested_attachments = [str(item) for item in (getattr(args, "attach_files", None) or [])]
+        local_attachment_delivery = (
+            submit_meta.get("local_attachment_delivery")
+            if isinstance(submit_meta, dict)
+            else None
+        )
+        if ok and requested_attachments and _is_direct_claude_cli_handler(handler):
+            if not isinstance(local_attachment_delivery, dict) or local_attachment_delivery.get("delivered") is not True:
+                failure = (
+                    "local_model_attachment_delivery_missing: requested attachments were not "
+                    "inlined into the local Claude lane"
+                )
+                ok = False
+            elif _response_denies_attachment_access(response_text):
+                failure = (
+                    "local_model_attachment_unavailable: local Claude response explicitly "
+                    "denied access to the requested evidence"
+                )
+                ok = False
         if ok and browser_attachment_paths and _response_denies_attachment_access(response_text):
             failure = (
                 f"{BROWSER_ATTACHMENT_UNAVAILABLE}: provider response explicitly denied access "
@@ -1041,6 +1061,11 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "browser_attachment_paths": browser_attachment_paths,
         "requested_attachment_paths": [str(item) for item in (getattr(args, "attach_files", None) or [])],
         "browser_local_path_preflight": browser_local_path_preflight,
+        "local_attachment_delivery": (
+            submit_meta.get("local_attachment_delivery")
+            if isinstance(submit_meta, dict)
+            else None
+        ),
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
         "browser_oracle": resolve_payload,
@@ -2506,8 +2531,98 @@ def _response_denies_attachment_access(text: str) -> bool:
         "unable to inspect the visual contents",
         "cannot inspect the visual contents",
         "file was not provided or rendered",
+        "there is no battle bundle in it",
+        "no battle bundle in it",
+        "battle bundle is not present",
+        "bundle is not present in this dispatch",
+        "bundle was not bound",
+        "nothing was bound to this handler node",
+        "accepted_input_count: 0",
+        '"accepted_input_count": 0',
     )
     return any(marker in normalized for marker in markers)
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _local_text_attachment_prompt(
+    attachments: list[str],
+    *,
+    max_chars_per_file: int = 80_000,
+) -> tuple[str, dict[str, Any] | None]:
+    """Inline text attachments for local non-browser model lanes.
+
+    Browser seats use Surf attachment/inlining rules. Local Claude CLI seats
+    receive stdin only, so a requested bundle must be copied into that stdin and
+    recorded as delivered. Otherwise the model can answer from prompt prose and
+    still produce a PASS-looking receipt.
+    """
+    if not attachments:
+        return "", None
+
+    delivered: list[dict[str, Any]] = []
+    sections: list[str] = []
+    for index, attachment in enumerate(attachments, start=1):
+        path = Path(attachment).expanduser()
+        if not path.is_file():
+            raise RuntimeError(f"local_model_attachment_missing: requested attachment not readable: {attachment}")
+        suffix = path.suffix.lower()
+        if suffix in _IMAGE_SUFFIXES or suffix in {".pdf", ".zip"}:
+            raise RuntimeError(
+                "local_model_attachment_unsupported: direct Claude CLI seats only support readable text "
+                f"attachments, got {path.name}"
+            )
+        text = path.read_text(encoding="utf-8", errors="replace")
+        truncated = len(text) > max_chars_per_file
+        body = text[:max_chars_per_file]
+        label = f"LOCAL_ATTACHMENT_{index}"
+        sections.append(
+            "\n".join(
+                [
+                    f"### {label}: {path.name}",
+                    "",
+                    "```text",
+                    body.rstrip(),
+                    "```",
+                    "",
+                    (
+                        f"[{label} truncated at {max_chars_per_file} characters]"
+                        if truncated
+                        else f"[{label} complete]"
+                    ),
+                ]
+            )
+        )
+        delivered.append(
+            {
+                "label": label,
+                "path": str(path.resolve()),
+                "name": path.name,
+                "sha256": _sha256_file(path),
+                "chars": len(text),
+                "inlined_chars": len(body),
+                "truncated": truncated,
+            }
+        )
+
+    prompt_suffix = "\n\nLocal evidence attachments inlined for this local model lane:\n\n"
+    prompt_suffix += "\n\n".join(sections)
+    prompt_suffix += "\n\nUse the LOCAL_ATTACHMENT_* sections as source material. Do not claim the bundle is missing.\n"
+    return prompt_suffix, {
+        "schema": "ask.local_model_attachment_delivery.v1",
+        "status": "PASS",
+        "delivered": True,
+        "mode": "stdin_inline_text",
+        "requested_count": len(attachments),
+        "delivered_count": len(delivered),
+        "attachments": delivered,
+    }
 
 
 def _looks_browser_attachment_ui_missing(text: str) -> bool:
@@ -6119,6 +6234,8 @@ def _is_subagent_handler_args(args: argparse.Namespace) -> bool:
 def _provider_transport_for_args(args: argparse.Namespace, handler: str) -> str:
     if handler in HANDLER_SUBMIT_COMMANDS:
         return "$surf"
+    if _is_direct_claude_cli_handler(handler):
+        return "$claude-cli"
     if _is_subagent_handler_args(args):
         return "$subagent-runner"
     return "$scillm"
@@ -6127,6 +6244,8 @@ def _provider_transport_for_args(args: argparse.Namespace, handler: str) -> str:
 def _transport_for_args(args: argparse.Namespace, handler: str) -> str:
     if handler in HANDLER_SUBMIT_COMMANDS:
         return HANDLER_SUBMIT_COMMANDS[handler]
+    if _is_direct_claude_cli_handler(handler):
+        return "claude.cli"
     if _is_subagent_handler_args(args):
         return "subagent-runner.codex_exec"
     return "scillm.chat"
@@ -6458,6 +6577,10 @@ def _run_claude_handler(
         "--dangerously-skip-permissions",
     ]
     prompt_text = prompt_path.read_text(encoding="utf-8")
+    attachment_suffix, local_attachment_delivery = _local_text_attachment_prompt(
+        [str(item) for item in (getattr(args, "attach_files", None) or [])]
+    )
+    prompt_text += attachment_suffix
     started = time.monotonic()
     proc = subprocess.run(
         claude_cmd,
@@ -6487,7 +6610,9 @@ def _run_claude_handler(
     meta = {
         "schema": "ask.claude_handler_meta.v1",
         "model": model,
+        "requested_handler": args.handler,
         "workspace": str(workspace),
+        "local_attachment_delivery": local_attachment_delivery,
         "claude_returncode": proc.returncode,
         "duration_seconds": round(duration, 3),
         "finished_at": _now(),

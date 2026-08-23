@@ -628,6 +628,33 @@
       "evidence_class": "fault_injected_deterministic"
     },
     {
+      "name": "direct-claude-opus-cli-receives-attachments-and-denials-fail-closed",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "supports_claims": [
+        "ask.local_claude.attachments_visible",
+        "ask.local_claude.attachment_denial_fail_closed"
+      ],
+      "seams": [
+        "local_claude.attachment_delivery",
+        "local_claude.self_recovery"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest -q tests/test_tau_roundtable_sanity_eval.py -k 'direct_claude_cli_inlines_text_attachment or claude_missing_bundle_wording'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic",
+      "notes": "Regression for 2026-08-23: one-shot passed --attach-file to claude-opus-4-8-high, but the direct Claude CLI lane ignored the file and returned an answer saying no Battle bundle was present while the node receipt still showed PASS. The worker now inlines text attachments into Claude stdin, records ask.local_model_attachment_delivery.v1, and treats missing-bundle wording as attachment denial."
+    },
+    {
       "name": "webclaude-is-never-preferred-over-the-local-lane",
       "type": "adversarial",
       "real_world": true,
@@ -1643,6 +1670,22 @@
       "evidence_required": [
         "fault_injected_deterministic"
       ]
+    },
+    {
+      "id": "ask.local_claude.attachments_visible",
+      "criticality": "critical",
+      "description": "Direct local Claude CLI lanes receive readable --attach-file evidence by inlining it into stdin and recording a delivery receipt.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "id": "ask.local_claude.attachment_denial_fail_closed",
+      "criticality": "critical",
+      "description": "A local Claude lane that says the requested bundle or attachment is missing is treated as an attachment-delivery failure, not a usable PASS.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
     }
   ],
   "seams": [
@@ -1763,6 +1806,32 @@
         "a stale green run is graded in place of a failed current one",
         "a wrong-seat or tokenless receipt is credited",
         "a self-reported success is trusted without execution"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "local_claude.attachment_delivery",
+      "claim_id": "ask.local_claude.attachments_visible",
+      "seam_type": "local_model/stdin_boundary",
+      "criticality": "critical",
+      "failure_modes": [
+        "a --attach-file bundle is recorded on the receipt but omitted from Claude stdin",
+        "the lane answers from request prose while believing no bundle was delivered"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
+      "seam_id": "local_claude.self_recovery",
+      "claim_id": "ask.local_claude.attachment_denial_fail_closed",
+      "seam_type": "provider_response_to_lane_status",
+      "criticality": "critical",
+      "failure_modes": [
+        "a local Claude response that says the bundle is missing is still marked PASS",
+        "attachment-delivery failure lacks a named recovery packet"
       ],
       "required_evidence": [
         "fault_injected_deterministic"

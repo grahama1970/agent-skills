@@ -6,6 +6,7 @@ import importlib.util
 import json
 import multiprocessing
 import os
+import subprocess
 import sys
 import time
 from types import SimpleNamespace
@@ -600,6 +601,65 @@ def test_worker_does_not_reject_cautious_answer_without_attachment_denial() -> N
     response_text = "TESTER_STATUS: UNKNOWN\nThe status label is too small to read confidently."
 
     assert tau_roundtable_worker._response_denies_attachment_access(response_text) is False
+
+
+def test_worker_rejects_claude_missing_bundle_wording() -> None:
+    response_text = "I checked the dispatch bundle before answering. There is no Battle bundle in it."
+
+    assert tau_roundtable_worker._response_denies_attachment_access(response_text) is True
+
+
+def test_direct_claude_cli_inlines_text_attachment_and_records_delivery(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    evidence = tmp_path / "bundle.md"
+    evidence.write_text("ASK_ATTACHMENT_SENTINEL=direct-claude-visible\n", encoding="utf-8")
+    prompt = tmp_path / "prompt.md"
+    prompt.write_text("Read the attached bundle and echo the sentinel.", encoding="utf-8")
+    response = tmp_path / "response.md"
+    raw = tmp_path / "response.raw.md"
+    meta = tmp_path / "response.meta.json"
+    captured: dict[str, str] = {}
+
+    def fake_run(command, *, input, capture_output, text, timeout, cwd):
+        captured["input"] = input
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            stdout="I saw ASK_ATTACHMENT_SENTINEL=direct-claude-visible",
+            stderr="",
+        )
+
+    monkeypatch.setattr(tau_roundtable_worker.subprocess, "run", fake_run)
+    args = SimpleNamespace(
+        handler="claude-opus-4-8-high",
+        attach_files=[str(evidence)],
+        timeout=60,
+        codex_workspace=str(tmp_path),
+    )
+
+    text, submit_meta, commands = tau_roundtable_worker._run_claude_handler(
+        args,
+        prompt_path=prompt,
+        response_path=response,
+        raw_path=raw,
+        meta_path=meta,
+    )
+
+    assert "ASK_ATTACHMENT_SENTINEL=direct-claude-visible" in captured["input"]
+    assert "LOCAL_ATTACHMENT_1" in captured["input"]
+    assert text == "I saw ASK_ATTACHMENT_SENTINEL=direct-claude-visible"
+    assert commands[0]["returncode"] == 0
+    assert tau_roundtable_worker._provider_transport_for_args(args, args.handler) == "$claude-cli"
+    assert tau_roundtable_worker._transport_for_args(args, args.handler) == "claude.cli"
+    assert submit_meta["requested_handler"] == "claude-opus-4-8-high"
+    delivery = submit_meta["local_attachment_delivery"]
+    assert delivery["schema"] == "ask.local_model_attachment_delivery.v1"
+    assert delivery["delivered"] is True
+    assert delivery["delivered_count"] == 1
+    assert delivery["attachments"][0]["name"] == "bundle.md"
+    assert json.loads(meta.read_text(encoding="utf-8"))["local_attachment_delivery"]["delivered"] is True
 
 
 def test_worker_fails_closed_when_browser_response_denies_attached_evidence(tmp_path: Path) -> None:
