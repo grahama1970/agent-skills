@@ -174,7 +174,7 @@
       }
     },
     {
-      "name": "ticket-repair-refuses-answer-only-creator-before-lease",
+      "name": "ticket-repair-uses-gpt55-high-creator-through-tau-workspace",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
@@ -185,7 +185,7 @@
         "--project",
         "..",
         "pytest",
-        "../tests/test_project_watchdog.py::test_ticket_repair_refuses_answer_only_creator_before_lease",
+        "../tests/test_project_watchdog.py::test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace",
         "-q"
       ],
       "expected": {

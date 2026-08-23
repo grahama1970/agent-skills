@@ -546,7 +546,7 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
         "repo": TAU_REPO,
         "worktree": str(_clean_worktree(tmp_path)),
         "runner_kind": "tau-command-loop",
-        "repair_creator": "oc-deepseek",
+        "repair_creator": "gpt-5.5-high",
         "repair_reviewer": "claude-fable-low",
         "ticket_repair_timeout_s": 10800,
     }
@@ -579,7 +579,7 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     # Authored in a worktree of the lane's own making, never the registered
     # checkout: that one is a human's working tree.
     workspace = argv[argv.index("--handler-workspace") + 1]
-    assert workspace.startswith("oc-deepseek=")
+    assert workspace.startswith("gpt-5.5-high=")
     assert str(tmp_path) != workspace.split("=", 1)[1]
     assert "repair-worktrees" in workspace
     assert argv[1] == "tau-dag"
@@ -610,7 +610,7 @@ def test_ticket_repair_documents_tau_owned_scillm_boundary() -> None:
     assert "must not reimplement SciLLM auth probing" in text
 
 
-def test_ticket_repair_refuses_answer_only_creator_before_lease(tmp_path) -> None:
+def test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace(tmp_path) -> None:
     project = {
         "project_id": "pdf_oxide",
         "repo": "grahama1970/pdf_oxide",
@@ -621,16 +621,30 @@ def test_ticket_repair_refuses_answer_only_creator_before_lease(tmp_path) -> Non
     issue = _issue(32, labels=["agent-work"])
     issue["watchdog_action"] = "ticket_repair"
     with (
-        mock.patch.object(handlers.github, "issue_comment") as comment,
-        mock.patch.object(handlers.github, "issue_edit") as edit,
-        mock.patch.object(handlers, "run_cmd") as dispatched,
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}
+        ) as dispatched,
+        mock.patch.object(
+            handlers.registry,
+            "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-32",
+                          "worktree": str(tmp_path / "repair-worktrees" / "pdf-oxide-32")},
+        ),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
-    assert result["status"] == "BLOCKED"
-    assert "not a locally-executing coding lane" in result["summary"]
-    assert not comment.called
-    assert not edit.called
-    assert not dispatched.called
+    assert result["status"] == "NEEDS_ATTENTION", result.get("summary")
+    asks = [c.args[0] for c in dispatched.call_args_list
+            if str(c.args[0][0]).endswith("ask/run.sh")]
+    assert len(asks) == 1
+    argv = asks[0]
+    workspace = argv[argv.index("--handler-workspace") + 1]
+    assert workspace.startswith("gpt-5.5-high=")
+    assert "repair-worktrees" in workspace
+    assert argv[1] == "tau-dag"
+    assert "--scillm-api-key" not in argv
+    assert "--scillm-base-url" not in argv
 
 
 # --------------------------------------------------------------------------- #

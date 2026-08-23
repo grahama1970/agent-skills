@@ -451,7 +451,7 @@
         "cwd": "/home/graham/workspace/experiments/pdf_oxide",
         "requires_start_handoff": false
       },
-      "repair_creator": "oc-deepseek",
+      "repair_creator": "gpt-5.5-high",
       "repair_reviewer": "claude-fable-low",
       "ticket_repair_timeout_s": 10800,
       "allowed_agents": [

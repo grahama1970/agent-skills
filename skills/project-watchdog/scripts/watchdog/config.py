@@ -125,7 +125,9 @@ def projects_path() -> Path:
 
 
 #: The creator seat. Must be able to mutate a workspace and produce a real git
-#: diff, which is the local Codex CLI lane -- an answer-only subagent cannot.
+#: diff through the Tau repair DAG. Bare ``codex`` is the local Codex CLI lane
+#: and is refused by the dispatch guard; model seats such as ``gpt-5.5-high``
+#: are valid when routed through ``$ask tau-dag`` with a handler workspace.
 DEFAULT_REPAIR_CREATOR = "codex"
 
 #: The reviewer seat. Deliberately a different model family from the creator:
@@ -229,14 +231,11 @@ def seat_can_run_code(seat: str) -> bool:
 
 
 def seat_can_author_repair(seat: str) -> bool:
-    """A creator must be a workspace-mutating local coding lane.
-
-    API/model handlers such as ``gpt-5.5-high`` can answer, but recent live
-    pdf_oxide runs showed they returned "no repository or shell access" instead
-    of editing the repair worktree. Refuse them before leasing.
-    """
+    """A creator must be able to author through the Tau repair workspace route."""
     s = seat.strip().lower()
     if s.startswith("oc-"):
+        return True
+    if s.startswith("gpt-") or s.startswith("codex-"):
         return True
     if s == "claude" or s.startswith("claude-"):
         return True
@@ -253,8 +252,9 @@ def assert_cross_provider_seats(creator: str, reviewer: str) -> None:
             )
     if not seat_can_author_repair(creator):
         raise SeatIndependenceError(
-            f"repair creator {creator!r} is not a locally-executing coding lane; "
-            "use an OpenCode Go `oc-*` seat or the local `claude` lane."
+            f"repair creator {creator!r} is not a Tau repair authoring lane; "
+            "use a Tau-routed model seat such as `gpt-5.5-high`, an OpenCode Go `oc-*` "
+            "seat, or the local `claude` lane."
         )
     cp, rp = seat_provider(creator), seat_provider(reviewer)
     if cp == rp:
