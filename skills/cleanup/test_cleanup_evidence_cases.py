@@ -149,6 +149,11 @@ class EvidenceCasesMixin:
         Path(cleanup.CLEANUP_EVIDENCE_FILENAME).unlink(missing_ok=True)
         artifact = cleanup.scan_cleanup_evidence_artifact()
         self.assert_equal(artifact["status"], "missing", "Artifact should report missing")
+        self.assert_in(
+            "--local-artifacts-only",
+            artifact["producer_command"],
+            "Cleanup evidence refresh must not route agents into Memory-write scan paths",
+        )
 
         verdict = cleanup.evaluate_candidate_dependency_evidence("any.py", artifact)
         self.assert_equal(

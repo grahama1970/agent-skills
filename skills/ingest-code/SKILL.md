@@ -473,6 +473,15 @@ These artifacts are fallback evidence, not a replacement for `/memory recall`.
 Prefer `/memory recall` when available; use the JSONL and evidence files for
 offline inspection, review bundles, or deterministic receipts.
 
+For cleanup evidence refreshes that must not mutate Memory, use:
+
+```bash
+./run.sh scan /path/to/repo --treesitter --cleanup-evidence --local-artifacts-only
+```
+
+`--local-artifacts-only` writes local analysis artifacts and skips knowledge
+storage, edge storage, and Memory projection application.
+
 ## Static Debugger Invocation Candidates
 
 `debug_invocations.jsonl` is a handoff artifact for `$debugger`, not proof that

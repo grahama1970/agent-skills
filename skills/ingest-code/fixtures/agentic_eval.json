@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "ingest-code",
   "trials": 3,
-  "proof_scope": "deterministic static ingest artifact gates",
+  "proof_scope": "deterministic static ingest artifact and cleanup-evidence gates",
   "claims": {
-    "proves": "the skill has deterministic tests for scan sanity, analysis handoff readback, and static freshness fail-closed behavior",
+    "proves": "the skill has deterministic tests for scan sanity, cleanup evidence emission, analysis handoff readback, and static freshness fail-closed behavior",
     "does_not_prove": "Memory activation, runtime debugger proof, model summaries, semantic correctness, or full release readiness"
   },
   "cases": [
@@ -18,6 +18,31 @@
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "cleanup-evidence-cli-regression",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "--locked",
+        "pytest",
+        "../tests/test_cleanup_evidence.py",
+        "../tests/test_scoped_rescan.py::test_collect_files_skips_agent_mirrors_and_output_dirs",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "required_assertions": [
+          "scan accepts --cleanup-evidence",
+          "scan writes cleanup.evidence.v1 readback",
+          "--no-cleanup-evidence suppresses the artifact",
+          "agent mirrors and ingest-code outputs are skipped"
+        ]
       }
     },
     {

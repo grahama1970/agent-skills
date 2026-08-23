@@ -38,6 +38,7 @@ from code_memory_client import (
     write_code_projection_request,
 )
 from code_analysis_handoff import write_analysis_handoff
+from cleanup_evidence import write_cleanup_evidence
 from environment_manifest import write_environment_manifest
 from runtime_verification_request import write_runtime_verification_requests
 from code_freshness_preflight import refresh_allowed, run_preflight
@@ -83,7 +84,8 @@ DEFAULT_GLOB_PATTERNS = [
 SKIP_DIRS = {
     ".venv", "venv", "node_modules", "__pycache__", ".git", ".tox",
     "dist", "build", "egg-info", ".eggs", ".mypy_cache", ".pytest_cache",
-    "site-packages", ".uv",
+    "site-packages", ".uv", ".agents", ".pi", ".codex", ".worktrees",
+    ".herdr-workstations", "artifacts",
 }
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
@@ -1795,20 +1797,33 @@ def scan(
     projection_mode: ProjectionMode | None = typer.Option(None, "--projection-mode", help="Projection handling: emit, apply, or none"),
     compat_symbol_upsert: bool = typer.Option(False, "--compat-symbol-upsert", help="Use legacy per-symbol upserts instead of complete projection application"),
     emit_analysis_handoff: Path | None = typer.Option(None, "--emit-analysis-handoff", help="Write ingest-code.analysis_handoff.v1 to this path; defaults under artifacts/ingest-code when Tree-sitter runs"),
+    cleanup_evidence: bool = typer.Option(True, "--cleanup-evidence/--no-cleanup-evidence", help="Write .cleanup-evidence.json for cleanup dependency decisions"),
+    local_artifacts_only: bool = typer.Option(False, "--local-artifacts-only", help="Write local analysis artifacts only; do not store knowledge, edges, or Memory projections"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be stored without writing"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     batch_size: int = typer.Option(50, help="Files per batch"),
 ):
     """Scan a codebase for functional knowledge and CWE mappings, store in /memory."""
+    cleanup_evidence_enabled = cleanup_evidence if isinstance(cleanup_evidence, bool) else True
+    local_artifacts_only_enabled = (
+        local_artifacts_only if isinstance(local_artifacts_only, bool) else False
+    )
     selected_projection_mode = _resolve_projection_mode(
         projection_mode,
         code_index=code_index,
         compat_symbol_upsert=compat_symbol_upsert,
     )
+    if local_artifacts_only_enabled:
+        selected_projection_mode = ProjectionMode.EMIT
     taxonomy = load_taxonomy_module()
     memory_script = find_memory_skill()
 
-    if not memory_script and not dry_run and selected_projection_mode is not ProjectionMode.EMIT:
+    if (
+        not memory_script
+        and not dry_run
+        and not local_artifacts_only_enabled
+        and selected_projection_mode is not ProjectionMode.EMIT
+    ):
         print('{"error": "Memory skill not found"}', file=sys.stderr)
         raise SystemExit(1)
 
@@ -1839,6 +1854,7 @@ def scan(
     )
     precomputed_edges: list[dict[str, Any]] | None = None
     code_graph_artifact: dict[str, Any] | None = None
+    cleanup_evidence_artifact: dict[str, Any] | None = None
     local_code_symbols_artifact: Path | None = None
     local_code_symbols_written = 0
     if treesitter and not cwe_only:
@@ -1897,11 +1913,28 @@ def scan(
         )
         print(f"Code graph artifacts: {code_graph_artifact['path']}", flush=True)
 
+    if cleanup_evidence_enabled and not cwe_only and not dry_run:
+        if precomputed_edges is None:
+            precomputed_edges = extract_edges(files, path)
+        cleanup_evidence_artifact = write_cleanup_evidence(
+            codebase_root=path,
+            files=files,
+            edges=precomputed_edges,
+        )
+        print(
+            "Cleanup evidence: "
+            f"{cleanup_evidence_artifact['path']} "
+            f"({cleanup_evidence_artifact['file_count']} files)",
+            flush=True,
+        )
+
     # --- Phase 1: Functional knowledge extraction ---
     knowledge_stored = 0
     knowledge_total = 0
 
-    if not cwe_only:
+    if not cwe_only and local_artifacts_only_enabled:
+        print("\n--- Phase 1: skipped by --local-artifacts-only ---", flush=True)
+    elif not cwe_only:
         print("\n--- Phase 1: Extracting functional knowledge ---", flush=True)
         failed = 0
 
@@ -1963,7 +1996,9 @@ def scan(
     files_with_cwes = 0
     cwe_summary: dict[str, int] = {}
 
-    if taxonomy:
+    if taxonomy and local_artifacts_only_enabled:
+        print("\n--- Phase 2: skipped by --local-artifacts-only ---", flush=True)
+    elif taxonomy:
         print("\n--- Phase 2: CWE scanning ---", flush=True)
         cwe_files = [f for f in files if f.suffix not in (".md", ".mdx")]
         cwe_monitor = Monitor(None, name="ingest-code-cwe", desc="CWE scanning", total=len(cwe_files)) if Monitor else None
@@ -2010,7 +2045,9 @@ def scan(
     edges_stored = 0
     edges_total = 0
 
-    if not cwe_only:
+    if not cwe_only and local_artifacts_only_enabled:
+        print("\n--- Phase 3: skipped by --local-artifacts-only ---", flush=True)
+    elif not cwe_only:
         print("\n--- Phase 3: Extracting code relationships ---", flush=True)
         edges = precomputed_edges if precomputed_edges is not None else extract_edges(files, path)
         edges_total = len(edges)
@@ -2024,7 +2061,9 @@ def scan(
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
-    if treesitter and selected_projection_mode is not ProjectionMode.NONE and not cwe_only:
+    if treesitter and local_artifacts_only_enabled and not cwe_only:
+        print("\n--- Phase 4: skipped by --local-artifacts-only ---", flush=True)
+    elif treesitter and selected_projection_mode is not ProjectionMode.NONE and not cwe_only:
         print("\n--- Phase 4: Structured code projection boundary ---", flush=True)
         if dry_run:
             print("  [DRY RUN] code projection request/application skipped", flush=True)
@@ -2113,7 +2152,7 @@ def scan(
                 })
             print(f"Code index: {code_symbols_stored} symbols stored", flush=True)
 
-    if code_graph_artifact and not dry_run and not cwe_only:
+    if code_graph_artifact and not dry_run and not cwe_only and not local_artifacts_only_enabled:
         if selected_projection_mode is not ProjectionMode.APPLY or code_projection_receipt:
             analysis_handoff_path = _analysis_handoff_target(emit_analysis_handoff, path)
             analysis_handoff = write_analysis_handoff(
@@ -2155,11 +2194,13 @@ def scan(
         "local_code_symbols_artifact": str(local_code_symbols_artifact) if local_code_symbols_artifact else None,
         "environment_manifest": environment_manifest,
         "code_graph_artifact": code_graph_artifact,
+        "cleanup_evidence_artifact": cleanup_evidence_artifact,
         "code_projection_request": code_projection_request,
         "code_projection_receipt": code_projection_receipt,
         "analysis_handoff": analysis_handoff,
         "runtime_verification_requests": runtime_verification_requests,
         "projection_mode": selected_projection_mode.value,
+        "local_artifacts_only": local_artifacts_only_enabled,
         "dry_run": dry_run,
     }
     print(f"\n{json.dumps(result, indent=2)}")
@@ -2193,12 +2234,13 @@ def scan(
             print(f"Warning: Could not write marker file: {e}", file=sys.stderr)
 
         # Store ingestion record in /memory for discoverability
-        _learn_http(
-            problem=f"Has codebase {path.resolve().name} been indexed for semantic search?",
-            solution=f"Yes, indexed on {datetime.now().isoformat()}. {knowledge_stored} lessons, {code_symbols_stored} code symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
-            scope="system",
-            tags=["ingest-code", "indexed-codebase", path.resolve().name, str(path.resolve())],
-        )
+        if not local_artifacts_only_enabled:
+            _learn_http(
+                problem=f"Has codebase {path.resolve().name} been indexed for semantic search?",
+                solution=f"Yes, indexed on {datetime.now().isoformat()}. {knowledge_stored} lessons, {code_symbols_stored} code symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
+                scope="system",
+                tags=["ingest-code", "indexed-codebase", path.resolve().name, str(path.resolve())],
+            )
 
 
 @cli.command()

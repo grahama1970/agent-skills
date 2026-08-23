@@ -4,8 +4,10 @@ Status: **implemented on both sides.**
 
 - Producer: `$ingest-code` `scan`, Phase 0, via
   `skills/ingest-code/cleanup_evidence.py`. Enabled by default; disable with
-  `--no-cleanup-evidence`. Not emitted by `rescan`, whose `--since` filter
-  yields a partial file set that cannot support a coverage claim.
+  `--no-cleanup-evidence`. Use `--local-artifacts-only` when refreshing this
+  artifact for cleanup so the scan does not store knowledge, edges, or Memory
+  projections. Not emitted by `rescan`, whose `--since` filter yields a partial
+  file set that cannot support a coverage claim.
 - Consumer: `$cleanup` (`scan_cleanup_evidence_artifact`,
   `evaluate_candidate_dependency_evidence`).
 - Reviewed-by: pending. The open questions at the end are unresolved.

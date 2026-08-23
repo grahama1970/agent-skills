@@ -1341,7 +1341,7 @@ def scan_cleanup_evidence_artifact(
         ),
         "producer_command": (
             f"{Path(__file__).resolve().parent.parent / 'ingest-code' / 'run.sh'} "
-            f"scan {Path.cwd()} --treesitter --cleanup-evidence"
+            f"scan {Path.cwd()} --treesitter --cleanup-evidence --local-artifacts-only"
         ),
     }
     if not path.exists():
@@ -1680,7 +1680,7 @@ def evaluate_mutation_readiness(
     if artifact_status != "complete":
         tracked_reasons.append(
             f"cleanup evidence artifact is {artifact_status}; run "
-            f"{evidence_artifact.get('producer_command', 'ingest-code with --cleanup-evidence')}"
+            f"{evidence_artifact.get('producer_command', 'ingest-code with --cleanup-evidence --local-artifacts-only')}"
         )
     candidate_verdicts = findings.get("candidate_dependency_evidence", [])
     verdict_counts = Counter(

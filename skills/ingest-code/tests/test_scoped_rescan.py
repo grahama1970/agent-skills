@@ -47,6 +47,29 @@ def test_collect_files_respects_gitignore_and_monitor_include_dirs(tmp_path: Pat
     assert "other/outside.py" not in rel
 
 
+def test_collect_files_skips_agent_mirrors_and_output_dirs(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    for directory in (
+        "src",
+        ".agents/skills/example",
+        ".pi/skills/example",
+        ".worktrees/branch",
+        "artifacts/ingest-code",
+    ):
+        (repo / directory).mkdir(parents=True)
+    (repo / "src" / "keep.py").write_text("def keep():\n    return 1\n")
+    (repo / ".agents" / "skills" / "example" / "skip.py").write_text("def skip():\n    return 1\n")
+    (repo / ".pi" / "skills" / "example" / "skip.py").write_text("def skip():\n    return 1\n")
+    (repo / ".worktrees" / "branch" / "skip.py").write_text("def skip():\n    return 1\n")
+    (repo / "artifacts" / "ingest-code" / "skip.py").write_text("def skip():\n    return 1\n")
+    _git(repo, "init")
+
+    files = ingest_code.collect_files(repo, ["*.py"])
+    rel = {p.relative_to(repo).as_posix() for p in files}
+
+    assert rel == {"src/keep.py"}
+
+
 def test_scan_roots_can_be_overridden_by_env(monkeypatch, tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     (repo / "scripts").mkdir(parents=True)
