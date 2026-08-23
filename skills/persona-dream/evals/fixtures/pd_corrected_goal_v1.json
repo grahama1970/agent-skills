@@ -87,8 +87,8 @@
     "minimum_opening_duration_ratio": 1.08,
     "maximum_opening_speech_rate_ratio": 0.92,
     "closing_duration_ratio_range": [
-      0.92,
-      1.08
+      0.85,
+      1.15
     ]
   },
   "identity": {
