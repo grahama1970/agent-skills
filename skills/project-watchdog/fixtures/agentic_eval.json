@@ -404,6 +404,32 @@
       }
     },
     {
+      "name": "stale-lease-expiry-and-reclaim",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_rotation.py::test_stale_lease_is_reclaimed_from_the_in_flight_set",
+        "../tests/test_project_rotation.py::test_fresh_lease_remains_in_flight",
+        "../tests/test_project_rotation.py::test_unknown_acquisition_time_fails_closed_as_in_flight",
+        "../tests/test_project_rotation.py::test_reclaim_removes_only_the_expired_lease_label",
+        "../tests/test_project_rotation.py::test_reclaimed_issue_is_not_redispatched_in_the_same_tick",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "5 passed"
+        ]
+      }
+    },
+    {
       "name": "a-stall-that-needs-a-human-is-not-reported-as-success",
       "type": "adversarial",
       "command": [
