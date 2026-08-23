@@ -8,6 +8,27 @@ The goal is clear: Battle needs one working adaptive-lineage backend proof and a
 PixiJS replay game that truthfully replays the same receipt set. PixiJS polish
 is not the product; it is the receipt inspector.
 
+## Watchdog Run After This Analysis
+
+`project-watchdog` dry-run correctly selected `#1499` after the Battle files
+were committed and pushed. The apply run then false-closed `#1499`.
+
+Evidence:
+
+- watchdog receipt:
+  `/home/graham/.local/state/project-watchdog/receipts/project-watchdog-20260823T145213Z/receipt.json`
+- `#1499` was closed as completed, then reopened.
+- `handler-gpt-5-5-high/response.md` said `NEEDS_ATTENTION` because it had no
+  repository/tool access.
+- `handler-claude-opus-5-medium/response.md` reported the live proof failed
+  with `g1_delta_validation_failed` and said a second attempt was still running.
+- `git log --oneline -- skills/battle` showed no new backend-proof commit after
+  `58cdec031b`.
+
+Conclusion: `#1499` remains open and is blocked behind `#1504` until
+`project-watchdog` rejects ticket-repair closure when Ask responses do not
+contain the ticket's required proof.
+
 ## Evidence Read This Turn
 
 - `skills/battle/CURRENT_STATUS.json`
