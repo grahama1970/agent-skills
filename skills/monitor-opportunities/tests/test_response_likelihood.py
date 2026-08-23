@@ -33,8 +33,10 @@ def test_rank_orders_by_response() -> None:
 def test_local_standout_boosts_only_with_fit() -> None:
     strong = score_opportunity({"organization": "CUBRC", "fit": 0.85, "workplace_type": "WNY_ONSITE", "source": "discover-contacts"})
     weak = score_opportunity({"organization": "Generic local shop", "fit": 0.2, "workplace_type": "WNY_ONSITE", "source": "indeed.com"})
-    assert strong["drivers"]["local"] == 1.0
-    assert any("Buffalo/WNY local" in r for r in strong["why_it_responds"])
+    # Graded geo: WNY onsite carries a strong (not maximal) local weight; WNY
+    # hybrid is the 1.0 ideal. Both are a standout local advantage.
+    assert strong["drivers"]["local"] == 0.85
+    assert any("Buffalo/WNY onsite" in r for r in strong["why_it_responds"])
     # mandate-first: weak-fit local must NOT be lifted, and must be flagged
     assert weak["response_score"] < strong["response_score"] * 0.4
     assert any("local alone is not a reason" in r for r in weak["why_it_responds"])

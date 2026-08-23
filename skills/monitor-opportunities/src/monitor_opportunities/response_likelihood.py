@@ -137,7 +137,7 @@ def score_opportunity(opp: dict[str, Any], channels: dict[str, Any] | None = Non
         reasons.append("low-competition channel (niche board / inbound / expert network), not the applicant pile")
     if fit >= 0.6:
         reasons.append("strong JD mandate-fit for your lane")
-    if fit < 0.6 and local >= 1.0:
+    if fit < 0.6 and local >= 0.85:
         reasons.append("BUT weak mandate fit — local alone is not a reason to apply (mandate-first)")
     if not has_driver:
         # Fit alone does not earn a reply — flag the cold path honestly.
