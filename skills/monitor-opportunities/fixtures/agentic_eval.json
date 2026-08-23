@@ -600,6 +600,59 @@
       }
     },
     {
+      "name": "morning-digest-employment-accounting",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_morning_digest_employment_accounting.py --output /tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MORNING_DIGEST_EMPLOYMENT_ACCOUNTING_OK",
+          "employment_input=",
+          "employment_included=",
+          "employment_excluded=",
+          "unaccounted=0"
+        ],
+        "stderr_excludes": [
+          "MORNING_DIGEST_EMPLOYMENT_ACCOUNTING_FAILED"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/invariant_pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/rebuilt_digest/selection_accounting/unaccounted",
+            "equals": 0
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/missing_employment_reason_count",
+            "equals": 0
+          }
+        ]
+      },
+      "proves": "A production morning digest projection over a completed live nightly report manifest records per-candidate selection accounting for admitted employment rows, with included + excluded equal to input and zero unaccounted candidates.",
+      "does_not_prove": "A fresh nightly can pass unrelated live source admission gates or that employment opportunities were submitted externally."
+    },
+    {
       "name": "relationship-prospect-queue-accounting",
       "type": "negative",
       "real_world": true,
