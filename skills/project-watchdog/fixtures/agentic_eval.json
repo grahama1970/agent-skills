@@ -39,6 +39,29 @@
       }
     },
     {
+      "name": "strict-project-does-not-fall-through-to-fleet",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_rotation.py::test_strict_project_tick_does_not_fall_through_to_another_project",
+        "../tests/test_project_rotation.py::test_all_project_tick_is_the_explicit_fleet_fallback",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "unknown-project-fails-closed-and-names-it",
       "type": "negative",
       "command": [

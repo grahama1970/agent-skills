@@ -212,6 +212,7 @@ def _audit_one_closure(
     receipt: dict[str, Any],
     *,
     apply: bool,
+    candidates: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
     """Review the oldest unchecked closure across active projects, if any.
 
@@ -219,7 +220,7 @@ def _audit_one_closure(
     can never starve the repair lane.
     """
     pending_by_project: list[dict[str, Any]] = []
-    for candidate in registry.rotation_order(load_json(config.projects_path()), state):
+    for candidate in candidates or registry.rotation_order(load_json(config.projects_path()), state):
         cid = str(candidate.get("project_id"))
         if state.get("projects", {}).get(cid, {}).get("state") != "active":
             continue
@@ -286,6 +287,7 @@ def _attest_completion(
     receipt: dict[str, Any],
     *,
     apply: bool,
+    candidates: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
     """Ask an independent seat whether a finished-looking project is finished.
 
@@ -299,7 +301,7 @@ def _attest_completion(
     """
     now = time.time()
     attested = state.setdefault("completion_attested_at", {})
-    for candidate in registry.rotation_order(load_json(config.projects_path()), state):
+    for candidate in candidates or registry.rotation_order(load_json(config.projects_path()), state):
         cid = str(candidate.get("project_id"))
         if state.get("projects", {}).get(cid, {}).get("state") != "active":
             continue
@@ -359,23 +361,28 @@ def _tick_locked(
         log_event(run_id, "tick_skipped", reason=receipt["stop_reason"])
         return finish(run_id, receipt_dir, receipt, 0)
 
-    try:
-        project = find_project(load_json(config.projects_path()), project_id)
-    except ValueError as exc:
-        receipt.update({"ok": False, "status": "BLOCKED", "errors": [str(exc)]})
-        logger.error("{}", exc)
-        return finish(run_id, receipt_dir, receipt, 2)
-
-    # Try every active project, best candidate first, until one has work. The
-    # crontab pins a single project and the tick used to stop there: if that one
-    # was paused, or active with nothing dispatchable, the whole fleet idled
-    # while another project had a ready ticket (#1084).
     projects_doc = load_json(config.projects_path())
+    if project_id == "all":
+        rotation_mode = "fleet"
+        candidates = registry.rotation_order(projects_doc, state)
+    else:
+        try:
+            requested_project = find_project(projects_doc, project_id)
+        except ValueError as exc:
+            receipt.update({"ok": False, "status": "BLOCKED", "errors": [str(exc)]})
+            logger.error("{}", exc)
+            return finish(run_id, receipt_dir, receipt, 2)
+        rotation_mode = "strict"
+        candidates = [requested_project]
+
+    # Fleet mode tries every active project, best candidate first, until one has
+    # work. Strict mode tries only the requested project; it must never dispatch
+    # another repository while the receipt says a specific project was requested.
     skipped: list[dict[str, Any]] = []
     project = None
     issues: list[dict[str, Any]] = []
 
-    for candidate in registry.rotation_order(projects_doc, state, requested=project_id):
+    for candidate in candidates:
         cid = str(candidate.get("project_id"))
         cstate = state.get("projects", {}).get(cid, {}).get("state")
         if cstate != "active":
@@ -470,6 +477,7 @@ def _tick_locked(
         break
 
     receipt["rotation"] = {
+        "mode": rotation_mode,
         "requested": project_id,
         "selected": None if project is None else str(project.get("project_id")),
         "skipped": skipped,
@@ -490,7 +498,9 @@ def _tick_locked(
         return finish(run_id, receipt_dir, receipt, 0)
 
     if project is None:
-        audited = _audit_one_closure(run_id, receipt_dir, state, receipt, apply=apply)
+        audited = _audit_one_closure(
+            run_id, receipt_dir, state, receipt, apply=apply, candidates=candidates
+        )
         if audited is not None:
             receipt["handled_issues"].append(audited)
             receipt["handled_count"] = 1
@@ -509,7 +519,9 @@ def _tick_locked(
     # Nothing to repair and nothing to audit: the point where the system would
     # otherwise call itself done. Ask an independent seat whether it actually is.
     if project is None:
-        attested = _attest_completion(run_id, receipt_dir, state, receipt, apply=apply)
+        attested = _attest_completion(
+            run_id, receipt_dir, state, receipt, apply=apply, candidates=candidates
+        )
         if attested is not None:
             receipt["handled_issues"].append(attested)
             receipt["handled_count"] = 1
