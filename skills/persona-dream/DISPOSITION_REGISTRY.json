@@ -139,7 +139,7 @@
       "supporting_receipts": [
         {
           "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-          "sha256": "sha256:a8c7286aea6502741db36bb748b1ecf5118180d298ca24f160e2fac3d3c44aca",
+          "sha256": "sha256:f722c23b8089da27a74ee7826a65ebfa56100c1d1cbbf1e2b296a9def256e601",
           "status": "PASS_STIMULUS_TECHNICAL_SCREEN",
           "role": "technical_screen_only"
         },
