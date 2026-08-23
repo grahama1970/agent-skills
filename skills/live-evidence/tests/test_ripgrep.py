@@ -73,3 +73,46 @@ def test_ripgrep_bounds_high_frequency_matches(tmp_path: Path) -> None:
     )
     assert result.ok is True
     assert 1 <= len(result.sources) <= 12
+
+
+def test_ripgrep_prefers_implementation_for_acronym_code_location(tmp_path: Path) -> None:
+    repo = tmp_path / "sparta"
+    repo.mkdir()
+    (repo / "docs").mkdir()
+    (repo / "plans").mkdir()
+    implementation_dir = repo / "src" / "sparta" / "pipeline" / "steps"
+    implementation_dir.mkdir(parents=True)
+    (repo / "docs" / "QRA_APPROACH.md").write_text(
+        "Status: this document describes the design for QRA generation.\n",
+        encoding="utf-8",
+    )
+    (repo / "plans" / "registry.txt").write_text(
+        "Gate SPARTA QRA generation on source-backed descriptions.\n",
+        encoding="utf-8",
+    )
+    implementation = implementation_dir / "12_qra.py"
+    implementation.write_text(
+        '"""Step 12 implementation entry point."""\n',
+        encoding="utf-8",
+    )
+    profile_path = tmp_path / "profile.yaml"
+    profile_path.write_text("name: qra\n", encoding="utf-8")
+    settings = AppSettings(
+        skill_root=tmp_path,
+        data_dir=tmp_path / "data",
+        profile_path=profile_path,
+        repo_roots=[repo],
+        memory_url="http://127.0.0.1:9",
+        subprocess_timeout_s=3.0,
+    )
+    profile = InterviewProfile(
+        name="qra",
+        project_aliases={"sparta": ["sparta"]},
+    )
+    result = asyncio.run(
+        RipgrepEvidenceClient(settings, profile).retrieve(
+            "Where is QRA generation implemented in the sparta pipeline?"
+        )
+    )
+    assert result.ok is True
+    assert result.sources[0].path == str(implementation.resolve())

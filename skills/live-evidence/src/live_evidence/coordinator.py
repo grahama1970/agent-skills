@@ -35,6 +35,7 @@ from .persistence import SessionJournal
 from .retrieval import (
     AskSolutionClient,
     ExternalSkillClient,
+    is_code_location_query,
     MemoryEvidenceClient,
     RipgrepEvidenceClient,
     rank_sources,
@@ -194,9 +195,12 @@ class EvidenceCoordinator:
     async def _surface_order(
         self, query: str, thread: str, ranked: list[EvidenceSource]
     ) -> tuple[list[EvidenceSource], bool]:
-        """Filtering agent decides whether to surface a card and orders its
-        evidence. Returns (ordered sources, surface); surface=False suppresses
-        an irrelevant/non-question turn. Fail-open."""
+        """Return ordered sources and whether the card should surface."""
+        if is_code_location_query(query):
+            receipt = {"mode": "deterministic_code_location", "applied": True, "surface": True}
+            await self._journal.append(self._state.session_id(), "surface_selection", receipt,
+                                       policy_digest=self._state.session_policy_digest())
+            return ranked, True
         if not SurfaceSelector.enabled() or not ranked:
             return ranked, True
         reordered, receipt = await asyncio.to_thread(
@@ -791,9 +795,6 @@ def _bounded_query(raw: str, verdict: ReadinessVerdict | None) -> str:
 
 
 def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
-    """Deprecated fallback: fires on incidental code retrieval. The live path
-    gates on the stage-1 resolver verdict instead."""
-
     return any(
         source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources
     )

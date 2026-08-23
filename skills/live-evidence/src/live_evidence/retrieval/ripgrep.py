@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from ..config import AppSettings, InterviewProfile
 from ..models import EvidenceSource, Freshness, RetrievalLane
-from ..trigger import search_terms
+from ..trigger import QUESTION_LEADS, STOPWORDS, search_terms, tokenize
 
 load_dotenv(override=False)
 
@@ -115,8 +115,12 @@ class RipgrepEvidenceClient:
         terms = _prioritized_terms(query, self._profile)
         if not terms:
             return RipgrepResult(sources=[], latency_ms=0, detail="No lexical terms", ok=False)
+        prefer_code_paths = _is_code_location_query(query)
         results = await asyncio.gather(
-            *(asyncio.to_thread(self._search_repo, root, terms) for root in self._settings.repo_roots),
+            *(
+                asyncio.to_thread(self._search_repo, root, terms, prefer_code_paths)
+                for root in self._settings.repo_roots
+            ),
             return_exceptions=True,
         )
         sources: list[EvidenceSource] = []
@@ -133,7 +137,12 @@ class RipgrepEvidenceClient:
             detail += f"; {errors} repo error(s)"
         return RipgrepResult(sources=sources, latency_ms=latency_ms, detail=detail, ok=bool(sources))
 
-    def _search_repo(self, root: Path, terms: list[str]) -> list[EvidenceSource]:
+    def _search_repo(
+        self,
+        root: Path,
+        terms: list[str],
+        prefer_code_paths: bool,
+    ) -> list[EvidenceSource]:
         command = [
             "rg",
             "--json",
@@ -159,24 +168,65 @@ class RipgrepEvidenceClient:
         )
         if returncode not in {0, 1} and not truncated:
             raise RuntimeError(f"rg exited {returncode}: {stderr[:200]}")
-        return _parse_rg_json(root, stdout)
+        sources = _parse_rg_json(root, stdout, prefer_code_paths=prefer_code_paths)
+        if prefer_code_paths:
+            sources.extend(_path_match_sources(root, terms))
+        return sources
 
 
 def _prioritized_terms(query: str, profile: InterviewProfile) -> list[str]:
     lower = query.casefold()
+    project_names = {project.casefold() for project in profile.project_aliases}
     aliases = [
         alias
         for project, values in profile.project_aliases.items()
-        for alias in [project, *values]
-        if alias.casefold() in lower
+        for alias in values
+        if alias.casefold() != project.casefold() and alias.casefold() in lower
     ]
     profile_terms = [
         term
         for term in profile.watch_terms
         if term.casefold() in lower and _term_is_specific(term)
     ]
-    lexical = [term for term in search_terms(query, limit=10) if _term_is_specific(term)]
-    return _unique([*aliases, *profile_terms, *lexical])[:6]
+    acronym_terms = _short_code_terms(query)
+    phrase_terms = _adjacent_acronym_phrases(query)
+    lexical = [
+        term
+        for term in search_terms(query, limit=10)
+        if _term_is_specific(term) and term.casefold() not in project_names
+    ]
+    return _unique([*phrase_terms, *aliases, *profile_terms, *acronym_terms, *lexical])[:6]
+
+
+def _short_code_terms(query: str) -> list[str]:
+    """Keep short uppercase/domain acronyms that are too specific to discard."""
+
+    result: list[str] = []
+    for token in tokenize(query):
+        if _is_short_code_token(token):
+            result.append(token)
+    return result
+
+
+def _adjacent_acronym_phrases(query: str) -> list[str]:
+    tokens = tokenize(query)
+    phrases: list[str] = []
+    for left, right in zip(tokens, tokens[1:], strict=False):
+        if _is_short_code_token(left) and _term_is_specific(right):
+            phrases.append(f"{left} {right}")
+        if _term_is_specific(left) and _is_short_code_token(right):
+            phrases.append(f"{left} {right}")
+    return phrases
+
+
+def _is_short_code_token(token: str) -> bool:
+    clean = token.strip("._-/")
+    normalized = clean.casefold()
+    if len(normalized) != 3:
+        return False
+    if normalized in STOPWORDS or normalized in QUESTION_LEADS:
+        return False
+    return clean.isupper() or any(char.isdigit() for char in clean)
 
 
 def _term_is_specific(term: str) -> bool:
@@ -272,7 +322,12 @@ def _is_match_event(line: bytes) -> bool:
     return isinstance(event, dict) and event.get("type") == "match"
 
 
-def _parse_rg_json(root: Path, stdout: str) -> list[EvidenceSource]:
+def _parse_rg_json(
+    root: Path,
+    stdout: str,
+    *,
+    prefer_code_paths: bool = False,
+) -> list[EvidenceSource]:
     sources: list[EvidenceSource] = []
     repository = root.name
     for raw_line in stdout.splitlines():
@@ -299,7 +354,7 @@ def _parse_rg_json(root: Path, stdout: str) -> list[EvidenceSource]:
         specific_matches = [term for term in matched_terms if _term_is_specific(term)]
         if not specific_matches:
             continue
-        score = _source_score(path, specific_matches)
+        score = _source_score(path, specific_matches, prefer_code_paths=prefer_code_paths)
         sources.append(
             EvidenceSource(
                 lane=RetrievalLane.RIPGREP,
@@ -321,6 +376,97 @@ def _parse_rg_json(root: Path, stdout: str) -> list[EvidenceSource]:
             )
         )
     return sources
+
+
+def _path_match_sources(root: Path, terms: list[str]) -> list[EvidenceSource]:
+    command = ["rg", "--files"]
+    for glob in INCLUDE_GLOBS:
+        command.extend(["--glob", glob])
+    for glob in SKIP_GLOBS:
+        command.extend(["--glob", glob])
+    command.append(str(root))
+    try:
+        result = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=3.0,
+            env={**os.environ, "RIPGREP_CONFIG_PATH": ""},
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    if result.returncode != 0:
+        return []
+    repository = root.name
+    sources: list[EvidenceSource] = []
+    for raw_path in result.stdout.splitlines()[:5_000]:
+        path = Path(raw_path)
+        if path.suffix.casefold() not in {".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go", ".java"}:
+            continue
+        try:
+            relative = path.resolve().relative_to(root.resolve())
+        except ValueError:
+            continue
+        matched_terms = _path_matched_terms(relative, terms)
+        if not matched_terms:
+            continue
+        score = _source_score(path, matched_terms, prefer_code_paths=True)
+        excerpt = _path_excerpt(path) or f"Implementation candidate matched by path: {relative.as_posix()}"
+        sources.append(
+            EvidenceSource(
+                lane=RetrievalLane.RIPGREP,
+                label=f"{repository}/{relative.as_posix()}",
+                excerpt=excerpt[:4_000],
+                score=score,
+                freshness=Freshness.CURRENT,
+                repository=repository,
+                path=str(path.resolve()),
+                line_start=1,
+                line_end=1,
+                metadata={
+                    "matched_terms": matched_terms,
+                    "path_match": True,
+                    "root": str(root),
+                    "content_sha256": _file_sha256(path),
+                },
+            )
+        )
+    return sources
+
+
+def _path_matched_terms(relative: Path, terms: list[str]) -> list[str]:
+    path_tokens = _path_tokens(relative)
+    acronym_tokens = {
+        term.casefold()
+        for term in terms
+        if _is_short_code_token(term)
+    }
+    if acronym_tokens and not (path_tokens & acronym_tokens):
+        return []
+    matches: list[str] = []
+    for term in terms:
+        term_tokens = _path_tokens(Path(term))
+        if path_tokens & term_tokens:
+            matches.append(term)
+    return matches
+
+
+def _path_excerpt(path: Path) -> str:
+    lines: list[str] = []
+    try:
+        for raw_line in path.read_text(encoding="utf-8", errors="replace").splitlines()[:40]:
+            line = raw_line.strip()
+            if not line:
+                continue
+            if line.startswith(("#", "import ", "from ")):
+                continue
+            lines.append(line)
+            if len(lines) >= 3:
+                break
+    except OSError:
+        return ""
+    return " ".join(lines)
 
 
 def _matched_texts(value: Any) -> list[str]:
@@ -345,7 +491,12 @@ def _positive_int(value: Any) -> int | None:
     return parsed if parsed >= 1 else None
 
 
-def _source_score(path: Path, matched_terms: list[str]) -> float:
+def _source_score(
+    path: Path,
+    matched_terms: list[str],
+    *,
+    prefer_code_paths: bool = False,
+) -> float:
     """Score exact matches higher when the current source path is also topical."""
 
     path_tokens = _path_tokens(path)
@@ -358,7 +509,53 @@ def _source_score(path: Path, matched_terms: list[str]) -> float:
     path_overlap = len(path_tokens & matched_tokens)
     suffix_bonus = 0.04 if path.suffix.casefold() in {".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go"} else 0.0
     path_bonus = min(0.18, path_overlap * 0.09)
-    return min(0.93, 0.56 + (0.10 * len(matched_terms)) + path_bonus + suffix_bonus)
+    implementation_bonus = _implementation_path_score(path) if prefer_code_paths else 0.0
+    return max(
+        0.05,
+        min(
+            0.98,
+            0.56 + (0.10 * len(matched_terms)) + path_bonus + suffix_bonus + implementation_bonus,
+        ),
+    )
+
+
+def _is_code_location_query(query: str) -> bool:
+    lower = query.casefold()
+    return any(
+        phrase in lower
+        for phrase in (
+            "where is",
+            "where in",
+            "implemented",
+            "implementation",
+            "which module",
+            "which file",
+            "source code",
+            "codebase",
+        )
+    )
+
+
+def _implementation_path_score(path: Path) -> float:
+    suffix = path.suffix.casefold()
+    parts = {part.casefold() for part in path.parts}
+    path_tokens = _path_tokens(path)
+    helper_penalty = (
+        -0.35
+        if path_tokens.intersection(
+            {"audit", "test", "tests", "check", "validate", "sanity", "repair", "gate", "promote"}
+        )
+        else 0.0
+    )
+    if suffix in {".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go", ".java"} and parts.intersection(
+        {"src", "scripts", "lib", "app", "server"}
+    ):
+        return 0.22 + helper_penalty
+    if suffix in {".md", ".txt", ".json", ".yaml", ".yml", ".toml"} or parts.intersection(
+        {"docs", "plans", "config", "tests", "fixtures"}
+    ):
+        return -0.18
+    return helper_penalty
 
 
 def _path_tokens(path: Path) -> set[str]:

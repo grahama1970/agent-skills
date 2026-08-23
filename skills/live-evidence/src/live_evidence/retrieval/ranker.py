@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from ..config import InterviewProfile
 from ..models import EvidenceSource, Freshness, RetrievalLane
 
@@ -44,6 +46,7 @@ def rank_sources(
     query_tokens = _tokens(query)
     priorities = {name.casefold(): index for index, name in enumerate(profile.repo_priorities)}
     scope = repo_scope or set()
+    code_location = is_code_location_query(query)
 
     def rank(source: EvidenceSource) -> tuple[float, str]:
         overlap = len(query_tokens & _tokens(f"{source.label} {source.excerpt}"))
@@ -61,10 +64,53 @@ def rank_sources(
             + repo_score
             + locator_score
             + _project_affinity(source, scope)
+            + (_code_location_affinity(source) if code_location else 0.0)
         )
         return total, source.label.casefold()
 
     return sorted(sources, key=rank, reverse=True)
+
+
+def is_code_location_query(query: str) -> bool:
+    lower = query.casefold()
+    return any(
+        phrase in lower
+        for phrase in (
+            "where is",
+            "where in",
+            "implemented",
+            "implementation",
+            "which module",
+            "which file",
+            "source code",
+            "codebase",
+        )
+    )
+
+
+def _code_location_affinity(source: EvidenceSource) -> float:
+    path = source.path or ""
+    suffix = Path(path).suffix.casefold()
+    parts = {part.casefold() for part in Path(path).parts}
+    path_tokens = _tokens(path)
+    score = 0.0
+    if source.lane is RetrievalLane.MEMORY:
+        score -= 0.35
+    if source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP}:
+        score += 0.12
+        if suffix in {".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go", ".java"}:
+            score += 0.24
+        if parts.intersection({"src", "scripts", "lib", "app", "server"}):
+            score += 0.12
+        if source.metadata.get("path_match"):
+            score += 0.08
+    if suffix in {".md", ".txt", ".json", ".yaml", ".yml", ".toml"} or parts.intersection(
+        {"docs", "plans", "config", "tests", "fixtures"}
+    ):
+        score -= 0.24
+    if path_tokens.intersection({"audit", "test", "tests", "check", "validate", "sanity", "repair", "gate", "promote"}):
+        score -= 0.24
+    return score
 
 
 def _project_affinity(source: EvidenceSource, scope: set[str]) -> float:
