@@ -277,7 +277,8 @@
       "failure_modes": [
         "slot mutation accepted",
         "Judge replay mismatch accepted",
-        "invalid lineage IDs accepted"
+        "invalid lineage IDs accepted",
+        "normalized adaptive-lineage mechanics fixture omits source receipt hash/status"
       ],
       "required_evidence": [
         "adversarial_live_e2e"

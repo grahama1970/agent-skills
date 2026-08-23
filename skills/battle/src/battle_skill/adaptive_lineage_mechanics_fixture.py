@@ -22,6 +22,7 @@ provider) — it is never hardcoded to ``"live"``.
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,10 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"expected a JSON object at {path}")
     return value
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _changed_dimensions(fitness: dict[str, Any]) -> list[dict[str, Any]]:
@@ -113,7 +118,8 @@ def normalize_adaptive_lineage_bundle(
 ) -> dict[str, Any]:
     """Project an adaptive-lineage qualification bundle into a UX fixture."""
     bundle_dir = Path(bundle_dir)
-    qualification = _read_json(bundle_dir / "adaptive-lineage-qualification.json")
+    qualification_path = bundle_dir / "adaptive-lineage-qualification.json"
+    qualification = _read_json(qualification_path)
     receipts_dir = bundle_dir / "receipts"
 
     specimens = {
@@ -200,6 +206,12 @@ def normalize_adaptive_lineage_bundle(
         "run_id": qualification.get("run_id"),
         "data_source": resolved_source,
         "generated_at": generated_at,
+        "source": {
+            "schema": "battle.adaptive_lineage_mechanics_fixture_source.v1",
+            "qualification_receipt_sha256": _sha256_file(qualification_path),
+            "qualification_receipt_schema": qualification.get("schema"),
+            "qualification_receipt_status": qualification.get("status"),
+        },
         "qualification": {
             "status": qualification.get("status"),
             "stop_condition": qualification.get("stop_condition"),

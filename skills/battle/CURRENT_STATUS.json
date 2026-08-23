@@ -877,8 +877,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "82a4defa3cf3308afe930930e50f309b6a1e9118",
-    "commit": "bc158e7dbb1c57555407b8984cd885590706787c",
+    "battle_tree": "78cf6bf4d8c5bb7f5c7a7d919e7d68087b601311",
+    "commit": "36f30269c29f1bb9c839eb43ff9103ce8a78d519",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -1053,5 +1053,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-23T15:43:49Z"
+  "updated_at": "2026-08-23T15:51:52Z"
 }

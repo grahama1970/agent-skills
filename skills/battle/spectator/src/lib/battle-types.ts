@@ -64,12 +64,20 @@ export type AdaptiveLineageQualification = {
 	reasons: string[];
 };
 
+export type AdaptiveLineageFixtureSource = {
+	schema: "battle.adaptive_lineage_mechanics_fixture_source.v1";
+	qualification_receipt_sha256: string;
+	qualification_receipt_schema: string | null;
+	qualification_receipt_status: string | null;
+};
+
 export type BattleAdaptiveLineageMechanicsFixtureV1 = {
 	schema: "battle.adaptive_lineage_mechanics_fixture.v1";
 	battle_id: string;
 	run_id: string;
 	data_source: AdaptiveLineageDataSource;
 	generated_at?: string | null;
+	source?: AdaptiveLineageFixtureSource;
 	qualification: AdaptiveLineageQualification;
 	selection: AdaptiveLineageSelection;
 	nodes: AdaptiveLineageNode[];

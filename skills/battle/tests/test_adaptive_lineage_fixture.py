@@ -51,11 +51,16 @@ def test_normalized_fixture_top_level_shape(tmp_path: Path) -> None:
         "battle_id",
         "run_id",
         "data_source",
+        "source",
         "qualification",
         "selection",
         "nodes",
         "edges",
     }
+    assert fixture["source"]["schema"] == "battle.adaptive_lineage_mechanics_fixture_source.v1"
+    assert fixture["source"]["qualification_receipt_schema"] == "battle.adaptive_lineage_qualification.v1"
+    assert fixture["source"]["qualification_receipt_status"] == "PASS"
+    assert len(fixture["source"]["qualification_receipt_sha256"]) == 64
 
 
 def test_normalized_fixture_nodes_and_parent_edges(tmp_path: Path) -> None:

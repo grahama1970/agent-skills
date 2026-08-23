@@ -179,5 +179,11 @@
     "deciding_criterion": "novelty_distance",
     "runner_up_id": "G1-B",
     "selected_id": "G1-A"
+  },
+  "source": {
+    "qualification_receipt_schema": "battle.adaptive_lineage_qualification.v1",
+    "qualification_receipt_sha256": "005e1ed51cdfe2e43df610de91157ebfdf65291eb0431d49a14763a293113653",
+    "qualification_receipt_status": "PASS",
+    "schema": "battle.adaptive_lineage_mechanics_fixture_source.v1"
   }
 }

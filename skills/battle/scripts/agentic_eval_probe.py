@@ -1638,6 +1638,7 @@ def main() -> int:
                 args.summary,
                 suite=args.suite,
                 tests=[
+                    "test_adaptive_lineage_fixture.py",
                     "test_adaptive_lineage_goal_qualification.py",
                     "test_adaptive_red_blue_lineage_canary_contract.py",
                     "test_adaptive_lineage_backend_verifier.py",
