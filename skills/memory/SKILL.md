@@ -1459,7 +1459,7 @@ assert "emotion_tags" not in resp and "chatterbox_tags" not in resp
 This skill tree does not currently contain a `references/` directory. Use the
 memory repository docs and source as the detailed contract:
 
-- `${HOME}/workspace/experiments/memory/docs/guides/QDRANT_EMBEDDING_CONTRACT.md` — Qdrant vs Arango semantic vector contract.
+- `${HOME}/workspace/experiments/memory/docs/guides/QDRANT_SEMANTIC_SYNC_CONTRACT.md` — current Qdrant vs Arango semantic vector contract: Arango stores pointer metadata only; Qdrant stores all Jina 1024-dimensional vectors.
 - `${HOME}/workspace/experiments/memory/docs/CONTRACT.md` — stable CLI and Python API contract.
 - `${HOME}/workspace/experiments/memory/docs/guides/QUICK_START.md` — setup and Python API quick start.
 - `${HOME}/workspace/experiments/memory/docs/INTENT_MODEL_WALKTHROUGH.md` — `/intent` and QuerySpec architecture.
