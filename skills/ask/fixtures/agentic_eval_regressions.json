@@ -22,6 +22,28 @@
           "LIVE_TRIAL_HARD_BOUNDED"
         ]
       }
+    },
+    {
+      "name": "roundtable-failclosed-no-empty-panel",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/ask && python3 scripts/eval_roundtable_failclosed.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ROUNDTABLE_FAILCLOSED_OK"
+        ],
+        "stderr_excludes": [
+          "EMPTY_PANEL_PASSED",
+          "SUBQUORUM_PASSED",
+          "SILENT_CONSENSUS_PASSED",
+          "QUORUM_MET_REJECTED"
+        ]
+      }
     }
   ]
 }
