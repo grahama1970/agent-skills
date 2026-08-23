@@ -267,6 +267,20 @@ path is:
 5. regenerate `CURRENT_STATUS.json` so the status, goal doc, receipts, and
    tickets agree.
 
+### Current Progress — 2026-08-23
+
+- Backend receipt regenerated: `local/battle-004-adaptive-lineage-20260823T153057Z/adaptive-lineage-qualification.json`.
+- Backend receipt read-back: `status: PASS`, `11/11` checks true, `selected_id: G1-A`,
+  `runner_up_id: G1-B`, `g2_judge_attempts: 1`, `mocked: no`, `live: yes`.
+- Status binding: `CURRENT_STATUS.json` now records
+  `source_receipts.adaptive_lineage_qualification` and
+  `p0_adaptive_lineage_fresh_qualification`.
+- Regression guard: `current-status-adaptive-lineage-receipt` in
+  `fixtures/agentic_eval.json` fails closed if status generation omits or
+  weakens the fresh adaptive-lineage receipt evidence.
+- Still not complete: the Pixi replay must be normalized and browser-verified
+  from this same receipt set before the immutable goal can be reported as met.
+
 ## Historical Completion Evidence — Recovery Only
 
 - [x] Adaptive backend and Tau recognizer fix **committed** — `origin/main`

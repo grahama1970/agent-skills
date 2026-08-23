@@ -1,9 +1,9 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-08-22 by agent
+**Last updated:** 2026-08-23 by agent
 **Status:** Active development
 
-## Current Status Addendum (2026-08-22)
+## Current Status Addendum (2026-08-23)
 
 Purpose boundary clarified by the human: Battle is a Red/Blue security
 competition orchestrator and adaptive-learning backend. PixiJS is only a fun
@@ -12,12 +12,19 @@ Adaptive lineage means backend parent/child Red/Blue evidence generated,
 judged, scored, and promoted or rejected from receipts. Do not treat PixiJS
 gameplay or sprite polish as proof that Battle works.
 
-Current proof boundary: V13/exact-chain and the 2026-08-22 Pixi replay video
-prove narrow receipt/replay slices. They do not prove an overnight working
-Battle. The next core gate is a same-run authorized Battle receipt chain:
-Red/Blue generation, Judge replay, scorekeeper authority, adaptive
-parent/child selection, and memory promotion or nonpromotion, with PixiJS
-rendering that same chain only as replay evidence.
+Current proof boundary: the 2026-08-23 backend qualification receipt at
+`local/battle-004-adaptive-lineage-20260823T153057Z/adaptive-lineage-qualification.json`
+proves the narrow backend acceptance rung for `battle-004`: `status: PASS`,
+11/11 checks true, G0/G1-A/G1-B/G2 present, G1-A selected over G1-B, G2 bound to
+exactly one Judge attempt, `mocked: no`, `live: yes`. It does not by itself prove
+the Pixi replay from that same receipt set, visual acceptance, a real overnight
+campaign, production WebSocket/TLS/auth/fanout, QEMU boot execution, or arbitrary
+target exploitability. The next core gate is same-receipt replay acceptance:
+normalize the 2026-08-23 receipt into the Pixi fixture, render it in browser,
+and inspect screenshot/video evidence.
+
+Historical V13/exact-chain and the 2026-08-22 Pixi replay video prove narrow
+receipt/replay slices. They do not prove an overnight working Battle.
 
 Agentic eval audit: `skills/battle/fixtures/agentic_eval.json` had 13 declared
 seams and 9 cases, so `agentic-evals coverage show skills/battle` reported

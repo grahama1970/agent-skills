@@ -28,8 +28,89 @@
     "script": "skills/battle/scripts/current_status.py"
   },
   "issue_state_at_generation": {
-    "all_battle_label_issue_count": 34,
+    "all_battle_label_issue_count": 39,
     "all_battle_label_issues": [
+      {
+        "labels": [
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1503,
+        "state": "OPEN",
+        "title": "Battle: prove fresh provider-backed adaptive-lineage campaign",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1503"
+      },
+      {
+        "labels": [
+          "agent:frontend-coder",
+          "battle",
+          "lane:fe",
+          "needs-human",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1502,
+        "state": "OPEN",
+        "title": "Battle: complete visual acceptance for adaptive-lineage Pixi replay",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1502"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "blocked:upstream",
+          "lane:fe",
+          "maintainer-blocked",
+          "needs-human",
+          "route:frontend_code",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1501,
+        "state": "OPEN",
+        "title": "Battle: fix adaptive replay first-viewport pause_after_round failure state",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1501"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "blocked:upstream",
+          "lane:fe",
+          "maintainer-blocked",
+          "needs-human",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1500,
+        "state": "OPEN",
+        "title": "Battle: bind Pixi replay proof to durable adaptive-lineage receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1500"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "blocked:upstream",
+          "lane:be",
+          "maintainer-blocked",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "skill-maintenance",
+          "type:maintenance"
+        ],
+        "number": 1499,
+        "state": "OPEN",
+        "title": "Battle: regenerate durable adaptive-lineage qualification receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1499"
+      },
       {
         "labels": [
           "agent-blocked",
@@ -520,8 +601,90 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 0,
-    "open_battle_label_issues": []
+    "open_battle_label_count": 5,
+    "open_battle_label_issues": [
+      {
+        "labels": [
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "type:feature"
+        ],
+        "number": 1503,
+        "state": "OPEN",
+        "title": "Battle: prove fresh provider-backed adaptive-lineage campaign",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1503"
+      },
+      {
+        "labels": [
+          "agent:frontend-coder",
+          "battle",
+          "lane:fe",
+          "needs-human",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1502,
+        "state": "OPEN",
+        "title": "Battle: complete visual acceptance for adaptive-lineage Pixi replay",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1502"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "blocked:upstream",
+          "lane:fe",
+          "maintainer-blocked",
+          "needs-human",
+          "route:frontend_code",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1501,
+        "state": "OPEN",
+        "title": "Battle: fix adaptive replay first-viewport pause_after_round failure state",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1501"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "blocked:upstream",
+          "lane:fe",
+          "maintainer-blocked",
+          "needs-human",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1500,
+        "state": "OPEN",
+        "title": "Battle: bind Pixi replay proof to durable adaptive-lineage receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1500"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "blocked:upstream",
+          "lane:be",
+          "maintainer-blocked",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "skill-maintenance",
+          "type:maintenance"
+        ],
+        "number": 1499,
+        "state": "OPEN",
+        "title": "Battle: regenerate durable adaptive-lineage qualification receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1499"
+      }
+    ]
   },
   "non_claims": [
     "This status does not claim production deployment readiness.",
@@ -555,6 +718,48 @@
     }
   ],
   "proven": [
+    {
+      "does_not_prove": [
+        "browser visual Pixi acceptance from the same receipt set.",
+        "fresh provider-backed overnight campaign breadth."
+      ],
+      "evidence": {
+        "budget": {
+          "blue_artifacts": 1,
+          "descendant_generations": 2,
+          "elapsed_seconds": 7.21744,
+          "fixed_blue_artifacts": 1,
+          "g2_judge_complete": true,
+          "http_completions": 4,
+          "max_descendant_generations": 2,
+          "max_http_completions": 14,
+          "max_primary_scillm_calls": 10,
+          "max_red_specimens": 4,
+          "max_seconds": 1200.0,
+          "overrun": false,
+          "overrun_reasons": [],
+          "policy_id": "battle-adaptive-lineage-qualification-v1",
+          "primary_scillm_calls": 4,
+          "red_specimens": 4,
+          "schema": "battle.adaptive_lineage_budget.v1"
+        },
+        "check_count": 11,
+        "checks_ok": true,
+        "g2_judge_attempts": 1,
+        "g2_patched_bypass": false,
+        "g2_vulnerable_original_confirmed": true,
+        "runner_up_id": "G1-B",
+        "selected_id": "G1-A",
+        "status": "PASS",
+        "stop_condition": null
+      },
+      "id": "p0_adaptive_lineage_fresh_qualification",
+      "issue_refs": [
+        1499
+      ],
+      "receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-adaptive-lineage-20260823T153057Z/adaptive-lineage-qualification.json",
+      "status": "PASS"
+    },
     {
       "does_not_prove": [
         "Ask/WebGPT transport completed a repair.",
@@ -672,8 +877,8 @@
   ],
   "schema": "battle.current_status.v1",
   "source": {
-    "battle_tree": "0d03b24d25790dddcf3582e08fae03069f63fce2",
-    "commit": "9d7d5640ad7c5ef76a372aed329ac051b91ca592",
+    "battle_tree": "82a4defa3cf3308afe930930e50f309b6a1e9118",
+    "commit": "bc158e7dbb1c57555407b8984cd885590706787c",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -699,6 +904,15 @@
       "schema": "battle.adaptive_lineage_panel_source_proof.v1",
       "sha256": "77104e37760dd79902ed14ed6ff5acc12cf46c7025992fca06ac9b519edd82c3",
       "status": null
+    },
+    "adaptive_lineage_qualification": {
+      "exists": true,
+      "live": null,
+      "mocked": null,
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-adaptive-lineage-20260823T153057Z/adaptive-lineage-qualification.json",
+      "schema": "battle.adaptive_lineage_qualification.v1",
+      "sha256": "b9cb13da928de4d4f4efc27043398fb8f5ed55db05f0bea7d4972c302fecb577",
+      "status": "PASS"
     },
     "adaptive_lineage_v13_browser": {
       "exists": true,
@@ -839,5 +1053,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-08-22T23:39:21Z"
+  "updated_at": "2026-08-23T15:43:49Z"
 }

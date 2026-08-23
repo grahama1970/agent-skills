@@ -145,6 +145,49 @@ def _latest_backend_goal_dir() -> Path | None:
     return max(valid, key=lambda path: path.stat().st_mtime)
 
 
+def _latest_adaptive_lineage_qualification() -> Path | None:
+    candidates: list[Path] = []
+    for path in (BATTLE_DIR / "local").glob("**/adaptive-lineage-qualification.json"):
+        try:
+            payload = _read_json(path)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if payload.get("schema") == "battle.adaptive_lineage_qualification.v1":
+            candidates.append(path)
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def _adaptive_lineage_qualification_evidence(path: Path | None) -> dict[str, Any]:
+    if path is None or not path.is_file():
+        return {
+            "status": None,
+            "checks_ok": False,
+            "check_count": 0,
+            "selected_id": None,
+            "runner_up_id": None,
+            "g2_judge_attempts": None,
+            "budget": None,
+        }
+    payload = _read_json(path)
+    checks = payload.get("checks") or []
+    return {
+        "status": payload.get("status"),
+        "stop_condition": payload.get("stop_condition"),
+        "checks_ok": all(bool(item.get("ok")) for item in checks),
+        "check_count": len(checks),
+        "selected_id": payload.get("selected_id"),
+        "runner_up_id": payload.get("runner_up_id"),
+        "g2_judge_attempts": (payload.get("g2_outcome") or {}).get("judge_attempts"),
+        "g2_patched_bypass": (payload.get("g2_outcome") or {}).get("patched_bypass"),
+        "g2_vulnerable_original_confirmed": (payload.get("g2_outcome") or {}).get(
+            "vulnerable_original_confirmed"
+        ),
+        "budget": payload.get("budget"),
+    }
+
+
 def _source_context_item(path: str) -> dict[str, Any]:
     candidate = Path(path)
     resolved = candidate if candidate.is_absolute() else REPO_ROOT / candidate
@@ -163,6 +206,10 @@ def _issue_ref(issue: dict[str, Any]) -> dict[str, Any]:
 
 def generate(out: Path) -> int:
     receipts = {name: _receipt(path) for name, path in DEFAULT_RECEIPTS.items()}
+    adaptive_lineage_qualification = _latest_adaptive_lineage_qualification()
+    receipts["adaptive_lineage_qualification"] = _receipt(
+        adaptive_lineage_qualification or BATTLE_DIR / "local" / "MISSING" / "adaptive-lineage-qualification.json"
+    )
     backend_goal_dir = _latest_backend_goal_dir()
     receipts["backend_goal_full_proof_dir"] = _artifact(backend_goal_dir)
     if backend_goal_dir is not None:
@@ -237,6 +284,9 @@ def generate(out: Path) -> int:
         if DEFAULT_RECEIPTS["human_interjection_spectator"].is_file()
         else {}
     )
+    adaptive_lineage_evidence = _adaptive_lineage_qualification_evidence(
+        adaptive_lineage_qualification
+    )
     open_issues = [_issue_ref(issue) for issue in _gh_issue_list("open")]
     all_issues = [_issue_ref(issue) for issue in _gh_issue_list("all")]
 
@@ -270,6 +320,23 @@ def generate(out: Path) -> int:
         },
         "source_receipts": receipts,
         "proven": [
+            {
+                "id": "p0_adaptive_lineage_fresh_qualification",
+                "status": (
+                    "PASS"
+                    if adaptive_lineage_evidence.get("status") == "PASS"
+                    and adaptive_lineage_evidence.get("checks_ok") is True
+                    and adaptive_lineage_evidence.get("check_count") == 11
+                    else "MISSING_OR_STALE"
+                ),
+                "issue_refs": [1499],
+                "receipt": receipts["adaptive_lineage_qualification"]["path"],
+                "evidence": adaptive_lineage_evidence,
+                "does_not_prove": [
+                    "browser visual Pixi acceptance from the same receipt set.",
+                    "fresh provider-backed overnight campaign breadth.",
+                ],
+            },
             {
                 "id": "p0_project_agent_dispatch_selection",
                 "status": "PROVEN_SELECTION_PARTIAL_REPAIR_NEEDS_ATTENTION",
@@ -445,6 +512,24 @@ def check(path: Path) -> int:
     for item in status.get("source_receipts", {}).values():
         if not item.get("exists") and not item.get("superseded_by"):
             errors.append(f"missing_source_receipt:{item.get('path')}")
+    adaptive_receipt = status.get("source_receipts", {}).get("adaptive_lineage_qualification") or {}
+    if adaptive_receipt.get("status") != "PASS":
+        errors.append("adaptive_lineage_qualification_not_pass")
+    adaptive_claim = next(
+        (
+            item
+            for item in status.get("proven", [])
+            if item.get("id") == "p0_adaptive_lineage_fresh_qualification"
+        ),
+        {},
+    )
+    adaptive_evidence = adaptive_claim.get("evidence") or {}
+    if adaptive_claim.get("status") != "PASS":
+        errors.append("adaptive_lineage_fresh_qualification_claim_not_pass")
+    if adaptive_evidence.get("checks_ok") is not True or adaptive_evidence.get("check_count") != 11:
+        errors.append("adaptive_lineage_fresh_qualification_checks_not_green")
+    if adaptive_evidence.get("g2_judge_attempts") != 1:
+        errors.append("adaptive_lineage_g2_judge_attempt_count_not_one")
 
     closed = {
         str(issue["number"])

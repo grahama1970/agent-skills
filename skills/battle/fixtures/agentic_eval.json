@@ -69,6 +69,14 @@
       }
     },
     {
+      "id": "battle.current_status.adaptive_lineage_receipt",
+      "description": "CURRENT_STATUS.json binds the newest durable adaptive-lineage qualification receipt and fails closed when the 11-check backend receipt is missing or stale",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.immutable_goal.adaptive_lineage_pixi",
       "description": "Battle immutable goal close gate requires both durable adaptive-lineage exact-chain proof and browser-visible PixiJS replay evidence",
       "criticality": "critical",
@@ -283,6 +291,19 @@
       "failure_modes": [
         "recovered/fresh live campaign receipts are not bound to GOAL_ADAPTIVE_LINEAGE.md",
         "mutated live campaign input is accepted"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "current_status.adaptive_lineage_receipt",
+      "claim_id": "battle.current_status.adaptive_lineage_receipt",
+      "seam_type": "receipt/status projection",
+      "criticality": "critical",
+      "failure_modes": [
+        "CURRENT_STATUS.json passes while omitting the latest durable adaptive-lineage qualification receipt",
+        "CURRENT_STATUS.json passes with a stale or failed adaptive-lineage qualification receipt"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -672,6 +693,38 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/adaptive-lineage-live-exact-chain.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "current-status-adaptive-lineage-receipt",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.current_status.adaptive_lineage_receipt"
+      ],
+      "seams": [
+        "current_status.adaptive_lineage_receipt"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py current-status-adaptive-lineage-receipt --summary /tmp/battle-agentic-evals/current-status-adaptive-lineage-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=current-status-adaptive-lineage-receipt"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/current-status-adaptive-lineage-receipt.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

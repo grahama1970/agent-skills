@@ -40,6 +40,13 @@ Regenerate it with:
 Older goal files and handoffs are historical unless their claims appear in
 `CURRENT_STATUS.json`.
 
+Current backend adaptive-lineage receipt: `CURRENT_STATUS.json` now records
+`source_receipts.adaptive_lineage_qualification` from
+`local/battle-004-adaptive-lineage-20260823T153057Z/adaptive-lineage-qualification.json`.
+That receipt is `PASS` with 11/11 checks and one G2 Judge attempt. The immutable
+goal is still not complete until the Pixi replay is normalized and browser-
+verified from that same receipt set.
+
 ## Agentic Eval Coverage Boundary
 
 The committed agentic eval fixture now intentionally distinguishes declared
@@ -51,9 +58,10 @@ case with an oracle that can fail.
 
 Current covered seams include authorization fail-closed behavior, the local
 Docker reactive Judge round, Red/Judge/Blue visibility, scorekeeper authority,
-adaptive-lineage contract guards, exact-chain adaptive lineage, memory-lineage
-contracts, same-run transport safety, receipt-backed Pixi replay, and staging
-fail-closed behavior.
+adaptive-lineage contract guards, exact-chain adaptive lineage, current-status
+binding to the durable adaptive-lineage receipt, memory-lineage contracts,
+same-run transport safety, receipt-backed Pixi replay, and staging fail-closed
+behavior.
 
 Missing evals that must not be silently counted as ready:
 
@@ -64,7 +72,7 @@ Missing evals that must not be silently counted as ready:
 | Tau/provider subagents | General Red/Blue Tau handoff and provider-authorship cases outside the narrow recovered exact-chain proof. |
 | Team memory and learning | Live Memory write/recall/promotion/nonpromotion with team isolation and negative-evidence retention. |
 | Research ingress | Dogpile/Brave/GitHub research receipt ingestion with host-only research and no target-container network leakage. |
-| Adaptive lineage backend | Same-run authorized Red/Blue/Judge/scorekeeper/memory lineage case that proves child selection from actual battle evidence. |
+| Broader adaptive learning campaign | Same-run authorized Red/Blue/Judge/scorekeeper/memory lineage across a real overnight campaign, beyond the narrow 2026-08-23 `battle-004` backend qualification receipt. |
 | Swarm/throughput | Dynamic worker-count and concurrency envelope case for more than the fixed small-worker fixtures. |
 | PixiJS replay gameplay | Browser video/screenshot case for play, pause, resume, scrub/restart, and nonblank moving replay from the same receipt source. |
 | Monitor/human interjection | Schema-valid human interjection through the production monitor contract, fail-closed when backend handling is absent. |

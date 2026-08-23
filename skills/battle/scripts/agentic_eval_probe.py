@@ -1542,6 +1542,81 @@ def probe_adaptive_lineage_live_exact_chain(summary_path: Path, *, proof_root: s
     )
 
 
+def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
+    suite = "current-status-adaptive-lineage-receipt"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    status_path = out_root / "CURRENT_STATUS.json"
+    generate = _run_in(
+        [sys.executable, str(BATTLE_DIR / "scripts" / "current_status.py"), "generate", "--out", str(status_path)],
+        cwd=BATTLE_DIR,
+        timeout=120,
+    )
+    (out_root / "generate.stdout.txt").write_text(generate.stdout, encoding="utf-8")
+    (out_root / "generate.stderr.txt").write_text(generate.stderr, encoding="utf-8")
+    if generate.returncode != 0:
+        raise AssertionError("current_status generate failed: " + generate.stderr)
+    check = _run_in(
+        [sys.executable, str(BATTLE_DIR / "scripts" / "current_status.py"), "check", "--path", str(status_path)],
+        cwd=BATTLE_DIR,
+        timeout=120,
+    )
+    (out_root / "check.stdout.txt").write_text(check.stdout, encoding="utf-8")
+    (out_root / "check.stderr.txt").write_text(check.stderr, encoding="utf-8")
+    if check.returncode != 0:
+        raise AssertionError("current_status check failed: " + check.stdout + check.stderr)
+    status = _read_json(status_path)
+    receipt = (status.get("source_receipts") or {}).get("adaptive_lineage_qualification") or {}
+    claim = next(
+        (
+            item
+            for item in status.get("proven", [])
+            if item.get("id") == "p0_adaptive_lineage_fresh_qualification"
+        ),
+        {},
+    )
+    evidence = claim.get("evidence") or {}
+    if receipt.get("status") != "PASS" or receipt.get("exists") is not True:
+        raise AssertionError(f"adaptive lineage qualification receipt missing/pass drifted: {receipt}")
+    if claim.get("status") != "PASS":
+        raise AssertionError(f"adaptive lineage qualification claim drifted: {claim}")
+    if evidence.get("checks_ok") is not True or evidence.get("check_count") != 11:
+        raise AssertionError(f"adaptive lineage qualification checks drifted: {evidence}")
+    if evidence.get("g2_judge_attempts") != 1:
+        raise AssertionError(f"G2 Judge attempt count drifted: {evidence}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="local_current_status_generation_with_receipt_readback",
+            checks=[
+                {
+                    "name": "current_status_binds_fresh_adaptive_lineage_receipt",
+                    "status": "PASS",
+                    "receipt": receipt.get("path"),
+                    "receipt_sha256": receipt.get("sha256"),
+                    "evidence": evidence,
+                }
+            ],
+            artifacts={
+                "current_status": str(status_path),
+                "generate_stdout": str(out_root / "generate.stdout.txt"),
+                "check_stdout": str(out_root / "check.stdout.txt"),
+            },
+            claims_proves=[
+                "CURRENT_STATUS.json generation binds the newest durable adaptive-lineage qualification receipt",
+                "the status checker fails closed unless the adaptive-lineage qualification is PASS with 11 green checks and one G2 Judge attempt",
+            ],
+            claims_does_not_prove=[
+                "browser visual Pixi acceptance from the same receipt set",
+                "fresh paid-provider campaign regeneration",
+            ],
+        ),
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run a Battle agentic-eval probe")
     parser.add_argument("suite")
@@ -1572,6 +1647,8 @@ def main() -> int:
             )
         if args.suite == "adaptive-lineage-live-exact-chain":
             return probe_adaptive_lineage_live_exact_chain(args.summary, proof_root=args.proof_root)
+        if args.suite == "current-status-adaptive-lineage-receipt":
+            return probe_current_status_adaptive_lineage_receipt(args.summary)
         if args.suite == "adaptive-lineage-same-run-backend-contracts":
             return probe_pytest_contracts(
                 args.summary,
