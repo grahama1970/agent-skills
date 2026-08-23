@@ -1,0 +1,93 @@
+{
+  "attempt_id": "recovery_cycle_07.attempt_01",
+  "claims": {
+    "does_not_prove": [
+      "general disaster recovery",
+      "cloud or multi-region durability",
+      "human-perceived emotion"
+    ],
+    "proves": [
+      "this preregistered recovery scenario either reconstructs a hash-bound chain or blocks visibly",
+      "duplicate accepted effects remain zero in the scenario receipt"
+    ]
+  },
+  "created_at": "2026-08-23T00:19:18Z",
+  "cycle_id": "recovery_cycle_07",
+  "exact_rereads": [
+    {
+      "actual_sha256": "sha256:4d02812c76804703dc1c54ce9b97294df501af5d03ffe8b6600a30a1bdb7a0fe",
+      "expected_sha256": "sha256:4d02812c76804703dc1c54ce9b97294df501af5d03ffe8b6600a30a1bdb7a0fe",
+      "match": true,
+      "path": "durable_payload"
+    }
+  ],
+  "fail_closed_reason": null,
+  "first_divergent_stage": null,
+  "fresh_session_id": "recovery_session_07.post_restart",
+  "injected_fault": "retry_after_terminal_blocked_or_error_state",
+  "last_accepted_durable_stage": "terminal_blocked_receipt",
+  "ledger_epoch_after": 7,
+  "ledger_epoch_before": 6,
+  "live": false,
+  "mocked": false,
+  "original_terminal_receipt": {
+    "attempt_id": "recovery_cycle_07.attempt_01",
+    "sha256": "sha256:854713f6ec248acb461f4fa89090b26a18bb8a10da32fc984cf4ebe7a7ffd430",
+    "status": "BLOCKED_TERMINAL_RETAINED"
+  },
+  "recovery_action": "retain_original_terminal_and_issue_new_attempt_identity",
+  "render_admissions": [
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:65cfad11ad761f5a28bd5243c24d44e95ca5173dcd3ff0753184d10430c6b5f4",
+      "render_id": "render_07_pre_restart",
+      "session_id": "recovery_session_07.pre_restart"
+    },
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:5fb5c592c3dd90d482059cffeb9e60358cf99098b3b41adfc9e43285bd6451a9",
+      "render_id": "render_07_post_restart",
+      "session_id": "recovery_session_07.post_restart"
+    }
+  ],
+  "render_output_hashes": [
+    {
+      "output_sha256": "sha256:b59a862b0eea0cd530ea1891168ad5adcc190053f81eb4bc13734200c83feb62",
+      "render_id": "render_07_pre_restart"
+    },
+    {
+      "output_sha256": "sha256:829c236812c8e1e2b4d6ff30b9443a0a7ee2456513a84f8e1b17e4ffcb80ddd5",
+      "render_id": "render_07_post_restart"
+    }
+  ],
+  "retry_terminal_receipt": {
+    "attempt_id": "recovery_cycle_07.attempt_02",
+    "sha256": "sha256:cbb13891118bfca4c8cc0ad37a1e5126b65f001b790a6933af7dca8429e1367a",
+    "status": "PASS_RETRY_WITH_NEW_ATTEMPT_IDENTITY"
+  },
+  "scenario_id": "scenario_07",
+  "schema": "persona_dream.recovery_scenario_receipt.v1",
+  "service_boot_identities_after": {},
+  "service_boot_identities_before": {},
+  "service_restart_actions": {},
+  "session_mood_id": "mood_07",
+  "side_effect_counts": {
+    "accepted_effect_count": 1,
+    "canonical_write_attempts": 1,
+    "duplicate_accepted_effect_count": 0,
+    "external_repository_edits": 0,
+    "provider_calls": 0
+  },
+  "stale_session_id": "recovery_session_07.pre_restart",
+  "status": "PASS_RECOVERY_SCENARIO",
+  "terminal_status": "PASS_RETRY_WITH_NEW_ATTEMPT_IDENTITY",
+  "validation_failures": [],
+  "write_attempts": [
+    {
+      "accepted": true,
+      "attempt_id": "recovery_cycle_07.attempt_01",
+      "stage": "terminal_blocked_receipt",
+      "write_sha256": "sha256:4d02812c76804703dc1c54ce9b97294df501af5d03ffe8b6600a30a1bdb7a0fe"
+    }
+  ]
+}

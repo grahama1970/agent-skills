@@ -1,0 +1,120 @@
+import importlib.util
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+recovery = _load("run_recovery_campaign")
+
+
+def test_recovery_campaign_writes_seven_retained_scenario_receipts(tmp_path):
+    class Args:
+        out_dir = tmp_path
+        allow_service_restart = False
+        memory_container = "memory"
+        chatterbox_container = "chatterbox"
+        restart_timeout_seconds = 1
+
+    aggregate = recovery.run_campaign(Args)
+
+    assert aggregate["status"] == "PASS_RECOVERY_CAMPAIGN"
+    assert aggregate["mocked"] is False
+    assert aggregate["live"] is False
+    assert aggregate["counts"]["scenario_count"] == 7
+    assert aggregate["counts"]["duplicate_accepted_effect_count"] == 0
+    assert aggregate["counts"]["provider_calls"] == 0
+    assert aggregate["counts"]["external_repository_edits"] == 0
+    assert (tmp_path / "PREREGISTRATION.json").is_file()
+    for idx in range(1, 8):
+        receipt = tmp_path / f"scenario_{idx:02d}" / "RECEIPT.json"
+        assert receipt.is_file()
+        row = json.loads(receipt.read_text(encoding="utf-8"))
+        assert row["validation_failures"] == []
+        assert row["side_effect_counts"]["duplicate_accepted_effect_count"] == 0
+
+
+def test_tampered_reread_hash_blocks():
+    receipt = {
+        "terminal_status": "PASS_RECOVERY_RECONSTRUCTED",
+        "fail_closed_reason": None,
+        "first_divergent_stage": None,
+        "side_effect_counts": {
+            "duplicate_accepted_effect_count": 0,
+            "provider_calls": 0,
+        },
+        "original_terminal_receipt": {"attempt_id": "a1"},
+        "retry_terminal_receipt": None,
+        "exact_rereads": [
+            {"expected_sha256": "sha256:1", "actual_sha256": "sha256:2", "match": False}
+        ],
+    }
+
+    assert "EXACT_REREAD_HASH_MISMATCH" in recovery.validate_receipt(receipt)
+
+
+def test_retry_must_use_new_attempt_identity():
+    receipt = {
+        "terminal_status": "PASS_RETRY_WITH_NEW_ATTEMPT_IDENTITY",
+        "fail_closed_reason": None,
+        "first_divergent_stage": None,
+        "side_effect_counts": {
+            "duplicate_accepted_effect_count": 0,
+            "provider_calls": 0,
+        },
+        "original_terminal_receipt": {"attempt_id": "same"},
+        "retry_terminal_receipt": {"attempt_id": "same"},
+        "exact_rereads": [
+            {"expected_sha256": "sha256:1", "actual_sha256": "sha256:1", "match": True}
+        ],
+    }
+
+    assert "RETRY_REUSED_ATTEMPT_ID" in recovery.validate_receipt(receipt)
+
+
+def test_visible_restart_identity_is_required_when_restart_flag_is_used(tmp_path, monkeypatch):
+    class Args:
+        out_dir = tmp_path
+        allow_service_restart = True
+        memory_container = "memory"
+        chatterbox_container = "chatterbox"
+        restart_timeout_seconds = 1
+
+    def same_snapshot(services, _containers):
+        return {
+            service: {
+                "identity_sha256": f"sha256:{service}",
+                "health_ok": True,
+            }
+            for service in services
+        }
+
+    monkeypatch.setattr(recovery, "service_snapshot", same_snapshot)
+    monkeypatch.setattr(
+        recovery,
+        "restart_services",
+        lambda services, _containers, _timeout: {
+            service: {"returncode": 0, "health_after_restart": {"ok": True}}
+            for service in services
+        },
+    )
+
+    aggregate = recovery.run_campaign(Args)
+
+    assert aggregate["status"] == "BLOCKED_RECOVERY_CAMPAIGN"
+    blocked = [
+        json.loads((tmp_path / f"scenario_{idx:02d}" / "RECEIPT.json").read_text(encoding="utf-8"))
+        for idx in range(1, 8)
+    ]
+    assert any(
+        any(failure.startswith("RESTART_NOT_VISIBLE_IN_PROCESS_IDENTITY") for failure in row["validation_failures"])
+        for row in blocked
+    )

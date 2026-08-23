@@ -10,7 +10,7 @@
       "immutable-goal completion is not claimed while required hypotheses remain nonterminal"
     ]
   },
-  "created_at": "2026-08-23T00:10:07Z",
+  "created_at": "2026-08-23T00:21:04Z",
   "failures": [],
   "hypothesis_count": 6,
   "immutable_goal_completion_claimed": false,

@@ -189,20 +189,27 @@
     {
       "id": "operational_reliability_value",
       "status": "TERMINAL_SCOPED",
-      "scope": "Local no-restart P2 continuity reliability under one workstation configuration; restart recovery remains separate.",
-      "governing_issue": "grahama1970/agent-skills#1128",
+      "scope": "Local P2 continuity reliability under one workstation configuration, covering the 35-cycle no-restart soak and the seven-scenario restart/stale-session recovery campaign.",
+      "governing_issue": "grahama1970/agent-skills#1128 and grahama1970/agent-skills#1129",
       "preregistration": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/PREFLIGHT_RECEIPT.json",
       "terminal_result_receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/AGGREGATE_RECEIPT.json",
       "terminal_result_receipt_sha256": "sha256:aaee5b251a7f311d1be99fb91c1289e7d2b9c4cec1fd3ffe0c9ccb7983864878",
-      "supporting_receipts": [],
+      "supporting_receipts": [
+        {
+          "path": "skills/persona-dream/reports/goal_v5/continuity/recovery/AGGREGATE_RECEIPT.json",
+          "sha256": "sha256:3d4d556d3a29fb2e9ca69697cc6ac41ecab7c0e29e64a4efbc4f80356bdf3e4f",
+          "status": "PASS_RECOVERY_CAMPAIGN",
+          "role": "restart_stale_session_recovery"
+        }
+      ],
       "result_class": "POSITIVE",
-      "primary_comparison": "35 no-restart cycles, 35 pass, 0 blocked, 0 errored",
-      "raw_effect": "Wilson 95% lower bound 0.901096 for the scoped no-restart campaign",
-      "what_it_proves": "The local live P2 continuity chain completed 35 no-restart cycles without duplicate accepted effects.",
-      "what_it_does_not_prove": "Production reliability, restart recovery, paid provider/video repeatability, or human-perceived value.",
+      "primary_comparison": "35 no-restart cycles plus seven preregistered restart/stale-session recovery scenarios",
+      "raw_effect": "35/35 no-restart cycles passed with Wilson 95% lower bound 0.901096; 7/7 recovery scenarios passed with 6 live service restarts and zero duplicate accepted effects.",
+      "what_it_proves": "The local live P2 continuity chain completed 35 no-restart cycles, and the local recovery campaign retained seven hash-bound restart/stale-session receipts without duplicate accepted effects.",
+      "what_it_does_not_prove": "Production reliability, cloud or multi-region disaster recovery, paid provider/video repeatability, or human-perceived value.",
       "safety_invariant_status": "PASS",
       "product_decision": "CONSTRAIN",
-      "retained_subsystem_scope": "Use as scoped local no-restart reliability evidence only; do not generalize beyond tested services.",
+      "retained_subsystem_scope": "Use as scoped local reliability and recovery evidence only; do not generalize beyond tested services and fault points.",
       "transfer_destinations": [],
       "transfer_outcomes": [
         {
@@ -210,11 +217,11 @@
           "reason": "No downstream adoption is warranted by a workstation-local no-restart reliability result."
         }
       ],
-      "successor_or_retirement_action": "Run #1129 restart/stale-session recovery before any production reliability claim.",
+      "successor_or_retirement_action": "Keep constrained to local workstation services; require a new preregistered campaign before any production reliability claim.",
       "human_authority_required": false,
-      "external_blocker": "grahama1970/agent-skills#1129",
-      "review_condition": "Re-evaluate operational reliability after restart recovery aggregate exists.",
-      "last_verified": "2026-08-22T23:58:00Z"
+      "external_blocker": null,
+      "review_condition": "Re-evaluate only for a new deployment or production-reliability claim.",
+      "last_verified": "2026-08-23T00:20:00Z"
     },
     {
       "id": "previous_video_attachment_value",

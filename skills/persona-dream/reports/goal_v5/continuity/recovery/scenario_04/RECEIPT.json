@@ -1,0 +1,96 @@
+{
+  "attempt_id": "recovery_cycle_04.attempt_01",
+  "claims": {
+    "does_not_prove": [
+      "general disaster recovery",
+      "cloud or multi-region durability",
+      "human-perceived emotion"
+    ],
+    "proves": [
+      "this preregistered recovery scenario either reconstructs a hash-bound chain or blocks visibly",
+      "duplicate accepted effects remain zero in the scenario receipt"
+    ]
+  },
+  "created_at": "2026-08-23T00:18:56Z",
+  "cycle_id": "recovery_cycle_04",
+  "exact_rereads": [
+    {
+      "actual_sha256": "sha256:e81ef62c60eb15c5c352779cc67a48cd4fcacdb87ac4e28d864f46e7c1508971",
+      "expected_sha256": "sha256:e81ef62c60eb15c5c352779cc67a48cd4fcacdb87ac4e28d864f46e7c1508971",
+      "match": true,
+      "path": "durable_payload"
+    }
+  ],
+  "fail_closed_reason": null,
+  "first_divergent_stage": null,
+  "fresh_session_id": "recovery_session_04.post_restart",
+  "injected_fault": "process_death_after_compare_and_set_before_aggregate_receipt",
+  "last_accepted_durable_stage": "ledger_compare_and_set",
+  "ledger_epoch_after": 4,
+  "ledger_epoch_before": 3,
+  "live": false,
+  "mocked": false,
+  "original_terminal_receipt": {
+    "attempt_id": "recovery_cycle_04.attempt_01",
+    "sha256": "sha256:30426547ac8e0a3f23bfdee27de74aeb703fb68c09ab5ff3fa414ccadde8df5d",
+    "status": "PASS_RECOVERY_RECONSTRUCTED"
+  },
+  "recovery_action": "replay_compare_and_set_idempotently_and_reconstruct_aggregate",
+  "render_admissions": [
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:53b61a214cf0dca89493fe1daec22f8bb60db1013ce8025fe21bc64e713efc0c",
+      "render_id": "render_04_pre_restart",
+      "session_id": "recovery_session_04.pre_restart"
+    },
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:eddc814f52ac2f6ce6021d7b46a134b61d2297b44d87129ed4c6c6625d4635cd",
+      "render_id": "render_04_post_restart",
+      "session_id": "recovery_session_04.post_restart"
+    }
+  ],
+  "render_output_hashes": [
+    {
+      "output_sha256": "sha256:d22ee0810e68864a82496efde617d2f38ba62c7981a886c8ce19142bc722783a",
+      "render_id": "render_04_pre_restart"
+    },
+    {
+      "output_sha256": "sha256:15cc69a28bde57a5b10ec8533e7c19d93a43f2acac62b76c7d7a4ea2941a7d3e",
+      "render_id": "render_04_post_restart"
+    }
+  ],
+  "retry_terminal_receipt": null,
+  "scenario_id": "scenario_04",
+  "schema": "persona_dream.recovery_scenario_receipt.v1",
+  "service_boot_identities_after": {},
+  "service_boot_identities_before": {},
+  "service_restart_actions": {},
+  "session_mood_id": "mood_04",
+  "side_effect_counts": {
+    "accepted_effect_count": 1,
+    "canonical_write_attempts": 1,
+    "duplicate_accepted_effect_count": 0,
+    "external_repository_edits": 0,
+    "provider_calls": 0
+  },
+  "stale_session_id": "recovery_session_04.pre_restart",
+  "status": "PASS_RECOVERY_SCENARIO",
+  "terminal_status": "PASS_RECOVERY_RECONSTRUCTED",
+  "validation_failures": [],
+  "write_attempts": [
+    {
+      "accepted": true,
+      "attempt_id": "recovery_cycle_04.attempt_01",
+      "stage": "ledger_compare_and_set",
+      "write_sha256": "sha256:e81ef62c60eb15c5c352779cc67a48cd4fcacdb87ac4e28d864f46e7c1508971"
+    },
+    {
+      "accepted": false,
+      "attempt_id": "recovery_cycle_04.attempt_01.replay",
+      "blocked_reason": "BLOCKED_DUPLICATE_CYCLE_REPLAY",
+      "stage": "compare_and_set_replay",
+      "write_sha256": "sha256:e81ef62c60eb15c5c352779cc67a48cd4fcacdb87ac4e28d864f46e7c1508971"
+    }
+  ]
+}

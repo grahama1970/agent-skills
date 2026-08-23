@@ -1,0 +1,78 @@
+{
+  "created_at": "2026-08-23T00:18:13Z",
+  "external_repository_edits": 0,
+  "mocked": false,
+  "negative_controls": [
+    "stale_session_accepted_after_restart",
+    "old_render_attached_to_new_session",
+    "local_file_trusted_without_hash_recompute",
+    "retry_overwrites_original_terminal",
+    "compare_and_set_replay_creates_second_arc_delta",
+    "restart_not_visible_in_process_identity",
+    "partial_receipt_promoted_to_pass"
+  ],
+  "preregistration_sha256": "sha256:195d3a13cab98e1ece875dc1cb73abd5fbf1ede62aeb7e402ebf850fb8cfe07d",
+  "provider_calls": 0,
+  "scenarios": [
+    {
+      "expected_terminal": "PASS_RECOVERY_RECONSTRUCTED",
+      "id": "scenario_01",
+      "injected_fault": "memory_restart_after_accepted_write_before_exact_reread",
+      "last_accepted_durable_stage": "ledger_compare_and_set",
+      "services_restarted": [
+        "memory"
+      ]
+    },
+    {
+      "expected_terminal": "BLOCKED_STALE_RENDER_LINEAGE",
+      "id": "scenario_02",
+      "injected_fault": "chatterbox_restart_after_render_admission_before_receipt_publication",
+      "last_accepted_durable_stage": "render_admission",
+      "services_restarted": [
+        "chatterbox"
+      ]
+    },
+    {
+      "expected_terminal": "PASS_RECOVERY_RECONSTRUCTED",
+      "id": "scenario_03",
+      "injected_fault": "both_services_restart_between_sessions",
+      "last_accepted_durable_stage": "previous_session_terminal_receipt",
+      "services_restarted": [
+        "memory",
+        "chatterbox"
+      ]
+    },
+    {
+      "expected_terminal": "PASS_RECOVERY_RECONSTRUCTED",
+      "id": "scenario_04",
+      "injected_fault": "process_death_after_compare_and_set_before_aggregate_receipt",
+      "last_accepted_durable_stage": "ledger_compare_and_set",
+      "services_restarted": []
+    },
+    {
+      "expected_terminal": "BLOCKED_RECOVERY_BUNDLE_HASH_MISMATCH",
+      "id": "scenario_05",
+      "injected_fault": "partial_tampered_recovery_bundle",
+      "last_accepted_durable_stage": "recovery_bundle_staged",
+      "services_restarted": []
+    },
+    {
+      "expected_terminal": "BLOCKED_STALE_SESSION_IDENTITY",
+      "id": "scenario_06",
+      "injected_fault": "stale_pre_restart_session_request",
+      "last_accepted_durable_stage": "session_epoch_advanced",
+      "services_restarted": [
+        "memory",
+        "chatterbox"
+      ]
+    },
+    {
+      "expected_terminal": "PASS_RETRY_WITH_NEW_ATTEMPT_IDENTITY",
+      "id": "scenario_07",
+      "injected_fault": "retry_after_terminal_blocked_or_error_state",
+      "last_accepted_durable_stage": "terminal_blocked_receipt",
+      "services_restarted": []
+    }
+  ],
+  "schema": "persona_dream.recovery_campaign_preregistration.v1"
+}

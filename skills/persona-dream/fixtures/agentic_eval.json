@@ -491,6 +491,32 @@
       }
     },
     {
+      "name": "recovery-campaign-contract-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.recovery_campaign_contract"
+      ],
+      "seams": [
+        "continuity.recovery_campaign"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_recovery_campaign.py -q && bash ../run.sh run-recovery-campaign --out-dir /tmp/persona-dream-recovery-campaign-eval --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nreceipt = json.loads(Path('/tmp/persona-dream-recovery-campaign-eval/AGGREGATE_RECEIPT.json').read_text(encoding='utf-8'))\nassert receipt['status'] == 'PASS_RECOVERY_CAMPAIGN'\nassert receipt['mocked'] is False\nassert receipt['counts']['scenario_count'] == 7\nassert receipt['counts']['duplicate_accepted_effect_count'] == 0\nassert receipt['counts']['provider_calls'] == 0\nassert len(receipt['scenario_receipts']) == 7\nassert {row['status'] for row in receipt['scenario_receipts']} == {'PASS_RECOVERY_SCENARIO'}\nprint('RECOVERY_CAMPAIGN_READBACK_OK')\nPY"
+      ],
+      "readback": true,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed",
+          "PASS_RECOVERY_CAMPAIGN",
+          "RECOVERY_CAMPAIGN_READBACK_OK"
+        ]
+      }
+    },
+    {
       "name": "session-mood-recognition-status-contract-tests",
       "type": "positive",
       "real_world": true,
@@ -706,6 +732,15 @@
       }
     },
     {
+      "id": "persona_dream.recovery_campaign_contract",
+      "description": "Persona Dream restart and stale-session recovery is exercised as seven retained fault scenarios with hash-bound receipts, duplicate-effect accounting, typed stale/tampered controls, and explicit live service restart proof when requested.",
+      "criticality": "critical",
+      "evidence_required": {
+        "fault_injected_deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
       "id": "persona_dream.ux.workspace_renders",
       "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
       "criticality": "critical",
@@ -827,6 +862,15 @@
       "criticality": "critical",
       "required_evidence": [
         "deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "continuity.recovery_campaign",
+      "seam_type": "fault_recovery_contract",
+      "criticality": "critical",
+      "required_evidence": [
+        "fault_injected_deterministic",
         "live_e2e"
       ]
     },

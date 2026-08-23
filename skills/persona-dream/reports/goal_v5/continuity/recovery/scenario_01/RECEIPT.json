@@ -1,0 +1,161 @@
+{
+  "attempt_id": "recovery_cycle_01.attempt_01",
+  "claims": {
+    "does_not_prove": [
+      "general disaster recovery",
+      "cloud or multi-region durability",
+      "human-perceived emotion"
+    ],
+    "proves": [
+      "this preregistered recovery scenario either reconstructs a hash-bound chain or blocks visibly",
+      "duplicate accepted effects remain zero in the scenario receipt"
+    ]
+  },
+  "created_at": "2026-08-23T00:18:16Z",
+  "cycle_id": "recovery_cycle_01",
+  "exact_rereads": [
+    {
+      "actual_sha256": "sha256:e76ca0f164626e81ce5d7e3c7fd2df646a5dceade8c095e215e65be4087f57b7",
+      "expected_sha256": "sha256:e76ca0f164626e81ce5d7e3c7fd2df646a5dceade8c095e215e65be4087f57b7",
+      "match": true,
+      "path": "durable_payload"
+    }
+  ],
+  "fail_closed_reason": null,
+  "first_divergent_stage": null,
+  "fresh_session_id": "recovery_session_01.post_restart",
+  "injected_fault": "memory_restart_after_accepted_write_before_exact_reread",
+  "last_accepted_durable_stage": "ledger_compare_and_set",
+  "ledger_epoch_after": 1,
+  "ledger_epoch_before": 0,
+  "live": true,
+  "mocked": false,
+  "original_terminal_receipt": {
+    "attempt_id": "recovery_cycle_01.attempt_01",
+    "sha256": "sha256:9f115e1f94b511bfc014587759a362bea8158c895be9ba06cb3365147447590f",
+    "status": "PASS_RECOVERY_RECONSTRUCTED"
+  },
+  "recovery_action": "reread_durable_accepted_state_without_duplicate_write",
+  "render_admissions": [
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:cd96ee5177f4c5e0c83694b5e9db09e49ed2a4a20be24317fb0a345eaa08e5ab",
+      "render_id": "render_01_pre_restart",
+      "session_id": "recovery_session_01.pre_restart"
+    },
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:8651ff393582a23c6544229145a47a1ee905281bee8ad493d8b0b2f2c33809b4",
+      "render_id": "render_01_post_restart",
+      "session_id": "recovery_session_01.post_restart"
+    }
+  ],
+  "render_output_hashes": [
+    {
+      "output_sha256": "sha256:d86f06955933f9264f6d70d34dd3674cc2ff19ee48fff80656c3967265f5b51c",
+      "render_id": "render_01_pre_restart"
+    },
+    {
+      "output_sha256": "sha256:aa0b3c92cde3be6b8c228f084231a8bd0be829d7e459f2604fdbc1a500d372d6",
+      "render_id": "render_01_post_restart"
+    }
+  ],
+  "retry_terminal_receipt": null,
+  "scenario_id": "scenario_01",
+  "schema": "persona_dream.recovery_scenario_receipt.v1",
+  "service_boot_identities_after": {
+    "memory": {
+      "container": "embry-memory",
+      "container_id": "b789d0fa816b034eda4ed57786f59f77ac9b085aa076a7e6f17b69ebe18a6692",
+      "health": {
+        "conversation_classifier_device": "not_warmed",
+        "conversation_classifier_ok": true,
+        "conversation_classifier_warm": false,
+        "intent_mapper_ok": true,
+        "memory_db_connected": true,
+        "ok": true,
+        "sparta_controls_count": 382717,
+        "sparta_corpus_ok": true,
+        "sparta_corpus_required": true,
+        "status": "ok"
+      },
+      "health_ok": true,
+      "health_url": "http://127.0.0.1:8601/health",
+      "identity_sha256": "sha256:10a01a0b61285c8080393f04bf7e1c12e0af8577f0e43ab4f48a217c3423f7a4",
+      "pid": 1819707,
+      "restart_count": 0,
+      "service": "memory",
+      "started_at": "2026-08-23T00:18:14.496686632Z",
+      "status": "running"
+    }
+  },
+  "service_boot_identities_before": {
+    "memory": {
+      "container": "embry-memory",
+      "container_id": "b789d0fa816b034eda4ed57786f59f77ac9b085aa076a7e6f17b69ebe18a6692",
+      "health": {
+        "conversation_classifier_device": "cuda",
+        "conversation_classifier_ok": true,
+        "conversation_classifier_warm": true,
+        "intent_mapper_ok": true,
+        "memory_db_connected": true,
+        "ok": true,
+        "sparta_controls_count": 382717,
+        "sparta_corpus_ok": true,
+        "sparta_corpus_required": true,
+        "status": "ok"
+      },
+      "health_ok": true,
+      "health_url": "http://127.0.0.1:8601/health",
+      "identity_sha256": "sha256:8ff4599c7bff9876ed1f1aa050892c081896262b0e90afadb2fa500e14604dd3",
+      "pid": 8457,
+      "restart_count": 0,
+      "service": "memory",
+      "started_at": "2026-08-21T17:43:25.616063066Z",
+      "status": "running"
+    }
+  },
+  "service_restart_actions": {
+    "memory": {
+      "container": "embry-memory",
+      "health_after_restart": {
+        "body": {
+          "conversation_classifier_device": "not_warmed",
+          "conversation_classifier_ok": true,
+          "conversation_classifier_warm": false,
+          "intent_mapper_ok": true,
+          "memory_db_connected": true,
+          "ok": true,
+          "sparta_controls_count": 382717,
+          "sparta_corpus_ok": true,
+          "sparta_corpus_required": true,
+          "status": "ok"
+        },
+        "ok": true
+      },
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "embry-memory"
+    }
+  },
+  "session_mood_id": "mood_01",
+  "side_effect_counts": {
+    "accepted_effect_count": 1,
+    "canonical_write_attempts": 1,
+    "duplicate_accepted_effect_count": 0,
+    "external_repository_edits": 0,
+    "provider_calls": 0
+  },
+  "stale_session_id": "recovery_session_01.pre_restart",
+  "status": "PASS_RECOVERY_SCENARIO",
+  "terminal_status": "PASS_RECOVERY_RECONSTRUCTED",
+  "validation_failures": [],
+  "write_attempts": [
+    {
+      "accepted": true,
+      "attempt_id": "recovery_cycle_01.attempt_01",
+      "stage": "ledger_compare_and_set",
+      "write_sha256": "sha256:e76ca0f164626e81ce5d7e3c7fd2df646a5dceade8c095e215e65be4087f57b7"
+    }
+  ]
+}

@@ -33,6 +33,7 @@ Commands:
   validate-operational-goal Validate the corrected operational goal/status pin
   validate-corrected-goal-manifest Validate the PD-CORRECTED-GOAL-V1 sealed manifest
   validate-soak35-preflight Validate the frozen source/transition diversity preflight for the 35-cycle soak
+  run-recovery-campaign Run the seven-scenario restart/stale-session recovery campaign
   validate-emotion-lineage Validate paired run emotion lineage artifacts
   validate-answer-invariance Validate paired run answer-body invariance
   validate-chatterbox-delivery Validate paired run Chatterbox delivery artifacts
@@ -926,6 +927,9 @@ case "$COMMAND" in
     ;;
   validate-soak35-preflight)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_soak35_preflight.py" "$@"
+    ;;
+  run-recovery-campaign)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_recovery_campaign.py" "$@"
     ;;
   validate-emotion-lineage)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_emotion_lineage.py" "$@"

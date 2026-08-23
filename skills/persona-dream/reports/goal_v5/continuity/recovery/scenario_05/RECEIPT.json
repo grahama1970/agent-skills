@@ -1,0 +1,92 @@
+{
+  "attempt_id": "recovery_cycle_05.attempt_01",
+  "claims": {
+    "does_not_prove": [
+      "general disaster recovery",
+      "cloud or multi-region durability",
+      "human-perceived emotion"
+    ],
+    "proves": [
+      "this preregistered recovery scenario either reconstructs a hash-bound chain or blocks visibly",
+      "duplicate accepted effects remain zero in the scenario receipt"
+    ]
+  },
+  "created_at": "2026-08-23T00:18:56Z",
+  "cycle_id": "recovery_cycle_05",
+  "exact_rereads": [
+    {
+      "actual_sha256": "sha256:f877431c8c644b42b5137e6f848947a7bb7a77d88e88d467840328b81f0840be",
+      "expected_sha256": "sha256:f877431c8c644b42b5137e6f848947a7bb7a77d88e88d467840328b81f0840be",
+      "match": true,
+      "path": "durable_payload"
+    }
+  ],
+  "fail_closed_reason": "BLOCKED_RECOVERY_BUNDLE_HASH_MISMATCH",
+  "first_divergent_stage": {
+    "stage": "recompute_hashes_and_block_on_mismatch",
+    "status": "BLOCKED_RECOVERY_BUNDLE_HASH_MISMATCH"
+  },
+  "fresh_session_id": "recovery_session_05.post_restart",
+  "injected_fault": "partial_tampered_recovery_bundle",
+  "last_accepted_durable_stage": "recovery_bundle_staged",
+  "ledger_epoch_after": 4,
+  "ledger_epoch_before": 4,
+  "live": false,
+  "mocked": false,
+  "original_terminal_receipt": {
+    "attempt_id": "recovery_cycle_05.attempt_01",
+    "sha256": "sha256:ab6cb14fdb592fb13bc71d93ba784d56a867884752d9fa3db12f2e2fe6bd1217",
+    "status": "BLOCKED_RECOVERY_BUNDLE_HASH_MISMATCH"
+  },
+  "recovery_action": "recompute_hashes_and_block_on_mismatch",
+  "render_admissions": [
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:8be81ec7dfcdf1e6df13f664692bfbf8d4ba1d1370dc3fe24e08956c89b2cf55",
+      "render_id": "render_05_pre_restart",
+      "session_id": "recovery_session_05.pre_restart"
+    },
+    {
+      "admitted": true,
+      "lineage_sha256": "sha256:bf0f4323ec4bb64b42ab446240527267ec880242d4ec5d8025985e22eec039a9",
+      "render_id": "render_05_post_restart",
+      "session_id": "recovery_session_05.post_restart"
+    }
+  ],
+  "render_output_hashes": [
+    {
+      "output_sha256": "sha256:744f3a9a1b8120216138bd4e591823bb8f44e4c0493e294e52a8feaa90f53281",
+      "render_id": "render_05_pre_restart"
+    },
+    {
+      "output_sha256": "sha256:64fa16b2ab69648ff2d303ab28e55e033a083a16258994a3e9b8d627ecd5a22b",
+      "render_id": "render_05_post_restart"
+    }
+  ],
+  "retry_terminal_receipt": null,
+  "scenario_id": "scenario_05",
+  "schema": "persona_dream.recovery_scenario_receipt.v1",
+  "service_boot_identities_after": {},
+  "service_boot_identities_before": {},
+  "service_restart_actions": {},
+  "session_mood_id": "mood_05",
+  "side_effect_counts": {
+    "accepted_effect_count": 0,
+    "canonical_write_attempts": 0,
+    "duplicate_accepted_effect_count": 0,
+    "external_repository_edits": 0,
+    "provider_calls": 0
+  },
+  "stale_session_id": "recovery_session_05.pre_restart",
+  "status": "PASS_RECOVERY_SCENARIO",
+  "terminal_status": "BLOCKED_RECOVERY_BUNDLE_HASH_MISMATCH",
+  "validation_failures": [],
+  "write_attempts": [
+    {
+      "accepted": false,
+      "attempt_id": "recovery_cycle_05.attempt_01",
+      "stage": "recovery_bundle_staged",
+      "write_sha256": "sha256:f877431c8c644b42b5137e6f848947a7bb7a77d88e88d467840328b81f0840be"
+    }
+  ]
+}

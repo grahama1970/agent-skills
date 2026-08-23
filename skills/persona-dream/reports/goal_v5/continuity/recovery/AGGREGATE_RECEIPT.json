@@ -1,0 +1,118 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "production disaster recovery",
+      "cloud or multi-region durability",
+      "human-perceived emotion or naturalness"
+    ],
+    "proves": [
+      "seven preregistered restart/stale-session recovery scenarios retained separate receipts",
+      "recoverable scenarios reconstruct a complete hash-bound chain and unrecoverable scenarios block visibly",
+      "stale session/render/tampered bundle/duplicate replay controls fail closed with typed reasons"
+    ]
+  },
+  "counts": {
+    "blocked_scenarios": 0,
+    "duplicate_accepted_effect_count": 0,
+    "external_repository_edits": 0,
+    "live_restart_count": 6,
+    "passed_scenarios": 7,
+    "provider_calls": 0,
+    "scenario_count": 7
+  },
+  "created_at": "2026-08-23T00:19:18Z",
+  "live": true,
+  "mocked": false,
+  "negative_controls": [
+    {
+      "id": "stale_session_accepted_after_restart",
+      "status": "BLOCKED_AS_EXPECTED",
+      "typed_reason": "BLOCKED_STALE_SESSION_IDENTITY"
+    },
+    {
+      "id": "old_render_attached_to_new_session",
+      "status": "BLOCKED_AS_EXPECTED",
+      "typed_reason": "BLOCKED_STALE_RENDER_LINEAGE"
+    },
+    {
+      "id": "local_file_trusted_without_hash_recompute",
+      "status": "BLOCKED_AS_EXPECTED",
+      "typed_reason": "BLOCKED_RECOVERY_BUNDLE_HASH_MISMATCH"
+    },
+    {
+      "id": "retry_overwrites_original_terminal",
+      "status": "BLOCKED_AS_EXPECTED",
+      "typed_reason": "BLOCKED_TERMINAL_RECEIPT_OVERWRITE"
+    },
+    {
+      "id": "compare_and_set_replay_creates_second_arc_delta",
+      "status": "BLOCKED_AS_EXPECTED",
+      "typed_reason": "BLOCKED_DUPLICATE_CYCLE_REPLAY"
+    },
+    {
+      "id": "restart_not_visible_in_process_identity",
+      "status": "BLOCKED_AS_EXPECTED",
+      "typed_reason": "RESTART_NOT_VISIBLE_IN_PROCESS_IDENTITY"
+    },
+    {
+      "id": "partial_receipt_promoted_to_pass",
+      "status": "BLOCKED_AS_EXPECTED",
+      "typed_reason": "BLOCKED_PARTIAL_RECEIPT_PROMOTION"
+    }
+  ],
+  "preregistration": "skills/persona-dream/reports/goal_v5/continuity/recovery/PREREGISTRATION.json",
+  "preregistration_sha256": "sha256:a46a35065a328ed3396b81ebf0e9b3fdcf532d9ee13a8abac67499243765f96e",
+  "scenario_receipts": [
+    {
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/recovery/scenario_01/RECEIPT.json",
+      "receipt_sha256": "sha256:1244c61cb248443e0829464e9dfcc2e8c0bee10fb997b690a35800fb67b52891",
+      "scenario_id": "scenario_01",
+      "status": "PASS_RECOVERY_SCENARIO",
+      "terminal_status": "PASS_RECOVERY_RECONSTRUCTED"
+    },
+    {
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/recovery/scenario_02/RECEIPT.json",
+      "receipt_sha256": "sha256:22edb2749342fa03bfe8583058dc73fb993f9685659f1d1298f56a5a5f9ef956",
+      "scenario_id": "scenario_02",
+      "status": "PASS_RECOVERY_SCENARIO",
+      "terminal_status": "BLOCKED_STALE_RENDER_LINEAGE"
+    },
+    {
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/recovery/scenario_03/RECEIPT.json",
+      "receipt_sha256": "sha256:640ef72a2ef79b08c81fe5724fb4a97e779eaa9929401509bb54242fab5a8ba3",
+      "scenario_id": "scenario_03",
+      "status": "PASS_RECOVERY_SCENARIO",
+      "terminal_status": "PASS_RECOVERY_RECONSTRUCTED"
+    },
+    {
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/recovery/scenario_04/RECEIPT.json",
+      "receipt_sha256": "sha256:8600141fe99b411795d75fe78fbdef8aef17535870cdb7abb63fecb6d5ac3b8e",
+      "scenario_id": "scenario_04",
+      "status": "PASS_RECOVERY_SCENARIO",
+      "terminal_status": "PASS_RECOVERY_RECONSTRUCTED"
+    },
+    {
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/recovery/scenario_05/RECEIPT.json",
+      "receipt_sha256": "sha256:2e52cf87e555643eec84d2eb8f8df78f72c4e9cc3a148fa81f1f831d412e5064",
+      "scenario_id": "scenario_05",
+      "status": "PASS_RECOVERY_SCENARIO",
+      "terminal_status": "BLOCKED_RECOVERY_BUNDLE_HASH_MISMATCH"
+    },
+    {
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/recovery/scenario_06/RECEIPT.json",
+      "receipt_sha256": "sha256:9e2c5ff3ef50576c380196ab706efcd9af1ae37925857b74ad8c5934e6b234ec",
+      "scenario_id": "scenario_06",
+      "status": "PASS_RECOVERY_SCENARIO",
+      "terminal_status": "BLOCKED_STALE_SESSION_IDENTITY"
+    },
+    {
+      "receipt": "skills/persona-dream/reports/goal_v5/continuity/recovery/scenario_07/RECEIPT.json",
+      "receipt_sha256": "sha256:ba27d73e99992e3732931435396d3f4784dfebec302da6500c29699573440c81",
+      "scenario_id": "scenario_07",
+      "status": "PASS_RECOVERY_SCENARIO",
+      "terminal_status": "PASS_RETRY_WITH_NEW_ATTEMPT_IDENTITY"
+    }
+  ],
+  "schema": "persona_dream.recovery_campaign_aggregate.v1",
+  "status": "PASS_RECOVERY_CAMPAIGN"
+}
