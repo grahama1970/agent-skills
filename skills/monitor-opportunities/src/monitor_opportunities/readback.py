@@ -37,11 +37,13 @@ READBACK_PRIORITY_GEO = frozenset({"WNY_HYBRID", "WNY_ONSITE"})
 
 _TITLE_MATCH_THRESHOLD = 0.60
 
-# A primary-source probe takes an employer name and returns whatever primary-ATS
-# candidates it can find for that employer (each shaped like a discovery
-# candidate: source_provider greenhouse/lever/ashby, title, primary_evidence_url,
-# workplace_type, ...). It must never return a LinkedIn/locator row.
-AtsProbe = Callable[[str], list[dict[str, Any]]]
+# A primary-source probe takes the locator candidate (employer + title) and
+# returns whatever primary-ATS candidates it can find for that employer (each
+# shaped like a discovery candidate: source_provider greenhouse/lever/ashby/
+# workday, title, primary_evidence_url, workplace_type, ...). It must never
+# return a LinkedIn/locator row. The title lets search-capable boards (Workday)
+# target the specific posting instead of paging the whole board.
+AtsProbe = Callable[[dict[str, Any]], list[dict[str, Any]]]
 
 
 def _is_linkedin_locator(candidate: dict[str, Any]) -> bool:
@@ -132,7 +134,7 @@ def resolve_primary_source(
         "locator_source": locator.get("source_provider"),
     }
     try:
-        primaries = ats_probe(org) or []
+        primaries = ats_probe(locator) or []
     except Exception as exc:  # noqa: BLE001 - a probe failure is INDETERMINATE, never a match
         receipt["status"] = "READBACK_ERROR"
         receipt["detail"] = f"{type(exc).__name__}: {exc}"[:200]
@@ -210,13 +212,19 @@ def live_ats_probe(
     live path is testable without network.
     """
     if adapters is None:  # pragma: no cover - exercised live; unit path injects adapters
-        from .discovery import _ashby_candidates, _greenhouse_candidates, _lever_candidates
-        adapters = [_greenhouse_candidates, _lever_candidates, _ashby_candidates]
+        from .discovery import (
+            _ashby_candidates,
+            _greenhouse_candidates,
+            _lever_candidates,
+            _workday_candidates,
+        )
+        adapters = [_greenhouse_candidates, _lever_candidates, _ashby_candidates, _workday_candidates]
 
-    def probe(org: str) -> list[dict[str, Any]]:
+    def probe(locator: dict[str, Any]) -> list[dict[str, Any]]:
+        org = str(locator.get("organization") or "")
         results: list[dict[str, Any]] = []
         for slug in slug_variants(org)[:max_slugs]:
-            target = {"slug": slug, "name": org}
+            target = {"slug": slug, "name": org, "search_text": locator.get("title") or ""}
             for adapter in adapters:
                 try:
                     receipt, cands = adapter(client, target)
@@ -224,6 +232,10 @@ def live_ats_probe(
                     continue
                 if receipt.get("result_status") == "MATCHES":
                     results.extend(cands)
+            # Employer-level early exit: once any board resolves for this employer,
+            # stop trying more slug variants (bounds requests on a shared checkout).
+            if results:
+                break
         return results
 
     return probe
@@ -234,11 +246,11 @@ def compose_probes(*probes: "AtsProbe | None") -> AtsProbe:
     by primary URL then org+title so the same posting is not offered twice."""
     active = [p for p in probes if p is not None]
 
-    def probe(org: str) -> list[dict[str, Any]]:
+    def probe(locator: dict[str, Any]) -> list[dict[str, Any]]:
         seen: set[str] = set()
         out: list[dict[str, Any]] = []
         for p in active:
-            for cand in p(org):
+            for cand in p(locator):
                 key = str(cand.get("primary_evidence_url") or cand.get("posting_url")
                           or f"{cand.get('organization')}|{cand.get('title')}")
                 if key in seen:

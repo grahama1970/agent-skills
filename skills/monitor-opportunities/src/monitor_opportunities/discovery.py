@@ -1306,6 +1306,115 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     return receipt, candidates
 
 
+# Workday tenants split across data centers; these cover the vast majority of
+# US employer tenants. Sites are the board name inside a tenant.
+# Bounded to the highest-probability coordinates: wd1/wd5 host the large
+# majority of US tenants, and "ExternalCareers" is Workday's default external
+# site. Ordered most-likely first; the adapter early-exits on the first hit.
+_WORKDAY_DATACENTERS = ("wd1", "wd5")
+_WORKDAY_SITE_HINTS = ("ExternalCareers", "External", "Careers", "External_Careers")
+
+
+def _workday_job_url(host: str, site: str, external_path: str) -> str:
+    path = external_path if external_path.startswith("/") else f"/{external_path}"
+    return f"https://{host}/{site}{path}"
+
+
+def _workday_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Read-only Workday CXS board reader.
+
+    Workday hosts are ``{tenant}.{dc}.myworkdayjobs.com`` and the public job feed
+    is ``POST /wday/cxs/{tenant}/{site}/jobs``. Tenant, data center, and site are
+    per-employer and not derivable with certainty, so this tries a small bounded
+    matrix (``tenant`` from the slug x a few data centers x a few site names) and
+    stops at the first host+site that returns postings. No credentials, capped
+    body, per-request failures swallowed. Most WNY employers (Roswell Park, Moog,
+    PwC, Voya) publish on Workday, which the greenhouse/lever/ashby readers miss.
+    """
+    tenant = re.sub(r"[^a-z0-9]", "", str(target["slug"]).lower())
+    receipt = _base_receipt("A", "workday", target["name"], "employer_ats")
+    receipt["required_source_id"] = "workday"
+    receipt["channel"] = "api"
+    sites = list(dict.fromkeys([tenant, *(_WORKDAY_SITE_HINTS)]))
+    # Search by the locator title so the specific posting is returned rather than
+    # an arbitrary page of a large board (Roswell Park has 130 postings).
+    body = {"appliedFacets": {}, "limit": _registry_limit(target, 20), "offset": 0,
+            "searchText": str(target.get("search_text") or "")}
+    attempts: list[str] = []
+    postings: list[dict[str, Any]] = []
+    resolved_host = ""
+    resolved_site = ""
+    for dc in _WORKDAY_DATACENTERS:
+        host = f"{tenant}.{dc}.myworkdayjobs.com"
+        for site in sites:
+            url = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
+            attempts.append(url)
+            try:
+                response = client.post(url, json=body, headers={"Accept": "application/json"})
+                if response.status_code != 200:
+                    continue
+                if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
+                    continue
+                data = response.json()
+            except (httpx.HTTPError, ValueError):
+                continue
+            jobs = data.get("jobPostings", []) if isinstance(data, dict) else []
+            if isinstance(jobs, list) and jobs:
+                postings = jobs
+                resolved_host, resolved_site = host, site
+                break
+        if postings:
+            break
+
+    _add_registry_evidence(receipt, target, target.get("primary_source_url"),
+                           f"https://{resolved_host}" if resolved_host else None)
+    receipt["request_summary"] = (
+        f"POST wday/cxs/{tenant}/<site>/jobs across {len(attempts)} host/site combos; "
+        f"resolved={resolved_host or 'none'}"
+    )
+    receipt["response_bytes"] = len(str(postings))
+    receipt["content_sha256"] = sha256_bytes(str(postings).encode("utf-8"))
+    if not postings:
+        receipt["result_status"] = "NO_MATCHES"
+        receipt["parser_result"] = "NO_PARSE"
+        receipt["limitations"].append("No Workday host/site combo resolved for this tenant guess.")
+        return _finalize_receipt(receipt), []
+
+    receipt["result_status"] = "MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt = _finalize_receipt(receipt)
+    candidates: list[dict[str, Any]] = []
+    for job in postings[: _registry_limit(target, 20)]:
+        if not isinstance(job, dict):
+            continue
+        location = str(job.get("locationsText") or "Unknown")
+        content = " ".join(str(x) for x in (job.get("bulletFields") or []))
+        posting_url = _workday_job_url(resolved_host, resolved_site, str(job.get("externalPath") or ""))
+        payload = {
+            "lane": "A",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": "workday",
+            "source_identity": f"{tenant}/{resolved_site}",
+            "organization": target["name"],
+            "title": job.get("title") or "Untitled",
+            "location_display": location,
+            "workplace_type": _workplace_type(location, content),
+            "relocation_required": _relocation_required(location, content),
+            "clearance_required": False,
+            "posting_url": posting_url,
+            "apply_url": posting_url,
+            "primary_evidence_url": posting_url,
+            "published_at": job.get("postedOn"),
+            "updated_at": job.get("postedOn"),
+            "content_hash": sha256_bytes(str(job).encode("utf-8")),
+            "posting_text": content[:14000],
+            "fit_score": target.get("default_fit_score", 0.5),
+        }
+        payload["candidate_id"] = _candidate_id("candidate:a", payload)
+        candidates.append(payload)
+    return receipt, candidates
+
+
 def _builtin_candidates(
     client: httpx.Client, target: dict[str, Any]
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:

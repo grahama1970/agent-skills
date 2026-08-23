@@ -354,7 +354,8 @@ def _run_local_ats_probe(candidates: list[dict[str, Any]]) -> "AtsProbe":
     primaries = [c for c in candidates if not _readback._is_linkedin_locator(c)
                  and not _is_source_intel_candidate(c)]
 
-    def probe(org: str) -> list[dict[str, Any]]:
+    def probe(locator: dict[str, Any]) -> list[dict[str, Any]]:
+        org = str(locator.get("organization") or "")
         return [c for c in primaries if _readback.same_employer(org, str(c.get("organization") or ""))]
 
     return probe

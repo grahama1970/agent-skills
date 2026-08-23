@@ -132,11 +132,48 @@ def main() -> int:
     if any(c.get("located_via") == "linkedin" for c in c_out):
         failures.append("SLUG_COLLISION_FALSE_PROMOTE: a different employer's posting was promoted on a title match")
 
+    # 6. Workday adapter: the ATS most WNY employers use. A resolvable Workday
+    #    tenant must parse CXS postings and promote the locator.
+    from monitor_opportunities.discovery import _workday_candidates  # noqa: E402
+
+    class _WdResp:
+        def __init__(self, status, payload):
+            self.status_code = status
+            self._p = payload
+
+        @property
+        def content(self):
+            import json as _j
+            return _j.dumps(self._p).encode()
+
+        def json(self):
+            return self._p
+
+    class _WdClient:
+        def post(self, url, json=None, headers=None):
+            if "roswellpark.wd1" in url and "/roswellpark/jobs" in url:
+                return _WdResp(200, {"jobPostings": [{
+                    "title": "Senior Computational Scientist",
+                    "externalPath": "/job/Buffalo/Comp_R1", "locationsText": "Buffalo, NY",
+                    "bulletFields": ["R1"]}]})
+            return _WdResp(404, {})
+
+    wd_receipt, wd_cands = _workday_candidates(_WdClient(), {"slug": "roswellpark", "name": "Roswell Park Comprehensive Cancer Center"})
+    if wd_receipt.get("result_status") != "MATCHES" or not wd_cands:
+        failures.append("WORKDAY_ADAPTER_NO_PARSE: Workday CXS response did not yield candidates")
+    elif wd_cands[0].get("workplace_type") != "WNY_ONSITE":
+        failures.append(f"WORKDAY_GEO_WRONG: Buffalo posting not classified WNY_ONSITE (got {wd_cands[0].get('workplace_type')})")
+    else:
+        wd_loc = _locator("wd", "Roswell Park Comprehensive Cancer Center", "Computational Scientist", "WNY_ONSITE")
+        wd_out, _ = promote_linkedin_locators([wd_loc], live_ats_probe(_WdClient(), adapters=[_workday_candidates]))
+        if not any(c.get("source_provider") == "workday" for c in wd_out if c.get("located_via") == "linkedin"):
+            failures.append("WORKDAY_NO_PROMOTE: a resolvable Workday WNY role was not promoted")
+
     if failures:
         for f in failures:
             print(f, file=sys.stderr)
         return 1
-    print(f"WNY_LINKEDIN_READBACK_OK: cross-ref + live-fetch promote WNY locators, "
+    print(f"WNY_LINKEDIN_READBACK_OK: cross-ref + live-fetch (incl. Workday) promote WNY locators, "
           f"surfaced-pending otherwise, non-WNY untouched ({len(receipts)} readback attempts)")
     return 0
 
