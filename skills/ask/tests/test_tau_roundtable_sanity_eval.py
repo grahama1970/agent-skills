@@ -1403,6 +1403,87 @@ def test_worker_lane_recovery_never_retries_provider_refusal(tmp_path: Path) -> 
     assert "provider-side" in receipt["skipped_reason"]
 
 
+def test_codex_workspace_lane_accepts_committed_clean_worktree(tmp_path: Path, monkeypatch) -> None:
+    """A Codex creator that commits its repair must not be rejected as no-op."""
+    workspace = tmp_path / "workspace"
+    (workspace / ".git").mkdir(parents=True)
+    artifact_dir = tmp_path / "node-artifacts" / "handler-gpt-5-5-high"
+    artifact_dir.mkdir(parents=True)
+    request_file = tmp_path / "request.json"
+    request_file.write_text(json.dumps({"request": "Repair the issue and commit."}), encoding="utf-8")
+    args = SimpleNamespace(
+        node_id="handler-gpt-5-5-high",
+        handler="gpt-5.5-high",
+        topology="sequential",
+        workflow_mode="roundtable",
+        request_file=str(request_file),
+        browser_oracle_project="",
+        provider_hint="",
+        next_agent="reviewer",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(tmp_path / "surf-run.sh"),
+        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=[],
+        timeout=300,
+        command_timeout_budget=0,
+        browser_lock_timeout=0,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+        attach_files=[],
+        codex_workspace=str(workspace),
+        browser_model_preference="",
+        subagent_runner="",
+        subagent_model="gpt-5.5",
+        subagent_reasoning_effort="high",
+        subagent_requested_model="gpt-5.5-high",
+    )
+    before = "0" * 40
+    after = "8" * 40
+    codex_ran = False
+
+    def fake_subprocess_run(command, **kwargs):  # noqa: ANN001, ANN003
+        nonlocal codex_ran
+        if command[0] == "codex":
+            raw_path = Path(command[command.index("-o") + 1])
+            raw_path.write_text(
+                "VERDICT: PASS\n\nCommitted `88b7e98a`.\n"
+                "Immutable Goal: ACHIEVED_WITH_RECEIPT:/tmp/receipt.json\n",
+                encoding="utf-8",
+            )
+            codex_ran = True
+            return subprocess.CompletedProcess(command, 0, "", "")
+        if command[:3] == ["git", "-C", str(workspace)]:
+            git_args = command[3:]
+            if git_args == ["rev-parse", "HEAD"]:
+                return subprocess.CompletedProcess(command, 0, f"{after if codex_ran else before}\n", "")
+            if git_args == ["status", "--short"]:
+                return subprocess.CompletedProcess(command, 0, "", "")
+            if git_args == ["diff"]:
+                return subprocess.CompletedProcess(command, 0, "", "")
+            if git_args[:3] == ["diff", "--stat", "--patch"]:
+                return subprocess.CompletedProcess(command, 0, "diff --git a/proof.py b/proof.py\n+PASS\n", "")
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr(tau_roundtable_worker.subprocess, "run", fake_subprocess_run)
+
+    result = tau_roundtable_worker._run_handler(args, {"goal": {"goal_hash": "sha256:test"}}, artifact_dir)
+
+    assert result["exit_code"] == 0
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["ok"] is True
+    assert receipt["response_chars"] > 0
+    assert receipt["provider_receipt"]["transport"] == "codex.exec"
+    meta = json.loads((artifact_dir / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["head_changed"] is True
+    response = (artifact_dir / "response.md").read_text(encoding="utf-8")
+    assert f"HEAD: {before} -> {after}" in response
+    assert "diff --git" in response
+
+
 def test_worker_lane_recovery_skips_interrupted_submit(tmp_path: Path, monkeypatch) -> None:
     """A cancelled browser submit must not spawn a long in-run extractor."""
     artifact_dir = tmp_path / "art"

@@ -6435,6 +6435,7 @@ def _run_codex_handler(
     if not workspace.is_dir() or not (workspace / ".git").exists():
         raise RuntimeError(f"codex workspace is not a git worktree: {workspace}")
     commands: list[dict[str, Any]] = []
+    before_head = _git_head(workspace)
     final_message_path = raw_path
     model = str(getattr(args, "subagent_model", "") or "gpt-5.5").strip()
     requested_model = str(getattr(args, "subagent_requested_model", "") or args.handler).strip()
@@ -6486,6 +6487,7 @@ def _run_codex_handler(
     )
     if proc.returncode != 0:
         raise RuntimeError(f"codex exec failed rc={proc.returncode}: {(proc.stderr or proc.stdout)[-500:]}")
+    after_head = _git_head(workspace)
     diff = subprocess.run(
         ["git", "-C", str(workspace), "diff"],
         capture_output=True,
@@ -6498,6 +6500,28 @@ def _run_codex_handler(
         text=True,
         timeout=60,
     )
+    committed_diff = ""
+    diff_label = "git diff"
+    if after_head and after_head != before_head:
+        diff_range = f"{before_head}..{after_head}" if before_head else after_head
+        committed = subprocess.run(
+            ["git", "-C", str(workspace), "diff", "--stat", "--patch", diff_range],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        commands.append(
+            {
+                "command": ["git", "-C", str(workspace), "diff", "--stat", "--patch", diff_range],
+                "returncode": committed.returncode,
+                "duration_seconds": 0,
+                "stdout_excerpt": (committed.stdout or "")[:400],
+                "stderr_excerpt": (committed.stderr or "")[:200],
+            }
+        )
+        if committed.returncode == 0:
+            committed_diff = committed.stdout or ""
+            diff_label = f"git diff {diff_range}"
     commands.append(
         {
             "command": ["git", "-C", str(workspace), "diff"],
@@ -6507,11 +6531,18 @@ def _run_codex_handler(
             "stderr_excerpt": (diff.stderr or "")[:200],
         }
     )
-    if not (diff.stdout or "").strip() and not (status_out.stdout or "").strip():
+    if not (diff.stdout or "").strip() and not (status_out.stdout or "").strip() and not committed_diff.strip():
         raise RuntimeError("codex_no_workspace_change: coder ran but produced no diff")
     final_message = ""
     if final_message_path.is_file():
         final_message = final_message_path.read_text(encoding="utf-8")
+    diff_text = (diff.stdout or "").strip()
+    if not diff_text:
+        diff_text = committed_diff.strip()
+    status_text = (status_out.stdout or "").strip()
+    if after_head and after_head != before_head:
+        head_line = f"HEAD: {before_head or '<none>'} -> {after_head}"
+        status_text = f"{head_line}\n{status_text}".strip()
     response = "\n".join(
         [
             "## Coder summary",
@@ -6519,12 +6550,12 @@ def _run_codex_handler(
             "",
             "## Workspace status",
             "```",
-            (status_out.stdout or "").strip(),
+            status_text,
             "```",
             "",
-            "## Workspace diff (git diff)",
+            f"## Workspace diff ({diff_label})",
             "```diff",
-            (diff.stdout or "").strip()[:60000],
+            diff_text[:60000],
             "```",
             "",
         ]
@@ -6544,10 +6575,27 @@ def _run_codex_handler(
         "codex_returncode": proc.returncode,
         "duration_seconds": round(duration, 3),
         "diff_bytes": len(diff.stdout or ""),
+        "committed_diff_bytes": len(committed_diff or ""),
+        "before_head": before_head,
+        "after_head": after_head,
+        "head_changed": bool(after_head and after_head != before_head),
         "finished_at": _now(),
     }
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return response, meta, commands
+
+
+def _git_head(workspace: Path) -> str | None:
+    proc = subprocess.run(
+        ["git", "-C", str(workspace), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    if proc.returncode != 0:
+        return None
+    head = (proc.stdout or "").strip()
+    return head or None
 
 
 def _claude_model_for(handler: str) -> str:

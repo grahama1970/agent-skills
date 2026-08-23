@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "ask",
   "trials": 3,
-  "proof_scope": "ask entrypoints, browser-window reclamation, output pruning, blocker-ledger honesty gates, and the MVP fail-now proof gate, exercised against real browser/filesystem state and a real captured model proposal",
+  "proof_scope": "ask entrypoints, browser-window reclamation, output pruning, blocker-ledger honesty gates, codex workspace receipt admission, and the MVP fail-now proof gate, exercised against real browser/filesystem state and a real captured model proposal",
   "claims": {
-    "proves": "ask entrypoints, panel compliance with best-practices-roundtable/competition, workflow compilation, and the MVP refusal gates",
+    "proves": "ask entrypoints, panel compliance with best-practices-roundtable/competition, workflow compilation, codex workspace receipt classification, and the MVP refusal gates",
     "does_not_prove": "that any provider answers; see fixtures/agentic_eval_live.json for the live contract"
   },
   "cases": [
@@ -610,6 +610,31 @@
           "2 passed"
         ]
       }
+    },
+    {
+      "name": "gpt55-high-codex-committed-clean-worktree-is-pass",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest -q tests/test_tau_roundtable_sanity_eval.py::test_codex_workspace_lane_accepts_committed_clean_worktree"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "supports_claims": [
+        "ask.codex_workspace.receipt_admission"
+      ],
+      "seams": [
+        "codex_workspace.receipt_classification"
+      ],
+      "notes": "Regression for project-watchdog/pdf_oxide#36 on 2026-08-23: codex exec returned 0 and response.raw.md contained VERDICT: PASS plus Immutable Goal ACHIEVED_WITH_RECEIPT, but Ask rejected the lane as codex_no_workspace_change because the creator committed its repair and left the worktree clean. The worker must admit HEAD advancement as workspace evidence."
     },
     {
       "name": "every-roster-browser-seat-has-a-fresh-url",
@@ -1714,6 +1739,14 @@
       ]
     },
     {
+      "id": "ask.codex_workspace.receipt_admission",
+      "criticality": "critical",
+      "description": "Ask/Tau admits a workspace-bound Codex creator lane as PASS when Codex returns a usable response and advances HEAD with a committed repair, even if the worktree is clean afterward.",
+      "evidence_required": [
+        "fault_injected_deterministic"
+      ]
+    },
+    {
       "id": "ask.local_claude.attachments_visible",
       "criticality": "critical",
       "description": "Direct local Claude CLI lanes receive readable --attach-file evidence by inlining it into stdin and recording a delivery receipt.",
@@ -1731,6 +1764,19 @@
     }
   ],
   "seams": [
+    {
+      "seam_id": "codex_workspace.receipt_classification",
+      "claim_id": "ask.codex_workspace.receipt_admission",
+      "seam_type": "receipt_gate",
+      "criticality": "critical",
+      "failure_modes": [
+        "a committed clean Codex worktree is rejected as codex_no_workspace_change",
+        "response.raw.md contains a PASS verdict but node-receipt.json records codex_handler_failed"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
+    },
     {
       "seam_id": "browser.prompt_preflight",
       "claim_id": "ask.preflight.fails_before_browser",
