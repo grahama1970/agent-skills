@@ -177,6 +177,7 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
         receipt.update({"ok": False, "status": "BLOCKED", "errors": ["lock already held"]})
         return finish(run_id, receipt_dir, receipt, 1, persist=False)
     try:
+        _test_hold_lock_if_requested(run_id)
         return _tick_locked(
             run_id, receipt_dir, apply=apply, project_id=project_id, max_tickets=max_tickets,
             only_issue=only_issue,
@@ -189,6 +190,22 @@ def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | No
 #: operator and must survive a tick that started before they changed it.
 _TICK_OWNED_STATE_KEYS = ("last_served_project", "closure_audit_attempts",
                           "completion_attested_at")
+
+
+def _test_hold_lock_if_requested(run_id: str) -> None:
+    """Pause with the real singleton lock held for overlap regression evals."""
+    raw = os.environ.get("PROJECT_WATCHDOG_TEST_HOLD_LOCK_SECONDS", "").strip()
+    if not raw:
+        return
+    try:
+        seconds = float(raw)
+    except ValueError:
+        seconds = 0.0
+    if seconds <= 0:
+        return
+    log_event(run_id, "test_hold_lock_start", seconds=seconds)
+    time.sleep(seconds)
+    log_event(run_id, "test_hold_lock_finish", seconds=seconds)
 
 
 def _persist_tick_state(state: dict[str, Any]) -> None:

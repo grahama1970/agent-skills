@@ -254,9 +254,16 @@ def lock_holder_alive() -> bool:
     owner_path = config.lock_dir() / "owner.json"
     try:
         owner = json.loads(owner_path.read_text(encoding="utf-8"))
-        pid = int(owner.get("pid", 0))
     except (OSError, ValueError, TypeError) as exc:
         logger.error("could not read lock owner: {}", exc)
+        return False
+    return _owner_pid_alive(owner)
+
+
+def _owner_pid_alive(owner: dict[str, Any]) -> bool:
+    try:
+        pid = int(owner.get("pid", 0))
+    except (ValueError, TypeError):
         return False
     if pid <= 0:
         return False
@@ -279,6 +286,20 @@ def _reclaim_stale_lock(run_id: str, lock: Path) -> bool:
         age = float("inf")
         owner = {}
     if age < config.LOCK_STALE_SECONDS:
+        return False
+    if _owner_pid_alive(owner):
+        logger.warning(
+            "watchdog lock held by live pid={} exceeded stale age_s={:.0f}; refusing takeover",
+            owner.get("pid"),
+            age,
+        )
+        log_event(
+            run_id,
+            "stale_lock_owner_still_alive",
+            previous_run_id=owner.get("run_id"),
+            pid=owner.get("pid"),
+            age_seconds=age,
+        )
         return False
     logger.warning(
         "reclaiming stale watchdog lock held by run_id={} pid={} age_s={:.0f}",

@@ -338,8 +338,24 @@ def test_stale_lock_is_reclaimed(tmp_path, monkeypatch) -> None:
     owner = config.lock_dir() / "owner.json"
     payload = json.loads(owner.read_text(encoding="utf-8"))
     payload["epoch"] = time.time() - (config.LOCK_STALE_SECONDS + 60)
+    payload["pid"] = 999_999_999
     owner.write_text(json.dumps(payload), encoding="utf-8")
     assert core.acquire_lock("recovery-run") is True
+    core.release_lock()
+
+
+def test_stale_lock_with_live_owner_is_not_reclaimed(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+    assert core.acquire_lock("live-long-run") is True
+    owner = config.lock_dir() / "owner.json"
+    payload = json.loads(owner.read_text(encoding="utf-8"))
+    payload["epoch"] = time.time() - (config.LOCK_STALE_SECONDS + 60)
+    owner.write_text(json.dumps(payload), encoding="utf-8")
+
+    assert core.acquire_lock("overlapping-run") is False
+    readback = json.loads(owner.read_text(encoding="utf-8"))
+    assert readback["run_id"] == "live-long-run"
+    assert readback["pid"] == os.getpid()
     core.release_lock()
 
 
@@ -814,6 +830,20 @@ def test_goal_hash_is_stable_across_reruns() -> None:
     assert a != handlers.issue_goal_hash(TAU_REPO, 150)
 
 
+def _seed_passing_repair_evidence(receipt_dir: Path) -> None:
+    ask_dir = receipt_dir / "ask" / "run-1" / "node-artifacts"
+    for handler in (config.DEFAULT_REPAIR_CREATOR, config.DEFAULT_REPAIR_REVIEWER):
+        node = ask_dir / handlers.repair_node_id(handler)
+        node.mkdir(parents=True, exist_ok=True)
+        (node / "response.md").write_text("VERDICT: PASS\n", encoding="utf-8")
+
+
+def _passing_repair_run_cmd(command, **_kwargs):  # noqa: ANN001, ANN003
+    if command[:3] == ["git", "rev-list", "--count"]:
+        return {"exit_code": 0, "stdout": "1\n", "stderr": ""}
+    return {"exit_code": 0, "stdout": "", "stderr": ""}
+
+
 def test_a_dirty_target_blocks_before_any_github_write(tmp_path) -> None:
     """Readiness is judged per target, and refusal happens before leasing.
 
@@ -923,6 +953,7 @@ def test_a_failed_lease_stops_the_dispatch(tmp_path) -> None:
 
 
 def test_a_lease_that_takes_proceeds(tmp_path) -> None:
+    _seed_passing_repair_evidence(tmp_path)
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
@@ -940,7 +971,7 @@ def test_a_lease_that_takes_proceeds(tmp_path) -> None:
             return_value={"ok": True, "branch": "watchdog/issue-22",
                           "worktree": str(tmp_path / "wt")},
         ),
-        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+        mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "COMPLETED", result.get("summary")
@@ -1036,6 +1067,7 @@ def test_a_repair_that_moved_main_is_flagged_and_blocked(tmp_path) -> None:
 
 
 def test_an_untouched_main_completes_normally(tmp_path) -> None:
+    _seed_passing_repair_evidence(tmp_path)
     project = {
         "project_id": "agent-skills",
         "repo": "grahama1970/agent-skills",
@@ -1052,7 +1084,7 @@ def test_an_untouched_main_completes_normally(tmp_path) -> None:
                           "worktree": str(tmp_path / "wt")},
         ),
         mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["aaa111", "aaa111"]),
-        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+        mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "COMPLETED", result.get("summary")
@@ -1637,6 +1669,7 @@ def test_a_finished_repair_stops_being_routable() -> None:
 
 
 def test_a_completed_repair_marks_the_ticket_done(tmp_path) -> None:
+    _seed_passing_repair_evidence(tmp_path)
     project = {
         "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
     }
@@ -1655,7 +1688,7 @@ def test_a_completed_repair_marks_the_ticket_done(tmp_path) -> None:
                           "worktree": str(tmp_path / "wt")},
         ),
         mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
-        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+        mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
 

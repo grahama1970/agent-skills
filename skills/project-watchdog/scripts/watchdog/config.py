@@ -125,23 +125,16 @@ def projects_path() -> Path:
 
 
 #: The creator seat. Must be able to mutate a workspace and produce a real git
-#: diff through the Tau repair DAG. Bare ``codex`` is the local Codex CLI lane
-#: and is refused by the dispatch guard; model seats such as ``gpt-5.5-high``
-#: are valid when routed through ``$ask tau-dag`` with a handler workspace.
-DEFAULT_REPAIR_CREATOR = "codex"
+#: diff or commit through the Tau repair DAG. Bare ``codex`` is the local Codex
+#: CLI lane and is refused by the dispatch guard; model seats such as
+#: ``gpt-5.5-high`` are valid when routed through ``$ask tau-dag`` with a
+#: handler workspace.
+DEFAULT_REPAIR_CREATOR = "gpt-5.5-high"
 
-#: The reviewer seat. Deliberately a different model family from the creator:
-#: `gpt-5.5-xhigh` resolves to `codex exec --model ...`, the same family the
-#: creator runs, so it shared the creator's blind spots and was a second pass
-#: rather than a second opinion.
-#:
-#: A browser handler rather than an API model. `tau doctor` reports the
-#: anthropic provider as credential=missing, so every scillm-routed Claude seat
-#: returns `scillm_auth_invalid_api_key` -- and scillm will not cross-vendor
-#: fall back, correctly: answering an opus request with GPT would void the
-#: independence the second seat exists for. webclaude routes through surf, so it
-#: is a different family AND a different transport, and needs no Anthropic key.
-DEFAULT_REPAIR_REVIEWER = "webclaude"
+#: The reviewer seat. It must be a different provider family from the creator
+#: and must be locally executing so it can run the ticket's proof command.
+#: Browser seats such as ``webclaude`` are not acceptable closure reviewers.
+DEFAULT_REPAIR_REVIEWER = "claude-fable-low"
 
 
 def repair_creator(project: dict[str, Any] | None = None) -> str:

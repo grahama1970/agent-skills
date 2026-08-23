@@ -423,6 +423,24 @@
       }
     },
     {
+      "name": "overlapping-applied-ticks-skip-live",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 600,
+      "command": [
+        "bash",
+        "-c",
+        "cd ..; D=$(mktemp -d); printf '%s\n' '{\"schema\":\"agent_skills.project_watchdog.registry.v1\",\"projects\":[]}' > $D/projects.json; printf '%s\n' '{\"global\":{\"state\":\"active\"},\"projects\":{}}' > $D/state.json; PROJECT_WATCHDOG_STATE_ROOT=$D PROJECT_WATCHDOG_PROJECTS_PATH=$D/projects.json PROJECT_WATCHDOG_TEST_HOLD_LOCK_SECONDS=8 ./run.sh tick --apply --project all --max-tickets 1 > $D/first.out 2> $D/first.err & first=$!; for i in $(seq 1 80); do [ -f $D/lock/owner.json ] && break; sleep 0.1; done; test -f $D/lock/owner.json || { echo FIRST_LOCK_NOT_OBSERVED; cat $D/first.err; kill $first 2>/dev/null || true; wait $first 2>/dev/null || true; exit 1; }; python3 - <<PY\nimport json, pathlib\np=pathlib.Path('$D/lock/owner.json')\nd=json.loads(p.read_text())\nd['epoch']=0\np.write_text(json.dumps(d, indent=2)+'\\n')\nprint('FIRST_RUN='+d['run_id'])\nPY\nPROJECT_WATCHDOG_STATE_ROOT=$D PROJECT_WATCHDOG_PROJECTS_PATH=$D/projects.json ./run.sh tick --apply --project all --max-tickets 1 > $D/second.out 2> $D/second.err; second_rc=$?; wait $first; first_rc=$?; python3 - <<PY\nimport json, pathlib, sys\nroot=pathlib.Path('$D')\nsecond_rc=int('$second_rc')\nfirst_rc=int('$first_rc')\nsecond=json.loads((root/'second.out').read_text())\nassert second_rc == 0, (second_rc, (root/'second.err').read_text())\nassert second['status']=='SKIPPED', second\nassert second['stop_reason']=='tick_already_running', second\nassert second.get('handled_issues') == [], second.get('handled_issues')\nassert second.get('receipt_persisted') is False, second\nassert first_rc == 0, (first_rc, (root/'first.err').read_text())\nprint('OVERLAP_SKIPPED_LIVE')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OVERLAP_SKIPPED_LIVE"
+        ]
+      }
+    },
+    {
       "name": "path-literals-never-contain-shell-variables",
       "type": "adversarial",
       "command": [
