@@ -41,20 +41,33 @@ SciLLM judge (claude-sonnet-5, low effort) rather than token overlap. It is
 stricter than the token-family campaign and immediately caught a FALSE PASS the
 token scorer was giving. It drove four fixes (memory excerpt boilerplate,
 memory project-affinity ranking, extractive-summary header truncation, shared
-`capture_live_session`). It is NOT yet a passing gate: two real gaps remain and
-the eval honestly fails on them —
+`capture_live_session`). ## Agentic surface selection (2026-08-23)
 
-1. Retrieval ranking: ripgrep matches in non-source docs (THIRD_PARTY_NOTICES,
-   LICENSES, fixtures/*.json) on generic terms can still outrank the
-   semantically-correct memory doc for the card ANSWER (built from the top
-   source). Needs ripgrep noise-filtering or answer-source selection weighted
-   by lane relevance, not just rank.
-2. STT segmentation: RealtimeSTT emits ~1 final per continuous session, so a
-   dense multi-question meeting merges or drops a question run-to-run (the
-   resolver authored one canonical question spanning version+QRA). The token
-   campaign shows the same flake on the QRA family. Root cause is bridge
-   finalization cadence, not the question window. This is the next hardening
-   target.
+Deterministic scalar ranking is no longer the arbiter of what a card surfaces.
+`surface_selector.py` makes one quick `gpt-5.5` low-reasoning call (~2.5s) that
+orders the gathered candidates by relevance to the current question and thread;
+the coordinator applies it after `rank_sources` (which is now only a gatherer),
+off the event loop, journaling a `surface_selection` receipt. Fail-open: no key
+/ timeout / unparseable reply keeps the deterministic order. The candidate pool
+is lane-balanced (round-robin across lanes) so a ripgrep flood cannot crowd the
+answering memory doc out before the model judges it.
+
+Wiring it exposed and fixed the real retrieval root cause: the default profile
+pinned recall to `scope=live-evidence` with a collections allowlist that
+excluded document-level project memory, so a Sparta meeting could only retrieve
+cross-project live-evidence chunks. The raw (profile=None) recall now runs
+UNSCOPED with no collection filter whenever the meeting declares repos; project
+affinity + the selector then prefer the meeting's own project. After this, the
+transcript eval's memory hard-rules card passes the agentic similarity judge
+and research passes; client-pitch (briefing) stays green (no regression).
+
+Remaining open gap:
+
+- STT segmentation: RealtimeSTT emits ~1 final per continuous session, so a
+  dense multi-question meeting merges or drops a question run-to-run (the QRA
+  question never opens its own ledger). The token campaign shows the same flake
+  on the QRA family. Root cause is bridge finalization cadence, not the question
+  window. This is the next hardening target.
 
 ## Open Questions
 
