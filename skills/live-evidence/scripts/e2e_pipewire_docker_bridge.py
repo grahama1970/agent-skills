@@ -29,6 +29,7 @@ DOCKER_BRIDGE = r'''
 import json
 import os
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -123,8 +124,35 @@ except Exception as exc:
 chunks = 0
 bytes_read = 0
 started = time.time()
+finals_published = 0
+done = threading.Event()
+
+
+def consume_finals():
+    # RealtimeSTT.text() blocks until ONE utterance completes (after
+    # post_speech_silence_duration of silence) and returns it. Looping it in a
+    # consumer thread yields one final PER spoken utterance, so a meeting with
+    # pauses segments into per-question finals. The previous one-shot .text()
+    # after stop() published a single final containing the whole session, which
+    # merged every co-located question into one buffer -- the segmentation flake.
+    global finals_published
+    while not done.is_set():
+        try:
+            txt = recorder.text()
+        except Exception as exc:
+            if not done.is_set():
+                print(json.dumps({"kind": "final_error", "error": str(exc)}),
+                      file=sys.stderr, flush=True)
+            break
+        if txt and txt.strip():
+            publish("final", txt)
+            finals_published += 1
+
+
+consumer = threading.Thread(target=consume_finals, daemon=True)
 try:
     recorder.start()
+    consumer.start()
     while True:
         chunk = sys.stdin.buffer.read(4096)
         if not chunk:
@@ -135,15 +163,11 @@ try:
         if samples.size:
             recorder.feed_audio(samples, original_sample_rate=16000)
     recorder.stop()
-    time.sleep(1.2)
-    try:
-        final_text = recorder.text()
-    except Exception as exc:
-        print(json.dumps({"kind": "final_error", "error": str(exc)}), file=sys.stderr, flush=True)
-    else:
-        publish("final", final_text)
+    time.sleep(1.5)  # let the last utterance transcribe and publish
+    done.set()
 finally:
     recorder.shutdown()
+    consumer.join(timeout=3)
 
 summary = {
     "schema": "live_evidence.docker_realtimestt_bridge_summary.v1",
