@@ -1,0 +1,149 @@
+import copy
+import importlib.util
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+checker = _load("check_dispositions")
+
+
+def _registry():
+    return json.loads((ROOT / "DISPOSITION_REGISTRY.json").read_text(encoding="utf-8"))
+
+
+def _row(doc, hyp_id):
+    for row in doc["hypotheses"]:
+        if row["id"] == hyp_id:
+            return row
+    raise AssertionError(hyp_id)
+
+
+def _codes(report):
+    return {failure["code"] for failure in report["failures"]}
+
+
+def test_current_registry_passes_strict_contract():
+    report = checker.validate_registry(_registry(), strict=True)
+
+    assert report["status"] == "PASS_DISPOSITION_REGISTRY"
+    assert report["required_hypothesis_count"] == 6
+    assert "previous_video_attachment_value" in report["terminal_hypotheses"]
+    assert "cognitive_value_pctom" in report["nonterminal_hypotheses"]
+    assert report["immutable_goal_completion_claimed"] is False
+
+
+def test_measurement_validity_cannot_be_positive_cognitive_benefit():
+    doc = _registry()
+    row = _row(doc, "cognitive_value_pctom")
+    support = row["supporting_receipts"][0]
+    row["result_class"] = "POSITIVE"
+    row["status"] = "TERMINAL"
+    row["terminal_result_receipt"] = support["path"]
+    row["terminal_result_receipt_sha256"] = support["sha256"]
+    row["terminal_result_evidence_role"] = "apparatus_validity_only"
+    row["product_decision"] = "ADOPT"
+
+    assert "terminal_result_backed_only_by_apparatus_validity" in _codes(
+        checker.validate_registry(doc, strict=True)
+    )
+
+
+def test_technical_screen_cannot_be_perceptual_emotion_failure():
+    doc = _registry()
+    row = _row(doc, "voice_emotion_value")
+    support = row["supporting_receipts"][0]
+    row["result_class"] = "NEGATIVE"
+    row["status"] = "TERMINAL"
+    row["terminal_result_receipt"] = support["path"]
+    row["terminal_result_receipt_sha256"] = support["sha256"]
+    row["terminal_result_evidence_role"] = "technical_screen_only"
+    row["product_decision"] = "REJECT"
+
+    assert "terminal_result_backed_only_by_technical_screen" in _codes(
+        checker.validate_registry(doc, strict=True)
+    )
+
+
+def test_adopt_with_failed_safety_invariant_blocks():
+    doc = _registry()
+    row = _row(doc, "operational_reliability_value")
+    row["product_decision"] = "ADOPT"
+    row["safety_invariant_status"] = "FAIL_IDENTITY_BOUNDARY"
+
+    assert "adopt_with_failed_safety_invariant" in _codes(checker.validate_registry(doc, strict=True))
+
+
+def test_terminal_result_without_product_decision_blocks():
+    doc = _registry()
+    row = _row(doc, "operational_reliability_value")
+    row["product_decision"] = None
+
+    assert "invalid_product_decision" in _codes(checker.validate_registry(doc, strict=True))
+
+
+def test_downstream_transfer_missing_artifact_blocks():
+    doc = _registry()
+    row = _row(doc, "operational_reliability_value")
+    row["transfer_outcomes"] = [{"type": "DOWNSTREAM_ISSUE", "repo": "grahama1970/tau"}]
+
+    assert "downstream_transfer_missing_field" in _codes(checker.validate_registry(doc, strict=True))
+
+
+def test_retire_while_runtime_advertises_required_blocks():
+    doc = _registry()
+    row = _row(doc, "previous_video_attachment_value")
+    row["runtime_advertises_required"] = True
+
+    assert "retire_while_runtime_advertises_required" in _codes(
+        checker.validate_registry(doc, strict=True)
+    )
+
+
+def test_terminal_receipt_hash_mutation_blocks():
+    doc = _registry()
+    row = _row(doc, "operational_reliability_value")
+    row["terminal_result_receipt_sha256"] = "sha256:not-the-real-hash"
+
+    assert "terminal_receipt_sha256_mismatch" in _codes(checker.validate_registry(doc, strict=True))
+
+
+def test_defer_without_external_blocker_or_review_condition_blocks():
+    doc = _registry()
+    row = _row(doc, "multimodal_media_value")
+    row["external_blocker"] = ""
+    row["review_condition"] = ""
+
+    codes = _codes(checker.validate_registry(doc, strict=True))
+    assert "defer_without_external_blocker" in codes
+    assert "defer_without_review_condition" in codes
+
+
+def test_immutable_goal_completion_with_nonterminal_hypothesis_blocks():
+    doc = _registry()
+    doc["immutable_goal_completion_claimed"] = True
+
+    assert "immutable_goal_completion_claimed_with_nonterminal_hypothesis" in _codes(
+        checker.validate_registry(doc, strict=True)
+    )
+
+
+def test_null_or_negative_result_cannot_be_replaced_by_exploratory_run():
+    doc = _registry()
+    row = _row(doc, "operational_reliability_value")
+    row["result_class"] = "NEGATIVE"
+    row["product_decision"] = "CONSTRAIN"
+    row["later_exploratory_overrides"] = True
+
+    assert "null_or_negative_replaced_by_exploratory_run" in _codes(
+        checker.validate_registry(doc, strict=True)
+    )

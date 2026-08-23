@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, and the Chatterbox affect-validation claim-boundary registry consumer",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, and Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
@@ -464,6 +464,31 @@
       }
     },
     {
+      "name": "disposition-registry-contract-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.disposition_registry_contract"
+      ],
+      "seams": [
+        "research.disposition_registry"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_check_dispositions.py -q && bash ../run.sh check-dispositions --strict --json --out /tmp/persona-dream-disposition-registry-eval-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "11 passed",
+          "PASS_DISPOSITION_REGISTRY",
+          "\"immutable_goal_completion_claimed\": false"
+        ]
+      }
+    },
+    {
       "name": "session-mood-recognition-status-contract-tests",
       "type": "positive",
       "real_world": true,
@@ -670,6 +695,14 @@
       }
     },
     {
+      "id": "persona_dream.disposition_registry_contract",
+      "description": "Persona Dream research hypotheses terminate through a machine-readable registry that recomputes receipt hashes, checks result/product/transfer consistency, and refuses immutable-goal completion while required hypotheses remain nonterminal.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.ux.workspace_renders",
       "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
       "criticality": "critical",
@@ -780,6 +813,14 @@
     {
       "seam_id": "continuity.chatterbox_affect_validation_registry",
       "seam_type": "claim_boundary_contract",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "research.disposition_registry",
+      "seam_type": "research_governance_contract",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"

@@ -1,0 +1,33 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "any new experimental result",
+      "human listener perception",
+      "downstream repository adoption beyond recorded issue/PR references"
+    ],
+    "proves": [
+      "disposition registry hashes and result/product/transfer combinations are internally consistent",
+      "immutable-goal completion is not claimed while required hypotheses remain nonterminal"
+    ]
+  },
+  "created_at": "2026-08-23T00:05:06Z",
+  "failures": [],
+  "hypothesis_count": 6,
+  "immutable_goal_completion_claimed": false,
+  "live": false,
+  "mocked": false,
+  "nonterminal_hypotheses": [
+    "cognitive_value_pctom",
+    "multimodal_media_value",
+    "persistent_persona_adaptation_value",
+    "voice_emotion_value"
+  ],
+  "required_hypothesis_count": 6,
+  "schema": "persona_dream.disposition_registry_check.v1",
+  "status": "PASS_DISPOSITION_REGISTRY",
+  "strict": true,
+  "terminal_hypotheses": [
+    "operational_reliability_value",
+    "previous_video_attachment_value"
+  ]
+}

@@ -34,6 +34,7 @@ authoritative entry point for the question you have:
 | Read the immutable goal and gate sequence | [`GOAL.md`](GOAL.md) |
 | Resume operational work | [`local/HANDOFF.md`](local/HANDOFF.md) |
 | Review forensic chronology or superseded findings | [`PROJECT_KNOWLEDGE.md`](PROJECT_KNOWLEDGE.md) |
+| Inspect machine-readable research dispositions | [`DISPOSITION_REGISTRY.json`](DISPOSITION_REGISTRY.json) and `./run.sh check-dispositions --strict --json` |
 | Inspect transfer decisions | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md) |
 | Inspect per-run evidence | revision-scoped receipts under `reports/` |
 
@@ -664,4 +665,3 @@ than papered over with a reading list assembled after the fact.
 - [`create-movie`](../create-movie/SKILL.md) - downstream polished media lane
 - [Graph Memory Operator](https://github.com/grahama1970/graph-memory-operator) - graph, retrieval, and persistence implementation
 - Nested creative helpers live under `skills/persona-dream/skills/`.
-

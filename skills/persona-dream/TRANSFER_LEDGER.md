@@ -9,7 +9,13 @@ downstream PR or an explicit no-adoption decision. This ledger satisfies the
 A negative, null, or blocking result is a completed result. Nothing in this
 ledger is required to be positive.
 
-The discipline is mechanized, not aspirational. Three gates run in CI and fail
+The machine-readable source for current research dispositions is
+`DISPOSITION_REGISTRY.json`. This prose ledger is historical context; the strict
+gate is `./run.sh check-dispositions --strict --json`, which recomputes receipt
+hashes and refuses immutable-goal completion while required hypotheses remain
+nonterminal.
+
+The discipline is mechanized, not aspirational. Four gates run in CI and fail
 closed:
 
 - `scripts/check_current_state_consistency.py` — 9 stages over the claim
@@ -17,6 +23,10 @@ closed:
   PASS without a receipt, when a claim is PASS while its successor issue is
   open, when a surface restores a superseded goal, or when a claim cites the
   wrong apparatus.
+- `scripts/check_dispositions.py` — every major hypothesis has a bounded
+  result class, product decision, transfer/no-adoption outcome, and recomputed
+  receipt hash where terminal evidence exists. Apparatus-validity and technical
+  screens cannot be promoted into benefit/perceptual results.
 - `scripts/audit_readme_proof_claims.py` — every proof row on the evidence
   surface must bind to a named receipt whose status matches the claimed one, and
   no unproven row may use positive language. One receipt cannot earn two claims.
@@ -389,4 +399,3 @@ ADOPT the calibrated tone path. RETIRE the local affect table.
   the calibrated affect path rather than tone presets.
 - **Serves criterion:** `voice_value_disposition`, `transfer_record`,
   `ablation_retirement`.
-

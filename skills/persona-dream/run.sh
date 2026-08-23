@@ -29,6 +29,7 @@ Commands:
   check-pctom-v2-negative-controls  Adversarial controls: each must BLOCK with a typed reason
   check-skill-contract  Static check: SKILL.md remains a stable executable contract
   check-current-state-consistency  Static check: current-state surfaces must not contradict named receipts
+  check-dispositions  Validate machine-readable research dispositions and transfer outcomes
   validate-operational-goal Validate the corrected operational goal/status pin
   validate-corrected-goal-manifest Validate the PD-CORRECTED-GOAL-V1 sealed manifest
   validate-soak35-preflight Validate the frozen source/transition diversity preflight for the 35-cycle soak
@@ -911,6 +912,11 @@ case "$COMMAND" in
     # Fail closed when CURRENT_STATUS.json, PROJECT_KNOWLEDGE.md, or README.md
     # contradict the receipts they describe. Receipts outrank prose.
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_current_state_consistency.py" "$@"
+    ;;
+  check-dispositions)
+    # Fail closed when research result, product decision, transfer, retirement,
+    # or immutable-goal completion claims drift from the disposition registry.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dispositions.py" "$@"
     ;;
   validate-operational-goal)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_operational_goal.py" "$@"
