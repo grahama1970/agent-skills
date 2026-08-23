@@ -254,7 +254,7 @@ def run_digest_phase(
                 relationship_signals_from_candidates,
                 relationship_signals_from_meetup_attendees,
             )
-            from .prospect_queue import build_prospect_queue
+            from .prospect_queue import build_prospect_queue_receipt
 
             sam_evidence = None
             sam_path = capture_dir / "sam-website-evidence.json"
@@ -299,7 +299,10 @@ def run_digest_phase(
                     if signal.get("signal_id") not in relationship_signal_ids:
                         relationship_signals.append(signal)
                         relationship_signal_ids.add(signal.get("signal_id"))
-            prospects = build_prospect_queue(sam_evidence, shortlist_rows, relationship_signals)
+            prospect_receipt = build_prospect_queue_receipt(
+                sam_evidence, shortlist_rows, relationship_signals
+            )
+            prospects = prospect_receipt["prospects"]
             # WHO to reach out to this week - the grunt work the human should not
             # do. Ranks the same relationship signals by mandate fit + reachability.
             try:
@@ -325,6 +328,8 @@ def run_digest_phase(
                             "shortlist_rows": len(shortlist_rows),
                             "relationship_signals": len(relationship_signals),
                         },
+                        "counts": prospect_receipt["counts"],
+                        "relationship_signals": prospect_receipt["relationship_signals"],
                         "prospects": prospects,
                     },
                     indent=2,
@@ -337,8 +342,8 @@ def run_digest_phase(
                 digest["prospect_queue"] = prospects[:10]
             steps["prospect_queue"] = {
                 "prospects": len(prospects),
-                "federal": sum(1 for p in prospects if p.get("signal_type") == "federal"),
-                "relationship": sum(1 for p in prospects if p.get("signal_type") == "relationship"),
+                **prospect_receipt["counts"],
+                "relationship_signals": prospect_receipt["relationship_signals"],
                 "artifact": str(out / "prospect-queue.json"),
             }
         except Exception as exc:  # noqa: BLE001 - prospecting must never fail the run

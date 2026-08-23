@@ -104,24 +104,49 @@ def commercial_prospects(shortlist: list[dict[str, Any]]) -> list[dict[str, Any]
     return out
 
 
-def relationship_prospects(relationship_signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Direct and adjacent contact paths become reconnect prospects.
+def _relationship_exclusion(
+    signal: dict[str, Any], seen_signal_ids: set[str]
+) -> tuple[str | None, bool]:
+    """Return an exclusion reason and whether this signal id should be recorded."""
+    sid = str(signal.get("signal_id") or "")
+    if sid and sid in seen_signal_ids:
+        return "duplicate_signal_id", False
+    if signal.get("visible_in_report") is False:
+        return "not_report_visible", True
+    if not str(signal.get("subject") or "").strip():
+        return "missing_subject", True
+    return None, True
+
+
+def relationship_prospect_projection(relationship_signals: list[dict[str, Any]]) -> dict[str, Any]:
+    """Project relationship signals into prospects plus inclusion/exclusion accounting.
 
     This is intentionally local-only: it queues a human decision to reconnect,
     attend, watch, skip, or defer. It never sends messages or claims the contact
     is reachable beyond the supplied evidence.
     """
     out: list[dict[str, Any]] = []
+    exclusions: list[dict[str, Any]] = []
     seen_signal_ids: set[str] = set()
-    for signal in relationship_signals:
+    for index, signal in enumerate(relationship_signals):
         sid = str(signal.get("signal_id") or "")
-        if sid and sid in seen_signal_ids:
-            continue  # one prospect per signal; duplicates doubled queue rows on 2026-08-20
-        seen_signal_ids.add(sid)
+        reason, record_signal_id = _relationship_exclusion(signal, seen_signal_ids)
+        if record_signal_id and sid:
+            seen_signal_ids.add(sid)
+        if reason:
+            exclusions.append(
+                {
+                    "index": index,
+                    "reason": reason,
+                    "signal_id": signal.get("signal_id"),
+                    "subject": signal.get("subject"),
+                    "organization": signal.get("organization"),
+                    "visible_in_report": signal.get("visible_in_report"),
+                }
+            )
+            continue
         subject = str(signal.get("subject") or "").strip()
         org = str(signal.get("organization") or subject).strip()
-        if not subject:
-            continue
         out.append(
             {
                 "organization": org,
@@ -148,7 +173,43 @@ def relationship_prospects(relationship_signals: list[dict[str, Any]]) -> list[d
                 "external_effects": False,
             }
         )
-    return out
+    return {
+        "prospects": out,
+        "relationship_signals": {
+            "input": len(relationship_signals),
+            "included": len(out),
+            "excluded": len(exclusions),
+            "exclusions": exclusions,
+            "unaccounted": 0,
+        },
+    }
+
+
+def relationship_prospects(relationship_signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Direct and adjacent contact paths become reconnect prospects."""
+    return list(relationship_prospect_projection(relationship_signals)["prospects"])
+
+
+def build_prospect_queue_receipt(
+    sam_evidence: dict[str, Any] | None,
+    shortlist: list[dict[str, Any]],
+    relationship_signals: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Assemble prospects with relationship inclusion/exclusion accounting."""
+    federal = federal_prospects(sam_evidence) if sam_evidence else []
+    commercial = commercial_prospects(shortlist)
+    relationship = relationship_prospect_projection(relationship_signals or [])
+    prospects = [*federal, *commercial, *relationship["prospects"]]
+    return {
+        "prospects": prospects,
+        "counts": {
+            "total": len(prospects),
+            "federal": len(federal),
+            "commercial": len(commercial),
+            "relationship": len(relationship["prospects"]),
+        },
+        "relationship_signals": relationship["relationship_signals"],
+    }
 
 
 def build_prospect_queue(
@@ -157,9 +218,6 @@ def build_prospect_queue(
     relationship_signals: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Assemble the full prospect queue from federal + commercial signals."""
-    prospects: list[dict[str, Any]] = []
-    if sam_evidence:
-        prospects += federal_prospects(sam_evidence)
-    prospects += commercial_prospects(shortlist)
-    prospects += relationship_prospects(relationship_signals or [])
-    return prospects
+    return list(
+        build_prospect_queue_receipt(sam_evidence, shortlist, relationship_signals)["prospects"]
+    )

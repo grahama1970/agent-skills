@@ -598,6 +598,62 @@
           "LINKEDIN_SILENT_DROP"
         ]
       }
+    },
+    {
+      "name": "relationship-prospect-queue-accounting",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_relationship_prospect_queue.py --output /tmp/monitor-opportunities-relationship-prospect-queue-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RELATIONSHIP_PROSPECT_QUEUE_OK",
+          "input=",
+          "included=",
+          "excluded=",
+          "relationship="
+        ],
+        "stderr_excludes": [
+          "RELATIONSHIP_PROSPECT_QUEUE_NO_LIVE_RUN",
+          "RELATIONSHIP_PROSPECT_QUEUE_NO_INPUT",
+          "RELATIONSHIP_PROSPECT_QUEUE_UNACCOUNTED",
+          "RELATIONSHIP_PROSPECT_QUEUE_COUNT_MISMATCH"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/invariant_pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/unaccounted",
+            "equals": 0
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/relationship_count_matches_included",
+            "equals": true
+          }
+        ]
+      },
+      "proves": "A production digest projection over a completed live nightly run writes prospect-queue relationship accounting where included + excluded equals input, unaccounted is zero, and the relationship prospect count matches included relationship signals.",
+      "does_not_prove": "A fresh nightly can pass unrelated live source admission gates or that outbound reconnect effects are authorized."
     }
   ]
 }

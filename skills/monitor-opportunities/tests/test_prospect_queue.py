@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from monitor_opportunities.prospect_queue import (
+    build_prospect_queue_receipt,
     build_prospect_queue,
     commercial_prospects,
     federal_prospects,
@@ -83,3 +84,48 @@ def test_relationship_signals_become_warm_reconnect_prospects() -> None:
     assert prospects[0]["contact_channel_risk"] == "corporate_email_may_be_blocked_after_long_gap"
     assert "LINKEDIN_HUMAN_HANDOFF" in prospects[0]["preferred_human_channels"]
     assert "Eric Mertens" in prospects[0]["title"]
+
+
+def test_relationship_signals_are_included_or_documented_as_excluded() -> None:
+    signals = [
+        {
+            "signal_id": "rel-1",
+            "subject": "Eric Mertens",
+            "organization": "Galois, Inc.",
+            "signal_type": "adjacent_contact",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "evidence_refs": ["https://www.galois.com/team/eric-mertens"],
+            "visible_in_report": True,
+        },
+        {
+            "signal_id": "rel-1",
+            "subject": "Eric Mertens duplicate",
+            "organization": "Galois, Inc.",
+            "visible_in_report": True,
+        },
+        {
+            "signal_id": "rel-hidden",
+            "subject": "Hidden Contact",
+            "organization": "Hidden Org",
+            "visible_in_report": False,
+        },
+        {
+            "signal_id": "rel-no-subject",
+            "organization": "Unknown Org",
+            "visible_in_report": True,
+        },
+    ]
+    receipt = build_prospect_queue_receipt(None, [], signals)
+
+    assert receipt["counts"]["relationship"] == 1
+    assert receipt["relationship_signals"]["input"] == 4
+    assert receipt["relationship_signals"]["included"] == 1
+    assert receipt["relationship_signals"]["excluded"] == 3
+    assert receipt["relationship_signals"]["unaccounted"] == 0
+    assert {row["reason"] for row in receipt["relationship_signals"]["exclusions"]} == {
+        "duplicate_signal_id",
+        "not_report_visible",
+        "missing_subject",
+    }
+    assert receipt["prospects"][0]["relationship_signal_id"] == "rel-1"
+    assert receipt["prospects"][0]["external_effects"] is False
