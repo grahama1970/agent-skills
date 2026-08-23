@@ -1,0 +1,26 @@
+{
+  "arms": [
+    "M",
+    "R",
+    "D",
+    "DW"
+  ],
+  "canonical_memory_writes_allowed": 0,
+  "case_id": "rev_idea_f3f9c48d5cc2_phase12_provider_return",
+  "created_at": "2026-08-23T00:29:43Z",
+  "exploratory_n_limitation": "N=1 frozen historical case; any positive result would require separately authorized replication.",
+  "governing_issue": "grahama1970/agent-skills#1195",
+  "human_hidden_state_scoring": false,
+  "identity_writes_allowed": 0,
+  "llm_judge_used": false,
+  "negative_rule": "DW proper_score < strongest(M,R,D) or positive inferred from non-score evidence",
+  "null_or_tie_rule": "DW proper_score equals strongest(M,R,D)",
+  "planning_regret_metric": "planning_regret",
+  "positive_rule": "DW proper_score > strongest(M,R,D) and DW planning_regret < strongest planning_regret",
+  "primary_metric": "proper_score",
+  "provider_calls_allowed": 0,
+  "schema": "persona_dream.multimodal_ablation.preregistration.v1",
+  "stopping_rule": "single frozen accepted case; terminal positive, null/tie, or negative result accepted",
+  "strongest_simpler_baseline_rule": "max proper_score over M, R, and D; ties broken lexicographically for audit only",
+  "task": "Choose a constrained downstream action for the next Horus/Embry conversation without changing factual answer content."
+}

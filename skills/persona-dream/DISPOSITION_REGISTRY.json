@@ -62,33 +62,34 @@
     },
     {
       "id": "multimodal_media_value",
-      "status": "NONTERMINAL",
+      "status": "TERMINAL_SCOPED",
       "scope": "Whether rendered-and-Watch-observed dream media adds measurable value beyond text-only dream, direct memory, or structured reflection.",
       "governing_issue": "grahama1970/agent-skills#1195",
-      "preregistration": null,
-      "terminal_result_receipt": null,
-      "terminal_result_receipt_sha256": null,
+      "preregistration": "skills/persona-dream/research/multimodal-ablation/PREREGISTRATION.json",
+      "terminal_result_receipt": "skills/persona-dream/research/multimodal-ablation/RESULT_RECEIPT.json",
+      "terminal_result_receipt_sha256": "sha256:c5d177ccb996bd0dd1586aa47d42a1f7cbbd25554e01eef05d757f0fd87ea83c",
+      "terminal_result_evidence_role": "matched_ablation",
       "supporting_receipts": [],
-      "result_class": "NOT_RUN",
-      "primary_comparison": "M/R/D/DW matched ablation not run",
-      "raw_effect": "not measured",
-      "what_it_proves": "Nothing yet.",
-      "what_it_does_not_prove": "Any benefit of rendered media or Watch observations.",
-      "safety_invariant_status": "NOT_APPLICABLE",
-      "product_decision": "DEFER_WITH_EXPLICIT_REASON",
-      "retained_subsystem_scope": "Retain media lane as historical/creative and for preregistered #1195 only; no provider spend authorized by this registry.",
+      "result_class": "NULL_OR_TIE",
+      "primary_comparison": "DW versus strongest simpler arm among M/R/D on the frozen matched ablation",
+      "raw_effect": "DW minus strongest(M,R,D) = 0.0 proper_score; planning regret tied at 0.0",
+      "what_it_proves": "For this one frozen accepted Persona Dream case and constrained-action task, adding hash-bound Watch observations to the identical text dream did not improve the preregistered score over direct memory, structured reflection, or text-only dream.",
+      "what_it_does_not_prove": "General multimodal value, human listener preference, PCTOM-R benefit, previous-video causality, or that future provider media should be purchased.",
+      "safety_invariant_status": "PASS",
+      "product_decision": "RETAIN_CREATIVE_ONLY",
+      "retained_subsystem_scope": "Retain rendered media/Watch observations for historical audit, creative review, and separately authorized preregistered replications only; do not place provider media on the cognitive critical path from this result.",
       "transfer_destinations": [],
       "transfer_outcomes": [
         {
-          "type": "LOCAL_ONLY_WITH_REASON",
-          "reason": "#1195 must first produce a terminal matched ablation receipt."
+          "type": "NO_ADOPTION_WITH_REASON",
+          "reason": "The terminal #1195 matched ablation was NULL_OR_TIE on the frozen case, so no downstream cognitive-critical adoption is justified."
         }
       ],
-      "successor_or_retirement_action": "Run #1195 provider-free matched ablation before making a product decision.",
+      "successor_or_retirement_action": "Keep media off the cognitive critical path unless a separate human-authorized replication ticket produces a positive preregistered result.",
       "human_authority_required": false,
-      "external_blocker": "grahama1970/agent-skills#1195",
-      "review_condition": "Re-evaluate after RESULT_RECEIPT.json exists for #1195.",
-      "last_verified": "2026-08-22T23:58:00Z"
+      "external_blocker": null,
+      "review_condition": "Re-evaluate only after a separate authorized replication over new provider returns.",
+      "last_verified": "2026-08-23T00:29:43Z"
     },
     {
       "id": "persistent_persona_adaptation_value",

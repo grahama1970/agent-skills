@@ -34,6 +34,7 @@ Commands:
   validate-corrected-goal-manifest Validate the PD-CORRECTED-GOAL-V1 sealed manifest
   validate-soak35-preflight Validate the frozen source/transition diversity preflight for the 35-cycle soak
   run-recovery-campaign Run the seven-scenario restart/stale-session recovery campaign
+  run-multimodal-ablation Run the provider-free M/R/D/DW text-vs-Watch ablation
   validate-emotion-lineage Validate paired run emotion lineage artifacts
   validate-answer-invariance Validate paired run answer-body invariance
   validate-chatterbox-delivery Validate paired run Chatterbox delivery artifacts
@@ -930,6 +931,9 @@ case "$COMMAND" in
     ;;
   run-recovery-campaign)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_recovery_campaign.py" "$@"
+    ;;
+  run-multimodal-ablation)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_multimodal_ablation.py" "$@"
     ;;
   validate-emotion-lineage)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_emotion_lineage.py" "$@"

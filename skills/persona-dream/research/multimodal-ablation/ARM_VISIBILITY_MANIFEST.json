@@ -1,0 +1,40 @@
+{
+  "D": {
+    "acceptance_labels_visible": false,
+    "hidden_script_intention_visible": false,
+    "rendered_frames_visible": false,
+    "source_memory_boundary_sha256": "sha256:57607b5402f87a16561952e5f05cf16e853edebc3625ab02c03c5649b07803e2",
+    "structured_reflection_visible": false,
+    "text_dream_sha256": "sha256:52620b48f9435a976d1ee586c8a8f18565148d4b768fcb8314387a47b0c1353b",
+    "watch_observation_visible": false
+  },
+  "DW": {
+    "acceptance_labels_visible": false,
+    "hidden_script_intention_visible": false,
+    "rendered_frames_visible": false,
+    "source_memory_boundary_sha256": "sha256:57607b5402f87a16561952e5f05cf16e853edebc3625ab02c03c5649b07803e2",
+    "structured_reflection_visible": false,
+    "text_dream_sha256": "sha256:52620b48f9435a976d1ee586c8a8f18565148d4b768fcb8314387a47b0c1353b",
+    "watch_observation_visible": true,
+    "watch_packet_sha256": "sha256:835ae475ac26ae3a7e8fb79da2f570949285fd8aafbe39203ef5033adb2f95f7",
+    "watch_report_sha256": "sha256:3715a4f3f2f5cf2fe64cd9e731c899049768439aa54791d60343b3e0786f3509"
+  },
+  "M": {
+    "acceptance_labels_visible": false,
+    "hidden_script_intention_visible": false,
+    "rendered_frames_visible": false,
+    "source_memory_boundary_sha256": "sha256:57607b5402f87a16561952e5f05cf16e853edebc3625ab02c03c5649b07803e2",
+    "structured_reflection_visible": false,
+    "text_dream_sha256": null,
+    "watch_observation_visible": false
+  },
+  "R": {
+    "acceptance_labels_visible": false,
+    "hidden_script_intention_visible": false,
+    "rendered_frames_visible": false,
+    "source_memory_boundary_sha256": "sha256:57607b5402f87a16561952e5f05cf16e853edebc3625ab02c03c5649b07803e2",
+    "structured_reflection_visible": true,
+    "text_dream_sha256": null,
+    "watch_observation_visible": false
+  }
+}

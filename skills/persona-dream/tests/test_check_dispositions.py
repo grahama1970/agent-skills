@@ -167,7 +167,7 @@ def test_terminal_receipt_hash_mutation_blocks():
 
 def test_defer_without_external_blocker_or_review_condition_blocks():
     doc = _registry()
-    row = _row(doc, "multimodal_media_value")
+    row = _row(doc, "cognitive_value_pctom")
     row["external_blocker"] = ""
     row["review_condition"] = ""
 

@@ -10,7 +10,7 @@
       "immutable-goal completion is not claimed while required hypotheses remain nonterminal"
     ]
   },
-  "created_at": "2026-08-23T00:21:04Z",
+  "created_at": "2026-08-23T00:31:53Z",
   "failures": [],
   "hypothesis_count": 6,
   "immutable_goal_completion_claimed": false,
@@ -31,7 +31,6 @@
   "mocked": false,
   "nonterminal_hypotheses": [
     "cognitive_value_pctom",
-    "multimodal_media_value",
     "persistent_persona_adaptation_value",
     "voice_emotion_value"
   ],
@@ -40,6 +39,7 @@
   "status": "PASS_DISPOSITION_REGISTRY",
   "strict": true,
   "terminal_hypotheses": [
+    "multimodal_media_value",
     "operational_reliability_value",
     "previous_video_attachment_value"
   ]

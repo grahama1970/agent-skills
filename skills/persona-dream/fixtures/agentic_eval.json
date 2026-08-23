@@ -679,6 +679,48 @@
           "2 passed"
         ]
       }
+    },
+    {
+      "name": "multimodal-ablation-contract-tests",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.multimodal_ablation_contract"
+      ],
+      "seams": [
+        "research.multimodal_ablation"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_multimodal_ablation.py -q && bash ../run.sh run-multimodal-ablation --out-dir /tmp/persona-dream-multimodal-ablation-eval --live-artifact-readback --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nreceipt = json.loads(Path('/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json').read_text(encoding='utf-8'))\nassert receipt['status'] == 'PASS_MULTIMODAL_ABLATION_RESULT'\nassert receipt['mocked'] is False\nassert receipt['live'] is True\nassert receipt['provider_calls'] == 0\nassert receipt['canonical_memory_writes'] == 0\nassert receipt['identity_writes'] == 0\nassert receipt['terminal_result_class'] == 'NULL_OR_TIE'\nassert receipt['dw_minus_strongest_simple'] == 0.0\nassert receipt['visible_evidence_refs_by_arm']['D']['text_dream_sha256'] == receipt['visible_evidence_refs_by_arm']['DW']['text_dream_sha256']\nassert receipt['visible_evidence_refs_by_arm']['D']['watch_observation_visible'] is False\nassert receipt['visible_evidence_refs_by_arm']['DW']['watch_observation_visible'] is True\nprint('MULTIMODAL_ABLATION_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json",
+            "json_pointer": "/status",
+            "equals": "PASS_MULTIMODAL_ABLATION_RESULT"
+          },
+          {
+            "path": "/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json",
+            "json_pointer": "/terminal_result_class",
+            "equals": "NULL_OR_TIE"
+          }
+        ],
+        "stdout_contains": [
+          "11 passed",
+          "PASS_MULTIMODAL_ABLATION_RESULT",
+          "MULTIMODAL_ABLATION_READBACK_OK"
+        ],
+        "stdout_not_contains": [
+          "FAIL ",
+          "BLOCKED_MULTIMODAL_ABLATION_RESULT"
+        ]
+      }
     }
   ],
   "capability_claims": [
@@ -737,6 +779,15 @@
       "criticality": "critical",
       "evidence_required": {
         "fault_injected_deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "persona_dream.multimodal_ablation_contract",
+      "description": "Rendered-and-Watch-observed dream media value is evaluated through a provider-free M/R/D/DW matched ablation with sealed commitments, zero canonical writes, typed negative controls, and terminal null/positive/negative disposition.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
         "live_e2e": true
       }
     },
@@ -859,6 +910,15 @@
     {
       "seam_id": "research.disposition_registry",
       "seam_type": "research_governance_contract",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "research.multimodal_ablation",
+      "seam_type": "matched_ablation_contract",
       "criticality": "critical",
       "required_evidence": [
         "deterministic",
