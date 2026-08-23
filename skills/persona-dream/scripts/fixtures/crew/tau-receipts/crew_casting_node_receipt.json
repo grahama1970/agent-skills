@@ -1,0 +1,16 @@
+{
+  "schema": "persona_dream.fixture_crew_casting_node_receipt.v1",
+  "node_id": "crew_casting",
+  "ok": true,
+  "status": "PASS_FIXTURE_CREW_CASTING",
+  "mocked": true,
+  "live": false,
+  "proof_scope": {
+    "proves": [
+      "fixture crew_contract.json has a readable ok:true node receipt for deterministic gate tests"
+    ],
+    "does_not_prove": [
+      "a live ask tau-dag crew selection run"
+    ]
+  }
+}

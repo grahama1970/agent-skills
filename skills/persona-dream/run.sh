@@ -46,6 +46,7 @@ Commands:
   research-bakeoff     Run opt-in story/contact-sheet/A-V research bakeoff modes
   contact-sheet        Build/amend/retrieve visual reference sheets, memory records, and Qdrant index
   pipeline-phase02-recall  Re-run Phase 2 live recall and refresh Phase 1+2 sections of the 8892 report
+  pipeline            Run one fail-closed per-step pipeline command (currently: run --step crew_casting)
   phase-05-sync-contact-sheet-sidecars  Write prompt links + probed-dimension sidecars (no PNG duplication)
   phase-05-contact-sheet-gate  Validate/write Phase 5 contact-sheet gate (accepted 4:3 sizes + sidecars)
   regenerate                 Regenerate contact sheets or panels from recreate bundles
@@ -231,6 +232,7 @@ Examples:
   ./run.sh validate-gate --gate all --table
   ./run.sh pipeline-loop-status /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --direction backward --json
   ./run.sh pipeline-loop-run /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --direction backward --output /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/receipts/pipeline_loop_run.json --json
+  ./run.sh pipeline run --scene "Horus and Embry have tea under a patio umbrella on a void world." --step crew_casting
   ./run.sh validate-pipeline-loop-run /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/receipts/pipeline_loop_run.json --json
   ./run.sh validate-run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --json
   ./run.sh multiscene-live-smoke --run-root /tmp/persona-dream-multiscene-live --scene-count 2 --max-workers 2 --auth codex-oauth --json
@@ -318,6 +320,9 @@ case "$COMMAND" in
     ;;
   pipeline-phase02-recall)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_phase_02_memory_recall.py" "$@"
+    ;;
+  pipeline)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/pipeline_run.py" "$@"
     ;;
   phase-05-sync-contact-sheet-sidecars)
     exec python3 "${SCRIPT_DIR}/scripts/sync_contact_sheet_sidecars.py" "$@"

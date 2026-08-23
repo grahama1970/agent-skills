@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+RUN = SKILL_ROOT / "run.sh"
+FIXTURE = SKILL_ROOT / "scripts" / "fixtures" / "crew_selector_response.json"
+
+
+def test_pipeline_run_crew_casting_writes_receipt_backed_contract(tmp_path):
+    out = tmp_path / "crew-run"
+    proc = subprocess.run(
+        [
+            str(RUN),
+            "pipeline",
+            "run",
+            "--scene",
+            "Horus and Embry have tea under a patio umbrella on a void world.",
+            "--step",
+            "crew_casting",
+            "--run-root",
+            str(out),
+            "--selector-fixture",
+            str(FIXTURE),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    receipt = json.loads((out / "crew_casting_receipt.json").read_text())
+    assert receipt["status"] == "PASS_CREW_CASTING"
+    assert receipt["mocked"] is True
+    contract = json.loads((out / "crew_contract.json").read_text())
+    assert contract["schema"] == "persona_dream.phase_03_crew_contract.v1"
+    assert contract["validation_status"] == "schema_validated"
+    assert contract["provenance"]["agent_bespoke_selection"] is False
+    assert contract["node_receipt"]["ok"] is True
+    assert {role for role in contract["selected_crew"]} == {
+        "producer",
+        "scriptwriter",
+        "director",
+    }
+
+
+def test_pipeline_run_crew_casting_rejects_out_of_pool_selection(tmp_path):
+    bad_fixture = tmp_path / "bad_selector.json"
+    payload = json.loads(FIXTURE.read_text())
+    payload["selected_crew"]["producer"]["persona_id"] = "not_in_pool"
+    bad_fixture.write_text(json.dumps(payload))
+    out = tmp_path / "bad-run"
+    proc = subprocess.run(
+        [
+            str(RUN),
+            "pipeline",
+            "run",
+            "--scene",
+            "Horus and Embry have tea under a patio umbrella on a void world.",
+            "--step",
+            "crew_casting",
+            "--run-root",
+            str(out),
+            "--selector-fixture",
+            str(bad_fixture),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert proc.returncode == 3, proc.stdout + proc.stderr
+    blocked = json.loads((out / "crew_casting_blocked.json").read_text())
+    assert blocked["status"] == "BLOCKED_CREW_CASTING"
+    assert blocked["reason"] == "selection_outside_candidate_pool"
+    assert not (out / "crew_contract.json").exists()

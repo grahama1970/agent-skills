@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/persona_dream_crew_contract.schema.json",
+  "title": "Persona Dream Phase 03 Crew Contract",
+  "type": "object",
+  "required": [
+    "schema",
+    "scene",
+    "selected_crew",
+    "selection_order",
+    "tau_run_dir",
+    "node_receipt",
+    "validation_status",
+    "provenance"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.phase_03_crew_contract.v1"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "scene": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selected_crew": {
+      "type": "object",
+      "required": ["producer", "scriptwriter", "director"],
+      "properties": {
+        "producer": {"$ref": "#/$defs/crew_member"},
+        "scriptwriter": {"$ref": "#/$defs/crew_member"},
+        "director": {"$ref": "#/$defs/crew_member"}
+      },
+      "additionalProperties": true
+    },
+    "selection_order": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "producer"},
+        {"const": "scriptwriter"},
+        {"const": "director"}
+      ],
+      "minItems": 3
+    },
+    "tau_run_dir": {
+      "type": "string",
+      "minLength": 1
+    },
+    "node_receipt": {
+      "type": "object",
+      "required": ["path", "ok"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "ok": {"const": true},
+        "node_id": {"type": "string"},
+        "handler": {"type": "string"},
+        "status": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "validation_status": {
+      "const": "schema_validated"
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["selector_runtime", "agent_bespoke_selection"],
+      "properties": {
+        "selector_runtime": {"type": "string"},
+        "selector_handler": {"type": "string"},
+        "agent_bespoke_selection": {"const": false},
+        "candidate_pool_root": {"type": "string"},
+        "candidate_pool_sha256": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "crew_member": {
+      "type": "object",
+      "required": ["name", "persona_id", "role", "source_paths"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "persona_id": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "roles": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "source_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "rationale": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

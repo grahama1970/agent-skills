@@ -88,7 +88,7 @@ SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
 # any of these in-code; it requires them and validates them, then fails closed. Skipping
 # crew casting (or hand-picking a crew) is the exact bespoking this gate forbids.
 CREW_CASTING_REQUIRED = [
-    ("crew_contract.json", None),  # phase_03_crew_contract.v1; roster shape-checked below
+    ("crew_contract.json", "crew_contract.schema.json"),
     ("technique_selection.json", "cinematic_technique_selection.v1.schema.json"),
     ("script_dna_selection.json", "cinematic_script_dna.v1.schema.json"),
     ("look_lock.json", None),  # presence-checked; its schema is embedded in technique_selection
@@ -1504,8 +1504,24 @@ def _require_crew_casting(crew_dir: Path | None, out: Path) -> tuple[bool, dict[
                 except jsonschema.ValidationError as exc:
                     invalid.append({"artifact": name, "error": exc.message})
             if name == "crew_contract.json":
-                # No standalone schema file for phase_03_crew_contract.v1; validate the
-                # load-bearing shape: a named crew selected from the candidate pool.
+                receipt = doc.get("node_receipt")
+                receipt_path_value = receipt.get("path") if isinstance(receipt, dict) else None
+                if not isinstance(receipt_path_value, str) or not receipt_path_value.strip():
+                    invalid.append({"artifact": name, "error": "node_receipt.path is missing"})
+                else:
+                    receipt_path = Path(receipt_path_value)
+                    if not receipt_path.is_absolute():
+                        receipt_path = src.parent / receipt_path
+                    try:
+                        receipt_doc = json.loads(receipt_path.read_text())
+                    except (json.JSONDecodeError, OSError) as exc:
+                        invalid.append({"artifact": name, "error": f"node_receipt unreadable: {exc}"})
+                    else:
+                        if receipt_doc.get("ok") is not True:
+                            invalid.append({"artifact": name, "error": "node_receipt.ok is not true"})
+                provenance = doc.get("provenance")
+                if not isinstance(provenance, dict) or provenance.get("agent_bespoke_selection") is not False:
+                    invalid.append({"artifact": name, "error": "provenance.agent_bespoke_selection must be false"})
                 if doc.get("schema") != "persona_dream.phase_03_crew_contract.v1":
                     invalid.append({"artifact": name, "error": "schema is not persona_dream.phase_03_crew_contract.v1"})
                 roster = doc.get("selected_crew")

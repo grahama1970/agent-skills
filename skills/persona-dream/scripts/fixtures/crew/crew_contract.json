@@ -7,6 +7,19 @@
     "script_dna"
   ],
   "live": true,
+  "node_receipt": {
+    "handler": "fixture",
+    "node_id": "crew_casting",
+    "ok": true,
+    "path": "tau-receipts/crew_casting_node_receipt.json",
+    "status": "PASS_FIXTURE_CREW_CASTING"
+  },
+  "provenance": {
+    "agent_bespoke_selection": false,
+    "candidate_pool_root": "/mnt/storage12tb/media/personas",
+    "selector_handler": "fixture",
+    "selector_runtime": "fixture"
+  },
   "memory_recall_evidence": {
     "base_url": "http://127.0.0.1:8601",
     "collections": [
@@ -300,7 +313,9 @@
     "producer": "Karen Kehela Sherwood is selected for production feasibility, water/surf logistics, genre fit, budget scope, and packaging against the accepted Phase 02 story.",
     "scriptwriter": "John Stockwell is selected for screenplay structure, restrained dialogue, character fidelity, and surf/environment causality against the accepted Phase 02 story."
   },
+  "scene": "Fixture-backed accepted Embry/Kai surf scene for deterministic crew-gate tests.",
   "schema": "persona_dream.phase_03_crew_contract.v1",
+  "schema_version": "1.0",
   "selected_crew": {
     "director": {
       "name": "Kathryn Bigelow",
@@ -757,5 +772,7 @@
     },
     "story_text": "Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave."
   },
-  "status": "CREW_SELECTED"
+  "status": "CREW_SELECTED",
+  "tau_run_dir": "tau-receipts",
+  "validation_status": "schema_validated"
 }

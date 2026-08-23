@@ -1,0 +1,19 @@
+{
+  "schema": "persona_dream.phase_03_crew_selection_response.v1",
+  "scene": "Horus and Embry have tea under a patio umbrella on a void world.",
+  "selected_crew": {
+    "producer": {
+      "persona_id": "karen_kehela_sherwood",
+      "rationale": "The scene needs grounded production around a character-led Embry/Horus exchange, and the candidate pool marks Karen Kehela Sherwood as a producer for female-athlete authenticity and water/beach continuity."
+    },
+    "scriptwriter": {
+      "persona_id": "andy_weir",
+      "rationale": "The scene benefits from practical, cause-and-effect problem solving while preserving factual clarity; Andy Weir is the available writer candidate with that craft profile."
+    },
+    "director": {
+      "persona_id": "kathryn_bigelow",
+      "rationale": "The scene needs first-person tension and procedural realism without melodrama; Kathryn Bigelow is the director candidate with embedded, participant-camera pressure."
+    }
+  },
+  "selection_order": ["producer", "scriptwriter", "director"]
+}
