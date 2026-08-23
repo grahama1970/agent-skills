@@ -42,6 +42,7 @@ from .retrieval import (
 from .retrieval.external import derive_manual_search_query
 from .state import RuntimeState
 from .summarizer import ExtractiveSummarizer
+from .surface_selector import SurfaceSelector
 from .question_window import QuestionWindowBuilder, candidate_thread
 from .trigger import TriggerDecision
 
@@ -63,8 +64,7 @@ class EvidenceCoordinator:
         self.settings = settings  # public: action lane memory_url (#1475)
         self.actions = None  # ActionEngine, lazily bound to the session policy
         self.briefing = None  # BriefingMatcher when a pack is loaded
-        # Repo basenames this meeting is about; feeds memory project-affinity
-        # ranking so cross-project recall noise cannot outscore its knowledge.
+        # Repo basenames this meeting is about; feeds memory project-affinity.
         self._repo_scope = {p.name.casefold() for p in settings.repo_roots}
         self._question_window = QuestionWindowBuilder(profile)
         self._memory = MemoryEvidenceClient(settings, profile)
@@ -72,18 +72,16 @@ class EvidenceCoordinator:
         self._external = ExternalSkillClient(settings)
         self._ask = AskSolutionClient(settings)
         self._summarizer = ExtractiveSummarizer()
+        self._selector = SurfaceSelector()
         self._resolver = StreamingResolver()
         self._facts = SalientFactWriter(settings.memory_url)
         self._tasks: set[asyncio.Task[None]] = set()
-        # (#1454) at-most-once solver per accepted question revision, plus the
-        # held retrieval context for questions blocked on unresolved
-        # requirements, so an amendment can continue without re-retrieving.
+        # (#1454) at-most-once solver per revision, plus held retrieval context
+        # for blocked questions so an amendment continues without re-retrieving.
         self._solved_revisions: set[tuple[str, int]] = set()
         self._held: dict[tuple[str, int], dict] = {}
-        # Text the assistant is currently speaking aloud (#1453). The mic path
-        # hears our own TTS and labels it "interviewer"; transcript events that
-        # substantially match what we are saying are journaled as assistant
-        # echo and never enter the question path.
+        # Text the assistant is speaking (#1453): the mic hears our own TTS as
+        # "interviewer"; matching events are journaled as echo, not questions.
         self._assistant_utterances: list[str] = []
 
     async def accept_transcript(self, event: TranscriptEvent) -> None:
@@ -97,11 +95,8 @@ class EvidenceCoordinator:
         if self._state.session_status() is not SessionStatus.LISTENING:
             return
         policy = self._state.session_policy()
-        # Salient-fact capture runs beside question handling, never inside it:
-        # an explicit decision is a record to remember, not a question to
-        # answer, and its durable write must not block or join the
-        # revision-fenced card path. Consent is already enforced above -- an
-        # ARMED session returns before reaching this line.
+        # Salient-fact capture runs beside question handling: its durable write
+        # must not block or join the revision-fenced card path.
         fact = extract_decision(event, self._state.session_id()) if policy.retain_transcript else None
         if fact is not None:
             fact_task = asyncio.create_task(self._write_salient_fact(fact))
@@ -121,8 +116,7 @@ class EvidenceCoordinator:
                 return
             event = event.model_copy(update={"text": stripped})
         if self.briefing is not None and event.kind.value == "final":
-            # Briefing pack (recognition assist): zero-latency deterministic
-            # matching; every surfaced point binds its trigger events.
+            # Briefing pack: zero-latency matching; each point binds its events.
             for hit in self.briefing.match(event.event_id, event.text):
                 await self._journal.append(
                     self._state.session_id(), "briefing_point_surfaced", hit,
@@ -130,9 +124,8 @@ class EvidenceCoordinator:
                 )
         outcome = self._question_window.ingest(event)
         if outcome.candidate is None or outcome.duplicate:
-            # (#1454) A final interviewer turn that is NOT a new question, while
-            # a blocking clarification is outstanding, is treated as its spoken
-            # answer -- bound to the exact question revision and clarification.
+            # (#1454) A final non-question turn while a blocking clarification
+            # is outstanding is treated as its spoken answer.
             if (
                 outcome.candidate is None
                 and event.kind.value == "final"
@@ -162,9 +155,9 @@ class EvidenceCoordinator:
             reason=candidate.trigger_reason,
             source_event_ids=tuple(span.event_id for span in candidate.source_spans),
         )
-        # Claim the revision this retrieval answers BEFORE dispatching it. A
-        # later turn bumps the revision, so a slow result can be recognised as
-        # stale at publication time instead of overwriting a newer answer.
+        # Claim the revision this retrieval answers BEFORE dispatching it, so a
+        # slow result is recognised as stale at publish time (a later turn bumps
+        # the revision) instead of overwriting a newer answer.
         question_id, question_revision = await self._state.revise_question(decision.query)
         await self._state.set_thread(decision.thread)
         task = asyncio.create_task(self._retrieve(decision, question_id, question_revision))
@@ -198,6 +191,21 @@ class EvidenceCoordinator:
             f"Fact write unconfirmed: {detail}",
         )
         logger.warning("salient fact UNCONFIRMED fact_id={} ({})", fact.fact_id[:12], detail)
+
+    async def _surface_order(
+        self, query: str, thread: str, ranked: list[EvidenceSource]
+    ) -> list[EvidenceSource]:
+        """A fast model decides what to surface; rank is only the gatherer."""
+        if not SurfaceSelector.enabled() or len(ranked) < 2:
+            return ranked
+        reordered, receipt = await asyncio.to_thread(
+            self._selector.order, query, thread, ranked
+        )
+        await self._journal.append(
+            self._state.session_id(), "surface_selection", receipt,
+            policy_digest=self._state.session_policy_digest(),
+        )
+        return reordered
 
     def register_assistant_utterance(self, text: str) -> None:
         """Record text the assistant is about to speak, for echo suppression."""
@@ -446,8 +454,7 @@ class EvidenceCoordinator:
         await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
         await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Current source")
         started = monotonic()
-        # Stage 1 runs BEFORE retrieval so its canonical question can drive the
-        # search terms, the Ask seed, and the card, instead of the raw window.
+        # Stage 1 runs BEFORE retrieval so its canonical question drives search.
         verdict = await self._resolve_readiness(decision.query)
         query = _bounded_query(decision.query, verdict)
         memory_result, ripgrep_result = await asyncio.gather(
@@ -513,11 +520,10 @@ class EvidenceCoordinator:
             sources.extend(ripgrep_result.sources)
 
         ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
+        ranked = await self._surface_order(query, decision.thread, ranked)
 
-        # When the resolver is unreachable or unconfigured we cannot judge
-        # readiness at all, which is different from judging "not ready". Falling
-        # back to the legacy predicate keeps local/offline runs working instead
-        # of silently disabling the Ask lane whenever SciLLM is absent.
+        # No resolver means we cannot judge readiness (different from "not
+        # ready"); fall back to the legacy predicate so offline runs still work.
         policy = self._state.session_policy()
         may_ask = (
             verdict.may_invoke_ask
@@ -525,20 +531,16 @@ class EvidenceCoordinator:
             else _should_solve_with_ask(query, ranked)
         )
         if not policy.candidate_answer_generation:
-            # Frozen session policy outranks the readiness verdict: a
-            # formal-assessment or interviewer-assist session never generates
-            # a candidate answer, however ready the question is (#1449).
+            # Frozen policy outranks readiness: a formal-assessment or
+            # interviewer-assist session never generates an answer (#1449).
             may_ask = False
             await self._state.set_lane(
                 RetrievalLane.ASK, LaneState.DISABLED, "Disabled by session policy"
             )
 
-        # (#1454) Requirement ledger for this question revision. The objective
-        # is transcript-bound; each blocking clarifying question becomes an
-        # UNRESOLVED blocking requirement; a default assumption becomes a
-        # visibly labeled ASSUMED entry. A grammatical period never marks the
-        # task complete: completeness is judged by the resolver and by this
-        # ledger, not punctuation.
+        # (#1454) Requirement ledger for this revision: each blocking clarifier
+        # is an UNRESOLVED entry, each default an ASSUMED one; completeness is
+        # judged by the resolver and this ledger, never by punctuation.
         entries = build_requirement_entries(
             question_id, question_revision, query, decision, verdict
         )
@@ -571,8 +573,8 @@ class EvidenceCoordinator:
             may_ask = False
 
         if verdict is not None and verdict.action_candidates:
-            # (#1475) resolver-proposed action candidates: propose-only here;
-            # execution requires an explicit human approval via the API.
+            # (#1475) resolver action candidates: propose-only; execution needs
+            # explicit human approval via the API.
             from .actions import ActionEngine
 
             digest = self._state.session_policy_digest()
@@ -602,8 +604,7 @@ class EvidenceCoordinator:
         if may_ask:
             self._solved_revisions.add((question_id, question_revision))
             if FastSolver.available():
-                # (#1473) Publish the evidence card first, then stream the
-                # answer into it; the full $ask path stays as escalation.
+                # (#1473) Publish the card first, then stream the answer in.
                 fast_pending = True
                 await self._state.set_lane(
                     RetrievalLane.ASK, LaneState.RUNNING, "Fast solver streaming"
@@ -620,8 +621,7 @@ class EvidenceCoordinator:
                 )
                 ranked = rank_sources([*sources, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
         elif verdict is not None:
-            # A judged "not ready" holds the solver back and says why, so the
-            # HUD never shows a confident answer to a truncated question.
+            # A judged "not ready" holds the solver back and says why.
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.IDLE,

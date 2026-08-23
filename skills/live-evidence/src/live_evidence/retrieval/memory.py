@@ -165,27 +165,33 @@ class MemoryEvidenceClient:
         use_profile_collections: bool = True,
     ) -> dict[str, Any]:
         url = f"{self._settings.memory_url}/recall"
-        request = {
-            "q": query,
-            "k": 6,
-            "scope": self._profile.memory_scope,
-        }
+        request: dict[str, Any] = {"q": query, "k": 6}
+        # A tool that follows ANY meeting must not pin recall to one project.
+        # When the meeting declares repos, the raw (profile=None) recall runs
+        # UNSCOPED with no collection filter, so document-level project memory
+        # (e.g. local_memory__experiments-sparta__memory) is retrievable;
+        # project-affinity ranking and the surface selector then prefer the
+        # meeting's own project. The profile scope/collections still bound the
+        # profile-specific recalls, and single-project deployments (no repos)
+        # keep the configured scope. Root-caused live: scope="live-evidence"
+        # returned only cross-project chunks for a Sparta question.
+        broad = profile is None and bool(self._settings.repo_roots)
+        if not broad:
+            request["scope"] = self._profile.memory_scope
+            if use_profile_collections:
+                request["collections"] = self._profile.memory_collections
         if profile:
             request["recall_profile"] = profile
-        if use_profile_collections:
-            request["collections"] = self._profile.memory_collections
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.post(url, json=request, headers={"X-Caller-Skill": "live-evidence"})
             if response.status_code in {400, 404, 422}:
-                fallback_request = {
-                    "q": query,
-                    "k": 8,
-                    "scope": self._profile.memory_scope,
-                }
+                fallback_request: dict[str, Any] = {"q": query, "k": 8}
+                if not broad:
+                    fallback_request["scope"] = self._profile.memory_scope
+                    if use_profile_collections:
+                        fallback_request["collections"] = self._profile.memory_collections
                 if profile:
                     fallback_request["recall_profile"] = profile
-                if use_profile_collections:
-                    fallback_request["collections"] = self._profile.memory_collections
                 fallback = await client.post(
                     url,
                     json=fallback_request,
