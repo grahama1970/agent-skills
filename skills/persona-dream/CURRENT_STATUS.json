@@ -163,7 +163,7 @@
       ]
     },
     "latest_blinded_listener_study_validation_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json",
-    "latest_blinded_listener_study_validation_receipt_sha256": "sha256:c5d6c01e4f4db0fb7f1a4a5c1535c316d666665c541753b6c4f8db46f162e7fa",
+    "latest_blinded_listener_study_validation_receipt_sha256": "sha256:75853f97732bac95b6b03e60aee544eeee0f465ef78370a30c8990ce3f3f5c2f",
     "latest_blinded_listener_study_readiness": {
       "status": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
       "stimulus_hashes_matched": "4/4",
@@ -173,17 +173,17 @@
       "rater_page": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html",
       "rater_page_sha256": "sha256:aaf80e065138bee35f28751c8fa36c7951d7b276f40ae96efaec8b8ea6b92450",
       "rater_page_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json",
-      "rater_page_receipt_sha256": "sha256:f190e9d641e7f3926d211212374ed509b4c7fa2194916e259dfb2e3073436e1c",
+      "rater_page_receipt_sha256": "sha256:0b001b324d2a77db29f4a420042639276265ec01c7b3b122892942e58b15564d",
       "rater_page_status": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
       "human_responses": "0/20 valid",
       "remaining_failed_gate": "human_responses_complete",
       "superseded_by": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-      "superseded_on": "2026-08-03",
-      "supersession_note": "READY_FOR_HUMAN_RATERS described readiness before the technical screen, which blocked these stimuli as confounded. Human collection must not proceed until #1179 re-renders under one loudness-normalization policy. Retained as history.",
-      "human_collection_permitted": false
+      "superseded_on": "2026-08-22",
+      "supersession_note": "#1179 re-rendered all four target stimuli under one shared Chatterbox norm_loudness policy and one shared ffmpeg loudnorm post-processing policy; the frozen technical screen now reports PASS_STIMULUS_TECHNICAL_SCREEN with failed_gates=[] and nuisance_rows_outside_neutral_spread=0. The remaining gate is human collection plus signed interpretation under #1058.",
+      "human_collection_permitted": true
     },
     "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:241b32edbf0ca854907338454497ca76f7e6caaa7483927ee36a9844a89025a5",
+    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:9d8c5c66aa3f6c1609c1a3a0a25ddc734984abb8ff16a2761fc20eb51eff8dd1",
     "latest_blinded_listener_study_analysis": {
       "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
       "mocked": false,
@@ -232,14 +232,14 @@
       "boundary": "v2 design repair only (#1126): per-rater counterbalanced order, intention-to-treat primary, independent attention check; provides no human perceptual evidence"
     },
     "latest_technical_screen_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-    "latest_technical_screen_receipt_sha256": "sha256:209e5ec65d2620080e646e6d24d248105639b547c398a34de35be99670e31ac1",
+    "latest_technical_screen_receipt_sha256": "sha256:f722c23b8089da27a74ee7826a65ebfa56100c1d1cbbf1e2b296a9def256e601",
     "latest_technical_screen": {
-      "status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND",
-      "issue": "grahama1970/agent-skills#1127",
+      "status": "PASS_STIMULUS_TECHNICAL_SCREEN",
+      "issue": "grahama1970/agent-skills#1179",
       "neutral_render_count": 8,
-      "finding": "dream +4.22 LKFS and adversarial +3.75 LKFS vs neutral median against a same-parameter neutral spread of sd 0.79 (tolerance 2.38); adversarial also +1.96s duration and an elevated silence floor. Loudness is a known correlate of perceived arousal, so raters could separate the dream stimulus without any emotion being conveyed.",
-      "cleared": "the upstream resemble-ai/chatterbox#536 ~4.9 kHz vocoder line is NOT differentially present: every condition sits within +/-1.9 dB of neutral against a 3.0 dB tolerance",
-      "boundary": "technical comparability screening only; proves nothing about perceived emotion, naturalness, or identity"
+      "finding": "After #1179/#1497 all four target stimuli are rendered under one shared Chatterbox norm_loudness policy and one shared ffmpeg loudnorm post-processing policy; the frozen screen reports failed_gates=[] and nuisance_rows_outside_neutral_spread=0.",
+      "cleared": "the earlier #1127 loudness and duration confounds are cleared for the current v2 bundle; live ASR WER is 0.0 for all four stimuli in STIMULUS_VALIDATION_RECEIPT.json",
+      "boundary": "technical comparability screening only; proves collection readiness, not perceived emotion, naturalness, or identity"
     }
   },
   "latest_voice_proof": {
@@ -481,7 +481,7 @@
     ]
   },
   "active_blockers": [
-    "Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions under one normalization and pass the frozen screen before any human collection under #1058.",
+    "#1058 is ready for human listener collection from the current v2 bundle: rater page, stimulus validation, and technical screen pass, but analysis remains fail-closed until 20 valid human response rows and SIGNED_INTERPRETATION.json exist.",
     "SPARTA has local live API proof of consuming the Persona Dream session_arc_bias artifact, but deployed production operation beyond that local receipt remains unproven.",
     "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
     "PCTOM-R does not yet prove confidence-bounded planning advantage.",
@@ -494,7 +494,7 @@
       "PD-CORRECTED-GOAL-V1: validate the operational goal and sealed manifest fixture.",
       "PD-CORRECTED-GOAL-V1: run C0_STRUCTURED_REFLECTION and C1_DREAM_JOURNAL against the same source-memory and answer capsule.",
       "PD-CORRECTED-GOAL-V1: adjudicate answer invariance before emotional lineage or delivery effects.",
-      "#1179 listener stimuli, PCTOM expansion, Kling/video/provider work, and human perception claims remain deferred until the paired proof exists."
+      "#1058 human listener collection, PCTOM expansion, Kling/video/provider work, and human perception claims remain deferred until the paired proof exists and the relevant human/external evidence exists."
     ]
   },
   "current_claims": {
@@ -547,21 +547,22 @@
       "next_scope_issue": "grahama1970/agent-skills#1130"
     },
     "human_perceived_emotion_and_identity": {
-      "status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND",
+      "status": "AWAITING_HUMAN_LISTENER_COLLECTION",
       "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness; v2 design (per-rater counterbalancing, intention-to-treat primary, independent attention check) preregistered under #1126",
       "receipt": "reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-      "receipt_sha256": "sha256:241b32edbf0ca854907338454497ca76f7e6caaa7483927ee36a9844a89025a5",
+      "receipt_sha256": "sha256:9d8c5c66aa3f6c1609c1a3a0a25ddc734984abb8ff16a2761fc20eb51eff8dd1",
       "valid_human_responses": "0/20",
       "sample_count": 0,
       "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
-      "does_not_prove": "any perceptual emotion, naturalness, or human identity result. Re-measured 2026-08-04 against the calibrated renderer: duration is now controllable by pinning pace, but loudness still separates the conditions and demonstrably because of the affect itself -- grief_safe derives exaggeration 0.570 and renders quiet, firm_boundary derives 1.155 and renders 4.08 LKFS louder against a 0.52 tolerance. One identical norm_loudness tightened the tolerance without equalizing conditions. Upstream chatterbox#23 then found perceived valence flat (Spearman 0.075) while arousal tracks intensity (0.961), so tones separate by energy alone. Gain-matching would delete the only working affect dimension and guarantee an uninterpretable null; not gain-matching leaves level as a discriminable cue. No design escapes that pair while valence is inert, so #1179 waits on chatterbox#23.",
-      "successor_issue": "grahama1970/agent-skills#1179",
+      "does_not_prove": "any perceptual emotion, naturalness, or human identity result; the v2 bundle is technically ready for raters, but valid human responses remain 0/20 and the signed human interpretation record is missing.",
+      "successor_issue": "grahama1970/agent-skills#1058",
       "successor_resolved": false,
-      "surface_token": "#1179",
+      "surface_token": "#1058",
       "blocking_receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-      "resolved_prerequisite": "grahama1970/agent-skills#1127 CLOSED: technical screen built and it BLOCKED the existing stimuli",
+      "resolved_prerequisite": "grahama1970/agent-skills#1179 CLOSED: current v2 stimuli pass the frozen technical screen and rater-page/stimulus-validation guards",
       "blocked_by": [
-        "grahama1970/chatterbox#23"
+        "20 valid human listener rows in responses_v2.jsonl",
+        "SIGNED_INTERPRETATION.json"
       ]
     },
     "pctom_apparatus_integrity": {

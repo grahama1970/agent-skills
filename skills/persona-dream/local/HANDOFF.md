@@ -67,13 +67,11 @@ slice, P2.1-P2.3 receipts) — recoverable at
 
 ## 4. What is Currently Broken / Open
 
-- **End-to-end reliability remains the open frontier**: `full-cycle-live` now
-  has a 3/3 live harness pass on 2026-08-22 after #1495 exposed
-  `run.sh converse-dynamic` and #1496 made recall-instrument outcomes
-  auditable. This is not #1128's 35-cycle no-restart reliability evidence.
-  #1128 remains open because its acceptance bar is 35 immutable terminal rows,
-  stable process identity, Wilson lower bound recomputation, and fail-closed
-  negative controls.
+- **End-to-end reliability has bounded local receipts but remains scope-limited**:
+  `full-cycle-live` has a 3/3 live harness pass on 2026-08-22 after #1495
+  exposed `run.sh converse-dynamic` and #1496 made recall-instrument outcomes
+  auditable. #1128 is now closed in GitHub; retain its receipt boundary rather
+  than treating reliability as production readiness.
 - **`/api/tau/dream/*`** (story/script draft endpoints the workspace calls)
   has no server implementation anywhere; those UI actions fail.
 - **Blinded listener study**: #1179 removed the loudness nuisance confound and
@@ -98,11 +96,12 @@ slice, P2.1-P2.3 receipts) — recoverable at
 
 ## 5. Next Steps
 
-1. Decide the next reliability ticket action under `project-watchdog`: #1128
-   needs 35 no-restart cycles and depends on cross-mood identity policy (#1130),
-   while #1130 is still agent-blocked and needs a frozen 36-render matrix.
-2. Unblock/continue #1130 cross-mood identity matrix, then #1058 human
-   listener collection. The technical screen no longer blocks those lanes.
+1. Advance #1058 only by collecting 20 valid human listener rows in
+   `responses_v2.jsonl` and adding `SIGNED_INTERPRETATION.json`; the agent must
+   not fabricate either artifact.
+2. If working agent-owned research next, inspect #1196 (longitudinal
+   M/R/D adaptation) and #1008 (held-out PCTOM-R condition-benefit slice)
+   under `project-watchdog`; neither replaces #1058's human perceptual gate.
 3. Optional UX: implement or stub `/api/tau/dream/*` server-side; commit the
    ux-lab registry surface entry if still uncommitted.
 

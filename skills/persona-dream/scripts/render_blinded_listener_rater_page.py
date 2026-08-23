@@ -59,6 +59,8 @@ def resolve_bundle_path(study_dir: Path, raw: str | None) -> Path:
     path = Path(raw)
     if path.is_absolute():
         return path
+    if raw.startswith("skills/"):
+        return REPO_ROOT / raw
     if raw.startswith("reports/"):
         return ROOT / raw
     return study_dir / raw

@@ -19,7 +19,7 @@
     "control",
     "dream"
   ],
-  "created_at": "2026-08-22T23:06:55Z",
+  "created_at": "2026-08-23T13:21:42Z",
   "failed_gates": [],
   "intended_mediator_rows_outside_neutral_spread": [
     {
@@ -81,7 +81,7 @@
   "issue": "grahama1970/agent-skills#1127",
   "live": true,
   "manifest": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_MANIFEST.json",
-  "manifest_sha256": "sha256:755b7b05a558c3f39b2b5e7dd17ea836bd1b33f4497a7318b1d73ad90f2695b5",
+  "manifest_sha256": "sha256:c5bd0f525304975a74f2953a63b1f3b01c431e558f8461f2c551f14f5d6eb83d",
   "mocked": false,
   "neutral_render_count": 8,
   "nuisance_rows_outside_neutral_spread": [],

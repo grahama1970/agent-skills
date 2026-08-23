@@ -100,6 +100,31 @@ def test_rater_page_uses_blinded_audio_filenames_and_no_condition_labels(tmp_pat
         assert stimulus_id in html
 
 
+def test_rater_page_resolves_repo_relative_skill_audio_paths(tmp_path):
+    study = _write_study(tmp_path)
+    repo_root = tmp_path / "repo"
+    repo_audio = repo_root / "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/repo_relative_test.wav"
+    repo_audio.parent.mkdir(parents=True, exist_ok=True)
+    repo_audio.write_bytes(b"RIFF....WAVEfmt repo-relative")
+    prereg_path = study / "PREREGISTRATION.json"
+    prereg = json.loads(prereg_path.read_text(encoding="utf-8"))
+    prereg["stimuli"][0]["audio"] = str(repo_audio.relative_to(repo_root))
+    prereg["stimuli"][0]["bytes"] = repo_audio.stat().st_size
+    prereg["stimuli"][0]["sha256"] = renderer.sha_file(repo_audio)
+    prereg_path.write_text(json.dumps(prereg), encoding="utf-8")
+
+    old_repo_root = renderer.REPO_ROOT
+    renderer.REPO_ROOT = repo_root
+    try:
+        receipt = renderer.run(_args(study))
+    finally:
+        renderer.REPO_ROOT = old_repo_root
+
+    assert receipt["status"] == "PASS_BLINDED_LISTENER_RATER_PAGE_READY"
+    assert "stimulus_hash_match:S01" not in receipt["failed_gates"]
+    assert (study / "blinded_stimuli" / "S01.wav").read_bytes() == repo_audio.read_bytes()
+
+
 def test_rater_page_blocks_when_preregistered_audio_hash_changes(tmp_path):
     study = _write_study(tmp_path)
     (study / "stimuli" / "dream.wav").write_bytes(b"changed")

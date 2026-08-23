@@ -1,15 +1,17 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-08-19 UTC (DreamWorkspace blank-page incident: two ReferenceErrors from the 99-file split hidden by @ts-nocheck; workspace remounted at ux/app #dream; surf run recovered into the library; residue board now stratified across media kinds; agentic-eval guards added and verified non-vacuous) by Claude Fable 5
+**Last updated:** 2026-08-23 UTC (Persona Dream rater-page path repair; #1344 canonical `run.sh dream` spine reaches spoken journal; #1179/#1497 listener-study technical screen now PASS; #1058 remains the human listener collection gate) by Codex
 **Status:** Active development
 **Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
 **Active successor issues (own the open claims; see `CURRENT_STATUS.json` `current_claims`):**
-#1126/#1127 blinded listener study repair CLOSED — the #1127 screen BLOCKED the
-existing stimuli as loudness-confounded, so #1179 must re-render them under one
-identical normalization before any human collection (gates #1058),
-#1128 no-restart reliability soak (the completed 5/5 result is the downstream
-P2 engineering pilot, not production or full Phase 01-16 reliability),
-#1129 restart/recovery fault campaign, #1130 cross-mood machine identity,
+#1126/#1127/#1179 listener-study technical prerequisites CLOSED — the current
+v2 stimuli pass the frozen technical screen and the refreshed rater page validates
+against current blinded stimulus bytes; #1058 remains open for 20 valid human
+listener rows plus signed interpretation,
+#1128 no-restart reliability soak and #1130 cross-mood machine identity are
+closed in GitHub; retain their proof boundaries when making reliability or
+speaker-identity claims,
+#1129 restart/recovery fault campaign,
 #1131 PCTOM-R corpus/estimator repair CLOSED (apparatus now valid; the live
 held-out benefit result is #1008 and does not exist yet),
 #1059 previous-video causality deferred with no provider spend.

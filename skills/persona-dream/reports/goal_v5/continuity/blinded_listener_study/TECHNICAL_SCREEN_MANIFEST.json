@@ -927,7 +927,7 @@
       "wav_sha256": "sha256:822b23b9ed5c348528ffefe9adba603af8606b7893d1fdce8daa0c650c0f93e9"
     }
   },
-  "created_at": "2026-08-22T23:06:55Z",
+  "created_at": "2026-08-23T13:21:42Z",
   "intended_mediators": [
     "f0_median_hz",
     "f0_range_hz",
