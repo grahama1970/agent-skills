@@ -752,6 +752,64 @@ def test_supported_high_api_handler_still_compiles_to_scillm(tmp_path: Path) -> 
     assert command[command.index("--handler") + 1] == "gpt-5.5-high"
 
 
+def test_non_browser_handler_timeout_uses_explicit_execution_budget(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Ask gpt-5.5-high to draft, then claude-opus-5-medium reviews.",
+        repo="local/ask",
+        target="non-browser-timeout-budget",
+        immutable_goal="Non-browser handler DAGs honor the requested execution budget.",
+        handlers=["gpt-5.5-high", "claude-opus-5-medium"],
+        topology="sequential",
+        dag_template="creator-reviewer",
+        output_root=tmp_path,
+        execution_timeout_seconds=1800,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["dag"]["limits"]["default_timeout_seconds"] == 1800 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+    for node in ("handler-gpt-5-5-high", "handler-claude-opus-5-medium"):
+        spec = json.loads(
+            Path(bundle["command_spec_root"], node, "tau-dispatch-command.json").read_text(encoding="utf-8")
+        )
+        command = spec["command"]
+        assert spec["timeout_s"] == 1800 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+        assert command[command.index("--timeout") + 1] == "1800"
+
+
+def test_tau_dag_cli_passes_explicit_execution_timeout_to_compiler(tmp_path: Path) -> None:
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "run",
+            "Ask gpt-5.5-high to draft, then claude-opus-5-medium reviews.",
+            "--repo",
+            "local/ask",
+            "--target",
+            "non-browser-timeout-cli",
+            "--immutable-goal",
+            "Non-browser handler DAGs honor the requested execution budget.",
+            "--handler",
+            "gpt-5.5-high",
+            "--handler",
+            "claude-opus-5-medium",
+            "--topology",
+            "sequential",
+            "--dag-template",
+            "creator-reviewer",
+            "--execution-timeout-seconds",
+            "1800",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["bundle"]["dag"]["limits"]["default_timeout_seconds"] == 1800 + tau_dag.BROWSER_COMMAND_GRACE_SECONDS
+
+
 def test_tau_worker_dispatches_xhigh_handler_through_subagent_runner(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(json.dumps({"request": "What is 2+2?"}) + "\n", encoding="utf-8")

@@ -348,6 +348,13 @@ def run(
         float,
         typer.Option("--poll-timeout-seconds", help="Maximum status polling time."),
     ] = 120.0,
+    execution_timeout_seconds: Annotated[
+        int,
+        typer.Option(
+            "--execution-timeout-seconds",
+            help="Maximum per-node handler execution budget. This is separate from status polling time.",
+        ),
+    ] = 0,
     poll_interval_seconds: Annotated[
         float,
         typer.Option("--poll-interval-seconds", help="Polling interval."),
@@ -377,11 +384,11 @@ def run(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
-        # Lane execution budgets come from the per-handler envelopes in
-        # _roundtable_command_timeout; deriving them from --poll-timeout-seconds
-        # (default 120) starved every browser lane to a 300s wall (observed:
-        # webgpt/webgrok killed mid-generation at 120s effective submit).
-        execution_timeout_seconds=0,
+        # Lane execution budgets come from this explicit option and the
+        # per-handler envelopes in _roundtable_command_timeout; they must not
+        # be derived from --poll-timeout-seconds, which only bounds status
+        # polling.
+        execution_timeout_seconds=execution_timeout_seconds,
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)
@@ -657,6 +664,13 @@ def compete(
         float,
         typer.Option("--poll-timeout-seconds", help="Maximum status polling time."),
     ] = 120.0,
+    execution_timeout_seconds: Annotated[
+        int,
+        typer.Option(
+            "--execution-timeout-seconds",
+            help="Maximum per-node handler execution budget. This is separate from status polling time.",
+        ),
+    ] = 0,
     poll_interval_seconds: Annotated[
         float,
         typer.Option("--poll-interval-seconds", help="Polling interval."),
@@ -687,11 +701,11 @@ def compete(
         scillm_api_key=scillm_api_key,
         tau_project_root=tau_project_root,
         browser_lock_timeout=browser_lock_timeout,
-        # Lane execution budgets come from the per-handler envelopes in
-        # _roundtable_command_timeout; deriving them from --poll-timeout-seconds
-        # (default 120) starved every browser lane to a 300s wall (observed:
-        # webgpt/webgrok killed mid-generation at 120s effective submit).
-        execution_timeout_seconds=0,
+        # Lane execution budgets come from this explicit option and the
+        # per-handler envelopes in _roundtable_command_timeout; they must not
+        # be derived from --poll-timeout-seconds, which only bounds status
+        # polling.
+        execution_timeout_seconds=execution_timeout_seconds,
         attachments=attach_file,
     )
     bundle = compile_tau_dag_bundle(input_payload)

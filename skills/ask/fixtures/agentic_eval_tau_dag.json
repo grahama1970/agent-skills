@@ -109,6 +109,29 @@
           "tau.dag_contract.v1"
         ]
       }
+    },
+    {
+      "name": "non-browser-execution-timeout-reaches-dag-and-worker",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_tau_dag.py::test_non_browser_handler_timeout_uses_explicit_execution_budget",
+        "../tests/test_tau_dag.py::test_tau_dag_cli_passes_explicit_execution_timeout_to_compiler",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
     }
   ]
 }

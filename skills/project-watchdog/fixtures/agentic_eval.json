@@ -129,6 +129,28 @@
       }
     },
     {
+      "name": "repair-dispatch-passes-explicit-ask-execution-timeout",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
       "name": "unknown-project-fails-closed-and-names-it",
       "type": "negative",
       "command": [

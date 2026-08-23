@@ -546,6 +546,9 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
         "repo": TAU_REPO,
         "worktree": str(_clean_worktree(tmp_path)),
         "runner_kind": "tau-command-loop",
+        "repair_creator": "gpt-5.5-high",
+        "repair_reviewer": "claude-opus-5-medium",
+        "ticket_repair_timeout_s": 10800,
     }
     issue = _issue(9, labels=["agent-work"])
     issue["watchdog_action"] = "ticket_repair"
@@ -569,15 +572,16 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     # Authored in a worktree of the lane's own making, never the registered
     # checkout: that one is a human's working tree.
     workspace = argv[argv.index("--handler-workspace") + 1]
-    assert workspace.startswith("codex=")
+    assert workspace.startswith("gpt-5.5-high=")
     assert str(tmp_path) != workspace.split("=", 1)[1]
     assert "repair-worktrees" in workspace
     assert argv[1] == "tau-dag"
     assert "--dag-template" in argv and argv[argv.index("--dag-template") + 1] == "creator-reviewer"
     assert "--topology" in argv and argv[argv.index("--topology") + 1] == "sequential"
     assert "--execute" in argv and "--allow-provider-calls" in argv
+    assert argv[argv.index("--execution-timeout-seconds") + 1] == "3600"
     # The creator seat mutates and needs a workspace; the reviewer seat does not.
-    assert handlers.REPAIR_REVIEWER_HANDLER in argv
+    assert "claude-opus-5-medium" in argv
     # $ask fails preflight without an immutable goal, before any handler runs.
     goal = argv[argv.index("--immutable-goal") + 1]
     assert "#9" in goal and "Do not weaken or delete a test" in goal

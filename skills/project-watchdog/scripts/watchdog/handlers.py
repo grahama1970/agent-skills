@@ -535,6 +535,18 @@ def repair_immutable_goal(repo: str, issue_number: int) -> str:
     )
 
 
+def _ticket_repair_execution_timeout(project: dict[str, Any]) -> int:
+    """Ask/Tau per-node timeout for creator/reviewer repair lanes."""
+    configured = int(
+        project.get("ticket_repair_execution_timeout_s")
+        or project.get("ticket_repair_node_timeout_s")
+        or 0
+    )
+    if configured <= 0:
+        configured = min(int(project.get("ticket_repair_timeout_s", 1800)), 3600)
+    return max(300, min(configured, 3600))
+
+
 def build_repair_task(
     *,
     repo: str,
@@ -811,6 +823,7 @@ def handle_ticket_repair(
             "--topology", "sequential",
             "--run-output-root", str(ask_run_dir),
             "--execute",
+            "--execution-timeout-seconds", str(_ticket_repair_execution_timeout(project)),
             "--allow-provider-calls",
             "--json",
         ],

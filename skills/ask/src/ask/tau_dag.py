@@ -2749,13 +2749,19 @@ def _write_roundtable_command_spec(
     browser_worker_timeout_s = DEFAULT_BROWSER_WORKER_TIMEOUT_SECONDS
     if command_timeout_budget_s > 0:
         browser_worker_timeout_s = min(browser_worker_timeout_s, command_timeout_budget_s)
+    execution_timeout_s = int(getattr(input, "execution_timeout_seconds", 0) or 0)
+    non_browser_worker_timeout_s = max(300, execution_timeout_s) if execution_timeout_s > 0 else 300
     worker_provider_timeout_s = (
         "5400"
         if handler == "codex"
         else (
             "1500"
             if is_subagent_handler
-            else (str(browser_worker_timeout_s) if browser_handler else "300")
+            else (
+                str(browser_worker_timeout_s)
+                if browser_handler
+                else str(non_browser_worker_timeout_s)
+            )
         )
     )
     command = [
@@ -2883,8 +2889,6 @@ def _dag_default_timeout_seconds(input: TauDagCompileInput) -> int:
     old flat 300s could never succeed for them. Derived from the same
     per-handler budgets the dispatch commands use, so the two can't drift.
     """
-    if not any(_is_browser_handler(h) for h in input.handlers):
-        return NON_BROWSER_DAG_DEFAULT_TIMEOUT_SECONDS
     lock_timeout_s = _browser_lock_timeout_seconds(input)
     execution_timeout_s = int(getattr(input, "execution_timeout_seconds", 0) or 0)
     budgets = [
@@ -2927,6 +2931,8 @@ def _roundtable_command_timeout(
         if execution_timeout_s > 0:
             return min(base_timeout, execution_timeout_s + BROWSER_COMMAND_GRACE_SECONDS)
         return base_timeout
+    if execution_timeout_s > 0:
+        return max(420, min(TAU_STANDARD_MAX_RUN_SECONDS, execution_timeout_s + BROWSER_COMMAND_GRACE_SECONDS))
     if handler == "webgpt":
         return 3900
     if handler == "webgemini":
