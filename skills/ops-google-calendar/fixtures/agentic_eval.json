@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "skill": "ops-google-calendar",
+  "trials": 2,
+  "proof_scope": "propose-only fail-closed discipline and honest auth reporting",
+  "claims": {
+    "proves": "a scheduling write is proposed and never applied without --confirm, a confirmed write with no token fails closed, and status/events report honestly when unauthenticated",
+    "does_not_prove": "live OAuth consent, real calendar reads/writes, or event correctness (all require the human's Google OAuth client and token)"
+  },
+  "cases": [
+    {
+      "name": "reschedule-proposal-not-executed",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh propose-reschedule --event-id abc123 --to 2026-08-28T15:00:00-04:00 | jq -e '.schema==\"ops_google_calendar.proposal.v1\" and .status==\"NOT_EXECUTED\" and .confirmed==false' >/dev/null && echo PASS_PROPOSAL_NOT_EXECUTED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_PROPOSAL_NOT_EXECUTED"]
+      }
+    },
+    {
+      "name": "confirmed-write-fails-closed-without-token",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "OPS_GCAL_CONFIG_DIR=\"$(mktemp -d)\" ../run.sh propose-create --summary Sync --start 2026-08-28T15:00:00-04:00 --end 2026-08-28T15:30:00-04:00 --confirm; rc=$?; test $rc -eq 1 && echo PASS_WRITE_FAILS_CLOSED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["BLOCKED_UNAUTHENTICATED", "PASS_WRITE_FAILS_CLOSED"]
+      }
+    },
+    {
+      "name": "status-honest-when-unauthenticated",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "OPS_GCAL_CONFIG_DIR=\"$(mktemp -d)\" ../run.sh status | jq -e '.schema==\"ops_google_calendar.status.v1\" and .authenticated==false and .status==\"UNAUTHENTICATED\" and .mocked==false' >/dev/null && echo PASS_STATUS_HONEST"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_STATUS_HONEST"]
+      }
+    }
+  ]
+}
