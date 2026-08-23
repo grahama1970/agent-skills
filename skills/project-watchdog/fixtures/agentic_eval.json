@@ -151,6 +151,29 @@
       }
     },
     {
+      "name": "ticket-repair-preserves-tau-owned-scillm-boundary",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
+        "../tests/test_project_watchdog.py::test_ticket_repair_documents_tau_owned_scillm_boundary",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "ticket-repair-refuses-answer-only-creator-before-lease",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

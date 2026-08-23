@@ -586,6 +586,9 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     assert "--dag-template" in argv and argv[argv.index("--dag-template") + 1] == "creator-reviewer"
     assert "--topology" in argv and argv[argv.index("--topology") + 1] == "sequential"
     assert "--execute" in argv and "--allow-provider-calls" in argv
+    assert "--scillm-api-key" not in argv
+    assert "--scillm-base-url" not in argv
+    assert not any("localhost:4001" in str(item) or "/v1/scillm/" in str(item) for item in argv)
     assert argv[argv.index("--execution-timeout-seconds") + 1] == "3600"
     # The creator seat mutates and needs a workspace; the reviewer seat does not.
     assert "claude-fable-low" in argv
@@ -595,6 +598,16 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
 
     task = (tmp_path / "repair-task.md").read_text(encoding="utf-8")
     assert "VERDICT: PASS" in task, "the reviewer seat must be asked for a verdict"
+
+
+def test_ticket_repair_documents_tau_owned_scillm_boundary() -> None:
+    skill = Path(__file__).resolve().parents[1] / "SKILL.md"
+    text = skill.read_text(encoding="utf-8")
+
+    assert "project-watchdog never calls SciLLM directly" in text
+    assert "project-watchdog -> $ask tau-dag -> Tau-executed DAG/command_spec -> Tau-owned SciLLM adapter" in text
+    assert "SCILLM_AUTH_INVALID_API_KEY" in text
+    assert "must not reimplement SciLLM auth probing" in text
 
 
 def test_ticket_repair_refuses_answer_only_creator_before_lease(tmp_path) -> None:

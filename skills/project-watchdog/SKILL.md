@@ -297,6 +297,21 @@ it. The watchdog does not drive the loop, count attempts, or decide when work is
 done; Tau owns dispatch, receipt validation, resume, timeouts, immutable-goal
 enforcement and fail-closed drift detection, and its receipt is the verdict.
 
+Provider boundary: project-watchdog never calls SciLLM directly, never chooses a
+SciLLM endpoint, and never passes raw `--scillm-*` auth or URL flags. The only
+allowed provider route for repair is:
+
+```text
+project-watchdog -> $ask tau-dag -> Tau-executed DAG/command_spec -> Tau-owned SciLLM adapter
+```
+
+If a repair receipt reports `SCILLM_AUTH_INVALID_API_KEY` or
+`scillm_auth_invalid_api_key`, that is a Tau/SciLLM provider-adapter failure
+reported through the Tau receipt. project-watchdog may surface the exact failure
+code, preserve the receipt path, and label the ticket for operator action; it
+must not reimplement SciLLM auth probing, call `http://localhost:4001`, or
+describe the failure as project-watchdog itself talking to SciLLM.
+
 Two seats, deliberately different model families (`repair_creator`,
 `repair_reviewer`, per project or env). A reviewer sharing the creator's blind
 spots is a second pass, not a second opinion, so identical seats are refused
