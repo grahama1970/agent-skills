@@ -38,6 +38,12 @@ This skill performs a deep assessment of the codebase to identify technical debt
 
 - **Artifact review**: Detects binary/media files (`.wav`, `.mp4`, `.pt`, `.ckpt`, `.parquet`, etc.) but keeps root-level candidates review-only because they may be runtime inputs
 - **Root stray detection**: Flags untracked directories at project root that don't belong (e.g. `personaplex/`, `data_horus/`)
+- **Human-authorized deprecated move**: When the human explicitly says to move
+  root strays or artifacts into a deprecated folder and not delete them, perform
+  only a path-scoped `mv` into `deprecated/cleanup-<date>/...`, write a receipt
+  with source, destination, size, and SHA-256, read back old-path absence and
+  new-path presence, and commit only that deprecated path plus the receipt.
+  This is not `--execute`; it is an owner-approved preservation move.
 - **Junk file cleanup**: Removes logs, temp files, cache dirs
 - **Unused-file candidate detection**: Uses lexical absence only to nominate
   review candidates; it never treats that signal as removal proof
@@ -126,8 +132,8 @@ Each mutation class carries its own evidence requirement:
 | `memory_index_refresh` | explicit memory-index request + ingest-code receipt + `.ingest-code.json` + local artifact paths | non-cleanup mutation; indexes for project-agent recall/search |
 | `registered_worktree_rescue_prune` | explicit rescue/prune request + dirty secondary audit + active-process exclusion + pushed rescue branch receipt + clean status proof before remove | non-mutating audit by default; blocks prune/remove until rescue proof exists |
 | `agentic_evaluation` | target skill `fixtures/agentic_eval.json` run through `$agentic-evals` with `readiness: READY` | complete, blocked, or not_applicable |
-| `root_stray_mutation` | human owner decision | review-only |
-| `artifact_archive` | human owner decision | review-only |
+| `root_stray_mutation` | human owner decision + path-scoped deprecated move receipt | review-only until explicitly authorized |
+| `artifact_archive` | human owner decision + path-scoped deprecated move receipt | review-only until explicitly authorized |
 
 Untracked junk removal does not require dependency edges: it only ever touches
 paths git does not track. Requiring a repository-wide index for it costs a live
@@ -216,7 +222,7 @@ never per-file safety evidence. Every run states these limits explicitly:
 8. **Code evidence / searchability** (`$ingest-code`): Only required to unblock
    tracked-file mutation, never to run assessment or untracked junk removal.
    Run `--memory-index` to
-   invoke `bash .pi/skills/ingest-code/run.sh scan "$PWD" --treesitter`,
+   invoke `bash /home/graham/workspace/experiments/agent-skills/skills/ingest-code/run.sh scan "$PWD" --treesitter`,
    refreshing `.ingest-code.json`, `.cleanup-evidence.json`, and code-symbol
    JSONL artifacts where supported.
    If this leaves a completed marker with zero scanned files or a disabled code
@@ -234,7 +240,34 @@ never per-file safety evidence. Every run states these limits explicitly:
      (`--force` skips the prompt, not the provenance check)
    - Keep root strays, artifacts, and tracked candidates review-only
    - Log all actions to `local/CLEANUP_LOG.md` and the phase receipt
-11. **Script scanability repair**: When the requested cleanup slice is explicitly
+11. **Human-authorized deprecated move**: When the human explicitly authorizes
+   a preservation move such as "move to deprecated folder, do not delete",
+   perform a bounded manual `mv` slice rather than `--execute`.
+   Preconditions:
+   - Read the latest `--worktree-audit` or `--dry-run` receipt and name the
+     exact paths being moved.
+   - Exclude `.agents/`, `.codex/`, `.claude/`, `.worktrees/`, registered Git
+     worktrees, current cleanup outputs, runtime state, source/config/test
+     paths, and any evidence artifacts still needed for the active proof unless
+     the human names them explicitly.
+   - For source-like, config, service, test, or script paths, first run the
+     "Readiness Before Moving Source-Like Files" gate below. If that gate is not
+     available, do not move those paths.
+   - Create `deprecated/cleanup-<YYYYMMDD>/<class>/` inside the live repo unless
+     the human names a different destination.
+   - Use `mv --` only after checking the destination does not already exist.
+     Do not run `rm`, `git clean`, `git reset`, `git checkout --`,
+     `git worktree remove`, `git worktree prune`, or any delete/prune command.
+   - Write a receipt such as
+     `deprecated/cleanup-<YYYYMMDD>/MOVE_RECEIPT.tsv` with timestamp, source,
+     destination, byte size, and SHA-256.
+   - Read back the result with counts for `old_paths_absent`,
+     `new_files_present`, and `receipt_records`.
+   - Stage and commit only the moved deprecated paths and receipt. Do not stage
+     unrelated dirty worktree entries to make the repository look clean.
+   Non-claims: this move does not prove the whole worktree is clean, does not
+   authorize deletion, and does not prove unreviewed root strays are unused.
+12. **Script scanability repair**: When the requested cleanup slice is explicitly
    readability repair, add only non-behavioral documentation such as module
    docstrings, usage notes, side-effect notes, and useful function/class
    docstrings. Do not change script control flow, flags, imports, IO behavior,
@@ -242,39 +275,39 @@ never per-file safety evidence. Every run states these limits explicitly:
    slice with parse/compile plus each touched script's `--help`, entrypoint
    smoke, or narrow sanity command, then commit separately from deletion or
    archive cleanup.
-12. **Public-readiness/security triage**: For an explicit public-readiness
+13. **Public-readiness/security triage**: For an explicit public-readiness
    slice, run `--public-readiness`, preserve artifacts, triage gitleaks history
    findings, narrow noisy working-directory scans, and require maintainer
    review for GitHub visibility/security/reporting settings. See
    `references/public-readiness-security.md`.
-13. **Quality-gate validation**: For an explicit validation slice, run
+14. **Quality-gate validation**: For an explicit validation slice, run
    `--quality-gate` and preserve the receipt. Missing configured tools,
    unexecuted required gates, or failed gates remain blockers. See
    `references/quality-gates.md`.
-14. **Post-cleanup proof**: Rerun the same sanity command, the target skill's
+15. **Post-cleanup proof**: Rerun the same sanity command, the target skill's
    `$agentic-evals` fixture, and relevant `best-practices-*` checks for changed
    files, then commit/push only the coherent cleanup slice.
 
 ## How to Use
 
 1. Trigger with "cleanup this project" or "archive artifacts".
-2. Run `bash .pi/skills/cleanup/run.sh --dry-run` to see JSON findings. This
+2. Run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --dry-run` to see JSON findings. This
    works with no index present; the phase receipt records what was unavailable.
-3. Run `bash .pi/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
-4. Run `bash .pi/skills/cleanup/run.sh --script-scanability` to run only the
+3. Run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --plan` to generate a readable cleanup plan.
+4. Run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --script-scanability` to run only the
    non-mutating script readability pass.
-5. Run `bash .pi/skills/cleanup/run.sh --public-readiness` to run only the
+5. Run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --public-readiness` to run only the
    non-mutating public-readiness/security lane.
-6. Run `bash .pi/skills/cleanup/run.sh --quality-gate` for the selected
+6. Run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --quality-gate` for the selected
    non-mutating quality-gate lane.
-7. Run `bash .pi/skills/cleanup/run.sh --memory-index` for Memory
+7. Run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --memory-index` for Memory
    searchability and local offline code-symbol artifacts.
-8. For dirty worktrees, run `bash .pi/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
+8. For dirty worktrees, run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --worktree-audit --output artifacts/cleanup/worktree_audit.json`.
 9. Use `--registered-worktree-audit` for stray secondary worktrees; review the
    audit before rescue/prune.
 10. If a clean worktree is needed for commit isolation, record both paths in the
    plan: the live repo of record and the temporary commit worktree.
-11. Review the plan and audit, then run `bash .pi/skills/cleanup/run.sh --execute`.
+11. Review the plan and audit, then run `bash /home/graham/workspace/experiments/agent-skills/skills/cleanup/run.sh --execute`.
 12. Use `--force` only to skip the confirmation prompt for junk removal. It
    cannot bypass per-path provenance or authorize any other mutation class.
 13. Read the phase receipt at `artifacts/cleanup/cleanup_receipt.json` (override
@@ -322,6 +355,11 @@ to `.gitignore` separately because cleanup does not edit `.gitignore`.
   exist. Active cwd ownership excludes that worktree from automation.
 - **Root artifacts are review-only**: Binary/media files at project root may be
   runtime inputs and are never moved automatically.
+- **Deprecated moves preserve, never delete**: A human-approved move to
+  `deprecated/` is a preservation action, not a cleanup execution. It must be
+  path-scoped, receipt-backed, read back from disk, and committed independently.
+  It must not touch registered worktrees, agent runtime state, current cleanup
+  outputs, or source-like paths without the source-like readiness gate.
 - **Evidence must match the mutation**: A mutation class is authorized only by
   evidence about the paths it touches. Aggregate ingest counters never authorize
   anything, and no class inherits authority from an unrelated index. Requiring a
@@ -412,7 +450,9 @@ worktree cannot be committed cleanly. The audit classifies each
 - `generated_or_archive`: artifacts, logs, cleanup evidence, and archive paths;
   commit only if they are intended proof, otherwise archive/ignore.
 - `root_stray_review`: root-level files outside the infrastructure allowlist;
-  move to docs/artifacts/scripts before committing.
+  move to docs/artifacts/scripts or `deprecated/cleanup-<date>/...` before
+  committing only when the human gives an explicit owner decision. The move must
+  be receipt-backed and path-scoped; do not delete.
 - `project_dependency_review`: untracked source/config files under live project
   paths; do not quarantine or move until import/readiness checks prove tracked
   code does not depend on them. Prefer committing the coherent feature slice or

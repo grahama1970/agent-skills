@@ -2,21 +2,113 @@
   "version": 2,
   "skill": "cleanup",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "cleanup operating-contract regression checks plus existing local safety runner",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "cleanup documents the canonical agent-skills runtime path, preserves human-approved deprecated moves with receipts, and keeps the existing local cleanup safety checks passing",
+    "does_not_prove": "live cleanup execution in an arbitrary project, safety of unreviewed root strays, full repository release readiness, or browser/oracle review"
   },
+  "capability_claims": [
+    {
+      "id": "cleanup.deprecated_move_contract",
+      "description": "Human-authorized deprecated moves are preservation-only, path-scoped, receipt-backed, and use canonical agent-skills paths.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "cleanup.local_safety_runner",
+      "description": "The cleanup skill's existing local safety runner still exercises review-only root candidates and forbidden mutation boundaries.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "cleanup.skill_contract.commands",
+      "seam_type": "documentation_to_agent_runtime",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "cleanup.skill_contract.deprecated_move",
+      "seam_type": "human_instruction_to_filesystem_mutation",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
   "cases": [
     {
-      "name": "sanity",
+      "name": "skill-contract",
       "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "cleanup.deprecated_move_contract"
+      ],
+      "seams": [
+        "cleanup.skill_contract.commands",
+        "cleanup.skill_contract.deprecated_move"
+      ],
       "command": [
         "bash",
-        "../sanity.sh"
+        "-lc",
+        "cd .. && uv run --project . pytest test_cleanup_skill_contract.py -q"
       ],
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed"
+        ]
+      }
+    },
+    {
+      "name": "deprecated-move-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "cleanup.deprecated_move_contract"
+      ],
+      "seams": [
+        "cleanup.skill_contract.deprecated_move"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && uv run --project . pytest test_cleanup_skill_contract.py::test_deprecated_move_contract_is_explicit_and_preserving -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
+      "name": "local-safety-runner",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "cleanup.local_safety_runner"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && python3 test_cleanup.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "142 passed, 0 failed"
+        ]
       }
     }
   ]
