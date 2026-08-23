@@ -253,6 +253,32 @@
       }
     },
     {
+      "name": "recognition-route-beats-cold-apply",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "ranking.shortlist_selection"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_recognition_route.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RECOGNITION_ROUTE_OK"
+        ],
+        "stderr_excludes": [
+          "ROUTE_MISCLASSIFIED",
+          "FOUNDER_OVERREACH",
+          "RANKING_WRONG",
+          "COLD_NOT_FLAGGED"
+        ]
+      }
+    },
+    {
       "name": "wny-linkedin-readback",
       "type": "adversarial",
       "real_world": true,
