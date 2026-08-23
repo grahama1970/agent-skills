@@ -362,14 +362,14 @@
         "requires_start_handoff": false
       },
       "repair_creator": "gpt-5.5-high",
-      "repair_reviewer": "webclaude",
+      "repair_reviewer": "claude-opus-5-medium",
       "allowed_agents": [
         "project-or-harness-verifier",
         "code-reviewer",
         "human"
       ],
       "notes": [
-        "ticket_repair via $ask tau-dag; fixer gpt-5.5-high, reviewer webclaude."
+        "ticket_repair via $ask tau-dag; fixer gpt-5.5-high, reviewer claude-opus-5-medium."
       ],
       "service": {
         "kind": "systemd",
