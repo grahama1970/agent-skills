@@ -29,7 +29,7 @@ class ActionCandidate(BaseModel):
         validation_alias="schema", serialization_alias="schema",
     )
     action_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
-    kind: Literal["fact_check", "remember_fact", "open_artifact", "schedule"]
+    kind: Literal["fact_check", "remember_fact", "open_artifact", "schedule", "compose"]
     summary: str = Field(min_length=1, max_length=600)
     payload: str = Field(min_length=1, max_length=2_000)
     trigger_event_ids: list[str] = Field(min_length=1, max_length=16)
@@ -74,7 +74,8 @@ class ActionEngine:
         accepted: list[ActionCandidate] = []
         for raw in raw_candidates[:6]:
             kind = str(raw.get("kind") or "")
-            if kind not in {"fact_check", "remember_fact", "open_artifact", "schedule"}:
+            if kind not in {"fact_check", "remember_fact", "open_artifact",
+                            "schedule", "compose"}:
                 continue
             payload = str(raw.get("payload") or raw.get("claim") or raw.get("fact")
                           or raw.get("artifact") or raw.get("request") or "").strip()
@@ -189,6 +190,15 @@ class ActionEngine:
             receipt.update(_route_to_calendar(candidate.payload))
             candidate.status = "unresolved"
 
+        elif candidate.kind == "compose":
+            # An analytical/visual request ("graph these metrics") is a
+            # multi-skill composition, not a card. PLAN it here (which skills,
+            # in what order) but do not run the heavy DAG: fetching + computing
+            # + rendering is expensive and outward-facing, so the plan is
+            # proposed and a human approves execution (a Tau DAG) separately.
+            receipt.update(_plan_composition(candidate.payload))
+            candidate.status = "unresolved"
+
         elif candidate.kind == "open_artifact":
             if not self._policy.retrieve_local_evidence:
                 candidate.status = "rejected_by_policy"
@@ -231,6 +241,34 @@ def _route_to_calendar(request: str) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001 -- routing failures are reported, not raised
         result.update({"routed": False, "reason": f"{type(exc).__name__}: {exc}"})
     return result
+
+
+def _plan_composition(request: str) -> dict[str, Any]:
+    """Plan a multi-skill composition for an analytical/visual request.
+
+    The plan is derived from the skills' declared valence shells
+    (create-figure composes analytics; brave-search provides web-search): a
+    request to visualize data resolves to fetch -> aggregate -> render. The
+    plan names the Tau DAG nodes; execution (running the DAG) is a separate
+    human-approved step, so this only proposes -- it never runs the chain.
+    """
+
+    text = request.lower()
+    needs_web = any(w in text for w in ("latest", "current", "online", "web",
+                                        "market", "pricing", "recent"))
+    nodes: list[dict[str, str]] = []
+    if needs_web:
+        nodes.append({"skill": "brave-search", "role": "fetch external data"})
+    nodes.append({"skill": "analytics", "role": "schema + aggregate the metrics"})
+    nodes.append({"skill": "create-figure", "role": "render a D3/React figure"})
+    return {
+        "destination": "tau",
+        "request": request[:500],
+        "orchestrator": "tau.dag_contract.v1",
+        "plan": nodes,
+        "resolution": "planned",
+        "note": "propose-only; approve to compile and run the Tau DAG",
+    }
 
 
 def _resolve_artifact(reference: str, coordinator: Any) -> dict[str, Any]:

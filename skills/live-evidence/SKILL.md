@@ -28,6 +28,10 @@ composes:
   - dogpile
   - debugger
   - surf
+  - tau
+  - ops-google-calendar
+  - analytics
+  - create-figure
 complies:
   - best-practices-skills
   - best-practices-python

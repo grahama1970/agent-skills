@@ -877,6 +877,32 @@
         ]
       },
       "notes": "Wires the live-evidence action lane to the ops-google-calendar skill. A heard scheduling request ('can we push the Sparta review to Friday?') proposes a kind=schedule action_candidate routed to ops-google-calendar, PROPOSE-ONLY -- it never auto-writes a calendar (execution needs human approval via the API plus the calendar skill's own --confirm, and OAuth). Actions are proposed independent of the card gate, so a logistics turn whose evidence card is suppressed by the filtering agent still proposes the schedule action. A control question proposes no schedule action. Proof boundary: proves the proposal + routing and the no-auto-write safety; live calendar execution needs the human's Google OAuth (see ops-google-calendar). Needs memory :8601, the sparta repo, and SciLLM."
+    },
+    {
+      "name": "compose-action-wiring",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-compose-action"
+      ],
+      "timeout_seconds": 300,
+      "infra_blocked_when": [
+        "server did not come up",
+        "INFRA_BLOCKED",
+        "scillm_transport:TimeoutError"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "visualization request proposes a compose action: PASS",
+          "compose action does NOT auto-run the skill DAG: PASS",
+          "a non-visualization question proposes no compose action: PASS",
+          "compose action: PASS"
+        ]
+      },
+      "notes": "Multi-skill composition: an analytical/visual request ('pull our latest coverage metrics and graph them as a bar chart') proposes a kind=compose action_candidate whose plan is a Tau DAG over brave-search -> analytics -> create-figure (derived from the skills' declared composes/provides valence shells). PROPOSE-ONLY: fetch+compute+render is expensive and outward-facing, so the plan is proposed and a human approves running the DAG; nothing auto-executes. Independent of the card gate. A non-visualization question proposes no compose action. Proof boundary: proves the proposal + plan + no-auto-run; running the DAG and rendering the D3/React figure is the human-approved next step (tau + analytics + create-figure). Needs memory :8601, the sparta repo, and SciLLM."
     }
   ]
 }

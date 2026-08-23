@@ -46,7 +46,7 @@ PROMPT_HEADER = (
     'needs_clarification|not_a_question","question_type":"research|code|leetcode|'
     'client|none","actionable":bool,"question_asked_yet":bool,'
     '"canonical_question":str,"clarifying_questions":[str],"confidence":float,'
-    '"action_candidates":[{"kind":"fact_check|remember_fact|open_artifact|schedule",'
+    '"action_candidates":[{"kind":"fact_check|remember_fact|open_artifact|schedule|compose",'
     '"payload":str,"summary":str}]}\n\n'
     "Rules:\n"
     "- A statement cut off mid-sentence is NOT complete; ready_to_answer=false, "
@@ -71,7 +71,10 @@ PROMPT_HEADER = (
     "  is kind=fact_check with payload=the question. A request to schedule,\n"
     "  reschedule, or move a meeting ('push this to Friday', 'set up a\n"
     "  follow-up next week') is kind=schedule, payload=the scheduling request.\n"
-    "  Only propose what was literally said.\n\n"
+    "  A request to build a chart/graph/figure/visualization/dashboard of data\n"
+    "  or metrics ('graph last quarter's numbers', 'show a chart of X') is\n"
+    "  kind=compose, payload=the visualization request. Only propose what was\n"
+    "  literally said.\n\n"
     "BUFFER:\n"
 )
 

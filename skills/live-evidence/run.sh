@@ -252,6 +252,10 @@ PY
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_schedule_action.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-compose-action)
+    shift
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_compose_action.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-review-dossier)
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_review_dossier.py" "$SCRIPT_DIR" "$@"
