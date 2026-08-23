@@ -948,6 +948,17 @@ CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
 #: would crowd out the ticket itself.
 ARTIFACT_EXCERPT_CHARS = 4000
 
+_LOCAL_PATH_IN_PROMPT = re.compile(r"(?<![\w.])(?:/home|/tmp)/[^\s`'\"),\]]+")
+
+
+def sanitize_local_paths_for_browser_prompt(text: str) -> str:
+    """Remove absolute local paths from prompts sent to browser-backed seats."""
+    def replace(match: re.Match[str]) -> str:
+        name = Path(match.group(0)).name or "path"
+        return f"[local path omitted: {name}]"
+
+    return _LOCAL_PATH_IN_PROMPT.sub(replace, text)
+
 
 def collect_closure_artifacts(comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Read the proof artifacts a closure claimed, so the audit can see them.
@@ -1023,7 +1034,7 @@ def build_closure_audit_task(
     "is this good work" but "does the closure hold against what the ticket
     asked for".
     """
-    return (
+    task = (
         f"Audit the closure of {repo}#{issue_number}: {issue_title}\n\n"
         f"Decide one thing: does the evidence below actually establish the "
         f"acceptance criterion and the required proof the ticket names?\n\n"
@@ -1049,6 +1060,7 @@ def build_closure_audit_task(
         f"--- closing evidence ---\n{evidence}\n\n"
         f"--- proof artifacts read from disk ---\n{artifacts}"
     )
+    return sanitize_local_paths_for_browser_prompt(task)
 
 
 def _extract_verdict(text: str) -> str | None:

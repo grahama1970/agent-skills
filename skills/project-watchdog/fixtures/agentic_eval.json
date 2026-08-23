@@ -86,6 +86,27 @@
       }
     },
     {
+      "name": "closure-audit-prompt-omits-local-paths",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_closure_audit_prompt_omits_absolute_local_paths",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
       "name": "unknown-project-fails-closed-and-names-it",
       "type": "negative",
       "command": [

@@ -1355,6 +1355,27 @@ def test_the_audit_prompt_tells_the_seat_the_artifacts_are_real_output(tmp_path)
     assert "PASS" in task
 
 
+def test_closure_audit_prompt_omits_absolute_local_paths(tmp_path) -> None:
+    """Browser-backed audit seats reject prompts containing live local paths."""
+    art = tmp_path / "a.txt"
+    art.write_text("PASS")
+    found = handlers.collect_closure_artifacts([_evidence_comment(str(art))])
+
+    task = handlers.build_closure_audit_task(
+        repo="o/r",
+        issue_number=1,
+        issue_title="t",
+        issue_body="read /home/graham/workspace/experiments/pdf_oxide/local/HANDOFF.md",
+        evidence="receipt: /home/graham/.local/state/project-watchdog/receipts/r/receipt.json",
+        artifacts=handlers.render_closure_artifacts(found),
+    )
+
+    assert "/home/" not in task
+    assert "/tmp/" not in task
+    assert "[local path omitted:" in task
+    assert "PASS" in task
+
+
 def test_a_comment_without_the_schema_yields_no_artifacts() -> None:
     assert handlers.collect_closure_artifacts([{"body": "```json\n{\"a\": 1}\n```"}]) == []
 
