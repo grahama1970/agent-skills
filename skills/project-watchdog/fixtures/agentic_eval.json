@@ -678,6 +678,27 @@
       }
     },
     {
+      "name": "dependency-unblock-does-not-dispatch-same-tick",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "watchdog.dependency_gate",
+        "watchdog.ticket_dispatch"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_closed_dependency_apply_clears_hold_labels_without_same_tick_dispatch skills/project-watchdog/tests/test_project_rotation.py::test_closed_dependency_dry_run_still_reports_downstream_routable"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "ticket-repair-rejects-needs-attention-without-proof",
       "type": "adversarial",
       "real_world": true,

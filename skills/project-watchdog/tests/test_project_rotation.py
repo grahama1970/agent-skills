@@ -436,7 +436,7 @@ depends_on: grahama1970/pdf_oxide#31
     assert registry.LAST_SCAN["excluded_issues"]["dependency_open"] == [31]
 
 
-def test_closed_dependency_clears_hold_labels_and_routes(monkeypatch):
+def test_closed_dependency_apply_clears_hold_labels_without_same_tick_dispatch(monkeypatch):
     issue = _dependency_issue(
         labels=["agent-work", "blocked:upstream", "maintainer-blocked", "needs-human"],
     )
@@ -461,14 +461,37 @@ def test_closed_dependency_clears_hold_labels_and_routes(monkeypatch):
         "t", {"repo": "o/agent-skills", "worktree": "/tmp/wt"}, apply=True
     )
 
-    assert [row["number"] for row in routable] == [31]
-    assert routable[0]["watchdog_dependencies"]["status"] == "resolved"
+    assert routable == []
+    assert registry.LAST_SCAN["excluded"]["dependency_unblocked_this_tick"] == 1
+    assert registry.LAST_SCAN["dependency_unblocks"][0]["status"] == "unblocked"
     assert calls == [{
         "repo": "o/agent-skills",
         "issue": 31,
         "add": None,
         "remove": ["blocked:upstream", "maintainer-blocked", "needs-human"],
     }]
+
+
+def test_closed_dependency_dry_run_still_reports_downstream_routable(monkeypatch):
+    issue = _dependency_issue(
+        labels=["agent-work", "blocked:upstream", "maintainer-blocked", "needs-human"],
+    )
+    monkeypatch.setattr(
+        registry,
+        "run_cmd",
+        _fake_dependency_scan(
+            issue,
+            upstream_state="CLOSED",
+            comments=["blocked-by: grahama1970/pdf_oxide#31"],
+        ),
+    )
+
+    routable = registry.list_routable_issues(
+        "t", {"repo": "o/agent-skills", "worktree": "/tmp/wt"}, apply=False
+    )
+
+    assert [row["number"] for row in routable] == [31]
+    assert routable[0]["watchdog_dependencies"]["status"] == "resolved"
 
 
 def test_unreadable_dependency_fails_closed(monkeypatch):

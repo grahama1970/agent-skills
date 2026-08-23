@@ -290,6 +290,16 @@ minute without an explicit retry decision.
 A tick tries them in this order and stops at the first that has work, so an
 audit can never delay a ticket that is actually waiting.
 
+### 0. Dependency unblock — clear proved upstream holds only
+
+Before repair dispatch, the scan reads `blocked-by` / `depends_on` references.
+When every upstream issue is closed as `COMPLETED`, an applied tick removes only
+the dependency hold labels (`blocked:upstream`, `maintainer-blocked`,
+`needs-human`), records `dependency_unblock` as the handled work, and exits. It
+does not dispatch the newly unblocked ticket in the same tick; the next cron
+tick handles that ticket from a fresh scan. This keeps dependency clearing from
+turning immediately into a repair DAG or a worktree-readiness failure.
+
 ### 1. Repair — `ticket_repair`
 
 `$ask tau-dag --dag-template creator-reviewer` compiles the DAG and Tau executes

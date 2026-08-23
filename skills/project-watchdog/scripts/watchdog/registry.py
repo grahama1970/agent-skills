@@ -254,6 +254,7 @@ def list_routable_issues(
     issues = json.loads(result["stdout"] or "[]")
     routable: list[dict[str, Any]] = []
     unroutable_no_repair_lane = 0
+    dependency_unblocks: list[dict[str, Any]] = []
     # Every ticket the scan passes over is recorded with its reason, so a tick
     # that dispatches nothing names the tickets it declined and why.
     excluded: dict[str, list[int]] = {}
@@ -274,6 +275,15 @@ def list_routable_issues(
         if dep["status"] in {"open", "unreadable", "unblock_failed"}:
             excluded.setdefault(str(dep["reason"]), []).append(issue_number)
             issue["watchdog_dependencies"] = dep
+            continue
+        if dep["status"] == "unblocked":
+            excluded.setdefault(str(dep["reason"]), []).append(issue_number)
+            issue["watchdog_dependencies"] = dep
+            dependency_unblocks.append({
+                "issue_number": issue_number,
+                "repo": repo,
+                **dep,
+            })
             continue
         if dep["status"] == "resolved":
             issue["watchdog_dependencies"] = dep
@@ -319,6 +329,7 @@ def list_routable_issues(
     LAST_SCAN["scanned"] = len(issues)
     LAST_SCAN["excluded"] = {reason: len(nums) for reason, nums in sorted(excluded.items())}
     LAST_SCAN["excluded_issues"] = {reason: nums for reason, nums in sorted(excluded.items())}
+    LAST_SCAN["dependency_unblocks"] = dependency_unblocks
     return routable
 
 
@@ -482,6 +493,8 @@ def dependency_gate(
             )
             return result
         result["applied"] = True
+        result["status"] = "unblocked"
+        result["reason"] = "dependency_unblocked_this_tick"
     if removed:
         _remove_dependency_hold_labels(issue)
     return result

@@ -62,7 +62,9 @@ from .registry import find_project, list_routable_issues
 #:
 #: Idle is normal. Idle for too long is the idle-streak escalation's job, not
 #: this one's.
-_SELF_CLEARING_SKIPS = frozenset({"lane_busy", "no_routable_issues"})
+_SELF_CLEARING_SKIPS = frozenset(
+    {"lane_busy", "no_routable_issues", "dependency_unblocked_this_tick"}
+)
 
 
 def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) -> None:
@@ -441,8 +443,10 @@ def _tick_locked(
             "scanned": registry.LAST_SCAN.get("scanned", 0),
             "excluded": registry.LAST_SCAN.get("excluded", {}),
             "excluded_issues": registry.LAST_SCAN.get("excluded_issues", {}),
+            "dependency_unblocks": registry.LAST_SCAN.get("dependency_unblocks", []),
         }
         issue_scans.append(scan)
+        dependency_unblocks = list(scan["dependency_unblocks"])
         if only_issue is not None:
             # Targeted repair (agent-skills#1456): lease ONLY the named issue.
             # If it is not routable right now, refuse without leasing anything
@@ -456,6 +460,24 @@ def _tick_locked(
                     "targeted_issue": int(only_issue),
                 })
                 continue
+        if dependency_unblocks and apply:
+            project, issues = candidate, []
+            receipt["issue_scans"] = issue_scans
+            receipt["excluded_counts"] = scan["excluded"]
+            receipt["excluded_issues"] = scan["excluded_issues"]
+            receipt["excluded_issue_refs"] = {
+                reason: [f"{scan['repo']}#{number}" for number in numbers]
+                for reason, numbers in scan["excluded_issues"].items()
+            }
+            receipt["dependency_unblocks"] = dependency_unblocks
+            receipt["lease_staleness"] = candidate_staleness
+            receipt["reclaimed_leases"] = reclaimed
+            receipt["in_flight"] = {
+                "issues": [int(i["number"]) for i in in_flight],
+                "targets": sorted(busy),
+                "leases": registry.LAST_LEASE_SCAN.get("active", []),
+            }
+            break
         if not found:
             skipped.append(
                 {
@@ -591,6 +613,24 @@ def _tick_locked(
     streaks.clear_idle(project_id)
 
     receipt["scanned_issues"] = issues
+    if not issues and receipt.get("dependency_unblocks"):
+        receipt["handled_issues"].extend(
+            {
+                "action": "dependency_unblock",
+                "issue_number": int(row["issue_number"]),
+                "repo": row["repo"],
+                "ok": True,
+                "status": "COMPLETED",
+                "removed_labels": row.get("removed_labels", []),
+                "refs": row.get("refs", []),
+            }
+            for row in receipt["dependency_unblocks"]
+        )
+        receipt["handled_count"] = len(receipt["handled_issues"])
+        receipt["ok"] = True
+        receipt["status"] = "COMPLETED"
+        receipt["stop_reason"] = "dependency_unblocked_this_tick"
+        return finish(run_id, receipt_dir, receipt, 0, persist=True)
     # A period wider than the observed maximum tick makes overlap unlikely; a
     # deadline below the period makes it structural. Without one the lock is
     # the only thing standing between a slow tick and a queue of skipped ones,
