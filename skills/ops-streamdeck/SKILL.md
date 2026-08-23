@@ -136,6 +136,13 @@ The streamdeck project has two components:
 | Command                | Description                                                                 |
 | ---------------------- | --------------------------------------------------------------------------- |
 | `audit-display-safety` | Non-mutating audit for meeting/display button routes and KDE scale hazards  |
+| `dynamic-stage-check`  | Non-mutating compile/stage check for voice/chat dynamic page requests       |
+
+### Dynamic Pages
+
+| Command               | Description                                                                 |
+| --------------------- | --------------------------------------------------------------------------- |
+| `dynamic-stage-check` | Compiles a semantic `streamdeck.dynamic_page_request.v1` request through the live streamdeck CLI and verifies staged artifacts without hardware effects |
 
 ### Configuration
 
@@ -220,6 +227,40 @@ For meeting/display button work:
   `audit-display-safety` readback has passed.
 - If display recovery is needed, use the separate workstation rollback plan and
   do not fold recovery commands into Stream Deck meeting automation.
+
+## Dynamic Page Safety
+
+Voice commands and SPARTA Explorer chat must enter the Stream Deck through the
+semantic request boundary, not by emitting raw button commands. The safe request
+shape is `streamdeck.dynamic_page_request.v1`; it names source, request id,
+intent text, context refs, confidence, lifetime, and optional catalog recipe id.
+
+The compiler selects a catalog recipe and emits a staged
+`streamdeck.dynamic_page_manifest.v1` artifact. Button commands in that artifact
+must be dispatcher bindings such as:
+
+```text
+streamdeck-cli action invoke --binding <binding-id>
+```
+
+The request boundary rejects raw executable fields such as `buttons`, `command`,
+`keys`, or `write`, and rejects workstation primitives such as `xrandr`,
+`kscreen`, `nvidia-settings`, KDE scale terms, process kill commands, and shell
+composition tokens.
+
+Use this non-mutating proof command after dynamic-page or voice/SPARTA page
+changes:
+
+```bash
+./run.sh dynamic-stage-check
+```
+
+It calls `/home/graham/workspace/streamdeck/.venv/bin/streamdeck-cli page
+stage-request`, writes artifacts under `/tmp/ops-streamdeck-dynamic-stage-check`
+unless `STREAMDECK_DYNAMIC_STAGE_OUTPUT` is set, and requires
+`external_effects=false`, `recipe_id=sparta_review_controls`, two dispatcher
+bindings, and an inspectable staged manifest. This does not prove physical
+button rendering, action-dispatch semantics, or deployment to hardware.
 
 ## Configuration
 
@@ -376,11 +417,14 @@ rules, or any meeting/display button path:
 ```
 
 The eval exercises a live local status path, a fail-closed malformed button
-request, nested button-state readback, `audit-states`, and
-`audit-display-safety`, which non-mutatingly checks live config/templates/scripts
-for hazardous display and KDE scale routes. It does not prove physical button
-rendering, USB hardware availability, light behavior, daemon API correctness,
-actual meeting button execution, or safe persistent config mutation.
+request, nested button-state readback, `audit-states`, `audit-display-safety`,
+and `dynamic-stage-check`. The display audit non-mutatingly checks live
+config/templates/scripts for hazardous display and KDE scale routes. The
+dynamic check non-mutatingly compiles a semantic voice/SPARTA request to staged
+artifacts. It does not prove physical button rendering, USB hardware
+availability, light behavior, daemon API correctness, actual meeting button
+execution, action-dispatch semantics, deployment to hardware, or safe persistent
+config mutation.
 
 ### Adding New Features
 

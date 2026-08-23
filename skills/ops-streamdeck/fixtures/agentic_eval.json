@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "ops-streamdeck",
   "trials": 3,
-  "proof_scope": "Stream Deck operations command posture and non-mutating workstation display-safety guardrails",
+  "proof_scope": "Stream Deck operations command posture, non-mutating workstation display-safety guardrails, and semantic dynamic page staging",
   "claims": {
-    "proves": "the skill entrypoint can query live local Stream Deck status, fails closed for malformed button execution requests, audits configured button states, and detects unsafe meeting/display button routes before they mutate workstation display state",
-    "does_not_prove": "physical button rendering, USB hardware availability, light behavior, daemon API correctness, command semantics for every executable button, actual meeting button execution, or safe persistent config mutation"
+    "proves": "the skill entrypoint can query live local Stream Deck status, fails closed for malformed button execution requests, audits configured button states, detects unsafe meeting/display button routes before they mutate workstation display state, and compiles a semantic voice/SPARTA dynamic page request into staged artifacts without hardware effects",
+    "does_not_prove": "physical button rendering, USB hardware availability, light behavior, daemon API correctness, command semantics for every executable button, actual meeting button execution, action-dispatch semantics, deployment to hardware, or safe persistent config mutation"
   },
   "cases": [
     {
@@ -95,6 +95,27 @@
           "\"meeting_button_command\": \"/home/graham/workspace/streamdeck/scripts/meeting-mode.sh\"",
           "\"display_mutation_guard\": true",
           "\"display_mutation_env\": true"
+        ]
+      }
+    },
+    {
+      "name": "semantic-dynamic-page-request-stages-without-hardware-effects",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "dynamic-stage-check"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true",
+          "\"external_effects\": false",
+          "\"recipe_id\": \"sparta_review_controls\"",
+          "\"binding_count\": 2",
+          "\"manifest_schema\": true",
+          "\"dispatcher_bindings\": true"
         ]
       }
     }

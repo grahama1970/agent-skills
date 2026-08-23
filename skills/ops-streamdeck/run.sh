@@ -52,6 +52,8 @@ COMMANDS:
     audit-states    Non-mutating audit of all configured button states
     audit-display-safety
                     Non-mutating audit for meeting/display button hazards
+    dynamic-stage-check
+                    Non-mutating dynamic page request staging check
     config          Configuration commands
     health-check    Verify services and button icons
     fix             Auto-fix button configuration (safe)
@@ -86,6 +88,8 @@ AUDIT COMMANDS:
     audit-states       Validate every configured page/button/state without executing commands
     audit-display-safety
                        Verify meeting/display buttons do not route to display topology or KDE scale mutation
+    dynamic-stage-check
+                       Compile a semantic voice/chat request into staged Stream Deck artifacts without hardware effects
 
 CONFIG COMMANDS:
     config             Show current configuration
@@ -564,6 +568,77 @@ sys.exit(0 if summary["ok"] else 1)
 AUDIT_DISPLAY_SAFETY_EOF
 }
 
+dynamic_stage_check() {
+    local project_root="${STREAMDECK_PROJECT:-/home/graham/workspace/streamdeck}"
+    local cli="${STREAMDECK_CLI:-$project_root/.venv/bin/streamdeck-cli}"
+    local output_dir="${STREAMDECK_DYNAMIC_STAGE_OUTPUT:-/tmp/ops-streamdeck-dynamic-stage-check}"
+
+    if [ ! -x "$cli" ]; then
+        error "streamdeck CLI not executable: $cli"
+        exit 1
+    fi
+
+    mkdir -p "$output_dir"
+
+    local request
+    request='{
+      "schema": "streamdeck.dynamic_page_request.v1",
+      "source": "ops_streamdeck_eval",
+      "request_id": "ops.dynamic.stage.001",
+      "intent_text": "Create SPARTA evidence review controls",
+      "context_refs": ["sparta:evidence-review"],
+      "transcript_confidence": 0.99,
+      "requested_lifetime": "meeting"
+    }'
+
+    local receipt
+    if ! receipt="$("$cli" page stage-request --json "$request" --output-dir "$output_dir")"; then
+        error "dynamic page stage-request failed"
+        exit 1
+    fi
+
+    RECEIPT_JSON="$receipt" python3 << 'DYNAMIC_STAGE_CHECK_EOF'
+import json
+import os
+import sys
+from pathlib import Path
+
+receipt = json.loads(os.environ["RECEIPT_JSON"])
+manifest_path = Path(receipt["manifest_path"])
+staged = json.loads(manifest_path.read_text())
+
+checks = {
+    "status": receipt.get("status") == "STAGED",
+    "external_effects": receipt.get("external_effects") is False,
+    "source": receipt.get("source") == "dynamic_request",
+    "recipe_id": receipt.get("recipe_id") == "sparta_review_controls",
+    "binding_count": receipt.get("binding_count") == 2,
+    "manifest_exists": manifest_path.exists(),
+    "manifest_schema": staged.get("schema") == "streamdeck.dynamic_page_manifest.v1",
+    "manifest_deployment_state": staged.get("deployment_state") == "staged",
+    "manifest_external_effects": staged.get("external_effects") is False,
+    "dispatcher_bindings": all(
+        button.get("command", "").startswith("streamdeck-cli action invoke --binding ")
+        for button in staged.get("buttons", [])
+    ),
+}
+
+summary = {
+    "ok": all(checks.values()),
+    "checks": checks,
+    "receipt_path": receipt.get("receipt_path"),
+    "manifest_path": str(manifest_path),
+    "recipe_id": receipt.get("recipe_id"),
+    "page_instance_id": receipt.get("page_instance_id"),
+    "binding_count": receipt.get("binding_count"),
+    "external_effects": receipt.get("external_effects"),
+}
+
+print(json.dumps(summary, indent=2, sort_keys=True))
+sys.exit(0 if summary["ok"] else 1)
+DYNAMIC_STAGE_CHECK_EOF
+}
+
 # Status queries
 status_show() {
     local mode="${1:-}"
@@ -964,6 +1039,11 @@ case "$COMMAND" in
     # Non-mutating display/workstation safety audit
     audit-display-safety|display-safety)
         audit_display_safety
+        ;;
+
+    # Non-mutating dynamic page request staging check
+    dynamic-stage-check|dynamic-page-stage-check)
+        dynamic_stage_check
         ;;
     
     # Config commands
