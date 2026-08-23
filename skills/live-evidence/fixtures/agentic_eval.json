@@ -903,6 +903,31 @@
         ]
       },
       "notes": "Multi-skill composition: an analytical/visual request ('pull our latest coverage metrics and graph them as a bar chart') proposes a kind=compose action_candidate whose plan is a Tau DAG over brave-search -> analytics -> create-figure (derived from the skills' declared composes/provides valence shells). PROPOSE-ONLY: fetch+compute+render is expensive and outward-facing, so the plan is proposed and a human approves running the DAG; nothing auto-executes. Independent of the card gate. A non-visualization question proposes no compose action. Proof boundary: proves the proposal + plan + no-auto-run; running the DAG and rendering the D3/React figure is the human-approved next step (tau + analytics + create-figure). Needs memory :8601, the sparta repo, and SciLLM."
+    },
+    {
+      "name": "research-lane-selection",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-research-lane"
+      ],
+      "timeout_seconds": 300,
+      "infra_blocked_when": [
+        "server did not come up",
+        "INFRA_BLOCKED",
+        "scillm_transport:TimeoutError"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "deep/comparative research routes to dogpile: PASS",
+          "quick current-fact research routes to brave: PASS",
+          "research lane: PASS"
+        ]
+      },
+      "notes": "External research picks the right skill by question shape: a deep/comparative question ('deep dive comparing approaches to RAG in the literature') routes to /dogpile (the deep aggregator over web/code/papers/videos); a quick current-fact question ('latest released version of MITRE SPARTA') routes to /brave-search. The lane is a deterministic first-class field (research_lane) on EVERY proposed fact_check candidate -- whether the resolver authored it or the research auto-proposal did -- and the fact_check executor routes to that lane. Still propose-only (human approves the egress; the raw transcript never leaves). Needs memory :8601, the sparta repo, and SciLLM."
     }
   ]
 }

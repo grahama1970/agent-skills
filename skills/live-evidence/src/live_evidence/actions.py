@@ -97,7 +97,14 @@ class ActionEngine:
                                  "action_ids": [c.action_id for c in accepted],
                                  "candidates": [
                                      {"action_id": c.action_id, "kind": c.kind,
-                                      "summary": c.summary[:200]}
+                                      "summary": c.summary[:200],
+                                      # The external-research destination is
+                                      # deterministic from the query, whether the
+                                      # candidate came from the resolver or the
+                                      # research auto-proposal: dogpile for deep/
+                                      # comparative, brave for a quick fact.
+                                      **({"research_lane": research_lane(c.payload)}
+                                         if c.kind == "fact_check" else {})}
                                      for c in accepted
                                  ]})
         return accepted
@@ -151,9 +158,12 @@ class ActionEngine:
                 return candidate
             from .models import ManualSearchRequest, RetrievalLane
 
+            lane = (RetrievalLane.DOGPILE if research_lane(candidate.payload) == "dogpile"
+                    else RetrievalLane.BRAVE)
             card = await coordinator.manual_search(
-                ManualSearchRequest(lane=RetrievalLane.BRAVE, query=candidate.payload[:500])
+                ManualSearchRequest(lane=lane, query=candidate.payload[:500])
             )
+            receipt["research_lane"] = lane.value
             supported = bool(card.sources)
             receipt.update({"card_id": card.card_id, "sources": len(card.sources),
                             "resolution": "supported" if supported else "unresolved"})
@@ -303,9 +313,10 @@ async def propose_research(coordinator: Any, state: Any, journal: Any, *,
         coordinator.actions = ActionEngine(
             purpose=state.session_purpose(), policy=policy, policy_digest=digest,
         )
+    lane = research_lane(query)
     coordinator.actions.propose(
         [{"kind": "fact_check",
-          "summary": f"Research externally: {query[:140]}",
+          "summary": f"Research externally ({lane}): {query[:130]}",
           "payload": query[:500]}],
         trigger_event_ids=trigger_event_ids,
         question_id=question_id, question_revision=question_revision,
@@ -314,6 +325,23 @@ async def propose_research(coordinator: Any, state: Any, journal: Any, *,
         await journal.append(state.session_id(), entry.pop("kind"), entry,
                              policy_digest=digest)
     coordinator.actions.journal.clear()
+
+
+_DEEP_RESEARCH_MARKERS = (
+    "deep dive", "deep research", "comprehensive", "compare approaches",
+    "survey", "literature", "state of the art", "in depth", "in-depth",
+    "thorough", "prior work", "papers on", "research paper", "benchmark",
+    "landscape", "pros and cons", "trade-offs", "tradeoffs",
+)
+
+
+def research_lane(query: str) -> str:
+    """Pick the research skill for a proposed external lookup: DOGPILE (the
+    deep aggregator over web/code/papers/videos) for a multi-source or
+    comparative question, else BRAVE for a quick current-fact lookup."""
+
+    text = query.lower()
+    return "dogpile" if any(m in text for m in _DEEP_RESEARCH_MARKERS) else "brave"
 
 
 def research_warranted(card: Any, verdict: Any, ranked: list) -> bool:
