@@ -8,6 +8,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from . import readback as _readback
+from .readback import AtsProbe
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json, write_jsonl
 
 from dotenv import load_dotenv
@@ -343,9 +345,45 @@ def _propagate_duplicate_history(best: dict[str, dict[str, Any]], candidates: li
             survivor["application_history_state"] = states[0]
 
 
-def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
+def _same_employer(a: str, b: str) -> bool:
+    """Loose employer-name equality for primary-source cross-reference."""
+    def norm(s: str) -> str:
+        s = re.sub(r"[^a-z0-9 ]+", " ", (s or "").lower())
+        drop = {"inc", "llc", "ltd", "corp", "corporation", "company", "co", "the",
+                "comprehensive", "center", "centre", "group", "solutions", "technologies",
+                "technology", "labs", "systems"}
+        return " ".join(w for w in s.split() if w and w not in drop)
+    na, nb = norm(a), norm(b)
+    if not na or not nb:
+        return False
+    return na == nb or na in nb or nb in na
+
+
+def _run_local_ats_probe(candidates: list[dict[str, Any]]) -> "AtsProbe":
+    """A primary-source probe that corroborates a LinkedIn locator against the
+    primary-ATS postings already discovered in THIS run. Zero new network and
+    deterministic: if the employer's Greenhouse/Lever/Ashby posting was found
+    independently, the locator is confirmed and promoted; otherwise it stays a
+    locator (and WNY ones are surfaced as pending verification, never buried)."""
+    primaries = [c for c in candidates if not _readback._is_linkedin_locator(c)
+                 and not _is_source_intel_candidate(c)]
+
+    def probe(org: str) -> list[dict[str, Any]]:
+        return [c for c in primaries if _same_employer(org, str(c.get("organization") or ""))]
+
+    return probe
+
+
+def rank(discovery_run: Path, limit: int, out_dir: Path,
+         ats_probe: "AtsProbe | None" = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     candidates = _load_candidates(discovery_run)
+    # Primary-source readback: promote LinkedIn-located WNY roles that a primary
+    # ATS source corroborates into the rankable pool; surface the rest as
+    # pending-verification instead of burying them in non-actionable source-intel.
+    probe = ats_probe if ats_probe is not None else _run_local_ats_probe(candidates)
+    candidates, readback_receipts = _readback.promote_linkedin_locators(candidates, probe)
+    write_jsonl(out_dir / "readback-receipts.jsonl", readback_receipts)
     candidates, duplicates_dropped, merged_into = dedupe_postings(candidates)
     eligibility_receipts = []
     ranking_receipts = []
@@ -432,6 +470,9 @@ def rank(discovery_run: Path, limit: int, out_dir: Path) -> dict[str, Any]:
         "shortlisted": len(shortlist),
         "source_intel_shortlisted": len(source_intel_shortlist),
         "rejected_or_review": len(rejections),
+        "linkedin_readback_attempts": len(readback_receipts),
+        "linkedin_readback_promoted": sum(1 for r in readback_receipts if r.get("status") == "PRIMARY_CONFIRMED"),
+        "linkedin_readback_pending": sum(1 for r in readback_receipts if r.get("status") != "PRIMARY_CONFIRMED"),
     }
     write_jsonl(out_dir / "eligibility-receipts.jsonl", eligibility_receipts)
     write_jsonl(out_dir / "ranking-receipts.jsonl", ranking_receipts)

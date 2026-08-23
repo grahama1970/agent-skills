@@ -253,6 +253,32 @@
       }
     },
     {
+      "name": "wny-linkedin-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "discovery.linkedin_evidence_merge"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_wny_linkedin_readback.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WNY_LINKEDIN_READBACK_OK"
+        ],
+        "stderr_excludes": [
+          "WNY_PROMOTION_MISSING",
+          "WNY_PROMOTION_NOT_RANKABLE",
+          "WNY_MISS_BURIED",
+          "REMOTE_LOCATOR_ACTIONABLE"
+        ]
+      }
+    },
+    {
       "name": "self-heal-files-ticket-wiring",
       "type": "adversarial",
       "real_world": true,

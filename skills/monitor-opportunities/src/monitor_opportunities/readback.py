@@ -1,0 +1,169 @@
+"""Primary-source readback: promote LinkedIn-located roles to real opportunities.
+
+The research-first architecture is "locate via aggregator, then read the primary
+source." The locate half runs (LinkedIn Jobs rows become source-intelligence),
+but the readback half was never built, so every LinkedIn-located role was
+quarantined as ``LOCATOR_ONLY`` / ``action_worthy: False`` and could never enter
+the ranked opportunity shortlist. Because Buffalo/WNY roles surface almost
+entirely via LinkedIn, the highest-priority geography was structurally absent
+from the actionable list every run (diagnosed 2026-08-23 against
+run-20260823T060000Z: 6 eligible WNY_ONSITE roles, all stuck in source_intel).
+
+This module performs the missing readback. For a LinkedIn locator it asks a
+primary-source probe (the employer's own Greenhouse/Lever/Ashby board, reusing
+the existing discovery adapters) whether the same posting exists on a primary
+source. On a confirmed match the locator is PROMOTED into a full primary-source
+candidate bound to the employer URL, so it flows through the normal
+eligibility -> fit -> ranking path and competes for the shortlist. On no match
+a WNY-priority locator is NOT silently buried: it is surfaced as
+``PENDING_PRIMARY_VERIFICATION`` / ``action_worthy: True`` so the human can
+verify and apply.
+
+The probe is dependency-injected so this is deterministic to test without
+network; production wires it to the live ATS adapters.
+"""
+
+from __future__ import annotations
+
+import re
+from difflib import SequenceMatcher
+from typing import Any, Callable, Protocol
+
+from .util import stable_id
+
+# Geographies that get an active primary-source readback. Buffalo is the hard
+# constraint, so WNY roles are resolved first; a locator elsewhere stays intel.
+READBACK_PRIORITY_GEO = frozenset({"WNY_HYBRID", "WNY_ONSITE"})
+
+_TITLE_MATCH_THRESHOLD = 0.60
+
+# A primary-source probe takes an employer name and returns whatever primary-ATS
+# candidates it can find for that employer (each shaped like a discovery
+# candidate: source_provider greenhouse/lever/ashby, title, primary_evidence_url,
+# workplace_type, ...). It must never return a LinkedIn/locator row.
+AtsProbe = Callable[[str], list[dict[str, Any]]]
+
+
+def _is_linkedin_locator(candidate: dict[str, Any]) -> bool:
+    return candidate.get("source_provider") in {
+        "human_supplied_linkedin",
+        "ops_linkedin_authorized_read_only",
+    }
+
+
+def _normalize_title(title: str) -> str:
+    t = (title or "").lower()
+    # Drop seniority/level noise and punctuation so "Senior Computational
+    # Scientist" matches "Computational Scientist".
+    t = re.sub(r"[^a-z0-9 ]+", " ", t)
+    noise = {"senior", "sr", "staff", "principal", "lead", "junior", "jr", "i", "ii", "iii",
+             "the", "a", "of", "and", "-"}
+    tokens = [w for w in t.split() if w and w not in noise]
+    return " ".join(tokens)
+
+
+def _title_similarity(a: str, b: str) -> float:
+    na, nb = _normalize_title(a), _normalize_title(b)
+    if not na or not nb:
+        return 0.0
+    if na == nb:
+        return 1.0
+    return SequenceMatcher(None, na, nb).ratio()
+
+
+def _best_primary_match(
+    locator: dict[str, Any], primaries: list[dict[str, Any]]
+) -> tuple[dict[str, Any] | None, float]:
+    """The primary-ATS posting that best matches the locator's title, if any is
+    above threshold. Locator rows are never accepted as their own primary."""
+    title = locator.get("title", "")
+    best: dict[str, Any] | None = None
+    best_score = 0.0
+    for cand in primaries:
+        if _is_linkedin_locator(cand):
+            continue
+        score = _title_similarity(title, str(cand.get("title", "")))
+        if score > best_score:
+            best, best_score = cand, score
+    if best is not None and best_score >= _TITLE_MATCH_THRESHOLD:
+        return best, best_score
+    return None, best_score
+
+
+def resolve_primary_source(
+    locator: dict[str, Any], ats_probe: AtsProbe
+) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    """Attempt primary-source readback for one LinkedIn locator.
+
+    Returns ``(promoted_candidate | None, receipt)``. ``promoted_candidate`` is a
+    full primary-source candidate (so downstream ranking treats it as a real
+    opportunity) carrying provenance back to the LinkedIn row. The receipt records
+    the outcome for the report's source-integrity accounting.
+    """
+    org = str(locator.get("organization") or "")
+    locator_url = locator.get("primary_evidence_url") or locator.get("posting_url")
+    receipt: dict[str, Any] = {
+        "receipt_id": stable_id("readback", locator.get("candidate_id", org)),
+        "kind": "primary_source_readback",
+        "organization": org,
+        "title": locator.get("title"),
+        "workplace_type": locator.get("workplace_type"),
+        "locator_url": locator_url,
+        "locator_source": locator.get("source_provider"),
+    }
+    try:
+        primaries = ats_probe(org) or []
+    except Exception as exc:  # noqa: BLE001 - a probe failure is INDETERMINATE, never a match
+        receipt["status"] = "READBACK_ERROR"
+        receipt["detail"] = f"{type(exc).__name__}: {exc}"[:200]
+        return None, receipt
+
+    match, score = _best_primary_match(locator, primaries)
+    receipt["primaries_seen"] = len(primaries)
+    receipt["best_title_score"] = round(score, 3)
+    if match is None:
+        receipt["status"] = "NO_PRIMARY_FOUND"
+        return None, receipt
+
+    promoted = dict(match)
+    promoted["located_via"] = "linkedin"
+    promoted["locator_url"] = locator_url
+    promoted["locator_candidate_id"] = locator.get("candidate_id")
+    promoted["readback_receipt_id"] = receipt["receipt_id"]
+    # Keep the priority geography from the locator when the primary posting is
+    # geographically vaguer; the locator already established WNY.
+    if locator.get("workplace_type") in READBACK_PRIORITY_GEO and not promoted.get("workplace_type") in READBACK_PRIORITY_GEO:
+        promoted["workplace_type"] = locator["workplace_type"]
+    receipt["status"] = "PRIMARY_CONFIRMED"
+    receipt["primary_url"] = match.get("primary_evidence_url") or match.get("posting_url")
+    receipt["primary_provider"] = match.get("source_provider")
+    return promoted, receipt
+
+
+def promote_linkedin_locators(
+    candidates: list[dict[str, Any]], ats_probe: AtsProbe
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Run primary-source readback across a candidate set.
+
+    Returns ``(candidates_out, readback_receipts)``. Each WNY-priority LinkedIn
+    locator is either replaced by a confirmed primary-source candidate (promoted
+    into the rankable pool) or annotated ``pending_primary_verification`` so it is
+    surfaced as human-actionable instead of buried. Non-priority locators and
+    non-locators pass through unchanged.
+    """
+    out: list[dict[str, Any]] = []
+    receipts: list[dict[str, Any]] = []
+    for cand in candidates:
+        if not _is_linkedin_locator(cand) or cand.get("workplace_type") not in READBACK_PRIORITY_GEO:
+            out.append(cand)
+            continue
+        promoted, receipt = resolve_primary_source(cand, ats_probe)
+        receipts.append(receipt)
+        if promoted is not None:
+            out.append(promoted)
+        else:
+            annotated = dict(cand)
+            annotated["pending_primary_verification"] = True
+            annotated["readback_receipt_id"] = receipt["receipt_id"]
+            out.append(annotated)
+    return out, receipts
