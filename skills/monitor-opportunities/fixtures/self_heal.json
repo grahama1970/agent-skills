@@ -82,6 +82,30 @@
       ]
     },
     {
+      "name": "linkedin-locator-not-action-worthy-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_source_admission.py::test_pending_linkedin_locator_remains_visible_but_not_action_worthy -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "LINKEDIN_LOCATOR_ACTIONABLE"
+        ]
+      },
+      "seams": [
+        "report.source_intel",
+        "discovery.linkedin_locator"
+      ]
+    },
+    {
       "name": "response-hardening-regression",
       "type": "adversarial",
       "real_world": true,

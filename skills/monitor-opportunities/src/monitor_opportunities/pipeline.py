@@ -378,10 +378,8 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
         }
     if _is_linkedin_locator(candidate):
         # A WNY-priority locator that primary-source readback could not confirm
-        # this run is surfaced as human-actionable pending verification rather
-        # than buried as non-actionable intel — Buffalo is the hard-constraint
-        # geography and must reach the human even before a primary source is
-        # resolved. All other locators stay LOCATOR_ONLY.
+        # this run remains visible, but LinkedIn locator evidence is still
+        # source intelligence only until primary-source readback admits it.
         pending = bool(candidate.get("pending_primary_verification"))
         return {
             "signal_id": stable_id("source-intel", candidate["candidate_id"]),
@@ -400,7 +398,7 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
                 if not pending else
                 "WNY priority: no primary ATS source corroborated this run — verify the employer posting, then apply.",
             ],
-            "action_worthy": pending,
+            "action_worthy": False,
             "visible_in_report": True,
         }
     if _is_github_intelligence(candidate):

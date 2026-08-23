@@ -24,6 +24,27 @@ def test_linkedin_only_candidate_is_source_intel_not_opportunity() -> None:
     assert all(item and item["decision"] == "LOCATOR_ONLY" for item in intel)
 
 
+def test_pending_linkedin_locator_remains_visible_but_not_action_worthy() -> None:
+    intel = _source_intel(
+        {
+            "candidate_id": "candidate:a:pending-linkedin",
+            "lane": "A",
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": "src:linkedin",
+            "title": "Machine Learning Engineer IV, Data",
+            "organization": "ACV Auctions",
+            "posting_url": "https://www.linkedin.com/jobs/view/123",
+            "pending_primary_verification": True,
+        }
+    )
+
+    assert intel is not None
+    assert intel["signal_type"] == "LINKEDIN_LOCATOR"
+    assert intel["decision"] == "PENDING_PRIMARY_VERIFICATION"
+    assert intel["visible_in_report"] is True
+    assert intel["action_worthy"] is False
+
+
 def test_report_visible_opportunity_must_cite_known_accepted_source_receipt() -> None:
     data = copy.deepcopy(built_in_fixture())
     data["opportunities"][0]["source_receipt_ids"] = ["src:missing"]

@@ -13,7 +13,7 @@ This guard exercises the real functions and fails (exit 1) if:
   - a WNY LinkedIn locator whose employer HAS a same-run primary ATS posting is
     NOT promoted into the rankable opportunity pool; or
   - a WNY LinkedIn locator with NO primary corroboration is buried
-    (action_worthy False / decision LOCATOR_ONLY) instead of surfaced as
+    (not visible / decision LOCATOR_ONLY) instead of surfaced as
     PENDING_PRIMARY_VERIFICATION; or
   - a non-WNY LinkedIn locator is wrongly promoted or made action-worthy.
 """
@@ -82,8 +82,17 @@ def main() -> int:
         failures.append("WNY_MISS_NOT_SURFACED: uncorroborated WNY locator was not flagged pending_primary_verification")
     else:
         si = pipeline._source_intel(miss)
-        if not (si and si.get("action_worthy") and si.get("decision") == "PENDING_PRIMARY_VERIFICATION"):
-            failures.append(f"WNY_MISS_BURIED: uncorroborated WNY locator not action-worthy pending (got {si and si.get('decision')}, action_worthy={si and si.get('action_worthy')})")
+        if not (
+            si
+            and si.get("visible_in_report") is True
+            and si.get("action_worthy") is False
+            and si.get("decision") == "PENDING_PRIMARY_VERIFICATION"
+        ):
+            failures.append(
+                "WNY_MISS_BURIED: uncorroborated WNY locator not visible pending "
+                f"(got {si and si.get('decision')}, action_worthy={si and si.get('action_worthy')}, "
+                f"visible_in_report={si and si.get('visible_in_report')})"
+            )
 
     # 3. non-WNY locator untouched (still a plain, non-actionable locator)
     remote = next((c for c in out if c.get("candidate_id") == "remote-loc"), None)
