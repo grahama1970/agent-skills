@@ -33,6 +33,11 @@ from monitor_opportunities.util import read_json  # noqa: E402
 BASE_SECTION_MARKERS = ("SUMMARY", "CORE SKILLS", "PROFESSIONAL EXPERIENCE")
 MIN_REQUIRED_MARKERS = 2
 MIN_RESUME_BYTES = 1500  # the stub is ~370 bytes; the composed base is ~4.4 KB
+UNAPPROVED_METRIC_MARKERS = (
+    "80% reduction in compliance verification costs",
+    "3-5x more critical issues found",
+    "3\u20135x more critical issues found",
+)
 
 
 def _fixture_posting(claim_keys: list[str]) -> dict[str, object]:
@@ -78,6 +83,16 @@ def main() -> int:
             "The nightly tailoring path must compose the ATS base resume + "
             "claim-bound highlights (see resume_artifact.build_variant_markdown), "
             "not emit only the claim-highlights delta.",
+            file=sys.stderr,
+        )
+        return 1
+
+    unapproved_metrics = [marker for marker in UNAPPROVED_METRIC_MARKERS if marker in resume_txt]
+    if unapproved_metrics:
+        print(
+            "RESUME_UNAPPROVED_METRIC_REGRESSION: active base resume injected "
+            f"unsupported metric text into tailored output: {unapproved_metrics}. "
+            "Remove or approve the metric in the claim ledger before rendering.",
             file=sys.stderr,
         )
         return 1
