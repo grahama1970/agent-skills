@@ -279,6 +279,75 @@
       }
     },
     {
+      "name": "recognition-evidence-reliability-recorded-shortlist",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 60,
+      "seams": [
+        "recognition.evidence_routing"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_recognition_evidence_reliability.py --samples 3 --out local/evals/recognition-evidence-reliability.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RECOGNITION_EVIDENCE_RELIABILITY_OK",
+          "mocked=yes",
+          "live=no"
+        ],
+        "stderr_excludes": [
+          "RECOGNITION_EVIDENCE_ROUTE_MISMATCH",
+          "RECOGNITION_EVIDENCE_INVENTED_ROUTE",
+          "RECOGNITION_EVIDENCE_NO_SHORTLIST"
+        ],
+        "artifacts": [
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "min_bytes": 512
+          },
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "json_pointer": "/opportunity_count",
+            "equals": 8
+          },
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "json_pointer": "/samples_per_opportunity",
+            "equals": 3
+          },
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "json_pointer": "/route_pass_rate",
+            "equals": 1.0
+          },
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "json_pointer": "/invented_warm_route_count",
+            "equals": 0
+          },
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "json_pointer": "/mocked",
+            "equals": true
+          },
+          {
+            "path": "../local/evals/recognition-evidence-reliability.json",
+            "json_pointer": "/live",
+            "equals": false
+          }
+        ]
+      }
+    },
+    {
       "name": "wny-linkedin-readback",
       "type": "adversarial",
       "real_world": true,
