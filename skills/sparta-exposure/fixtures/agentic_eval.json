@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "skill": "sparta-exposure",
+  "eval_tier": "compliance",
+  "trials": 2,
+  "proof_scope": "SPARTA exposure skill contract guard through the real local skill entrypoint",
+  "mocked": false,
+  "live": false,
+  "claims": {
+    "proves": "the sparta-exposure skill contract contains the required SPARTA/F-36 scope, fail-closed exposure routing examples, data-qid boundary, draft/human signoff boundary, and local validator behavior across repeated trials",
+    "does_not_prove": "live Memory intent routing, extract-entities service output, create-evidence-case output, monitor-sparta freshness reads, or Sparta Explorer read-model integration"
+  },
+  "what_was_exercised": "the real sparta-exposure run.sh local contract checker",
+  "what_remains_unverified": "live service integration with Memory, ArangoDB, monitor-sparta, and Sparta Explorer",
+  "cases": [
+    {
+      "name": "contract-check",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "../run.sh", "check", "--json"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["SPARTA_EXPOSURE_CONTRACT_OK", "\"live_memory_arango_monitor_explorer\": false"]
+      }
+    },
+    {
+      "name": "bare-exposure-must-clarify",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "../run.sh", "check", "--json", "--scenario", "bare_exposure"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"scenario_route\": \"clarify_missing_target\""]
+      }
+    },
+    {
+      "name": "unsupported-premise-must-not-answer",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "../run.sh", "check", "--json", "--scenario", "unsupported_premise"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"scenario_route\": \"clarify_unsupported_premise\""]
+      }
+    },
+    {
+      "name": "sampled-contract-sweep",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": ["bash", "../run.sh", "check", "--json", "--samples", "64", "--seed", "13"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["SPARTA_EXPOSURE_CONTRACT_OK", "\"sampled_cases\": 64"]
+      }
+    }
+  ]
+}
