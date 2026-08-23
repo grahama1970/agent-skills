@@ -40,6 +40,54 @@ def test_current_registry_passes_strict_contract():
     assert "previous_video_attachment_value" in report["terminal_hypotheses"]
     assert "cognitive_value_pctom" in report["nonterminal_hypotheses"]
     assert report["immutable_goal_completion_claimed"] is False
+    assert report["live"] is False
+
+
+def test_live_github_transfer_readback_passes(monkeypatch):
+    def fake_read(kind, repo, number):
+        assert kind == "DOWNSTREAM_ISSUE"
+        assert repo == "grahama1970/chatterbox"
+        assert number == 7
+        return {
+            "number": 7,
+            "state": "OPEN",
+            "url": "https://github.com/grahama1970/chatterbox/issues/7",
+        }
+
+    monkeypatch.setattr(checker, "read_downstream_artifact", fake_read)
+
+    report = checker.validate_registry(_registry(), strict=True, allow_live_github=True)
+
+    assert report["status"] == "PASS_DISPOSITION_REGISTRY"
+    assert report["live"] is True
+    assert report["live_github_enabled"] is True
+    assert report["live_checks"][0]["actual_state"] == "OPEN"
+
+
+def test_live_github_transfer_state_mismatch_blocks(monkeypatch):
+    def fake_read(_kind, _repo, _number):
+        return {
+            "number": 7,
+            "state": "CLOSED",
+            "url": "https://github.com/grahama1970/chatterbox/issues/7",
+        }
+
+    monkeypatch.setattr(checker, "read_downstream_artifact", fake_read)
+
+    report = checker.validate_registry(_registry(), strict=True, allow_live_github=True)
+
+    assert "downstream_live_state_mismatch" in _codes(report)
+
+
+def test_live_github_transfer_read_error_blocks(monkeypatch):
+    def fake_read(_kind, _repo, _number):
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(checker, "read_downstream_artifact", fake_read)
+
+    report = checker.validate_registry(_registry(), strict=True, allow_live_github=True)
+
+    assert "downstream_live_read_failed" in _codes(report)
 
 
 def test_measurement_validity_cannot_be_positive_cognitive_benefit():

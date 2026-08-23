@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -70,8 +71,25 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def validate_registry(doc: dict[str, Any], *, strict: bool = False) -> dict[str, Any]:
+def read_downstream_artifact(kind: str, repo: str, number: int) -> dict[str, Any]:
+    if kind == "DOWNSTREAM_PR":
+        command = ["gh", "pr", "view", str(number), "--repo", repo, "--json", "number,state,url"]
+    else:
+        command = ["gh", "issue", "view", str(number), "--repo", repo, "--json", "number,state,url"]
+    proc = subprocess.run(command, check=False, capture_output=True, text=True, timeout=15)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or f"gh exited {proc.returncode}")
+    return json.loads(proc.stdout)
+
+
+def validate_registry(
+    doc: dict[str, Any],
+    *,
+    strict: bool = False,
+    allow_live_github: bool = False,
+) -> dict[str, Any]:
     failures: list[dict[str, Any]] = []
+    live_checks: list[dict[str, Any]] = []
 
     def fail(code: str, hypothesis: str | None = None, detail: str | None = None) -> None:
         failures.append({"code": code, "hypothesis": hypothesis, "detail": detail})
@@ -165,6 +183,27 @@ def validate_registry(doc: dict[str, Any], *, strict: bool = False) -> dict[str,
                 for key in ("repo", "number", "url", "state", "relationship"):
                     if not outcome.get(key):
                         fail("downstream_transfer_missing_field", hyp_id, key)
+                if allow_live_github and outcome.get("repo") and outcome.get("number"):
+                    try:
+                        live = read_downstream_artifact(kind, str(outcome["repo"]), int(outcome["number"]))
+                    except Exception as exc:  # noqa: BLE001 - preserve the external command error.
+                        fail("downstream_live_read_failed", hyp_id, str(exc))
+                    else:
+                        live_check = {
+                            "type": kind,
+                            "hypothesis": hyp_id,
+                            "repo": outcome["repo"],
+                            "number": int(outcome["number"]),
+                            "expected_state": outcome.get("state"),
+                            "actual_state": live.get("state"),
+                            "expected_url": outcome.get("url"),
+                            "actual_url": live.get("url"),
+                        }
+                        live_checks.append(live_check)
+                        if live.get("state") != outcome.get("state"):
+                            fail("downstream_live_state_mismatch", hyp_id, json.dumps(live_check, sort_keys=True))
+                        if live.get("url") != outcome.get("url"):
+                            fail("downstream_live_url_mismatch", hyp_id, json.dumps(live_check, sort_keys=True))
             if kind in {"NO_ADOPTION_WITH_REASON", "LOCAL_ONLY_WITH_REASON"} and not outcome.get("reason"):
                 fail("transfer_reason_missing", hyp_id, str(kind))
 
@@ -194,7 +233,9 @@ def validate_registry(doc: dict[str, Any], *, strict: bool = False) -> dict[str,
         "created_at": utc_now(),
         "status": status,
         "mocked": False,
-        "live": False,
+        "live": bool(live_checks),
+        "live_github_enabled": allow_live_github,
+        "live_checks": live_checks,
         "strict": strict,
         "required_hypothesis_count": len(required),
         "hypothesis_count": len(records),
@@ -210,7 +251,7 @@ def validate_registry(doc: dict[str, Any], *, strict: bool = False) -> dict[str,
             "does_not_prove": [
                 "any new experimental result",
                 "human listener perception",
-                "downstream repository adoption beyond recorded issue/PR references",
+                "downstream repository adoption beyond recorded issue/PR state readbacks",
             ],
         },
     }
@@ -220,10 +261,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
     parser.add_argument("--strict", action="store_true")
+    parser.add_argument("--allow-live-github", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
-    report = validate_registry(load_json(args.registry), strict=args.strict)
+    report = validate_registry(
+        load_json(args.registry),
+        strict=args.strict,
+        allow_live_github=args.allow_live_github,
+    )
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")

@@ -3,18 +3,31 @@
     "does_not_prove": [
       "any new experimental result",
       "human listener perception",
-      "downstream repository adoption beyond recorded issue/PR references"
+      "downstream repository adoption beyond recorded issue/PR state readbacks"
     ],
     "proves": [
       "disposition registry hashes and result/product/transfer combinations are internally consistent",
       "immutable-goal completion is not claimed while required hypotheses remain nonterminal"
     ]
   },
-  "created_at": "2026-08-23T00:05:06Z",
+  "created_at": "2026-08-23T00:10:07Z",
   "failures": [],
   "hypothesis_count": 6,
   "immutable_goal_completion_claimed": false,
-  "live": false,
+  "live": true,
+  "live_checks": [
+    {
+      "actual_state": "OPEN",
+      "actual_url": "https://github.com/grahama1970/chatterbox/issues/7",
+      "expected_state": "OPEN",
+      "expected_url": "https://github.com/grahama1970/chatterbox/issues/7",
+      "hypothesis": "voice_emotion_value",
+      "number": 7,
+      "repo": "grahama1970/chatterbox",
+      "type": "DOWNSTREAM_ISSUE"
+    }
+  ],
+  "live_github_enabled": true,
   "mocked": false,
   "nonterminal_hypotheses": [
     "cognitive_value_pctom",

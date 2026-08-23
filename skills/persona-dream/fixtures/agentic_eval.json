@@ -467,7 +467,7 @@
       "name": "disposition-registry-contract-tests",
       "type": "adversarial",
       "real_world": true,
-      "evidence_class": "deterministic",
+      "evidence_class": "live_e2e",
       "supports_claims": [
         "persona_dream.disposition_registry_contract"
       ],
@@ -477,14 +477,16 @@
       "command": [
         "bash",
         "-lc",
-        "uv run --project .. pytest ../tests/test_check_dispositions.py -q && bash ../run.sh check-dispositions --strict --json --out /tmp/persona-dream-disposition-registry-eval-receipt.json"
+        "uv run --project .. pytest ../tests/test_check_dispositions.py -q && bash ../run.sh check-dispositions --strict --allow-live-github --json --out /tmp/persona-dream-disposition-registry-eval-receipt.json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nreceipt = json.loads(Path('/tmp/persona-dream-disposition-registry-eval-receipt.json').read_text(encoding='utf-8'))\nassert receipt['status'] == 'PASS_DISPOSITION_REGISTRY'\nassert receipt['mocked'] is False\nassert receipt['live'] is True\nchecks = receipt['live_checks']\nassert checks and checks[0]['repo'] == 'grahama1970/chatterbox'\nassert checks[0]['number'] == 7\nassert checks[0]['actual_state'] == checks[0]['expected_state'] == 'OPEN'\nassert checks[0]['actual_url'] == checks[0]['expected_url'] == 'https://github.com/grahama1970/chatterbox/issues/7'\nprint('DISPOSITION_LIVE_READBACK_OK')\nPY"
       ],
+      "readback": true,
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "11 passed",
+          "14 passed",
           "PASS_DISPOSITION_REGISTRY",
-          "\"immutable_goal_completion_claimed\": false"
+          "\"immutable_goal_completion_claimed\": false",
+          "DISPOSITION_LIVE_READBACK_OK"
         ]
       }
     },
@@ -699,7 +701,8 @@
       "description": "Persona Dream research hypotheses terminate through a machine-readable registry that recomputes receipt hashes, checks result/product/transfer consistency, and refuses immutable-goal completion while required hypotheses remain nonterminal.",
       "criticality": "critical",
       "evidence_required": {
-        "deterministic": true
+        "deterministic": true,
+        "live_e2e": true
       }
     },
     {
@@ -823,7 +826,8 @@
       "seam_type": "research_governance_contract",
       "criticality": "critical",
       "required_evidence": [
-        "deterministic"
+        "deterministic",
+        "live_e2e"
       ]
     },
     {
