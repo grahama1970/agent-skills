@@ -15,6 +15,19 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 2
 fi
 
+# Self-heal an impossible requires-python. A cross-checkout sync periodically
+# copies a stale pre-fix pyproject.toml over this one, reverting requires-python
+# to ">=3.14,<3.13" -- an empty range that makes `uv run` refuse with
+# "conflicting Python requirements", silently breaking every caller (e.g. the
+# agentic-evals self-heal DAG gate). The canonical value is ">=3.14" (PHART 1.5).
+# Idempotent: rewrites only when the broken range is present, and back to the
+# value HEAD already holds, so a healthy tree stays clean.
+PYPROJECT="$SCRIPT_DIR/pyproject.toml"
+if [[ -f "$PYPROJECT" ]] && grep -q 'requires-python *= *">=3\.14,<3\.13"' "$PYPROJECT"; then
+  sed -i 's/requires-python *= *">=3\.14,<3\.13"/requires-python = ">=3.14"/' "$PYPROJECT"
+  echo "note [phart]: repaired impossible requires-python in pyproject.toml (was >=3.14,<3.13)" >&2
+fi
+
 cmd="${1:-}"
 shift || true
 
