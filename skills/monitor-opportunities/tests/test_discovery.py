@@ -23,6 +23,7 @@ from monitor_opportunities.discovery import (
     _ashby_candidates,
     _candidate_id,
     _employment_candidates,
+    _greenhouse_candidates,
     _linkedin_evidence_candidates,
     _meetup_evidence_candidates,
     _sam_receipt,
@@ -298,6 +299,76 @@ def test_ashby_large_valid_board_under_employer_ats_cap_is_parsed() -> None:
     assert receipt["parser_result"] == "PARSED"
     assert rows[0]["title"] == "Large Board AI Engineer"
     assert len(rows[0]["posting_text"]) == 14000  # cap raised so requirement lists survive
+
+
+def test_ashby_valid_board_over_employer_ats_cap_is_not_silently_dropped() -> None:
+    large_description = "Build applied AI systems. " * 360_000
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/posting-api/job-board/oversized")
+        body = json.dumps(
+            {
+                "jobs": [
+                    {
+                        "title": "Oversized Ashby AI Engineer",
+                        "location": {"name": "Remote"},
+                        "jobUrl": "https://jobs.example/oversized-ashby",
+                        "descriptionPlain": large_description,
+                    }
+                ]
+            }
+        ).encode("utf-8")
+        assert len(body) > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+        return httpx.Response(200, content=body, headers={"content-type": "application/json"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, rows = _ashby_candidates(client, {"name": "Oversized", "slug": "oversized"})
+
+    assert receipt["response_bytes"] > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["parser_result"] == "PARSED_OVERSIZE"
+    assert not any(
+        "Response exceeded bounded parser limit" in item
+        for item in receipt["limitations"]
+    )
+    assert any("bounded evidence preview" in item for item in receipt["limitations"])
+    assert rows[0]["title"] == "Oversized Ashby AI Engineer"
+    assert len(rows[0]["posting_text"]) == 14000
+
+
+def test_greenhouse_valid_board_over_employer_ats_cap_is_not_silently_dropped() -> None:
+    large_content = "Build applied AI systems. " * 360_000
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/v1/boards/oversized/jobs")
+        body = json.dumps(
+            {
+                "jobs": [
+                    {
+                        "title": "Oversized Greenhouse AI Engineer",
+                        "location": {"name": "Remote"},
+                        "absolute_url": "https://jobs.example/oversized-greenhouse",
+                        "content": large_content,
+                    }
+                ]
+            }
+        ).encode("utf-8")
+        assert len(body) > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+        return httpx.Response(200, content=body, headers={"content-type": "application/json"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, rows = _greenhouse_candidates(client, {"name": "Oversized", "slug": "oversized"})
+
+    assert receipt["response_bytes"] > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["parser_result"] == "PARSED_OVERSIZE"
+    assert not any(
+        "Response exceeded bounded parser limit" in item
+        for item in receipt["limitations"]
+    )
+    assert any("bounded evidence preview" in item for item in receipt["limitations"])
+    assert rows[0]["title"] == "Oversized Greenhouse AI Engineer"
+    assert len(rows[0]["posting_text"]) == 14000
 
 
 def test_sam_zero_records_is_no_matches(monkeypatch) -> None:

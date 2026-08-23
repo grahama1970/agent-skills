@@ -1041,6 +1041,42 @@ def _add_registry_evidence(receipt: dict[str, Any], target: dict[str, Any], *url
             receipt["evidence_refs"].append(url)
 
 
+def _parse_employer_ats_json_response(
+    response: httpx.Response,
+    receipt: dict[str, Any],
+) -> tuple[Any | None, str | None]:
+    """Parse ATS JSON even when the retained evidence preview is capped.
+
+    The response body is already materialized by httpx. The byte cap controls
+    retained evidence/hash size; it must not by itself convert a valid HTTP 200
+    employer board into INVALID_RESPONSE.
+    """
+
+    oversized = len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES
+    try:
+        data = response.json()
+    except ValueError as exc:
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "JSON_PARSE_ERROR_OVERSIZE" if oversized else "ERROR"
+        if oversized:
+            receipt["limitations"].append(
+                "Employer ATS response exceeded bounded evidence preview and JSON parsing failed; "
+                f"response_bytes={len(response.content)}, "
+                f"retained_bytes={MAX_EMPLOYER_ATS_RESPONSE_BYTES}, error={type(exc).__name__}."
+            )
+        else:
+            receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
+        return None, None
+    if oversized:
+        receipt["limitations"].append(
+            "Employer ATS response exceeded bounded evidence preview but parsed as full JSON; "
+            f"response_bytes={len(response.content)}, "
+            f"retained_bytes={MAX_EMPLOYER_ATS_RESPONSE_BYTES}."
+        )
+        return data, "PARSED_OVERSIZE"
+    return data, "PARSED"
+
+
 FIXTURE_DATE_FIELDS = ("published_at", "updated_at", "observed_at")
 
 
@@ -1118,13 +1154,10 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
             receipt["limitations"].append("Greenhouse board slug did not route.")
             return _finalize_receipt(receipt), []
         response.raise_for_status()
-        if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
-            receipt["result_status"] = "INVALID_RESPONSE"
-            receipt["parser_result"] = "SIZE_LIMIT"
-            receipt["limitations"].append("Response exceeded bounded parser limit.")
+        data, parser_result = _parse_employer_ats_json_response(response, receipt)
+        if data is None:
             return _finalize_receipt(receipt), []
-        data = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
+    except httpx.HTTPError as exc:
         receipt["result_status"] = "FEED_DOWN"
         receipt["parser_result"] = "ERROR"
         receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
@@ -1133,7 +1166,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
     jobs = jobs if isinstance(jobs, list) else []
     receipt["result_status"] = "MATCHES" if jobs else "NO_MATCHES"
-    receipt["parser_result"] = "PARSED"
+    receipt["parser_result"] = parser_result or "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for job in jobs[: _registry_limit(target, 20)]:
@@ -1258,13 +1291,10 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             receipt["limitations"].append("Ashby board slug did not route.")
             return _finalize_receipt(receipt), []
         response.raise_for_status()
-        if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
-            receipt["result_status"] = "INVALID_RESPONSE"
-            receipt["parser_result"] = "SIZE_LIMIT"
-            receipt["limitations"].append("Response exceeded bounded parser limit.")
+        data, parser_result = _parse_employer_ats_json_response(response, receipt)
+        if data is None:
             return _finalize_receipt(receipt), []
-        data = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
+    except httpx.HTTPError as exc:
         receipt["result_status"] = "FEED_DOWN"
         receipt["parser_result"] = "ERROR"
         receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
@@ -1272,7 +1302,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
 
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
     receipt["result_status"] = "MATCHES" if jobs else "NO_MATCHES"
-    receipt["parser_result"] = "PARSED"
+    receipt["parser_result"] = parser_result or "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for job in jobs[: _registry_limit(target, 20)]:

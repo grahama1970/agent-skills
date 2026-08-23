@@ -66,6 +66,58 @@
       "proves": "The required-source contract accepts a valid current-run receipt even with supplemental locator noise, accepts sam.gov API receipts under browser_or_api, and emits honest auth-required browser receipts for Indeed/HiddenJobs instead of fabricated source coverage."
     },
     {
+      "name": "employer-ats-parser-limit-accounting",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . --extra test pytest tests/test_discovery.py::test_ashby_valid_board_over_employer_ats_cap_is_not_silently_dropped tests/test_discovery.py::test_greenhouse_valid_board_over_employer_ats_cap_is_not_silently_dropped -q && uv run --project . python scripts/eval_employer_ats_parser_limit.py --output /tmp/monitor-opportunities-employer-ats-parser-limit-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed",
+          "EMPLOYER_ATS_PARSER_LIMIT_OK",
+          "named=5",
+          "size_only_failures=0"
+        ],
+        "stderr_excludes": [
+          "Response exceeded bounded parser limit"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/invariant_pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/named_target_count",
+            "equals": 5
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/size_only_failures",
+            "equals": []
+          }
+        ]
+      },
+      "proves": "Oversized valid Ashby and Greenhouse board JSON is parsed instead of rejected solely because of the evidence-preview cap, and the completed live nightly receipts for Sierra, Harvey, ElevenLabs, Decagon, and OneTrust are no longer size-only INVALID_RESPONSE records.",
+      "does_not_prove": "A fresh full nightly can pass unrelated browser/auth gates or that non-Ashby/non-Greenhouse providers parse oversized responses."
+    },
+    {
       "name": "no-fabricated-god-of-war-claim",
       "type": "adversarial",
       "command": [
