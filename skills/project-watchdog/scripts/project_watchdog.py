@@ -87,7 +87,7 @@ def activate_command(
 def install_cron_command(
     apply: bool = typer.Option(False, "--apply", help="Install the crontab entry."),
     minute: str = typer.Option(
-        "*/15",
+        "*/5",
         "--minute",
         help="Cron minute field. Default */5; see install_cron for why not '*'.",
     ),

@@ -66,7 +66,7 @@ subagents so individual projects do not each invent their own cron loop.
 ./run.sh tick --project tau                        # strict scan of tau only
 ./run.sh set-state global paused --reason "..."    # fail-closed kill switch
 ./run.sh set-state project active --project tau --reason "..."
-./run.sh install-cron --apply                      # install the crontab line
+./run.sh install-cron --apply                      # install the */5 crontab line
 ./sanity.sh                                        # behavioural acceptance gates
 ```
 

@@ -393,12 +393,12 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && ./run.sh install-cron 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); line=d['cron_line']; assert not line.startswith('* * * * *'), line; assert line.split()[0].startswith('*/'), line; assert '--project all' in line, line; print('default interval is', line.split()[0], 'project all')\""
+        "cd .. && ./run.sh install-cron 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); line=d['cron_line']; minute=line.split()[0]; assert minute == '*/5', line; assert not line.startswith('* * * * *'), line; assert '--project all' in line, line; print('default interval is', minute, 'project all')\""
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "default interval is */",
+          "default interval is */5",
           "project all"
         ]
       },
