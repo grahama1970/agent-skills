@@ -28,7 +28,11 @@ sys.path.insert(0, str(SKILL_DIR / "src"))
 
 from monitor_opportunities import pipeline  # noqa: E402
 from monitor_opportunities.ranking import _run_local_ats_probe, _is_source_intel_candidate  # noqa: E402
-from monitor_opportunities.readback import promote_linkedin_locators  # noqa: E402
+from monitor_opportunities.readback import (  # noqa: E402
+    live_ats_probe,
+    promote_linkedin_locators,
+    slug_variants,
+)
 
 
 def _locator(cid, org, title, geo):
@@ -90,11 +94,49 @@ def main() -> int:
         if si and (si.get("action_worthy") or si.get("decision") != "LOCATOR_ONLY"):
             failures.append("REMOTE_LOCATOR_ACTIONABLE: a non-WNY locator was wrongly made action-worthy")
 
+    # 4. LIVE resolver: an employer whose ATS board is fetchable (no same-run
+    #    primary) is still promoted by actively resolving its board.
+    if "roswellpark" not in slug_variants("Roswell Park Comprehensive Cancer Center"):
+        failures.append("SLUG_DERIVATION_WEAK: expected 'roswellpark' among derived slugs")
+
+    def _stub_board(client, target):
+        if target["slug"] == "roswellpark":
+            return ({"result_status": "MATCHES"}, [{
+                "source_provider": "greenhouse", "organization": target["name"],
+                "title": "Computational Scientist", "workplace_type": "WNY_ONSITE",
+                "primary_evidence_url": "https://boards.greenhouse.io/roswellpark/jobs/9",
+                "posting_url": "https://boards.greenhouse.io/roswellpark/jobs/9",
+            }])
+        return ({"result_status": "INVALID_REQUEST"}, [])
+
+    live_only = _locator("live", "Roswell Park Comprehensive Cancer Center", "Computational Scientist", "WNY_ONSITE")
+    live_out, live_rec = promote_linkedin_locators([live_only], live_ats_probe(None, adapters=[_stub_board]))
+    live_promoted = [c for c in live_out if c.get("located_via") == "linkedin"]
+    if not live_promoted:
+        failures.append("LIVE_RESOLVER_NO_PROMOTE: live ATS fetch failed to promote a resolvable WNY locator")
+    elif live_promoted[0].get("source_provider") == "human_supplied_linkedin":
+        failures.append("LIVE_RESOLVER_STILL_LOCATOR: live-promoted candidate kept the LinkedIn provider")
+    elif live_rec[0].get("status") != "PRIMARY_CONFIRMED":
+        failures.append(f"LIVE_RESOLVER_BAD_RECEIPT: expected PRIMARY_CONFIRMED, got {live_rec[0].get('status')}")
+
+    # 5. Slug-collision safety: a fetched board belonging to a DIFFERENT employer
+    #    must never promote, even with an identical title.
+    def _collision_board(client, target):
+        return ({"result_status": "MATCHES"}, [{
+            "source_provider": "greenhouse", "organization": "Fleet Financial Group",
+            "title": "Computational Scientist", "workplace_type": "REMOTE",
+            "primary_evidence_url": "https://boards.greenhouse.io/fleet/jobs/1",
+        }])
+    collide = _locator("collide", "Fleet AI, Inc.", "Computational Scientist", "WNY_ONSITE")
+    c_out, _ = promote_linkedin_locators([collide], live_ats_probe(None, adapters=[_collision_board]))
+    if any(c.get("located_via") == "linkedin" for c in c_out):
+        failures.append("SLUG_COLLISION_FALSE_PROMOTE: a different employer's posting was promoted on a title match")
+
     if failures:
         for f in failures:
             print(f, file=sys.stderr)
         return 1
-    print(f"WNY_LINKEDIN_READBACK_OK: WNY locator promoted on primary corroboration, "
+    print(f"WNY_LINKEDIN_READBACK_OK: cross-ref + live-fetch promote WNY locators, "
           f"surfaced-pending otherwise, non-WNY untouched ({len(receipts)} readback attempts)")
     return 0
 

@@ -1137,7 +1137,23 @@ def run_stage0(
                     or "Prior application history was not available.",
                 }
             )
-    ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir)
+    # Live primary-source readback (opt-in): when enabled, WNY LinkedIn locators
+    # get their employer ATS board fetched and are promoted into the ranked pool.
+    # Off by default so offline/deterministic runs make no network calls.
+    ranking_probe = None
+    if os.environ.get("MONITOR_READBACK_LIVE", "").lower() in {"1", "true", "yes"}:
+        import httpx
+
+        from .readback import live_ats_probe
+
+        _readback_client = httpx.Client(timeout=httpx.Timeout(8.0), follow_redirects=True)
+        try:
+            ranking_probe = live_ats_probe(_readback_client)
+            ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir, ats_probe=ranking_probe)
+        finally:
+            _readback_client.close()
+    else:
+        ranking_receipt = rank(discovery_dir, SHORTLIST_LIMIT, ranking_dir)
     phases.append({"phase": "RANKING_COMPLETE", "artifact": str(ranking_dir / "ranking-receipt.json")})
     tailoring_receipt = None
     apply_prep: list[dict[str, Any]] = []

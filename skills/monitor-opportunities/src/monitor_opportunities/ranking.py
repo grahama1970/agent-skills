@@ -345,20 +345,6 @@ def _propagate_duplicate_history(best: dict[str, dict[str, Any]], candidates: li
             survivor["application_history_state"] = states[0]
 
 
-def _same_employer(a: str, b: str) -> bool:
-    """Loose employer-name equality for primary-source cross-reference."""
-    def norm(s: str) -> str:
-        s = re.sub(r"[^a-z0-9 ]+", " ", (s or "").lower())
-        drop = {"inc", "llc", "ltd", "corp", "corporation", "company", "co", "the",
-                "comprehensive", "center", "centre", "group", "solutions", "technologies",
-                "technology", "labs", "systems"}
-        return " ".join(w for w in s.split() if w and w not in drop)
-    na, nb = norm(a), norm(b)
-    if not na or not nb:
-        return False
-    return na == nb or na in nb or nb in na
-
-
 def _run_local_ats_probe(candidates: list[dict[str, Any]]) -> "AtsProbe":
     """A primary-source probe that corroborates a LinkedIn locator against the
     primary-ATS postings already discovered in THIS run. Zero new network and
@@ -369,7 +355,7 @@ def _run_local_ats_probe(candidates: list[dict[str, Any]]) -> "AtsProbe":
                  and not _is_source_intel_candidate(c)]
 
     def probe(org: str) -> list[dict[str, Any]]:
-        return [c for c in primaries if _same_employer(org, str(c.get("organization") or ""))]
+        return [c for c in primaries if _readback.same_employer(org, str(c.get("organization") or ""))]
 
     return probe
 
@@ -381,7 +367,9 @@ def rank(discovery_run: Path, limit: int, out_dir: Path,
     # Primary-source readback: promote LinkedIn-located WNY roles that a primary
     # ATS source corroborates into the rankable pool; surface the rest as
     # pending-verification instead of burying them in non-actionable source-intel.
-    probe = ats_probe if ats_probe is not None else _run_local_ats_probe(candidates)
+    # Always cross-reference the run's own primary candidates (free); when a live
+    # probe is supplied, union it in so an employer's ATS board is fetched too.
+    probe = _readback.compose_probes(_run_local_ats_probe(candidates), ats_probe)
     candidates, readback_receipts = _readback.promote_linkedin_locators(candidates, probe)
     write_jsonl(out_dir / "readback-receipts.jsonl", readback_receipts)
     candidates, duplicates_dropped, merged_into = dedupe_postings(candidates)

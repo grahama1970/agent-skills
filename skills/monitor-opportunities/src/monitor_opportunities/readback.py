@@ -71,16 +71,36 @@ def _title_similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, na, nb).ratio()
 
 
+def same_employer(a: str, b: str) -> bool:
+    """Loose employer-name equality, resistant to legal suffixes and descriptors.
+    Guards against ATS slug collisions promoting a different company's posting."""
+    def norm(s: str) -> str:
+        s = re.sub(r"[^a-z0-9 ]+", " ", (s or "").lower())
+        drop = _ORG_SUFFIX_NOISE | {"comprehensive", "center", "centre", "solutions",
+                                    "technologies", "technology", "labs", "systems", "cancer"}
+        return " ".join(w for w in s.split() if w and w not in drop)
+    na, nb = norm(a), norm(b)
+    if not na or not nb:
+        return False
+    return na == nb or na in nb or nb in na
+
+
 def _best_primary_match(
     locator: dict[str, Any], primaries: list[dict[str, Any]]
 ) -> tuple[dict[str, Any] | None, float]:
-    """The primary-ATS posting that best matches the locator's title, if any is
-    above threshold. Locator rows are never accepted as their own primary."""
+    """The primary-ATS posting that best matches the locator, if any clears the
+    title threshold AND is the same employer. The employer check is essential:
+    a fetched board may belong to a slug-collision company, and a title-only
+    match would then promote the wrong employer's role. Locator rows are never
+    accepted as their own primary."""
     title = locator.get("title", "")
+    org = locator.get("organization", "")
     best: dict[str, Any] | None = None
     best_score = 0.0
     for cand in primaries:
         if _is_linkedin_locator(cand):
+            continue
+        if not same_employer(org, str(cand.get("organization") or "")):
             continue
         score = _title_similarity(title, str(cand.get("title", "")))
         if score > best_score:
@@ -138,6 +158,96 @@ def resolve_primary_source(
     receipt["primary_url"] = match.get("primary_evidence_url") or match.get("posting_url")
     receipt["primary_provider"] = match.get("source_provider")
     return promoted, receipt
+
+
+_ORG_SUFFIX_NOISE = {"inc", "llc", "ltd", "corp", "corporation", "company", "co", "the",
+                     "group", "holdings", "plc", "gmbh"}
+
+
+def slug_variants(org: str) -> list[str]:
+    """Candidate ATS board slugs derived from an employer name, most-specific
+    first. Employers pick non-obvious slugs, so we try a small ordered set
+    (full-join, first-two-words, first word, hyphenated, acronym) rather than
+    guess one. Deduped, order-preserving, bounded by the caller."""
+    s = re.sub(r"[^a-z0-9 ]+", " ", (org or "").lower())
+    words = [w for w in s.split() if w and w not in _ORG_SUFFIX_NOISE]
+    if not words:
+        return []
+    variants = [
+        "".join(words),
+        "".join(words[:2]) if len(words) >= 2 else "",
+        words[0],
+        "-".join(words),
+        "-".join(words[:2]) if len(words) >= 2 else "",
+        "".join(w[0] for w in words) if len(words) >= 2 else "",
+    ]
+    seen: set[str] = set()
+    out: list[str] = []
+    for v in variants:
+        if v and len(v) >= 2 and v not in seen:
+            seen.add(v)
+            out.append(v)
+    return out
+
+
+# An ATS adapter matches the discovery signature: (client, target) -> (receipt, candidates).
+AtsAdapter = Callable[[Any, dict[str, Any]], tuple[dict[str, Any], list[dict[str, Any]]]]
+
+
+def live_ats_probe(
+    client: Any,
+    *,
+    max_slugs: int = 5,
+    adapters: "list[AtsAdapter] | None" = None,
+) -> AtsProbe:
+    """A primary-source probe that actively fetches the employer's own ATS board.
+
+    For each derived slug it queries the real Greenhouse/Lever/Ashby adapters
+    (read-only, no credentials) and returns every posting from a board that
+    resolved (``MATCHES``). Read-only and bounded: at most ``max_slugs`` slugs x
+    len(adapters) requests per employer. Any per-request failure is swallowed so
+    one dead slug never aborts the readback. ``adapters`` is injectable so the
+    live path is testable without network.
+    """
+    if adapters is None:  # pragma: no cover - exercised live; unit path injects adapters
+        from .discovery import _ashby_candidates, _greenhouse_candidates, _lever_candidates
+        adapters = [_greenhouse_candidates, _lever_candidates, _ashby_candidates]
+
+    def probe(org: str) -> list[dict[str, Any]]:
+        results: list[dict[str, Any]] = []
+        for slug in slug_variants(org)[:max_slugs]:
+            target = {"slug": slug, "name": org}
+            for adapter in adapters:
+                try:
+                    receipt, cands = adapter(client, target)
+                except Exception:  # noqa: BLE001 - a dead slug/board is not a readback failure
+                    continue
+                if receipt.get("result_status") == "MATCHES":
+                    results.extend(cands)
+        return results
+
+    return probe
+
+
+def compose_probes(*probes: "AtsProbe | None") -> AtsProbe:
+    """Union of several probes (cross-reference + live fetch), deduping primaries
+    by primary URL then org+title so the same posting is not offered twice."""
+    active = [p for p in probes if p is not None]
+
+    def probe(org: str) -> list[dict[str, Any]]:
+        seen: set[str] = set()
+        out: list[dict[str, Any]] = []
+        for p in active:
+            for cand in p(org):
+                key = str(cand.get("primary_evidence_url") or cand.get("posting_url")
+                          or f"{cand.get('organization')}|{cand.get('title')}")
+                if key in seen:
+                    continue
+                seen.add(key)
+                out.append(cand)
+        return out
+
+    return probe
 
 
 def promote_linkedin_locators(
