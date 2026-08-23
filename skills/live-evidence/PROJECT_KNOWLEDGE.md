@@ -30,6 +30,32 @@
 | 2026-08-20 | Diarization deferred behind a deterministic speaker-turn contract | Anonymous stable turns + manual correction first; model diarization only when proven insufficient |
 | 2026-08-21 | Briefing packs are deterministic stem-matching on the hot path | Zero latency, exact trigger-event binding; fuzzy model matching can layer on later without changing the contract |
 
+## Agentic transcript-meeting eval (goal v2, 2026-08-23)
+
+`scripts/eval_transcript_meeting.py` (`run.sh eval-transcript-meeting`,
+`fixtures/transcript_meetings.json`) implements Graham's design: take a COMPLETE
+speaker transcript, extract its questions and expected answers IN ADVANCE, play
+it through chatterbox in real time down the live path, and judge whether each
+produced card is SEMANTICALLY SIMILAR to the expected answer with an agentic
+SciLLM judge (claude-sonnet-5, low effort) rather than token overlap. It is
+stricter than the token-family campaign and immediately caught a FALSE PASS the
+token scorer was giving. It drove four fixes (memory excerpt boilerplate,
+memory project-affinity ranking, extractive-summary header truncation, shared
+`capture_live_session`). It is NOT yet a passing gate: two real gaps remain and
+the eval honestly fails on them —
+
+1. Retrieval ranking: ripgrep matches in non-source docs (THIRD_PARTY_NOTICES,
+   LICENSES, fixtures/*.json) on generic terms can still outrank the
+   semantically-correct memory doc for the card ANSWER (built from the top
+   source). Needs ripgrep noise-filtering or answer-source selection weighted
+   by lane relevance, not just rank.
+2. STT segmentation: RealtimeSTT emits ~1 final per continuous session, so a
+   dense multi-question meeting merges or drops a question run-to-run (the
+   resolver authored one canonical question spanning version+QRA). The token
+   campaign shows the same flake on the QRA family. Root cause is bridge
+   finalization cadence, not the question window. This is the next hardening
+   target.
+
 ## Open Questions
 
 - [ ] Should briefing-pack matching gain a resolver-fuzzy second tier for paraphrased openings the stem floor misses (measured miss rate first)?
