@@ -24,6 +24,7 @@ sys.path.insert(0, str(SKILL_DIR / "src"))
 from monitor_opportunities.recognition_routes import (  # noqa: E402
     classify_route,
     rank_by_recognition,
+    route_opportunity,
 )
 
 PROFILE = {
@@ -78,6 +79,38 @@ def main() -> int:
     cold = next(o for o in ranked if o["organization"] == "Cold")
     if not cold["recognition_route"]["is_cold_longshot"]:
         failures.append("COLD_NOT_FLAGGED: a cold apply was not flagged as a long shot")
+
+    # Automatic path: agentic extraction (stub returns the exact JSON gpt-5.5-high
+    # produced live) must map to the right route, and NEVER invent a founder from
+    # a public giant (the regex failure mode this replaced).
+    def search_stub(_q):
+        return [{"title": "x", "description": "y"}]
+
+    def extract_startup(_p):
+        return '{"is_founder_led_startup":true,"founder_name":"Brian Raymond","founder_domain_aware":true,"is_defense_aerospace":false,"hiring_manager_name":null}'
+
+    r = route_opportunity({"organization": "Unstructured", "title": "Principal SWE"},
+                          PROFILE, search_stub, extract_startup)["recognition_route"]
+    if r["route_type"] != "FOUNDER_DIRECT" or "Raymond" not in r["target"]:
+        failures.append(f"AGENTIC_FOUNDER_MISSED: expected FOUNDER_DIRECT/Raymond, got {r['route_type']}/{r['target']}")
+
+    def extract_public_defense(_p):
+        return '{"is_founder_led_startup":false,"founder_name":"Moog Inc","founder_domain_aware":false,"is_defense_aerospace":true,"hiring_manager_name":null}'
+
+    r = route_opportunity({"organization": "Moog Inc.", "title": "AI Engineer"},
+                          PROFILE, search_stub, extract_public_defense)["recognition_route"]
+    if r["route_type"] == "FOUNDER_DIRECT":
+        failures.append("AGENTIC_FOUNDER_OVERREACH: a non-startup public defense employer got FOUNDER_DIRECT")
+    if r["route_type"] != "DEFENSE_NETWORK":
+        failures.append(f"AGENTIC_DEFENSE_MISSED: expected DEFENSE_NETWORK, got {r['route_type']}")
+
+    def extract_empty(_p):
+        return "not json at all"
+
+    r = route_opportunity({"organization": "BigCorp", "title": "SWE"},
+                          PROFILE, search_stub, extract_empty)["recognition_route"]
+    if not r["is_cold_longshot"]:
+        failures.append("AGENTIC_BAD_EXTRACTION_NOT_COLD: unparseable extraction must fall to cold, not invent a route")
 
     if failures:
         for f in failures:

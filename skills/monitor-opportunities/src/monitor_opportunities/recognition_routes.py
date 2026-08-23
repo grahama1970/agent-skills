@@ -20,7 +20,26 @@ classification is deterministic and testable.
 
 from __future__ import annotations
 
-from typing import Any
+import json
+import re
+from typing import Any, Callable
+
+# Evidence extraction is JUDGMENT work (is this a founder-led startup? who is the
+# founder? is there a real bridge?), so it runs as an agentic pass, not regex --
+# regex conflates "founder" with "founded in 1951" and invents partnerships.
+# search_fn(query) -> result rows; extract_fn(prompt) -> the model's JSON string.
+SearchFn = Callable[[str], list[dict[str, Any]]]
+ExtractFn = Callable[[str], str]
+
+_EXTRACT_INSTRUCTION = (
+    "You are extracting recruiting-route evidence about an employer for a DARPA-prime-caliber "
+    "AI engineer. From ONLY the search results below, return STRICT JSON with keys: "
+    "is_founder_led_startup (bool), founder_name (string or null — only a clearly named human "
+    "founder/CEO of THIS company, never the company name), founder_domain_aware (bool: does the "
+    "founder work in AI/data/defense/intel), is_defense_aerospace (bool), "
+    "hiring_manager_name (string or null — a named eng manager/lead for this role, else null). "
+    "Do not guess. If unsupported, use null/false. Return ONLY the JSON object."
+)
 
 # Route types, best-recognition first. The ordering IS the policy: a route that
 # reaches someone who recognizes the candidate's caliber beats the funnel.
@@ -123,6 +142,50 @@ def _route(route_type: str, org: str, *, target: str, rationale: str, action: st
         "recognition_score": _recognition_score(route_type),
         "is_cold_longshot": route_type == "COLD_APPLY_LONGSHOT",
     }
+
+
+def agentic_evidence(opp: dict[str, Any], search_fn: SearchFn, extract_fn: ExtractFn) -> dict[str, Any]:
+    """Gather recognition evidence for one opportunity via search + an agentic
+    extraction pass. Returns evidence keys in the shape classify_route reads.
+    Any failure yields empty evidence (falls through to a safe route), never a
+    fabricated one."""
+    org = str(opp.get("organization") or "").strip()
+    title = str(opp.get("title") or "")
+    rows: list[dict[str, Any]] = []
+    for query in (f"{org} founder CEO funding startup", f"{org} {title} engineering manager LinkedIn"):
+        try:
+            rows.extend((search_fn(query) or [])[:5])
+        except Exception:  # noqa: BLE001
+            continue
+    if not rows:
+        return {}
+    packed = "\n".join(f"- {r.get('title','')} :: {r.get('description','')}" for r in rows[:10])
+    try:
+        raw = extract_fn(f"{_EXTRACT_INSTRUCTION}\n\nEmployer: {org}\nRole: {title}\nResults:\n{packed}")
+        m = re.search(r"\{.*\}", raw or "", re.S)
+        data = json.loads(m.group(0)) if m else {}
+    except Exception:  # noqa: BLE001 - a bad extraction is empty evidence, never invented
+        return {}
+    ev: dict[str, Any] = {}
+    if data.get("is_defense_aerospace"):
+        ev["is_defense"] = True
+    fn = data.get("founder_name")
+    if data.get("is_founder_led_startup") and isinstance(fn, str) and fn.strip() \
+            and fn.strip().lower() not in org.lower():
+        ev["founder"] = {"name": fn.strip(), "reachable": True,
+                         "domain_aware": bool(data.get("founder_domain_aware")),
+                         "verify_before_outreach": True}
+    hm = data.get("hiring_manager_name")
+    if isinstance(hm, str) and hm.strip():
+        ev["hiring_manager"] = {"name": hm.strip(), "role": title, "verify_before_outreach": True}
+    return ev
+
+
+def route_opportunity(opp: dict[str, Any], profile: dict[str, Any],
+                      search_fn: SearchFn, extract_fn: ExtractFn) -> dict[str, Any]:
+    """Automatic per-opportunity recognition route: agentic evidence, then classify."""
+    enriched = {**opp, **agentic_evidence(opp, search_fn, extract_fn)}
+    return {**enriched, "recognition_route": classify_route(enriched, profile)}
 
 
 def rank_by_recognition(opps: list[dict[str, Any]], profile: dict[str, Any]) -> list[dict[str, Any]]:
