@@ -7,6 +7,7 @@
 ## Architecture
 - [socket-vs-config.md](socket-vs-config.md) — CRITICAL: Socket for live, config for persistent
 - [page-creation-build-page.md](page-creation-build-page.md) — CRITICAL: Always use build_page for new pages
+- [dynamic-page-contract.md](dynamic-page-contract.md) — CRITICAL: Dynamic pages use semantic requests, staged previews, approval, and guarded deployment
 - [arango-fallback.md](arango-fallback.md) — HIGH: Every ArangoDB call needs filesystem fallback
 
 ## Widget Lifecycle

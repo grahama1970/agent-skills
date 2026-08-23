@@ -2,21 +2,74 @@
   "version": 2,
   "skill": "best-practices-streamdeck",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "Stream Deck dynamic page safety contract regression guard",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the skill documents the standard dynamic-page request pipeline, stable identities, lifecycle gates, denied workstation primitives, and eval-update requirements that prevent bespoke unsafe page generation",
+    "does_not_prove": "Stream Deck runtime behavior, physical button behavior, voice/SPARTA integrations, live hardware deployment, or workstation display/audio safety"
   },
   "cases": [
     {
       "name": "sanity",
       "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
       "command": [
         "bash",
         "../sanity.sh"
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "dynamic-page-pipeline-and-identities",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "python3",
+        "../scripts/check_dynamic_page_contract.py",
+        "pipeline"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DYNAMIC_PAGE_CONTRACT_PRESENT"
+        ]
+      }
+    },
+    {
+      "name": "dynamic-page-denies-workstation-primitives",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "python3",
+        "../scripts/check_dynamic_page_contract.py",
+        "denied-primitives"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DENIED_WORKSTATION_PRIMITIVES_PRESENT"
+        ]
+      }
+    },
+    {
+      "name": "dynamic-page-requires-catalogs-and-agentic-evals",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "python3",
+        "../scripts/check_dynamic_page_contract.py",
+        "catalog-and-evals"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CATALOG_AND_EVAL_GUARDS_PRESENT"
+        ]
       }
     }
   ]

@@ -63,3 +63,64 @@ Use this skill whenever you:
 4. **Page Management** — creation, indexing, context rules, anticipation
 5. **ArangoDB Integration** — fallback patterns, collection conventions
 6. **NVIS Palette** — MIL-STD-3009 colors, font stack, rendering primitives
+
+## Dynamic Page Contract
+
+Dynamic Stream Deck pages must use the standard request-to-deployment pipeline;
+do not bespoke-code page generators for voice, SPARTA Explorer, meeting mode,
+or task-specific control surfaces.
+
+Required flow:
+
+```text
+streamdeck.dynamic_page_request.v1
+  -> bounded recipe/action plan
+  -> deterministic manifest compiler
+  -> staged preview
+  -> hash-bound approval
+  -> explicit deployment
+```
+
+Voice and SPARTA adapters may emit only semantic requests with source,
+request_id, intent_text, context_refs, transcript_confidence, and requested
+lifetime. They must not emit buttons, executable commands, shell snippets,
+Stream Deck page indexes, socket/config writes, display settings, audio
+settings, process/service operations, or filesystem/network side effects.
+
+Dynamic manifests must be compiled from a versioned recipe catalog and action
+catalog. Button behavior is bound through stable dispatcher identities such as
+`streamdeck-cli action invoke --binding <binding_id>`; generated manifests must
+not contain arbitrary shell. Keep identities stable and explicit:
+
+- `qid`: stable logical control identity
+- `action_id`: stable semantic action identity
+- `binding_id`: compiler-owned executable binding
+- `page_instance_id`: staged page instance identity
+- `deployment_id`: approved deployment identity
+- `event_id`: emitted action receipt identity
+
+Use the lifecycle states `REQUESTED`, `NEEDS_CONFIRMATION`, `RESOLVED`,
+`STAGED`, `APPROVED`, `DEPLOYED`, `BLOCKED`, `REJECTED`, `SUPERSEDED`,
+`EXPIRED`, `ROLLBACK_APPROVED`, `ROLLED_BACK`, and `REVOKED`. Staging,
+preview, approval, and diff commands are `external_effects=false` operations:
+they must not open `/tmp/streamdeck_ui.sock`, mutate `~/.streamdeck_ui.json`,
+restart services, or touch the live deck.
+
+Pages `0-9` are static/manual pages. Dynamic pages use `10+`, leases, ownership
+metadata, compare-and-swap deployment, and rollback receipts. Dynamic page
+generation must deny by default. Reject requests or recipes that try to control
+KDE, KWin, KDED, Plasma, X11, displays, global scale, audio, windows, processes,
+services, sudo, shell pipes, command chaining, redirection, arbitrary
+filesystem/network writes, `xrandr`, `kscreen-doctor`, `nvidia-settings`,
+`keys`, or `write` primitives. Meeting-off buttons must be receipt-only unless
+they call an already-cataloged safe action.
+
+SPARTA and memory-backed context must pass explicit context ids or bounded,
+cached projections. Do not put broad Memory `/list`, ArangoDB scans, graph
+hydration, or dynamic recipe discovery in the UI request path.
+
+Every change to dynamic-page request handling, recipe/action catalogs,
+compiler output, approval/deploy state, or action dispatch must add or
+strengthen `fixtures/agentic_eval.json`. Live hardware, voice, SPARTA, or
+physical-button claims require a separate canary receipt and must be reported
+as unverified until that live proof exists.
