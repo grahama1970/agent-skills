@@ -61,13 +61,22 @@ affinity + the selector then prefer the meeting's own project. After this, the
 transcript eval's memory hard-rules card passes the agentic similarity judge
 and research passes; client-pitch (briefing) stays green (no regression).
 
+STT segmentation (FIXED 2026-08-23): the flake was NOT finalization cadence or
+missing pauses (the synth already inserts 2.5s gaps; post_speech_silence_duration
+is 0.45s). The Docker RealtimeSTT bridge called recorder.text() exactly once,
+after recorder.stop(), publishing a single 'final' with the whole session, so
+co-located questions merged into one buffer. Fix: a consumer thread loops
+recorder.text() while audio is fed, publishing one 'final' per utterance.
+Verified on the dense 3-question standup: finals 1 -> 7, distinct question
+ledgers 2 -> 4, every question now cards. Registered live gates stayed green.
+
 Remaining open gap:
 
-- STT segmentation: RealtimeSTT emits ~1 final per continuous session, so a
-  dense multi-question meeting merges or drops a question run-to-run (the QRA
-  question never opens its own ledger). The token campaign shows the same flake
-  on the QRA family. Root cause is bridge finalization cadence, not the question
-  window. This is the next hardening target.
+- Code-family answer quality: the QRA code question now segments and cards, but
+  the surfaced answer sometimes cites a commit message / memory metadata rather
+  than the QRA module's source path. This is a code-retrieval/answer-quality
+  issue (ripgrep/code lane + selector), separate from segmentation, and is why
+  the sparta-standup scenario's code family is not yet a gate.
 
 ## Open Questions
 
