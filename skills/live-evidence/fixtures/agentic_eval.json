@@ -826,6 +826,32 @@
         ]
       },
       "notes": "LIVE MONITORED MEETING end-to-end: an invented Sparta standup rendered turn-by-turn by the live chatterbox server, played through a PipeWire null sink, transcribed by Docker RealtimeSTT (GPU), and answered down the full resolver -> retrieval -> gpt-5.5 surface selector -> card path. The memory-recall card is judged SEMANTICALLY SIMILAR to the expected read-first rules by an agentic SciLLM judge -- the real live-audio card-surfacing capability, gated. The meeting also carries a second spoken question so the assistant is monitoring a realistic multi-question call, but the gate is the memory card because live-audio research-proposal detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically by eval_action_lane instead. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM. The denser sparta-standup-invented and meeting-campaign scenarios remain diagnostics that still expose the STT segmentation flake."
+    },
+    {
+      "name": "relevance-filter-adversarial",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-relevance-filter"
+      ],
+      "timeout_seconds": 600,
+      "infra_blocked_when": [
+        "server did not come up",
+        "INFRA_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SURFACE [0]",
+          "filter decided suppress [2]",
+          "filter decided suppress [3]",
+          "filter decided suppress [5]",
+          "relevance filter: PASS"
+        ]
+      },
+      "notes": "ADVERSARIAL gate for the gpt-5.5 relevance filtering agent. Each case runs in its own isolated server, posted STT-free over HTTP so the result reflects the filter, not RealtimeSTT variance. The suppression cases are chosen to PASS the deterministic question-window trigger -- they carry a '?', a question lead, or a Sparta watch-term -- so only the agent's judgment can stop them: 'can we push this to Friday?' (logistics), 'can everyone hear me?' (social), a statement mentioning the project, and a bare rhetorical must each be suppressed with a surface=false decision, while two genuine questions must surface. Suppression is scoped to question-worthiness, NOT evidence strength, so a real question with thin retrieval still surfaces (an earlier evidence-strength suppression dropped a real memory question). Needs memory :8601, the sparta repo, and SciLLM."
     }
   ]
 }
