@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import time
 from pathlib import Path
 from typing import Any
 
@@ -570,6 +571,11 @@ def build_repair_task(
         f"The creator seat implements the fix and commits it. The reviewer seat "
         f"checks it against the ticket's acceptance criterion and required proof, "
         f"and answers VERDICT: PASS, VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION.\n\n"
+        f"The verdict must be on a line of its own. Only VERDICT: PASS closes "
+        f"this ticket, and only when the ticket's proof command has actually run "
+        f"and its artifact reads as a completed pass -- name the artifact path in "
+        f"the review. A proof that is still running, that failed, or that was not "
+        f"run is VERDICT: NEEDS_ATTENTION.\n\n"
         f"--- ticket body ---\n{issue_body}"
     )
 
@@ -640,6 +646,293 @@ def _land_repair_to_main(worktree: Path, run_id: str, issue_number: int) -> tupl
     landed = push["exit_code"] == 0
     log_event(run_id, "auto_land_to_main", issue=issue_number, landed=landed)
     return landed, cmds
+
+
+# --------------------------------------------------------------------------- #
+# Repair proof gate — a DAG that exited 0 is not a repaired ticket
+# --------------------------------------------------------------------------- #
+
+#: The verdict vocabulary the repair task asks each seat for. A response that
+#: declares nothing from this vocabulary has declared no verdict; the watchdog
+#: reads what a seat states, it does not interpret prose into a verdict.
+REPAIR_VERDICT_TOKENS = frozenset({"PASS", "FAIL", "NEEDS_ATTENTION", "BLOCKED"})
+
+#: Verdicts that are an explicit refusal to claim the repair is done.
+REPAIR_REFUSAL_TOKENS = frozenset({"FAIL", "NEEDS_ATTENTION", "BLOCKED"})
+
+#: Values a machine-readable proof artifact may carry that mean "this run
+#: finished and passed".
+PROOF_PASS_VALUES = frozenset(
+    {"PASS", "PASSED", "READY", "OK", "COMPLETED", "SUCCESS", "GREEN", "TRUE"}
+)
+
+#: Values that mean the proof did not finish, or finished badly. ``RUNNING``
+#: and ``PENDING`` are failures here on purpose: agent-skills#1499 was closed
+#: while its second proof attempt was still going.
+PROOF_FAIL_VALUES = frozenset(
+    {
+        "FAIL", "FAILED", "BLOCKED", "ERROR", "ERRORED", "NOT_READY",
+        "NEEDS_ATTENTION", "RUNNING", "PENDING", "IN_PROGRESS", "TIMEOUT",
+        "TIMED_OUT", "CANCELLED", "SKIPPED", "UNKNOWN", "FALSE",
+    }
+)
+
+#: Keys whose value states the outcome of a run. Read at any depth so a
+#: per-case ``status: FAIL`` inside an otherwise READY report still fails.
+PROOF_RESULT_KEYS = frozenset(
+    {"readiness", "status", "verdict", "result", "outcome", "overall",
+     "overall_status", "state", "ok", "passed"}
+)
+
+#: How far into a proof artifact to read result keys. Deep enough for a
+#: per-case eval report, bounded so a huge artifact cannot stall a tick.
+PROOF_SCAN_DEPTH = 6
+
+_POSITION_HEADING = re.compile(r"^#{1,6}\s*position\s*$", re.IGNORECASE)
+_OUTPUT_FLAG = re.compile(r"--(?:output|out|output-file|report)[ =]+([^\s`'\"]+)")
+_PROOF_PATH = re.compile(
+    r"(?:^|[\s`'\"(=])((?:/|\./|~/)?[\w.@+-]+(?:/[\w.@+-]+)+\.(?:json|xml|txt|log|md|csv|html))"
+)
+
+
+def repair_node_id(handler: str) -> str:
+    """The ``node-artifacts`` directory ``$ask`` writes for one handler seat."""
+    return "handler-" + re.sub(r"[^a-z0-9]+", "-", handler.lower()).strip("-")
+
+
+def declared_verdict(text: str) -> str | None:
+    """The verdict a seat declared, or ``None`` if it declared none.
+
+    Two structural forms, both of which the repair task and the roundtable
+    prompt ask for by name: a ``VERDICT: <token>`` line, or the first word of
+    the ``## Position`` section. This is extraction, not classification --
+    prose that describes a problem in its own words yields ``None``, and the
+    gate treats "no verdict" as unproven rather than guessing at it.
+    """
+    def token(raw: str) -> str | None:
+        words = raw.strip().split()
+        if not words:
+            return None
+        candidate = words[0].strip("*`_.,:;#—–-").upper()
+        return candidate if candidate in REPAIR_VERDICT_TOKENS else None
+
+    lines = text.splitlines()
+    for line in lines:
+        stripped = line.strip().lstrip("*#>- ").strip()
+        if stripped.upper().startswith("VERDICT:"):
+            found = token(stripped.split(":", 1)[1])
+            if found:
+                return found
+    for index, line in enumerate(lines):
+        if not _POSITION_HEADING.match(line.strip()):
+            continue
+        for following in lines[index + 1:]:
+            if not following.strip():
+                continue
+            return token(following)
+    return None
+
+
+def seat_response_text(ask_run_dir: Path, handler: str) -> str | None:
+    """The response one seat actually wrote, across every ``$ask`` run dir."""
+    node_id = repair_node_id(handler)
+    for candidate in sorted(ask_run_dir.glob(f"*/node-artifacts/{node_id}/response.md")):
+        try:
+            return candidate.read_text(encoding="utf-8", errors="replace")
+        except OSError:  # pragma: no cover - unreadable artifact is "no response"
+            continue
+    return None
+
+
+def required_proof_artifacts(issue_body: str) -> list[str]:
+    """The artifact paths the ticket's own proof section names.
+
+    Only the ``Required proof`` section is read: paths elsewhere in a ticket
+    body are context files and reproduction pointers, not things the repair is
+    supposed to produce. When the section names an ``--output`` operand those
+    win outright, because that is the artifact the proof command writes.
+    """
+    section: list[str] = []
+    collecting = False
+    for line in issue_body.splitlines():
+        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
+        if heading:
+            collecting = heading.group(1).strip().lower() == "required proof"
+            continue
+        if collecting:
+            section.append(line)
+    text = "\n".join(section)
+    if not text.strip():
+        return []
+    outputs = [m.group(1) for m in _OUTPUT_FLAG.finditer(text)]
+    if outputs:
+        return sorted(dict.fromkeys(outputs))
+    return sorted(dict.fromkeys(m.group(1) for m in _PROOF_PATH.finditer(text)))
+
+
+def _result_values(payload: Any, depth: int = 0) -> list[str]:
+    """Every outcome-key value in a parsed artifact, uppercased."""
+    if depth > PROOF_SCAN_DEPTH:
+        return []
+    found: list[str] = []
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            if str(key).lower() in PROOF_RESULT_KEYS and isinstance(value, (str, bool)):
+                found.append(str(value).upper())
+            else:
+                found.extend(_result_values(value, depth + 1))
+    elif isinstance(payload, list):
+        for item in payload:
+            found.extend(_result_values(item, depth + 1))
+    return found
+
+
+def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any]:
+    """Whether one named proof artifact is present, fresh, and a completed pass.
+
+    Freshness is load-bearing: agent-skills#1499 had a passing receipt on disk
+    from July, and accepting it would have closed the ticket on a proof no seat
+    in this dispatch ever ran.
+    """
+    path = Path(raw_path).expanduser()
+    record: dict[str, Any] = {
+        "path": str(path), "exists": False, "fresh": False,
+        "machine_readable": False, "passed": False, "reason": "",
+    }
+    if not path.is_file():
+        record["reason"] = "not written"
+        return record
+    record["exists"] = True
+    stat = path.stat()
+    record["mtime"] = stat.st_mtime
+    record["size"] = stat.st_size
+    if stat.st_mtime < not_before:
+        record["reason"] = "predates this dispatch"
+        return record
+    record["fresh"] = True
+    if stat.st_size == 0:
+        record["reason"] = "empty"
+        return record
+    if path.suffix.lower() != ".json":
+        record["passed"] = True
+        record["reason"] = "fresh non-empty artifact"
+        return record
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, json.JSONDecodeError) as exc:
+        record["reason"] = f"unreadable json: {exc}"
+        return record
+    values = _result_values(payload)
+    record["machine_readable"] = bool(values)
+    failing = sorted({v for v in values if v in PROOF_FAIL_VALUES})
+    passing = sorted({v for v in values if v in PROOF_PASS_VALUES})
+    record["failing_values"] = failing
+    record["passing_values"] = passing
+    if failing:
+        record["reason"] = f"reports {', '.join(failing)}"
+        return record
+    if not passing:
+        record["reason"] = "no machine-readable result"
+        return record
+    record["passed"] = True
+    record["reason"] = f"reports {', '.join(passing)}"
+    return record
+
+
+def repair_commits_ahead(worktree: Path) -> int | None:
+    """Commits the repair branch has that ``origin/main`` does not.
+
+    ``None`` means git could not answer, which the gate treats as unproven.
+    """
+    counted = run_cmd(
+        ["git", "rev-list", "--count", "origin/main..HEAD"], cwd=worktree, timeout_s=60
+    )
+    if counted.get("exit_code") != 0:
+        return None
+    try:
+        return int(str(counted.get("stdout", "")).strip())
+    except ValueError:  # pragma: no cover - git printed something unexpected
+        return None
+
+
+def evaluate_repair_proof(
+    *,
+    ask_run_dir: Path,
+    issue_body: str,
+    creator: str,
+    reviewer: str,
+    repair_worktree: Path,
+    not_before: float,
+) -> dict[str, Any]:
+    """Decide whether this repair may close its ticket.
+
+    ``$ask tau-dag`` exiting 0 means the DAG ran, not that the ticket was
+    repaired: in agent-skills#1499 both seats reported ``status: PASS`` in
+    their node receipts while the creator's response said it had no tools and
+    the reviewer's said the live proof failed and a retry was still running.
+    The issue was closed as completed with no proof and no commit.
+
+    So closure requires positive evidence, and everything else fails closed:
+
+    - the reviewer seat declares ``VERDICT: PASS`` in its response;
+    - no seat declares FAIL, BLOCKED, or NEEDS_ATTENTION;
+    - if the ticket names proof artifacts, at least one exists, was written
+      during this dispatch, and reads as a completed pass;
+    - the repair branch is at least one commit ahead of ``origin/main``.
+    """
+    gate: dict[str, Any] = {
+        "schema": "agent_skills.project_watchdog.repair_proof_gate.v1",
+        "ok": False,
+        "reasons": [],
+        "seat_verdicts": {},
+        "required_proof_artifacts": [],
+        "artifact_results": [],
+        "commits_ahead": None,
+        "checked_at": iso_now(),
+    }
+    reasons: list[str] = []
+
+    for role, handler in (("creator", creator), ("reviewer", reviewer)):
+        response = seat_response_text(ask_run_dir, handler)
+        verdict = declared_verdict(response) if response is not None else None
+        gate["seat_verdicts"][role] = {
+            "handler": handler,
+            "node_id": repair_node_id(handler),
+            "responded": response is not None,
+            "verdict": verdict,
+        }
+        if response is None:
+            reasons.append(f"{role} seat {handler} wrote no response artifact")
+            continue
+        if verdict in REPAIR_REFUSAL_TOKENS:
+            reasons.append(f"{role} seat {handler} declared {verdict}")
+        elif verdict is None and role == "reviewer":
+            reasons.append(
+                f"reviewer seat {handler} declared no VERDICT; the repair task "
+                f"requires VERDICT: PASS, FAIL, or NEEDS_ATTENTION"
+            )
+        elif verdict != "PASS" and role == "reviewer":
+            reasons.append(f"reviewer seat {handler} declared {verdict}, not PASS")
+
+    artifacts = required_proof_artifacts(issue_body)
+    gate["required_proof_artifacts"] = artifacts
+    if artifacts:
+        results = [inspect_proof_artifact(a, not_before=not_before) for a in artifacts]
+        gate["artifact_results"] = results
+        if not any(r["passed"] for r in results):
+            detail = "; ".join(f"{r['path']}: {r['reason']}" for r in results)
+            reasons.append(f"no required proof artifact was produced and passing ({detail})")
+
+    commits = repair_commits_ahead(repair_worktree)
+    gate["commits_ahead"] = commits
+    if commits is None:
+        reasons.append(f"could not read commits on the repair branch in {repair_worktree}")
+    elif commits < 1:
+        reasons.append("the repair branch has no commit ahead of origin/main")
+
+    gate["reasons"] = reasons
+    gate["ok"] = not reasons
+    return gate
 
 
 def handle_ticket_repair(
@@ -808,6 +1101,9 @@ def handle_ticket_repair(
     # does not hand-author a tau.dag_contract.v1: doing so bound this lane to
     # Tau's own command-spec tree, which only the tau checkout has, so every
     # other project was refused before it could dispatch anything.
+    # Everything the proof gate accepts must be written after this instant: a
+    # proof artifact older than the dispatch proves a previous run, not this one.
+    dispatched_at = time.time()
     dag_result = run_cmd(
         [
             str(config.ask_run_sh()),
@@ -896,6 +1192,49 @@ def handle_ticket_repair(
             github.issue_edit(repo, issue_number, add=[config.BLOCKED_LABEL],
                               remove=[config.LEASE_LABEL])
         )
+        return result
+
+    # A DAG that exited 0 says the seats were reached, nothing more. Closure
+    # needs the reviewer's own PASS, the ticket's proof, and a commit --
+    # agent-skills#1499 was closed as completed with none of the three.
+    gate = evaluate_repair_proof(
+        ask_run_dir=ask_run_dir,
+        issue_body=str(issue.get("body", "")),
+        creator=creator,
+        reviewer=reviewer,
+        repair_worktree=repair_worktree,
+        not_before=dispatched_at,
+    )
+    result["proof_gate"] = gate
+    gate_path = receipt_dir / "repair-proof-gate.json"
+    write_json(gate_path, gate)
+    result["artifacts"].append(str(gate_path))
+    if not gate["ok"]:
+        result.update(
+            {
+                "ok": False,
+                "status": "NEEDS_ATTENTION",
+                "summary": (
+                    f"$ask tau-dag passed but the repair is unproven for "
+                    f"{repo}#{issue_number}: {'; '.join(gate['reasons'])}. "
+                    f"Not landing and not closing."
+                ),
+            }
+        )
+        result["commands"].append(
+            github.issue_comment(
+                repo,
+                issue_number,
+                github.watchdog_comment("Repair proof gate refused closure", gate),
+            )
+        )
+        result["commands"].append(
+            github.issue_edit(
+                repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
+            )
+        )
+        log_event(run_id, "repair_proof_gate_refused", issue=issue_number,
+                  reasons=gate["reasons"])
         return result
 
     # Alpha projects (operator rule): a reviewer-passed repair lands directly on

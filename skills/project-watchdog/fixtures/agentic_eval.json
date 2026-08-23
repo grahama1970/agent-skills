@@ -631,6 +631,33 @@
           "DEFAULT_NOT_OFF"
         ]
       }
+    },
+    {
+      "name": "ticket-repair-rejects-needs-attention-without-proof",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "seams": [
+        "watchdog.repair_proof_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . python scripts/eval_repair_proof_gate.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REPAIR_PROOF_GATE_OK"
+        ],
+        "stderr_excludes": [
+          "CLOSED_WITHOUT_PROOF",
+          "LANDED_WITHOUT_PROOF",
+          "MARKED_DONE_WITHOUT_PROOF",
+          "NOT_NEEDS_ATTENTION",
+          "GATE_IS_A_WALL"
+        ]
+      }
     }
   ]
 }

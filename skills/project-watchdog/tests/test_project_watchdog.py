@@ -566,9 +566,16 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
         ),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
-    assert result["ok"] is True and result["status"] == "COMPLETED", result.get("summary")
-    argv = bounded.call_args.args[0]
-    assert argv[0].endswith("ask/run.sh"), "repair must go through $ask"
+    # A stubbed $ask writes no seat responses, no proof artifact and no commit,
+    # so the proof gate refuses closure. That is the point of the gate: exit 0
+    # from the DAG is a dispatch receipt, not a repaired ticket (#1504).
+    assert result["status"] == "NEEDS_ATTENTION", result.get("summary")
+    # The proof gate runs git after the dispatch, so the $ask call is no longer
+    # the last bounded command.
+    asks = [c.args[0] for c in bounded.call_args_list
+            if str(c.args[0][0]).endswith("ask/run.sh")]
+    assert len(asks) == 1, "repair must go through $ask, exactly once"
+    argv = asks[0]
     # Authored in a worktree of the lane's own making, never the registered
     # checkout: that one is a human's working tree.
     workspace = argv[argv.index("--handler-workspace") + 1]
@@ -588,6 +595,118 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
 
     task = (tmp_path / "repair-task.md").read_text(encoding="utf-8")
     assert "VERDICT: PASS" in task, "the reviewer seat must be asked for a verdict"
+
+
+# --------------------------------------------------------------------------- #
+# Repair proof gate — agent-skills#1504
+# --------------------------------------------------------------------------- #
+
+
+def test_a_seat_that_refused_is_read_as_a_refusal() -> None:
+    """agent-skills#1499's creator seat: node receipt PASS, response NEEDS_ATTENTION."""
+    assert handlers.declared_verdict(
+        "## Position\n\nNEEDS_ATTENTION - no shell, filesystem, or git access.\n"
+    ) == "NEEDS_ATTENTION"
+    assert handlers.declared_verdict("Some notes.\n\n**VERDICT: PASS**\n") == "PASS"
+    assert handlers.declared_verdict("VERDICT: FAIL\n") == "FAIL"
+
+
+def test_prose_about_a_failing_proof_is_not_read_as_a_verdict() -> None:
+    """The #1499 reviewer described a failed proof and a running retry in prose.
+
+    The watchdog does not classify prose into a verdict. No declared verdict is
+    no verdict, which the gate then treats as unproven.
+    """
+    assert handlers.declared_verdict(
+        "Ran the required live proof once. It failed fail-closed: `status: FAIL`, "
+        "`stop_condition: g1_delta_validation_failed`. The second attempt is running.\n"
+    ) is None
+
+
+def test_only_the_proof_section_names_required_artifacts() -> None:
+    body = (
+        "## Target\n\nskills/project-watchdog\n\n"
+        "## Required proof\n\nRun: skills/agentic-evals/run.sh run f.json "
+        "--output /tmp/proof-gate.json --timeout-seconds 600\n\n"
+        "## Ticket type details\n\n- **Reproduction:** /tmp/unrelated.json\n"
+    )
+    assert handlers.required_proof_artifacts(body) == ["/tmp/proof-gate.json"]
+    assert handlers.required_proof_artifacts("## Target\n\nskills/x\n") == []
+
+
+def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
+    """#1499 had a July receipt on disk; accepting it would close on a stale pass."""
+    artifact = tmp_path / "proof.json"
+    artifact.write_text(json.dumps({"readiness": "READY"}), encoding="utf-8")
+    stale = artifact.stat().st_mtime
+    fresh = handlers.inspect_proof_artifact(str(artifact), not_before=stale - 10)
+    assert fresh["passed"] is True
+    old = handlers.inspect_proof_artifact(str(artifact), not_before=stale + 10)
+    assert old["passed"] is False and old["reason"] == "predates this dispatch"
+
+
+def test_a_proof_artifact_that_reports_a_failure_does_not_count(tmp_path) -> None:
+    artifact = tmp_path / "proof.json"
+    artifact.write_text(
+        json.dumps({"readiness": "READY", "cases": [{"name": "c", "status": "FAIL"}]}),
+        encoding="utf-8",
+    )
+    record = handlers.inspect_proof_artifact(str(artifact), not_before=0)
+    assert record["passed"] is False and "FAIL" in record["reason"]
+
+
+def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path) -> None:
+    """agent-skills#1499 verbatim: DAG exit 0, seats PASS, nothing proven.
+
+    The creator said it had no tools, the reviewer said the proof failed and a
+    retry was still running, and no commit existed -- and the watchdog closed
+    the issue as completed.
+    """
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "repair_creator": "gpt-5.5-high", "repair_reviewer": "claude-opus-5-medium",
+        "auto_land_main": True,
+    }
+    issue = _issue(1499, labels=["agent-work"], body=(
+        "type: bug\ntarget: skills/x\n\n"
+        "## Required proof\n\nRun: skills/x/run.sh proof "
+        f"--output {tmp_path / 'never-written.json'}\n"
+    ))
+    issue["watchdog_action"] = "ticket_repair"
+    ask_dir = tmp_path / "ask" / "run-1" / "node-artifacts"
+    for handler, text in (
+        ("gpt-5.5-high", "## Position\n\nNEEDS_ATTENTION - no tools in this session.\n"),
+        ("claude-opus-5-medium", "The proof failed; the second attempt is still running.\n"),
+    ):
+        node = ask_dir / handlers.repair_node_id(handler)
+        node.mkdir(parents=True)
+        (node / "response.md").write_text(text, encoding="utf-8")
+    edits: list[dict] = []
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(handlers.github, "issue_close") as close,
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-1499",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "NEEDS_ATTENTION" and result["ok"] is False
+    assert not close.called, "an unproven repair must not close its ticket"
+    assert not any(e.get("add") == [config.DONE_LABEL] for e in edits), "must not mark it done"
+    assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
+    reasons = " | ".join(result["proof_gate"]["reasons"])
+    assert "declared NEEDS_ATTENTION" in reasons
+    assert "declared no VERDICT" in reasons
+    assert "no required proof artifact" in reasons
 
 
 def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:

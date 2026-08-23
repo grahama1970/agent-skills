@@ -312,6 +312,28 @@ so, and the lane records `origin/main` before and after, blocking the ticket if
 it moved. That detects the violation; preventing it belongs in branch
 protection.
 
+#### The proof gate — a DAG that exited 0 is not a repaired ticket
+
+`$ask tau-dag` exiting 0 means the seats were reached. Before the lane lands or
+closes anything it checks four things and fails closed on any of them, writing
+`repair-proof-gate.json` into the tick receipt either way:
+
+- the reviewer seat declares `VERDICT: PASS` in its own response;
+- no seat declares `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION`;
+- if the ticket's `Required proof` section names artifacts, at least one exists,
+  was written after this dispatch started, and reads as a completed pass;
+- the repair branch is at least one commit ahead of `origin/main`.
+
+Verdicts are read, not inferred: only a `VERDICT:` line or the first word of a
+`## Position` section counts, and prose describing a problem yields no verdict,
+which is unproven. Refusal leaves the ticket open, `agent-blocked`, and
+`NEEDS_ATTENTION`.
+
+agent-skills#1499 is why: both node receipts said `status: PASS` while the
+creator's response said it had no tools and the reviewer's said the live proof
+had failed and a retry was still running. The issue was landed and closed as
+completed with no proof artifact and no commit.
+
 ### 2. Closure audit — closing a ticket is a claim
 
 Two seats (`closure_auditors`, at least two distinct) judge each `COMPLETED`
