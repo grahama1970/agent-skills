@@ -20,6 +20,14 @@
       ],
       "state": "paused"
     },
+    "battle": {
+      "reason": "Skill-scoped Battle project may route only issues under skills/battle.",
+      "resume_requires": [
+        "battle-skill-contract",
+        "valid-github-auth"
+      ],
+      "state": "active"
+    },
     "chatgpt-lab": {
       "reason": "Existing PhatGPT watchdog needs an adapter to the shared lease and receipt protocol before global scheduling.",
       "resume_requires": [

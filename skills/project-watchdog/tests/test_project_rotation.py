@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from watchdog import commands, registry  # noqa: E402
 from watchdog.registry import (  # noqa: E402
     UNKNOWN_TARGET,
     busy_targets,
@@ -73,6 +74,17 @@ def test_paused_projects_are_skipped_with_named_reason():
     assert [s["reason"] for s in skipped] == ["project_state_paused"] * 3
 
 
+def test_missing_runtime_state_uses_project_default_state():
+    state = {"projects": {}}
+    active_project = {"project_id": "battle", "state_policy": {"default_state": "active"}}
+    paused_project = {"project_id": "new", "state_policy": {"default_state": "paused"}}
+    unconfigured_project = {"project_id": "old"}
+
+    assert commands._project_runtime_state(active_project, state) == "active"
+    assert commands._project_runtime_state(paused_project, state) == "paused"
+    assert commands._project_runtime_state(unconfigured_project, state) is None
+
+
 def test_a_lease_no_longer_removes_its_project_from_rotation():
     """One leased ticket used to withhold every other target in the repo."""
     chosen, skipped = select_next_project(
@@ -128,6 +140,70 @@ def test_a_legacy_ticket_falls_back_to_the_skills_it_mentions():
     """7 of the 8 leases open on agent-skills predate the target: line."""
     body = "Fix `skills/ask` compete when `skills/surf` returns a stale tab."
     assert issue_targets({"body": body}) == {"skills/ask", "skills/surf"}
+
+
+def test_skill_scoped_project_ignores_unrelated_agent_skills_tickets(monkeypatch):
+    """A Battle project tick must not take Ask/Surf tickets from the shared repo."""
+    ask_issue = _issue(1507, "skills/ask")
+    battle_issue = _issue(1510, "skills/battle")
+
+    def run_cmd(cmd, timeout_s=None):
+        import json as _json
+
+        assert cmd[1:3] == ["issue", "list"]
+        return {
+            "exit_code": 0,
+            "stdout": _json.dumps([ask_issue, battle_issue]),
+            "stderr": "",
+        }
+
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+
+    routable = registry.list_routable_issues(
+        "t",
+        {
+            "project_id": "battle",
+            "repo": "o/agent-skills",
+            "worktree": "/tmp/wt",
+            "issue_target_prefixes": ["skills/battle"],
+        },
+    )
+
+    assert [i["number"] for i in routable] == [1510]
+    assert routable[0]["watchdog_targets"] == ["skills/battle"]
+    assert registry.LAST_SCAN["excluded_issues"]["project_scope_mismatch"] == [1507]
+
+
+def test_broad_agent_skills_project_can_exclude_battle_tickets(monkeypatch):
+    """Fleet rotation must not let generic agent-skills consume Battle tickets."""
+    battle_issue = _issue(1510, "skills/battle")
+    ticket_issue = _issue(1511, "skills/ticket")
+
+    def run_cmd(cmd, timeout_s=None):
+        import json as _json
+
+        assert cmd[1:3] == ["issue", "list"]
+        return {
+            "exit_code": 0,
+            "stdout": _json.dumps([battle_issue, ticket_issue]),
+            "stderr": "",
+        }
+
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+
+    routable = registry.list_routable_issues(
+        "t",
+        {
+            "project_id": "agent-skills",
+            "repo": "o/agent-skills",
+            "worktree": "/tmp/wt",
+            "issue_target_exclude_prefixes": ["skills/battle"],
+        },
+    )
+
+    assert [i["number"] for i in routable] == [1511]
+    assert routable[0]["watchdog_targets"] == ["skills/ticket"]
+    assert registry.LAST_SCAN["excluded_issues"]["project_scope_mismatch"] == [1510]
 
 
 def test_an_unreadable_target_is_its_own_namespace():

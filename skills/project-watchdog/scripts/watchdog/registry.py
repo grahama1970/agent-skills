@@ -271,6 +271,10 @@ def list_routable_issues(
             reason = skip_reasons.get(issue_number, "lease_reclaimed_this_tick")
             excluded.setdefault(reason, []).append(issue_number)
             continue
+        targets = issue_targets(issue)
+        if not issue_matches_project_scope(project, targets):
+            excluded.setdefault("project_scope_mismatch", []).append(issue_number)
+            continue
         dep = dependency_gate(run_id, repo, issue, apply=apply)
         if dep["status"] in {"open", "unreadable", "unblock_failed"}:
             excluded.setdefault(str(dep["reason"]), []).append(issue_number)
@@ -291,7 +295,6 @@ def list_routable_issues(
         if action is None:
             excluded.setdefault(reason or "unknown", []).append(issue_number)
             continue
-        targets = issue_targets(issue)
         if targets_are_blocked(targets, busy_now):
             excluded.setdefault("target_busy", []).append(issue_number)
             continue
@@ -612,6 +615,8 @@ def list_closed_for_audit(
     pending: list[dict[str, Any]] = []
     for issue in json.loads(result.get("stdout") or "[]"):
         labels = {str(lbl.get("name")) for lbl in issue.get("labels", [])}
+        if not issue_matches_project_scope(project, issue_targets(issue)):
+            continue
         if (
             config.CLOSURE_VERIFIED_LABEL in labels
             or config.CLOSURE_UNVERIFIED_LABEL in labels
@@ -634,14 +639,18 @@ def list_recently_closed(run_id: str, project: dict[str, Any]) -> list[dict[str,
         [
             "gh", "issue", "list", "--repo", repo, "--state", "closed",
             "--label", config.READY_LABEL, "--limit", "40",
-            "--json", "number,title,labels,closedAt,stateReason",
+            "--json", "number,title,body,labels,closedAt,stateReason",
         ],
         timeout_s=60,
     )
     if result.get("exit_code") != 0:
         raise RuntimeError(f"closed-issue scan failed for {repo}: {result.get('stderr')}")
     issues = json.loads(result.get("stdout") or "[]")
-    return sorted(issues, key=lambda i: str(i.get("closedAt") or ""), reverse=True)
+    scoped = [
+        issue for issue in issues
+        if issue_matches_project_scope(project, issue_targets(issue))
+    ]
+    return sorted(scoped, key=lambda i: str(i.get("closedAt") or ""), reverse=True)
 
 
 def _parse_iso(value: Any) -> float | None:
@@ -851,6 +860,63 @@ def issue_targets(issue: dict[str, Any]) -> set[str]:
         return declared_paths
     mentioned = {path.rstrip("/") for path in _SKILL_PATH.findall(body)}
     return mentioned or {UNKNOWN_TARGET}
+
+
+def _project_target_prefix_list(project: dict[str, Any], key: str) -> list[str]:
+    raw = project.get(key) or []
+    prefixes: list[str] = []
+    if isinstance(raw, str):
+        raw = [raw]
+    for item in raw:
+        prefix = str(item).strip().rstrip("/")
+        if prefix and not prefix.startswith(("/", "..")):
+            prefixes.append(prefix)
+    return prefixes
+
+
+def project_target_prefixes(project: dict[str, Any]) -> list[str]:
+    """Target prefixes this project owns inside a shared repository.
+
+    Most registered projects map one GitHub repo to one project. The
+    agent-skills repo is different: it holds hundreds of skills. A skill-level
+    project such as Battle must see only tickets scoped to ``skills/battle``;
+    otherwise the shared repo queue can hand it unrelated Ask or Surf work.
+    """
+    return _project_target_prefix_list(project, "issue_target_prefixes")
+
+
+def project_target_exclude_prefixes(project: dict[str, Any]) -> list[str]:
+    """Target prefixes this broad project explicitly leaves to scoped projects."""
+    return _project_target_prefix_list(project, "issue_target_exclude_prefixes")
+
+
+def target_matches_prefix(target: str, prefix: str) -> bool:
+    """Return whether ``target`` is exactly under ``prefix``."""
+    target = target.rstrip("/")
+    prefix = prefix.rstrip("/")
+    return target == prefix or target.startswith(f"{prefix}/")
+
+
+def issue_matches_project_scope(project: dict[str, Any], targets: set[str]) -> bool:
+    """Whether the issue targets belong to this project's declared scope."""
+    include_prefixes = project_target_prefixes(project)
+    exclude_prefixes = project_target_exclude_prefixes(project)
+    if not include_prefixes and not exclude_prefixes:
+        return True
+    concrete = {target for target in targets if target != UNKNOWN_TARGET}
+    if any(
+        target_matches_prefix(target, prefix)
+        for target in concrete
+        for prefix in exclude_prefixes
+    ):
+        return False
+    if not include_prefixes:
+        return True
+    return any(
+        target_matches_prefix(target, prefix)
+        for target in concrete
+        for prefix in include_prefixes
+    )
 
 
 def busy_targets(issues: list[dict[str, Any]]) -> set[str]:

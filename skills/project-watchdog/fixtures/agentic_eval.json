@@ -129,6 +129,31 @@
       }
     },
     {
+      "name": "skill-scoped-projects-only-route-owned-targets",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_rotation.py::test_missing_runtime_state_uses_project_default_state",
+        "../tests/test_project_rotation.py::test_skill_scoped_project_ignores_unrelated_agent_skills_tickets",
+        "../tests/test_project_rotation.py::test_broad_agent_skills_project_can_exclude_battle_tickets",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ]
+      },
+      "notes": "Regression for Battle scope drift: a battle-scoped project sees only skills/battle issues, and the broad agent-skills project can exclude skills/battle so fleet rotation does not steal Battle tickets."
+    },
+    {
       "name": "repair-dispatch-passes-explicit-ask-execution-timeout",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

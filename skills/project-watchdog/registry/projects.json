@@ -176,11 +176,70 @@
       ]
     },
     {
+      "project_id": "battle",
+      "display_name": "Battle",
+      "repo": "grahama1970/agent-skills",
+      "worktree": "/home/graham/workspace/experiments/agent-skills",
+      "status": "registered",
+      "issue_target_prefixes": [
+        "skills/battle"
+      ],
+      "state_policy": {
+        "default_state": "active",
+        "pause_allowed_by": [
+          "human",
+          "project-watchdog"
+        ],
+        "stop_allowed_by": [
+          "human"
+        ],
+        "resume_allowed_by": [
+          "human"
+        ],
+        "resume_requires": [
+          "battle-skill-contract",
+          "valid-github-auth"
+        ]
+      },
+      "runner_kind": "project-local",
+      "runner": {
+        "command": "skills/battle/sanity.sh",
+        "cwd": "/home/graham/workspace/experiments/agent-skills",
+        "requires_start_handoff": false
+      },
+      "allowed_agents": [
+        "battle-agent",
+        "code-reviewer",
+        "project-or-harness-verifier",
+        "human"
+      ],
+      "capabilities": [
+        "battle-adaptive-lineage",
+        "battle-receipt-replay",
+        "battle-judge-scorekeeper"
+      ],
+      "notes": [
+        "Skill-scoped agent-skills project. It may dispatch only issues whose parsed target is under skills/battle. Generic agent-skills excludes this prefix so fleet rotation does not steal Battle tickets."
+      ],
+      "repair_creator": "gpt-5.5-high",
+      "repair_reviewer": "claude-fable-low",
+      "ticket_repair_timeout_s": 10800,
+      "service": {
+        "kind": "none",
+        "note": "Battle runs from the agent-skills source tree; Docker proof rungs are invoked by the skill entrypoints.",
+        "proof_needs_restart": false
+      },
+      "auto_land_main": true
+    },
+    {
       "project_id": "agent-skills",
       "display_name": "Agent Skills",
       "repo": "grahama1970/agent-skills",
       "worktree": "/home/graham/workspace/experiments/agent-skills",
       "status": "registered",
+      "issue_target_exclude_prefixes": [
+        "skills/battle"
+      ],
       "state_policy": {
         "default_state": "paused",
         "pause_allowed_by": [

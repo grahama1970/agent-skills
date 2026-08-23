@@ -234,6 +234,17 @@ def _persist_tick_state(state: dict[str, Any]) -> None:
     write_json(config.state_path(), current)
 
 
+def _project_runtime_state(project: dict[str, Any], state: dict[str, Any]) -> str | None:
+    """Runtime state for a project, falling back to registry policy for new ids."""
+    cid = str(project.get("project_id"))
+    explicit = state.get("projects", {}).get(cid, {}).get("state")
+    if explicit:
+        return str(explicit)
+    policy = project.get("state_policy") or {}
+    default = policy.get("default_state")
+    return str(default) if default else None
+
+
 def _audit_one_closure(
     run_id: str,
     receipt_dir: Path,
@@ -251,7 +262,7 @@ def _audit_one_closure(
     pending_by_project: list[dict[str, Any]] = []
     for candidate in candidates or registry.rotation_order(load_json(config.projects_path()), state):
         cid = str(candidate.get("project_id"))
-        if state.get("projects", {}).get(cid, {}).get("state") != "active":
+        if _project_runtime_state(candidate, state) != "active":
             continue
         try:
             pending = registry.list_closed_for_audit(run_id, candidate)
@@ -332,7 +343,7 @@ def _attest_completion(
     attested = state.setdefault("completion_attested_at", {})
     for candidate in candidates or registry.rotation_order(load_json(config.projects_path()), state):
         cid = str(candidate.get("project_id"))
-        if state.get("projects", {}).get(cid, {}).get("state") != "active":
+        if _project_runtime_state(candidate, state) != "active":
             continue
         record = attested.get(cid)
         if isinstance(record, dict):
@@ -415,7 +426,7 @@ def _tick_locked(
 
     for candidate in candidates:
         cid = str(candidate.get("project_id"))
-        cstate = state.get("projects", {}).get(cid, {}).get("state")
+        cstate = _project_runtime_state(candidate, state)
         if cstate != "active":
             skipped.append({"project_id": cid, "reason": f"project_state_{cstate}"})
             continue

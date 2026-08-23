@@ -108,6 +108,14 @@ ticket names its target on the `target:` line `/ticket` writes; older tickets
 fall back to the skill paths their body mentions. A leased ticket blocks its own
 targets and nothing else.
 
+Registered projects may narrow a shared repository with `issue_target_prefixes`
+and may leave a subtree to a narrower project with
+`issue_target_exclude_prefixes`. This is required for skill-scoped projects
+inside `agent-skills`: `battle` may dispatch only tickets whose parsed target is
+under `skills/battle`, while the broad `agent-skills` project excludes that
+prefix so fleet rotation does not hand Battle tickets to the generic skill
+maintainer or hand Ask/Surf tickets to the Battle agent.
+
 ## Troubleshooting: the watchdog runs but never dispatches
 
 `status: NOOP, stop_reason: no_routable_issues` on every tick means the scan
