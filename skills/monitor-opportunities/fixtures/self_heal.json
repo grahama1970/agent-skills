@@ -448,6 +448,32 @@
           "SELF_HEAL_NO_FILEABLE_STEP"
         ]
       }
+    },
+    {
+      "name": "promoted-stage0-requires-clean-stage-ledger",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "nightly.publication",
+        "report.acceptance",
+        "stage.conservation"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_report_acceptance.py::test_report_acceptance_fails_required_stage_ledger_violation -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "stage_ledger_pass"
+        ]
+      }
     }
   ]
 }

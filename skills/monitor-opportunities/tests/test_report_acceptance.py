@@ -40,6 +40,43 @@ def test_report_acceptance_passes_for_receipt_backed_run(tmp_path: Path) -> None
     assert (out / "report-acceptance-receipt.json").is_file()
 
 
+def test_report_acceptance_fails_required_stage_ledger_violation(tmp_path: Path) -> None:
+    out = _run_fixture(tmp_path)
+    replay = runner.invoke(app, ["replay", "--run", str(out)])
+    assert replay.exit_code == 0, replay.output
+    (out / "stage-ledger.json").write_text(
+        json.dumps(
+            {
+                "schema": "monitor_opportunities.stage_ledger.v1",
+                "ok": False,
+                "counts": {"discovered": 2, "accepted": 1, "unaccounted": 1},
+                "violations": [
+                    {
+                        "rule": "no-silent-loss",
+                        "candidate_id": "candidate:a:ghost",
+                        "detail": "discovered record candidate:a:ghost has no disposition",
+                    }
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out), "--require-stage-ledger"])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["status"] == "FAIL"
+    assert payload["checks"]["stage_ledger_required"] is True
+    assert payload["checks"]["stage_ledger_present"] is True
+    assert payload["checks"]["stage_ledger_pass"] is False
+    assert payload["counts"]["stage_ledger_violations"] == 1
+    assert any(row["check"] == "stage_ledger_pass" for row in payload["failures"])
+
+
 def test_report_acceptance_fails_without_required_zero_effect_replay(tmp_path: Path) -> None:
     out = _run_fixture(tmp_path)
 

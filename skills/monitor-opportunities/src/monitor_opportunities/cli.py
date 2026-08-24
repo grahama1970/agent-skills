@@ -815,12 +815,18 @@ def report_acceptance(
         "--allow-missing-zero-effect-replay",
         help="Allow run-only receipts that were not produced by nightly.",
     ),
+    require_stage_ledger: bool = typer.Option(
+        False,
+        "--require-stage-ledger",
+        help="Require stage-ledger.json to exist and pass.",
+    ),
 ) -> None:
     """Validate report-visible claims, provenance, degradation, and zero effects."""
     _configure_logging()
     receipt = validate_report_acceptance(
         run,
         require_zero_effect_replay=not allow_missing_zero_effect_replay,
+        require_stage_ledger=require_stage_ledger,
     )
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
     if receipt["status"] != "PASS":
@@ -2432,6 +2438,7 @@ def nightly(
     report_acceptance_receipt = validate_report_acceptance(
         out,
         require_zero_effect_replay=True,
+        require_stage_ledger=promoted_stage0,
     )
     report_acceptance_sha256 = sha256_json(report_acceptance_receipt)
     steps["report_acceptance"] = {
@@ -2480,9 +2487,13 @@ def nightly(
             "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
             "zero_effect_replay": str(replay_receipt_path),
             "report_acceptance": str(report_acceptance_path),
+            "stage_ledger": str(out / "stage-ledger.json")
+            if (out / "stage-ledger.json").exists()
+            else None,
         },
         "artifact_hashes": {
             "report_acceptance": report_acceptance_sha256,
+            "stage_ledger": _json_hash_file(out / "stage-ledger.json"),
         },
         "receipt_consistency_status": consistency.get("status") if consistency else "MISSING",
         "report_acceptance_status": report_acceptance_receipt.get("status"),

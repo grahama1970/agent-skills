@@ -161,7 +161,10 @@ def _validate_zero_effect_replay_binding(
 
 
 def validate_report_acceptance(
-    run_dir: Path, *, require_zero_effect_replay: bool = True
+    run_dir: Path,
+    *,
+    require_zero_effect_replay: bool = True,
+    require_stage_ledger: bool = False,
 ) -> dict[str, Any]:
     """Validate report-visible claims, provenance, degradation, and zero effects."""
 
@@ -170,6 +173,7 @@ def validate_report_acceptance(
     report_json_path = run_dir / "report" / "report.json"
     report_html_path = run_dir / "report" / "index.html"
     zero_effect_path = run_dir / "zero-effect-replay-receipt.json"
+    stage_ledger_path = run_dir / "stage-ledger.json"
     failures: list[dict[str, Any]] = []
 
     def fail(check: str, detail: str) -> None:
@@ -186,6 +190,8 @@ def validate_report_acceptance(
         fail("report_json_present", "report/report.json is missing")
     if not report_html_path.exists():
         fail("report_html_present", "report/index.html is missing")
+    if require_stage_ledger and not stage_ledger_path.exists():
+        fail("stage_ledger_present", "stage-ledger.json is missing")
 
     manifest = None
     if manifest_raw:
@@ -219,6 +225,28 @@ def validate_report_acceptance(
 
     if run_receipt and run_receipt.get("external_effects") is not False:
         fail("run_external_effects", "run receipt external_effects is not false")
+
+    stage_ledger = read_json(stage_ledger_path) if stage_ledger_path.exists() else None
+    stage_ledger_schema_ok = (
+        stage_ledger.get("schema") == "monitor_opportunities.stage_ledger.v1"
+        if stage_ledger is not None
+        else False
+    )
+    stage_ledger_pass = (
+        stage_ledger.get("ok") is True
+        if stage_ledger is not None
+        else False
+    )
+    stage_ledger_violations = (
+        len(stage_ledger.get("violations") or []) if stage_ledger is not None else 0
+    )
+    if stage_ledger is not None and not stage_ledger_schema_ok:
+        fail("stage_ledger_schema", "stage-ledger.json has an unexpected schema")
+    if require_stage_ledger and stage_ledger is not None and not stage_ledger_pass:
+        fail(
+            "stage_ledger_pass",
+            f"stage-ledger.json is not ok; violations={stage_ledger_violations}",
+        )
 
     source_receipts = manifest_raw.get("source_receipts") or []
     degraded_statuses = {
@@ -277,6 +305,10 @@ def validate_report_acceptance(
                 zero_effect.get("status") == "PASS" if zero_effect is not None else False
             ),
             **replay_binding_checks,
+            "stage_ledger_required": require_stage_ledger,
+            "stage_ledger_present": stage_ledger is not None,
+            "stage_ledger_schema": stage_ledger_schema_ok,
+            "stage_ledger_pass": stage_ledger_pass,
             "run_external_effects_false": run_receipt.get("external_effects") is False,
             "shortlist_bound": opportunity_count <= 8,
             "application_packets_human_authorized_only": not authorized_packets,
@@ -289,6 +321,7 @@ def validate_report_acceptance(
             "source_receipts": len(source_receipts),
             "degraded_source_receipts": len(degraded_receipts),
             "application_packets": len(application_packets),
+            "stage_ledger_violations": stage_ledger_violations,
         },
         "receipt_consistency": consistency,
         "failures": failures,

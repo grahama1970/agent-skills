@@ -107,6 +107,27 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         (run_dir / "morning-digest.json").write_text(
             '{"schema":"digest","counts":{"employment":1}}\n', encoding="utf-8"
         )
+        (run_dir / "stage-ledger.json").write_text(
+            json.dumps(
+                {
+                    "schema": "monitor_opportunities.stage_ledger.v1",
+                    "ok": True,
+                    "counts": {
+                        "discovered": 2,
+                        "accepted": 2,
+                        "rejected": 0,
+                        "deduplicated": 0,
+                        "eligible_not_shortlisted": 0,
+                        "unaccounted": 0,
+                    },
+                    "violations": [],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         steps["digest"] = {"status": "PASS"}
 
     monkeypatch.setattr("monitor_opportunities.nightly_digest.run_digest_phase", fake_digest)
