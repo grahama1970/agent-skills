@@ -324,6 +324,11 @@ def _source_intel_summary(candidate: dict[str, Any], *, contacts: list[Any] | No
         return f"{title} at {organization} is Meetup source intelligence with recommended decision {decision}."
     if _is_linkedin_locator(candidate):
         if candidate.get("easy_apply"):
+            if candidate.get("top_candidate_evidence"):
+                return (
+                    f"{title} at {organization} is LinkedIn Top Applicant plus Easy Apply source intelligence; "
+                    "standing authorization applies, so prepare the exact LinkedIn Easy Apply commit path."
+                )
             return (
                 f"{title} at {organization} is LinkedIn Easy Apply source intelligence; "
                 "human authorization and exact payload review are required before any platform action."
@@ -389,13 +394,15 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
     if _is_linkedin_locator(candidate):
         # A WNY-priority locator that primary-source readback could not confirm
         # this run remains visible. Top Applicant and Easy Apply rows are also
-        # action-worthy human review items, but still source intelligence until
-        # primary-source readback admits them or the human authorizes an exact
-        # LinkedIn payload. Plain LinkedIn locator evidence remains inert.
+        # action-worthy items. Combined Top Applicant + Easy Apply rows carry
+        # standing authorization for the gated LinkedIn Easy Apply commit path;
+        # standalone LinkedIn locator evidence remains inert.
         pending = bool(candidate.get("pending_primary_verification"))
         top_applicant = bool(candidate.get("top_candidate_evidence"))
         easy_apply = bool(candidate.get("easy_apply"))
-        if easy_apply:
+        if easy_apply and top_applicant:
+            decision = "EASY_APPLY_AUTHORIZED"
+        elif easy_apply:
             decision = "EASY_APPLY_REVIEW"
         elif top_applicant:
             decision = "TOP_APPLICANT_REVIEW"
@@ -407,9 +414,17 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             "LinkedIn row is profile/recommendation source intelligence only.",
         ]
         if easy_apply:
-            reasons.append(
-                "LinkedIn Easy Apply signal: prepare an exact human-authorized payload before any platform action."
-            )
+            if top_applicant:
+                reasons.append(
+                    "Standing authorization applies: Graham is Top Applicant and the posting exposes LinkedIn Easy Apply."
+                )
+                reasons.append(
+                    "Use the gated commit-linkedin path; stop if duplicate protection, missing known answers, or confirmation readback fails."
+                )
+            else:
+                reasons.append(
+                    "LinkedIn Easy Apply signal: prepare an exact human-authorized payload before any platform action."
+                )
         if top_applicant:
             reasons.append(
                 "LinkedIn Top Applicant signal: surface for Graham review even when primary-source readback is pending."

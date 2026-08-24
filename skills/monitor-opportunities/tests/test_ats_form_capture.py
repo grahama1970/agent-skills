@@ -166,6 +166,27 @@ def test_close_tab_records_browser_control_failure(
     assert sleeps == []
 
 
+def test_close_tab_circuit_defers_after_three_pending_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    close_calls: list[tuple[object, ...]] = []
+
+    def close_timeout(*args: object, **__: object) -> str:
+        close_calls.append(args)
+        raise subprocess.TimeoutExpired(["surf", "tab.close"], 8)
+
+    monkeypatch.setattr(browser_capture, "_surf", close_timeout)
+    browser_capture.reset_browser_control_events()
+
+    browser_capture._close_tab(Path("surf/run.sh"), "101", "first")
+    browser_capture._close_tab(Path("surf/run.sh"), "102", "second")
+    browser_capture._close_tab(Path("surf/run.sh"), "103", "third")
+    assert len(close_calls) == 6
+
+    browser_capture._close_tab(Path("surf/run.sh"), "104", "fourth")
+    assert len(close_calls) == 6
+
+
 def test_close_tab_final_sweep_success_does_not_degrade(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

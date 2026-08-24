@@ -247,6 +247,30 @@
       "proves": "Pacing sleeps no longer call surf wait, so a busy/unavailable surf lease cannot abort a capture that already has rows (the 2026-08-13 top-applicant failure)."
     },
     {
+      "name": "surf-tab-close-circuit-breaks-repeated-timeouts",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_ats_form_capture.py::test_close_tab_circuit_defers_after_three_pending_failures -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "TimeoutExpired"
+        ]
+      },
+      "timeout_seconds": 60,
+      "proves": "After three pending Surf tab-close timeouts, monitor-opportunities stops spending per-tab timeout budget on new close attempts and defers later tabs to the existing final cleanup sweep.",
+      "does_not_prove": "The underlying Surf tab.close command is repaired, or that every browser tab will close promptly in a live nightly.",
+      "seams": [
+        "browser_capture.tab_close_cleanup"
+      ]
+    },
+    {
       "name": "nightly-claim-authority-and-relative-evidence-regression-2026-08-24",
       "type": "adversarial",
       "evidence_class": "deterministic",
@@ -571,6 +595,34 @@
       },
       "seams": [
         "ats.linkedin_easy_apply"
+      ]
+    },
+    {
+      "name": "linkedin-top-applicant-easy-apply-standing-authorization",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_is_standing_authorized_source_intel -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "SOURCE_INTEL_DECISION_INVALID",
+          "LINKEDIN_PRIORITY_NOT_ACTIONABLE"
+        ]
+      },
+      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is not left as generic review-only source intelligence; it is classified as EASY_APPLY_AUTHORIZED, visible in the report, action-worthy, and routed toward the gated commit-linkedin path.",
+      "does_not_prove": "A live LinkedIn submit occurred, that LinkedIn exposed a qualifying row in the current account, or that unknown screening questions can be answered without Graham.",
+      "seams": [
+        "pipeline.linkedin_source_intel_policy",
+        "contracts.linkedin_source_intel_decision_allowlist",
+        "report.linkedin_apply_queue_signal"
       ]
     },
     {

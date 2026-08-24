@@ -89,6 +89,42 @@ def test_linkedin_top_applicant_and_easy_apply_are_action_worthy_source_intel() 
     assert "Easy Apply" in easy_apply["summary"]
 
 
+def test_linkedin_top_applicant_plus_easy_apply_is_standing_authorized_source_intel() -> None:
+    intel = _source_intel(
+        {
+            "candidate_id": "candidate:a:linkedin-top-applicant-easy-apply",
+            "lane": "A",
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": "src:linkedin",
+            "title": "Applied AI Engineer",
+            "organization": "Example AI",
+            "posting_url": "https://www.linkedin.com/jobs/view/456/",
+            "top_candidate_evidence": True,
+            "easy_apply": True,
+        }
+    )
+
+    assert intel is not None
+    assert intel["decision"] == "EASY_APPLY_AUTHORIZED"
+    assert intel["visible_in_report"] is True
+    assert intel["action_worthy"] is True
+    assert "Top Applicant plus Easy Apply" in intel["summary"]
+    assert any("Standing authorization applies" in reason for reason in intel["reasons"])
+    assert any("commit-linkedin" in reason for reason in intel["reasons"])
+
+    data = copy.deepcopy(built_in_fixture())
+    receipt_id = data["source_receipts"][0]["receipt_id"]
+    evidence_ref = data["source_receipts"][0]["evidence_refs"][0]
+    intel["source_receipt_ids"] = [receipt_id]
+    intel["evidence_refs"] = [evidence_ref]
+    data.setdefault("source_intel", []).append(intel)
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    manifest = validate_manifest(data)
+    assert manifest.source_intel[-1].decision == "EASY_APPLY_AUTHORIZED"
+
+
 def test_report_visible_opportunity_must_cite_known_accepted_source_receipt() -> None:
     data = copy.deepcopy(built_in_fixture())
     data["opportunities"][0]["source_receipt_ids"] = ["src:missing"]

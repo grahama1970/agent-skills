@@ -235,6 +235,7 @@ _TAB_CLOSE_LOCK_TIMEOUT_SECONDS = 5
 _TAB_CLOSE_ATTEMPTS = 1
 _TAB_CLOSE_SWEEP_TIMEOUT_SECONDS = 30
 _TAB_CLOSE_INDIVIDUAL_SWEEP_TIMEOUT_SECONDS = 12
+_TAB_CLOSE_CIRCUIT_BREAK_THRESHOLD = 3
 
 
 def _surf_pause(surf_run: Path, seconds: str, timeout: int = 30) -> None:
@@ -352,6 +353,16 @@ def flush_browser_control_cleanup(surf_run: Path = SURF_RUN_DEFAULT) -> None:
 
 
 def _close_tab(surf_run: Path, tab_id: str, label: str) -> None:
+    if len(_PENDING_TAB_CLOSE_FAILURES) >= _TAB_CLOSE_CIRCUIT_BREAK_THRESHOLD:
+        _PENDING_TAB_CLOSE_FAILURES[tab_id] = {
+            "attempted_modes": ["deferred_by_close_circuit"],
+            "error": BrowserCaptureError(
+                f"tab close circuit open after {_TAB_CLOSE_CIRCUIT_BREAK_THRESHOLD} pending failures"
+            ),
+            "label": label,
+            "timeout": 0,
+        }
+        return
     last_error: BrowserCaptureError | subprocess.TimeoutExpired | None = None
     attempts = [
         (

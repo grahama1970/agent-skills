@@ -683,6 +683,7 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
                 "PENDING_PRIMARY_VERIFICATION",
                 "TOP_APPLICANT_REVIEW",
                 "EASY_APPLY_REVIEW",
+                "EASY_APPLY_AUTHORIZED",
             }
             if decision not in allowed:
                 raise ContractError(
@@ -697,7 +698,7 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
             if decision != "LOCATOR_ONLY" and item.get("action_worthy") is not True:
                 raise ContractError(
                     "LINKEDIN_PRIORITY_NOT_ACTIONABLE",
-                    "LinkedIn Top Applicant, Easy Apply, and pending WNY locators must be action-worthy",
+                    "LinkedIn Top Applicant, Easy Apply, authorized Easy Apply, and pending WNY locators must be action-worthy",
                 )
         if signal_type == "GITHUB_REPO_INTELLIGENCE" and decision != "CONTACT_INTELLIGENCE_ONLY":
             raise ContractError("SOURCE_INTEL_DECISION_INVALID", f"Unsupported GitHub decision: {decision}")
