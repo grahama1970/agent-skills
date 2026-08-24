@@ -106,6 +106,30 @@
       ]
     },
     {
+      "name": "nightly-latest-not-promoted-before-acceptance-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_nightly_promoted_stage0.py::test_promoted_stage0_fails_on_report_acceptance_failure -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "PROMOTED_LATEST_BEFORE_ACCEPTANCE"
+        ]
+      },
+      "seams": [
+        "nightly.publication",
+        "report.acceptance"
+      ]
+    },
+    {
       "name": "response-hardening-regression",
       "type": "adversarial",
       "real_world": true,

@@ -366,7 +366,7 @@ def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
     )
 
     assert result.exit_code == 2
-    assert "SCHEDULER_EQUIVALENCE_FAILED" in result.stderr
+    assert "SCHEDULER_EQUIVALENCE_FAILED" in result.output
     equivalence_path = (
         scheduler_data / "receipts" / "monitor-opportunities-nightly-equivalence.json"
     )

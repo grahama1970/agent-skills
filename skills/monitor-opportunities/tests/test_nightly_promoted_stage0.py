@@ -527,7 +527,7 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
     result = runner.invoke(app, ["nightly", "--promoted-stage0", "--out", str(out)])
 
     assert result.exit_code == 2
-    assert "PROMOTED_STAGE0_ZERO_EFFECT_REPLAY_FAILED" in result.stderr
+    assert "PROMOTED_STAGE0_ZERO_EFFECT_REPLAY_FAILED" in result.output
     replay_receipt = json.loads(stale_replay.read_text(encoding="utf-8"))
     assert replay_receipt["status"] == "FAIL"
     assert replay_receipt["checks"]["projection_external_effects_false"] is False
@@ -538,6 +538,15 @@ def test_promoted_stage0_fails_on_report_acceptance_failure(
     tmp_path: Path, monkeypatch
 ) -> None:
     out = tmp_path / "nightly"
+    promotion_calls: list[Path] = []
+    monkeypatch.setattr(
+        "monitor_opportunities.cli._new_nightly_run_dir",
+        lambda skill_dir, *, promote_latest=True: out,
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.cli._promote_nightly_latest",
+        lambda run_dir: promotion_calls.append(run_dir),
+    )
 
     monkeypatch.setattr(
         "monitor_opportunities.run_attestation.attest",
@@ -752,8 +761,9 @@ def test_promoted_stage0_fails_on_report_acceptance_failure(
 
     monkeypatch.setattr("subprocess.run", fake_subprocess_run)
 
-    result = runner.invoke(app, ["nightly", "--promoted-stage0", "--out", str(out)])
+    result = runner.invoke(app, ["nightly", "--promoted-stage0"])
 
     assert result.exit_code == 2
-    assert "PROMOTED_STAGE0_REPORT_ACCEPTANCE_FAILED" in result.stderr
+    assert "PROMOTED_STAGE0_REPORT_ACCEPTANCE_FAILED" in result.output
     assert not (out / "nightly-receipt.json").exists()
+    assert promotion_calls == []

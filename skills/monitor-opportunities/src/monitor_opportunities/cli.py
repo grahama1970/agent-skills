@@ -436,21 +436,8 @@ def _default_nightly_out(workdir: Path) -> Path:
 NIGHTLY_RUNS_KEPT = 60
 
 
-def _new_nightly_run_dir(skill_dir: Path) -> Path:
-    """A dated directory per run, with `latest` pointing at the newest.
-
-    Writing every run into a fixed `latest/` destroyed the previous night's
-    receipts, so on 2026-08-18 the only recoverable evidence for a week of
-    nightlies was a single file: there was no way to answer whether a run that
-    exited 0 had actually delivered anything. Each run now gets its own dated
-    directory and `latest` becomes a symlink, so readers keep working and
-    history survives.
-    """
-
-    root = skill_dir / "local" / "nightly"
-    root.mkdir(parents=True, exist_ok=True)
-    run_dir = root / datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ")
-    run_dir.mkdir(parents=True, exist_ok=True)
+def _promote_nightly_latest(run_dir: Path) -> None:
+    root = run_dir.parent
     link = root / "latest"
     try:
         if link.is_symlink() or link.exists():
@@ -459,8 +446,11 @@ def _new_nightly_run_dir(skill_dir: Path) -> Path:
             else:
                 shutil.rmtree(link)
         link.symlink_to(run_dir.name)
-    except OSError as exc:  # a broken link must never stop the run
+    except OSError as exc:  # a broken link must never stop an already written run
         logger.warning("could not update nightly latest symlink: {}", exc)
+
+
+def _prune_nightly_runs(root: Path) -> None:
     runs = sorted(
         (d for d in root.glob("run-*") if d.is_dir()),
         key=lambda d: d.name,
@@ -471,6 +461,27 @@ def _new_nightly_run_dir(skill_dir: Path) -> Path:
             shutil.rmtree(stale)
         except OSError:
             pass
+
+
+def _new_nightly_run_dir(skill_dir: Path, *, promote_latest: bool = True) -> Path:
+    """A dated directory per run, with `latest` pointing at the newest.
+
+    Writing every run into a fixed `latest/` destroyed the previous night's
+    receipts, so on 2026-08-18 the only recoverable evidence for a week of
+    nightlies was a single file: there was no way to answer whether a run that
+    exited 0 had actually delivered anything. Each run now gets its own dated
+    directory and `latest` becomes a symlink, so readers keep working and
+    history survives. Scheduled nightly publication uses ``promote_latest=False``
+    and promotes only after the final report acceptance gate writes a receipt.
+    """
+
+    root = skill_dir / "local" / "nightly"
+    root.mkdir(parents=True, exist_ok=True)
+    run_dir = root / datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    if promote_latest:
+        _promote_nightly_latest(run_dir)
+    _prune_nightly_runs(root)
     return run_dir
 
 
@@ -1696,8 +1707,9 @@ def nightly(
     import subprocess
 
     skill_dir = Path(__file__).resolve().parents[2]
+    promote_latest_on_success = out is None
     if out is None:
-        out = _new_nightly_run_dir(skill_dir)
+        out = _new_nightly_run_dir(skill_dir, promote_latest=False)
     run_sh = skill_dir / "run.sh"
     steps: dict[str, object] = {}
 
@@ -2447,6 +2459,11 @@ def nightly(
         "live": True,
         "external_effects": False,
         "out": str(out),
+        "publication": {
+            "latest_promoted": promote_latest_on_success,
+            "latest_path": str(out.parent / "latest") if promote_latest_on_success else None,
+            "published_run": str(out) if promote_latest_on_success else None,
+        },
         "artifacts": {
             "effect_policy": str(effect_policy_path),
             "run": str(run_receipt_path),
@@ -2473,6 +2490,8 @@ def nightly(
     }
     nightly_receipt_path = out / "nightly-receipt.json"
     write_json(nightly_receipt_path, nightly_receipt)
+    if promote_latest_on_success:
+        _promote_nightly_latest(out)
     typer.echo(json.dumps({**nightly_receipt, "receipt": str(nightly_receipt_path)}, indent=2, sort_keys=True))
 
 
