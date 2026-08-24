@@ -226,6 +226,9 @@ function Inline({ tokens, ns = 'link' }: { tokens: Token[]; ns?: string }) {
     <>
       {tokens.map((tok, i) => {
         if (tok.t === 'link') {
+          if (tok.href?.startsWith('mailto:')) {
+            return <span key={i}>{tok.v}</span>;
+          }
           const external = /^https?:\/\//.test(tok.href ?? '');
           return (
             <a

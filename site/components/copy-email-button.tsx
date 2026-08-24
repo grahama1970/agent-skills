@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 function CopyIcon() {
   return (
@@ -11,7 +11,25 @@ function CopyIcon() {
   );
 }
 
-export function CopyEmailButton({ email }: { email: string }) {
+type CopyEmailButtonProps = {
+  email: string;
+  children?: ReactNode;
+  className?: string;
+  qid?: string;
+  qsAction?: string;
+  title?: string;
+  showStatus?: boolean;
+};
+
+export function CopyEmailButton({
+  email,
+  children,
+  className = 'cv-copy-email',
+  qid = 'resume:button:copy-email',
+  qsAction = 'RESUME_COPY_EMAIL',
+  title,
+  showStatus = true,
+}: CopyEmailButtonProps) {
   const [copied, setCopied] = useState(false);
 
   async function copyEmail() {
@@ -27,18 +45,24 @@ export function CopyEmailButton({ email }: { email: string }) {
   return (
     <button
       type="button"
-      className="cv-copy-email"
+      className={className}
       onClick={copyEmail}
-      data-qid="resume:button:copy-email"
-      data-qs-action="RESUME_COPY_EMAIL"
-      title={`Copy ${email}`}
+      data-qid={qid}
+      data-qs-action={qsAction}
+      title={title ?? `Copy ${email}`}
       aria-label={`Copy ${email}`}
     >
-      <span>{email}</span>
-      <CopyIcon />
-      <span className="cv-copy-email-status" aria-live="polite">
-        {copied ? 'Copied' : 'Copy'}
-      </span>
+      {children ?? (
+        <>
+          <span>{email}</span>
+          <CopyIcon />
+        </>
+      )}
+      {showStatus && (
+        <span className="cv-copy-email-status" aria-live="polite">
+          {copied ? 'Copied' : 'Copy'}
+        </span>
+      )}
     </button>
   );
 }

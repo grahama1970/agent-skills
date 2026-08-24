@@ -117,7 +117,10 @@ ship disabled; enable only when the scheduler environment is ready).
   `grahama.co/resume` must run `test-interactions` discovery and replay on the
   changed surface before commit/push. The manifest must come from the live DOM,
   and protocol-launching controls such as top-nav email must be tested as
-  in-page behavior or explicitly classified as external wait-only links.
+  in-page behavior or explicitly classified as external wait-only links. Email
+  contact controls on these surfaces default to clipboard copy buttons; raw
+  `mailto:` links are a regression unless a task explicitly requires native
+  mail-client launch behavior.
 - **One-source cascade:** `update` is the project-agent/Graham collaboration
   path. It runs the existing resume exporters before the site generator, then
   delegates LinkedIn profile JSON and optional own-profile sync planning to

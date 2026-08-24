@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndex, runSearch, type Hit } from '@/lib/search';
 import { SearchMiss } from '@/components/search-miss';
+import { CopyEmailButton } from '@/components/copy-email-button';
 import inventory from '@/inventory.json';
 
 const BUILD_COMMIT = (inventory as { commit: string }).commit;
@@ -125,16 +126,16 @@ export function CapabilitySearch() {
                 don&rsquo;t look too closely — but not faking a result is
                 sort of the whole point here. Try a capability or a problem,
                 or{' '}
-                <a
-                  href={`mailto:graham@grahama.co?subject=${encodeURIComponent(
-                    'A problem for you',
-                  )}&body=${encodeURIComponent(`I was looking for: ${q}\n\nHere's the actual problem:\n`)}`}
-                  data-qid="search:empty:email"
-                  data-qs-action="SEARCH_EMPTY_EMAIL"
-                  title="Email graham@grahama.co and describe the problem"
+                <CopyEmailButton
+                  className="capsearch-email-copy"
+                  email="graham@grahama.co"
+                  qid="search:empty:email"
+                  qsAction="SEARCH_EMPTY_COPY_EMAIL"
+                  title="Copy graham@grahama.co"
+                  showStatus={false}
                 >
                   tell me what you&rsquo;re actually trying to do
-                </a>{' '}
+                </CopyEmailButton>{' '}
                 — that&rsquo;s often the more interesting problem anyway.
               </p>
               <p className="capsearch-empty-recover">

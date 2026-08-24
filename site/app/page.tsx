@@ -15,6 +15,7 @@ import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { TauCase } from '@/components/cases/tau-case';
 import { CalendlyPopupLink } from '@/components/calendly-scheduler';
+import { CopyEmailButton } from '@/components/copy-email-button';
 import calendly from '@/calendly.json';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
@@ -654,15 +655,16 @@ export default function Home() {
                   source your team owns, deterministic checks, runbooks, and
                   plain boundary notes so another engineer can continue the work.
                 </p>
-                <a
+                <CopyEmailButton
                   className="btn"
-                  href="mailto:graham@grahama.co"
-                  data-qid="contact:action:email"
-                  data-qs-action="CONTACT_EMAIL"
-                  title="Email graham@grahama.co"
+                  email="graham@grahama.co"
+                  qid="contact:action:email"
+                  qsAction="CONTACT_COPY_EMAIL"
+                  title="Copy graham@grahama.co"
+                  showStatus={false}
                 >
                   graham@grahama.co <span className="arrow">→</span>
-                </a>
+                </CopyEmailButton>
                 <CalendlyPopupLink
                   className="btn cta-calendly-btn"
                   url={calendlyUrl}
@@ -680,14 +682,16 @@ export default function Home() {
             <div className="foot-grid">
               <div className="foot-a">
                 <p className="lab">Contact</p>
-                <a
-                  href="mailto:graham@grahama.co"
-                  data-qid="footer:link:email"
-                  data-qs-action="FOOTER_EMAIL"
-                  title="Email graham@grahama.co"
+                <CopyEmailButton
+                  className="footer-copy-email"
+                  email="graham@grahama.co"
+                  qid="footer:link:email"
+                  qsAction="FOOTER_COPY_EMAIL"
+                  title="Copy graham@grahama.co"
+                  showStatus={false}
                 >
                   graham@grahama.co
-                </a>
+                </CopyEmailButton>
                 <a
                   href={REPO}
                   data-qid="footer:link:repo"
