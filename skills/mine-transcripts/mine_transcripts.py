@@ -21,6 +21,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Iterator, Optional
+import httpx
 from loguru import logger
 
 # ── TaskClient integration ──────────────────────────────────────────────────
@@ -61,6 +62,67 @@ import subprocess as _sp
 
 # Removed: memory accessed via httpx to Unix socket (see _memory_cmd)
 MEMORY_AVAILABLE = True  # Assume available; fails loud at call site
+
+
+def _chain_task_text(chain: dict) -> str:
+    """Build the typed skill-chain task text from a mined transcript record."""
+    request = str(chain.get("request", "")).strip()
+    project = str(chain.get("project", "")).strip()
+    source = str(chain.get("source", "")).strip()
+    suffix_parts = []
+    if project:
+        suffix_parts.append(f"Project: {project}")
+    if source:
+        suffix_parts.append(f"Source: {source}")
+    suffix = f" ({'; '.join(suffix_parts)})" if suffix_parts else ""
+    return f"{request[:360]}{suffix}"[:500]
+
+
+def _store_mined_chains_to_typed_memory(
+    chains_found: list[dict],
+    memory_run: Path = MEMORY_SKILL / "run.sh",
+    limit: int = 100,
+) -> int:
+    """Store mined chains as typed ``skill_chains`` records.
+
+    Skill-chain recall reads the first-class ``skill_chains`` collection. Using
+    ``memory learn`` here would write ordinary lessons and recreate issue #145.
+    """
+    stored = 0
+    for chain in chains_found[:limit]:
+        raw_chain = chain.get("chain", [])
+        if not isinstance(raw_chain, list):
+            continue
+        skills = [str(skill).lstrip("/") for skill in raw_chain if str(skill).strip()]
+        if len(skills) < 2:
+            continue
+        try:
+            result = _sp.run(
+                [
+                    str(memory_run),
+                    "chain-learn",
+                    "--skills",
+                    ",".join(skills),
+                    "--task",
+                    _chain_task_text(chain),
+                    "--source",
+                    "transcript",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (_sp.TimeoutExpired, FileNotFoundError):
+            continue
+        if result.returncode == 0:
+            stored += 1
+        else:
+            logger.warning(
+                "Typed skill_chain storage failed for source={} stderr={}",
+                chain.get("source", ""),
+                result.stderr.strip()[:500],
+            )
+    return stored
 
 
 def _memory_cmd(args: list, timeout: int = 60) -> dict:
@@ -583,7 +645,6 @@ def mine_chains(
     /skill-lab gap detection.
     """
     import re
-    import subprocess as sp
 
     SKILL_RE = re.compile(r"/([a-z][a-z0-9-]+)")
     CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
@@ -766,27 +827,13 @@ def mine_chains(
 
     logger.info(f"Mined {len(chains_found)} skill chains from {len(transcript_dirs)} projects → {output}")
 
-    # Store to /memory for consumption by /skill-lab and /recommend-skill-chain
+    # Store typed skill_chains for consumption by /skill-lab and
+    # /recommend-skill-chain. Do not use memory learn here; that writes ordinary
+    # lessons and makes mined chains invisible to chain recall.
     if store_memory and chains_found:
         memory_run = MEMORY_SKILL / "run.sh"
-        stored = 0
-        for chain in chains_found[:100]:  # Cap at 100 per run to avoid flooding
-            if len(chain["chain"]) < 2:
-                continue
-            chain_str = " -> ".join(chain["chain"])
-            try:
-                sp.run(
-                    [str(memory_run), "learn",
-                     "--problem", chain["request"][:200],
-                     "--solution", f"skill chain: {chain_str}. Project: {chain['project']}",
-                     "--scope", "pi-mono",
-                     "--tag", "skill-chain", "--tag", "mined"],
-                    capture_output=True, timeout=30,
-                )
-                stored += 1
-            except (sp.TimeoutExpired, FileNotFoundError):
-                continue
-        logger.info(f"Stored {stored} chains to /memory")
+        stored = _store_mined_chains_to_typed_memory(chains_found, memory_run=memory_run)
+        logger.info(f"Stored {stored} typed skill_chains to /memory")
 
     return len(chains_found)
 

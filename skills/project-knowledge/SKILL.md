@@ -56,6 +56,12 @@ This skill maintains two surfaces:
 1. `PROJECT_KNOWLEDGE.md` as the human-readable projection
 2. `/memory` as the agent retrieval surface
 
+It does not own skill-chain records. Proven workflow chains are written by
+`/checkpoint --skills` or the typed chain backfill lane in `/mine-transcripts`
+into the `skill_chains` collection. `/project-knowledge` may mention those
+chains as project context, but its sync command writes only `project_knowledge`
+documents and chunks.
+
 The file is for humans. Agents should still be memory-first.
 
 This skill therefore:
@@ -168,6 +174,8 @@ Every update command syncs to `/memory` automatically.
 # 1. Aggregate structured doc → collection=project_knowledge
 # 2. Each section is chunked into recall-friendly chunk documents
 # 3. Each chunk gets tags: project_knowledge, project:{name}, section:{slug}
+# It does not write skill_chains; use /checkpoint or /mine-transcripts
+# chain backfill for that.
 ```
 
 This enables cross-project recall:

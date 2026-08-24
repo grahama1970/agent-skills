@@ -3,6 +3,10 @@ set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "=== [mine-transcripts] Sanity Check ==="
 
+run_python() {
+    (cd "$SCRIPT_DIR" && uv run python "$@")
+}
+
 # Check 1: Required files exist
 echo -n "Check 1 - Required files: "
 FAIL=0
@@ -17,7 +21,7 @@ done
 
 # Check 2: Python syntax check
 echo -n "Check 2 - Python syntax: "
-if python3 -m py_compile "$SCRIPT_DIR/mine_transcripts.py" 2>/dev/null; then
+if run_python -m py_compile "$SCRIPT_DIR/mine_transcripts.py" 2>/dev/null; then
     echo "PASS"
 else
     echo "FAIL: syntax error in mine_transcripts.py"
@@ -26,7 +30,7 @@ fi
 
 # Check 3: Core stdlib imports
 echo -n "Check 3 - Core imports: "
-python3 -c "
+run_python -c "
 import argparse
 import hashlib
 import json
@@ -41,7 +45,7 @@ print('PASS')
 
 # Check 4: Smoke test - text utility functions
 echo -n "Check 4 - Text utilities: "
-python3 -c "
+run_python -c "
 import sys
 sys.path.insert(0, '$SCRIPT_DIR')
 from mine_transcripts import (
@@ -79,7 +83,7 @@ print('PASS')
 
 # Check 5: CLI help
 echo -n "Check 5 - CLI help: "
-if python3 "$SCRIPT_DIR/mine_transcripts.py" --help >/dev/null 2>&1; then
+if run_python "$SCRIPT_DIR/mine_transcripts.py" --help >/dev/null 2>&1; then
     echo "PASS"
 else
     echo "WARN: CLI help returned non-zero"
@@ -87,7 +91,7 @@ fi
 
 # Check 6: Sources command (non-destructive)
 echo -n "Check 6 - Sources discovery: "
-if python3 "$SCRIPT_DIR/mine_transcripts.py" sources >/dev/null 2>&1; then
+if run_python "$SCRIPT_DIR/mine_transcripts.py" sources >/dev/null 2>&1; then
     echo "PASS"
 else
     echo "WARN: sources command failed"

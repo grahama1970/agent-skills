@@ -74,7 +74,8 @@ Train the bridge classifier on REAL human communication patterns, not synthetic 
 ## Dependencies
 
 - **/taxonomy** - Bridge label extraction (Precision, Resilience, Fragility, Corruption, Loyalty, Stealth)
-- **/memory** - Deduplication against existing lessons, optional storage
+- **/memory** - Deduplication against existing lessons, optional storage; mined
+  skill chains must be written through `chain-learn` into typed `skill_chains`
 - **/episodic-archiver** - Emotional context from archived sessions
 - **/scheduler** - Nightly runs
 
@@ -87,8 +88,11 @@ Train the bridge classifier on REAL human communication patterns, not synthetic 
 # Mine with deduplication against existing training data
 ./run.sh mine --all-agents --dedupe
 
-# Mine and store to memory (creates lessons)
+# Mine and store classifier examples to memory (creates lessons)
 ./run.sh mine --all-agents --store-memory
+
+# Mine and store skill chains to typed /memory skill_chains records
+./run.sh mine-chains --all-projects
 
 # Analyze coverage of existing training data
 ./run.sh analyze data/mined.jsonl
@@ -105,6 +109,17 @@ Training data in JSONL format:
 {"text": "perfect, that fixed the issue!", "labels": ["Resilience", "Loyalty"]}
 ```
 
+Skill-chain mining writes JSONL records such as:
+
+```json
+{"request": "Fix a memory bug", "chain": ["/memory", "/checkpoint"], "project": "memory", "source": "session.jsonl"}
+```
+
+When storage is enabled, those chains are written with `/memory chain-learn`.
+They must not be stored as ordinary `/memory learn` lessons, because
+`recall --brief`, `chain-recall`, and `/recommend-skill-chain` read the typed
+`skill_chains` collection.
+
 ## Emotional Context
 
 Messages are enriched with emotional detection:
@@ -120,6 +135,9 @@ Registered as `transcript-mining-nightly`:
 - Runs at 4:30am daily
 - Deduplicates against existing training data
 - Feeds into `bridge-classifier-retrain` at 5am
+
+Skill-chain mining should run as the chain backfill lane and write typed
+`skill_chains`; classifier mining remains the lesson/training-data lane.
 
 ## Triggers
 

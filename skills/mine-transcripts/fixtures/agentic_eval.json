@@ -1,22 +1,39 @@
 {
   "version": 2,
   "skill": "mine-transcripts",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "trials": 2,
+  "proof_scope": "mine-transcripts command and typed skill-chain storage regression guard",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the skill sanity command runs and the mined-chain storage helper invokes typed memory chain-learn rather than legacy learn",
+    "does_not_prove": "live transcript mining quality, live Memory daemon behavior, or full classifier training readiness"
   },
   "cases": [
     {
       "name": "sanity",
       "type": "positive",
+      "real_world": true,
       "command": [
         "bash",
         "../sanity.sh"
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "typed-chain-storage-uses-chain-learn",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && PYTHONPATH=. uv run python -m pytest -q tests/test_skill_chain_storage.py -k 'typed_skill_chains or skips_short_chains'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
       }
     }
   ]
