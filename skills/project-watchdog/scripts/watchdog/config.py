@@ -129,15 +129,16 @@ def projects_path() -> Path:
 
 
 #: The creator seat. Must be able to mutate a workspace and produce a real git
-#: diff or commit through the Tau repair DAG. Bare ``codex`` is the local Codex
-#: CLI lane and is refused by the dispatch guard; model seats such as
-#: ``gpt-5.5-high`` are valid when routed through ``$ask tau-dag`` with a
-#: handler workspace.
+#: diff or commit through the Tau repair DAG. Browser/web seats are advisory
+#: strategy and ticket-planning lanes; they cannot author local repairs. Bare
+#: ``codex`` is the local Codex CLI lane and is refused by the dispatch guard;
+#: model seats such as ``gpt-5.5-high`` are valid when routed through
+#: ``$ask tau-dag`` with a handler workspace.
 DEFAULT_REPAIR_CREATOR = "gpt-5.5-high"
 
 #: The reviewer seat. It must be a different provider family from the creator
 #: and must be locally executing so it can run the ticket's proof command.
-#: Browser seats such as ``webclaude`` are not acceptable closure reviewers.
+#: Browser seats such as ``webclaude`` are not acceptable repair reviewers.
 DEFAULT_REPAIR_REVIEWER = "claude-fable-low"
 
 

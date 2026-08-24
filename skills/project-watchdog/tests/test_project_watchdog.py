@@ -619,11 +619,16 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
 def test_ticket_repair_documents_tau_owned_scillm_boundary() -> None:
     skill = Path(__file__).resolve().parents[1] / "SKILL.md"
     text = skill.read_text(encoding="utf-8")
+    compact = " ".join(text.split())
 
     assert "project-watchdog never calls SciLLM directly" in text
     assert "project-watchdog -> $ask tau-dag -> Tau-executed DAG/command_spec -> Tau-owned SciLLM adapter" in text
     assert "SCILLM_AUTH_INVALID_API_KEY" in text
     assert "must not reimplement SciLLM auth probing" in text
+    assert "Browser/web" in compact
+    assert "cannot run local code" in compact
+    assert "must not be configured as `repair_creator` or `repair_reviewer`" in compact
+    assert "creating focused `$ticket` items" in compact
 
 
 def test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace(tmp_path) -> None:
@@ -993,9 +998,48 @@ def test_the_two_repair_seats_are_different_model_families() -> None:
 
 
 def test_a_project_may_name_its_own_seats() -> None:
-    project = {"repair_creator": "codex", "repair_reviewer": "webclaude"}
-    assert config.repair_creator(project) == "codex"
-    assert config.repair_reviewer(project) == "webclaude"
+    project = {"repair_creator": "gpt-5.5-high", "repair_reviewer": "claude-opus-4-8-high"}
+    assert config.repair_creator(project) == "gpt-5.5-high"
+    assert config.repair_reviewer(project) == "claude-opus-4-8-high"
+
+
+def test_registered_repair_seats_can_author_and_review_code() -> None:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    projects = payload["projects"] if isinstance(payload, dict) else payload
+
+    invalid: list[str] = []
+    for project in projects:
+        if not project.get("repair_creator") and not project.get("repair_reviewer"):
+            continue
+        try:
+            config.repair_seats(project)
+        except config.SeatIndependenceError as exc:
+            invalid.append(f"{project.get('project_id', '<unknown>')}: {exc}")
+
+    assert invalid == []
+
+
+def test_tau_repair_reviewer_is_local_claude_opus_48_high() -> None:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    projects = payload["projects"] if isinstance(payload, dict) else payload
+    tau = next(project for project in projects if project["project_id"] == "tau")
+
+    assert tau["repair_reviewer"] == "claude-opus-4-8-high"
+    creator, reviewer = config.repair_seats(tau)
+    assert creator == "gpt-5.5-high"
+    assert reviewer == "claude-opus-4-8-high"
+
+
+def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    projects = payload["projects"] if isinstance(payload, dict) else payload
+    memory = next(project for project in projects if project["project_id"] == "memory")
+
+    assert config.auto_land_main(memory) is True
+    assert memory["repair_reviewer"] == "claude-fable-low"
 
 
 def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
@@ -1030,6 +1074,24 @@ def test_oc_chat_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
     assert result["status"] == "BLOCKED"
     assert "not a Tau repair authoring lane" in result["summary"]
     assert "oc-*" in result["summary"]
+    assert not dispatched.called
+
+
+def test_web_model_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
+    project = {
+        "project_id": "memory",
+        "repo": "grahama1970/graph-memory-operator",
+        "worktree": str(_clean_worktree(tmp_path)),
+        "repair_creator": "webgpt",
+        "repair_reviewer": "claude-fable-low",
+    }
+    issue = _issue(146, labels=["agent-work"], body="type: bug\ntarget: src/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    with mock.patch.object(handlers, "run_cmd") as dispatched:
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "not a Tau repair authoring lane" in result["summary"]
+    assert "webgpt" in result["summary"]
     assert not dispatched.called
 
 

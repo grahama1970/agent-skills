@@ -70,7 +70,7 @@
         "Tau has a local one-tick cron/handoff path plus a live generic issue-to-handoff watchdog proof for project-watchdog-action:tau-handoff-dispatch."
       ],
       "repair_creator": "gpt-5.5-high",
-      "repair_reviewer": "webclaude",
+      "repair_reviewer": "claude-opus-4-8-high",
       "service": {
         "kind": "none",
         "note": "CLI DAG engine; runs from source per invocation, no long-running daemon to restart",
@@ -122,7 +122,7 @@
         "SciLLM has live doctor receipts; a bounded issue runner still needs a project command contract before mutation."
       ],
       "repair_creator": "gpt-5.5-high",
-      "repair_reviewer": "webclaude",
+      "repair_reviewer": "claude-opus-4-8-high",
       "service": {
         "kind": "systemd",
         "restart_cmd": "systemctl --user restart embry-inference",
@@ -379,6 +379,7 @@
       ],
       "repair_creator": "gpt-5.5-high",
       "repair_reviewer": "claude-fable-low",
+      "auto_land_main": true,
       "service": {
         "kind": "docker+systemd",
         "restart_cmd": "uv pip install -e . && systemctl --user restart embry-memory",
@@ -466,14 +467,14 @@
         "requires_start_handoff": false
       },
       "repair_creator": "gpt-5.5-high",
-      "repair_reviewer": "webclaude",
+      "repair_reviewer": "claude-opus-4-8-high",
       "allowed_agents": [
         "project-or-harness-verifier",
         "code-reviewer",
         "human"
       ],
       "notes": [
-        "ticket_repair via $ask tau-dag; fixer gpt-5.5-high, reviewer webclaude."
+        "ticket_repair via $ask tau-dag; fixer gpt-5.5-high, reviewer claude-opus-4-8-high."
       ],
       "service": {
         "kind": "systemd",

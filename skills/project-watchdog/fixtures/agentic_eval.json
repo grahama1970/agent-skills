@@ -189,6 +189,29 @@
         "pytest",
         "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
         "../tests/test_project_watchdog.py::test_ticket_repair_documents_tau_owned_scillm_boundary",
+        "../tests/test_project_watchdog.py::test_web_model_creator_is_refused_before_ask_dispatch",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ]
+      }
+    },
+    {
+      "name": "registered-repair-seats-can-author-and-review-code",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_registered_repair_seats_can_author_and_review_code",
+        "../tests/test_project_watchdog.py::test_tau_repair_reviewer_is_local_claude_opus_48_high",
         "-q"
       ],
       "expected": {
@@ -804,6 +827,32 @@
           "AUTO_LAND_NOT_WIRED",
           "NO_FAIL_CLOSED",
           "DEFAULT_NOT_OFF"
+        ]
+      }
+    },
+    {
+      "name": "memory-project-auto-lands-reviewer-passed-repairs",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "seams": [
+        "watchdog.auto_land",
+        "watchdog.dependency_gate"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_memory_project_auto_lands_reviewer_passed_repairs",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
         ]
       }
     },
