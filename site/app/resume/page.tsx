@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { CalendlyPopupLink } from '@/components/calendly-scheduler';
+import { CopyEmailButton } from '@/components/copy-email-button';
 import { SiteNav } from '@/components/site-nav';
 import calendly from '@/calendly.json';
 import resume from '@/resume.json';
@@ -56,6 +57,7 @@ type Block =
   | { kind: 'p'; inline: Token[] }
   | { kind: 'ul'; items: Token[][] }
   | { kind: 'role'; title: Token[]; period: string; blocks: Block[] };
+type ResumeSection = { title: string; blocks: Block[] };
 
 const TECH_TERMS = [
   'MITRE ATT&CK',
@@ -92,6 +94,36 @@ const ROLE_TECH_STACKS = [
     skills: ['Python', 'Data Science', 'Production ML', 'Knowledge Graphs'],
   },
 ];
+
+const PUBLIC_WORK_META: Record<string, { title?: string; href?: string; facts: string; tags: string[] }> = {
+  'agent-skills': {
+    facts: '340+ skills · 90+ worker roles · ~85% sanity gates',
+    tags: ['Python', 'Skills', 'Receipts'],
+  },
+  tau: {
+    facts: 'Receipt-gated DAG harness',
+    tags: ['Agents', 'Typed DAGs', 'Checks'],
+  },
+  pdf_oxide: {
+    facts: '430 commits · ~137K lines added',
+    tags: ['Rust', 'PDF', 'NIST'],
+  },
+  scillm: {
+    href: 'https://github.com/grahama1970/agent-skills/tree/main/skills/scillm',
+    facts: 'LLM gateway and routing skill',
+    tags: ['LLMOps', 'Streaming', 'Fallbacks'],
+  },
+  'grahama.co': {
+    facts: 'Static export · generated counts · d3-force graph',
+    tags: ['Next.js', 'D3', 'Evidence'],
+  },
+  'extractor, anvil, fetcher, chatterbox voice-agent fork': {
+    title: 'supporting cast',
+    href: 'https://github.com/grahama1970/agent-skills/tree/main/skills',
+    facts: 'Public skill contracts inside agent-skills',
+    tags: ['Extraction', 'Tools', 'Voice'],
+  },
+};
 
 function DownloadIcon({ className }: { className?: string }) {
   return (
@@ -148,6 +180,19 @@ function tokenText(tokens: Token[]) {
 function roleTechStack(title: Token[]) {
   const text = tokenText(title);
   return ROLE_TECH_STACKS.find((stack) => text.includes(stack.match))?.skills ?? [];
+}
+
+function publicWorkTitle(tokens: Token[]) {
+  const firstLink = tokens.find((token) => token.t === 'link');
+  if (firstLink) return firstLink.v;
+  const text = tokenText(tokens);
+  return text.split(' — ', 1)[0].trim();
+}
+
+function publicWorkDescription(tokens: Token[]) {
+  const text = tokenText(tokens);
+  const cut = text.indexOf(' — ');
+  return cut >= 0 ? text.slice(cut + 3).trim() : text;
 }
 
 function RoleTechBadges({ skills }: { skills: string[] }) {
@@ -347,6 +392,54 @@ function Blocks({
   );
 }
 
+function PublicWorkSection({ section }: { section: ResumeSection }) {
+  const introBlocks = section.blocks.filter((block) => block.kind !== 'ul');
+  const items = section.blocks.flatMap((block) => block.kind === 'ul' ? block.items : []);
+
+  return (
+    <section className="cv-section cv-public-work">
+      <h2>{section.title}</h2>
+      <Blocks blocks={introBlocks} />
+      <div className="cv-public-grid" aria-label="Public work repositories and project evidence">
+        {items.map((item) => {
+          const key = publicWorkTitle(item);
+          const meta = PUBLIC_WORK_META[key] ?? { facts: 'Public work sample', tags: ['Public'] };
+          const link = item.find((token) => token.t === 'link')?.href ?? meta.href;
+          const title = meta.title ?? key;
+
+          return (
+            <article className="cv-public-card" key={key}>
+              <div className="cv-public-card-head">
+                <h3>
+                  {link ? (
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-qid={`resume:public-work:${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}
+                      data-qs-action="RESUME_OPEN_PUBLIC_WORK"
+                      title={`Open ${title}`}
+                    >
+                      {title}
+                    </a>
+                  ) : title}
+                </h3>
+                <span className="cv-public-facts">{meta.facts}</span>
+              </div>
+              <p>{publicWorkDescription(item)}</p>
+              <div className="cv-public-tags" aria-label={`${title} tags`}>
+                {meta.tags.map((tag) => (
+                  <TechPill key={tag}>{tag}</TechPill>
+                ))}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default function ResumePage() {
   const doc = resume as unknown as {
     name: string;
@@ -354,14 +447,18 @@ export default function ResumePage() {
     contactLines: Token[][];
     lede: string;
     intro: Block[];
-    sections: { title: string; blocks: Block[] }[];
+    sections: ResumeSection[];
     downloads: { pdf: string; docx: string; markdown: string };
     sourceCommit: string;
     asOf: string;
+    sourceSha256?: string;
+    pdfBytes?: number;
+    docxBytes?: number;
     jsonLd: unknown;
     timeline: { start: number; end: string; label: string; org: string }[];
   };
   const calendlyUrl = calendly.primarySchedulingUrl || calendly.user.schedulingUrl;
+  const email = doc.contact.find((token) => token.href?.startsWith('mailto:'))?.v;
 
   return (
     <>
@@ -381,6 +478,11 @@ export default function ResumePage() {
               <Inline tokens={line} ns="contact" />
             </p>
           ))}
+          {email ? (
+            <div className="cv-contact-actions">
+              <CopyEmailButton email={email} />
+            </div>
+          ) : null}
           {doc.lede ? <p className="cv-lede">{doc.lede}</p> : null}
         </header>
 
@@ -442,6 +544,9 @@ export default function ResumePage() {
         {doc.intro.length ? <section className="cv-intro"><Blocks blocks={doc.intro} /></section> : null}
 
         {doc.sections.map((s) => (
+          s.title.startsWith('PUBLIC WORK') ? (
+            <PublicWorkSection key={s.title} section={s} />
+          ) : (
           <section key={s.title} className="cv-section">
             <h2>{s.title}</h2>
             <Blocks
@@ -465,13 +570,14 @@ export default function ResumePage() {
               </p>
             ) : null}
           </section>
+          )
         ))}
 
         {/* The build stamp is a receipt for the page, not part of the resume,
             so the print stylesheet drops it. */}
         <footer className="cv-foot">
           <p className="machine">
-            Generated from{' '}
+            Build receipt: static export · source{' '}
             {/* Pinned to the commit, not to main, so the link always shows the
                 exact source that produced this page rather than whatever the
                 resume looks like today. */}
@@ -485,7 +591,7 @@ export default function ResumePage() {
             >
               RESUME.md
             </a>{' '}
-            at{' '}
+            at commit{' '}
             <a
               href={`https://github.com/grahama1970/agent-skills/commit/${doc.sourceCommit}`}
               target="_blank"
@@ -495,8 +601,11 @@ export default function ResumePage() {
               title={`Open commit ${doc.sourceCommit} on GitHub`}
             >
               {doc.sourceCommit}
-            </a>{' '}
-            · <time dateTime={doc.asOf}>{doc.asOf}</time>
+            </a>
+            {doc.pdfBytes ? <> · PDF {doc.pdfBytes.toLocaleString()} bytes</> : null}
+            {doc.docxBytes ? <> · DOCX {doc.docxBytes.toLocaleString()} bytes</> : null}
+            {doc.sourceSha256 ? <> · source SHA-256 {doc.sourceSha256.slice(0, 12)}</> : null}
+            {' '}· <time dateTime={doc.asOf}>{doc.asOf}</time>
           </p>
         </footer>
       </main>
