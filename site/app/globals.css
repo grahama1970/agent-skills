@@ -4486,6 +4486,11 @@ h1 .proof-origin::after {
   border-radius: 6px;
   min-width: 0;
   padding: 0.95rem;
+  transition: border-color var(--dur-state) var(--ease-state);
+}
+
+.cv-public-card:hover {
+  border-color: rgba(226, 172, 98, 0.4);
 }
 
 .cv-public-card::before {
@@ -4507,6 +4512,26 @@ h1 .proof-origin::after {
   font-weight: 650;
   line-height: 1.25;
   margin: 0;
+}
+
+.cv-public-card h3 a {
+  align-items: baseline;
+  display: inline-flex;
+  gap: 0.28rem;
+}
+
+.cv-public-arrow {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.72em;
+  transform: translateY(-0.03em);
+  transition: color var(--dur-state) var(--ease-state),
+    transform var(--dur-state) var(--ease-state);
+}
+
+.cv-public-card h3 a:hover .cv-public-arrow {
+  color: var(--brass);
+  transform: translate(1px, -1px);
 }
 
 .cv-public-card p {

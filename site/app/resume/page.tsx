@@ -429,7 +429,8 @@ function PublicWorkSection({ section }: { section: ResumeSection }) {
                       data-qs-action="RESUME_OPEN_PUBLIC_WORK"
                       title={`Open ${title}`}
                     >
-                      {title}
+                      <span>{title}</span>
+                      <span className="cv-public-arrow" aria-hidden="true">↗</span>
                     </a>
                   ) : title}
                 </h3>
