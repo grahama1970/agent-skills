@@ -296,20 +296,83 @@ def build_jsonld(doc: dict) -> dict:
         }
         person["address"] = {k: v for k, v in person["address"].items() if v}
     if knows:
-        person["knowsAbout"] = knows
+        required_knows = [
+            "Large Language Models (LLM)",
+            "Retrieval-Augmented Generation (RAG)",
+            "Rust",
+            "Lean 4",
+            "ArangoDB",
+            "Knowledge Graphs",
+            "NIST 800-53",
+            "DARPA ARCOS / ACERT",
+            "ITAR / EAR Compliance",
+        ]
+        person["knowsAbout"] = list(dict.fromkeys([*knows, *required_knows]))
+
+    # These availability and engagement facts are also rendered on /resume.
+    # They are authored facts rather than Markdown body copy, so keep them here
+    # with the structured data generator instead of hand-splicing JSON-LD in the
+    # React page.
+    person.update(
+        {
+            "@id": "https://grahama.co/resume#person",
+            "url": "https://grahama.co/resume",
+            "jobTitle": [
+                "Principal AI Engineer",
+                "AI Architect",
+                "Staff LLM Platform Engineer",
+            ],
+            "description": (
+                "Principal AI Engineer and AI Architect specializing in "
+                "LLM-assisted certification, deterministic agent orchestration, "
+                "graph-memory RAG systems, and ITAR/EAR-compliant defense R&D."
+            ),
+            "nationality": {
+                "@type": "Country",
+                "name": "United States",
+            },
+            "hasOfferCatalog": {
+                "@type": "OfferCatalog",
+                "name": "Employment and Consulting Services",
+                "itemListElement": [
+                    {
+                        "@type": "Offer",
+                        "itemOffered": {
+                            "@type": "Service",
+                            "name": "Full-Time W-2 (Principal / Staff AI Engineer)",
+                        },
+                    },
+                    {
+                        "@type": "Offer",
+                        "itemOffered": {
+                            "@type": "Service",
+                            "name": "Scoped 1099 R&D Consulting (grahamaco)",
+                        },
+                    },
+                ],
+            },
+            "seeks": {
+                "@type": "Demand",
+                "name": "Principal / Staff AI Engineering Roles",
+                "availabilityStarts": "2026-09-01",
+                "areaServed": "United States",
+            },
+        }
+    )
 
     return {
         "@context": "https://schema.org",
         "@graph": [
-            person,
             {
                 "@type": "ProfilePage",
-                "@id": "https://grahama.co/resume",
-                "name": f"Résumé — {doc['name']}",
-                "mainEntity": {"@id": "https://grahama.co/#person"},
+                "@id": "https://grahama.co/resume#webpage",
+                "url": "https://grahama.co/resume",
+                "name": "Principal AI Engineer Resume",
+                "mainEntity": {"@id": "https://grahama.co/resume#person"},
                 "primaryImageOfPage": "https://grahama.co/og.png",
                 "inLanguage": "en-US",
             },
+            person,
         ],
     }
 

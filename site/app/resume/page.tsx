@@ -18,26 +18,38 @@ import resume from '@/resume.json';
 
 const title = 'Résumé — Graham Anderson';
 const description =
-  'Principal AI Engineer, ML Engineer, and AI Architect. Agentic AI, LLM/RAG, knowledge graphs, defense and aerospace. Download as PDF, DOCX, or Markdown.';
+  'Principal AI Engineer specializing in LLM certification, graph-memory RAG systems, and ITAR/EAR-compliant defense R&D. U.S. Citizen.';
 
 export const metadata: Metadata = {
-  title,
+  title: 'Graham Anderson | Principal AI Engineer & AI Architect',
   description,
   alternates: { canonical: '/resume' },
   openGraph: {
-    title,
+    title: 'Graham Anderson | Principal AI Engineer & AI Architect',
     description,
     url: 'https://grahama.co/resume',
-    siteName: 'grahama.co',
+    siteName: 'Graham Anderson - Portfolio & Resume',
     type: 'profile',
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'grahama.co — Graham Anderson résumé' }],
+    firstName: 'Graham',
+    lastName: 'Anderson',
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Graham Anderson - Principal AI Engineer Resume Summary' }],
   },
-  twitter: { card: 'summary_large_image', title, description, images: ['/og.png'] },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Graham Anderson | Principal AI Engineer & AI Architect',
+    description,
+    images: [{ url: '/og.png', alt: 'Graham Anderson - Principal AI Engineer Resume Summary' }],
+  },
 };
 
 // Matches --ink, so mobile browser chrome continues the page rather than
 // bracketing it with a colour the design system does not contain.
-export const viewport: Viewport = { themeColor: '#0c0908' };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  ],
+};
 
 type Token = { t: string; v: string; href?: string };
 type Block =

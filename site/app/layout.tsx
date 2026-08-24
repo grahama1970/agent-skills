@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { ProjectTargetHighlighter } from '@/components/project-target-highlighter';
 import './globals.css';
 
@@ -9,6 +9,19 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://grahama.co'),
   title: 'Graham Anderson — agent systems that prove what they did',
   description,
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png' }],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Graham Resume',
+  },
   openGraph: {
     title: 'Graham Anderson — agent systems that prove what they did',
     description,
@@ -25,6 +38,12 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  ],
+};
 
 export default function RootLayout({
   children,
@@ -39,6 +58,7 @@ export default function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body>
         <ProjectTargetHighlighter />

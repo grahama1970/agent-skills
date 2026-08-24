@@ -545,7 +545,7 @@
    ]
   }
  ],
- "sourceCommit": "2afaf6dcaa",
+ "sourceCommit": "e1bd6f3edd",
  "asOf": "2026-08-24",
  "generator": "site/scripts/gen_resume.py",
  "sourceSha256": "6215fd41bf9ebe0cd22dc55b0f03cc65808e48604499f581103bfd449ac3bfe7",
@@ -595,14 +595,29 @@
   "@context": "https://schema.org",
   "@graph": [
    {
+    "@type": "ProfilePage",
+    "@id": "https://grahama.co/resume#webpage",
+    "url": "https://grahama.co/resume",
+    "name": "Principal AI Engineer Resume",
+    "mainEntity": {
+     "@id": "https://grahama.co/resume#person"
+    },
+    "primaryImageOfPage": "https://grahama.co/og.png",
+    "inLanguage": "en-US"
+   },
+   {
     "@type": "Person",
-    "@id": "https://grahama.co/#person",
+    "@id": "https://grahama.co/resume#person",
     "name": "Graham Anderson",
     "givenName": "Graham",
     "familyName": "Anderson",
-    "url": "https://grahama.co",
-    "jobTitle": "Principal AI Engineer",
-    "description": "I build agent systems that can prove what they did.",
+    "url": "https://grahama.co/resume",
+    "jobTitle": [
+     "Principal AI Engineer",
+     "AI Architect",
+     "Staff LLM Platform Engineer"
+    ],
+    "description": "Principal AI Engineer and AI Architect specializing in LLM-assisted certification, deterministic agent orchestration, graph-memory RAG systems, and ITAR/EAR-compliant defense R&D.",
     "email": "graham@grahama.co",
     "sameAs": [
      "https://www.linkedin.com/in/grahamanderson/",
@@ -665,23 +680,46 @@
      "Python",
      "Rust",
      "Docker",
-     "Linux"
-    ]
-   },
-   {
-    "@type": "ProfilePage",
-    "@id": "https://grahama.co/resume",
-    "name": "Résumé — Graham Anderson",
-    "mainEntity": {
-     "@id": "https://grahama.co/#person"
+     "Linux",
+     "NIST 800-53",
+     "DARPA ARCOS / ACERT",
+     "ITAR / EAR Compliance"
+    ],
+    "nationality": {
+     "@type": "Country",
+     "name": "United States"
     },
-    "primaryImageOfPage": "https://grahama.co/og.png",
-    "inLanguage": "en-US"
+    "hasOfferCatalog": {
+     "@type": "OfferCatalog",
+     "name": "Employment and Consulting Services",
+     "itemListElement": [
+      {
+       "@type": "Offer",
+       "itemOffered": {
+        "@type": "Service",
+        "name": "Full-Time W-2 (Principal / Staff AI Engineer)"
+       }
+      },
+      {
+       "@type": "Offer",
+       "itemOffered": {
+        "@type": "Service",
+        "name": "Scoped 1099 R&D Consulting (grahamaco)"
+       }
+      }
+     ]
+    },
+    "seeks": {
+     "@type": "Demand",
+     "name": "Principal / Staff AI Engineering Roles",
+     "availabilityStarts": "2026-09-01",
+     "areaServed": "United States"
+    }
    }
   ]
  },
- "pdfSha256": "61d0766adecbd70de1fca16783d76d95780b3495f16014baeb317f56fad2b598",
+ "pdfSha256": "6de3316fb529866682313613273295e08e36fec4a635f357bfecc91bd0415f2a",
  "pdfBytes": 159670,
- "docxSha256": "f19a9e25be73edd17407556e3e3f3c5e561e71582336e00e5f5788fb957207ee",
+ "docxSha256": "43cfe2ca930dc3bb1d6e82de60808ecf4fc8a741c5ce5ee83db5f4128246df91",
  "docxBytes": 40581
 }
