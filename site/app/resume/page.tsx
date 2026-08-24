@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import type { ReactNode } from 'react';
 import { CalendlyPopupLink } from '@/components/calendly-scheduler';
 import { SiteNav } from '@/components/site-nav';
 import calendly from '@/calendly.json';
@@ -9,9 +10,10 @@ import resume from '@/resume.json';
  *
  * Deliberately the calmest page on the site: no constellation, no motion, no
  * hero. A recruiter skimming for twenty seconds should meet a document, not an
- * exhibit. Every word comes from RESUME.md via scripts/gen_resume.py; nothing
- * is authored here. The PDF, DOCX, and Markdown exports are one click away because
- * the page is what you link, the file is what you attach.
+ * exhibit. Resume body copy comes from RESUME.md via scripts/gen_resume.py; the
+ * download, scheduling, and employer-facts affordances are authored here. The
+ * PDF, DOCX, and Markdown exports are one click away because the page is what
+ * you link, the file is what you attach.
  */
 
 const title = 'Résumé — Graham Anderson';
@@ -42,6 +44,80 @@ type Block =
   | { kind: 'p'; inline: Token[] }
   | { kind: 'ul'; items: Token[][] }
   | { kind: 'role'; title: Token[]; period: string; blocks: Block[] };
+
+const TECH_TERMS = [
+  'MITRE ATT&CK',
+  'GraphRAG',
+  'ArangoDB',
+  'NIST 800-53',
+  'Lean 4',
+  'D3FEND',
+  'SPARTA',
+  'Rust',
+  'LLM',
+  'RAG',
+  'NIST',
+  'CWE',
+];
+
+function DownloadIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" x2="12" y1="15" y2="3" />
+    </svg>
+  );
+}
+
+function DocIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6" />
+      <path d="M8 13h8" />
+      <path d="M8 17h5" />
+    </svg>
+  );
+}
+
+function MarkdownIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 9H8" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
+    </svg>
+  );
+}
+
+function CalendarIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d="M3 10h18" />
+    </svg>
+  );
+}
+
+function TechPill({ children }: { children: ReactNode }) {
+  return <span className="cv-tech-pill">{children}</span>;
+}
+
+function TextWithTechPills({ text }: { text: string }) {
+  const pattern = new RegExp(`(${TECH_TERMS.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
+  return (
+    <>
+      {text.split(pattern).map((part, i) => (
+        TECH_TERMS.includes(part) ? <TechPill key={i}>{part}</TechPill> : <span key={i}>{part}</span>
+      ))}
+    </>
+  );
+}
 
 function Inline({ tokens, ns = 'link' }: { tokens: Token[]; ns?: string }) {
   return (
@@ -77,6 +153,71 @@ function Inline({ tokens, ns = 'link' }: { tokens: Token[]; ns?: string }) {
   );
 }
 
+function SelectedImpactList({ items }: { items: Token[][] }) {
+  return (
+    <ul className="cv-impact-list">
+      {items.map((item, i) => {
+        if (item.length === 1 && item[0]?.t === 'text') {
+          const text = item[0].v;
+          const cut = text.indexOf(' — ');
+          if (cut > 0) {
+            return (
+              <li key={i}>
+                <strong>{text.slice(0, cut)}</strong>
+                <span> — </span>
+                <TextWithTechPills text={text.slice(cut + 3)} />
+              </li>
+            );
+          }
+        }
+        return (
+          <li key={i}><Inline tokens={item} /></li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function EmployerQuickFacts() {
+  return (
+    <section className="cv-facts" aria-labelledby="cv-facts-title">
+      <div className="cv-facts-head">
+        <h2 id="cv-facts-title">Employer Quick Facts &amp; Eligibility</h2>
+        <span className="cv-facts-status">
+          <span aria-hidden="true" />
+          Available for hire
+        </span>
+      </div>
+
+      <ul className="cv-facts-chips" aria-label="Eligibility facts">
+        <li>U.S. Citizen</li>
+        <li>No Visa Sponsorship Required</li>
+        <li>ITAR / EAR Compliant</li>
+        <li>Clearable</li>
+      </ul>
+
+      <dl className="cv-facts-grid">
+        <div>
+          <dt>Target Roles</dt>
+          <dd>Principal AI Engineer · AI Architect · Staff LLM Platform</dd>
+        </div>
+        <div>
+          <dt>Engagement Preferences</dt>
+          <dd>Full-time W-2 or Scoped 1099 R&amp;D Consulting</dd>
+        </div>
+        <div>
+          <dt>Location &amp; Mobility</dt>
+          <dd>Buffalo, NY (EST) · Remote / Hybrid · Onsite Briefings</dd>
+        </div>
+        <div>
+          <dt>Start Notice</dt>
+          <dd>Immediate to 2 Weeks</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
 /**
  * A competency line is "Cluster: term, term, term". On paper the labelled
  * bullet parses well for ATS, but on screen a bullet buries the label mid-line.
@@ -109,12 +250,21 @@ function ClusterList({ items }: { items: Token[][] }) {
   );
 }
 
-function Blocks({ blocks, clusters = false }: { blocks: Block[]; clusters?: boolean }) {
+function Blocks({
+  blocks,
+  clusters = false,
+  selectedImpact = false,
+}: {
+  blocks: Block[];
+  clusters?: boolean;
+  selectedImpact?: boolean;
+}) {
   return (
     <>
       {blocks.map((b, i) => {
         if (b.kind === 'p') return <p key={i}><Inline tokens={b.inline} /></p>;
-        if (b.kind === 'ul')
+        if (b.kind === 'ul') {
+          if (selectedImpact) return <SelectedImpactList key={i} items={b.items} />;
           return clusters ? (
             <ClusterList key={i} items={b.items} />
           ) : (
@@ -124,6 +274,7 @@ function Blocks({ blocks, clusters = false }: { blocks: Block[]; clusters?: bool
               ))}
             </ul>
           );
+        }
         return (
           <article key={i} className="cv-role">
             {/* The career rail lives on the roles themselves: one node per
@@ -185,71 +336,64 @@ export default function ResumePage() {
             the two-page cut. Saying so here replaces the PDF-only source line,
             which would be self-referential on the page it points at. */}
         <div className="cv-actions">
-          <a
-            className="cv-btn cv-btn-primary"
-            href={doc.downloads.pdf}
-            download
-            data-qid="resume:link:pdf"
-            data-qs-action="RESUME_DOWNLOAD_PDF"
-            title="Download the résumé as a PDF"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" x2="12" y1="15" y2="3" />
-            </svg>
-            <span>Download PDF</span>
-          </a>
-          <a
-            className="cv-btn"
-            href={doc.downloads.docx}
-            download
-            data-qid="resume:link:docx"
-            data-qs-action="RESUME_DOWNLOAD_DOCX"
-            title="Download the résumé as an ATS-oriented DOCX"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-              <path d="M14 2v6h6" />
-              <path d="M8 13h8" />
-              <path d="M8 17h5" />
-            </svg>
-            <span>DOCX</span>
-          </a>
-          <a
-            className="cv-btn"
-            href={doc.downloads.markdown}
-            download
-            data-qid="resume:link:markdown"
-            data-qs-action="RESUME_DOWNLOAD_MARKDOWN"
-            title="Download the résumé as Markdown"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-              <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-              <path d="M10 9H8" />
-              <path d="M16 13H8" />
-              <path d="M16 17H8" />
-            </svg>
-            <span>Markdown</span>
-          </a>
-          <CalendlyPopupLink
-            className="cv-btn"
-            url={calendlyUrl}
-            qid="resume:link:calendly"
-          >
-            Book time
-          </CalendlyPopupLink>
-          <span className="cv-actions-note">Full version - PDF/DOCX are 2-page cuts</span>
+          <div className="cv-actions-row">
+            <a
+              className="cv-btn cv-btn-primary"
+              href={doc.downloads.pdf}
+              download
+              data-qid="resume:link:pdf"
+              data-qs-action="RESUME_DOWNLOAD_PDF"
+              title="Download the résumé as a PDF"
+            >
+              <DownloadIcon />
+              <span>Download PDF</span>
+            </a>
+            <a
+              className="cv-btn"
+              href={doc.downloads.docx}
+              download
+              data-qid="resume:link:docx"
+              data-qs-action="RESUME_DOWNLOAD_DOCX"
+              title="Download the résumé as an ATS-oriented DOCX"
+            >
+              <DocIcon />
+              <span>DOCX</span>
+            </a>
+            <a
+              className="cv-btn"
+              href={doc.downloads.markdown}
+              download
+              data-qid="resume:link:markdown"
+              data-qs-action="RESUME_DOWNLOAD_MARKDOWN"
+              title="Download the résumé as Markdown"
+            >
+              <MarkdownIcon />
+              <span>Markdown</span>
+            </a>
+            <CalendlyPopupLink
+              className="cv-btn cv-btn-calendly"
+              url={calendlyUrl}
+              qid="resume:link:calendly"
+            >
+              <CalendarIcon />
+              <span>Book time</span>
+            </CalendlyPopupLink>
+          </div>
+          <p className="cv-actions-note">Full version - PDF/DOCX are specialized 2-page cuts</p>
         </div>
 
+        <EmployerQuickFacts />
 
         {doc.intro.length ? <section className="cv-intro"><Blocks blocks={doc.intro} /></section> : null}
 
         {doc.sections.map((s) => (
           <section key={s.title} className="cv-section">
             <h2>{s.title}</h2>
-            <Blocks blocks={s.blocks} clusters={s.title === 'CORE COMPETENCIES'} />
+            <Blocks
+              blocks={s.blocks}
+              clusters={s.title === 'CORE COMPETENCIES'}
+              selectedImpact={s.title === 'SELECTED IMPACT'}
+            />
             {s.title === 'DEEPER DETAIL' ? (
               <p className="cv-evidence-link">
                 The generated discipline census is technical-inspector material, not
