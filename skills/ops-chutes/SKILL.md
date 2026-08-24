@@ -186,3 +186,16 @@ with ChutesSemaphore() as slot:
     # make Chutes API calls safely
     pass
 ```
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Chutes.ai documentation: <https://docs.chutes.ai/>
+
+```bash
+skills/context7/run.sh "chutes.ai api quota"
+skills/fetcher/run.sh "https://docs.chutes.ai/"
+```

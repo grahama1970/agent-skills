@@ -211,3 +211,17 @@ ENOSPC: System limit for number of file watchers reached
 ./run.sh report --daily --days 7 --json > /tmp/usage.json
 .pi/skills/create-figure/run.sh line /tmp/usage.json --key figure_data.line
 ```
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Claude Code documentation: <https://docs.claude.com/en/docs/claude-code/overview>
+- llms.txt (LLM-friendly doc index): <https://docs.claude.com/llms.txt>
+
+```bash
+skills/context7/run.sh "claude code cli hooks settings"
+skills/fetcher/run.sh "https://docs.claude.com/en/docs/claude-code/overview"
+```

@@ -231,3 +231,16 @@ Read only what the task needs:
 `fixtures/agentic_eval.json` exercises the real local CLI for positive, negative, and
 adversarial cases. It proves request validation, fail-closed evidence gating, and bounded
 attestation. It does not prove any live LinkedIn action.
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- LinkedIn developer docs (Microsoft Learn): <https://learn.microsoft.com/en-us/linkedin/>
+
+```bash
+skills/context7/run.sh "linkedin api marketing developer"
+skills/fetcher/run.sh "https://learn.microsoft.com/en-us/linkedin/"
+```

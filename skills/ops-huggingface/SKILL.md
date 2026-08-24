@@ -57,3 +57,17 @@ token. No token is ever echoed.
 
 `huggingface_hub` in the active environment. If absent, every command fails
 closed with a clear `Missing dependency: huggingface_hub` message.
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- huggingface_hub documentation: <https://huggingface.co/docs/huggingface_hub/index>
+- llms.txt (LLM-friendly doc index): <https://huggingface.co/docs/huggingface_hub/llms.txt>
+
+```bash
+skills/context7/run.sh "huggingface_hub upload snapshot repo"
+skills/fetcher/run.sh "https://huggingface.co/docs/huggingface_hub/index"
+```

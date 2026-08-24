@@ -141,3 +141,17 @@ Commands use `docker exec scillm-ollama ollama <command>` pattern or HTTP API `h
 | -------------------- | ----------- | ---------------------------- |
 | `LLM_HEALTH_TIMEOUT` | 2           | Seconds to wait per endpoint |
 | `LLM_CACHE_DIRS`     | (see above) | Space-separated cache paths  |
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Ollama docs: <https://github.com/ollama/ollama/tree/main/docs>
+- vLLM documentation: <https://docs.vllm.ai/en/latest/>
+
+```bash
+skills/context7/run.sh "ollama vllm serve api"
+skills/fetcher/run.sh "https://docs.vllm.ai/en/latest/"
+```

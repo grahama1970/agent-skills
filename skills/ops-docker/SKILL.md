@@ -90,3 +90,17 @@ Safe Docker management with dry-run defaults.
 ```bash
 ./scripts/prune.sh --until 24h --execute  # only prune images older than 24h
 ```
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Docker documentation: <https://docs.docker.com/>
+- llms.txt (LLM-friendly doc index): <https://docs.docker.com/llms.txt>
+
+```bash
+skills/context7/run.sh "docker compose prune cli"
+skills/fetcher/run.sh "https://docs.docker.com/"
+```

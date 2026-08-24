@@ -88,3 +88,16 @@ Gemini fallback call. `/ops-google usage` reads it.
 | gemini-2.5-flash   | 2000  | 4,000,000 |
 | gemini-2.5-pro     | 150   | 2,000,000 |
 | gemini-2.0-flash   | 2000  | 4,000,000 |
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Google Gemini API docs: <https://ai.google.dev/gemini-api/docs>
+
+```bash
+skills/context7/run.sh "google gemini api models"
+skills/fetcher/run.sh "https://ai.google.dev/gemini-api/docs"
+```

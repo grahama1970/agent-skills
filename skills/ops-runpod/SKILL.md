@@ -201,3 +201,17 @@ memory-agent learn \
 # Flash replaces ops-runpod for all training paths
 .pi/skills/create-gpt/run.sh train --task X --target flash --gpu B200
 ```
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- RunPod documentation: <https://docs.runpod.io/>
+- llms.txt (LLM-friendly doc index): <https://docs.runpod.io/llms.txt>
+
+```bash
+skills/context7/run.sh "runpod gpu pods api"
+skills/fetcher/run.sh "https://docs.runpod.io/"
+```

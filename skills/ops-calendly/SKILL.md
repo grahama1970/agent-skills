@@ -107,3 +107,18 @@ overridden. The token must have the `calendar.events` scope.
   the caller requests it and the existing file already exists.
 - Use the live Calendly API for integration proof when `CALENDLY_PAT` is
   available; fixture-backed sanity tests prove deterministic behavior only.
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Calendly developer portal: <https://developer.calendly.com/>
+- Calendly API reference: <https://developer.calendly.com/api-docs>
+- llms.txt (LLM-friendly doc index): <https://developer.calendly.com/llms.txt>
+
+```bash
+skills/context7/run.sh "calendly api scheduling"
+skills/fetcher/run.sh "https://developer.calendly.com/api-docs"
+```

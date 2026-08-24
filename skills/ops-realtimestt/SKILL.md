@@ -127,3 +127,16 @@ receipt behavior only. They do not prove a local STT service is running, that a
 GPU backend is usable, or that streaming transcription works. Live claims
 require `health`, `doctor`, `cuda`, `websocket-probe --live`, or
 `transcribe-smoke --live` receipts from the target service.
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- RealtimeSTT (KoljaB): <https://github.com/KoljaB/RealtimeSTT>
+
+```bash
+skills/context7/run.sh "realtimestt faster-whisper asr"
+skills/fetcher/run.sh "https://github.com/KoljaB/RealtimeSTT"
+```

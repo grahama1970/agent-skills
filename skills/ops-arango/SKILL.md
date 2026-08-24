@@ -219,3 +219,17 @@ scheduled:
     schedule: "0 3 * * *"  # 3am daily
     enabled: true
 ```
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- ArangoDB documentation: <https://arangodb.com/documentation/>
+- Reference manual (docs.arangodb.com, browser-only): <https://docs.arangodb.com/stable/>
+
+```bash
+skills/context7/run.sh "arangodb aql collections backup"
+skills/fetcher/run.sh "https://arangodb.com/documentation/"
+```

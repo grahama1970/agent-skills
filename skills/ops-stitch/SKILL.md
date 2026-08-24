@@ -64,3 +64,17 @@ captures/{target}/context-bundle/
   manifest.json        # metadata
   ref-*.png            # reference images (renamed copies)
 ```
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Google Stitch: <https://stitch.withgoogle.com/>
+- llms.txt (LLM-friendly doc index): <https://stitch.withgoogle.com/llms.txt>
+
+```bash
+skills/context7/run.sh "google stitch design"
+skills/fetcher/run.sh "https://stitch.withgoogle.com/"
+```

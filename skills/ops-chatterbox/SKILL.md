@@ -113,3 +113,16 @@ receipt behavior only. They do not prove the local Chatterbox service is
 running, that a model is loaded, or that a rendered voice sounds emotionally
 different. Live claims require `health`, `doctor`, or `render-smoke --live`
 receipts from the target service.
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Chatterbox TTS (Resemble AI): <https://github.com/resemble-ai/chatterbox>
+
+```bash
+skills/context7/run.sh "chatterbox tts resemble"
+skills/fetcher/run.sh "https://github.com/resemble-ai/chatterbox"
+```

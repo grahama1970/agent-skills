@@ -103,3 +103,16 @@ the applied event is read back into the receipt.
   resolved to a concrete datetime by the caller before `--confirm`.
 - **Not `ops-google`.** That skill manages the paid Gemini API; this one is a
   free Calendar OAuth integration with a separate credential.
+
+## References (retrieve on demand — do not vendor)
+
+External docs drift; cite the canonical URLs and fetch them when needed
+with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
+caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
+
+- Google Calendar API guide: <https://developers.google.com/calendar/api/guides/overview>
+
+```bash
+skills/context7/run.sh "google calendar api events oauth"
+skills/fetcher/run.sh "https://developers.google.com/calendar/api/guides/overview"
+```
