@@ -481,6 +481,36 @@ def test_targeted_issue_does_not_let_earlier_issue_claim_its_target(monkeypatch)
     assert "target_busy" not in registry.LAST_SCAN["excluded"]
 
 
+def test_dirty_target_is_excluded_before_dispatch_and_next_issue_can_route(monkeypatch):
+    dirty = _issue(1469, "skills/agentic-evals")
+    clean = _issue(1472, "skills/ticket")
+
+    def run_cmd(cmd, timeout_s=None):
+        import json as _json
+        return {"exit_code": 0, "stdout": _json.dumps([dirty, clean]), "stderr": ""}
+
+    def readiness(worktree, targets=None):
+        if targets == {"skills/agentic-evals"}:
+            return {
+                "ready": False,
+                "reasons": ["tracked_files_dirty:1"],
+                "dirty_paths": ["skills/agentic-evals/tests/test_remediation.py"],
+            }
+        return {"ready": True, "reasons": []}
+
+    monkeypatch.setattr(registry, "run_cmd", run_cmd)
+    monkeypatch.setattr(registry, "worktree_readiness", readiness)
+
+    routable = registry.list_routable_issues(
+        "t",
+        {"repo": "o/agent-skills", "worktree": "/tmp/worktree"},
+    )
+
+    assert [i["number"] for i in routable] == [1472]
+    assert registry.LAST_SCAN["excluded"]["target_busy"] == 1
+    assert registry.LAST_SCAN["excluded_issues"]["target_busy"] == [1469]
+
+
 def test_stale_lease_skip_reason_is_machine_readable(monkeypatch):
     issue = _live_shaped_lease()
     issue["labels"] = [{"name": "agent-work"}, {"name": "maintainer-active"}]

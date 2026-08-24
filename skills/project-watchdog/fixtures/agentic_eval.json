@@ -582,6 +582,26 @@
       "notes": "A widened fleet budget gives dispatch capacity to different projects in one pass while still taking at most one issue per project."
     },
     {
+      "name": "dirty-target-is-skipped-before-dispatch",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "mocked": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_dirty_target_is_excluded_before_dispatch_and_next_issue_can_route"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression for live receipt project-watchdog-20260824T211001Z: an issue whose target is dirty in the registered checkout is excluded as target_busy during selection, so it does not become a handled BLOCKED repair before an isolated worktree exists."
+    },
+    {
       "name": "scheduler-execution-lock-blocks-overlapping-targets",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

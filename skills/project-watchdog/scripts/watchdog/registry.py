@@ -305,6 +305,18 @@ def list_routable_issues(
             # as many broken tickets instead of one unconfigured project.
             unroutable_no_repair_lane += 1
             continue
+        if action == "ticket_repair" and has_lane:
+            readiness = worktree_readiness(project_worktree(project), targets)
+            reasons = [str(reason) for reason in readiness.get("reasons", [])]
+            if reasons and all(reason.startswith("tracked_files_dirty:") for reason in reasons):
+                # A dirty target in the registered checkout is a per-target
+                # collision, not a failed repair attempt. Exclude it during
+                # selection so it cannot consume the whole fleet tick before an
+                # isolated repair worktree is even created. The handler keeps
+                # the same readiness check for races between scan and dispatch.
+                issue["watchdog_worktree_readiness"] = readiness
+                excluded.setdefault("target_busy", []).append(issue_number)
+                continue
         issue["watchdog_action"] = action
         issue["watchdog_targets"] = sorted(targets)
         # Claim them for the rest of this scan: with max_tickets > 1 two tickets
