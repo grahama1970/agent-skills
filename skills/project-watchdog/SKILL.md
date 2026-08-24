@@ -362,6 +362,13 @@ so, and the lane records `origin/main` before and after, blocking the ticket if
 it moved. That detects the violation; preventing it belongs in branch
 protection.
 
+Alpha projects that use dependent ticket families may set `auto_land_main:
+true` in `registry/projects.json`. For those projects, a reviewer-passed repair
+with a passing proof gate is rebased onto `origin/main`, pushed to `main`, marked
+`agent-done`, and closed as `COMPLETED` in the same repair tick. Without this,
+the issue remains open with `agent-done` as a branch awaiting review, and
+downstream `blocked-by` tickets stay `dependency_open`.
+
 #### The proof gate — a DAG that exited 0 is not a repaired ticket
 
 `$ask tau-dag` exiting 0 means the seats were reached. Before the lane lands or

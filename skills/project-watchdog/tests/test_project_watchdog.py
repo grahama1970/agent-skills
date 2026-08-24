@@ -1003,6 +1003,16 @@ def test_a_project_may_name_its_own_seats() -> None:
     assert config.repair_reviewer(project) == "webclaude"
 
 
+def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    projects = payload["projects"] if isinstance(payload, dict) else payload
+    memory = next(project for project in projects if project["project_id"] == "memory")
+
+    assert config.auto_land_main(memory) is True
+    assert memory["repair_reviewer"] == "claude-fable-low"
+
+
 def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
     project = {
         "project_id": "agent-skills",

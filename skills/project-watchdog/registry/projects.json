@@ -379,6 +379,7 @@
       ],
       "repair_creator": "gpt-5.5-high",
       "repair_reviewer": "claude-fable-low",
+      "auto_land_main": true,
       "service": {
         "kind": "docker+systemd",
         "restart_cmd": "uv pip install -e . && systemctl --user restart embry-memory",

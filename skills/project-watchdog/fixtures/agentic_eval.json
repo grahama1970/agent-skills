@@ -809,6 +809,32 @@
       }
     },
     {
+      "name": "memory-project-auto-lands-reviewer-passed-repairs",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "seams": [
+        "watchdog.auto_land",
+        "watchdog.dependency_gate"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_memory_project_auto_lands_reviewer_passed_repairs",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
       "name": "dependency-unblock-does-not-dispatch-same-tick",
       "type": "positive",
       "real_world": true,
