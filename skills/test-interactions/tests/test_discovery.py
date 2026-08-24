@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from discovery import _build_manifest, _events_to_findings, _manifest_coverage, _manifest_selector_for_qid, _should_assert_visible_after_click, state_fingerprint
+from discovery import _build_manifest, _events_to_findings, _is_expected_navigation, _manifest_coverage, _manifest_selector_for_qid, _should_assert_visible_after_click, state_fingerprint
 
 
 class DiscoveryHelperTests(unittest.TestCase):
@@ -33,6 +33,7 @@ class DiscoveryHelperTests(unittest.TestCase):
 
     def test_generated_manifest_uses_only_data_qid_selectors(self):
         manifest = _build_manifest("http://127.0.0.1:8775/discovery_defects.html", [{
+            "url": "http://127.0.0.1:8775/discovery_defects.html",
             "title": "fixture",
             "interactives": [
                 {"qid": "fixture:ok", "visible": True, "enabled": True, "title": "OK", "qsAction": "OK"},
@@ -47,8 +48,57 @@ class DiscoveryHelperTests(unittest.TestCase):
         ]
         self.assertEqual(len(interactions), 1)
         self.assertEqual(interactions[0]["target"], "[data-qid='fixture:ok']")
+        self.assertEqual(interactions[0]["assert_timing"], "before")
+        self.assertEqual(manifest["base_url"], "http://127.0.0.1:8775")
+        self.assertEqual(manifest["surfaces"][0]["path"], "/discovery_defects.html")
+        self.assertTrue(manifest["surfaces"][0]["isolate_interactions"])
         self.assertNotIn("nth-child", str(manifest))
         self.assertNotIn(".missing", str(manifest))
+
+    def test_generated_manifest_marks_external_links(self):
+        manifest = _build_manifest("https://grahama.co", [{
+            "url": "https://grahama.co",
+            "title": "fixture",
+            "interactives": [
+                {
+                    "qid": "hero:link:repo",
+                    "visible": True,
+                    "enabled": True,
+                    "title": "Repo",
+                    "qsAction": "HERO_OPEN_REPO",
+                    "href": "https://github.com/grahama1970/agent-skills",
+                    "tag": "a",
+                },
+            ],
+        }])
+        interaction = manifest["surfaces"][0]["elements"][0]["interactions"][0]
+        self.assertTrue(interaction["allow_external_navigation"])
+        self.assertEqual(interaction["action"], "wait")
+        self.assertIn("without launching", interaction["description"])
+
+    def test_generated_manifest_keeps_root_url_and_groups_routes(self):
+        manifest = _build_manifest("https://grahama.co", [
+            {
+                "url": "https://grahama.co",
+                "title": "root",
+                "interactives": [
+                    {"qid": "hero:action:repo", "visible": True, "enabled": True, "title": "Repo", "qsAction": "HERO_OPEN_REPO"},
+                ],
+            },
+            {
+                "url": "https://grahama.co/resume",
+                "title": "resume",
+                "interactives": [
+                    {"qid": "resume:link:pdf", "visible": True, "enabled": True, "title": "PDF", "qsAction": "RESUME_DOWNLOAD_PDF"},
+                ],
+            },
+        ])
+        self.assertEqual(manifest["base_url"], "https://grahama.co")
+        surfaces = {surface["path"]: surface for surface in manifest["surfaces"]}
+        self.assertEqual(set(surfaces), {"/", "/resume"})
+        self.assertEqual(surfaces["/"]["elements"][0]["name"], "hero-action-repo")
+        self.assertEqual(surfaces["/resume"]["elements"][0]["name"], "resume-link-pdf")
+        self.assertTrue(all(surface["isolate_interactions"] for surface in manifest["surfaces"]))
 
     def test_manifest_selector_for_qid_uses_qid_target(self):
         self.assertEqual(_manifest_selector_for_qid("fixture:ok"), "[data-qid='fixture:ok']")
@@ -76,6 +126,18 @@ class DiscoveryHelperTests(unittest.TestCase):
             {"method": "Network.responseReceived", "params": {"response": {"status": 404, "url": "http://example.test/missing"}}},
         ], {"qid": "fixture:throws", "selector": "[data-qid='fixture:throws']", "tag": "button"}, "state-1")
         self.assertEqual([item["finding_kind"] for item in findings], ["console_exception", "network_failure"])
+
+    def test_anchor_navigation_is_expected_not_drift(self):
+        item = {
+            "qid": "nav:link:resume",
+            "selector": "[data-qid='nav:link:resume']",
+            "tag": "a",
+            "href": "https://grahama.co/resume",
+            "qsAction": "NAV_RESUME",
+        }
+        self.assertTrue(_is_expected_navigation(item, "https://grahama.co", "https://grahama.co/resume"))
+        button = {"qid": "fixture:url-drift", "tag": "button", "qsAction": "FIXTURE_URL_DRIFT"}
+        self.assertFalse(_is_expected_navigation(button, "http://example.test", "http://example.test?drift=1"))
 
 
 if __name__ == "__main__":

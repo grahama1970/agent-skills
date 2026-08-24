@@ -13,6 +13,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 from cdp_client import CDPClient
 
@@ -65,6 +66,7 @@ DISCOVER_INTERACTIVES_JS = r"""
       role: role,
       title: el.getAttribute('title') || '',
       qsAction: el.getAttribute('data-qs-action') || '',
+      href: el.href || el.getAttribute('href') || '',
       visible: isVisible(el),
       enabled: !disabled,
       text: (el.innerText || el.value || el.getAttribute('aria-label') || '').trim().slice(0, 120),
@@ -171,6 +173,41 @@ def _manifest_selector_for_qid(qid: str) -> str:
     return f"[data-qid='{qid}']"
 
 
+def _url_origin(url: str) -> str:
+    parsed = urlsplit(url)
+    if not parsed.scheme or not parsed.netloc:
+        return url.rstrip("/")
+    return urlunsplit((parsed.scheme, parsed.netloc, "", "", ""))
+
+
+def _url_path(url: str) -> str:
+    parsed = urlsplit(url)
+    path = parsed.path or "/"
+    if parsed.query:
+        path = f"{path}?{parsed.query}"
+    return path
+
+
+def _is_expected_navigation(item: dict[str, Any], before_url: str, after_url: str) -> bool:
+    if after_url == before_url:
+        return False
+    href = str(item.get("href") or "")
+    tag = str(item.get("tag") or "").lower()
+    if tag == "a" and href:
+        return True
+    label = " ".join(str(item.get(key) or "").lower() for key in ("qid", "title", "qsAction", "text"))
+    return any(token in label for token in ("nav_", "open_", "download", "email", "mailto", "link"))
+
+
+def _is_external_href(href: str, base_origin: str) -> bool:
+    parsed = urlsplit(href)
+    if parsed.scheme in {"mailto", "tel"}:
+        return True
+    if parsed.scheme and parsed.netloc:
+        return _url_origin(href) != base_origin
+    return False
+
+
 def _should_assert_visible_after_click(item: dict[str, Any]) -> bool:
     label = " ".join(str(item.get(key) or "").lower() for key in ("qid", "text", "title", "qsAction"))
     return not any(token in label for token in ("close", "dismiss", "cancel"))
@@ -238,43 +275,65 @@ def _keyboard_focusable(cdp: CDPClient, selector: str) -> bool:
 
 
 def _build_manifest(url: str, snapshots: list[dict[str, Any]]) -> dict[str, Any]:
-    by_qid: dict[str, dict[str, Any]] = {}
+    target_origin = _url_origin(url)
+    by_path_qid: dict[str, dict[str, dict[str, Any]]] = {}
     for snap in snapshots:
+        snap_url = str(snap.get("url") or url)
+        if _url_origin(snap_url) != target_origin:
+            continue
+        path = _url_path(snap_url)
+        by_qid = by_path_qid.setdefault(path, {})
         for item in snap.get("interactives") or []:
             qid = item.get("qid")
             if qid and item.get("visible") and item.get("enabled") and qid not in by_qid:
                 by_qid[qid] = item
 
-    elements = []
-    for qid, item in by_qid.items():
-        selector = _manifest_selector_for_qid(qid)
-        interaction: dict[str, Any] = {
-            "action": "click",
-            "target": selector,
-            "description": f"Discovered live interaction: {qid}",
-        }
-        if _should_assert_visible_after_click(item):
-            interaction["assert_visible"] = selector
-        if item.get("title"):
-            interaction["assert_title"] = selector
-        if item.get("qsAction"):
-            interaction["assert_qs_action"] = selector
-        elements.append({"name": qid.replace(":", "-"), "interactions": [interaction]})
+    surfaces = []
+    for path, by_qid in by_path_qid.items():
+        elements = []
+        for qid, item in by_qid.items():
+            selector = _manifest_selector_for_qid(qid)
+            external_href = _is_external_href(str(item.get("href") or ""), target_origin)
+            interaction: dict[str, Any] = {
+                "action": "wait" if external_href else "click",
+                "target": selector,
+                "description": f"Discovered live interaction: {qid}",
+                "assert_timing": "before",
+            }
+            if _should_assert_visible_after_click(item):
+                interaction["assert_visible"] = selector
+            if item.get("title"):
+                interaction["assert_title"] = selector
+            if item.get("qsAction"):
+                interaction["assert_qs_action"] = selector
+            if external_href:
+                interaction["allow_external_navigation"] = True
+                interaction["description"] = f"Assert external link without launching it: {qid}"
+            elements.append({"name": qid.replace(":", "-"), "interactions": [interaction]})
+        surfaces.append({
+            "name": "discovered-main" if path == _url_path(url) else f"discovered-{path.strip('/').replace('/', '-') or 'root'}",
+            "path": path,
+            "qid_compliance": False,
+            "isolate_interactions": True,
+            "elements": elements or [{"name": "full-page", "interactions": [{"action": "screenshot", "description": f"Full page of {url}"}]}],
+        })
 
     return {
         "version": 1,
         "app": (snapshots[0].get("title") if snapshots else "") or url,
-        "base_url": url.rsplit("/", 1)[0] if "/" in url else url,
+        "base_url": target_origin,
         "discovery": {
             "generated_at": utc_now(),
             "states": len(snapshots),
             "qid_only_executable_selectors": True,
+            "route_isolated": True,
         },
-        "surfaces": [{
+        "surfaces": surfaces or [{
             "name": "discovered-main",
-            "path": "/" + url.rsplit("/", 1)[-1] if "/" in url else "/",
+            "path": _url_path(url),
             "qid_compliance": False,
-            "elements": elements or [{"name": "full-page", "interactions": [{"action": "screenshot", "description": f"Full page of {url}"}]}],
+            "isolate_interactions": True,
+            "elements": [{"name": "full-page", "interactions": [{"action": "screenshot", "description": f"Full page of {url}"}]}],
         }],
     }
 
@@ -384,16 +443,19 @@ def discover_live_dom(
                 "clicked": clicked,
                 "depth": depth + 1,
             })
-            findings.extend(_events_to_findings(run_id, events, item, before_state))
+            expected_navigation = _is_expected_navigation(item, before_url, after_url)
+            if not expected_navigation:
+                findings.extend(_events_to_findings(run_id, events, item, before_state))
             if after_url != before_url:
-                findings.append(_finding(run_id, "unexpected_url_drift", "Interaction changed the page URL during discovery", element=item, state=before_state, evidence={"before": before_url, "after": after_url}))
+                if not expected_navigation:
+                    findings.append(_finding(run_id, "unexpected_url_drift", "Interaction changed the page URL during discovery", element=item, state=before_state, evidence={"before": before_url, "after": after_url}))
             observable_effect = (
                 after_state != before_state
                 or after_url != before_url
                 or after.get("bodyText", "") != before_text
                 or bool(events)
             )
-            if not observable_effect:
+            if not observable_effect and not expected_navigation:
                 findings.append(_finding(run_id, "inert_interaction", "Click produced no observable DOM, URL, console, network, focus, or text effect", element=item, state=before_state))
             after_dialog_count = len(after.get("dialogs") or [])
             if after_dialog_count > before_dialog_count:

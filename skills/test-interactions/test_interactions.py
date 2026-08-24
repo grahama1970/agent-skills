@@ -32,6 +32,7 @@ import base64
 from datetime import datetime, timezone
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 from typing import Optional
@@ -167,6 +168,26 @@ def _should_capture_animation(interaction: dict) -> bool:
     )
 
 
+def _url_origin(url: str) -> str:
+    parsed = urlsplit(url)
+    if not parsed.scheme or not parsed.netloc:
+        return url.rstrip("/")
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+def _allows_url_guard_escape(interaction: dict, target_href: str, url_guard: str) -> bool:
+    if not url_guard:
+        return False
+    if interaction.get("allow_external_navigation"):
+        return True
+    parsed = urlsplit(target_href or "")
+    if parsed.scheme in {"mailto", "tel"}:
+        return True
+    if parsed.scheme and parsed.netloc:
+        return _url_origin(target_href) != _url_origin(url_guard)
+    return False
+
+
 def _execute_interaction(
     cdp: CDPClient,
     interaction: dict,
@@ -194,9 +215,24 @@ def _execute_interaction(
         or interaction.get("focus")
         or ""
     ).strip()
+    target_href = ""
     pre_action_screenshot = ""
 
     try:
+        if target_selector:
+            target_href = str(cdp.get_attribute(target_selector, "href") or "")
+        assertions_before = interaction.get("assert_timing") == "before"
+        if assertions_before:
+            assertions = run_assertions(cdp, interaction, wait_ms)
+            result.assertions = assertions
+            for a in assertions:
+                if a["status"] == "FAIL":
+                    result.status = "FAIL"
+                    result.evidence = f"PRE-ASSERTION FAILED: {a['check']} — {a['evidence']}"
+                    break
+            if result.status == "FAIL":
+                return result
+
         if _should_capture_animation(interaction) and target_selector:
             pre_dir = output_dir / "visual-evidence"
             pre_dir.mkdir(parents=True, exist_ok=True)
@@ -297,7 +333,7 @@ def _execute_interaction(
             result.evidence = f"unknown action: {action}"
 
         # Run assertions (skip if action already failed)
-        if result.status != "FAIL":
+        if result.status != "FAIL" and not assertions_before:
             assertions = run_assertions(cdp, interaction, wait_ms)
             result.assertions = assertions
             for a in assertions:
@@ -319,7 +355,7 @@ def _execute_interaction(
 
         if url_guard:
             current_url = cdp.current_url()
-            if not current_url.startswith(url_guard):
+            if not current_url.startswith(url_guard) and not _allows_url_guard_escape(interaction, target_href, url_guard):
                 result.status = "FAIL"
                 drift = f"URL drifted outside test target: {current_url!r} does not start with {url_guard!r}"
                 result.evidence = f"{result.evidence} | {drift}" if result.evidence else drift
@@ -434,22 +470,27 @@ def _run_surface(cdp: CDPClient, surface: dict, base_url: str, output_dir: Path,
 
     nav_url = f"{base_url.rstrip('/')}{path}" if base_url else path
     url_guard = surface.get("url_guard") or base_url
+    isolate_interactions = bool(surface.get("isolate_interactions"))
     logger.info("Surface: {} ({})", surface_name, nav_url)
 
-    cdp.navigate(nav_url, wait_ms=2000)
+    def navigate_surface():
+        cdp.navigate(nav_url, wait_ms=2000)
+        wait_ready = surface.get("wait_ready")
+        if wait_ready:
+            timeout = surface.get("wait_ready_timeout_ms", 15000)
+            found = cdp.wait_for_selector(wait_ready, timeout_ms=timeout)
+            if not found:
+                logger.warning("wait_ready {} not found within {}ms", wait_ready, timeout)
 
-    wait_ready = surface.get("wait_ready")
-    if wait_ready:
-        timeout = surface.get("wait_ready_timeout_ms", 15000)
-        found = cdp.wait_for_selector(wait_ready, timeout_ms=timeout)
-        if not found:
-            logger.warning("wait_ready {} not found within {}ms", wait_ready, timeout)
+    navigate_surface()
 
     step_index = 0
     for element in surface.get("elements", []):
         element_name = element.get("name", "unnamed")
         for interaction in element.get("interactions", []):
             step_index += 1
+            if isolate_interactions:
+                navigate_surface()
             r = _execute_interaction(
                 cdp,
                 interaction,
