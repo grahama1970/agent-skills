@@ -332,6 +332,25 @@ allowed provider route for repair is:
 project-watchdog -> $ask tau-dag -> Tau-executed DAG/command_spec -> Tau-owned SciLLM adapter
 ```
 
+Once project-watchdog starts an Ask/Tau repair, the live status surface is the
+Ask run directory and Tau's JSON receipts, not the outer process. The watchdog
+operator or project agent must continuously read:
+
+```text
+<receipt-run>/ask/<ask-run>/tau-receipts/dag-progress.json
+<receipt-run>/ask/<ask-run>/tau-receipts/dag-receipt.json
+<receipt-run>/ask/<ask-run>/node-artifacts/<node-id>/node-receipt.json
+<receipt-run>/ask/<ask-run>/node-artifacts/<node-id>/response.md
+```
+
+Every repair status must include the exact Ask run directory plus
+`dag-progress.json` fields for `status`, `node_progress`,
+`active_subagents`, `completed_subagents`, `last_event`, `event_count`,
+`mocked`, and `live`. When a node blocks or completes, read the node receipt,
+handler receipt, recovery packet, and response before naming the cause. Do not
+report only "still running", "Ask failed", or a shell exit code while Tau JSON
+receipts exist.
+
 If a repair receipt reports `SCILLM_AUTH_INVALID_API_KEY` or
 `scillm_auth_invalid_api_key`, that is a Tau/SciLLM provider-adapter failure
 reported through the Tau receipt. project-watchdog may surface the exact failure

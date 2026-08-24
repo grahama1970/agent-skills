@@ -1686,6 +1686,30 @@
         ]
       },
       "notes": "Proof for agent-skills#1461: through the REAL gh-ticket-tools.sh with a stateful fake gh -- (a) close without a lease fails with 'not leased with maintainer-active'; (b) close with an active lease but an EMPTY proof file fails; (c) close with the lease plus non-empty proof succeeds. The convergence loop's closure accounting depends on exactly these three behaviors."
+    },
+    {
+      "name": "ask-tau-dag-requires-json-progress-monitoring",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && skill=$repo/skills/ask/SKILL.md && grep -q 'Mandatory Tau JSON Progress Monitoring' \"$skill\" && grep -q 'tau-receipts/dag-progress.json' \"$skill\" && grep -q 'node-artifacts/<node-id>/node-receipt.json' \"$skill\" && grep -q 'node_progress' \"$skill\" && grep -q 'active_subagents' \"$skill\" && grep -q 'completed_subagents' \"$skill\" && grep -q 'outer Ask CLI' \"$skill\" && echo ASK_TAU_JSON_PROGRESS_MONITORING_REQUIRED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_TAU_JSON_PROGRESS_MONITORING_REQUIRED"
+        ]
+      },
+      "notes": "Regression guard for live Ask/Tau runs: the skill contract must force agents to read Tau's JSON progress and node receipts instead of waiting on opaque outer process output."
     }
   ],
   "capability_claims": [

@@ -163,6 +163,34 @@ safe on a live run or in a watch loop.
 Not yet unified: the legacy `status --run` path reads a different artifact
 family and still has its own shape.
 
+## Mandatory Tau JSON Progress Monitoring
+
+When Ask launches or inspects an executed `tau-dag`, `compete`, browser-handler
+roundtable, or creator-reviewer loop, the Ask run directory is not opaque
+process output. The project agent must monitor the Tau JSON artifacts while the
+run is active and before reporting status.
+
+Required watch path:
+
+```text
+<ask-run-dir>/tau-receipts/dag-progress.json
+<ask-run-dir>/tau-receipts/dag-receipt.json
+<ask-run-dir>/node-artifacts/<node-id>/node-receipt.json
+<ask-run-dir>/node-artifacts/<node-id>/response.md
+```
+
+Status updates for active Ask/Tau runs must read `dag-progress.json` and report
+the current `status`, `node_progress`, `active_subagents`,
+`completed_subagents`, `last_event`, `event_count`, `mocked`, `live`, and exact
+run directory. If a node has become terminal, read that node's
+`node-receipt.json`, normalized handler receipt, recovery packet, and response
+before describing the failure or success.
+
+Do not wait on the outer Ask CLI, a shell PID, or terminal scrollback when Tau
+has already written JSON progress. Treating an Ask/Tau run as a black-box
+long-running command is a skill-use failure. The JSON stream is the operational
+status surface.
+
 ## Three Kinds Of Target
 
 `/ask` addresses three peer target types. They differ in transport, not in

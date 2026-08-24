@@ -990,6 +990,27 @@
           "GATE_IS_A_WALL"
         ]
       }
+    },
+    {
+      "name": "ticket-repair-requires-tau-json-progress-monitoring",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "seams": [
+        "watchdog.ticket_dispatch",
+        "watchdog.repair_proof_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && skill=$repo/skills/project-watchdog/SKILL.md && grep -q 'tau-receipts/dag-progress.json' \"$skill\" && grep -q 'tau-receipts/dag-receipt.json' \"$skill\" && grep -q 'node-artifacts/<node-id>/node-receipt.json' \"$skill\" && grep -q 'ticket_repair' \"$skill\" && grep -q 'node_progress' \"$skill\" && grep -q 'active_subagents' \"$skill\" && grep -q 'report only \"still running\"' \"$skill\" && echo WATCHDOG_TICKET_REPAIR_MONITORS_TAU_JSON"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WATCHDOG_TICKET_REPAIR_MONITORS_TAU_JSON"
+        ]
+      }
     }
   ]
 }
