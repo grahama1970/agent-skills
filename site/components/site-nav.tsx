@@ -41,7 +41,13 @@ export function SiteNav({ hrefBase = '' }: { hrefBase?: string }) {
   }, []);
 
   return (
-    <header className="topbar">
+    <header
+      className="topbar"
+      style={{
+        backdropFilter: 'blur(14px) saturate(1.08)',
+        WebkitBackdropFilter: 'blur(14px) saturate(1.08)',
+      }}
+    >
       <div className="wrap">
         <a
           className="wordmark"
