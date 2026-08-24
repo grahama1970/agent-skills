@@ -1,11 +1,14 @@
 ---
 name: monitor-website
-description: Audit and sync the public site (grahama.co, site/) against the repo README. Report-only audit detects drift between README's curated projects/inventory and site/content.json, plus live-site health; apply regenerates content.json from the README. Use for "is the website current", "sync the site with the README", "website drift", or after editing the README project cards or At a Glance table.
+description: Audit, sync, and update the public grahama.co site and resume surfaces from README.md and RESUME.md. Report-only audit detects drift between README's curated projects/inventory and site/content.json, plus live-site health; apply regenerates content.json from the README; update cascades README/RESUME changes into site content, resume JSON, Markdown, PDF, DOCX, llms.txt, and ops-linkedin JSON handoffs. Use for "is the website current", "sync the site with the README", "website drift", "monitor grahamaco", or after editing README project cards, the At a Glance table, or RESUME.md.
 triggers:
   - "monitor website"
   - "website drift"
   - "sync the site"
   - "is the website current"
+  - "monitor grahamaco"
+  - "grahamaco update"
+  - "resume website update"
 allowed-tools:
   - Bash
 provides:
@@ -65,6 +68,24 @@ reads `site/content.json`. This skill keeps them honest.
 ./run.sh refresh
 ./run.sh refresh --commit --push
 
+# One local collaboration cascade for Graham + project-agent updates. This is
+# the command to run after editing README.md or RESUME.md.
+#
+# Sources:
+#   README.md  -> site/content.json and generated public-site surfaces
+#   RESUME.md  -> resume PDF, DOCX, Markdown, site/resume.json, llms.txt
+#   RESUME.md  -> editable ops-linkedin.profile_entry.v1 JSON
+#
+# LinkedIn is a local handoff only: execution_claim stays NOT_EXECUTED and no
+# browser or LinkedIn platform access occurs here.
+./run.sh update --plan --linkedin-sync-plan --accept-linkedin-account-risk --json
+./run.sh update --linkedin-sync-plan --accept-linkedin-account-risk --build
+
+# Stable aliases for humans who think of this as the grahama.co monitor rather
+# than the generic website monitor.
+./run.sh grahamaco-update --plan
+./run.sh monitor-grahamaco --plan
+
 # Freeze section/page-state review units and serve a loopback capability URL.
 ./run.sh review-site prepare --url http://127.0.0.1:3003/ --out /tmp/grahama-review --json
 ./run.sh review-site verify --run-dir /tmp/grahama-review --json
@@ -92,6 +113,11 @@ ship disabled; enable only when the scheduler environment is ready).
 - **Proof:** audit JSON reports each drift item; after an applied change lands
   on main, the receipt is a green `site-deploy` run plus a curl read-back of
   the changed values on https://grahama.co.
+- **One-source cascade:** `update` is the project-agent/Graham collaboration
+  path. It runs the existing resume exporters before the site generator, then
+  delegates LinkedIn profile JSON and optional own-profile sync planning to
+  `ops-linkedin`. It does not apply LinkedIn changes or claim platform
+  verification.
 - **Review URLs:** `review-site` separates deterministic
   `candidate_fingerprint` integrity from runtime-only `access_nonce` routing.
   It consumes the section-corpus manifest, copies canonical renders into the

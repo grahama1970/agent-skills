@@ -13,12 +13,14 @@ import re
 import subprocess
 import sys
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 README = REPO / "README.md"
 CONTENT = REPO / "site" / "content.json"
 SITE_URL = "https://grahama.co"
+LINKEDIN_PROFILE_URL = "https://www.linkedin.com/in/grahamanderson/"
 
 STAT_KEYS = {
     "skills": r"\|\s*Skills\s*\|\s*(\d+)\s*\|",
@@ -215,6 +217,273 @@ def sync_content_stats_to_inventory() -> bool:
     return True
 
 
+def _run_step(name: str, argv: list[str], cwd: Path = REPO) -> dict:
+    proc = subprocess.run(argv, cwd=cwd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise SystemExit(
+            f"{name} failed ({proc.returncode}): {proc.stderr[-500:] or proc.stdout[-500:]}"
+        )
+    return {
+        "name": name,
+        "command": argv,
+        "cwd": str(cwd),
+        "exit_code": proc.returncode,
+        "stdout_tail": proc.stdout[-500:],
+        "stderr_tail": proc.stderr[-500:],
+    }
+
+
+def _update_step(name: str, action: str, writes: list[str], command: list[str] | None = None) -> dict:
+    step = {"name": name, "action": action, "writes": writes}
+    if command is not None:
+        step["command"] = command
+    return step
+
+
+def _grahamaco_update_plan(
+    *,
+    resume_exports: bool,
+    site: bool,
+    linkedin_draft: bool,
+    linkedin_sync_plan: bool,
+    build: bool,
+    output_dir: Path,
+) -> list[dict]:
+    steps: list[dict] = []
+    if resume_exports:
+        steps.extend(
+            [
+                _update_step(
+                    "resume_pdf",
+                    "build PDF from RESUME.md",
+                    ["docs/resume/graham-anderson-resume.pdf"],
+                    [
+                        "uv",
+                        "run",
+                        "--with",
+                        "markdown-pdf==1.13.2",
+                        "python",
+                        "scripts/build_markdown_pdf.py",
+                        "RESUME.md",
+                        "docs/resume/graham-anderson-resume.pdf",
+                        "--css",
+                        "docs/resume/resume.css",
+                        "--font-dir",
+                        "docs/resume/fonts",
+                        "--no-default-css",
+                        "--title",
+                        "Graham Anderson Resume",
+                        "--author",
+                        "Graham Anderson",
+                    ],
+                ),
+                _update_step(
+                    "resume_docx",
+                    "build DOCX from RESUME.md",
+                    ["docs/resume/graham-anderson-resume.docx"],
+                    [
+                        "uv",
+                        "run",
+                        "--with",
+                        "python-docx",
+                        "python",
+                        "scripts/build_resume_docx.py",
+                        "RESUME.md",
+                        "docs/resume/graham-anderson-resume.docx",
+                        "--omit-section",
+                        "DEEPER DETAIL",
+                    ],
+                ),
+            ]
+        )
+    if site:
+        steps.extend(
+            [
+                _update_step("site_content", "sync README.md project cards and stats into site/content.json", ["site/content.json"]),
+                _update_step(
+                    "site_generated_surfaces",
+                    "refresh inventory, artifacts, catalog, graph, competence, resume.json, public resume assets, and llms.txt",
+                    [
+                        "site/inventory.json",
+                        "site/content.json",
+                        "site/artifacts.json",
+                        "site/catalog.json",
+                        "site/graph.json",
+                        "site/competence.json",
+                        "site/research-map.json",
+                        "site/resume.json",
+                        "site/public/resume.md",
+                        "site/public/resume.pdf",
+                        "site/public/resume.docx",
+                        "site/public/llms.txt",
+                    ],
+                ),
+            ]
+        )
+    if linkedin_draft:
+        steps.append(
+            _update_step(
+                "linkedin_profile_entry",
+                "export editable ops-linkedin.profile_entry.v1 JSON from RESUME.md",
+                [str(output_dir / "linkedin-profile-entry.json")],
+            )
+        )
+    if linkedin_sync_plan:
+        steps.append(
+            _update_step(
+                "linkedin_profile_sync_plan",
+                "prepare bounded own-profile Surf sync plan with execution_claim=NOT_EXECUTED",
+                [str(output_dir / "linkedin-profile-sync.json")],
+            )
+        )
+    if build:
+        steps.append(_update_step("site_build", "run site qid/copy/build gates", ["site/out/"]))
+    return steps
+
+
+def grahamaco_update(
+    *,
+    plan_only: bool,
+    resume_exports: bool,
+    site: bool,
+    linkedin_draft: bool,
+    linkedin_sync_plan: bool,
+    accept_linkedin_account_risk: bool,
+    build: bool,
+    output_dir: Path,
+) -> dict:
+    """One local cascade for grahama.co and /resume freshness.
+
+    LinkedIn remains a local JSON handoff only. This command never opens a
+    browser, reads LinkedIn state, or claims a platform action.
+    """
+    if linkedin_sync_plan and not accept_linkedin_account_risk:
+        raise SystemExit("--accept-linkedin-account-risk is required with --linkedin-sync-plan")
+
+    planned_steps = _grahamaco_update_plan(
+        resume_exports=resume_exports,
+        site=site,
+        linkedin_draft=linkedin_draft,
+        linkedin_sync_plan=linkedin_sync_plan,
+        build=build,
+        output_dir=output_dir,
+    )
+    result = {
+        "schema": "monitor-website.grahamaco_update.v1",
+        "status": "UPDATE_PLAN" if plan_only else "UPDATED",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source": {
+            "website": "README.md",
+            "resume": "RESUME.md",
+            "linkedin": "RESUME.md via ops-linkedin.profile_entry.v1",
+        },
+        "output_dir": str(output_dir),
+        "steps": planned_steps,
+        "linkedin_boundary": {
+            "owner": "ops-linkedin",
+            "execution_claim": "NOT_EXECUTED",
+            "platform_verified": False,
+            "no_browser_or_linkedin_access": True,
+        },
+    }
+    if plan_only:
+        return result
+
+    executed: list[dict] = []
+    if resume_exports:
+        executed.append(
+            _run_step(
+                "resume_pdf",
+                [
+                    "uv",
+                    "run",
+                    "--with",
+                    "markdown-pdf==1.13.2",
+                    "python",
+                    "scripts/build_markdown_pdf.py",
+                    "RESUME.md",
+                    "docs/resume/graham-anderson-resume.pdf",
+                    "--css",
+                    "docs/resume/resume.css",
+                    "--font-dir",
+                    "docs/resume/fonts",
+                    "--no-default-css",
+                    "--title",
+                    "Graham Anderson Resume",
+                    "--author",
+                    "Graham Anderson",
+                ],
+            )
+        )
+        executed.append(
+            _run_step(
+                "resume_docx",
+                [
+                    "uv",
+                    "run",
+                    "--with",
+                    "python-docx",
+                    "python",
+                    "scripts/build_resume_docx.py",
+                    "RESUME.md",
+                    "docs/resume/graham-anderson-resume.docx",
+                    "--omit-section",
+                    "DEEPER DETAIL",
+                ],
+            )
+        )
+    if site:
+        content_result = apply_sync()
+        refresh_result = refresh(commit=False, push=False)
+        executed.append({"name": "site_content", "result": content_result})
+        executed.append({"name": "site_generated_surfaces", "result": refresh_result})
+    if linkedin_draft:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        entry_path = output_dir / "linkedin-profile-entry.json"
+        executed.append(
+            _run_step(
+                "linkedin_profile_entry",
+                [
+                    "bash",
+                    str(REPO / "skills/ops-linkedin/run.sh"),
+                    "profile-entry-export",
+                    "--resume-source",
+                    str(REPO / "RESUME.md"),
+                    "--profile-url",
+                    LINKEDIN_PROFILE_URL,
+                    "--output",
+                    str(entry_path),
+                ],
+            )
+        )
+        if linkedin_sync_plan:
+            executed.append(
+                _run_step(
+                    "linkedin_profile_sync_plan",
+                    [
+                        "bash",
+                        str(REPO / "skills/ops-linkedin/run.sh"),
+                        "profile-sync-plan",
+                        "--entry-json",
+                        str(entry_path),
+                        "--accept-account-risk",
+                        "--own-profile-only",
+                        "--output",
+                        str(output_dir / "linkedin-profile-sync.json"),
+                    ],
+                )
+            )
+    if build:
+        for check in (
+            ["python3", "scripts/verify-data-qid.py"],
+            ["python3", "scripts/copy_audit.py"],
+            ["npm", "run", "build"],
+        ):
+            executed.append(_run_step("site_build", check, cwd=REPO / "site"))
+    result["executed"] = executed
+    return result
+
+
 def refresh(commit: bool, push: bool) -> dict:
     """Regenerate the site's generated surfaces from current repo state,
     prove the build, and optionally commit. Copy (questions/blurbs) is
@@ -315,7 +584,32 @@ def main() -> None:
     if cmd == "refresh":
         print(json.dumps(refresh(commit="--commit" in args, push="--push" in args), indent=2))
         return
-    raise SystemExit(f"unknown command: {cmd} (use audit|apply|refresh)")
+    if cmd in {"update", "grahamaco-update", "monitor-grahamaco"}:
+        output_dir = REPO / "skills/monitor-website/local/grahama-update"
+        if "--output-dir" in args:
+            index = args.index("--output-dir")
+            try:
+                output_dir = Path(args[index + 1])
+            except IndexError as exc:
+                raise SystemExit("--output-dir requires a path") from exc
+            if not output_dir.is_absolute():
+                output_dir = REPO / output_dir
+        result = grahamaco_update(
+            plan_only="--plan" in args,
+            resume_exports="--no-resume-exports" not in args,
+            site="--no-site" not in args,
+            linkedin_draft="--no-linkedin-draft" not in args,
+            linkedin_sync_plan="--linkedin-sync-plan" in args,
+            accept_linkedin_account_risk="--accept-linkedin-account-risk" in args,
+            build="--build" in args,
+            output_dir=output_dir,
+        )
+        print(json.dumps(result, indent=2))
+        return
+    raise SystemExit(
+        "unknown command: "
+        f"{cmd} (use audit|apply|refresh|update|grahamaco-update|monitor-grahamaco)"
+    )
 
 
 if __name__ == "__main__":
