@@ -527,11 +527,11 @@ export default function ResumePage() {
             </a>
             <a
               className="cv-btn"
-              href={doc.downloads.markdown}
+              href="/llms.txt"
               download
               data-qid="resume:link:markdown"
-              data-qs-action="RESUME_DOWNLOAD_MARKDOWN"
-              title="Download the résumé as Markdown"
+              data-qs-action="RESUME_DOWNLOAD_LLMS_TXT"
+              title="Download the agent-readable llms.txt context"
             >
               <MarkdownIcon />
               <span>Markdown</span>
@@ -586,7 +586,7 @@ export default function ResumePage() {
             so the print stylesheet drops it. */}
         <footer className="cv-foot">
           <p className="machine">
-            Build receipt: static export · source{' '}
+            Build receipt: static export · llms.txt indexed · source{' '}
             {/* Pinned to the commit, not to main, so the link always shows the
                 exact source that produced this page rather than whatever the
                 resume looks like today. */}

@@ -58,6 +58,7 @@ export default function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM Context" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body>
