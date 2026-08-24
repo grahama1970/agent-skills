@@ -1,6 +1,68 @@
-# ops-memory — Project Knowledge (design spec, pre-build)
+# ops-memory — Project Knowledge
 
-**Status:** DESIGN / NOT_ESTABLISHED (skill not yet implemented).
+**Status:** BUILT / USABLE_WITH_GAPS (implemented 2026-08-24).
+
+## Established this session (live receipts, 2026-08-24)
+
+- CLI implemented: `scripts/ops_memory.py` (Typer, loguru, no direct DB access).
+  Commands: `health`, `metrics`, `topology`, `explain`, `recall`, `backups`,
+  `backup`, `fix`, `config doctor`. Gates: `sanity.sh` **PASS** (offline),
+  `sanity-e2e.sh` **PASS** (live: ops-arango check+coverage, ops-qdrant check,
+  phart chart, 12TB backup listing). `agentic-evals` composed;
+  `fixtures/agentic_eval.json` present.
+- `explain "<question>"` is the low-cognitive-load entry point: a closed-vocab
+  keyword router (no regex classification) that dispatches plain-language
+  questions to health / metrics / topology / backups / recall. Verified live on
+  four phrasings.
+- `metrics` (schema `ops_memory.metrics.v1`) over **315 Arango collections**,
+  each row carrying its `recall_lanes` (bm25/dense/graph) and `recall_connected`.
+  Live `recall_connectivity`: **209 of 258 non-empty collections reachable by
+  `/memory recall`, 49 NOT reachable.** flag_counts = no_secondary_index 209,
+  no_arangosearch 168, bm25_only/no_qdrant_embedding 63, empty 57,
+  not_recall_connected 49, partial_sync 20, embedding_array_violation 7,
+  slow_scan_risk 4, stale 2.
+  - **Invisible to recall** (no lane): `memory_events` (727K), `sparta_relationships`
+    (419K), `datalake_docs` (22K), `f36_answerable_candidate_migrations` (14K), …
+  - **Perf risk** (≥50k docs, no secondary index): `datalake_edges` (5.3M),
+    `datalake_chunks` (1.7M), `memory_events` (727K), `lessons_v2` (249K).
+  - **No dense lane** (0% Qdrant): 63 doc collections incl. `datalake_chunks`,
+    `execution_runs` (262K). Fully synced (bm25+dense): `sparta_qra`,
+    `sparta_controls`, `lessons_v2`, `sparta_url_knowledge` (100%).
+  - **Contract violations** (Arango holding embedding arrays): `code_symbols`,
+    `lessons`, `lesson_embeddings`, `skill_description_embeddings`, `personas`.
+  - New coverage inputs from ops-arango: 52 ArangoSearch views mapped to their
+    linked collections; 1 named graph (`contact_graph`).
+- `health` (schema `ops_memory.health.v1`) merged live: status=**degraded**,
+  arango up (9.86M docs, 43 embedding-array violations, 10 dup clusters),
+  qdrant up (11 collections, dense_ok=false → BM25-only recall).
+- Backups: `ops-arango dump` writes `/mnt/storage12tb/backups/arangodb`
+  (retention 7); **7 backups present**. `ops-memory backups` lists them,
+  `ops-memory backup --now` takes a fresh one.
+
+## Dependencies fixed in the owning skill (ops-arango) this session
+
+- `run.sh check --json` was broken (Typer callback `--json` must precede the
+  subcommand) — `run.sh` now hoists `--json` ahead of the command.
+- Human progress preambles (`[ops-arango] ...`) were printed to **stdout**,
+  polluting `--json`; routed to **stderr** (8 sites).
+- Added a read-only `coverage` command (schema `ops_arango.coverage.v1`):
+  per-collection count, index types, LIMIT-bounded Qdrant-pointer sampling,
+  observed `semantic_sync_state`, and an index-backed latest timestamp. This is
+  the sanctioned home for the per-collection Arango reads ops-memory composes.
+
+## Known gaps
+
+- Staleness is only asserted where a timestamp index makes it cheap; most
+  collections have no such index → `latest_timestamp: unknown` (never faked).
+- Sync coverage per collection is **sampled** (LIMIT 200), so fractions are
+  approximate, not exact.
+- `fix --apply` triggers the memory-repo migration but was not executed live
+  this session (external write; left to explicit operator authorization).
+
+---
+
+## Original design spec (pre-build, retained for intent)
+
 **Mission:** the memory/database setup must no longer be opaque. `ops-memory`
 is the natural-language front door that explains and health-checks the whole
 memory stack — Qdrant + ArangoDB + the embedder + the memory daemon — and
@@ -96,7 +158,6 @@ negative, and adversarial cases, a `sanity.sh` behavioral gate, and a live E2E
 gate (`sanity-e2e.sh`) that calls the real ops-arango/ops-qdrant/memory
 entrypoints and fails closed on a missing downstream receipt. Never mark a
 feature READY on exit-0 alone.
-
 
 ## Session Handoff — 2026-08-24
 

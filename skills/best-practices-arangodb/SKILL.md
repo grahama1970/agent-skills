@@ -367,6 +367,32 @@ indexes to Arango.
 
 **Real incident (2026-04-16):** 2,937 QRAs missing embeddings discovered during batch update. These were created by a script that skipped the embedding step.
 
+### 22b. CRITICAL: Qdrant Is Single-Owner — `qdrant-single-owner-access`
+
+Qdrant is the counterpart of rule 22: since it is the **only** vector store, it
+is also a **single-owner** store. The memory repo (`graph_memory`) owns all
+Qdrant collection config, upserts, and semantic sync. A skill MUST NOT embed raw
+Qdrant client authoring code.
+
+- **NEVER** `from qdrant_client import QdrantClient` (the raw PyPI library) in a
+  skill. Reach vectors through `/memory recall` (the daemon's dense lane) or, for
+  the few sanctioned producers, the memory repo's `graph_memory.qdrant_client`
+  wrapper — never the raw library, never a raw `:6333`/`:6334` REST call.
+- **NEVER** create/recreate a Qdrant collection, tune HNSW/quantization, or
+  choose vector dims/distance from a skill. jina v4/v5 unifies text+image in one
+  1024-dim Cosine space (named vectors `text_mm`/`image_mm`); that config is
+  owned by the memory repo, not re-decided per skill.
+- **Read-only detection** is the exception, and it already has a home:
+  `/ops-qdrant` (health, collections, point counts, dense probe). Use it instead
+  of opening a client. `monitor-memory` has the documented read-only probe
+  exception; no other skill does.
+
+This is the Qdrant analogue of the ArangoDB access policy (`never
+from arango import`). Enforcement: `/ops-qdrant assess <file>` flags a raw
+`qdrant_client` import or a direct `:6333` REST call in external code. As of
+2026-08-24 the whole `skills/` tree has **zero** raw `qdrant_client` imports —
+keep it that way.
+
 ### 23. HIGH: Use docker run for arangorestore — `arango-docker-run-restore`
 
 When `docker exec` times out (common with busy docker daemons), run arangorestore as a separate container:

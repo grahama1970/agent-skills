@@ -1,0 +1,67 @@
+{
+  "skill": "ops-memory",
+  "version": "0.1.0",
+  "trials": 3,
+  "proof_scope": "deterministic health/metrics composition + safety boundary; live paths gated by sanity-e2e.sh",
+  "mocked": "none — offline cases use only the CLI's own output; live cases call real ops-arango/ops-qdrant/memory/phart",
+  "live": "sanity-e2e.sh (ops-arango check+coverage, ops-qdrant check, phart-dag-chart chart, 12TB backup listing)",
+  "claims": {
+    "proves": [
+      "topology --json emits a valid ask.dag.v1 stack graph offline",
+      "config doctor --json emits ops_memory.config_doctor.v1 with readiness + child map + needs_attention, non-interactively",
+      "a bogus SKILLS_ROOT degrades to USABLE_WITH_GAPS and reports missing children instead of claiming READY",
+      "ops-memory never opens ArangoDB/Qdrant directly and never uses subprocess shell=True",
+      "health --json merges both lanes and stamps seam_validation=PASS",
+      "metrics --json returns a per-collection matrix flagging bm25_only, partial_sync, no_secondary_index, embedding_array_violation, empty, and stale collections"
+    ],
+    "does_not_prove": [
+      "that the underlying /memory data is correct or complete",
+      "that semantic sync will be repaired (remediation is owned by the memory repo, triggered by ops-memory fix --apply)",
+      "collection staleness where no timestamp index exists (reported as unknown, never fabricated)"
+    ]
+  },
+  "cases": [
+    {
+      "id": "ops-memory-topology-schema",
+      "case_type": "positive-control",
+      "command": "./run.sh topology --json",
+      "assert": ".schema_version == \"ask.dag.v1\" and (.nodes | length > 0)",
+      "readiness_contribution": "renders stack construction offline"
+    },
+    {
+      "id": "ops-memory-config-doctor-contract",
+      "case_type": "positive-control",
+      "command": "./run.sh config doctor --json",
+      "assert": ".schema == \"ops_memory.config_doctor.v1\" and has(\"readiness\") and has(\"children\") and has(\"needs_attention\")",
+      "readiness_contribution": "non-interactive readiness surface"
+    },
+    {
+      "id": "ops-memory-missing-children-fail-open-safe",
+      "case_type": "negative-control",
+      "command": "SKILLS_ROOT=/nonexistent-skills-root ./run.sh config doctor --json",
+      "assert": ".readiness == \"USABLE_WITH_GAPS\" and ([.needs_attention[].reason] | map(startswith(\"missing_child\")) | any)",
+      "readiness_contribution": "safe_failure_only"
+    },
+    {
+      "id": "ops-memory-no-direct-db-access",
+      "case_type": "adversarial-safety",
+      "command": "grep -nE 'from arango import|ArangoClient|QdrantClient|shell *= *True' scripts/ops_memory.py",
+      "assert_exit": 1,
+      "readiness_contribution": "composition boundary held"
+    },
+    {
+      "id": "ops-memory-health-merged-live",
+      "case_type": "positive-control-live",
+      "command": "./run.sh health --json",
+      "assert": ".schema == \"ops_memory.health.v1\" and .seam_validation.status == \"PASS\" and has(\"arango\") and has(\"qdrant\")",
+      "readiness_contribution": "merged stack health (requires live services)"
+    },
+    {
+      "id": "ops-memory-metrics-matrix-live",
+      "case_type": "positive-control-live",
+      "command": "./run.sh metrics --json",
+      "assert": ".schema == \"ops_memory.metrics.v1\" and (.collections | length > 0) and has(\"flag_counts\")",
+      "readiness_contribution": "per-collection monitoring matrix (requires live Arango)"
+    }
+  ]
+}

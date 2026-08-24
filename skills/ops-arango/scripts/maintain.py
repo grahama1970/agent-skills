@@ -732,7 +732,7 @@ def check():
     db = get_db()
     report = MaintenanceReport()
 
-    print("[ops-arango] Running health checks...")
+    print("[ops-arango] Running health checks...", file=sys.stderr)
 
     emb = check_embeddings(db)
     report.checks["embeddings"] = {
@@ -830,7 +830,7 @@ def duplicates(
     """Detect duplicate lessons."""
     db = get_db()
 
-    print("[ops-arango] Checking duplicates...")
+    print("[ops-arango] Checking duplicates...", file=sys.stderr)
     result = check_duplicates(db, report_only=not merge)
 
     if _json_output:
@@ -853,7 +853,7 @@ def orphans(
     """Find/fix orphaned edges."""
     db = get_db()
 
-    print("[ops-arango] Checking orphaned edges...")
+    print("[ops-arango] Checking orphaned edges...", file=sys.stderr)
     result = check_orphans(db, fix=fix)
 
     if _json_output:
@@ -876,7 +876,7 @@ def integrity():
     """Verify referential integrity."""
     db = get_db()
 
-    print("[ops-arango] Checking integrity...")
+    print("[ops-arango] Checking integrity...", file=sys.stderr)
     result = check_integrity(db)
 
     if _json_output:
@@ -897,7 +897,7 @@ def stats():
     """Show collection statistics."""
     db = get_db()
 
-    print("[ops-arango] Gathering stats...")
+    print("[ops-arango] Gathering stats...", file=sys.stderr)
     result = get_stats(db)
 
     if _json_output:
@@ -913,6 +913,145 @@ def stats():
                 print(f"  {name}: {coll_stats['count']} docs ({round(coll_stats['size_bytes'] / 1024, 1)} KB)")
 
 
+def _index_field_present(indexes: list, field: str) -> bool:
+    """True if any non-primary index covers ``field`` (for cheap latest-row reads)."""
+    for idx in indexes:
+        if idx.get("type") in ("primary", "edge"):
+            continue
+        if field in (idx.get("fields") or []):
+            return True
+    return False
+
+
+def get_coverage(db, sample: int = 200) -> dict:
+    """Per-collection monitoring facts, read-only and cheaply bounded.
+
+    For every non-system collection reports document count, the index types
+    present, a LIMIT-bounded sample of pointer/embedding metadata (approximate
+    Qdrant-sync coverage), observed ``semantic_sync_state`` values, and — only
+    when an index makes it cheap — the true latest ``updated_at``/``created_at``.
+    Emits ``ops_arango.coverage.v1``. No writes; all AQL is LIMIT-bounded or
+    index-backed so it is safe on multi-million-document collections.
+    """
+    collections: list[dict] = []
+    sample_aql = (
+        "FOR d IN @@coll LIMIT @n RETURN {"
+        " ptr: HAS(d, 'qdrant_point_id') AND d.qdrant_point_id != null,"
+        " sync: d.semantic_sync_state,"
+        " emb: HAS(d, 'embedding') AND d.embedding != null }"
+    )
+
+    # collection -> [ArangoSearch view names that link it] (the BM25/text lane
+    # that /memory recall queries). Missing => not text-searchable via recall.
+    view_links: dict[str, list[str]] = {}
+    try:
+        for v in db.views():
+            vname = v.get("name")
+            if not vname or v.get("type") != "arangosearch":
+                continue
+            info = db.view(vname) or {}
+            for coll_name in (info.get("links") or {}):
+                view_links.setdefault(coll_name, []).append(vname)
+    except Exception as exc:
+        print(f"[ops-arango] view-link introspection failed: {exc}", file=sys.stderr)
+
+    # collections that participate in a named graph (edge definitions).
+    graph_colls: set[str] = set()
+    try:
+        for g in db.graphs():
+            for ed in g.get("edge_definitions", []):
+                graph_colls.add(ed.get("edge_collection"))
+                graph_colls.update(ed.get("from_vertex_collections", []))
+                graph_colls.update(ed.get("to_vertex_collections", []))
+    except Exception as exc:
+        print(f"[ops-arango] named-graph introspection failed: {exc}", file=sys.stderr)
+    for coll in db.collections():
+        if coll["system"]:
+            continue
+        name = coll["name"]
+        c = db.collection(name)
+        try:
+            count = c.count()
+            indexes = c.indexes()
+            index_types = sorted({i.get("type", "?") for i in indexes})
+            is_edge = any(i.get("type") == "edge" for i in indexes)
+            sampled = (
+                list(db.aql.execute(sample_aql, bind_vars={"@coll": name, "n": sample}))
+                if count
+                else []
+            )
+            n = len(sampled)
+            ptr_hits = sum(1 for s in sampled if s.get("ptr"))
+            emb_hits = sum(1 for s in sampled if s.get("emb"))
+            sync_states = sorted({str(s["sync"]) for s in sampled if s.get("sync") is not None})
+
+            # True latest timestamp only when an index makes it a cheap top-1 read.
+            latest = None
+            latest_field = None
+            for field in ("updated_at", "created_at"):
+                if _index_field_present(indexes, field):
+                    rows = list(
+                        db.aql.execute(
+                            "FOR d IN @@coll SORT d.@field DESC LIMIT 1 RETURN d.@field",
+                            bind_vars={"@coll": name, "field": field},
+                        )
+                    )
+                    if rows and rows[0] is not None:
+                        latest = rows[0]
+                        latest_field = field
+                        break
+
+            collections.append(
+                {
+                    "name": name,
+                    "type": "edge" if is_edge else "document",
+                    "count": count,
+                    "index_types": index_types,
+                    "arangosearch_views": sorted(view_links.get(name, [])),
+                    "in_named_graph": name in graph_colls,
+                    "sampled": n,
+                    "vector_pointer_frac": round(ptr_hits / n, 3) if n else None,
+                    "embedding_array_frac": round(emb_hits / n, 3) if n else None,
+                    "sync_states": sync_states,
+                    "latest_field": latest_field,
+                    "latest_timestamp": latest,
+                }
+            )
+        except Exception as exc:
+            print(f"[ops-arango] coverage failed for {name}: {exc}", file=sys.stderr)
+            collections.append({"name": name, "count": None, "error": str(exc)})
+    return {
+        "schema": "ops_arango.coverage.v1",
+        "sample_size": sample,
+        "collection_count": len(collections),
+        "collections": collections,
+    }
+
+
+@app.command()
+def coverage(
+    sample: int = typer.Option(200, help="Docs to sample per collection for sync-coverage."),
+):
+    """Per-collection monitoring facts: counts, indexes, sampled Qdrant-sync, latest timestamp."""
+    db = get_db()
+    print("[ops-arango] Gathering per-collection coverage...", file=sys.stderr)
+    result = get_coverage(db, sample=sample)
+    if _json_output:
+        print(json.dumps(result, indent=2))
+    else:
+        print(f"\nCollections: {result['collection_count']} (sample={result['sample_size']}/coll)")
+        for c in sorted(result["collections"], key=lambda x: -(x.get("count") or 0)):
+            if c.get("error"):
+                print(f"  {c['name']}: ERROR {c['error']}")
+                continue
+            ptr = c["vector_pointer_frac"]
+            ptr_s = "n/a" if ptr is None else f"{int(ptr * 100)}%"
+            print(
+                f"  {c['count']:>10} docs  synced~{ptr_s:>4}  idx={','.join(c['index_types'])}"
+                f"  latest={c['latest_timestamp'] or 'unknown'}  {c['name']}"
+            )
+
+
 @app.command()
 def full(
     fix: bool = typer.Option(False, help="Apply fixes"),
@@ -922,7 +1061,7 @@ def full(
     embedding_service = os.environ.get("EMBEDDING_SERVICE_URL")
     dry_run = os.environ.get("DRY_RUN", "0") == "1"
 
-    print("[ops-arango] Running full maintenance...")
+    print("[ops-arango] Running full maintenance...", file=sys.stderr)
     report = MaintenanceReport()
 
     print("\n[1/4] Orphaned edges...")
@@ -964,7 +1103,7 @@ def url_coverage(
     """Audit URL content coverage across SPARTA collections."""
     db = get_db()
 
-    print("[ops-arango] Auditing URL content coverage...")
+    print("[ops-arango] Auditing URL content coverage...", file=sys.stderr)
 
     # 1. Basic counts
     total_urls = db.collection("sparta_urls").count() if db.has_collection("sparta_urls") else 0
@@ -1210,7 +1349,7 @@ def health_check_cmd(
     - lessons (1): embedding completeness
     """
     db = get_db()
-    print("[ops-arango] Running comprehensive SPARTA health check...")
+    print("[ops-arango] Running comprehensive SPARTA health check...", file=sys.stderr)
     report = sparta_health_check(db)
 
     if markdown or (output and output.endswith(".md")):

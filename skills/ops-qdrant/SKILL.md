@@ -79,7 +79,25 @@ and daemon endpoints. If you find a gap here, do not "fix" it from this skill.
 
 # Flag expected collections that are absent (comma-separated, or via env)
 ./run.sh check --expect memory_chunks_mm_jina_v5_omni_small_1024,persona_memory
+
+# Assess external code for Qdrant single-owner boundary violations
+./run.sh assess path/to/skill_script.py [--json]
 ```
+
+## assess — Qdrant single-owner boundary linter
+
+Qdrant is a **single-owner** store: the memory repo (`graph_memory`) owns all
+collection config and semantic sync (best-practices-arangodb rule 22b). `assess`
+flags external code that breaks that boundary — a raw `from qdrant_client import`
+(the PyPI library, *not* the sanctioned `graph_memory.qdrant_client` wrapper) or
+a Qdrant `create_collection`/`recreate_collection`/`delete_collection` call in a
+skill. It emits `ops_qdrant.assess.v1` and exits `1` on any violation, so CI can
+gate changed files:
+
+```bash
+git diff --name-only main | grep '\.py$' | while read f; do ./run.sh assess "$f"; done
+```
+
 
 ## Environment
 

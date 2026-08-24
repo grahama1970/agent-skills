@@ -38,9 +38,11 @@ from __future__ import annotations
 
 import json as jsonlib
 import os
+import re
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
+from pathlib import Path
 
 import httpx
 import typer
@@ -382,6 +384,97 @@ def dense_probe_cmd(
         )
     if probe.found and not probe.dense_ok:
         logger.warning("dense recall degraded to BM25-only (dense_max=0.0)")
+
+
+# --- assess: Qdrant single-owner boundary linter ---------------------------
+#
+# Grammar note (best-practices-python correctness-regex-only-known-grammar): the
+# patterns below match a KNOWN, stable grammar — Python import statements and
+# literal Qdrant REST ports — anchored to line starts. They are misuse detectors,
+# not general parsing. Each maps a specific violation of the Qdrant single-owner
+# access boundary (best-practices-arangodb rule 22b) to a corrective message.
+
+
+@dataclass(slots=True)
+class AssessPattern:
+    name: str
+    regex: str
+    severity: str
+    message: str
+    fix: str
+
+
+ASSESS_PATTERNS: tuple[AssessPattern, ...] = (
+    AssessPattern(
+        name="raw_qdrant_client_import",
+        # raw PyPI library only — NOT graph_memory.qdrant_client (sanctioned wrapper)
+        regex=r"^\s*(from\s+qdrant_client(\.\w+)*\s+import|import\s+qdrant_client)\b",
+        severity="error",
+        message="raw qdrant_client import — Qdrant is single-owner (memory repo)",
+        fix="use /memory recall (dense lane) or graph_memory.qdrant_client; for health use /ops-qdrant",
+    ),
+    AssessPattern(
+        name="qdrant_collection_mutation",
+        regex=r"\.(create_collection|recreate_collection|delete_collection)\s*\(",
+        severity="error",
+        message="Qdrant collection mutation in a skill — config is owned by the memory repo",
+        fix="collection config, HNSW/quantization, and dims/distance are memory-repo concerns",
+    ),
+)
+
+
+def assess_file(path: Path) -> dict:
+    """Scan one source file for Qdrant single-owner boundary violations."""
+    issues: list[dict] = []
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        logger.error("assess: cannot read {}: {}", path, exc)
+        return {"schema": "ops_qdrant.assess.v1", "file": str(path), "error": str(exc), "passed": False, "issues": []}
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        # The sanctioned wrapper is allowed; never flag it as a raw import.
+        if "graph_memory.qdrant_client" in line:
+            continue
+        for pat in ASSESS_PATTERNS:
+            if re.search(pat.regex, line):
+                issues.append(
+                    {
+                        "line": lineno,
+                        "pattern": pat.name,
+                        "severity": pat.severity,
+                        "message": pat.message,
+                        "fix": pat.fix,
+                    }
+                )
+    return {
+        "schema": "ops_qdrant.assess.v1",
+        "file": str(path),
+        "passed": not issues,
+        "issue_count": len(issues),
+        "issues": issues,
+    }
+
+
+@app.command()
+def assess(
+    path: str = typer.Argument(..., help="Python file to check for Qdrant boundary violations."),
+    json_out: bool = typer.Option(False, "--json", help="Emit JSON."),
+) -> None:
+    """Flag raw qdrant_client usage / direct Qdrant access in external code (read-only)."""
+    report = assess_file(Path(path))
+    if json_out:
+        typer.echo(jsonlib.dumps(report, indent=2))
+    else:
+        if report.get("error"):
+            logger.error("assess {}: {}", report["file"], report["error"])
+        elif report["passed"]:
+            logger.info("assess {}: OK — no Qdrant boundary violations", report["file"])
+        else:
+            logger.warning("assess {}: {} issue(s)", report["file"], report["issue_count"])
+            for i in report["issues"]:
+                logger.warning("  L{} [{}] {} -> {}", i["line"], i["severity"], i["message"], i["fix"])
+    if not report["passed"]:
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":
