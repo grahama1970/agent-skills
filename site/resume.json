@@ -3,7 +3,7 @@
  "contact": [
   {
    "t": "text",
-   "v": "Buffalo, NY · Buffalo-area hybrid/onsite or remote"
+   "v": "Buffalo, NY (EST)"
   },
   {
    "t": "link",
@@ -42,7 +42,7 @@
   [
    {
     "t": "text",
-    "v": "Buffalo, NY · Buffalo-area hybrid/onsite or remote"
+    "v": "Buffalo, NY (EST)"
    }
   ],
   [
@@ -545,10 +545,10 @@
    ]
   }
  ],
- "sourceCommit": "197488a2c1",
+ "sourceCommit": "401edbfd24",
  "asOf": "2026-08-24",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "fa55c281a4242e9a61d4d4177383eb39dd1f6b3242ee150db8f6912f96dd334f",
+ "sourceSha256": "46a614a6a7ca3fc1ff30817724d4153b31ed4d007b5b5a68d4165b18a0f069d0",
  "downloads": {
   "pdf": "/resume.pdf",
   "docx": "/resume.docx",
@@ -718,8 +718,8 @@
    }
   ]
  },
- "pdfSha256": "d498fa3e2505259200f3de89e2884746bf508df212f57b9b5c7bee58e78bf76c",
- "pdfBytes": 159744,
- "docxSha256": "19eb7a7961071d8c574e3125ac556f9ecea746c8a315970d1e5fabac614ebbba",
- "docxBytes": 40652
+ "pdfSha256": "70920f5cd80bf7c5cc3580a08f4f5c888282a8fe7efe9eeb647d3eefaeff1842",
+ "pdfBytes": 159453,
+ "docxSha256": "eca1cc46390c03c0cf78e5173dbee7ff72848c75dcfbf7a5c8bf12760cfe6ca6",
+ "docxBytes": 40639
 }

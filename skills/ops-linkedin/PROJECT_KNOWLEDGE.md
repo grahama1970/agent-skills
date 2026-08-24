@@ -1,16 +1,17 @@
 # ops-linkedin project knowledge
 
-Last reviewed: 2026-08-02
+Last reviewed: 2026-08-24
 
 ## Immutable goal
 
 Provide useful LinkedIn profile/content/outreach preparation while preventing the agent
-from accessing or acting on LinkedIn through unauthorized automation. Every operation must
-end in a local draft and a human-execution handoff with honest proof limits.
+from accessing or acting on LinkedIn broadly. Outbound operations end in a local draft and
+a human-execution handoff with honest proof limits. Graham's own profile is handled by a
+source-derived editable JSON entry and a bounded Surf sync plan.
 
 ## Current readiness
 
-Overall: **READY_FOR_DRAFT_ONLY_USE**
+Overall: **READY_FOR_DRAFT_AND_OWN_PROFILE_SYNC_PLANNING**
 
 | Feature | State | Evidence |
 |---|---|---|
@@ -19,8 +20,10 @@ Overall: **READY_FOR_DRAFT_ONLY_USE**
 | Block unsupported profile/lead claims | READY | deterministic readiness gate and exit code `3` |
 | Packet schema validation | READY | `validate` command |
 | Human completion attestation | READY | explicit confirmation flag; `platform_verified=false` |
-| Browser/session automation | PROHIBITED | immutable boundary and static sanity gate |
-| Live LinkedIn execution | NOT_ESTABLISHED | deliberately outside scope |
+| Editable own-profile JSON | READY | `profile-entry-export` emits `ops-linkedin.profile_entry.v1` from `RESUME.md` |
+| Own-profile Surf sync plan | READY | `profile-sync-plan` emits `ops-linkedin.profile_sync.v1` with `external_effects=false` |
+| Browser/session automation outside own profile | PROHIBITED | immutable boundary and static sanity gate |
+| Live LinkedIn execution receipt | NOT_ESTABLISHED | plan exists; Surf mutation execution is not yet implemented |
 | Official LinkedIn API adapter | NOT_IMPLEMENTED | authorization and separate review required |
 
 ## Implemented artifacts
@@ -29,6 +32,7 @@ Overall: **READY_FOR_DRAFT_ONLY_USE**
 - Human-facing `README.md`.
 - Typer CLI with `policy`, `status`, `prepare`, `validate`, and `attest`.
 - Pydantic request, claim, handoff, status, and policy contracts.
+- Pydantic editable profile-entry and profile-sync plan contracts.
 - Pure service functions with no network/browser dependencies.
 - Unit tests, non-mocked sanity checks, and an agentic-evals fixture.
 - Dated LinkedIn policy and upstream adaptation reference.
@@ -37,7 +41,8 @@ Overall: **READY_FOR_DRAFT_ONLY_USE**
 
 - Chrome extensions or browser plug-ins.
 - WebSocket/DOM bridges.
-- Selenium, Playwright, browser-use, Surf, or equivalent LinkedIn control.
+- Selenium, Playwright, browser-use, Surf, or equivalent LinkedIn control except the
+  explicit Graham-owned profile sync plan.
 - Login/session/cookie inspection.
 - Scraping or systematic profile/post viewing.
 - Automated posting, comments, likes, connections, follows, messages, applications, or
@@ -65,12 +70,13 @@ Prerequisites:
 
 ### Profile-system propagation
 
-Status: **NOT_ESTABLISHED**
+Status: **PARTIALLY_ESTABLISHED**
 
-A future integration may consume one canonical career-profile schema and emit synchronized
-resume, LinkedIn, memory, and application variants. It must preserve claim IDs, source
-references, sensitivity, active-version precedence, and purpose-specific field rules. The
-current skill accepts manifests but does not define that wider canonical schema.
+The current integration consumes the public `RESUME.md` presentation and emits an editable
+`ops-linkedin.profile_entry.v1` JSON file for project-agent editing. A future integration
+should consume the deeper canonical `career_profile` claim ledger and emit synchronized
+resume, LinkedIn, memory, and application variants while preserving claim IDs, source
+references, sensitivity, active-version precedence, and purpose-specific field rules.
 
 ## Known risks
 
@@ -97,8 +103,15 @@ OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 \
   bash ./skills/ops-linkedin/run.sh validate /tmp/ops-linkedin-packet.json
 ```
 
-`fixtures/agentic_eval.json` covers positive, negative, and adversarial lifecycle cases.
-It does not and must not claim live LinkedIn proof.
+`fixtures/agentic_eval.json` covers positive, negative, and adversarial lifecycle cases,
+including editable profile-entry export and own-profile sync planning.
+It does not and must not claim live LinkedIn mutation proof.
+
+Latest local receipts on 2026-08-24:
+
+- `bash skills/ops-linkedin/sanity.sh`: `Result: PASS`.
+- `bash skills/agentic-evals/run.sh run skills/ops-linkedin/fixtures/agentic_eval.json`:
+  `readiness=READY`, 9 cases, 27 trials, mocked=false, live=true for local CLI paths.
 
 
 ## Outbound roundtable gate + claim binding (2026-08-02)

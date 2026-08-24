@@ -1,7 +1,8 @@
-"""Typer CLI for draft-only LinkedIn operations and manual handoff receipts.
+"""Typer CLI for bounded LinkedIn operations and manual handoff receipts.
 
-The CLI reads and writes local JSON only. It never opens LinkedIn, reads browser
-state, performs HTTP requests, or submits social actions.
+Most commands read and write local JSON only. The profile-sync planning path can
+emit a Surf transport plan for Graham's own profile, but this CLI still does not
+open LinkedIn, read browser state, perform HTTP requests, or submit social actions.
 """
 
 from __future__ import annotations
@@ -15,6 +16,13 @@ from loguru import logger
 from pydantic import ValidationError
 
 from ops_linkedin.models import HandoffPacket, HandoffRequest, Readiness
+from ops_linkedin.profile_sync import (
+    DEFAULT_SURF_RUN,
+    LinkedInProfileEntry,
+    build_profile_entry,
+    build_profile_sync_packet,
+    build_profile_sync_packet_from_entry,
+)
 from ops_linkedin.service import (
     attest_human_completion,
     policy_report,
@@ -156,6 +164,97 @@ def attest_command(
         raise typer.Exit(code=3) from exc
 
     _write_json(completed, output)
+
+
+@app.command("profile-entry-export")
+def profile_entry_export_command(
+    resume_source: Annotated[
+        Path,
+        typer.Option(
+            "--resume-source",
+            exists=True,
+            dir_okay=False,
+            readable=True,
+            help="Canonical resume Markdown source.",
+        ),
+    ],
+    profile_url: Annotated[
+        str,
+        typer.Option("--profile-url", help="Graham-owned LinkedIn /in/ profile URL."),
+    ],
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Optional JSON path.")] = None,
+) -> None:
+    """Export an editable JSON representation of Graham's LinkedIn profile."""
+
+    _write_json(build_profile_entry(resume_path=resume_source, profile_url=profile_url), output)
+
+
+@app.command("profile-sync-plan")
+def profile_sync_plan_command(
+    resume_source: Annotated[
+        Path | None,
+        typer.Option(
+            "--resume-source",
+            dir_okay=False,
+            readable=True,
+            help="Canonical resume Markdown source.",
+        ),
+    ] = None,
+    entry_json: Annotated[
+        Path | None,
+        typer.Option(
+            "--entry-json",
+            exists=True,
+            dir_okay=False,
+            readable=True,
+            help="Editable ops-linkedin.profile_entry.v1 JSON to sync.",
+        ),
+    ] = None,
+    profile_url: Annotated[
+        str | None,
+        typer.Option("--profile-url", help="Graham-owned LinkedIn /in/ profile URL."),
+    ] = None,
+    accept_account_risk: Annotated[
+        bool,
+        typer.Option(
+            "--accept-account-risk",
+            help="Required acknowledgement for any LinkedIn own-profile automation plan.",
+        ),
+    ] = False,
+    own_profile_only: Annotated[
+        bool,
+        typer.Option(
+            "--own-profile-only",
+            help="Required assertion that the target is Graham's own profile.",
+        ),
+    ] = False,
+    surf_run: Annotated[
+        Path,
+        typer.Option("--surf-run", help="Surf skill run.sh path used in the emitted plan."),
+    ] = DEFAULT_SURF_RUN,
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Optional packet path.")] = None,
+) -> None:
+    """Emit a RESUME.md-derived own-profile sync packet and Surf command plan."""
+
+    if not accept_account_risk:
+        typer.echo("--accept-account-risk is required for LinkedIn profile sync planning", err=True)
+        raise typer.Exit(code=3)
+    if not own_profile_only:
+        typer.echo("--own-profile-only is required; this command cannot target other profiles", err=True)
+        raise typer.Exit(code=3)
+    if entry_json is not None:
+        profile_entry = LinkedInProfileEntry.model_validate(_read_json(entry_json))
+        packet = build_profile_sync_packet_from_entry(profile_entry=profile_entry, surf_run=surf_run)
+    else:
+        if resume_source is None or profile_url is None:
+            typer.echo("either --entry-json or both --resume-source and --profile-url are required", err=True)
+            raise typer.Exit(code=2)
+        packet = build_profile_sync_packet(
+            resume_path=resume_source,
+            profile_url=profile_url,
+            surf_run=surf_run,
+        )
+    _write_json(packet, output)
 
 
 @app.command("resolve-leads")

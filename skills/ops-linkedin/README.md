@@ -1,8 +1,9 @@
 # ops-linkedin
 
-`ops-linkedin` prepares LinkedIn work without automating LinkedIn. It converts a typed JSON
-request into an evidence-aware handoff packet containing reviewed copy, explicit claim
-sources, manual steps, negative automation guardrails, and bounded proof semantics.
+`ops-linkedin` prepares LinkedIn work without automating outreach, scraping, posts,
+messages, comments, applications, or third-party profile access. It converts typed JSON
+requests into evidence-aware handoff packets, and it can export an editable JSON entry for
+Graham's own LinkedIn profile from `RESUME.md`.
 
 ## Why it differs from browser-native LinkedIn skills
 
@@ -24,7 +25,8 @@ legally approved. The policy snapshot is dated and must be rechecked before expa
 - **Lead generation:** prepare public-web research and manual review criteria.
 - **Content operations:** analyze user-provided/exported content and metrics.
 
-Every lane ends before LinkedIn access.
+Every outbound lane ends before LinkedIn access. Graham's own profile has a separate
+JSON-first sync plan that requires explicit account-risk and own-profile flags.
 
 ## Quick start
 
@@ -36,6 +38,15 @@ bash ./run.sh policy
 bash ./run.sh status
 bash ./run.sh prepare assets/examples/publish-post.json -o /tmp/linkedin-handoff.json
 bash ./run.sh validate /tmp/linkedin-handoff.json
+bash ./run.sh profile-entry-export \
+  --resume-source ../../RESUME.md \
+  --profile-url "https://www.linkedin.com/in/grahamanderson/" \
+  -o /tmp/linkedin-profile-entry.json
+bash ./run.sh profile-sync-plan \
+  --entry-json /tmp/linkedin-profile-entry.json \
+  --accept-account-risk \
+  --own-profile-only \
+  -o /tmp/linkedin-profile-sync.json
 bash ./sanity.sh
 ```
 
@@ -91,13 +102,15 @@ bash ./sanity.sh
 
 The source package intentionally has no HTTP, browser, WebSocket, cookie, or scraping
 dependencies. `sanity.sh` statically rejects those implementation surfaces and runs the
-real CLI in positive and negative cases.
+real CLI in positive and negative cases. Surf appears only as an emitted command plan for
+the own-profile sync packet.
 
 ## Current scope
 
 Ready: local manifest validation, handoff creation, claim blocking, packet validation,
-status/policy reports, and bounded human attestation.
+status/policy reports, editable own-profile JSON export, own-profile Surf sync planning,
+and bounded human attestation.
 
-Not implemented: login checks, LinkedIn browsing, search execution, profile retrieval,
-posting, likes, comments, connections, messages, uploads, applications, or an official API
-adapter.
+Not implemented: generalized login checks, third-party LinkedIn browsing, search
+execution, profile retrieval, posting, likes, comments, connections, messages, uploads,
+applications, or an official API adapter.

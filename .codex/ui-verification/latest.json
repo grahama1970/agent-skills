@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-17T15:52:48.933366+00:00",
+  "verified_at": "2026-08-24T17:03:06.517711+00:00",
   "cwd": "/home/graham/workspace/experiments/agent-skills",
   "root": "/home/graham/workspace/experiments/agent-skills",
   "output_root": "/tmp/codex-ui-verification/agent-skills",
-  "url": "http://127.0.0.1:8798/",
-  "name": "live-evidence-agentic-evals-ui",
+  "url": "http://127.0.0.1:3026/resume.html",
+  "name": "resume-location-primary-local-final",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills/live-evidence-agentic-evals-ui/20260817T155243Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills/live-evidence-agentic-evals-ui/20260817T155243Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/resume-location-primary-local-final/20260824T170300Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/resume-location-primary-local-final/20260824T170300Z.read.json"
 }

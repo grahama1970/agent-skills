@@ -1,5 +1,5 @@
 # Graham Anderson
-Buffalo, NY · Buffalo-area hybrid/onsite or remote  
+Buffalo, NY (EST)
 [graham@grahama.co](mailto:graham@grahama.co) · [grahama.co](https://grahama.co) · [linkedin.com/in/grahamanderson](https://www.linkedin.com/in/grahamanderson/) · [github.com/grahama1970](https://github.com/grahama1970)
 
 > I build agent systems that leave evidence of what they did.
