@@ -5,7 +5,18 @@ import type { MouseEvent, ReactNode } from 'react';
 
 type CalendlyApi = {
   initInlineWidget: (options: { url: string; parentElement: HTMLElement; resize?: boolean }) => void;
-  initPopupWidget: (options: { url: string }) => void;
+  initPopupWidget: (options: {
+    url: string;
+    parentElement?: HTMLElement;
+    prefill?: Record<string, unknown>;
+    utm?: {
+      utmSource?: string;
+      utmMedium?: string;
+      utmCampaign?: string;
+      utmContent?: string;
+      utmTerm?: string;
+    };
+  }) => void;
 };
 
 declare global {
@@ -128,22 +139,46 @@ export function CalendlyPopupLink({
   className,
   qid,
   children = 'Book a 30-minute meeting',
+  showArrow = true,
+  title = 'Book a 30-minute meeting',
+  utmSource = 'grahama.co',
+  utmMedium = 'direct_site',
 }: {
   url: string;
   className?: string;
   qid: string;
   children?: ReactNode;
+  showArrow?: boolean;
+  title?: string;
+  utmSource?: string;
+  utmMedium?: string;
 }) {
+  const openFallback = () => {
+    const opened = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!opened) window.location.href = url;
+  };
+
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (typeof window === 'undefined') return;
     event.preventDefault();
     loadCalendly()
       .then(() => {
-        if (window.Calendly) window.Calendly.initPopupWidget({ url });
-        else window.location.href = url;
+        if (window.Calendly) {
+          window.Calendly.initPopupWidget({
+            url,
+            parentElement: document.body,
+            prefill: {},
+            utm: {
+              utmSource,
+              utmMedium,
+            },
+          });
+        } else {
+          openFallback();
+        }
       })
       .catch(() => {
-        window.location.href = url;
+        openFallback();
       });
   };
 
@@ -154,9 +189,10 @@ export function CalendlyPopupLink({
       onClick={onClick}
       data-qid={qid}
       data-qs-action="OPEN_CALENDLY_POPUP"
-      title="Book a 30-minute meeting"
+      title={title}
     >
-      {children} <span className="arrow">↗</span>
+      {children}
+      {showArrow ? <> <span className="arrow">↗</span></> : null}
     </a>
   );
 }

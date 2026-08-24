@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CalendlyPopupLink } from '@/components/calendly-scheduler';
+import calendly from '@/calendly.json';
 
 const LINKS = [
   { id: 'work', label: 'Work' },
@@ -17,6 +19,7 @@ const LINKS = [
  */
 export function SiteNav({ hrefBase = '' }: { hrefBase?: string }) {
   const [active, setActive] = useState('');
+  const calendlyUrl = calendly.primarySchedulingUrl || calendly.user.schedulingUrl;
 
   useEffect(() => {
     const spy = new IntersectionObserver(
@@ -74,6 +77,15 @@ export function SiteNav({ hrefBase = '' }: { hrefBase?: string }) {
               {l.label}
             </a>
           ))}
+          <CalendlyPopupLink
+            className="nav-calendly-link"
+            url={calendlyUrl}
+            qid="nav:link:calendly"
+            showArrow={false}
+            title="Book a 30-minute meeting"
+          >
+            [BOOK]
+          </CalendlyPopupLink>
           <span className="nav-icons">
             <a
               className="nav-icon"

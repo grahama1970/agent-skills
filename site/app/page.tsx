@@ -672,10 +672,12 @@ export default function Home() {
                   graham@grahama.co <span className="arrow">→</span>
                 </a>
                 <CalendlyPopupLink
-                  className="btn ghost"
+                  className="btn cta-calendly-btn"
                   url={calendlyUrl}
                   qid="contact:action:calendly"
-                />
+                >
+                  Book a 30-minute meeting
+                </CalendlyPopupLink>
               </div>
             </div>
             <CalendlyInlineWidget url={calendlyUrl} />

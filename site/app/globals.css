@@ -298,6 +298,16 @@ section {
 .nav .mailref {
   color: var(--brass);
 }
+.nav .nav-calendly-link {
+  color: var(--brass);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.nav .nav-calendly-link:hover {
+  color: var(--text);
+}
 .nav-icons {
   display: inline-flex;
   align-items: center;
@@ -587,6 +597,20 @@ h1 .it::after {
   border-color: var(--brass);
   color: var(--brass);
   background: rgba(226, 172, 98, 0.05);
+}
+.cta-calendly-btn {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: #170f09;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.cta-calendly-btn:hover {
+  background: #efc07c;
+  border-color: #efc07c;
+  color: #170f09;
 }
 
 /* inventory rail */
@@ -1761,6 +1785,10 @@ h1 .it::after {
   color: var(--muted);
   font-size: 0.9rem;
   margin: 0.85rem 0 0;
+}
+.calendly-overlay {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(4px);
 }
 
 /* --- footer ----------------------------------------------- */
