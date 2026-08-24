@@ -859,9 +859,20 @@ dynamic_deploy_check() {
       "requested_lifetime": "meeting"
     }'
 
+    local stage
+    if ! stage="$("$cli" page stage-request --json "$request" --output-dir "$output_dir")"; then
+        error "dynamic page stage-request failed"
+        exit 1
+    fi
+
+    local stage_receipt_path
+    local manifest_digest
+    stage_receipt_path="$(STAGE_JSON="$stage" python3 -c 'import json, os; print(json.loads(os.environ["STAGE_JSON"])["receipt_path"])')"
+    manifest_digest="$(STAGE_JSON="$stage" python3 -c 'import json, os; print(json.loads(os.environ["STAGE_JSON"])["manifest_digest"])')"
+
     local receipt
-    if ! receipt="$("$cli" page deploy-request --json "$request" --output-dir "$output_dir")"; then
-        error "dynamic page deploy-request failed"
+    if ! receipt="$("$cli" page deploy-stage --stage-receipt "$stage_receipt_path" --confirm-digest "$manifest_digest")"; then
+        error "dynamic page deploy-stage failed"
         exit 1
     fi
 
@@ -911,6 +922,7 @@ def compute_checks():
         "external_effects": receipt.get("external_effects") is True,
         "recipe_id": receipt.get("recipe_id") == "sparta_review_controls",
         "binding_count": receipt.get("binding_count") == 2,
+        "manifest_digest": isinstance(receipt.get("manifest_digest"), str) and receipt["manifest_digest"].startswith("sha256:"),
         "manifest_exists": manifest_path.exists(),
         "stage_receipt_exists": stage_receipt_path.exists(),
         "deploy_receipt_exists": deploy_receipt_path.exists(),

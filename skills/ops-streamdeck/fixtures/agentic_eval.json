@@ -135,6 +135,7 @@
           "\"external_effects\": true",
           "\"recipe_id\": \"sparta_review_controls\"",
           "\"binding_count\": 2",
+          "\"manifest_digest\": true",
           "\"config_button_0_dispatcher\": true",
           "\"config_button_1_dispatcher\": true",
           "\"config_unused_buttons_empty\": true",

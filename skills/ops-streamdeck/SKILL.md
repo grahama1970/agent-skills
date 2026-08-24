@@ -145,7 +145,7 @@ The streamdeck project has two components:
 | Command               | Description                                                                 |
 | --------------------- | --------------------------------------------------------------------------- |
 | `dynamic-stage-check` | Compiles a semantic `streamdeck.dynamic_page_request.v1` request through the live streamdeck CLI and verifies staged artifacts without hardware effects |
-| `dynamic-deploy-check` | Compiles and deploys a semantic `streamdeck.dynamic_page_request.v1` request to the dynamic page slot, then verifies persisted Stream Deck config readback |
+| `dynamic-deploy-check` | Stages a semantic `streamdeck.dynamic_page_request.v1` request, deploys the staged receipt with digest confirmation, then verifies persisted Stream Deck config readback |
 
 ### Configuration
 
@@ -273,7 +273,8 @@ Stream Deck dynamic page slot:
 ```
 
 It calls `/home/graham/workspace/streamdeck/.venv/bin/streamdeck-cli page
-deploy-request`, writes stage/deploy receipts under
+stage-request` followed by digest-confirmed `page deploy-stage`, writes
+stage/deploy receipts under
 `/tmp/ops-streamdeck-dynamic-deploy-check` unless
 `STREAMDECK_DYNAMIC_DEPLOY_OUTPUT` is set, and requires persisted
 `~/.streamdeck_ui.json` readback showing dispatcher bindings at buttons 0/1,
