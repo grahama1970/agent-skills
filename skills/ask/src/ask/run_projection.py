@@ -123,6 +123,24 @@ class _Reader:
             return None
         return loaded
 
+    def optional_json(self, relative_path: str, *, scope: str) -> dict[str, Any] | None:
+        path = self.run_dir / relative_path
+        if not path.is_file():
+            return None
+        try:
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            self.limitations.append(
+                _Limitation(scope, f"{relative_path} is unreadable: {exc}", str(path))
+            )
+            return None
+        if not isinstance(loaded, dict):
+            self.limitations.append(
+                _Limitation(scope, f"{relative_path} is not a JSON object", str(path))
+            )
+            return None
+        return loaded
+
 
 def _node_ids_in_dag_order(dag: dict[str, Any] | None) -> list[str]:
     """Node ids in the DAG's own order, which is the operator's mental order."""
@@ -251,6 +269,80 @@ def _run_lifecycle(
     return "UNKNOWN", "execution-status.json has no usable status"
 
 
+def _json_object(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str) and value.strip().startswith("{"):
+        try:
+            loaded = json.loads(value)
+        except ValueError:
+            return None
+        return loaded if isinstance(loaded, dict) else None
+    return None
+
+
+def _primary_dag_failure(
+    execution: dict[str, Any] | None,
+    tau_receipt: dict[str, Any] | None,
+    run_dir: Path,
+) -> dict[str, Any] | None:
+    candidates: list[dict[str, Any]] = []
+    if isinstance(tau_receipt, dict):
+        candidates.append(tau_receipt)
+    if isinstance(execution, dict):
+        candidates.append(execution)
+        stdout_receipt = _json_object(execution.get("dag_run_stdout"))
+        if stdout_receipt:
+            candidates.append(stdout_receipt)
+        nested_execution = _json_object(execution.get("execution"))
+        if nested_execution:
+            candidates.append(nested_execution)
+
+    for candidate in candidates:
+        dag_error = candidate.get("dag_error")
+        if isinstance(dag_error, dict) and dag_error.get("failure_code"):
+            failure = {
+                "failure_code": dag_error.get("failure_code"),
+                "failed_node": dag_error.get("failed_node") or dag_error.get("failed_agent"),
+                "failed_agent": dag_error.get("failed_agent"),
+                "message": dag_error.get("message"),
+                "receipt_path": dag_error.get("receipt_path"),
+                "recommended_action": dag_error.get("recommended_action"),
+            }
+            _add_failure_evidence_paths(failure, candidate, run_dir)
+            return {k: v for k, v in failure.items() if v not in (None, "", [])}
+
+        alerts = candidate.get("alerts")
+        if isinstance(alerts, list):
+            for alert in alerts:
+                if not isinstance(alert, dict) or not alert.get("code"):
+                    continue
+                evidence = alert.get("evidence") if isinstance(alert.get("evidence"), dict) else {}
+                failure = {
+                    "failure_code": alert.get("code"),
+                    "failed_node": evidence.get("node_id"),
+                    "message": alert.get("message"),
+                    "primary_alert": alert,
+                }
+                _add_failure_evidence_paths(failure, candidate, run_dir)
+                return {k: v for k, v in failure.items() if v not in (None, "", [])}
+    return None
+
+
+def _add_failure_evidence_paths(
+    failure: dict[str, Any],
+    candidate: dict[str, Any],
+    run_dir: Path,
+) -> None:
+    if not failure.get("receipt_path") and isinstance(candidate.get("receipt_path"), str):
+        failure["receipt_path"] = candidate["receipt_path"]
+    failed_node = failure.get("failed_node")
+    if isinstance(failed_node, str) and failed_node:
+        response_path = run_dir / "node-artifacts" / failed_node / "response.md"
+        if response_path.is_file():
+            failure["response_path"] = str(response_path)
+
+
 def project_run(run_dir: Path | str) -> dict[str, Any]:
     """Build ``ask.run_projection.v1`` for one run directory."""
     path = Path(run_dir)
@@ -270,6 +362,7 @@ def project_run(run_dir: Path | str) -> dict[str, Any]:
     dag = reader.json("dag.json", scope="dag")
     compile_status = reader.json("compile-status.json", scope="compile")
     execution = reader.json("execution-status.json", scope="execution")
+    tau_receipt = reader.optional_json("tau-receipts/dag-receipt.json", scope="tau")
     interview = None
     if (path / "interview-required.json").is_file():
         interview = reader.json("interview-required.json", scope="interview")
@@ -291,6 +384,7 @@ def project_run(run_dir: Path | str) -> dict[str, Any]:
     nodes = [_project_node(node_id, node_index.get(node_id, {}), reader) for node_id in ordered]
 
     lifecycle, lifecycle_source = _run_lifecycle(compile_status, execution, interview)
+    primary_failure = _primary_dag_failure(execution, tau_receipt, path)
 
     settled = [n for n in nodes if n["stage"] == "SETTLED"]
     admitted = [n for n in nodes if n["evidence_admitted"]]
@@ -316,7 +410,9 @@ def project_run(run_dir: Path | str) -> dict[str, Any]:
         "mocked": (execution or {}).get("mocked"),
         "live": (execution or {}).get("live"),
         "provider_live": (execution or {}).get("provider_live"),
-        "failure_code": (execution or {}).get("failure_code"),
+        "failure_code": (execution or {}).get("failure_code") or (primary_failure or {}).get("failure_code"),
+        "failed_node": (primary_failure or {}).get("failed_node"),
+        "primary_failure": primary_failure,
         "removed_seats": (execution or {}).get("removed_seats"),
         "node_count": len(nodes),
         "settled_node_count": len(settled),
@@ -350,6 +446,17 @@ def _next_action(
             return " ".join(str(part) for part in command)
         if isinstance(command, str) and command.strip():
             return command.strip()
+    primary_failure = projection.get("primary_failure")
+    if isinstance(primary_failure, dict) and primary_failure.get("failure_code"):
+        failed_node = primary_failure.get("failed_node") or "unknown node"
+        pieces = [
+            f"inspect Tau DAG failure {primary_failure['failure_code']} at {failed_node}"
+        ]
+        if primary_failure.get("response_path"):
+            pieces.append(f"response: {primary_failure['response_path']}")
+        elif primary_failure.get("receipt_path"):
+            pieces.append(f"receipt: {primary_failure['receipt_path']}")
+        return "; ".join(pieces)
     if projection["lifecycle"] == "PLANNED":
         return "compiled but never executed; re-run with --execute"
     unsettled = projection["unsettled_nodes"]
@@ -374,6 +481,12 @@ def render_text(projection: dict[str, Any]) -> list[str]:
         f" | settled: {projection['settled_node_count']}"
         f" | admitted: {projection['admitted_node_count']}",
     ]
+    if projection.get("failure_code"):
+        failure = projection.get("primary_failure") or {}
+        lines.append(
+            f"  failure: {projection['failure_code']}"
+            f" node={failure.get('failed_node') or projection.get('failed_node') or '-'}"
+        )
     for node in projection["nodes"]:
         detail = node.get("limitation") or node.get("failure_code") or ""
         lines.append(

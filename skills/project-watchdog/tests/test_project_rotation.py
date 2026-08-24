@@ -136,6 +136,53 @@ def test_markdown_target_paths_accept_coarse_exact_skill_path():
     assert issue_targets({"body": body}) == {"skills/battle"}
 
 
+def test_scoped_files_override_single_target_path_when_acceptance_needs_more_files():
+    body = """## Target
+
+fixtures/skill_chains/agentic_eval.json
+
+## Target paths
+
+- fixtures/skill_chains/agentic_eval.json
+
+## Ticket type details
+
+- **Scoped files:** fixtures/agentic_eval.json fixtures/skill_chains/agentic_eval.json tests/unit/test_skill_chain_eval_fixture_scope.py
+"""
+    assert issue_targets({"body": body}) == {
+        "fixtures/agentic_eval.json",
+        "fixtures/skill_chains/agentic_eval.json",
+        "tests/unit/test_skill_chain_eval_fixture_scope.py",
+    }
+
+
+def test_scoped_files_override_malformed_coarse_target_metadata():
+    body = """## Target
+
+fixtures/skill_chains + scripts/validation
+
+## Target paths
+
+- fixtures/skill_chains + scripts/validation
+
+## Ticket type details
+
+- **Scoped files:** fixtures/skill_chains/ranking_cohort.json scripts/validation/skill_chain_ranking_cohort.py tests/unit/test_skill_chain_ranking_cohort.py fixtures/skill_chains/agentic_eval.json
+
+## Orientation for a stateless agent
+
+Use `skills/memory/run.sh recall`, `skills/project-state/run.sh --json`,
+`skills/dogpile/run.sh`, `skills/brave-search/run.sh`, `skills/test/run.sh`,
+and `skills/treesitter/run.sh`.
+"""
+    assert issue_targets({"body": body}) == {
+        "fixtures/skill_chains/ranking_cohort.json",
+        "scripts/validation/skill_chain_ranking_cohort.py",
+        "tests/unit/test_skill_chain_ranking_cohort.py",
+        "fixtures/skill_chains/agentic_eval.json",
+    }
+
+
 def test_a_legacy_ticket_falls_back_to_the_skills_it_mentions():
     """7 of the 8 leases open on agent-skills predate the target: line."""
     body = "Fix `skills/ask` compete when `skills/surf` returns a stale tab."

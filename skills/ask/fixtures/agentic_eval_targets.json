@@ -211,6 +211,24 @@
       }
     },
     {
+      "name": "run-projection-surfaces-tau-dag-error-before-downstream-absence",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run pytest tests/test_run_projection.py::test_tau_dag_receipt_failure_overrides_missing_downstream_receipts -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression for a project-watchdog Ask/Tau repair where Tau recorded evidence_receipt_verdict_failed at the creator node but ask.run_projection pointed at downstream nodes that correctly never ran."
+    },
+    {
       "name": "default-doctor-touches-no-subsystem",
       "type": "adversarial",
       "timeout_seconds": 180,

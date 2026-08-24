@@ -103,10 +103,12 @@ before it could dispatch. `$ask` compiles the DAG for any repo; a project needs
 only a worktree.
 
 Collision is a property of the **target**, not the repository. agent-skills
-holds 364 skills, and two tickets against different ones share no files. Each
-ticket names its target on the `target:` line `/ticket` writes; older tickets
-fall back to the skill paths their body mentions. A leased ticket blocks its own
-targets and nothing else.
+holds 364 skills, and two tickets against different ones share no files. When a
+ticket has `Ticket type details` / `Scoped files`, that list is the concrete
+repair allowlist and wins over a coarse `target:` line or a short `## Target
+paths` summary. Tickets without scoped files use the `target:` line `/ticket`
+writes, then the `## Target paths` block, then legacy skill-path mentions. A
+leased ticket blocks its own targets and nothing else.
 
 Registered projects may narrow a shared repository with `issue_target_prefixes`
 and may leave a subtree to a narrower project with

@@ -101,6 +101,65 @@ def test_a_failed_receipt_is_acknowledged_not_admitted(tmp_path: Path) -> None:
     assert node["failure_code"] == "browser_provider_probe_timeout"
 
 
+def test_tau_dag_receipt_failure_overrides_missing_downstream_receipts(tmp_path: Path) -> None:
+    """A Tau semantic blocker is the root cause; skipped downstream nodes are not."""
+    run = _run(
+        tmp_path,
+        dag_nodes=[
+            {"id": "handler-gpt-5-5-high"},
+            {"id": "handler-claude-fable-low"},
+            {"id": "join"},
+        ],
+        compile={"status": "READY"},
+        execution={"status": "BLOCKED", "ok": False, "live": True, "mocked": False},
+    )
+    creator_dir = _node_dir(run, "handler-gpt-5-5-high")
+    (creator_dir / "response.md").write_text("VERDICT: NEEDS_ATTENTION", encoding="utf-8")
+    (creator_dir / "node-receipt.json").write_text(
+        json.dumps({"ok": True, "status": "PASS", "provider_live": True}),
+        encoding="utf-8",
+    )
+    receipt_dir = run / "tau-receipts"
+    receipt_dir.mkdir()
+    (receipt_dir / "dag-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "tau.dag_receipt.v1",
+                "status": "BLOCKED",
+                "ok": False,
+                "alerts": [
+                    {
+                        "code": "evidence_receipt_verdict_failed",
+                        "message": "Required receipt evidence recorded a non-PASS semantic verdict.",
+                        "evidence": {
+                            "node_id": "handler-gpt-5-5-high",
+                            "receipt_status": "PASS",
+                            "receipt_verdict": "NEEDS_ATTENTION",
+                        },
+                    }
+                ],
+                "dag_error": {
+                    "schema": "tau.dag_error.v1",
+                    "failure_code": "evidence_receipt_verdict_failed",
+                    "failed_node": "handler-gpt-5-5-high",
+                    "message": "Required receipt evidence recorded a non-PASS semantic verdict.",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    projection = project_run(run)
+
+    assert projection["failure_code"] == "evidence_receipt_verdict_failed"
+    assert projection["failed_node"] == "handler-gpt-5-5-high"
+    assert projection["primary_failure"]["response_path"].endswith(
+        "node-artifacts/handler-gpt-5-5-high/response.md"
+    )
+    assert "handler-gpt-5-5-high" in projection["next_action"]
+    assert "handler-claude-fable-low" not in projection["next_action"]
+
+
 def test_nodes_keep_the_dag_order(tmp_path: Path) -> None:
     run = _run(
         tmp_path,

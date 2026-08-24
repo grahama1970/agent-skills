@@ -133,7 +133,10 @@ cd skills/ask
 
 One normalized read model over the run's own artifacts, so a roundtable, a
 compete run, a browser lane and a scillm-only DAG all answer "what happened?"
-the same way.
+the same way. For Tau-executed DAGs, this includes
+`tau-receipts/dag-receipt.json`: an explicit Tau `dag_error` such as
+`evidence_receipt_verdict_failed` is the primary failure, even when downstream
+nodes never ran and therefore have no receipt.
 
 **Absence is reported, never dropped.** Every node in the frozen DAG appears
 even when it produced nothing — that node is the failure worth seeing, not a

@@ -794,7 +794,7 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
 
 #: The machine-readable `target: skills/<name>` line `/ticket` writes into every
 #: body. That line is the ticket's own statement of what it will change.
-_TARGET_LINE = re.compile(r"^target:\s*(\S+)\s*$", re.MULTILINE)
+_TARGET_LINE = re.compile(r"^target:\s*(.+?)\s*$", re.MULTILINE)
 
 #: Fallback for tickets filed before that line existed: every skill path the
 #: body mentions. Coarser, but it resolves 7 of the 8 leases currently open on
@@ -802,6 +802,12 @@ _TARGET_LINE = re.compile(r"^target:\s*(\S+)\s*$", re.MULTILINE)
 _SKILL_PATH = re.compile(r"\bskills/[a-z0-9][a-z0-9._-]*")
 
 _TARGET_PATHS_HEADING = re.compile(r"^##\s+Target paths\s*$", re.IGNORECASE | re.MULTILINE)
+_SCOPED_FILES_FIELD = re.compile(
+    r"^\s*(?:[-*]\s*)?(?:\*\*)?"
+    r"(?:Scoped files|Scope files|Allowed files|Target files|Target paths)"
+    r"(?:\*\*)?\s*:\s*(.+?)\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
 
 #: A ticket whose target cannot be read at all. Just another target value: it
 #: collides with other unreadable tickets and with nothing else. Treating it as
@@ -821,6 +827,17 @@ def _clean_target_path_fragment(raw: str) -> str | None:
     if token != fragment and "." not in Path(token).name:
         return None
     return token.rstrip("/")
+
+
+def _inline_target_paths(raw: str) -> set[str]:
+    """Parse a compact field value such as ``Scoped files: a.py b.py``."""
+    targets: set[str] = set()
+    normalized = raw.replace("`", " ").replace(",", " ")
+    for token in normalized.split():
+        target = _clean_target_path_fragment(token)
+        if target:
+            targets.add(target)
+    return targets
 
 
 def _markdown_target_paths(body: str) -> set[str]:
@@ -843,6 +860,14 @@ def _markdown_target_paths(body: str) -> set[str]:
     return targets
 
 
+def _markdown_scoped_files(body: str) -> set[str]:
+    """Parse scope-rich ticket fields that list every allowed repair file."""
+    targets: set[str] = set()
+    for match in _SCOPED_FILES_FIELD.finditer(body):
+        targets.update(_inline_target_paths(match.group(1)))
+    return targets
+
+
 def issue_targets(issue: dict[str, Any]) -> set[str]:
     """The paths a ticket will change, e.g. ``{"skills/ticket"}``.
 
@@ -852,9 +877,12 @@ def issue_targets(issue: dict[str, Any]) -> set[str]:
     the repo blocks 363 skills to protect 1.
     """
     body = issue.get("body") or ""
+    scoped_paths = _markdown_scoped_files(body)
+    if scoped_paths:
+        return scoped_paths
     match = _TARGET_LINE.search(body)
-    if match and (declared := match.group(1).strip().rstrip("/")):
-        return {declared}
+    if match and (declared_paths := _inline_target_paths(match.group(1))):
+        return declared_paths
     declared_paths = _markdown_target_paths(body)
     if declared_paths:
         return declared_paths

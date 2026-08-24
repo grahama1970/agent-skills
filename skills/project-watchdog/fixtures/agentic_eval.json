@@ -154,6 +154,30 @@
       "notes": "Regression for Battle scope drift: a battle-scoped project sees only skills/battle issues, and the broad agent-skills project can exclude skills/battle so fleet rotation does not steal Battle tickets."
     },
     {
+      "name": "ticket-scoped-files-define-repair-targets",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_rotation.py::test_scoped_files_override_single_target_path_when_acceptance_needs_more_files",
+        "../tests/test_project_rotation.py::test_scoped_files_override_malformed_coarse_target_metadata",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "notes": "Regression for graph-memory-operator#150/#151: Scoped files are the repair allowlist and must not be replaced by a coarse Target paths summary or orientation skill mentions."
+    },
+    {
       "name": "repair-dispatch-passes-explicit-ask-execution-timeout",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
