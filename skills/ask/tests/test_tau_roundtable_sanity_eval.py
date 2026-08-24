@@ -337,6 +337,43 @@ def test_worker_prompt_includes_prior_receipts_and_verdict_contract(tmp_path: Pa
     assert tau_roundtable_worker._has_verdict("No clear verdict") is False
 
 
+def test_project_watchdog_repair_prompt_requires_reviewer_verdict(tmp_path: Path) -> None:
+    prior_dir = tmp_path / "handler-gpt-5-5-high"
+    prior_dir.mkdir(parents=True)
+    response_path = prior_dir / "response.md"
+    response_path.write_text("Creator changed the registry and ran proof.", encoding="utf-8")
+    (prior_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-gpt-5-5-high",
+                "handler": "gpt-5.5-high",
+                "status": "PASS",
+                "ok": True,
+                "response_path": str(response_path),
+            }
+        ),
+        encoding="utf-8",
+    )
+    request_text = (
+        "The creator seat implements the fix and commits it. The reviewer seat "
+        "checks it against the ticket's acceptance criterion and required proof, "
+        "and answers VERDICT: PASS, VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION."
+    )
+
+    receipts = tau_roundtable_worker._load_prior_receipts(tmp_path, ["handler-gpt-5-5-high"])
+    assert tau_roundtable_worker._requires_verdict(request_text, receipts) is True
+    prompt = tau_roundtable_worker._handler_prompt(
+        request_text,
+        "claude-opus-4-8-high",
+        prior_receipts=receipts,
+        requires_verdict=tau_roundtable_worker._requires_verdict(request_text, receipts),
+    )
+
+    assert "Your first non-empty line must be exactly one review verdict" in prompt
+    assert "VERDICT: NEEDS_ATTENTION" in prompt
+
+
 def test_worker_webclaude_submit_command_includes_prior_response_attachment(tmp_path: Path) -> None:
     node_root = tmp_path / "node-artifacts"
     prior_dir = node_root / "handler-webkimi"

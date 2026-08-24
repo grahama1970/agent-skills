@@ -6919,6 +6919,12 @@ def _requires_verdict(request_text: str, prior_receipts: list[dict[str, Any]]) -
     return any(
         marker in lower
         for marker in (
+            "verdict: pass",
+            "verdict: fail",
+            "verdict: needs_attention",
+            "reviewer verdict",
+            "reviewer seat checks",
+            "reviewer seat",
             "pass/fail",
             "pass or fail",
             "pass fail",

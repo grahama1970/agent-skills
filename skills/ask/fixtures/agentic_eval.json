@@ -1749,15 +1749,15 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/ask pytest -q skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_worker_prompt_includes_prior_receipts_and_verdict_contract"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/ask pytest -q skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_worker_prompt_includes_prior_receipts_and_verdict_contract skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_project_watchdog_repair_prompt_requires_reviewer_verdict"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ]
       },
-      "notes": "Regression guard for reviewer lanes that complete transport but omit a parseable VERDICT line, causing project-watchdog's proof gate to refuse closure after a Tau PASS."
+      "notes": "Regression guard for reviewer lanes that complete transport but omit a parseable VERDICT line, causing project-watchdog's proof gate to refuse closure after a Tau PASS. Includes the exact project-watchdog repair prompt shape: VERDICT: PASS / FAIL / NEEDS_ATTENTION must activate the first-line verdict requirement."
     }
   ],
   "capability_claims": [
