@@ -224,6 +224,28 @@
       }
     },
     {
+      "name": "registered-repair-seats-can-author-and-review-code",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_registered_repair_seats_can_author_and_review_code",
+        "../tests/test_project_watchdog.py::test_tau_repair_reviewer_is_local_claude_opus_48_high",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "ticket-repair-uses-gpt55-high-creator-through-tau-workspace",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

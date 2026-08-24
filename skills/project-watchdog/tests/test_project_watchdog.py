@@ -1070,9 +1070,48 @@ def test_the_two_repair_seats_are_different_model_families() -> None:
 
 
 def test_a_project_may_name_its_own_seats() -> None:
-    project = {"repair_creator": "codex", "repair_reviewer": "webclaude"}
-    assert config.repair_creator(project) == "codex"
-    assert config.repair_reviewer(project) == "webclaude"
+    project = {"repair_creator": "gpt-5.5-high", "repair_reviewer": "claude-opus-4-8-high"}
+    assert config.repair_creator(project) == "gpt-5.5-high"
+    assert config.repair_reviewer(project) == "claude-opus-4-8-high"
+
+
+def test_registered_repair_seats_can_author_and_review_code() -> None:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    projects = payload["projects"] if isinstance(payload, dict) else payload
+
+    invalid: list[str] = []
+    for project in projects:
+        if not project.get("repair_creator") and not project.get("repair_reviewer"):
+            continue
+        try:
+            config.repair_seats(project)
+        except config.SeatIndependenceError as exc:
+            invalid.append(f"{project.get('project_id', '<unknown>')}: {exc}")
+
+    assert invalid == []
+
+
+def test_tau_repair_reviewer_is_local_claude_opus_48_high() -> None:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    projects = payload["projects"] if isinstance(payload, dict) else payload
+    tau = next(project for project in projects if project["project_id"] == "tau")
+
+    assert tau["repair_reviewer"] == "claude-opus-4-8-high"
+    creator, reviewer = config.repair_seats(tau)
+    assert creator == "gpt-5.5-high"
+    assert reviewer == "claude-opus-4-8-high"
+
+
+def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
+    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    projects = payload["projects"] if isinstance(payload, dict) else payload
+    memory = next(project for project in projects if project["project_id"] == "memory")
+
+    assert config.auto_land_main(memory) is True
+    assert memory["repair_reviewer"] == "claude-fable-low"
 
 
 def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
