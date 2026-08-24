@@ -335,11 +335,22 @@ Two seats, deliberately different model families (`repair_creator`,
 spots is a second pass, not a second opinion, so identical seats are refused
 before dispatch.
 
-Repair creators must be workspace-authoring lanes. `oc-*`/`opencode-go/*` are
-SciLLM OpenCode Go chat/review routes; they must not be given
-`--handler-workspace` and treated as Codex CLI models. Repo-changing OpenCode
-work needs a separate OpenCode serve/transport authoring lane with its own
-receipt contract.
+Repair creators and repair reviewers must be locally executing lanes that can
+work from the repair worktree and run the ticket's proof command. Browser/web
+model seats such as `webgpt`, `webclaude`, `webkimi`, `webgemini`, and
+`webgrok` cannot run local code and must not be configured as
+`repair_creator` or `repair_reviewer`.
+
+Web models are still useful before repair dispatch: use them through `$ask` for
+strategy review, failure-family analysis, and creating focused `$ticket` items
+with concrete targets, dependencies, acceptance criteria, and proof commands.
+They advise what work should be filed; they do not execute or verify the local
+repair lane.
+
+`oc-*`/`opencode-go/*` are SciLLM OpenCode Go chat/review routes; they must not
+be given `--handler-workspace` and treated as Codex CLI models. Repo-changing
+OpenCode work needs a separate OpenCode serve/transport authoring lane with its
+own receipt contract.
 
 Each repair is authored in a worktree of its own, created from `origin/main`
 per dispatch under the state root. The registered checkout is a human's working

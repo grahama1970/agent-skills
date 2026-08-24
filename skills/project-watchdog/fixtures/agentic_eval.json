@@ -189,12 +189,13 @@
         "pytest",
         "../tests/test_project_watchdog.py::test_ticket_repair_dispatches_through_ask_tau_dag",
         "../tests/test_project_watchdog.py::test_ticket_repair_documents_tau_owned_scillm_boundary",
+        "../tests/test_project_watchdog.py::test_web_model_creator_is_refused_before_ask_dispatch",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "3 passed"
         ]
       }
     },
