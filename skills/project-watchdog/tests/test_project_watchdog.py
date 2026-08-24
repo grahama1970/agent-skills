@@ -897,6 +897,9 @@ def test_the_repair_task_names_the_bar_the_reviewer_applies() -> None:
     assert "VERDICT: PASS" in task and "VERDICT: FAIL" in task
     assert "Allowed paths: skills/x" in task
     assert "type: bug" in task, "the ticket body carries the orientation a cron agent needs"
+    assert "Only the reviewer seat may emit a VERDICT line" in task
+    assert "The creator seat must not emit VERDICT" in task
+    assert "recursive_watchdog_proof_boundary" in task
 
 
 def test_goal_hash_is_stable_across_reruns() -> None:

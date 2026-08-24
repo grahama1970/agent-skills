@@ -1011,6 +1011,27 @@
           "WATCHDOG_TICKET_REPAIR_MONITORS_TAU_JSON"
         ]
       }
+    },
+    {
+      "name": "ticket-repair-creator-must-not-emit-verdict",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "seams": [
+        "watchdog.ticket_dispatch",
+        "watchdog.repair_proof_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_watchdog.py::test_the_repair_task_names_the_bar_the_reviewer_applies"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
     }
   ]
 }
