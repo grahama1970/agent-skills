@@ -545,12 +545,13 @@
    ]
   }
  ],
- "sourceCommit": "268bbcb5a1",
- "asOf": "2026-08-12",
+ "sourceCommit": "dc2ed51600",
+ "asOf": "2026-08-23",
  "generator": "site/scripts/gen_resume.py",
  "sourceSha256": "6215fd41bf9ebe0cd22dc55b0f03cc65808e48604499f581103bfd449ac3bfe7",
  "downloads": {
   "pdf": "/resume.pdf",
+  "docx": "/resume.docx",
   "markdown": "/resume.md"
  },
  "timeline": [
@@ -680,5 +681,7 @@
   ]
  },
  "pdfSha256": "61d0766adecbd70de1fca16783d76d95780b3495f16014baeb317f56fad2b598",
- "pdfBytes": 159670
+ "pdfBytes": 159670,
+ "docxSha256": "f19a9e25be73edd17407556e3e3f3c5e561e71582336e00e5f5788fb957207ee",
+ "docxBytes": 40581
 }

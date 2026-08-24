@@ -8,13 +8,13 @@ import resume from '@/resume.json';
  * Deliberately the calmest page on the site: no constellation, no motion, no
  * hero. A recruiter skimming for twenty seconds should meet a document, not an
  * exhibit. Every word comes from RESUME.md via scripts/gen_resume.py; nothing
- * is authored here. The PDF and Markdown exports are one click away because
+ * is authored here. The PDF, DOCX, and Markdown exports are one click away because
  * the page is what you link, the file is what you attach.
  */
 
 const title = 'Résumé — Graham Anderson';
 const description =
-  'Principal AI Engineer, ML Engineer, and AI Architect. Agentic AI, LLM/RAG, knowledge graphs, defense and aerospace. Download as PDF or Markdown.';
+  'Principal AI Engineer, ML Engineer, and AI Architect. Agentic AI, LLM/RAG, knowledge graphs, defense and aerospace. Download as PDF, DOCX, or Markdown.';
 
 export const metadata: Metadata = {
   title,
@@ -147,7 +147,7 @@ export default function ResumePage() {
     lede: string;
     intro: Block[];
     sections: { title: string; blocks: Block[] }[];
-    downloads: { pdf: string; markdown: string };
+    downloads: { pdf: string; docx: string; markdown: string };
     sourceCommit: string;
     asOf: string;
     jsonLd: unknown;
@@ -175,12 +175,11 @@ export default function ResumePage() {
           {doc.lede ? <p className="cv-lede">{doc.lede}</p> : null}
         </header>
 
-        {/* Sticky so the download stays one click away through a long scroll.
-            Both are real file links, not window.print(): the PDF served here
-            is the typeset, ATS-checked artifact, and a browser print-to-PDF
-            would substitute a different file per visitor. */}
-        {/* The page is the full version; the PDF is the two-page cut. Saying so
-            here replaces the PDF's own "this is the two-page version" line,
+        {/* Sticky so the downloads stay one click away through a long scroll.
+            These are real file links, not window.print(): browser export would
+            substitute a different file per visitor. */}
+        {/* The page is the full version; the attachable PDF/DOCX exports are
+            the two-page cut. Saying so here replaces the PDF-only source line,
             which would be self-referential on the page it points at. */}
         <div className="cv-actions">
           <a
@@ -200,6 +199,22 @@ export default function ResumePage() {
           </a>
           <a
             className="cv-btn"
+            href={doc.downloads.docx}
+            download
+            data-qid="resume:link:docx"
+            data-qs-action="RESUME_DOWNLOAD_DOCX"
+            title="Download the résumé as an ATS-oriented DOCX"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+              <path d="M14 2v6h6" />
+              <path d="M8 13h8" />
+              <path d="M8 17h5" />
+            </svg>
+            <span>DOCX</span>
+          </a>
+          <a
+            className="cv-btn"
             href={doc.downloads.markdown}
             download
             data-qid="resume:link:markdown"
@@ -215,7 +230,7 @@ export default function ResumePage() {
             </svg>
             <span>Markdown</span>
           </a>
-          <span className="cv-actions-note">Full version — the PDF is a 2-page cut</span>
+          <span className="cv-actions-note">Full version - PDF/DOCX are 2-page cuts</span>
         </div>
 
 

@@ -26,10 +26,10 @@ domains:
 # monitor-website
 
 `RESUME.md` is the source of truth for grahama.co/resume: `gen_resume.py`
-parses it into `site/resume.json` and copies the PDF and Markdown exports into
-`site/public/`, so the page, `/resume.pdf`, and `/resume.md` are one commit's
-content. The digest check below catches an edited resume whose surface was
-never regenerated.
+parses it into `site/resume.json` and copies the PDF, DOCX, and Markdown exports into
+`site/public/`, so the page, `/resume.pdf`, `/resume.docx`, and `/resume.md` are
+one commit's content. The digest check below catches an edited resume whose surface
+was never regenerated.
 
 The public site (`site/`, served at https://grahama.co) mirrors two curated
 surfaces in `README.md`: the "Fun Stuff I'm Working On" project cards and the
@@ -111,7 +111,7 @@ ship disabled; enable only when the scheduler environment is ready).
 | project membership | README project-card `<strong>` names + hrefs | slug present in one side only, or href changed |
 | live site | https://grahama.co, /sitemap.xml | non-200, or homepage missing a nav `data-qid` |
 | resume surface | `RESUME.md` vs `site/resume.json` | stamped commit != HEAD, or recorded `sourceSha256` != the real RESUME.md digest |
-| live resume | /resume, /resume.pdf, /resume.md | non-200, or the served file is not the expected page/PDF/Markdown |
+| live resume | /resume, /resume.pdf, /resume.docx, /resume.md | non-200, or the served file is not the expected page/PDF/DOCX/Markdown |
 
 ## Design maintenance — bespoke visual-world contract (#1337)
 

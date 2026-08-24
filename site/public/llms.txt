@@ -8,6 +8,7 @@ Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI ·
 
 - [Full résumé (HTML)](https://grahama.co/resume)
 - [Résumé PDF, two pages](https://grahama.co/resume.pdf)
+- [Résumé DOCX, ATS-oriented](https://grahama.co/resume.docx)
 - [Résumé source (Markdown)](https://grahama.co/resume.md)
 
 ## Experience
@@ -35,5 +36,5 @@ Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI ·
 - Client work is export-controlled (ITAR); client names are withheld by
   necessity, not omission.
 - Every count on this site is generated from the repository at the deploy
-  commit (268bbcb5a1), not hand-maintained.
+  commit (dc2ed51600), not hand-maintained.
 - Contact: graham@grahama.co

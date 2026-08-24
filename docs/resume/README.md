@@ -1,12 +1,13 @@
 # Resume PDF
 
-This directory is reserved for the generated public resume PDF.
+This directory is reserved for the generated public resume PDF and DOCX.
 
 Canonical source and generated artifact:
 
 ```text
 RESUME.md
 docs/resume/graham-anderson-resume.pdf
+docs/resume/graham-anderson-resume.docx
 ```
 
 Build the PDF from Markdown with the repo script:
@@ -20,6 +21,15 @@ uv run --with markdown-pdf==1.13.2 python scripts/build_markdown_pdf.py \
   --no-default-css \
   --title "Graham Anderson Resume" \
   --author "Graham Anderson"
+```
+
+Build the ATS-oriented DOCX from the same Markdown with:
+
+```bash
+uv run --with python-docx python scripts/build_resume_docx.py \
+  RESUME.md \
+  docs/resume/graham-anderson-resume.docx \
+  --omit-section "DEEPER DETAIL"
 ```
 
 `markdown-pdf` is intentionally optional rather than a repository dependency.
@@ -54,5 +64,5 @@ different typefaces.
 
 `.github/workflows/resume-pdf.yml` runs on pull requests and on pushes to
 `main` when the resume source, optional CSS, converter, or workflow changes.
-On `main`, it rebuilds `docs/resume/graham-anderson-resume.pdf` from `RESUME.md`
-and commits the generated PDF back to `main` when the rendered artifact changed.
+On `main`, it rebuilds the generated PDF and DOCX from `RESUME.md` and commits
+the generated artifacts back to `main` when either rendered artifact changed.

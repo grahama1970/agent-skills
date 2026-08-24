@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate site/resume.json (and the two download assets) from RESUME.md.
+"""Regenerate site/resume.json (and the download assets) from RESUME.md.
 
 RESUME.md at the repo root is the single source of truth for the resume. This
 generator parses it into a structured surface the /resume route renders, and
@@ -7,11 +7,13 @@ copies the two export artifacts into site/public/:
 
     public/resume.md   <- RESUME.md verbatim
     public/resume.pdf  <- docs/resume/graham-anderson-resume.pdf
+    public/resume.docx <- docs/resume/graham-anderson-resume.docx
 
-so grahama.co/resume, grahama.co/resume.md, and grahama.co/resume.pdf are all
-the same content at one commit. The PDF is copied, never rebuilt here: the
-resume-pdf workflow owns that build, and copying keeps the file served at
-/resume.pdf byte-identical to the one served from GitHub.
+so grahama.co/resume, grahama.co/resume.md, grahama.co/resume.pdf, and
+grahama.co/resume.docx are all the same content at one commit. The binary
+exports are copied, never rebuilt here: the resume workflows own those builds,
+and copying keeps the files served from /resume.* byte-identical to the
+repository artifacts.
 
 Inline markup is emitted as token arrays rather than HTML so the page renders
 through React elements and never needs dangerouslySetInnerHTML.
@@ -33,6 +35,7 @@ REPO = Path(__file__).resolve().parents[2]
 SITE = REPO / "site"
 SOURCE = REPO / "RESUME.md"
 PDF_SOURCE = REPO / "docs" / "resume" / "graham-anderson-resume.pdf"
+DOCX_SOURCE = REPO / "docs" / "resume" / "graham-anderson-resume.docx"
 OUT = SITE / "resume.json"
 
 # A role's first line is its employment period when it looks like one; pulling
@@ -326,7 +329,7 @@ def main() -> int:
     doc["asOf"] = git("log", "-1", "--format=%cs")
     doc["generator"] = "site/scripts/gen_resume.py"
     doc["sourceSha256"] = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
-    doc["downloads"] = {"pdf": "/resume.pdf", "markdown": "/resume.md"}
+    doc["downloads"] = {"pdf": "/resume.pdf", "docx": "/resume.docx", "markdown": "/resume.md"}
     doc["timeline"] = build_timeline(doc)
     doc["jsonLd"] = build_jsonld(doc)
 
@@ -340,6 +343,13 @@ def main() -> int:
     else:
         # Fail closed rather than ship a /resume page whose download 404s.
         print(f"error: missing resume PDF: {PDF_SOURCE}", file=sys.stderr)
+        return 1
+    if DOCX_SOURCE.is_file():
+        shutil.copyfile(DOCX_SOURCE, public / "resume.docx")
+        doc["docxSha256"] = hashlib.sha256(DOCX_SOURCE.read_bytes()).hexdigest()
+        doc["docxBytes"] = DOCX_SOURCE.stat().st_size
+    else:
+        print(f"error: missing resume DOCX: {DOCX_SOURCE}", file=sys.stderr)
         return 1
 
     # /llms.txt — the machine-readable entry point. Agents and recruiter tooling
@@ -373,6 +383,7 @@ def main() -> int:
         "",
         "- [Full résumé (HTML)](https://grahama.co/resume)",
         "- [Résumé PDF, two pages](https://grahama.co/resume.pdf)",
+        "- [Résumé DOCX, ATS-oriented](https://grahama.co/resume.docx)",
         "- [Résumé source (Markdown)](https://grahama.co/resume.md)",
         "",
         "## Experience",

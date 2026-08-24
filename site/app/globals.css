@@ -4143,9 +4143,8 @@ h1 .proof-origin::after {
   min-height: 44px; /* WCAG 2.5.5 / COTS touch-target floor */
   border-radius: 2px;
   color: var(--text);
-  display: inline-block;
   font-size: 0.9rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   padding: 0.5rem 1.05rem;
   text-decoration: none;
   transition: background var(--dur-state) var(--ease-state),
@@ -4346,11 +4345,15 @@ h1 .proof-origin::after {
   }
 }
 
-/* Below this the two labels crowd the row, so the secondary goes icon-only
-   and the primary call to action keeps its words. */
+/* Keep all format names visible on small phones; DOCX and Markdown otherwise
+   collapse to similar file icons. */
 @media (max-width: 400px) {
-  .cv .cv-btn:not(.cv-btn-primary) span {
-    display: none;
+  .cv-actions {
+    gap: 0.45rem;
+  }
+  .cv .cv-btn {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.5rem;
   }
 }
 

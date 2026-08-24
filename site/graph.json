@@ -1,6 +1,6 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "268bbcb5a1",
+  "sourceCommit": "dc2ed51600",
   "counts": {
     "nodes": 19,
     "edges": 18
@@ -18,7 +18,7 @@
       "label": "Agentic pipelines",
       "title": "Agentic pipelines & orchestration",
       "lens": "technical",
-      "skillCount": 49,
+      "skillCount": 51,
       "img": "surf"
     },
     {
@@ -111,7 +111,7 @@
       "label": "Extraction",
       "title": "Extraction & evidence",
       "lens": "technical",
-      "skillCount": 66,
+      "skillCount": 67,
       "img": "extractor"
     },
     {
@@ -165,7 +165,7 @@
       "label": "Compliance",
       "title": "Compliance, security & governance",
       "lens": "technical",
-      "skillCount": 59,
+      "skillCount": 65,
       "img": "sparta-explorer"
     },
     {
@@ -179,8 +179,8 @@
       "abstract": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
       "taxonomy": "Compliance, security & governance",
       "hasSanityCheck": false,
-      "visibility": "public",
-      "evidenceAccess": "source",
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
       "img": "sparta-explorer"
     },
     {

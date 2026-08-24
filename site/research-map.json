@@ -43,7 +43,7 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md"
         }
       ],
-      "skillCount": 49
+      "skillCount": 51
     },
     {
       "id": "memory",
@@ -109,7 +109,7 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md"
         }
       ],
-      "skillCount": 66
+      "skillCount": 67
     },
     {
       "id": "compliance",
@@ -137,7 +137,7 @@
           "href": "https://github.com/grahama1970/sparta-public"
         }
       ],
-      "skillCount": 59
+      "skillCount": 65
     },
     {
       "id": "adaptive-lineage",
@@ -229,5 +229,5 @@
     "observability-operations"
   ],
   "projectCount": 10,
-  "sourceCommit": "268bbcb5a1"
+  "sourceCommit": "dc2ed51600"
 }
