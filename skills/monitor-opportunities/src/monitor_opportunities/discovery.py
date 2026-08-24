@@ -144,6 +144,17 @@ def _load_linkedin_records(path: Path) -> list[dict[str, Any]]:
     return []
 
 
+def _linkedin_record_url(record: dict[str, Any]) -> str | None:
+    url = str(
+        record.get("primary_evidence_url")
+        or record.get("posting_url")
+        or record.get("job_url")
+        or record.get("linkedin_url")
+        or ""
+    ).strip()
+    return url or None
+
+
 # LinkedIn's top-applicant collection renders each row as
 # "<title>\n<title> with verification\n<employer>\n<location>", so a capture that
 # reads positionally lands the accessibility echo of the title in `organization`
@@ -322,6 +333,14 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
 
     receipt["result_status"] = "MATCHES" if records else "NO_MATCHES"
     receipt["parser_result"] = "PARSED"
+    receipt["evidence_refs"] = list(
+        dict.fromkeys(
+            [
+                *receipt["evidence_refs"],
+                *[url for record in records if (url := _linkedin_record_url(record))],
+            ]
+        )
+    )
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for record in records:
@@ -354,13 +373,7 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
             or record.get("raw_text_excerpt")
             or "Human-supplied LinkedIn top-candidate evidence."
         )
-        primary_url = str(
-            record.get("primary_evidence_url")
-            or record.get("posting_url")
-            or record.get("job_url")
-            or record.get("linkedin_url")
-            or ""
-        ).strip() or None
+        primary_url = _linkedin_record_url(record)
         payload = {
             "lane": "A",
             "source_receipt_id": receipt["receipt_id"],
@@ -2020,13 +2033,52 @@ def sweep(
     write_json(out_dir / "lane-summaries.json", lane_summaries)
     return manifest
 
+def _merge_linkedin_priority_fields(existing: dict[str, Any], row: dict[str, Any]) -> bool:
+    changed = False
+    for field in ("top_candidate", "easy_apply", "easy_apply_signal", "under_10_applicants"):
+        if row.get(field) and not existing.get(field):
+            existing[field] = row[field]
+            changed = True
+    for field in ("top_candidate_text", "evidence_text", "matched_query", "warm_path_via"):
+        if row.get(field) not in (None, "", [], {}) and existing.get(field) in (None, "", [], {}):
+            existing[field] = row[field]
+            changed = True
+
+    def _as_float(value: Any) -> float | None:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    if row.get("competition") is not None:
+        incoming = _as_float(row.get("competition"))
+        current = _as_float(existing.get("competition"))
+        if existing.get("competition") is None or (
+            incoming is not None and (current is None or incoming < current)
+        ):
+            existing["competition"] = row["competition"]
+            changed = True
+    if row.get("warm_path") is not None:
+        incoming = _as_float(row.get("warm_path"))
+        current = _as_float(existing.get("warm_path"))
+        if existing.get("warm_path") is None or (
+            incoming is not None and (current is None or incoming > current)
+        ):
+            existing["warm_path"] = row["warm_path"]
+            changed = True
+            if row.get("warm_path_via") not in (None, "", [], {}):
+                existing["warm_path_via"] = row["warm_path_via"]
+    return changed
+
+
 def _merge_linkedin_top_candidate(base_path: Path, other_path: Path) -> int:
-    """Merge one LinkedIn evidence stream into another, preserving top_candidate.
+    """Merge one LinkedIn evidence stream into another, preserving priority fields.
 
     Picking only the higher-row-count file dropped the top-applicant stream and
     its ``top_candidate`` flags. This merges the other stream's opportunities in:
-    a matching (title, organization) row inherits ``top_candidate`` if EITHER
-    stream flags it; unmatched rows are appended with their flag intact.
+    a matching (title, organization) row inherits Top Applicant, Easy Apply,
+    low-competition, and warm-path fields if either stream carries them;
+    unmatched rows are appended with their signals intact.
     """
     try:
         base = json.loads(base_path.read_text(encoding="utf-8"))
@@ -2044,11 +2096,11 @@ def _merge_linkedin_top_candidate(base_path: Path, other_path: Path) -> int:
         key = (row.get("title"), row.get("organization"))
         existing = index.get(key)
         if existing is not None:
-            if row.get("top_candidate"):
-                existing["top_candidate"] = True
+            if _merge_linkedin_priority_fields(existing, row):
                 merged += 1
         else:
             base_rows.append(row)
+            index[key] = row
             merged += 1
     # A file-level top_candidate:true (whole page is the top-applicant collection)
     # applies to every row it contributed.

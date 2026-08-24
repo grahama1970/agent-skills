@@ -1933,17 +1933,7 @@ def nightly(
     }
     if prem_receipt.get("evidence_path") and linkedin_evidence:
         try:
-            base = json.loads(Path(linkedin_evidence).read_text(encoding="utf-8"))
-            prem = json.loads(Path(prem_receipt["evidence_path"]).read_text(encoding="utf-8"))
-            seen_keys = {
-                (o.get("title"), o.get("organization")) for o in base.get("opportunities", [])
-            }
-            merged = 0
-            for o in prem.get("opportunities", []):
-                if (o.get("title"), o.get("organization")) not in seen_keys:
-                    base["opportunities"].append(o)
-                    merged += 1
-            Path(linkedin_evidence).write_text(json.dumps(base, indent=1), encoding="utf-8")
+            merged = _merge_linkedin_top_candidate(Path(linkedin_evidence), Path(prem_receipt["evidence_path"]))
             steps["browser_capture_linkedin_premium"]["merged_into_evidence"] = merged
         except (OSError, ValueError) as exc:
             logger.warning("premium evidence merge skipped: {}", exc)

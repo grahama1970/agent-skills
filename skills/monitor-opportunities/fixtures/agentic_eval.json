@@ -500,6 +500,29 @@
       ]
     },
     {
+      "name": "linkedin-premium-signals-survive-ranking-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates skills/monitor-opportunities/tests/test_discovery.py::test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_survive_duplicate_merge skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_are_reserved_in_source_intel_report -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed"
+        ]
+      },
+      "proves": "LinkedIn Premium Top Applicant, Easy Apply, low-competition, and warm-path fields survive browser evidence merge and duplicate posting collapse, row-level LinkedIn URLs are receipt-backed for relationship validation, then priority rows are reserved into source-intel before ordinary LinkedIn locator rows.",
+      "does_not_prove": "A live LinkedIn account will always expose Easy Apply or Top Applicant rows; the live capture still controls whether those signals are present on a given night.",
+      "seams": [
+        "ranking.linkedin_premium_signal_merge",
+        "ranking.source_intel_selection"
+      ]
+    },
+    {
       "name": "response-hardening-regression",
       "type": "adversarial",
       "real_world": true,

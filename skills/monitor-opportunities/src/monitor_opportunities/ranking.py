@@ -144,9 +144,15 @@ def _eligibility(candidate: dict[str, Any]) -> tuple[str, list[str]]:
     if workplace == "AMBIGUOUS":
         # A LinkedIn top-applicant role is high-value (Graham ranks in the top
         # pool) and must not be buried in human-review just because its location
-        # string is ambiguous — surface it as eligible so it reaches the report.
+        # string is ambiguous. Same for Premium/Easy Apply/low-competition
+        # signals: surface them as source intelligence while keeping application
+        # submission human-gated.
         if candidate.get("top_candidate_evidence"):
-            return "ELIGIBLE_TOP_APPLICANT", ["LinkedIn top applicant — surfaced despite ambiguous location"]
+            return "ELIGIBLE_TOP_APPLICANT", ["LinkedIn top applicant surfaced despite ambiguous location"]
+        if candidate.get("easy_apply"):
+            return "ELIGIBLE_EASY_APPLY_SOURCE_INTEL", ["LinkedIn Easy Apply surfaced for human review"]
+        if candidate.get("competition") is not None or candidate.get("warm_path") is not None:
+            return "ELIGIBLE_LINKEDIN_PREMIUM_SIGNAL", ["LinkedIn Premium signal surfaced for human review"]
         return "HUMAN_REVIEW_LOCATION_AMBIGUOUS", ["location cannot be disambiguated"]
     return "REJECT_LOCATION", [f"unsupported workplace_type={workplace!r}"]
 
@@ -256,21 +262,49 @@ def _source_intel_limit(opportunity_limit: int) -> int:
     return max(opportunity_limit, 12)
 
 
+def _is_linkedin_priority_source_intel(candidate: dict[str, Any]) -> bool:
+    """Signals that must not be hidden behind ordinary LinkedIn locator rows."""
+
+    if not _is_source_intel_candidate(candidate):
+        return False
+    return bool(
+        candidate.get("easy_apply")
+        or candidate.get("top_candidate_evidence")
+        or candidate.get("competition") is not None
+        or candidate.get("warm_path") is not None
+    )
+
+
 def _diverse_source_intel_shortlist(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
-    """Round-robin source-intel providers so one locator cannot hide another."""
+    """Round-robin providers, reserving explicit LinkedIn Premium signals first."""
 
     if limit <= 0:
         return []
+    selected: list[dict[str, Any]] = []
+    selected_ids: set[str] = set()
+    for candidate in candidates:
+        if not _is_linkedin_priority_source_intel(candidate):
+            continue
+        candidate_id = str(candidate.get("candidate_id") or "")
+        if candidate_id in selected_ids:
+            continue
+        selected.append(candidate)
+        selected_ids.add(candidate_id)
+        if len(selected) >= limit:
+            return selected
+
     groups: dict[str, list[dict[str, Any]]] = {}
     provider_order: list[str] = []
     for candidate in candidates:
+        candidate_id = str(candidate.get("candidate_id") or "")
+        if candidate_id in selected_ids:
+            continue
         provider = _source_intel_provider(candidate)
         if provider not in groups:
             groups[provider] = []
             provider_order.append(provider)
         groups[provider].append(candidate)
 
-    selected: list[dict[str, Any]] = []
     while len(selected) < limit and any(groups.values()):
         for provider in provider_order:
             rows = groups.get(provider) or []
@@ -302,6 +336,43 @@ def _organization_identity(candidate: dict[str, Any]) -> str:
     words = re.findall(r"[a-z0-9]+", raw.lower())
     key = " ".join(word for word in words if word not in ORG_SUFFIXES)
     return ORG_ALIASES.get(key, key)
+
+
+def _merge_linkedin_priority_signals(survivor: dict[str, Any], duplicate: dict[str, Any]) -> None:
+    """Preserve Premium locator signals when duplicate postings collapse."""
+
+    def _as_float(value: Any) -> float | None:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    for field in ("top_candidate_evidence", "easy_apply", "pending_primary_verification"):
+        if duplicate.get(field):
+            survivor[field] = True
+    for field in ("linkedin_collection", "linkedin_collection_label", "warm_path_via"):
+        if duplicate.get(field) not in (None, "", [], {}) and survivor.get(field) in (None, "", [], {}):
+            survivor[field] = duplicate[field]
+    if duplicate.get("competition") is not None:
+        prior = survivor.get("competition")
+        duplicate_competition = _as_float(duplicate.get("competition"))
+        prior_competition = _as_float(prior)
+        if prior is None or (
+            duplicate_competition is not None
+            and (prior_competition is None or duplicate_competition < prior_competition)
+        ):
+            survivor["competition"] = duplicate["competition"]
+    if duplicate.get("warm_path") is not None:
+        prior = survivor.get("warm_path")
+        duplicate_warm_path = _as_float(duplicate.get("warm_path"))
+        prior_warm_path = _as_float(prior)
+        if prior is None or (
+            duplicate_warm_path is not None
+            and (prior_warm_path is None or duplicate_warm_path > prior_warm_path)
+        ):
+            survivor["warm_path"] = duplicate["warm_path"]
+            if duplicate.get("warm_path_via") not in (None, "", [], {}):
+                survivor["warm_path_via"] = duplicate["warm_path_via"]
 
 
 def dedupe_postings(
@@ -343,8 +414,10 @@ def dedupe_postings(
         if _richness(c) > _richness(prior):
             # the incoming row wins; the prior one is now the duplicate
             best[key] = c
+            _merge_linkedin_priority_signals(c, prior)
             duplicates_by_key.setdefault(key, []).append(_cid(prior))
         else:
+            _merge_linkedin_priority_signals(prior, c)
             duplicates_by_key.setdefault(key, []).append(_cid(c))
     deduped = [best[k] for k in order]
     merged_into: dict[str, str] = {}

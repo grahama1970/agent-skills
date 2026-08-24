@@ -45,6 +45,19 @@ _TITLE_MATCH_THRESHOLD = 0.60
 # target the specific posting instead of paging the whole board.
 AtsProbe = Callable[[dict[str, Any]], list[dict[str, Any]]]
 
+_LOCATOR_PRIORITY_BOOLEAN_FIELDS = (
+    "top_candidate_evidence",
+    "easy_apply",
+    "pending_primary_verification",
+)
+_LOCATOR_PRIORITY_VALUE_FIELDS = (
+    "competition",
+    "warm_path",
+    "warm_path_via",
+    "linkedin_collection",
+    "linkedin_collection_label",
+)
+
 
 def _is_linkedin_locator(candidate: dict[str, Any]) -> bool:
     return candidate.get("source_provider") in {
@@ -153,6 +166,12 @@ def resolve_primary_source(
     promoted["locator_url"] = locator_url
     promoted["locator_candidate_id"] = locator.get("candidate_id")
     promoted["readback_receipt_id"] = receipt["receipt_id"]
+    for field in _LOCATOR_PRIORITY_BOOLEAN_FIELDS:
+        if locator.get(field):
+            promoted[field] = True
+    for field in _LOCATOR_PRIORITY_VALUE_FIELDS:
+        if locator.get(field) not in (None, "", [], {}):
+            promoted[field] = locator[field]
     # Keep the priority geography from the locator when the primary posting is
     # geographically vaguer; the locator already established WNY.
     if locator.get("workplace_type") in READBACK_PRIORITY_GEO and not promoted.get("workplace_type") in READBACK_PRIORITY_GEO:

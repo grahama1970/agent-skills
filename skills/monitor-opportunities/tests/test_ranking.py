@@ -163,6 +163,124 @@ def test_linkedin_readback_promotion_is_receipted_for_stage_accounting(tmp_path:
     assert shortlist[0]["workplace_type"] == "WNY_ONSITE"
 
 
+def test_linkedin_premium_signals_survive_duplicate_merge(tmp_path: Path) -> None:
+    candidates = [
+        {
+            "candidate_id": "linkedin:canonical",
+            "lane": "A",
+            "organization": "PwC",
+            "title": "US Tech - AI Engineering Senior Associate",
+            "workplace_type": "AMBIGUOUS",
+            "location_display": "United States",
+            "fit_score": 0.72,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "human_supplied_linkedin",
+            "source_receipt_id": "receipt:linkedin:human",
+            "posting_url": "https://www.linkedin.com/jobs/view/us-tech-ai-engineering-senior-associate-at-pwc-4453647794",
+        },
+        {
+            "candidate_id": "linkedin:top-applicant",
+            "lane": "A",
+            "organization": "PwC",
+            "title": "US Tech - AI Engineering Senior Associate",
+            "workplace_type": "AMBIGUOUS",
+            "location_display": "United States",
+            "fit_score": 0.93,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": "receipt:linkedin:top",
+            "posting_url": "https://www.linkedin.com/jobs/view/4453647794/",
+            "top_candidate_evidence": True,
+            "easy_apply": True,
+            "competition": 0.1,
+            "warm_path": 0.9,
+            "warm_path_via": "linkedin_premium",
+        },
+    ]
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((out / "ranking-receipt.json").read_text(encoding="utf-8"))
+    source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
+    assert receipt["duplicates_merged_into"] == {"linkedin:canonical": "linkedin:top-applicant"}
+    assert [row["candidate_id"] for row in source_intel] == ["linkedin:top-applicant"]
+    assert source_intel[0]["top_candidate_evidence"] is True
+    assert source_intel[0]["easy_apply"] is True
+    assert source_intel[0]["competition"] == 0.1
+    assert source_intel[0]["warm_path"] == 0.9
+
+
+def test_linkedin_premium_signals_are_reserved_in_source_intel_report(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("MONITOR_SOURCE_INTEL_LIMIT", "3")
+    candidates = [
+        {
+            "candidate_id": f"linkedin:generic:{i}",
+            "lane": "A",
+            "organization": f"Generic LinkedIn Employer {i}",
+            "title": "Principal AI Architect",
+            "workplace_type": "WNY_HYBRID",
+            "location_display": "Buffalo, NY (hybrid)",
+            "fit_score": 0.95,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": f"receipt:linkedin:generic:{i}",
+        }
+        for i in range(6)
+    ]
+    candidates.extend(
+        [
+            {
+                "candidate_id": "linkedin:top",
+                "lane": "A",
+                "organization": "Premium Top Employer",
+                "title": "Applied AI Engineer",
+                "workplace_type": "AMBIGUOUS",
+                "location_display": "United States",
+                "fit_score": 0.90,
+                "relocation_required": False,
+                "clearance_required": False,
+                "source_provider": "ops_linkedin_authorized_read_only",
+                "source_receipt_id": "receipt:linkedin:top",
+                "top_candidate_evidence": True,
+            },
+            {
+                "candidate_id": "linkedin:low-competition",
+                "lane": "A",
+                "organization": "Premium Low Competition Employer",
+                "title": "Distinguished AI Engineer",
+                "workplace_type": "AMBIGUOUS",
+                "location_display": "United States",
+                "fit_score": 0.70,
+                "relocation_required": False,
+                "clearance_required": False,
+                "source_provider": "ops_linkedin_authorized_read_only",
+                "source_receipt_id": "receipt:linkedin:low",
+                "competition": 0.1,
+                "warm_path": 0.9,
+                "warm_path_via": "linkedin_premium_under_10",
+            },
+        ]
+    )
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
+    source_ids = [row["candidate_id"] for row in source_intel]
+    assert source_ids[:2] == ["linkedin:top", "linkedin:low-competition"]
+    assert len(source_intel) == 3
+
+
 def test_source_intel_shortlist_preserves_provider_diversity(tmp_path: Path) -> None:
     candidates = [
         {

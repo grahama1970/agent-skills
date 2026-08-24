@@ -25,6 +25,7 @@ from monitor_opportunities.discovery import (
     _employment_candidates,
     _greenhouse_candidates,
     _linkedin_evidence_candidates,
+    _merge_linkedin_top_candidate,
     _meetup_evidence_candidates,
     _sam_receipt,
     _source_locator_receipt,
@@ -415,6 +416,7 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert receipt["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
     assert receipt["result_status"] == "MATCHES"
     assert len(rows) == 2
+    assert "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753" in receipt["evidence_refs"]
     assert rows[0]["source_provider"] == "ops_linkedin_authorized_read_only"
     assert rows[0]["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
     assert rows[0]["top_candidate_evidence"] is True
@@ -422,6 +424,62 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert rows[0]["primary_evidence_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
     assert rows[0]["apply_url"] is None
     assert rows[1]["location_display"] == "New York, NY (On-site)"
+
+
+def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_path: Path) -> None:
+    base = tmp_path / "advanced.json"
+    other = tmp_path / "premium.json"
+    base.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.linkedin_evidence.v1",
+                "opportunities": [
+                    {
+                        "title": "Applied AI Engineer",
+                        "organization": "Example AI",
+                        "primary_evidence_url": "https://www.linkedin.com/jobs/view/123/",
+                        "top_candidate": False,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    other.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.linkedin_evidence.v1",
+                "top_candidate": True,
+                "opportunities": [
+                    {
+                        "title": "Applied AI Engineer",
+                        "organization": "Example AI",
+                        "primary_evidence_url": "https://www.linkedin.com/jobs/view/123/",
+                        "top_candidate": True,
+                        "easy_apply": True,
+                        "under_10_applicants": True,
+                        "competition": 0.1,
+                        "warm_path": 0.9,
+                        "warm_path_via": "LinkedIn: connection works here",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    merged = _merge_linkedin_top_candidate(base, other)
+
+    payload = json.loads(base.read_text(encoding="utf-8"))
+    assert merged == 1
+    assert len(payload["opportunities"]) == 1
+    row = payload["opportunities"][0]
+    assert row["top_candidate"] is True
+    assert row["easy_apply"] is True
+    assert row["under_10_applicants"] is True
+    assert row["competition"] == 0.1
+    assert row["warm_path"] == 0.9
+    assert row["warm_path_via"] == "LinkedIn: connection works here"
 
 
 def test_meetup_evidence_emits_only_attend_or_watch_source_intel() -> None:
