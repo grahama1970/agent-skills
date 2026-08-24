@@ -4383,6 +4383,30 @@ h1 .proof-origin::after {
   content: none;
 }
 
+.cv-facts-context {
+  border-block: 1px solid var(--line-2);
+  margin: 0.9rem 0 1rem;
+  padding: 0.75rem 0;
+}
+
+.cv-facts-context span {
+  color: var(--faint);
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.cv-facts-context p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
 .cv-facts-grid {
   display: grid;
   gap: 0.8rem 1.3rem;

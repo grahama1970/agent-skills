@@ -93,6 +93,10 @@ const ROLE_TECH_STACKS = [
     match: 'Data Scientist | grahamaco',
     skills: ['Python', 'Data Science', 'Production ML', 'Knowledge Graphs'],
   },
+  {
+    match: 'Earlier: Interactive Executive Producer & Composer',
+    skills: ['Interactive Production', 'Campaigns', 'Large Teams', 'Audio'],
+  },
 ];
 
 const PUBLIC_WORK_META: Record<string, { title?: string; href?: string; facts: string; tags: string[] }> = {
@@ -293,6 +297,11 @@ function EmployerQuickFacts() {
         <li>ITAR / EAR Compliant</li>
         <li>Clearable</li>
       </ul>
+
+      <div className="cv-facts-context">
+        <span>Earlier Commercial Contexts</span>
+        <p>Sony · Adidas · X-Games · Disney · Microsoft · Toyota. Recent client and program detail is intentionally limited by export-control boundaries.</p>
+      </div>
 
       <dl className="cv-facts-grid">
         <div>
