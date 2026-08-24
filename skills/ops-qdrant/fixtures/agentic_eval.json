@@ -1,0 +1,41 @@
+{
+  "skill": "ops-qdrant",
+  "version": "0.1.0",
+  "eval_not_required_rationale": "ops-qdrant is a Tier-1/2 read-only health detector (no durable agent behavior, no writes, no orchestration). Its acceptance is enforced by sanity.sh behavioral + safety gates (positive control against live Qdrant, negative control fail-closed, and a no-writes source assertion). This fixture provides the standard eval posture; strengthen it if ops-qdrant grows agent-facing behavior.",
+  "proof_scope": "deterministic CLI health detection only",
+  "claims": {
+    "proves": [
+      "check --json emits schema ops_qdrant.health.v1 with qdrant_up, collections, dense_probe, missing_expected, status",
+      "unreachable Qdrant fails closed to status=down and exit code 2",
+      "the source performs no writes: no PUT/DELETE/PATCH, the only POST is the read-only /recall dense probe"
+    ],
+    "does_not_prove": [
+      "that Qdrant/Arango data is correct or complete",
+      "that semantic sync will be repaired (remediation lives in the memory repo, triggered by ops-memory)"
+    ]
+  },
+  "cases": [
+    {
+      "id": "ops-qdrant-health-schema",
+      "case_type": "positive-control",
+      "command": "./run.sh check --json",
+      "assert": ".schema == \"ops_qdrant.health.v1\" and has(\"qdrant_up\") and has(\"dense_probe\")",
+      "readiness_contribution": "detects vector-store health"
+    },
+    {
+      "id": "ops-qdrant-unreachable-fail-closed",
+      "case_type": "negative-control",
+      "command": "QDRANT_URL=http://127.0.0.1:1 ./run.sh check --json",
+      "assert_exit": 2,
+      "assert": ".status == \"down\" and .qdrant_up == false",
+      "readiness_contribution": "safe_failure_only"
+    },
+    {
+      "id": "ops-qdrant-no-writes",
+      "case_type": "adversarial-safety",
+      "command": "grep -nE '\\.(put|delete|patch)\\(' scripts/ops_qdrant.py",
+      "assert_exit": 1,
+      "readiness_contribution": "read-only boundary held"
+    }
+  ]
+}
