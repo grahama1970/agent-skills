@@ -1702,6 +1702,9 @@ h1 .it::after {
 .closer .b > .btn {
   align-self: flex-end;
 }
+.closer .b > .btn + .btn {
+  margin-top: 0.65rem;
+}
 .shelved {
   font-family: var(--serif);
   font-weight: 700;
@@ -1729,6 +1732,35 @@ h1 .it::after {
   color: var(--faint);
   font-size: 0.9rem;
   line-height: 1.55;
+}
+.calendly-panel {
+  border-top: 1px solid var(--line);
+  margin-top: clamp(2.1rem, 4vw, 3.4rem);
+  padding-top: clamp(1.2rem, 3vw, 1.8rem);
+}
+.calendly-panel-head {
+  align-items: baseline;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+.calendly-panel-head a,
+.calendly-status a {
+  color: var(--brass);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.calendly-inline-frame {
+  background: #f8f5ef;
+  min-height: 720px;
+  overflow: hidden;
+}
+.calendly-status {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.85rem 0 0;
 }
 
 /* --- footer ----------------------------------------------- */
@@ -2022,6 +2054,8 @@ footer a:hover {
   .receipts-copy, .tickets { grid-column: 1 / span 12; }
   .about-copy, .track { grid-column: 1 / span 12; }
   .closer .a, .closer .b { grid-column: 1 / span 12; }
+  .closer .b > .btn { align-self: flex-start; }
+  .calendly-panel-head { align-items: flex-start; flex-direction: column; }
   .foot-a, .foot-b, .foot-c { grid-column: 1 / span 12; }
   .foot-b, .foot-c { margin-top: 1.6rem; }
 }

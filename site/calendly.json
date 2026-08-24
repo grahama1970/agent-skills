@@ -1,0 +1,23 @@
+{
+  "generator": "site/scripts/gen_calendly.py",
+  "source": "calendly_api_v2",
+  "generatedFromApi": true,
+  "asOf": "2026-08-24T12:27:19Z",
+  "user": {
+    "name": "Graham Anderson",
+    "slug": "graham-grahama",
+    "timezone": "America/New_York",
+    "schedulingUrl": "https://calendly.com/graham-grahama"
+  },
+  "primarySchedulingUrl": "https://calendly.com/graham-grahama/30min",
+  "eventTypes": [
+    {
+      "name": "30 Minute Meeting",
+      "slug": "30min",
+      "active": true,
+      "duration": 30,
+      "kind": "solo",
+      "schedulingUrl": "https://calendly.com/graham-grahama/30min"
+    }
+  ]
+}

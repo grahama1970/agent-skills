@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
+import { CalendlyPopupLink } from '@/components/calendly-scheduler';
 import { SiteNav } from '@/components/site-nav';
+import calendly from '@/calendly.json';
 import resume from '@/resume.json';
 
 /**
@@ -153,6 +155,7 @@ export default function ResumePage() {
     jsonLd: unknown;
     timeline: { start: number; end: string; label: string; org: string }[];
   };
+  const calendlyUrl = calendly.primarySchedulingUrl || calendly.user.schedulingUrl;
 
   return (
     <>
@@ -230,6 +233,13 @@ export default function ResumePage() {
             </svg>
             <span>Markdown</span>
           </a>
+          <CalendlyPopupLink
+            className="cv-btn"
+            url={calendlyUrl}
+            qid="resume:link:calendly"
+          >
+            Book time
+          </CalendlyPopupLink>
           <span className="cv-actions-note">Full version - PDF/DOCX are 2-page cuts</span>
         </div>
 

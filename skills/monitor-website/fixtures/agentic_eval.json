@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "monitor-website",
   "trials": 2,
-  "proof_scope": "resume DOCX public-surface guard for grahama.co generated site output",
+  "proof_scope": "resume DOCX and Calendly public-surface guards for grahama.co generated site output",
   "claims": {
-    "proves": "the monitor-website audit entrypoint accepts the local generated site surfaces and the production static build emits a real /resume.docx download linked from /resume and llms.txt",
-    "does_not_prove": "live GitHub Pages deployment, formal design certification, broad disclosure-map health, or ATS semantic parse quality"
+    "proves": "the monitor-website audit entrypoint accepts the local generated site surfaces, the production static build emits a real /resume.docx download linked from /resume and llms.txt, and the static Calendly surfaces render from public metadata without exporting a PAT",
+    "does_not_prove": "live GitHub Pages deployment, formal design certification, broad disclosure-map health, ATS semantic parse quality, Calendly booking completion, or Calendly API availability in CI"
   },
   "cases": [
     {
@@ -39,6 +39,23 @@
         "exit_code": 0,
         "stdout_contains": [
           "DOCX_SURFACE_OK"
+        ]
+      }
+    },
+    {
+      "name": "calendly-static-build-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && CALENDLY_PAT= python3 site/scripts/gen_calendly.py >/tmp/monitor-website-calendly-gen.log && (cd site && npm run build >/tmp/monitor-website-calendly-build.log) && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nhome = Path('site/out/index.html').read_text(encoding='utf-8')\nresume = Path('site/out/resume.html').read_text(encoding='utf-8')\ncalendly = json.loads(Path('site/calendly.json').read_text(encoding='utf-8'))\nassert calendly['primarySchedulingUrl'] == 'https://calendly.com/graham-grahama/30min'\nassert 'data-qid=\"contact:action:calendly\"' in home\nassert 'data-qid=\"contact:calendly:inline\"' in home\nassert 'https://calendly.com/graham-grahama/30min' in home\nassert 'data-qid=\"resume:link:calendly\"' in resume\nassert 'Book time' in resume\nfor path in Path('site/out').rglob('*'):\n    if path.is_file() and path.suffix in {'.html', '.js', '.json', '.txt'}:\n        text = path.read_text(encoding='utf-8', errors='ignore')\n        assert 'CALENDLY_PAT' not in text\nprint('CALENDLY_SURFACE_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CALENDLY_SURFACE_OK"
         ]
       }
     }

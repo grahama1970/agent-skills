@@ -14,6 +14,8 @@ import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { TauCase } from '@/components/cases/tau-case';
+import { CalendlyInlineWidget, CalendlyPopupLink } from '@/components/calendly-scheduler';
+import calendly from '@/calendly.json';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
 import inventory from '@/inventory.json';
@@ -92,6 +94,7 @@ export default function Home() {
   const supportingProjects = SUPPORTING_SLUGS
     .map((slug) => projectBySlug.get(slug))
     .filter((p): p is ContentProject => Boolean(p));
+  const calendlyUrl = calendly.primarySchedulingUrl || calendly.user.schedulingUrl;
   return (
     <>
       <HomeJsonLd />
@@ -668,8 +671,14 @@ export default function Home() {
                 >
                   graham@grahama.co <span className="arrow">→</span>
                 </a>
+                <CalendlyPopupLink
+                  className="btn ghost"
+                  url={calendlyUrl}
+                  qid="contact:action:calendly"
+                />
               </div>
             </div>
+            <CalendlyInlineWidget url={calendlyUrl} />
           </div>
         </section>
 
