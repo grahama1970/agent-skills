@@ -52,8 +52,12 @@ COMMANDS:
     audit-states    Non-mutating audit of all configured button states
     audit-display-safety
                     Non-mutating audit for meeting/display button hazards
+    audit-date-widget
+                    Non-mutating audit for home date widget placement and renderer
     dynamic-stage-check
                     Non-mutating dynamic page request staging check
+    dynamic-deploy-check
+                    Live dynamic page request deploy check with config readback
     config          Configuration commands
     health-check    Verify services and button icons
     fix             Auto-fix button configuration (safe)
@@ -88,8 +92,12 @@ AUDIT COMMANDS:
     audit-states       Validate every configured page/button/state without executing commands
     audit-display-safety
                        Verify meeting/display buttons do not route to display topology or KDE scale mutation
+    audit-date-widget
+                       Verify the home date/day widget is directly under weather without hardware effects
     dynamic-stage-check
                        Compile a semantic voice/chat request into staged Stream Deck artifacts without hardware effects
+    dynamic-deploy-check
+                       Compile and deploy a semantic request to the dynamic page slot, then read back persisted config
 
 CONFIG COMMANDS:
     config             Show current configuration
@@ -298,6 +306,7 @@ audit_states() {
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 config_path = Path(os.environ["STREAMDECK_CONFIG"])
@@ -568,6 +577,193 @@ sys.exit(0 if summary["ok"] else 1)
 AUDIT_DISPLAY_SAFETY_EOF
 }
 
+audit_date_widget() {
+    local project_root="${STREAMDECK_PROJECT:-/home/graham/workspace/streamdeck}"
+    local python_bin="${STREAMDECK_PYTHON:-$project_root/.venv/bin/python}"
+
+    if [ ! -x "$python_bin" ]; then
+        python_bin="python3"
+    fi
+
+    STREAMDECK_PROJECT="$project_root" PYTHONPATH="$project_root/src${PYTHONPATH:+:$PYTHONPATH}" "$python_bin" << 'AUDIT_DATE_WIDGET_EOF'
+import json
+import os
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+
+import yaml
+
+project_root = Path(os.environ["STREAMDECK_PROJECT"])
+template_path = project_root / "config" / "page_templates" / "home_base.json"
+widget_path = project_root / "config" / "widget_buttons.yaml"
+manifest_path = project_root / "config" / "button_manifest.yaml"
+renderer_path = project_root / "src" / "streamdeck" / "widgets" / "date_render.py"
+
+forbidden_patterns = [
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in [
+        r"\bxrandr\b",
+        r"\bkscreen-doctor\b",
+        r"\bnvidia-settings\b",
+        r"\bkwriteconfig(?:5)?\b",
+        r"\bkdeglobals\b",
+        r"\bScreenScaleFactors\b",
+        r"\bforceFontDPI\b",
+        r"\bGlobal\s+Scale\b",
+        r"\bsystemctl\b",
+        r"\bkillall\b",
+        r"\bpkill\b",
+        r"streamdeck_ui\.sock",
+    ]
+]
+
+summary = {
+    "ok": False,
+    "project_root": str(project_root),
+    "weather_position": None,
+    "date_position": None,
+    "renderer": None,
+    "external_effects": False,
+    "render_size": None,
+    "render_mode": None,
+    "non_black_pixels": None,
+    "forbidden_hits": [],
+    "checks": {},
+}
+
+
+def add_hit(source, location, value, pattern):
+    summary["forbidden_hits"].append({
+        "source": source,
+        "location": location,
+        "value": value,
+        "pattern": pattern.pattern,
+    })
+
+
+def scan_file(path):
+    if not path.exists():
+        add_hit("file", str(path), "missing", re.compile("required_file_missing"))
+        return
+    content = path.read_text(errors="replace")
+    for pattern in forbidden_patterns:
+        if pattern.search(content):
+            add_hit("file", str(path), pattern.search(content).group(0), pattern)
+
+
+def read_json(path):
+    try:
+        return json.loads(path.read_text())
+    except Exception as exc:
+        add_hit("json", str(path), f"unreadable:{exc}", re.compile("json_unreadable"))
+        return None
+
+
+def read_yaml(path):
+    try:
+        return yaml.safe_load(path.read_text())
+    except Exception as exc:
+        add_hit("yaml", str(path), f"unreadable:{exc}", re.compile("yaml_unreadable"))
+        return None
+
+
+for path in (template_path, widget_path, manifest_path, renderer_path):
+    if not path.exists():
+        add_hit("file", str(path), "missing", re.compile("required_file_missing"))
+
+scan_file(renderer_path)
+
+template = read_json(template_path)
+widgets_yaml = read_yaml(widget_path)
+manifest = read_yaml(manifest_path)
+
+if template:
+    buttons = template.get("buttons", [])
+    weather_positions = [
+        idx for idx, button in enumerate(buttons)
+        if isinstance(button, dict) and button.get("widget") == "weather"
+    ]
+    date_positions = [
+        idx for idx, button in enumerate(buttons)
+        if isinstance(button, dict) and button.get("widget") == "date"
+    ]
+    summary["weather_position"] = weather_positions[0] if weather_positions else None
+    summary["date_position"] = date_positions[0] if date_positions else None
+    date_button = buttons[23] if len(buttons) > 23 and isinstance(buttons[23], dict) else {}
+    summary["checks"]["template_single_date_slot"] = date_positions == [23]
+    summary["checks"]["template_weather_slot"] = weather_positions == [15]
+    summary["checks"]["template_date_under_weather"] = (
+        summary["weather_position"] == 15 and summary["date_position"] == 23
+    )
+    summary["checks"]["template_date_button_inert"] = (
+        date_button.get("widget") == "date"
+        and not date_button.get("command")
+        and not date_button.get("text")
+        and not date_button.get("switch_page")
+        and not date_button.get("keys")
+        and not date_button.get("write")
+    )
+
+if widgets_yaml:
+    widgets = widgets_yaml.get("widgets", [])
+    date_widgets = [
+        widget for widget in widgets
+        if isinstance(widget, dict) and widget.get("name") == "date"
+    ]
+    widget = date_widgets[0] if date_widgets else {}
+    summary["renderer"] = widget.get("render_script")
+    summary["checks"]["widget_registry_single_date"] = len(date_widgets) == 1
+    summary["checks"]["widget_registry_date_target"] = (
+        widget.get("render_script") == "streamdeck.widgets.date_render"
+        and widget.get("page_template") == "home_base"
+        and widget.get("page") == 0
+        and widget.get("position") == 23
+        and widget.get("icon_path") == "icon/widget_date.png"
+        and widget.get("enabled") is True
+    )
+
+if manifest:
+    home_manifest = manifest.get("home_base", {})
+    summary["checks"]["manifest_date_slot"] = (
+        isinstance(home_manifest, dict)
+        and home_manifest.get(15, {}).get("widget") == "weather"
+        and home_manifest.get(23, {}).get("button_key") == "date_widget"
+        and home_manifest.get(23, {}).get("widget") == "date"
+    )
+
+try:
+    from streamdeck.widgets import date_render
+
+    image = date_render.render(datetime(2026, 8, 24))
+    non_black = sum(1 for pixel in image.getdata() if pixel != (0, 0, 0))
+    summary["render_size"] = list(image.size)
+    summary["render_mode"] = image.mode
+    summary["non_black_pixels"] = non_black
+    summary["checks"]["renderer_output"] = (
+        image.size == (72, 72)
+        and image.mode == "RGB"
+        and image.getpixel((0, 0)) == (0, 0, 0)
+        and non_black > 200
+    )
+    summary["checks"]["renderer_ordinal"] = date_render._ordinal(24) == "24th"
+except Exception as exc:
+    summary["checks"]["renderer_output"] = False
+    summary["renderer_error"] = repr(exc)
+
+summary["ok"] = (
+    bool(summary["checks"])
+    and all(summary["checks"].values())
+    and not summary["forbidden_hits"]
+    and summary["external_effects"] is False
+)
+
+print(json.dumps(summary, indent=2, sort_keys=True))
+sys.exit(0 if summary["ok"] else 1)
+AUDIT_DATE_WIDGET_EOF
+}
+
 dynamic_stage_check() {
     local project_root="${STREAMDECK_PROJECT:-/home/graham/workspace/streamdeck}"
     local cli="${STREAMDECK_CLI:-$project_root/.venv/bin/streamdeck-cli}"
@@ -601,6 +797,7 @@ dynamic_stage_check() {
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 receipt = json.loads(os.environ["RECEIPT_JSON"])
@@ -637,6 +834,128 @@ summary = {
 print(json.dumps(summary, indent=2, sort_keys=True))
 sys.exit(0 if summary["ok"] else 1)
 DYNAMIC_STAGE_CHECK_EOF
+}
+
+dynamic_deploy_check() {
+    local project_root="${STREAMDECK_PROJECT:-/home/graham/workspace/streamdeck}"
+    local cli="${STREAMDECK_CLI:-$project_root/.venv/bin/streamdeck-cli}"
+    local output_dir="${STREAMDECK_DYNAMIC_DEPLOY_OUTPUT:-/tmp/ops-streamdeck-dynamic-deploy-check}"
+
+    if [ ! -x "$cli" ]; then
+        error "streamdeck CLI not executable: $cli"
+        exit 1
+    fi
+
+    mkdir -p "$output_dir"
+
+    local request
+    request='{
+      "schema": "streamdeck.dynamic_page_request.v1",
+      "source": "ops_streamdeck_eval",
+      "request_id": "ops.dynamic.deploy.001",
+      "intent_text": "Create SPARTA evidence review controls",
+      "context_refs": ["sparta:evidence-review"],
+      "transcript_confidence": 0.99,
+      "requested_lifetime": "meeting"
+    }'
+
+    local receipt
+    if ! receipt="$("$cli" page deploy-request --json "$request" --output-dir "$output_dir")"; then
+        error "dynamic page deploy-request failed"
+        exit 1
+    fi
+
+RECEIPT_JSON="$receipt" python3 << 'DYNAMIC_DEPLOY_CHECK_EOF'
+import json
+import os
+import sys
+import time
+from pathlib import Path
+
+receipt = json.loads(os.environ["RECEIPT_JSON"])
+manifest_path = Path(receipt["manifest_path"])
+deploy_receipt_path = Path(receipt["deploy_receipt_path"])
+stage_receipt_path = Path(receipt["stage_receipt_path"])
+staged = json.loads(manifest_path.read_text())
+config_path = Path.home() / ".streamdeck_ui.json"
+page_idx = str(receipt["page_idx"])
+
+def read_page():
+    config = json.loads(config_path.read_text())
+    deck_id = next(iter(config["state"]))
+    page = config["state"][deck_id]["buttons"].get(page_idx, {})
+    return config, deck_id, page
+
+config, deck_id, page = read_page()
+
+def command_at(position: int) -> str:
+    button = page.get(str(position), {})
+    state = button.get("states", {}).get("0", {})
+    return state.get("command", "")
+
+def state_at(position: int) -> dict:
+    button = page.get(str(position), {})
+    return button.get("states", {}).get("0", {})
+
+def empty_button(position: int) -> bool:
+    state = state_at(position)
+    return all(not state.get(key) for key in ("text", "icon", "command", "keys", "write")) and state.get("switch_page", 0) == 0
+
+back_state = state_at(31)
+
+def compute_checks():
+    global back_state
+    back_state = state_at(31)
+    return {
+        "status": receipt.get("status") == "DEPLOYED",
+        "external_effects": receipt.get("external_effects") is True,
+        "recipe_id": receipt.get("recipe_id") == "sparta_review_controls",
+        "binding_count": receipt.get("binding_count") == 2,
+        "manifest_exists": manifest_path.exists(),
+        "stage_receipt_exists": stage_receipt_path.exists(),
+        "deploy_receipt_exists": deploy_receipt_path.exists(),
+        "manifest_schema": staged.get("schema") == "streamdeck.dynamic_page_manifest.v1",
+        "manifest_was_staged": staged.get("deployment_state") == "staged",
+        "manifest_no_external_effects": staged.get("external_effects") is False,
+        "config_page_exists": bool(page),
+        "config_button_0_dispatcher": command_at(0) == "streamdeck-cli action invoke --binding ops.dynamic.deploy.001.open_sparta_review",
+        "config_button_1_dispatcher": command_at(1) == "streamdeck-cli action invoke --binding ops.dynamic.deploy.001.show_stage_manifest_help",
+        "config_unused_buttons_empty": all(empty_button(position) for position in range(2, 31)),
+        "config_back_button_clean": (
+        bool(back_state.get("icon"))
+        and back_state.get("switch_page") == 1
+        and not back_state.get("text")
+        and not back_state.get("command")
+        and not back_state.get("keys")
+        and not back_state.get("write")
+        ),
+    }
+
+checks = compute_checks()
+deadline = time.time() + 3
+while not all(checks.values()) and time.time() < deadline:
+    time.sleep(0.25)
+    config, deck_id, page = read_page()
+    checks = compute_checks()
+
+summary = {
+    "ok": all(checks.values()),
+    "checks": checks,
+    "config_path": str(config_path),
+    "deck_id": deck_id,
+    "page_idx": receipt.get("page_idx"),
+    "receipt_path": str(deploy_receipt_path),
+    "stage_receipt_path": str(stage_receipt_path),
+    "manifest_path": str(manifest_path),
+    "recipe_id": receipt.get("recipe_id"),
+    "page_instance_id": receipt.get("page_instance_id"),
+    "binding_count": receipt.get("binding_count"),
+    "external_effects": receipt.get("external_effects"),
+}
+
+print(json.dumps(summary, indent=2, sort_keys=True))
+sys.exit(0 if summary["ok"] else 1)
+DYNAMIC_DEPLOY_CHECK_EOF
 }
 
 # Status queries
@@ -1041,9 +1360,19 @@ case "$COMMAND" in
         audit_display_safety
         ;;
 
+    # Non-mutating home date widget audit
+    audit-date-widget|date-widget-audit)
+        audit_date_widget
+        ;;
+
     # Non-mutating dynamic page request staging check
     dynamic-stage-check|dynamic-page-stage-check)
         dynamic_stage_check
+        ;;
+
+    # Live dynamic page request deploy check
+    dynamic-deploy-check|dynamic-page-deploy-check)
+        dynamic_deploy_check
         ;;
     
     # Config commands

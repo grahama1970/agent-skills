@@ -136,13 +136,16 @@ The streamdeck project has two components:
 | Command                | Description                                                                 |
 | ---------------------- | --------------------------------------------------------------------------- |
 | `audit-display-safety` | Non-mutating audit for meeting/display button routes and KDE scale hazards  |
+| `audit-date-widget`    | Non-mutating audit for home date/day widget placement and renderer binding  |
 | `dynamic-stage-check`  | Non-mutating compile/stage check for voice/chat dynamic page requests       |
+| `dynamic-deploy-check` | Live deploy check for semantic dynamic page requests with config readback   |
 
 ### Dynamic Pages
 
 | Command               | Description                                                                 |
 | --------------------- | --------------------------------------------------------------------------- |
 | `dynamic-stage-check` | Compiles a semantic `streamdeck.dynamic_page_request.v1` request through the live streamdeck CLI and verifies staged artifacts without hardware effects |
+| `dynamic-deploy-check` | Compiles and deploys a semantic `streamdeck.dynamic_page_request.v1` request to the dynamic page slot, then verifies persisted Stream Deck config readback |
 
 ### Configuration
 
@@ -261,6 +264,21 @@ unless `STREAMDECK_DYNAMIC_STAGE_OUTPUT` is set, and requires
 `external_effects=false`, `recipe_id=sparta_review_controls`, two dispatcher
 bindings, and an inspectable staged manifest. This does not prove physical
 button rendering, action-dispatch semantics, or deployment to hardware.
+
+Use this live proof command when the requested behavior is deployment to the
+Stream Deck dynamic page slot:
+
+```bash
+./run.sh dynamic-deploy-check
+```
+
+It calls `/home/graham/workspace/streamdeck/.venv/bin/streamdeck-cli page
+deploy-request`, writes stage/deploy receipts under
+`/tmp/ops-streamdeck-dynamic-deploy-check` unless
+`STREAMDECK_DYNAMIC_DEPLOY_OUTPUT` is set, and requires persisted
+`~/.streamdeck_ui.json` readback showing dispatcher bindings at buttons 0/1,
+empty unused buttons 2-30, and a clean back button at 31. It does not prove that
+pressing those buttons executes the target action dispatcher correctly.
 
 ## Configuration
 
@@ -418,13 +436,14 @@ rules, or any meeting/display button path:
 
 The eval exercises a live local status path, a fail-closed malformed button
 request, nested button-state readback, `audit-states`, `audit-display-safety`,
-and `dynamic-stage-check`. The display audit non-mutatingly checks live
-config/templates/scripts for hazardous display and KDE scale routes. The
-dynamic check non-mutatingly compiles a semantic voice/SPARTA request to staged
-artifacts. It does not prove physical button rendering, USB hardware
+`dynamic-stage-check`, `dynamic-deploy-check`, and `audit-date-widget`. The
+display audit non-mutatingly checks live config/templates/scripts for hazardous
+display and KDE scale routes. The dynamic stage check non-mutatingly compiles a
+semantic voice/SPARTA request to staged artifacts. The dynamic deploy check
+pushes the compiled page to the live dynamic page slot and verifies persisted
+config readback. It does not prove physical button rendering, USB hardware
 availability, light behavior, daemon API correctness, actual meeting button
-execution, action-dispatch semantics, deployment to hardware, or safe persistent
-config mutation.
+execution, action-dispatch semantics, or voice/STT/SPARTA transport integration.
 
 ### Adding New Features
 
