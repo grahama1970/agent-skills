@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-24T17:48:41.763207+00:00",
+  "verified_at": "2026-08-24T17:57:59.040579+00:00",
   "cwd": "/home/graham/workspace/experiments/agent-skills",
   "root": "/home/graham/workspace/experiments/agent-skills",
   "output_root": "/tmp/codex-ui-verification/agent-skills",
-  "url": "http://127.0.0.1:3031/resume.html",
-  "name": "resume-caption-specificity-local",
+  "url": "http://127.0.0.1:3032",
+  "name": "home-no-calendly-inline-local",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills/resume-caption-specificity-local/20260824T174835Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills/resume-caption-specificity-local/20260824T174835Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/home-no-calendly-inline-local/20260824T175752Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/home-no-calendly-inline-local/20260824T175752Z.read.json"
 }

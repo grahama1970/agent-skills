@@ -14,7 +14,7 @@ import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { TauCase } from '@/components/cases/tau-case';
-import { CalendlyInlineWidget, CalendlyPopupLink } from '@/components/calendly-scheduler';
+import { CalendlyPopupLink } from '@/components/calendly-scheduler';
 import calendly from '@/calendly.json';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
@@ -672,7 +672,6 @@ export default function Home() {
                 </CalendlyPopupLink>
               </div>
             </div>
-            <CalendlyInlineWidget url={calendlyUrl} />
           </div>
         </section>
 
