@@ -59,8 +59,10 @@ type Block =
 
 const TECH_TERMS = [
   'MITRE ATT&CK',
+  'Knowledge Graphs',
   'GraphRAG',
   'ArangoDB',
+  'Software Assurance',
   'NIST 800-53',
   'Lean 4',
   'D3FEND',
@@ -70,6 +72,25 @@ const TECH_TERMS = [
   'RAG',
   'NIST',
   'CWE',
+];
+
+const ROLE_TECH_STACKS = [
+  {
+    match: 'Founder & Principal AI Engineer / Architect',
+    skills: ['Rust', 'Python', 'ArangoDB', 'Lean 4', 'React/D3', 'NIST 800-53', 'ITAR'],
+  },
+  {
+    match: 'Lead Research Scientist, Agentic Formal Methods',
+    skills: ['Formal Methods', 'Lean 4', 'LLM', 'Aerospace Assurance', 'ITAR'],
+  },
+  {
+    match: 'Principal Data Scientist & ACERT Technical Lead',
+    skills: ['Knowledge Graphs', 'ArangoDB', 'LLM Certification', 'Software Assurance'],
+  },
+  {
+    match: 'Data Scientist | grahamaco',
+    skills: ['Python', 'Data Science', 'Production ML', 'Knowledge Graphs'],
+  },
 ];
 
 function DownloadIcon({ className }: { className?: string }) {
@@ -118,6 +139,26 @@ function CalendarIcon({ className }: { className?: string }) {
 
 function TechPill({ children }: { children: ReactNode }) {
   return <span className="cv-tech-pill">{children}</span>;
+}
+
+function tokenText(tokens: Token[]) {
+  return tokens.map((token) => token.v).join('');
+}
+
+function roleTechStack(title: Token[]) {
+  const text = tokenText(title);
+  return ROLE_TECH_STACKS.find((stack) => text.includes(stack.match))?.skills ?? [];
+}
+
+function RoleTechBadges({ skills }: { skills: string[] }) {
+  if (!skills.length) return null;
+  return (
+    <div className="cv-role-tech" aria-label="Role technology stack">
+      {skills.map((skill) => (
+        <TechPill key={skill}>{skill}</TechPill>
+      ))}
+    </div>
+  );
 }
 
 function TextWithTechPills({ text }: { text: string }) {
@@ -287,6 +328,7 @@ function Blocks({
             </ul>
           );
         }
+        const roleTech = roleTechStack(b.title);
         return (
           <article key={i} className="cv-role">
             {/* The career rail lives on the roles themselves: one node per
@@ -297,6 +339,7 @@ function Blocks({
             <h3><Inline tokens={b.title} /></h3>
             {b.period ? <p className="cv-period machine">{b.period}</p> : null}
             <Blocks blocks={b.blocks} />
+            <RoleTechBadges skills={roleTech} />
           </article>
         );
       })}
@@ -391,7 +434,7 @@ export default function ResumePage() {
               <span>Book time</span>
             </CalendlyPopupLink>
           </div>
-          <p className="cv-actions-note">Full version - PDF/DOCX are specialized 2-page cuts</p>
+          <p className="cv-actions-note">Full version — PDF/DOCX are specialized 2-page cuts</p>
         </div>
 
         <EmployerQuickFacts />

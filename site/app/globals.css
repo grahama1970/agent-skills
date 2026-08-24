@@ -4394,6 +4394,17 @@ h1 .proof-origin::after {
   vertical-align: 0.08em;
 }
 
+.cv-role-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.4rem;
+}
+
+.cv-role-tech .cv-tech-pill {
+  margin: 0;
+}
+
 /* The global `section` rule gives the homepage's full-bleed bands 64-140px of
    vertical padding. A resume is a continuous document, not a series of bands,
    so these sections opt out and use ordinary document rhythm instead. */
