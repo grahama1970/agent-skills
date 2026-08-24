@@ -4996,9 +4996,10 @@ th.cm-num {
 /* Sits with the download buttons: names which version you are reading. */
 .cv-actions-note {
   align-self: flex-start;
-  color: var(--faint);
+  color: #a3a3a3;
   font-size: 0.8rem;
   margin-left: 0.08rem;
+  margin-top: 0.1rem;
   text-align: left;
 }
 
