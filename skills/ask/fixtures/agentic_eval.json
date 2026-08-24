@@ -1710,6 +1710,30 @@
         ]
       },
       "notes": "Regression guard for live Ask/Tau runs: the skill contract must force agents to read Tau's JSON progress and node receipts instead of waiting on opaque outer process output."
+    },
+    {
+      "name": "codex-no-diff-final-message-reaches-reviewer",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/ask pytest -q skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_codex_workspace_lane_admits_no_diff_final_message_for_review"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression guard for project-watchdog Ask/Tau repairs where Codex produces a non-empty final message and proof references but no workspace diff; Ask must admit the response for reviewer inspection instead of failing before response.md exists."
     }
   ],
   "capability_claims": [
