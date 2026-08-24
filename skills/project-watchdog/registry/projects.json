@@ -378,7 +378,7 @@
         "Third routing vocabulary in the fleet: this repo labels issues 'ready-for-agent' + 'area:*', while routing expects 'agent-work' + 'executor:local' and /ticket emits 'type:*' + 'route:*'."
       ],
       "repair_creator": "gpt-5.5-high",
-      "repair_reviewer": "webclaude",
+      "repair_reviewer": "claude-fable-low",
       "service": {
         "kind": "docker+systemd",
         "restart_cmd": "uv pip install -e . && systemctl --user restart embry-memory",
