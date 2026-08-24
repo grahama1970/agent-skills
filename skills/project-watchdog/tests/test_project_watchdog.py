@@ -1104,25 +1104,17 @@ def test_tau_repair_reviewer_is_local_claude_opus_48_high() -> None:
     assert reviewer == "claude-opus-4-8-high"
 
 
-def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
+def test_memory_project_uses_local_claude_opus_48_high_reviewer() -> None:
     registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
     payload = json.loads(registry_path.read_text(encoding="utf-8"))
     projects = payload["projects"] if isinstance(payload, dict) else payload
     memory = next(project for project in projects if project["project_id"] == "memory")
 
     assert config.auto_land_main(memory) is True
-    assert memory["repair_reviewer"] == "claude-fable-low"
-
-
-def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
-    registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
-    payload = json.loads(registry_path.read_text(encoding="utf-8"))
-    projects = payload["projects"] if isinstance(payload, dict) else payload
-    memory = next(project for project in projects if project["project_id"] == "memory")
-
-    assert config.auto_land_main(memory) is True
-    assert memory["repair_reviewer"] == "claude-fable-low"
-
+    assert memory["repair_reviewer"] == "claude-opus-4-8-high"
+    creator, reviewer = config.repair_seats(memory)
+    assert creator == "gpt-5.5-high"
+    assert reviewer == "claude-opus-4-8-high"
 
 def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
     project = {

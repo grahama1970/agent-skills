@@ -378,7 +378,7 @@
         "Third routing vocabulary in the fleet: this repo labels issues 'ready-for-agent' + 'area:*', while routing expects 'agent-work' + 'executor:local' and /ticket emits 'type:*' + 'route:*'."
       ],
       "repair_creator": "gpt-5.5-high",
-      "repair_reviewer": "claude-fable-low",
+      "repair_reviewer": "claude-opus-4-8-high",
       "auto_land_main": true,
       "service": {
         "kind": "docker+systemd",

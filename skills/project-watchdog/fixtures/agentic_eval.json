@@ -236,12 +236,13 @@
         "pytest",
         "../tests/test_project_watchdog.py::test_registered_repair_seats_can_author_and_review_code",
         "../tests/test_project_watchdog.py::test_tau_repair_reviewer_is_local_claude_opus_48_high",
+        "../tests/test_project_watchdog.py::test_memory_project_uses_local_claude_opus_48_high_reviewer",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "3 passed"
         ]
       }
     },
@@ -932,7 +933,7 @@
         "--project",
         "..",
         "pytest",
-        "../tests/test_project_watchdog.py::test_memory_project_auto_lands_reviewer_passed_repairs",
+        "../tests/test_project_watchdog.py::test_memory_project_uses_local_claude_opus_48_high_reviewer",
         "-q"
       ],
       "expected": {
