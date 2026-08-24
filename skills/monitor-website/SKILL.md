@@ -113,6 +113,11 @@ ship disabled; enable only when the scheduler environment is ready).
 - **Proof:** audit JSON reports each drift item; after an applied change lands
   on main, the receipt is a green `site-deploy` run plus a curl read-back of
   the changed values on https://grahama.co.
+- **Interaction gate:** any UI-visible change to `grahama.co` or
+  `grahama.co/resume` must run `test-interactions` discovery and replay on the
+  changed surface before commit/push. The manifest must come from the live DOM,
+  and protocol-launching controls such as top-nav email must be tested as
+  in-page behavior or explicitly classified as external wait-only links.
 - **One-source cascade:** `update` is the project-agent/Graham collaboration
   path. It runs the existing resume exporters before the site generator, then
   delegates LinkedIn profile JSON and optional own-profile sync planning to

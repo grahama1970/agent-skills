@@ -207,10 +207,12 @@ section {
   position: sticky;
   top: 0;
   z-index: 500;
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  background: linear-gradient(180deg, rgba(12, 9, 8, 0.97), rgba(12, 9, 8, 0.9));
-  border-bottom: 1px solid var(--line-2);
+  background: rgba(10, 10, 10, 0.94);
+  backdrop-filter: blur(14px) saturate(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.08);
+  border-bottom: 1px solid rgba(64, 52, 44, 0.72);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  isolation: isolate;
 }
 .topbar .wrap {
   display: flex;
@@ -298,6 +300,16 @@ section {
 .nav .mailref {
   color: var(--brass);
 }
+.nav .nav-calendly-link {
+  color: var(--brass);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.nav .nav-calendly-link:hover {
+  color: var(--text);
+}
 .nav-icons {
   display: inline-flex;
   align-items: center;
@@ -314,12 +326,17 @@ section {
   background: rgba(226, 172, 98, 0.35);
 }
 .nav-icon {
+  appearance: none;
+  background: transparent;
+  border: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.35rem; /* widens the hit target to ~30px (Fitts's Law) */
   border-radius: 6px;
   color: var(--muted);
+  cursor: pointer;
+  font: inherit;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 .nav-icon:hover {
@@ -587,6 +604,20 @@ h1 .it::after {
   border-color: var(--brass);
   color: var(--brass);
   background: rgba(226, 172, 98, 0.05);
+}
+.cta-calendly-btn {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: #170f09;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.cta-calendly-btn:hover {
+  background: #efc07c;
+  border-color: #efc07c;
+  color: #170f09;
 }
 
 /* inventory rail */
@@ -1702,6 +1733,9 @@ h1 .it::after {
 .closer .b > .btn {
   align-self: flex-end;
 }
+.closer .b > .btn + .btn {
+  margin-top: 0.65rem;
+}
 .shelved {
   font-family: var(--serif);
   font-weight: 700;
@@ -1729,6 +1763,39 @@ h1 .it::after {
   color: var(--faint);
   font-size: 0.9rem;
   line-height: 1.55;
+}
+.calendly-panel {
+  border-top: 1px solid var(--line);
+  margin-top: clamp(2.1rem, 4vw, 3.4rem);
+  padding-top: clamp(1.2rem, 3vw, 1.8rem);
+}
+.calendly-panel-head {
+  align-items: baseline;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+.calendly-panel-head a,
+.calendly-status a {
+  color: var(--brass);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.calendly-inline-frame {
+  background: #f8f5ef;
+  min-height: 720px;
+  overflow: hidden;
+}
+.calendly-status {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.85rem 0 0;
+}
+.calendly-overlay {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(4px);
 }
 
 /* --- footer ----------------------------------------------- */
@@ -2022,6 +2089,8 @@ footer a:hover {
   .receipts-copy, .tickets { grid-column: 1 / span 12; }
   .about-copy, .track { grid-column: 1 / span 12; }
   .closer .a, .closer .b { grid-column: 1 / span 12; }
+  .closer .b > .btn { align-self: flex-start; }
+  .calendly-panel-head { align-items: flex-start; flex-direction: column; }
   .foot-a, .foot-b, .foot-c { grid-column: 1 / span 12; }
   .foot-b, .foot-c { margin-top: 1.6rem; }
 }
@@ -4111,6 +4180,48 @@ h1 .proof-origin::after {
   margin: 0 0 0.9rem;
 }
 
+.cv-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: -0.2rem 0 1rem;
+}
+
+.cv-copy-email {
+  align-items: center;
+  background: rgba(17, 13, 11, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  gap: 0.45rem;
+  line-height: 1.2;
+  min-height: 2rem;
+  padding: 0.38rem 0.55rem;
+  transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+}
+
+.cv-copy-email:hover {
+  background: rgba(33, 25, 23, 0.88);
+  border-color: rgba(226, 172, 98, 0.42);
+}
+
+.cv-copy-email svg {
+  color: var(--muted);
+  height: 0.95rem;
+  width: 0.95rem;
+}
+
+.cv-copy-email-status {
+  color: var(--brass);
+  display: inline-block;
+  min-width: 3.1rem;
+  text-align: left;
+}
+
 /* The site's hero claim, restated in the display face. */
 .cv-lede {
   color: var(--text);
@@ -4126,13 +4237,20 @@ h1 .proof-origin::after {
   background: var(--ink);
   border-bottom: 1px solid var(--line-2);
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.25rem;
   margin-bottom: 0.6rem;
   padding: 0.7rem 0;
   position: sticky;
   top: 58px;
   z-index: 400;
+}
+
+.cv-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 
 .cv .cv-btn {
@@ -4176,6 +4294,277 @@ h1 .proof-origin::after {
   background: #efc07c;
   border-color: #efc07c;
   color: var(--ink);
+}
+
+.cv .cv-btn-calendly {
+  background: rgba(226, 172, 98, 0.08);
+  border-color: rgba(226, 172, 98, 0.38);
+  color: var(--text);
+}
+
+.cv .cv-btn-calendly svg,
+.cv .cv-btn-calendly .arrow {
+  color: var(--brass);
+}
+
+.cv .cv-btn .arrow {
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.cv-facts {
+  background: rgba(24, 18, 17, 0.58);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 1.2rem;
+  padding: 1rem;
+}
+
+.cv-facts-head {
+  align-items: center;
+  border-bottom: 1px solid var(--line-2);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.7rem;
+}
+
+.cv-facts h2 {
+  color: var(--faint);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.cv-facts-status {
+  align-items: center;
+  color: #91d8a5;
+  display: inline-flex;
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  gap: 0.45rem;
+}
+
+.cv-facts-status span {
+  background: #55c878;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(85, 200, 120, 0.12);
+  height: 0.48rem;
+  width: 0.48rem;
+}
+
+.cv-facts-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1rem !important;
+}
+
+.cv .cv-facts-chips li {
+  background: rgba(33, 25, 23, 0.86);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+}
+
+.cv .cv-facts-chips li:first-child {
+  background: rgba(226, 172, 98, 0.12);
+  border-color: rgba(226, 172, 98, 0.32);
+  color: var(--brass);
+}
+
+.cv .cv-facts-chips li::before {
+  content: none;
+}
+
+.cv-facts-context {
+  border-block: 1px solid var(--line-2);
+  margin: 0.9rem 0 1rem;
+  padding: 0.75rem 0;
+}
+
+.cv-facts-context span {
+  color: var(--faint);
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.cv-facts-context p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.cv-facts-grid {
+  display: grid;
+  gap: 0.8rem 1.3rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.cv-facts-grid div {
+  min-width: 0;
+}
+
+.cv-facts-grid dt {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  line-height: 1.35;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+}
+
+.cv-facts-grid dd {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.cv-impact-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.cv .cv-impact-list li {
+  line-height: 1.62;
+  margin: 0;
+}
+
+.cv-tech-pill {
+  align-items: center;
+  background: rgba(33, 25, 23, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  display: inline-flex;
+  font-family: var(--mono);
+  font-size: 0.76em;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0.12rem;
+  padding: 0.05rem 0.35rem;
+  vertical-align: 0.08em;
+}
+
+.cv-role-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.4rem;
+}
+
+.cv-role-tech .cv-tech-pill {
+  margin: 0;
+}
+
+.cv-public-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.cv-public-card {
+  background: rgba(17, 13, 11, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-width: 0;
+  padding: 0.95rem;
+  transition: border-color var(--dur-state) var(--ease-state);
+}
+
+.cv-public-card:hover {
+  border-color: rgba(226, 172, 98, 0.4);
+}
+
+.cv-public-card::before {
+  content: none;
+}
+
+.cv-public-card-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+
+.cv-public-card h3 {
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-weight: 650;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.cv-public-card h3 a {
+  align-items: baseline;
+  display: inline-flex;
+  gap: 0.28rem;
+}
+
+.cv-public-arrow {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.72em;
+  transform: translateY(-0.03em);
+  transition: color var(--dur-state) var(--ease-state),
+    transform var(--dur-state) var(--ease-state);
+}
+
+.cv-public-card h3 a:hover .cv-public-arrow {
+  color: var(--brass);
+  transform: translate(1px, -1px);
+}
+
+.cv-public-card p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.cv-public-facts {
+  color: var(--brass);
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  max-width: 13rem;
+  text-align: right;
+}
+
+.cv-public-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.8rem;
+}
+
+.cv-public-tags .cv-tech-pill {
+  margin: 0;
 }
 
 /* The global `section` rule gives the homepage's full-bleed bands 64-140px of
@@ -4332,6 +4721,31 @@ h1 .proof-origin::after {
     font-size: 0.82rem;
     padding: 0.4rem 0.7rem;
   }
+  .cv-actions {
+    position: static;
+  }
+  .cv-facts {
+    padding: 0.85rem;
+  }
+  .cv-facts-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .cv-facts-grid {
+    grid-template-columns: 1fr;
+  }
+  .cv-public-grid {
+    grid-template-columns: 1fr;
+  }
+  .cv-public-card-head {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .cv-public-facts {
+    max-width: none;
+    text-align: left;
+  }
   /* Tighter rhythm keeps a section heading visually attached to its first
      entry instead of floating in whitespace on a small screen. */
   .cv-intro,
@@ -4348,7 +4762,7 @@ h1 .proof-origin::after {
 /* Keep all format names visible on small phones; DOCX and Markdown otherwise
    collapse to similar file icons. */
 @media (max-width: 400px) {
-  .cv-actions {
+  .cv-actions-row {
     gap: 0.45rem;
   }
   .cv .cv-btn {
@@ -4610,15 +5024,17 @@ th.cm-num {
 }
 
 /* Sits with the download buttons: names which version you are reading. */
-.cv-actions-note {
-  align-self: center;
-  color: var(--faint);
+.cv .cv-actions-note {
+  align-self: flex-start;
+  color: #737373;
   font-size: 0.8rem;
-  margin-left: 0.35rem;
+  margin-left: 0.08rem;
+  margin-top: 0.1rem;
+  text-align: left;
 }
 
 @media (max-width: 640px) {
-  .cv-actions-note {
+  .cv .cv-actions-note {
     flex-basis: 100%;
     margin-left: 0;
   }

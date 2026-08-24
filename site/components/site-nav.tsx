@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CalendlyPopupLink } from '@/components/calendly-scheduler';
+import calendly from '@/calendly.json';
 
 const LINKS = [
   { id: 'work', label: 'Work' },
@@ -17,6 +19,9 @@ const LINKS = [
  */
 export function SiteNav({ hrefBase = '' }: { hrefBase?: string }) {
   const [active, setActive] = useState('');
+  const [emailCopied, setEmailCopied] = useState(false);
+  const calendlyUrl = calendly.primarySchedulingUrl || calendly.user.schedulingUrl;
+  const email = 'graham@grahama.co';
 
   useEffect(() => {
     const spy = new IntersectionObserver(
@@ -37,8 +42,24 @@ export function SiteNav({ hrefBase = '' }: { hrefBase?: string }) {
     return () => spy.disconnect();
   }, []);
 
+  async function copyEmail() {
+    try {
+      await navigator.clipboard.writeText(email);
+      setEmailCopied(true);
+      window.setTimeout(() => setEmailCopied(false), 1800);
+    } catch {
+      setEmailCopied(false);
+    }
+  }
+
   return (
-    <header className="topbar">
+    <header
+      className="topbar"
+      style={{
+        backdropFilter: 'blur(14px) saturate(1.08)',
+        WebkitBackdropFilter: 'blur(14px) saturate(1.08)',
+      }}
+    >
       <div className="wrap">
         <a
           className="wordmark"
@@ -74,20 +95,33 @@ export function SiteNav({ hrefBase = '' }: { hrefBase?: string }) {
               {l.label}
             </a>
           ))}
+          <CalendlyPopupLink
+            className="nav-calendly-link"
+            url={calendlyUrl}
+            qid="nav:link:calendly"
+            showArrow={false}
+            title="Book a 30-minute meeting"
+          >
+            [BOOK]
+          </CalendlyPopupLink>
           <span className="nav-icons">
-            <a
-              className="nav-icon"
-              href="mailto:graham@grahama.co"
+            <button
+              type="button"
+              className="nav-icon nav-email-copy"
+              onClick={copyEmail}
               data-qid="nav:link:email"
-              data-qs-action="NAV_EMAIL"
-              title="Email graham@grahama.co"
-              aria-label="Email graham@grahama.co"
+              data-qs-action="NAV_COPY_EMAIL"
+              title={`Copy ${email}`}
+              aria-label={`Copy ${email}`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect width="20" height="16" x="2" y="4" rx="2" />
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
-            </a>
+              <span className="sr-only" aria-live="polite">
+                {emailCopied ? `${email} copied` : `Copy ${email}`}
+              </span>
+            </button>
             <a
               className="nav-icon"
               href="https://github.com/grahama1970"
