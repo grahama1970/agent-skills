@@ -15,7 +15,7 @@ This is the two-page version. The longer one — full project detail and the liv
 ## ABOUT
 Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for regulated technical environments. Most of my recent work sits in export-controlled aerospace and software-assurance settings, so I keep public claims focused on architecture, code, evaluation, interfaces, and technical briefing.
 
-My path has been unusual: interactive production, data science, and now defense R&D. Along the way I have built systems across games, sports/media campaigns, research programs, and aerospace work without losing the habit of staying close to the work. I work best when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles.
+My path has been unusual: interactive production, data science, and now defense R&D. Earlier on, that included commercial and interactive work around familiar names like Sony, Adidas, X-Games, Disney, Microsoft, and Toyota; more recently it has meant aerospace, software assurance, and agent systems. I work best when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles.
 
 ## SELECTED IMPACT
 - DARPA ARCOS / ACERT — technical lead for knowledge-graph and LLM-assisted certification of mission-critical software, briefing prime-contractor teams and program collaborators while remaining hands-on with architecture and code.

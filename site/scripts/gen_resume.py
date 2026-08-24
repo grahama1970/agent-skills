@@ -505,7 +505,7 @@ def main() -> int:
         "  for generated skill and capability evidence.",
         "- Use GitHub links for source-level inspection. Some links point to",
         "  skill README files inside agent-skills rather than separate repos.",
-        "- Client work is export-controlled (ITAR); client names are withheld by",
+        "- Current/export-controlled client and program details are withheld by",
         "  necessity, not omission.",
         "- Every count on this site is generated from the repository at the deploy",
         f"  commit ({doc['sourceCommit']}), not hand-maintained.",

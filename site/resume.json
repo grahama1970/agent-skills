@@ -123,7 +123,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "My path has been unusual: interactive production, data science, and now defense R&D. Along the way I have built systems across games, sports/media campaigns, research programs, and aerospace work without losing the habit of staying close to the work. I work best when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles."
+       "v": "My path has been unusual: interactive production, data science, and now defense R&D. Earlier on, that included commercial and interactive work around familiar names like Sony, Adidas, X-Games, Disney, Microsoft, and Toyota; more recently it has meant aerospace, software assurance, and agent systems. I work best when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles."
       }
      ]
     }
@@ -545,10 +545,10 @@
    ]
   }
  ],
- "sourceCommit": "d912a17f2f",
+ "sourceCommit": "0384f65764",
  "asOf": "2026-08-24",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "7adc52ae82a2a73cae215ac031e7d6654a307ef37a29c3244e93958dca6c4001",
+ "sourceSha256": "fa55c281a4242e9a61d4d4177383eb39dd1f6b3242ee150db8f6912f96dd334f",
  "downloads": {
   "pdf": "/resume.pdf",
   "docx": "/resume.docx",
@@ -718,8 +718,8 @@
    }
   ]
  },
- "pdfSha256": "78505ef9749d7c9ae160ae72a2dce1cc63b7b43eb468ce350ca15f0eb858a9e4",
- "pdfBytes": 159474,
- "docxSha256": "e3cb994259a266039c1ef72d477955234b92a3d8c4d6fae14a3865cdf77e2fe2",
- "docxBytes": 40634
+ "pdfSha256": "091ca4cc0d7a01a818e73aaf558c7ae18ac5a6fdde501321f69b77b739c4639a",
+ "pdfBytes": 159476,
+ "docxSha256": "70daffd08a5ff1691d16642526a08602e8dcaeba1d8bda4414ec3c5acca3fd22",
+ "docxBytes": 40652
 }
