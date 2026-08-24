@@ -167,6 +167,44 @@ uv run tau proof-index build
 
 ## Tau Runtime Lanes
 
+## Mandatory Live DAG Monitoring
+
+When a project-agent turn starts, owns, or waits on any Tau-backed DAG run, the
+agent must monitor Tau's JSON artifacts continuously until the run reaches a
+terminal state or the agent hands off with a concrete receipt path. Do not wait
+on only the outer shell process, cron log, or provider subprocess.
+
+Required read loop:
+
+1. Identify the active Tau run directory from the command arguments, ask
+   receipt, watchdog receipt, or process list.
+2. Read `<run_dir>/dag-progress.json` first and report `status`,
+   `node_progress`, `active_subagents`, `completed_subagents`, `last_event`,
+   `event_count`, `mocked`, and `live`.
+3. While `status` is `RUNNING`, poll `dag-progress.json` and the active
+   `node-artifacts/<node_id>/` directory at short intervals. For long waits,
+   report the latest JSON state instead of saying only that the command is
+   still running.
+4. When a node completes or fails, read its `node-receipt.json`,
+   `normalized-handler-receipt.json`, `handler-response-receipt.json`, terminal
+   contribution receipt, and runtime event/capture artifacts when present.
+5. When the DAG finishes, read `dag-receipt.json`, join decisions, terminal
+   contributions, and node receipts before making any claim about PASS, FAIL,
+   NEEDS_ATTENTION, reviewer verdict, or closure readiness.
+
+Plain status must name the current node and evidence path. Example:
+
+```text
+Tau status: RUNNING. Active node: handler-gpt-5-5-high attempt 1.
+Last event: node_started at 2026-08-24T21:37:34Z. Reviewer node is PENDING.
+Evidence: <run_dir>/dag-progress.json; node artifact dir contains prompt.md
+only, so no handler response receipt exists yet.
+```
+
+This is mandatory because Tau uses JSON streaming/progress artifacts as its
+operator interface. Treating Tau as an opaque long-running shell command is a
+skill-use failure.
+
 ### Local DAG Lane
 
 Use local `tau.dag_contract.v1` DAGs for deterministic creator/reviewer loops,

@@ -9,6 +9,18 @@
   },
   "cases": [
     {
+      "name": "tau-skill-requires-json-progress-monitoring",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "grep -q 'Mandatory Live DAG Monitoring' ../SKILL.md && grep -q '<run_dir>/dag-progress.json' ../SKILL.md && grep -q 'node_progress' ../SKILL.md && grep -q 'Treating Tau as an opaque long-running shell command is a' ../SKILL.md"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
       "name": "sanity",
       "type": "positive",
       "command": [
