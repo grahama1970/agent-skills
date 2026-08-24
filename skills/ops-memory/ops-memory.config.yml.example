@@ -1,0 +1,19 @@
+# ops-memory non-secret configuration (copy to ops-memory.config.yml).
+# Secrets (ARANGO_PASS) live ONLY in the repo-root .env, never here.
+
+# Where ArangoDB dumps are written / listed (must be on the 12TB drive).
+arango_backup_dir: /mnt/storage12tb/backups/arangodb
+
+# A collection is flagged STALE when its latest indexed timestamp is older
+# than this many days. Collections without a timestamp index report "unknown".
+stale_days: 30
+
+# Docs sampled per collection for approximate Qdrant-sync coverage (cheap,
+# LIMIT-bounded; higher = more accurate, slower over 300+ collections).
+coverage_sample: 200
+
+# Child skill run.sh overrides (defaults resolve under SKILLS_ROOT).
+# ops_arango_run: /abs/path/to/skills/ops-arango/run.sh
+# ops_qdrant_run: /abs/path/to/skills/ops-qdrant/run.sh
+# memory_run:     /abs/path/to/skills/memory/run.sh
+# phart_run:      /abs/path/to/skills/phart-dag-chart/run.sh

@@ -93,8 +93,19 @@ See:
 EOF
         exit 2
         ;;
-    check|health-check|embeddings|duplicates|orphans|integrity|stats|full|url-coverage)
-        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/maintain.py" "$CMD" "$@"
+    check|health-check|embeddings|duplicates|orphans|integrity|stats|coverage|full|url-coverage)
+        # --json is a global Typer callback option on maintain.py; it must
+        # precede the subcommand. Hoist it so `run.sh check --json` works.
+        JSON_FLAG=()
+        REST=()
+        for a in "$@"; do
+            case "$a" in
+                --json) JSON_FLAG=(--json) ;;
+                *) REST+=("$a") ;;
+            esac
+        done
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/maintain.py" \
+            ${JSON_FLAG[@]+"${JSON_FLAG[@]}"} "$CMD" ${REST[@]+"${REST[@]}"}
         ;;
     -h|--help|help)
         usage
