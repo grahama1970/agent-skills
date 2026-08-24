@@ -337,7 +337,7 @@
       "worktree": "/home/graham/workspace/experiments/memory",
       "status": "registered",
       "state_policy": {
-        "default_state": "paused",
+        "default_state": "active",
         "pause_allowed_by": [
           "human",
           "project-watchdog"
@@ -356,7 +356,7 @@
       },
       "runner_kind": "project-local",
       "runner": {
-        "command": "uv run pytest -q",
+        "command": "true",
         "cwd": "/home/graham/workspace/experiments/memory",
         "requires_start_handoff": false
       },
@@ -374,11 +374,11 @@
       "notes": [
         "Upstream owner of Tau and Chatterbox blockers. graph-memory-operator#61 (skill_chains/tool_chains recall contract) blocked tau#140 and tau#149; it closed 2026-07-27 and both Tau tickets closed the same day. #59 (recall/answer exceed the real-time voice budget) is still open and is the live Chatterbox-side blocker.",
         "Two independent clones of this repo existed on disk. The live checkout is experiments/memory. The stale clone (HEAD 2025-09-19) was moved to experiments/_deprecated/graph-memory-operator-stale-clone-20260727 on 2026-07-27 because its directory name shadowed the live checkout.",
-        "Paused until a bounded one-issue runner exists. The Makefile exposes recall, multihop, propose, and prune targets but none is a bounded issue tick, and 'uv run pytest -q' is a placeholder verification command, not a repair runner.",
-        "Third routing vocabulary in the fleet: this repo labels issues 'ready-for-agent' + 'area:*', while routing expects 'agent-work' + 'executor:local' and /ticket emits 'type:*' + 'route:*'."
+        "Enabled for bounded project-watchdog ticket_repair routing. Ordinary agent-work tickets are compiled through project-watchdog -> $ask tau-dag -> Tau creator-reviewer; runner.command is intentionally a no-op because ticket_repair does not execute the project-local placeholder.",
+        "graph-memory-operator tickets now use the shared ticket vocabulary: agent-work plus type:/route:/lane: labels from $ticket. Older ready-for-agent/area:* tickets remain legacy and are not the routing contract."
       ],
       "repair_creator": "gpt-5.5-high",
-      "repair_reviewer": "claude-fable-low",
+      "repair_reviewer": "claude-opus-4-8-high",
       "auto_land_main": true,
       "service": {
         "kind": "docker+systemd",
