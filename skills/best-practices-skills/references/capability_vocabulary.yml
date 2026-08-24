@@ -122,6 +122,18 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
+  calendly-readiness:
+    providers:
+      - ops-calendly
+  calendly-site-metadata:
+    providers:
+      - ops-calendly
+  calendly-secret-management:
+    providers:
+      - ops-calendly
+  scheduling-capacity-planning:
+    providers:
+      - ops-calendly
   ops-herdr-orchestration:
     providers:
       - ops-herdr

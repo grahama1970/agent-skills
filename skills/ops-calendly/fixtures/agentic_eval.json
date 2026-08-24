@@ -1,0 +1,68 @@
+{
+  "version": 2,
+  "skill": "ops-calendly",
+  "trials": 3,
+  "proof_scope": "Calendly public metadata generation, dry-run capacity hold planning, and secret-write fail-closed behavior",
+  "claims": {
+    "proves": "the skill can generate validated public calendly.json metadata from fixture API payloads, plan real current-week capacity holds without writing calendars, reject hold ratios above 45 percent, and keep GitHub secret writes dry-run by default",
+    "does_not_prove": "live Calendly API connectivity, GitHub secret mutation, or actual calendar busy-block writes"
+  },
+  "cases": [
+    {
+      "name": "fixture-site-metadata-public-and-validated",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "out=\"$(mktemp -d)/calendly.json\"; ../run.sh generate-site-metadata --fixture-me sample_user_me.json --fixture-event-types sample_event_types.json --out \"$out\" | jq -e '.status==\"WROTE\" and .generatedFromApi==false and .seam_validation.status==\"PASS\"' >/dev/null && jq -e '.primarySchedulingUrl==\"https://calendly.com/graham-anderson/intro-call\" and .seam_validation.status==\"PASS\" and (.eventTypes|length)==2' \"$out\" >/dev/null && echo PASS_PUBLIC_METADATA"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_PUBLIC_METADATA"]
+      }
+    },
+    {
+      "name": "capacity-holds-plan-dry-run-45-percent",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh capacity-holds plan --week current --today 2026-08-24 --target-ratio 0.45 | jq -e '.schema==\"ops_calendly.capacity_holds.plan.v1\" and .writesCalendar==false and .policy==\"real_capacity_holds_only\" and .disallowedUse==\"fake_scarcity\" and .targetRatio==0.45 and .plannedHoldCount==15' >/dev/null && echo PASS_CAPACITY_HOLDS_DRY_RUN"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_CAPACITY_HOLDS_DRY_RUN"]
+      }
+    },
+    {
+      "name": "capacity-holds-ratio-above-policy-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "set +e; ../run.sh capacity-holds plan --week current --today 2026-08-24 --target-ratio 0.46 >out.json 2>err.txt; rc=$?; set -e; test $rc -ne 0 && grep -q '0.45' err.txt && echo PASS_RATIO_REJECTED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_RATIO_REJECTED"]
+      }
+    },
+    {
+      "name": "github-secret-is-dry-run-without-execute",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh github-secret --repo grahama1970/agent-skills | jq -e '.status==\"DRY_RUN\" and .execute==false and .secret==\"CALENDLY_PAT\"' >/dev/null && echo PASS_SECRET_DRY_RUN"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_SECRET_DRY_RUN"]
+      }
+    }
+  ]
+}

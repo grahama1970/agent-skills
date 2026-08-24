@@ -1,0 +1,9 @@
+{
+  "resource": {
+    "uri": "https://api.calendly.com/users/example-user",
+    "name": "Graham Anderson",
+    "slug": "graham-anderson",
+    "timezone": "America/New_York",
+    "scheduling_url": "https://calendly.com/graham-anderson"
+  }
+}

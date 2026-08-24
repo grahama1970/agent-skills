@@ -1,8 +1,8 @@
 {
-  "generator": "site/scripts/gen_calendly.py",
+  "generator": "skills/ops-calendly/scripts/ops_calendly.py",
   "source": "calendly_api_v2",
   "generatedFromApi": true,
-  "asOf": "2026-08-24T12:27:19Z",
+  "asOf": "2026-08-24T12:59:54Z",
   "user": {
     "name": "Graham Anderson",
     "slug": "graham-grahama",
@@ -19,5 +19,9 @@
       "kind": "solo",
       "schedulingUrl": "https://calendly.com/graham-grahama/30min"
     }
-  ]
+  ],
+  "seam_validation": {
+    "kind": "ops_calendly.public_metadata.v1",
+    "status": "PASS"
+  }
 }

@@ -1,0 +1,20 @@
+{
+  "collection": [
+    {
+      "name": "Intro Call",
+      "slug": "intro-call",
+      "active": true,
+      "duration": 30,
+      "kind": "solo",
+      "scheduling_url": "https://calendly.com/graham-anderson/intro-call"
+    },
+    {
+      "name": "Working Session",
+      "slug": "working-session",
+      "active": false,
+      "duration": 60,
+      "kind": "solo",
+      "scheduling_url": "https://calendly.com/graham-anderson/working-session"
+    }
+  ]
+}
