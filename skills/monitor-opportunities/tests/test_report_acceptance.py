@@ -228,6 +228,24 @@ def test_report_acceptance_fails_shortlist_overflow(tmp_path: Path) -> None:
     assert any(row["check"] == "shortlist_bound" for row in payload["failures"])
 
 
+def test_report_acceptance_fails_zero_opportunities(tmp_path: Path) -> None:
+    out = _run_fixture(tmp_path)
+    replay = runner.invoke(app, ["replay", "--run", str(out)])
+    assert replay.exit_code == 0, replay.output
+    manifest_path = out / "report-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["opportunities"] = []
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+    result = runner.invoke(app, ["report-acceptance", "--run", str(out)])
+    payload = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert payload["counts"]["opportunities"] == 0
+    assert payload["checks"]["shortlist_nonempty"] is False
+    assert any(row["check"] == "shortlist_nonempty" for row in payload["failures"])
+
+
 def test_report_acceptance_fails_authorized_or_effectful_application_packet(
     tmp_path: Path,
 ) -> None:

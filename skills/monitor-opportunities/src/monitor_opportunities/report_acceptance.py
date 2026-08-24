@@ -284,6 +284,8 @@ def validate_report_acceptance(
         )
 
     opportunity_count = len(manifest_raw.get("opportunities") or [])
+    if opportunity_count == 0:
+        fail("shortlist_nonempty", "0 opportunities surfaced; promoted monitor report failed")
     if opportunity_count > 8:
         fail("shortlist_bound", f"{opportunity_count} opportunities exceeds max 8")
 
@@ -310,6 +312,7 @@ def validate_report_acceptance(
             "stage_ledger_schema": stage_ledger_schema_ok,
             "stage_ledger_pass": stage_ledger_pass,
             "run_external_effects_false": run_receipt.get("external_effects") is False,
+            "shortlist_nonempty": opportunity_count > 0,
             "shortlist_bound": opportunity_count <= 8,
             "application_packets_human_authorized_only": not authorized_packets,
             "degraded_source_limitations_present": not degraded_without_limitations,

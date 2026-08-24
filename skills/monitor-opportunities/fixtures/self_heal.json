@@ -476,6 +476,32 @@
       }
     },
     {
+      "name": "promoted-stage0-rejects-zero-opportunities",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "nightly.publication",
+        "report.acceptance",
+        "ranking.shortlist"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_report_acceptance.py::test_report_acceptance_fails_zero_opportunities -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "shortlist_nonempty"
+        ]
+      }
+    },
+    {
       "name": "readback-promoted-locator-is-stage-accounted",
       "type": "adversarial",
       "real_world": true,

@@ -282,8 +282,9 @@ ineligible opportunities are rejected before scoring. Ambiguous location, cleara
 citizenship/work-authorization, salary, and other human-attested facts remain `UNKNOWN`
 or `human_required`; a model cannot infer an attestation.
 
-An empty shortlist is a valid successful result. Never relax threshold, geography, or
-eligibility policy to manufacture volume.
+A promoted morning report with zero shortlisted opportunities is a failed monitor result.
+Never relax threshold, geography, or eligibility policy to manufacture volume; fix source
+coverage, evidence capture, or ranking so the report surfaces real opportunities.
 
 ## Claim-bound resume tailoring
 
