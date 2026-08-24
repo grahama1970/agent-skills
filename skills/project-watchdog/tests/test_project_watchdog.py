@@ -777,6 +777,75 @@ def test_relative_reviewer_named_proof_artifact_is_read_from_repair_worktree(tmp
     assert gate["required_proof_artifacts"] == ["local/issue147_agentic_eval_report.json"]
 
 
+def test_proof_artifact_repo_sha_must_match_repair_branch(tmp_path) -> None:
+    ask_run = tmp_path / "receipt" / "ask" / "run"
+    for handler, text in (
+        ("gpt-5.5-high", "Creator changed the repair branch.\n"),
+        (
+            "claude-fable-low",
+            "VERDICT: PASS\n"
+            "Read back `local/monitor_queue_agentic_eval_report.json`.\n",
+        ),
+    ):
+        node = ask_run / "node-artifacts" / handlers.repair_node_id(handler)
+        node.mkdir(parents=True, exist_ok=True)
+        (node / "response.md").write_text(text, encoding="utf-8")
+
+    repair = tmp_path / "repair"
+    (repair / "local").mkdir(parents=True)
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repair, check=True)
+    (repair / "base.txt").write_text("base\n", encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=repair, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "base"],
+        cwd=repair,
+        check=True,
+    )
+    main_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repair, text=True).strip()
+    subprocess.run(["git", "checkout", "-q", "-b", "watchdog/issue-142"], cwd=repair, check=True)
+    (repair / "fix.txt").write_text("fix\n", encoding="utf-8")
+    subprocess.run(["git", "add", "fix.txt"], cwd=repair, check=True)
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "fix"],
+        cwd=repair,
+        check=True,
+    )
+    subprocess.run(["git", "branch", "origin/main", "main"], cwd=repair, check=True)
+    repair_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repair, text=True).strip()
+    assert main_sha != repair_sha
+    (repair / "local" / "monitor_queue_agentic_eval_report.json").write_text(
+        json.dumps(
+            {
+                "readiness": "READY",
+                "outcome_counts": {"PASS": 1, "FAIL": 0},
+                "repo": {"sha": main_sha, "ref": "main"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    gate = handlers.evaluate_repair_proof(
+        ask_run_dir=tmp_path / "receipt" / "ask",
+        issue_body=(
+            "## Required proof\n\n"
+            "agentic-evals run fixtures/agentic_eval.json "
+            "--output local/monitor_queue_agentic_eval_report.json\n"
+        ),
+        creator="gpt-5.5-high",
+        reviewer="claude-fable-low",
+        repair_worktree=repair,
+        not_before=0,
+    )
+
+    assert gate["ok"] is False
+    assert gate["repair_head_sha"] == repair_sha
+    result = gate["artifact_results"][0]
+    assert result["repo_sha"] == main_sha
+    assert result["passed"] is False
+    assert "repo sha mismatch" in result["reason"]
+    assert "no required proof artifact" in " | ".join(gate["reasons"])
+
+
 def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
     """#1499 had a July receipt on disk; accepting it would close on a stale pass."""
     artifact = tmp_path / "proof.json"

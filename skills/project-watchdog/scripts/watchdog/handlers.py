@@ -823,7 +823,11 @@ def _result_values(payload: Any, depth: int = 0) -> list[str]:
 
 
 def inspect_proof_artifact(
-    raw_path: str, *, not_before: float, base_dir: Path | None = None
+    raw_path: str,
+    *,
+    not_before: float,
+    base_dir: Path | None = None,
+    expected_repo_sha: str | None = None,
 ) -> dict[str, Any]:
     """Whether one named proof artifact is present, fresh, and a completed pass.
 
@@ -861,6 +865,26 @@ def inspect_proof_artifact(
     except (OSError, json.JSONDecodeError) as exc:
         record["reason"] = f"unreadable json: {exc}"
         return record
+    repo_meta = payload.get("repo") if isinstance(payload, dict) else None
+    artifact_sha = None
+    artifact_ref = None
+    if isinstance(repo_meta, dict):
+        artifact_sha = str(repo_meta.get("sha") or "").strip() or None
+        artifact_ref = str(repo_meta.get("ref") or "").strip() or None
+    if artifact_sha:
+        record["repo_sha"] = artifact_sha
+        if artifact_ref:
+            record["repo_ref"] = artifact_ref
+        if expected_repo_sha and not (
+            artifact_sha == expected_repo_sha
+            or artifact_sha.startswith(expected_repo_sha)
+            or expected_repo_sha.startswith(artifact_sha)
+        ):
+            record["reason"] = (
+                f"repo sha mismatch: artifact {artifact_sha} "
+                f"!= repair head {expected_repo_sha}"
+            )
+            return record
     values = _result_values(payload)
     record["machine_readable"] = bool(values)
     failing = sorted({v for v in values if v in PROOF_FAIL_VALUES})
@@ -892,6 +916,15 @@ def repair_commits_ahead(worktree: Path) -> int | None:
         return int(str(counted.get("stdout", "")).strip())
     except ValueError:  # pragma: no cover - git printed something unexpected
         return None
+
+
+def repair_head_sha(worktree: Path) -> str | None:
+    """Current repair branch SHA, used to bind proof artifacts to the branch."""
+    result = run_cmd(["git", "rev-parse", "HEAD"], cwd=worktree, timeout_s=60)
+    if result.get("exit_code") != 0:
+        return None
+    sha = str(result.get("stdout", "")).strip()
+    return sha or None
 
 
 def evaluate_repair_proof(
@@ -927,6 +960,7 @@ def evaluate_repair_proof(
         "required_proof_artifacts": [],
         "artifact_results": [],
         "commits_ahead": None,
+        "repair_head_sha": None,
         "checked_at": iso_now(),
     }
     reasons: list[str] = []
@@ -960,9 +994,16 @@ def evaluate_repair_proof(
     if not artifacts:
         artifacts = reviewer_named_proof_artifacts(reviewer_response)
     gate["required_proof_artifacts"] = artifacts
+    expected_repo_sha = repair_head_sha(repair_worktree)
+    gate["repair_head_sha"] = expected_repo_sha
     if artifacts:
         results = [
-            inspect_proof_artifact(a, not_before=not_before, base_dir=repair_worktree)
+            inspect_proof_artifact(
+                a,
+                not_before=not_before,
+                base_dir=repair_worktree,
+                expected_repo_sha=expected_repo_sha,
+            )
             for a in artifacts
         ]
         gate["artifact_results"] = results

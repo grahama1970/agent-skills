@@ -361,6 +361,29 @@
       }
     },
     {
+      "name": "proof-artifact-repo-sha-must-match-repair-branch",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_proof_artifact_repo_sha_must_match_repair_branch",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression for graph-memory-operator#142: a required proof artifact that records repo.sha from the primary checkout must not count as proof for a repair branch commit."
+    },
+    {
       "name": "tick-does-not-revert-an-operator-state-change",
       "type": "adversarial",
       "command": [
