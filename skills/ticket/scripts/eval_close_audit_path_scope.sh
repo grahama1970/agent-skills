@@ -35,9 +35,29 @@ if [[ "${1:-}" == "issue" && "${2:-}" == "view" ]]; then
     exit 0
   fi
   if printf '%s\n' "$*" | grep -q -- '--json body'; then
-    printf 'type: maintenance\n'
-    printf 'target: skills/ticket\n'
-    printf 'route: backend_python_or_skill_runtime\n'
+    cat <<'BODY'
+## Type
+
+maintenance
+
+## Target
+
+skills/ticket + scripts/validation
+
+## Target paths
+
+- skills/ticket + scripts/validation
+
+## Ticket type details
+
+- **Scoped files:** skills/ticket/scripts/ticket_cli.py skills/ticket/SKILL.md
+
+## Orientation for a stateless agent
+
+Use `skills/memory/run.sh recall`, `skills/project-state/run.sh --json`,
+`skills/dogpile/run.sh`, `skills/brave-search/run.sh`, `skills/test/run.sh`,
+and `skills/treesitter/run.sh`.
+BODY
     exit 0
   fi
 fi
@@ -79,7 +99,7 @@ JSON
 
 grep -q '"dirty_secondary":0' "$err"
 grep -q '"dirty_secondary_ignored":1' "$err"
-grep -q '"scope_paths":\["skills/ticket"\]' "$err"
+grep -q '"scope_paths":\["skills/ticket/scripts/ticket_cli.py","skills/ticket/SKILL.md"\]' "$err"
 grep -q '"action":"close"' "$out"
 grep -q 'issue comment 1' "$calls"
 grep -q 'issue close 1' "$calls"

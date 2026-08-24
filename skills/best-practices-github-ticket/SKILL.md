@@ -195,6 +195,11 @@ skills/best-practices-github-ticket/scripts/audit-worktrees.sh --repo /path/to/r
 - A failing audit is a retention blocker until each path is either committed,
   removed with `git worktree remove` after confirming it is clean, or explicitly
   retained in the ticket with path, branch/HEAD, owner, and reason.
+- In Tau-backed ticket DAGs, this is the `releaser` node's responsibility. The
+  releaser must integrate the task-only commit into the target branch, push and
+  read back the target ref, close or release the ticket from the integrated
+  state, then remove the ticket-bound secondary worktree or record an explicit
+  retention reason. A reviewer verdict does not perform release.
 - Never use broad `git worktree prune` as a convenience cleanup while user work
   may exist. Prune only after the audit identifies prunable registrations and
   dirty secondary worktrees have been handled.

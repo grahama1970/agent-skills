@@ -462,6 +462,27 @@ Authoring rules for project subagents:
   command specs through adaptive expansion unless a separate validated
   expansion/branch-lock receipt allows it.
 
+### Releaser Node Contract
+
+For ticket-backed repair DAGs, `releaser` is the integration and disposal
+boundary. A reviewer decides whether evidence is acceptable; the releaser owns
+what happens after acceptance:
+
+1. Confirm the repair branch or worktree has no unrelated uncommitted changes.
+2. Integrate the task-only commit into the target branch, normally `main`.
+3. Push the integrated target branch and read back the remote ref.
+4. Run the ticket close/release command from the integrated state with the
+   accepted proof artifacts.
+5. Remove the ticket-bound secondary worktree after proving it is clean and the
+   task commit is reachable from the target branch, or write an explicit
+   retention reason naming the path, branch/HEAD, owner, and follow-up ticket.
+
+A Tau DAG must fail closed before a `releaser` terminal verdict when any of
+these receipts are missing: merge/integration receipt, remote-ref readback,
+ticket transition receipt, and worktree cleanup or retention receipt. A
+reviewer `PASS` is not a release verdict, and an open, dirty, or unaccounted
+ticket worktree is not releasable.
+
 ### Simple Example: One Local Creator/Reviewer Loop
 
 Use this shape when a project agent wants a coder/reviewer loop with one bounded

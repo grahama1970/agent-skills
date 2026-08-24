@@ -121,18 +121,78 @@ import re
 
 text = os.environ.get("TICKET_BODY", "")
 paths: list[str] = []
-for line in text.splitlines():
+
+FIELD_RE = re.compile(
+    r"(?i)^(?:[-*]\s*)?(?:\*\*)?"
+    r"(scoped files|scope files|allowed files|target files|target paths|target|scoped-files|source-scope)"
+    r"(?:\*\*)?\s*:\s*(.+)$"
+)
+TARGET_PATHS_HEADING_RE = re.compile(r"(?i)^##\s+Target paths\s*$")
+
+
+def clean_fragment(raw: str) -> str | None:
+    fragment = raw.strip().strip("`").strip().rstrip(".,;")
+    if not fragment or fragment.lower() in {"none", "n/a", "unknown"}:
+        return None
+    token = fragment.split()[0].strip("`").rstrip(".,;")
+    if not token or token.startswith(("/", "..")) or "/" not in token:
+        return None
+    if token != fragment and "." not in token.rsplit("/", 1)[-1]:
+        return None
+    if not re.match(r"^[A-Za-z0-9._/@:+-]+$", token):
+        return None
+    return token.rstrip("/")
+
+
+def add_inline(value: str) -> None:
+    normalized = value.replace("`", " ").replace(",", " ").replace(";", " ")
+    for token in normalized.split():
+        path = clean_fragment(token)
+        if path:
+            paths.append(path)
+
+
+def markdown_target_paths(lines: list[str]) -> None:
+    for index, line in enumerate(lines):
+        if not TARGET_PATHS_HEADING_RE.match(line.strip()):
+            continue
+        for section_line in lines[index + 1:]:
+            stripped = section_line.strip()
+            if stripped.startswith("## "):
+                break
+            if not stripped.startswith(("-", "*")):
+                continue
+            item = stripped[1:].strip()
+            for part in re.split(r"[,;]|\s+\+\s+", item):
+                path = clean_fragment(part)
+                if path:
+                    paths.append(path)
+        return
+
+
+lines = text.splitlines()
+scoped_paths: list[str] = []
+field_paths: list[str] = []
+for line in lines:
     stripped = line.strip()
-    match = re.match(r"(?i)^(?:[-*]\s*)?(?:target|scoped files|scoped-files|source-scope)\s*:\s*(.+)$", stripped)
+    match = FIELD_RE.match(stripped)
     if not match:
         continue
-    value = match.group(1).strip().strip("`")
-    for part in re.split(r"[,;]", value):
-        path = part.strip().strip("`").strip()
-        if not path or path.lower() in {"none", "n/a", "unknown"}:
-            continue
-        if re.match(r"^[A-Za-z0-9._/@:+-]+$", path):
-            paths.append(path.rstrip("/"))
+    before = len(paths)
+    add_inline(match.group(2))
+    parsed = paths[before:]
+    if match.group(1).lower() in {"scoped files", "scope files", "allowed files"}:
+        scoped_paths.extend(parsed)
+    else:
+        field_paths.extend(parsed)
+
+if scoped_paths:
+    paths = scoped_paths
+elif field_paths:
+    paths = field_paths
+else:
+    markdown_target_paths(lines)
+
 seen = set()
 for path in paths:
     if path not in seen:
