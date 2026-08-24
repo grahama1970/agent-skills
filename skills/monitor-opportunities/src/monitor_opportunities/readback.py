@@ -127,6 +127,7 @@ def resolve_primary_source(
     receipt: dict[str, Any] = {
         "receipt_id": stable_id("readback", locator.get("candidate_id", org)),
         "kind": "primary_source_readback",
+        "locator_candidate_id": locator.get("candidate_id"),
         "organization": org,
         "title": locator.get("title"),
         "workplace_type": locator.get("workplace_type"),
@@ -159,6 +160,7 @@ def resolve_primary_source(
     receipt["status"] = "PRIMARY_CONFIRMED"
     receipt["primary_url"] = match.get("primary_evidence_url") or match.get("posting_url")
     receipt["primary_provider"] = match.get("source_provider")
+    receipt["promoted_candidate_id"] = promoted.get("candidate_id")
     return promoted, receipt
 
 

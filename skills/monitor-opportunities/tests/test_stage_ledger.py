@@ -1,8 +1,11 @@
 """Stage conservation: no discovered record may vanish without a disposition."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from monitor_opportunities.ranking import dedupe_postings
-from monitor_opportunities.stage_ledger import build_ledger
+from monitor_opportunities.stage_ledger import build_ledger, build_ledger_for_run
 
 
 def _c(cid: str, lane: str = "A") -> dict[str, object]:
@@ -73,6 +76,47 @@ def test_lane_reporting_no_matches_need_not_emit() -> None:
     receipts = [{"lane": "C", "result_status": "NO_MATCHES"}]
     ok, _ = build_ledger([_c("a")], [_c("a")], [], {}, source_receipts=receipts)
     assert ok
+
+
+def test_readback_promoted_locator_is_accounted_from_ranking_receipt(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    (run / "discovery").mkdir(parents=True)
+    (run / "ranking").mkdir()
+    discovered = [
+        {"candidate_id": "primary:cognition", "lane": "A"},
+        {"candidate_id": "locator:cognition", "lane": "A"},
+    ]
+    (run / "discovery" / "candidates.jsonl").write_text(
+        "\n".join(json.dumps(row) for row in discovered) + "\n",
+        encoding="utf-8",
+    )
+    (run / "discovery" / "source-receipts.jsonl").write_text(
+        json.dumps({"lane": "A", "result_status": "MATCHES"}) + "\n",
+        encoding="utf-8",
+    )
+    (run / "ranking" / "shortlist.json").write_text(
+        json.dumps([{"candidate_id": "primary:cognition"}]) + "\n",
+        encoding="utf-8",
+    )
+    (run / "ranking" / "source-intel-shortlist.json").write_text("[]\n", encoding="utf-8")
+    (run / "ranking" / "rejections.json").write_text("[]\n", encoding="utf-8")
+    (run / "ranking" / "ranking-receipt.json").write_text(
+        json.dumps(
+            {
+                "duplicates_merged_into": {},
+                "readback_promoted_into": {"locator:cognition": "primary:cognition"},
+                "admitted": 1,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    ok, ledger = build_ledger_for_run(run)
+
+    assert ok, ledger["violations"]
+    assert ledger["counts"]["deduplicated"] == 1
+    assert ledger["counts"]["unaccounted"] == 0
 
 
 def test_dedupe_rewrites_all_aliases_to_final_canonical_survivor() -> None:

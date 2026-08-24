@@ -109,6 +109,60 @@ def test_source_intel_cannot_starve_reportable_opportunity_shortlist(tmp_path: P
     assert receipt["source_intel_shortlisted"] == 8
 
 
+def test_linkedin_readback_promotion_is_receipted_for_stage_accounting(tmp_path: Path) -> None:
+    candidates = [
+        {
+            "candidate_id": "primary:cognition",
+            "lane": "A",
+            "organization": "Cognition",
+            "title": "Applied AI Engineer",
+            "workplace_type": "AMBIGUOUS",
+            "location_display": "San Francisco, CA",
+            "fit_score": 0.92,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "ashby",
+            "source_receipt_id": "receipt:ashby",
+            "posting_url": "https://jobs.ashbyhq.com/cognition/applied-ai-engineer",
+            "apply_url": "https://jobs.ashbyhq.com/cognition/applied-ai-engineer/application",
+        },
+        {
+            "candidate_id": "locator:cognition",
+            "lane": "A",
+            "organization": "Cognition",
+            "title": "Applied AI Engineer",
+            "workplace_type": "WNY_ONSITE",
+            "location_display": "Buffalo, NY",
+            "fit_score": 0.92,
+            "relocation_required": False,
+            "clearance_required": False,
+            "source_provider": "human_supplied_linkedin",
+            "source_receipt_id": "receipt:linkedin",
+            "posting_url": "https://www.linkedin.com/jobs/view/applied-ai-engineer-at-cognition",
+        },
+    ]
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((out / "ranking-receipt.json").read_text(encoding="utf-8"))
+    readback = [
+        json.loads(line)
+        for line in (out / "readback-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    shortlist = json.loads((out / "shortlist.json").read_text(encoding="utf-8"))
+
+    assert receipt["readback_promoted_into"] == {"locator:cognition": "primary:cognition"}
+    assert readback[0]["locator_candidate_id"] == "locator:cognition"
+    assert readback[0]["promoted_candidate_id"] == "primary:cognition"
+    assert [row["candidate_id"] for row in shortlist] == ["primary:cognition"]
+    assert shortlist[0]["workplace_type"] == "WNY_ONSITE"
+
+
 def test_source_intel_shortlist_preserves_provider_diversity(tmp_path: Path) -> None:
     candidates = [
         {

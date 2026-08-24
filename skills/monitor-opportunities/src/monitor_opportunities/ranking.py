@@ -417,6 +417,13 @@ def rank(discovery_run: Path, limit: int, out_dir: Path,
     probe = _readback.compose_probes(_run_local_ats_probe(candidates), ats_probe)
     candidates, readback_receipts = _readback.promote_linkedin_locators(candidates, probe)
     write_jsonl(out_dir / "readback-receipts.jsonl", readback_receipts)
+    readback_promoted_into = {
+        str(row.get("locator_candidate_id")): str(row.get("promoted_candidate_id"))
+        for row in readback_receipts
+        if row.get("status") == "PRIMARY_CONFIRMED"
+        and row.get("locator_candidate_id")
+        and row.get("promoted_candidate_id")
+    }
     candidates, duplicates_dropped, merged_into = dedupe_postings(candidates)
     eligibility_receipts = []
     ranking_receipts = []
@@ -497,6 +504,7 @@ def rank(discovery_run: Path, limit: int, out_dir: Path,
         "inspected": len(candidates),
         "duplicates_dropped": duplicates_dropped,
         "duplicates_merged_into": merged_into,
+        "readback_promoted_into": readback_promoted_into,
         "admitted": len(admitted),
         "admitted_opportunities": len(admitted_opportunities),
         "admitted_source_intel": len(admitted_source_intel),

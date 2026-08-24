@@ -474,6 +474,33 @@
           "stage_ledger_pass"
         ]
       }
+    },
+    {
+      "name": "readback-promoted-locator-is-stage-accounted",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "discovery.linkedin_evidence_merge",
+        "ranking.readback",
+        "stage.conservation"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_ranking.py::test_linkedin_readback_promotion_is_receipted_for_stage_accounting tests/test_stage_ledger.py::test_readback_promoted_locator_is_accounted_from_ranking_receipt -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ],
+        "stderr_excludes": [
+          "no-silent-loss",
+          "dedupe-names-canonical"
+        ]
+      }
     }
   ]
 }

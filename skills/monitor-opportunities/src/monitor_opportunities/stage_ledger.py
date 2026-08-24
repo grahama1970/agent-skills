@@ -183,6 +183,10 @@ def build_ledger_for_run(run_dir: Path) -> tuple[bool, dict[str, Any]]:
         try:
             receipt = json.loads(receipt_p.read_text(encoding="utf-8"))
             merged = receipt.get("duplicates_merged_into", {}) or {}
+            merged = {
+                **merged,
+                **(receipt.get("readback_promoted_into", {}) or {}),
+            }
             admitted_count = int(receipt.get("admitted") or 0)
         except ValueError:
             merged = {}
