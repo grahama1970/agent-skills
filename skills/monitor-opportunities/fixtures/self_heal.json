@@ -450,6 +450,32 @@
       }
     },
     {
+      "name": "relationship-contact-event-table-visible",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "report.relationship_signals",
+        "nightly.contacts",
+        "nightly.meetup"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_report_visibility.py::test_static_report_renders_event_contacts_and_linkedin_candidates_in_table -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "Relationship signals</h2>"
+        ]
+      }
+    },
+    {
       "name": "promoted-stage0-requires-clean-stage-ledger",
       "type": "adversarial",
       "real_world": true,

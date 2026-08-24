@@ -124,6 +124,50 @@ def test_static_report_renders_relationship_signal_attachments() -> None:
     assert "Eric Mertens" in html
     assert "LINKEDIN_HUMAN_HANDOFF" in html
     assert "Relationship signals</h2>" in html
+    assert "relationship-signal-table" in html
+
+
+def test_static_report_renders_event_contacts_and_linkedin_candidates_in_table() -> None:
+    data = built_in_fixture()
+    signal = _relationship_signal(
+        signal_id="rel:meetup:ai-buffalo",
+        source_opportunity_id="meetup:https://www.meetup.com/buffalo-ai/",
+        signal_type="event_copresence",
+        subject="Jane Prospect",
+        organization="Buffalo AI Builders",
+        relationship_path=["Graham Anderson", "Buffalo AI Builders", "Jane Prospect"],
+        provenance='Signed up to "AI Automation for Manufacturers" via Buffalo AI Builders; listed as organizer',
+    )
+    signal.update(
+        {
+            "recommended_action": "human_decide_attend_watch_or_skip",
+            "event_title": "AI Automation for Manufacturers",
+            "event_url": "https://www.meetup.com/buffalo-ai/events/123/",
+            "profile_url": "https://www.meetup.com/buffalo-ai/members/456/",
+            "linkedin_candidates": [
+                {
+                    "name": "Jane Prospect",
+                    "headline": "Operations leader at WNY manufacturer",
+                    "profile": "https://www.linkedin.com/in/jane-prospect/",
+                    "source_url": "https://www.linkedin.com/search/results/people/?keywords=Jane%20Prospect",
+                }
+            ],
+            "linkedin_confirmation_required": True,
+            "human_decision_options": ["ATTEND", "WATCH", "SKIP"],
+        }
+    )
+    data["relationship_signals"] = [signal]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    html = render_html(validate_manifest(data))
+
+    assert "relationship-signal-table" in html
+    assert "AI Automation for Manufacturers" in html
+    assert "Jane Prospect" in html
+    assert "Operations leader at WNY manufacturer" in html
+    assert "LinkedIn identity confirmation required before outreach." in html
+    assert "human_decide_attend_watch_or_skip" in html
 
 
 def test_static_report_renders_source_intel_as_table() -> None:

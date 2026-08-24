@@ -107,15 +107,82 @@ def _relationship_summary(item: Any, signals_by_id: dict[str, Any]) -> str:
             rows.append(f"<li><code>{html.escape(signal_id)}</code>: missing from manifest</li>")
             continue
         rows.append(
-            "<li>"
-            f"<strong>{html.escape(signal.subject)}</strong> — {html.escape(signal.organization)} "
-            f"({_badge(signal.signal_type)})"
-            f"<div>{html.escape(signal.provenance)}</div>"
-            f"<div>Action: {html.escape(signal.recommended_action)}</div>"
-            f"<div>Channels: {html.escape(', '.join(signal.preferred_human_channels))}</div>"
-            "</li>"
+            (
+                "<li>"
+                f"<strong>{html.escape(signal.subject)}</strong> — {html.escape(signal.organization)} "
+                f"({_badge(signal.signal_type)})"
+                f"<div>{html.escape(signal.provenance)}</div>"
+                f"<div>Action: {html.escape(signal.recommended_action)}</div>"
+                f"<div>Channels: {html.escape(', '.join(signal.preferred_human_channels))}</div>"
+            )
+            + (
+                f"<div>Event: {_table_link(signal.event_title or 'event', signal.event_url)}</div>"
+                if getattr(signal, "event_title", None) or getattr(signal, "event_url", None)
+                else ""
+            )
+            + "</li>"
         )
     return f"<ul>{''.join(rows)}</ul>"
+
+
+def _linkedin_candidate_table(candidates: list[dict[str, Any]]) -> str:
+    rows = []
+    for candidate in candidates[:3]:
+        name = str(candidate.get("name") or candidate.get("subject") or "").strip()
+        profile = str(candidate.get("profile") or candidate.get("url") or "").strip()
+        headline = str(candidate.get("headline") or candidate.get("title") or "").strip()
+        evidence = str(candidate.get("source_url") or candidate.get("evidence_url") or "").strip()
+        if not (name or profile or headline or evidence):
+            continue
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(name or 'candidate')}</td>"
+            f"<td>{html.escape(headline or 'not supplied')}</td>"
+            f"<td>{_table_link('profile', profile)}{_table_link('evidence', evidence)}</td>"
+            "</tr>"
+        )
+    if not rows:
+        return ""
+    return (
+        '<table class="relationship-candidates">'
+        "<thead><tr><th>Candidate</th><th>Public signal</th><th>Links</th></tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def _render_relationships_table(signals: list[Any]) -> str:
+    rows = []
+    for item in signals:
+        event = ""
+        if getattr(item, "event_title", None) or getattr(item, "event_url", None):
+            event = _table_link(item.event_title or "event", item.event_url)
+        profile = _table_link("profile", getattr(item, "profile_url", None))
+        candidates = _linkedin_candidate_table(list(getattr(item, "linkedin_candidates", []) or []))
+        confirmation = (
+            '<div class="warn">LinkedIn identity confirmation required before outreach.</div>'
+            if getattr(item, "linkedin_confirmation_required", False)
+            else ""
+        )
+        rows.append(
+            "<tr>"
+            f"<td><strong>{html.escape(item.subject)}</strong><div class=\"small\">{html.escape(item.organization)}</div></td>"
+            f"<td>{_badge(item.signal_type)}<div class=\"small\">{html.escape(item.provenance)}</div></td>"
+            f"<td>{event}{profile}{candidates}{confirmation}</td>"
+            f"<td>{html.escape(item.recommended_action)}<div class=\"small\">{html.escape(item.contact_channel_risk)}</div></td>"
+            f"<td>{_list(item.preferred_human_channels)}{_list(item.channel_guidance)}</td>"
+            f"<td>{_list(item.evidence_refs)}</td>"
+            "</tr>"
+        )
+    if not rows:
+        return "<p>None</p>"
+    return (
+        '<table class="relationship-signal-table">'
+        "<thead><tr>"
+        "<th>Contact</th><th>Signal</th><th>Event / LinkedIn candidates</th>"
+        "<th>Human action</th><th>Channels</th><th>Evidence</th>"
+        "</tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
 
 
 def _draft_readback(item: Any) -> str:
@@ -167,19 +234,7 @@ def render_html(manifest: ReportManifest) -> str:
         for item in manifest.opportunities
     ) or '<p class="empty">No opportunity cleared the eligibility and quality bar.</p>'
 
-    relationships = "".join(
-        f"<article><h3>{html.escape(item.subject)} — {html.escape(item.organization)}</h3>"
-        f"<p>{_badge(item.signal_type)} action_worthy={str(item.action_worthy).lower()} "
-        f"external_effects=false</p>"
-        f"<p><strong>Recommended:</strong> {html.escape(item.recommended_action)}</p>"
-        f"<p><strong>Channel risk:</strong> {html.escape(item.contact_channel_risk)}</p>"
-        f"<h4>Path</h4>{_list(item.relationship_path)}"
-        f"<h4>Preferred human channels</h4>{_list(item.preferred_human_channels)}"
-        f"<h4>Guidance</h4>{_list(item.channel_guidance)}"
-        f"<h4>Evidence</h4>{_list(item.evidence_refs)}"
-        f"<p><strong>Provenance:</strong> {html.escape(item.provenance)}</p></article>"
-        for item in manifest.relationship_signals
-    ) or "<p>None</p>"
+    relationships = _render_relationships_table(list(manifest.relationship_signals))
 
     relationship_diagnostics = "".join(
         "<tr>"

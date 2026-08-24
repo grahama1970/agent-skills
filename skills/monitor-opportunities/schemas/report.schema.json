@@ -1900,6 +1900,33 @@
             "minLength": 1
           }
         },
+        "event_title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "event_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "linkedin_candidates": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "linkedin_confirmation_required": {
+          "type": "boolean"
+        },
         "human_decision_options": {
           "type": "array",
           "minItems": 1,

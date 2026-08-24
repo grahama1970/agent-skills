@@ -312,6 +312,11 @@ class RelationshipSignal(StrictModel):
     recommended_human_channel: str
     channel_rationale: str
     channel_limitations: list[str] = Field(min_length=1)
+    event_title: str | None = None
+    event_url: str | None = None
+    profile_url: str | None = None
+    linkedin_candidates: list[dict[str, Any]] = Field(default_factory=list)
+    linkedin_confirmation_required: bool = False
     human_decision_options: list[str] = Field(
         default_factory=lambda: ["RECONNECT", "DEFER", "ATTEND", "WATCH", "SKIP"],
         min_length=1,
