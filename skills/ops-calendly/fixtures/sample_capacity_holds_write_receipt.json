@@ -1,0 +1,18 @@
+{
+  "schema": "ops_calendly.capacity_holds.write.v1",
+  "status": "APPLIED",
+  "calendarId": "primary",
+  "writesCalendar": true,
+  "createdEvents": [
+    {
+      "id": "example-event-id",
+      "htmlLink": "https://calendar.google.com/calendar/event?eid=example",
+      "status": "confirmed",
+      "calendarId": "primary",
+      "summary": "Capacity hold",
+      "start": "2026-08-24T10:00:00-04:00",
+      "end": "2026-08-24T10:30:00-04:00",
+      "reason": "focus"
+    }
+  ]
+}

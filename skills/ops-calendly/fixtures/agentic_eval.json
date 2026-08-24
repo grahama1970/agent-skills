@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "ops-calendly",
   "trials": 3,
-  "proof_scope": "Calendly public metadata generation, dry-run capacity hold planning, and secret-write fail-closed behavior",
+  "proof_scope": "Calendly public metadata generation, capacity-hold planning, real-calendar write fail-closed behavior, release receipt validation, and secret-write fail-closed behavior",
   "claims": {
-    "proves": "the skill can generate validated public calendly.json metadata from fixture API payloads, plan real current-week capacity holds without writing calendars, reject hold ratios above 45 percent, and keep GitHub secret writes dry-run by default",
-    "does_not_prove": "live Calendly API connectivity, GitHub secret mutation, or actual calendar busy-block writes"
+    "proves": "the skill can generate validated public calendly.json metadata from fixture API payloads, plan real current-week capacity holds without writing calendars, reject hold ratios above 45 percent, keep capacity-hold execution and release dry-run by default, fail closed without Google OAuth, and keep GitHub secret writes dry-run by default",
+    "does_not_prove": "live Calendly API connectivity, GitHub secret mutation, successful Google Calendar busy-block writes, or successful release deletes"
   },
   "cases": [
     {
@@ -43,11 +43,53 @@
       "command": [
         "bash",
         "-lc",
-        "set +e; ../run.sh capacity-holds plan --week current --today 2026-08-24 --target-ratio 0.46 >out.json 2>err.txt; rc=$?; set -e; test $rc -ne 0 && grep -q '0.45' err.txt && echo PASS_RATIO_REJECTED"
+        "tmp=\"$(mktemp -d)\"; set +e; ../run.sh capacity-holds plan --week current --today 2026-08-24 --target-ratio 0.46 >\"$tmp/out.json\" 2>\"$tmp/err.txt\"; rc=$?; set -e; test $rc -ne 0 && grep -q '0.45' \"$tmp/err.txt\" && echo PASS_RATIO_REJECTED"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": ["PASS_RATIO_REJECTED"]
+      }
+    },
+    {
+      "name": "capacity-holds-execute-dry-run-by-default",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "out=\"$(mktemp -d)/write.json\"; ../run.sh capacity-holds execute --week current --today 2026-08-24 --target-ratio 0.45 --receipt-out \"$out\" | jq -e '.schema==\"ops_calendly.capacity_holds.write.v1\" and .status==\"NOT_EXECUTED\" and .writesCalendar==false and .execute==false and (.createdEvents|length)==0' >/dev/null && test ! -e \"$out\" && echo PASS_EXECUTE_DRY_RUN"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_EXECUTE_DRY_RUN"]
+      }
+    },
+    {
+      "name": "capacity-holds-execute-fails-closed-without-google-oauth",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "tmp=\"$(mktemp -d)\"; set +e; OPS_GCAL_CONFIG_DIR=\"$tmp/empty-gcal\" ../run.sh capacity-holds execute --week current --today 2026-08-24 --target-ratio 0.45 --receipt-out \"$tmp/write.json\" --execute >\"$tmp/receipt.json\"; rc=$?; set -e; test $rc -eq 1 && jq -e '.status==\"BLOCKED_UNAUTHENTICATED\" and .writesCalendar==false' \"$tmp/receipt.json\" >/dev/null && echo PASS_EXECUTE_FAILS_CLOSED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_EXECUTE_FAILS_CLOSED"]
+      }
+    },
+    {
+      "name": "capacity-holds-release-dry-run-from-receipt",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh capacity-holds release --receipt sample_capacity_holds_write_receipt.json | jq -e '.schema==\"ops_calendly.capacity_holds.release.v1\" and .status==\"NOT_EXECUTED\" and .writesCalendar==false and .wouldDeleteCount==1' >/dev/null && echo PASS_RELEASE_DRY_RUN"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_RELEASE_DRY_RUN"]
       }
     },
     {

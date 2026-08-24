@@ -54,6 +54,8 @@ unless the human explicitly authorizes the exact mutation.
 ./run.sh github-secret --repo grahama1970/agent-skills --json
 ./run.sh github-secret --repo grahama1970/agent-skills --execute --json
 ./run.sh capacity-holds plan --week current --target-ratio 0.45 --json
+./run.sh capacity-holds execute --week current --reason focus --execute --json
+./run.sh capacity-holds release --receipt <receipt.json> --execute --json
 ./run.sh sanity
 ```
 
@@ -78,23 +80,29 @@ Fixture output is marked `generatedFromApi: false`; live API output is marked
 
 ## Capacity Holds
 
-`capacity-holds plan` computes real capacity holds for the current week. This is
-a planning tool, not a deception tool. It does not create fake scarcity, does
-not write to Calendly, and does not write to Google Calendar. The receipt
-includes `writesCalendar: false` and `policy: real_capacity_holds_only`.
+`capacity-holds plan` computes real capacity holds for the current week. It
+does not write to Calendly or Google Calendar. `capacity-holds execute` creates
+real Busy events on the Google Calendar checked by Calendly, but only when the
+caller passes `--execute`. `capacity-holds release` deletes events recorded in
+a prior write receipt, also only with `--execute`.
 
 The default and maximum target ratio is `0.45`. Treat that as a cap for
 legitimate focus, delivery, travel, or admin time. Do not create or recommend
-calendar holds whose purpose is only to make availability look scarce. If a
-future write mode is added, it must create real busy calendar blocks with an
-explicit purpose and a human-confirmed `--execute` flag.
+calendar holds whose purpose is only to make availability look scarce. Write
+receipts are stored under `/mnt/storage12tb/skills/ops-calendly/receipts` by
+default, or wherever `--receipt-out` points.
+
+Calendar writes use the same local OAuth token contract as `ops-google-calendar`:
+`~/.config/ops-google-calendar/token.json`, or `OPS_GCAL_CONFIG_DIR` when
+overridden. The token must have the `calendar.events` scope.
 
 ## Boundaries
 
 - No token output. Never print `CALENDLY_PAT`, Authorization headers, or full
   provider payloads that could contain sensitive details.
-- Read-only by default. Secret writes require `--execute`; calendar writes are
-  not implemented by this skill.
+- Read-only by default. Secret writes and calendar writes require `--execute`.
+- `capacity-holds release` may delete only events listed in a prior
+  `ops_calendly.capacity_holds.write.v1` receipt.
 - Fail closed on missing credentials. Preserve existing site metadata only when
   the caller requests it and the existing file already exists.
 - Use the live Calendly API for integration proof when `CALENDLY_PAT` is

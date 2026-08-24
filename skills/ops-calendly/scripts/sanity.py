@@ -8,10 +8,15 @@ runs `doctor` separately with CALENDLY_PAT available.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 RUN_SH = SKILL_DIR / "run.sh"
@@ -19,12 +24,13 @@ FIXTURES = SKILL_DIR / "fixtures"
 FAILURES: list[str] = []
 
 
-def _run(*args: str) -> tuple[int, dict[str, object], str]:
+def _run(*args: str, env: dict[str, str] | None = None) -> tuple[int, dict[str, object], str]:
     proc = subprocess.run(
         [str(RUN_SH), *args],
         capture_output=True,
         text=True,
         timeout=90,
+        env=env,
     )
     try:
         payload = json.loads(proc.stdout or "{}")
@@ -84,6 +90,72 @@ def main() -> int:
         code != 0 and "0.45" in stderr,
         f"code={code} status={payload.get('status')}",
     )
+
+    with TemporaryDirectory(prefix="ops-calendly-gcal-") as tmp:
+        out = Path(tmp) / "write.json"
+        code, payload, _ = _run(
+            "capacity-holds", "execute",
+            "--week", "current",
+            "--today", "2026-08-24",
+            "--target-ratio", "0.45",
+            "--receipt-out", str(out),
+        )
+        check(
+            "capacity hold execute defaults to no calendar write",
+            code == 0
+            and payload.get("status") == "NOT_EXECUTED"
+            and payload.get("writesCalendar") is False
+            and not out.exists(),
+            f"status={payload.get('status')}",
+        )
+
+        empty_config = Path(tmp) / "empty-gcal"
+        empty_config.mkdir()
+        env = {**dict(os.environ), "OPS_GCAL_CONFIG_DIR": str(empty_config)}
+        code, payload, _ = _run(
+            "capacity-holds", "execute",
+            "--week", "current",
+            "--today", "2026-08-24",
+            "--target-ratio", "0.45",
+            "--receipt-out", str(out),
+            "--execute",
+            env=env,
+        )
+        check(
+            "capacity hold execute fails closed without Google OAuth",
+            code == 1
+            and payload.get("status") == "BLOCKED_UNAUTHENTICATED"
+            and payload.get("writesCalendar") is False,
+            f"status={payload.get('status')}",
+        )
+
+        release_receipt = Path(tmp) / "sample-write.json"
+        release_receipt.write_text(json.dumps({
+            "schema": "ops_calendly.capacity_holds.write.v1",
+            "status": "APPLIED",
+            "calendarId": "primary",
+            "writesCalendar": True,
+            "createdEvents": [{
+                "id": "example-event-id",
+                "calendarId": "primary",
+                "summary": "Capacity hold",
+                "start": "2026-08-24T10:00:00-04:00",
+                "end": "2026-08-24T10:30:00-04:00",
+                "reason": "focus",
+            }],
+        }), encoding="utf-8")
+        code, payload, _ = _run(
+            "capacity-holds", "release",
+            "--receipt", str(release_receipt),
+        )
+        check(
+            "capacity hold release defaults to no calendar delete",
+            code == 0
+            and payload.get("status") == "NOT_EXECUTED"
+            and payload.get("writesCalendar") is False
+            and payload.get("wouldDeleteCount") == 1,
+            f"status={payload.get('status')}",
+        )
 
     code, payload, _ = _run("github-secret", "--repo", "grahama1970/agent-skills")
     check(
