@@ -614,7 +614,7 @@ export default function ResumePage() {
             {doc.pdfBytes ? <> · PDF {doc.pdfBytes.toLocaleString()} bytes</> : null}
             {doc.docxBytes ? <> · DOCX {doc.docxBytes.toLocaleString()} bytes</> : null}
             {doc.sourceSha256 ? <> · source SHA-256 {doc.sourceSha256.slice(0, 12)}</> : null}
-            {' '}· <a href="/llms.txt" title="LLM-readable site context">LLM context</a>
+            {' '}· <a href="/llms.txt" title="LLM-readable site context" data-qid="resume:link:llms" data-qs-action="RESUME_OPEN_LLMS">LLM context</a>
             {' '}· <time dateTime={doc.asOf}>{doc.asOf}</time>
           </p>
         </footer>
