@@ -96,3 +96,46 @@ negative, and adversarial cases, a `sanity.sh` behavioral gate, and a live E2E
 gate (`sanity-e2e.sh`) that calls the real ops-arango/ops-qdrant/memory
 entrypoints and fails closed on a missing downstream receipt. Never mark a
 feature READY on exit-0 alone.
+
+
+## Session Handoff — 2026-08-24
+
+Written before a Claude Code restart. If you are the next session, read this first.
+
+### RESTART REQUIRED to activate (read only at process startup; NOT active in the writing session)
+- `~/.claude/settings.json`: `skillOverrides` = 373 skills set to `name-only` (trims the
+  403-skill listing that crowded every turn); `autoMemoryEnabled: false` (honors /memory-first);
+  `claude-md-size-guard` PostToolUse hook wired (blocks CLAUDE.md rebloat > 14 KB).
+- `~/.claude/CLAUDE.md`: distilled 20,583 -> 11,234 bytes (backup
+  `~/.claude/CLAUDE.md.bak-20260824T123454Z`). New sessions load the lean version.
+- `/clear` does NOT reload settings.json — do a full process restart.
+
+### Already active (no restart needed)
+- `~/.claude/hooks/operator-directive.sh` (UserPromptSubmit) — injects the 5-point operator
+  directive every turn. Was a DANGLING reference (file absent); recreated this session.
+- `~/.claude/hooks/no-candor-filler.sh` (Stop) — blocks vague/candor final messages. Was
+  missing; created.
+- herdr integration installed for Claude: `herdr integration status` -> `claude: current (v7)`.
+  Previously `not installed` while Codex was `current` — herdr (the stalled-agent supervisor)
+  had been blind to Claude. Likely a major reason Claude underperformed Codex in this env.
+
+### Shipped to agent-skills@main this session
+- ops-qdrant: read-only Qdrant health skill; `./sanity.sh` PASS; reproduces the #145 dense=0.
+- ops-memory: DESIGN DOC ONLY (this file). NOT a runnable skill yet — no SKILL.md / run.sh.
+- References sweep: 14 external-facing ops-* skills gained References sections with canonical
+  docs + llms.txt / llms-full.txt (all verified HTTP 200 on 2026-08-24).
+
+### Next steps (priority order)
+1. Build ops-memory to the spec above (DB-transparency orchestrator: merged health+metrics,
+   `/phart-dag-chart` topology, `/analytics` table, NL front door). Highest-value build.
+2. Codify the References convention in best-practices-skills ("external-service ops-* skills
+   require a References section with llms.txt where present").
+3. ops-compliance References decision: cite AICPA / EU-GDPR / HHS-HIPAA / PCI-SSC, or leave.
+4. memory repo / graph-memory-operator#145: vector-sync `lessons` + `skill_chains` into Qdrant
+   and fix the CLI embed port 8602 -> 8603 so `/recall` returns dense > 0. Separate repo;
+   ticketed. Re-verify with `skills/ops-qdrant/run.sh check --json` (dense_probe.dense_ok true).
+
+### Shared-tree caution
+- agent-skills working tree is shared by ~180 lanes and is dirty. `skills/ops-calendly/SKILL.md`
+  carries ANOTHER lane's uncommitted change — never commit it wholesale. All pushes this session
+  used temp-index plumbing off origin/main to avoid clobbering lanes.
