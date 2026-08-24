@@ -1,0 +1,138 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "fixtures/agentic_eval.json",
+  "run_id": "61fb6f82519c",
+  "fixture_sha256": "sha256:d73eacfe5772551003081d967bb45c86758904e79e069653f277eb2032472374",
+  "repo": {
+    "sha": "a5c5e5ae332a6d3dffa139a88f6a0ddea5a7ec24",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "mine-transcripts command and typed skill-chain storage regression guard",
+  "claims": {
+    "proves": "the skill sanity command runs and the mined-chain storage helper invokes typed memory chain-learn rather than legacy learn",
+    "does_not_prove": "live transcript mining quality, live Memory daemon behavior, or full classifier training readiness"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-08-24T13:49:57.950745+00:00",
+  "case_count": 2,
+  "required_case_count": 2,
+  "outcome_counts": {
+    "PASS": 2,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 4,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "sanity",
+      "type": "positive",
+      "case_id": "61fb6f82519c-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 758.303,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "=== [mine-transcripts] Sanity Check ===\nCheck 1 - Required files: PASS\nCheck 2 - Python syntax: PASS\nCheck 3 - Core imports: PASS\nCheck 4 - Text utilities: [WARN] Taxonomy skill not available, using fallback\nPASS\nCheck 5 - CLI help: PASS\nCheck 6 - Sources discovery: PASS\nCheck 7 - Optional deps: \n  WARN: /taxonomy skill not importable (will use fallback labeling)\n\nSKIP: Full mining (modifies data/ directory)\nSKIP: Memory storage (requires ArangoDB)\n\nResult: PASS\n",
+          "stderr": "2026-08-24 09:49:55.558 | DEBUG    | common.memory_client:<module>:48 - python-dotenv not installed; skipping .env loading\n",
+          "duration_ms": 782.613,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "61fb6f82519c-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "=== [mine-transcripts] Sanity Check ===\nCheck 1 - Required files: PASS\nCheck 2 - Python syntax: PASS\nCheck 3 - Core imports: PASS\nCheck 4 - Text utilities: [WARN] Taxonomy skill not available, using fallback\nPASS\nCheck 5 - CLI help: PASS\nCheck 6 - Sources discovery: PASS\nCheck 7 - Optional deps: \n  WARN: /taxonomy skill not importable (will use fallback labeling)\n\nSKIP: Full mining (modifies data/ directory)\nSKIP: Memory storage (requires ArangoDB)\n\nResult: PASS\n",
+          "stderr": "2026-08-24 09:49:56.335 | DEBUG    | common.memory_client:<module>:48 - python-dotenv not installed; skipping .env loading\n",
+          "duration_ms": 733.994,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "61fb6f82519c-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "typed-chain-storage-uses-chain-learn",
+      "type": "adversarial",
+      "case_id": "61fb6f82519c-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-lc",
+        "cd .. && PYTHONPATH=. uv run python -m pytest -q tests/test_skill_chain_storage.py -k 'typed_skill_chains or skips_short_chains'"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 558.028,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed, 1 deselected in 0.22s\n",
+          "stderr": "",
+          "duration_ms": 545.956,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "61fb6f82519c-c001-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed, 1 deselected in 0.22s\n",
+          "stderr": "",
+          "duration_ms": 570.1,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "61fb6f82519c-c001-t01",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}
