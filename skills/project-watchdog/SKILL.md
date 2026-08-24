@@ -2,8 +2,8 @@
 name: project-watchdog
 description: >
   Global cross-project watchdog registry and cron dispatcher that scans
-  registered GitHub repos for routable issues, takes one lease at a time, runs
-  one bounded tick through each project's Tau or project-local harness, and
+  registered GitHub repos for routable issues, takes bounded independent leases
+  across projects, runs each through its Tau or project-local harness, and
   requires a receipt before it mutates anything. Use when asked about the
   project watchdog, the GitHub issue cron, why the watchdog is idle or not
   picking up tickets, pausing or resuming automated issue dispatch, or
@@ -62,7 +62,7 @@ subagents so individual projects do not each invent their own cron loop.
 ```bash
 ./run.sh status                                    # registry, state, lock, cron
 ./run.sh tick --project all                        # dry-run fleet scan, no mutation
-./run.sh tick --apply --project all --max-tickets 1  # one bounded fleet dispatch
+./run.sh tick --apply --project all --max-tickets 3  # up to three independent projects
 ./run.sh tick --project tau                        # strict scan of tau only
 ./run.sh set-state global paused --reason "..."    # fail-closed kill switch
 ./run.sh set-state project active --project tau --reason "..."
@@ -110,6 +110,12 @@ paths` summary. Tickets without scoped files use the `target:` line `/ticket`
 writes, then the `## Target paths` block, then legacy skill-path mentions. A
 leased ticket blocks its own targets and nothing else.
 
+Fleet capacity is cross-project. The installed cron uses `--max-tickets 3`, and
+a fleet tick may hand capacity to up to three different projects when each has a
+routable independent ticket. It still takes at most one issue from any one
+project per tick; a second issue in the same project waits for the next tick so
+local lane and target safety remain simple.
+
 Registered projects may narrow a shared repository with `issue_target_prefixes`
 and may leave a subtree to a narrower project with
 `issue_target_exclude_prefixes`. This is required for skill-scoped projects
@@ -137,7 +143,8 @@ The runtime is deliberately narrow:
 
 1. Load `registry/projects.json`.
 2. Scan registered GitHub repos for routable issues.
-3. Acquire one lease for one project ticket.
+3. Acquire bounded leases for routable tickets, at most one per project in a
+   fleet tick.
 4. Invoke the project runner for one bounded tick.
 5. Require a receipt.
 6. Post the receipt or refusal back to GitHub.

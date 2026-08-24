@@ -841,6 +841,102 @@ def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
     assert captured["receipt"]["rotation"]["selected"] == "agent-skills"
 
 
+def test_fleet_budget_dispatches_one_issue_per_project(tmp_path, monkeypatch):
+    import json as _json
+    import threading
+
+    projects_path = tmp_path / "projects.json"
+    state_path = tmp_path / "state.json"
+    projects_path.write_text(_json.dumps({
+        "projects": [
+            {"project_id": "tau", "repo": "o/tau"},
+            {"project_id": "memory", "repo": "o/memory"},
+            {"project_id": "sparta", "repo": "o/sparta"},
+        ]
+    }))
+    state_path.write_text(_json.dumps({
+        "global": {"state": "active"},
+        "projects": {
+            "tau": {"state": "active"},
+            "memory": {"state": "active"},
+            "sparta": {"state": "active"},
+        },
+    }))
+    handled: list[tuple[str, int]] = []
+    captured: dict = {}
+    tau_started = threading.Event()
+    memory_started = threading.Event()
+    release_tau = threading.Event()
+
+    tau_one = _issue(317, "src/tau_coding/dag_runtime")
+    tau_one["watchdog_action"] = "ticket_repair"
+    tau_one["watchdog_targets"] = ["src/tau_coding/dag_runtime"]
+    tau_two = _issue(318, "src/tau_coding/other")
+    tau_two["watchdog_action"] = "ticket_repair"
+    tau_two["watchdog_targets"] = ["src/tau_coding/other"]
+    memory_issue = _issue(139, "src/graph_memory/lessons/skill_chains.py")
+    memory_issue["watchdog_action"] = "ticket_repair"
+    memory_issue["watchdog_targets"] = ["src/graph_memory/lessons/skill_chains.py"]
+
+    def fake_list(
+        run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
+        only_issue=None, apply=False,
+    ):
+        registry.LAST_SCAN.clear()
+        registry.LAST_SCAN.update({
+            "scanned": 1,
+            "excluded": {},
+            "excluded_issues": {},
+            "dependency_unblocks": [],
+        })
+        if candidate["project_id"] == "tau":
+            return [tau_one, tau_two]
+        if candidate["project_id"] == "memory":
+            return [memory_issue]
+        return []
+
+    def fake_handle(run_id, receipt_dir, project, issue, *, apply):
+        row = (str(project["project_id"]), int(issue["number"]))
+        handled.append(row)
+        if row == ("tau", 317):
+            tau_started.set()
+            assert memory_started.wait(1), "memory dispatch did not overlap tau"
+            release_tau.wait(1)
+        if row == ("memory", 139):
+            memory_started.set()
+            assert tau_started.wait(1), "tau dispatch did not overlap memory"
+            release_tau.set()
+        return {
+            "ok": True,
+            "status": "DRY_RUN",
+            "project_id": str(project["project_id"]),
+            "issue_number": int(issue["number"]),
+        }
+
+    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
+    monkeypatch.setattr(config, "state_path", lambda: state_path)
+    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
+    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
+    monkeypatch.setattr(commands, "handle_issue", fake_handle)
+    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
+    monkeypatch.setattr(commands, "_persist_tick_state", lambda state: None)
+    monkeypatch.setattr(
+        commands,
+        "finish",
+        lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code)
+        or code,
+    )
+
+    commands._tick_locked(
+        "run", tmp_path / "receipt", apply=False, project_id="all", max_tickets=3
+    )
+
+    assert set(handled) == {("tau", 317), ("memory", 139)}
+    assert captured["receipt"]["rotation"]["selected_projects"] == ["tau", "memory"]
+    assert captured["receipt"]["selected_projects"] == ["tau", "memory"]
+    assert captured["receipt"]["handled_count"] == 2
+
+
 def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkeypatch):
     import json as _json
 

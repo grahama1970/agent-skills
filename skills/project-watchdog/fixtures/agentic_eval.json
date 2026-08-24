@@ -562,6 +562,26 @@
       "notes": "Proof for agent-skills#1508: while issue #1 is still inside handle_issue for skills/ask, a nested tick can acquire the released scheduler lock and dispatch issue #2 for skills/ticket."
     },
     {
+      "name": "multi-project-concurrent-dispatch-capacity",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "mocked": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_fleet_budget_dispatches_one_issue_per_project"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "A widened fleet budget gives dispatch capacity to different projects in one pass while still taking at most one issue per project."
+    },
+    {
       "name": "scheduler-execution-lock-blocks-overlapping-targets",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
