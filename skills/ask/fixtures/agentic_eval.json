@@ -1734,6 +1734,30 @@
         ]
       },
       "notes": "Regression guard for project-watchdog Ask/Tau repairs where Codex produces a non-empty final message and proof references but no workspace diff; Ask must admit the response for reviewer inspection instead of failing before response.md exists."
+    },
+    {
+      "name": "reviewer-verdict-prompt-requires-first-line",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/ask pytest -q skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_worker_prompt_includes_prior_receipts_and_verdict_contract"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression guard for reviewer lanes that complete transport but omit a parseable VERDICT line, causing project-watchdog's proof gate to refuse closure after a Tau PASS."
     }
   ],
   "capability_claims": [

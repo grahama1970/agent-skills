@@ -330,7 +330,9 @@ def test_worker_prompt_includes_prior_receipts_and_verdict_contract(tmp_path: Pa
 
     assert "Prior handler receipts" in prompt
     assert "WebGPT produced the implementation." in prompt
+    assert "Your first non-empty line must be exactly one review verdict" in prompt
     assert "VERDICT: PASS" in prompt
+    assert "Do not omit the VERDICT line" in prompt
     assert tau_roundtable_worker._extract_verdict("VERDICT: FAIL\nReason") == "FAIL"
     assert tau_roundtable_worker._has_verdict("No clear verdict") is False
 

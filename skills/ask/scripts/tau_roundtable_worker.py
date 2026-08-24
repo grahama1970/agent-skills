@@ -5583,10 +5583,11 @@ def _handler_prompt(
     elif requires_verdict:
         lines.extend(
             [
-                "Return a review verdict using exactly one of:",
+                "Your first non-empty line must be exactly one review verdict:",
                 "VERDICT: PASS",
                 "VERDICT: FAIL",
                 "VERDICT: NEEDS_ATTENTION",
+                "Do not omit the VERDICT line. Do not put the verdict only in prose.",
                 "",
             ]
         )
