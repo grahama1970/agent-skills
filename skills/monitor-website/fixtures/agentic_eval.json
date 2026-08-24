@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "skill": "monitor-website",
+  "trials": 2,
+  "proof_scope": "resume DOCX public-surface guard for grahama.co generated site output",
+  "claims": {
+    "proves": "the monitor-website audit entrypoint accepts the local generated site surfaces and the production static build emits a real /resume.docx download linked from /resume and llms.txt",
+    "does_not_prove": "live GitHub Pages deployment, formal design certification, broad disclosure-map health, or ATS semantic parse quality"
+  },
+  "cases": [
+    {
+      "name": "no-live-audit-generated-surfaces",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && skills/monitor-website/run.sh audit --no-live --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"drift\": []",
+          "\"ok\": true"
+        ]
+      }
+    },
+    {
+      "name": "resume-docx-static-build-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && python3 site/scripts/gen_resume.py >/dev/null && (cd site && npm run build >/tmp/monitor-website-agentic-build.log) && python3 - <<'PY'\nimport json, zipfile\nfrom pathlib import Path\nhtml = Path('site/out/resume.html').read_text(encoding='utf-8')\nresume = json.loads(Path('site/resume.json').read_text(encoding='utf-8'))\nllms = Path('site/public/llms.txt').read_text(encoding='utf-8')\ndocx = Path('site/out/resume.docx')\nassert 'data-qid=\"resume:link:docx\"' in html\nassert '/resume.docx' in html\nassert resume['downloads']['docx'] == '/resume.docx'\nassert 'https://grahama.co/resume.docx' in llms\nassert docx.is_file() and docx.stat().st_size > 2000\nassert zipfile.is_zipfile(docx)\nwith zipfile.ZipFile(docx) as z:\n    assert 'word/document.xml' in z.namelist()\nprint('DOCX_SURFACE_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DOCX_SURFACE_OK"
+        ]
+      }
+    }
+  ]
+}

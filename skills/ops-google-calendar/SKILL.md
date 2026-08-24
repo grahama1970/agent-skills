@@ -35,7 +35,7 @@ taxonomy:
   - resilience
 runtime_self_improvement: basic
 disciplines:
-  - integration-operations
+  - observability-operations
   - developer-tooling
 ---
 

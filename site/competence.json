@@ -1,8 +1,8 @@
 {
-  "commit": "268bbcb5a1",
-  "as_of": "2026-08-12",
+  "commit": "2afaf6dcaa",
+  "as_of": "2026-08-24",
   "generator": "site/scripts/gen_competence.py",
-  "totalSkills": 347,
+  "totalSkills": 361,
   "disciplineCount": 18,
   "disciplines": [
     {
@@ -16,7 +16,7 @@
     {
       "id": "observability-operations",
       "label": "Observability operations",
-      "skillCount": 66,
+      "skillCount": 71,
       "lenses": [],
       "areas": [],
       "projects": []
@@ -24,7 +24,7 @@
     {
       "id": "content-creation",
       "label": "Content creation",
-      "skillCount": 53,
+      "skillCount": 54,
       "lenses": [
         "creative"
       ],
@@ -39,7 +39,7 @@
     {
       "id": "agentic-orchestration",
       "label": "Agentic orchestration",
-      "skillCount": 51,
+      "skillCount": 53,
       "lenses": [
         "technical"
       ],
@@ -75,7 +75,7 @@
     {
       "id": "ui-design-engineering",
       "label": "UI design engineering",
-      "skillCount": 43,
+      "skillCount": 44,
       "lenses": [
         "creative"
       ],
@@ -88,39 +88,9 @@
       "projects": []
     },
     {
-      "id": "compliance-security",
-      "label": "Compliance security",
-      "skillCount": 41,
-      "lenses": [
-        "technical"
-      ],
-      "areas": [
-        {
-          "id": "compliance",
-          "title": "Compliance, security & governance"
-        },
-        {
-          "id": "adaptive-lineage",
-          "title": "Adaptive-lineage hacking"
-        }
-      ],
-      "projects": [
-        {
-          "slug": "battle",
-          "name": "battle",
-          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md"
-        },
-        {
-          "slug": "sparta-explorer",
-          "name": "sparta explorer",
-          "href": "https://github.com/grahama1970/sparta-public"
-        }
-      ]
-    },
-    {
       "id": "developer-tooling",
       "label": "Developer tooling",
-      "skillCount": 40,
+      "skillCount": 43,
       "lenses": [
         "technical"
       ],
@@ -154,9 +124,60 @@
       ]
     },
     {
+      "id": "compliance-security",
+      "label": "Compliance security",
+      "skillCount": 41,
+      "lenses": [
+        "technical"
+      ],
+      "areas": [
+        {
+          "id": "compliance",
+          "title": "Compliance, security & governance"
+        },
+        {
+          "id": "adaptive-lineage",
+          "title": "Adaptive-lineage hacking"
+        }
+      ],
+      "projects": [
+        {
+          "slug": "battle",
+          "name": "battle",
+          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md"
+        },
+        {
+          "slug": "sparta-explorer",
+          "name": "sparta explorer",
+          "href": "https://github.com/grahama1970/sparta-public"
+        }
+      ]
+    },
+    {
+      "id": "engineering-standards",
+      "label": "Engineering standards",
+      "skillCount": 40,
+      "lenses": [
+        "technical"
+      ],
+      "areas": [
+        {
+          "id": "compliance",
+          "title": "Compliance, security & governance"
+        }
+      ],
+      "projects": [
+        {
+          "slug": "sparta-explorer",
+          "name": "sparta explorer",
+          "href": "https://github.com/grahama1970/sparta-public"
+        }
+      ]
+    },
+    {
       "id": "data-engineering",
       "label": "Data engineering",
-      "skillCount": 37,
+      "skillCount": 38,
       "lenses": [
         "technical"
       ],
@@ -181,27 +202,6 @@
           "slug": "watch",
           "name": "watch",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md"
-        }
-      ]
-    },
-    {
-      "id": "engineering-standards",
-      "label": "Engineering standards",
-      "skillCount": 37,
-      "lenses": [
-        "technical"
-      ],
-      "areas": [
-        {
-          "id": "compliance",
-          "title": "Compliance, security & governance"
-        }
-      ],
-      "projects": [
-        {
-          "slug": "sparta-explorer",
-          "name": "sparta explorer",
-          "href": "https://github.com/grahama1970/sparta-public"
         }
       ]
     },
@@ -275,7 +275,7 @@
     {
       "id": "research-retrieval",
       "label": "Research retrieval",
-      "skillCount": 26,
+      "skillCount": 27,
       "lenses": [
         "technical"
       ],
@@ -304,9 +304,9 @@
       ]
     },
     {
-      "id": "persona-simulation",
-      "label": "Persona simulation",
-      "skillCount": 24,
+      "id": "voice-audio",
+      "label": "Voice audio",
+      "skillCount": 25,
       "lenses": [
         "hybrid"
       ],
@@ -325,9 +325,9 @@
       ]
     },
     {
-      "id": "voice-audio",
-      "label": "Voice audio",
-      "skillCount": 23,
+      "id": "persona-simulation",
+      "label": "Persona simulation",
+      "skillCount": 24,
       "lenses": [
         "hybrid"
       ],
@@ -384,7 +384,7 @@
     {
       "id": "human-collaboration",
       "label": "Human collaboration",
-      "skillCount": 13,
+      "skillCount": 14,
       "lenses": [],
       "areas": [],
       "projects": []

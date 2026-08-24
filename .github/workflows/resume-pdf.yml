@@ -14,6 +14,7 @@ on:
       - "docs/resume/resume.css"
       - "docs/resume/fonts/**"
       - "scripts/build_markdown_pdf.py"
+      - "scripts/build_resume_docx.py"
       - ".github/workflows/resume-pdf.yml"
   pull_request:
     branches: [main]
@@ -22,6 +23,7 @@ on:
       - "docs/resume/resume.css"
       - "docs/resume/fonts/**"
       - "scripts/build_markdown_pdf.py"
+      - "scripts/build_resume_docx.py"
       - ".github/workflows/resume-pdf.yml"
   workflow_dispatch:
 
@@ -83,10 +85,11 @@ jobs:
           uv run --with python-docx python scripts/build_resume_docx.py \
             RESUME.md docs/resume/graham-anderson-resume.docx "${docx_args[@]}"
 
-      - name: Verify generated PDF
+      - name: Verify generated PDF and DOCX
         if: steps.resume_source.outputs.present == 'true'
         run: |
           test -s docs/resume/graham-anderson-resume.pdf
+          test -s docs/resume/graham-anderson-resume.docx
           python - <<'PY'
           from pathlib import Path
           pdf = Path("docs/resume/graham-anderson-resume.pdf")
@@ -95,14 +98,20 @@ jobs:
               raise SystemExit("generated resume is not a PDF")
           if len(data) < 1000:
               raise SystemExit("generated resume PDF is unexpectedly small")
+          docx = Path("docs/resume/graham-anderson-resume.docx")
+          data = docx.read_bytes()
+          if not data.startswith(b"PK") or b"word/document.xml" not in data:
+              raise SystemExit("generated resume is not a DOCX")
+          if len(data) < 2000:
+              raise SystemExit("generated resume DOCX is unexpectedly small")
           PY
 
-      - name: Commit generated PDF on main
+      - name: Commit generated resume artifacts on main
         if: steps.resume_source.outputs.present == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git add docs/resume/graham-anderson-resume.pdf docs/resume/graham-anderson-resume.docx
           if git diff --cached --quiet; then
-            echo "Resume PDF already current"
+            echo "Resume PDF/DOCX already current"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -118,4 +127,6 @@ jobs:
         if: steps.resume_source.outputs.present == 'true'
         with:
           name: graham-anderson-resume-pdf
-          path: docs/resume/graham-anderson-resume.pdf
+          path: |
+            docs/resume/graham-anderson-resume.pdf
+            docs/resume/graham-anderson-resume.docx

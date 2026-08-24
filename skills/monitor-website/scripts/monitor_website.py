@@ -63,14 +63,19 @@ def check_live() -> dict:
         ("sitemap", SITE_URL + "/sitemap.xml", "<urlset"),
         # /resume is a public entry point people are given directly, so a 404
         # there is as serious as a broken homepage.
-        ("resume", SITE_URL + "/resume", 'data-qid="resume:link:pdf"'),
-        ("resume_pdf", SITE_URL + "/resume.pdf", "%PDF"),
+        ("resume", SITE_URL + "/resume", 'data-qid="resume:link:docx"'),
+        ("resume_pdf", SITE_URL + "/resume.pdf", b"%PDF"),
+        ("resume_docx", SITE_URL + "/resume.docx", b"word/document.xml"),
         ("resume_md", SITE_URL + "/resume.md", "# Graham Anderson"),
     ):
         try:
             with urllib.request.urlopen(url, timeout=15) as r:
-                body = r.read().decode("utf-8", "replace")
-                out[label] = {"status": r.status, "ok": r.status == 200 and needle in body}
+                body = r.read()
+                if isinstance(needle, bytes):
+                    ok = body.startswith(needle) if needle == b"%PDF" else needle in body
+                else:
+                    ok = needle in body.decode("utf-8", "replace")
+                out[label] = {"status": r.status, "ok": r.status == 200 and ok}
         except Exception as e:  # noqa: BLE001 - report, don't crash the audit
             out[label] = {"status": None, "ok": False, "error": str(e)}
     return out

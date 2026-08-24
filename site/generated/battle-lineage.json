@@ -1,7 +1,7 @@
 {
   "battleId": "battle-004",
-  "runId": "arena-adaptive-lineage-20260718T152350Z",
-  "sourceSha256": "68391a9d884c72dc3b0a0bdf275910ae7bd20f6f5efbd9278067089abb8fe8ea",
+  "runId": "arena-adaptive-lineage-20260823T153108Z",
+  "sourceSha256": "c36a1c5aa83bed08fe5865980690efa8a52e1a23afbff3fd2133b5ad00ed0ef8",
   "qualification": "PASS",
   "criterion": "novelty_distance",
   "selectedId": "G1-A",
@@ -18,10 +18,10 @@
       "id": "G1-A",
       "mutationOperator": "method_replace",
       "noveltyDistance": 2,
-      "techniqueDelta": "Changed app.py loading from direct from app import import_zip to importlib.import_module('app') with getattr; archive construction, traversal member, direct call, and oracle remain unchanged.",
+      "techniqueDelta": "Replaced static from app import import_zip with importlib.util.spec_from_file_location dynamic loading; archive construction, traversal path, call, and oracle remain unchanged.",
       "changedDimensions": [
         {
-          "child": "none",
+          "child": "importlib_spec_from_file",
           "dimension": "app_load_mode",
           "parent": "from_import_app"
         },
@@ -36,7 +36,7 @@
       "id": "G1-B",
       "mutationOperator": "oracle_or_parameter_mutation",
       "noveltyDistance": 1,
-      "techniqueDelta": "Archive entry construction changed from in-memory writestr traversal member to a real file added with explicit traversal arcname.",
+      "techniqueDelta": "Changed malicious archive member construction from zf.writestr('../arena_escape.txt', data) to zf.write(real_payload_file, arcname='../arena_escape.txt') while preserving the direct import_zip call and outside-destination oracle.",
       "changedDimensions": [
         {
           "child": "zipfile_write_arcname",
@@ -48,13 +48,13 @@
     "G2": {
       "id": "G2",
       "mutationOperator": "failure_guided_crossover",
-      "noveltyDistance": 3,
-      "techniqueDelta": "Changed app loading to importlib.util.spec_from_file_location, changed archive construction to ZipInfo plus archive.open writes, and changed target call form to keyword arguments while retaining the outside-destination content oracle.",
+      "noveltyDistance": 4,
+      "techniqueDelta": "Replaces parent dynamic importlib loading with static local import, replaces writestr archive construction with ZipInfo plus open/write, calls import_zip with Path objects, and uses a read-back outside-directory oracle.",
       "changedDimensions": [
         {
-          "child": "importlib_spec_from_file",
+          "child": "from_import_app",
           "dimension": "app_load_mode",
-          "parent": "none"
+          "parent": "importlib_spec_from_file"
         },
         {
           "child": "zipinfo",
@@ -62,9 +62,14 @@
           "parent": "zipfile_writestr"
         },
         {
-          "child": "try[Exception:return|Exception:return|OSError:handle]",
+          "child": "function_call",
+          "dimension": "target_call_form",
+          "parent": "none"
+        },
+        {
+          "child": "try[Exception:return|UnicodeDecodeError:handle|ValueError:return]",
           "dimension": "exception_handling",
-          "parent": "try[Exception:return]"
+          "parent": "try[Exception:return|ValueError:handle]"
         }
       ]
     }

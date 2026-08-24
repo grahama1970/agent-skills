@@ -1,6 +1,6 @@
 {
-  "commit": "268bbcb5a1",
-  "as_of": "2026-08-12",
+  "commit": "2afaf6dcaa",
+  "as_of": "2026-08-24",
   "artifacts": [
     {
       "id": "roundtable-receipt",
@@ -17,26 +17,27 @@
     {
       "id": "live-audit",
       "title": "monitor-website audit \u2014 this page, checked against the repo",
-      "capture_status": "captured",
+      "capture_status": "unavailable",
       "source": "skills/monitor-website/run.sh audit --ignore-surface artifacts.json --json",
-      "digest": "sha256:2edca4d043db517fa15a12f2437891da816cdf322c8296d29cb983f1916229df",
-      "judgment": "LOCAL DRIFT: 0 \u00b7 PUBLIC ENDPOINTS: 5/5",
-      "proves": "The checkout's generated surfaces agreed with their source files, excluding artifacts.json while it was being regenerated, and the named public endpoints returned expected markers at capture time.",
-      "does_not_prove": "That the deployed HTML was built from this exact commit, or that every interaction works.",
-      "caption": "skills/monitor-website/run.sh audit --ignore-surface artifacts.json --json",
-      "body": "{\n  \"ok\": true,\n  \"drift\": [],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}"
+      "digest": null,
+      "judgment": "UNAVAILABLE",
+      "proves": "No audit receipt was captured.",
+      "does_not_prove": "That local generated surfaces agreed or public endpoints responded.",
+      "caption": "{\n  \"drift\": [],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": false\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_docx\": {\n      \"status\": null,\n      \"ok\": false,\n      \"error\": \"HTTP Error 404: Not Found\"\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}",
+      "body": "",
+      "unavailable_reason": "{\n  \"drift\": [],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": false\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_docx\": {\n      \"status\": null,\n      \"ok\": false,\n      \"error\": \"HTTP Error 404: Not Found\"\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}"
     },
     {
       "id": "inventory-provenance",
       "title": "inventory provenance \u2014 where the numbers come from",
       "capture_status": "captured",
       "source": "site/inventory.json",
-      "digest": "sha256:880da87f649a653c3762d23fcfc2550a963fab6293d7073f9e0ddef68cfb23b5",
-      "judgment": "BUILD: 268bbcb5a1",
+      "digest": "sha256:5b95b2c0cebb6cb3b2b39a845c3fe148d8e6da35a29634db73da39c1fbc0dd51",
+      "judgment": "BUILD: 2afaf6dcaa",
       "proves": "The numbers above came from checked source state, not marketing copy.",
       "does_not_prove": "That every skill is complete, useful, or production-ready.",
-      "caption": "site/inventory.json \u00b7 sha256 880da87f649a653c\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"268bbcb5a1\",\n  \"as_of\": \"2026-08-12\",\n  \"stats\": {\n    \"skills\": 347,\n    \"sanity\": 292,\n    \"agents\": 92\n  }\n}"
+      "caption": "site/inventory.json \u00b7 sha256 5b95b2c0cebb6cb3\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"2afaf6dcaa\",\n  \"as_of\": \"2026-08-24\",\n  \"stats\": {\n    \"skills\": 361,\n    \"sanity\": 301,\n    \"agents\": 92\n  }\n}"
     }
   ]
 }

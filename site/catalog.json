@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "268bbcb5a1",
+  "sourceCommit": "2afaf6dcaa",
   "counts": {
     "areas": 8,
     "projects": 10,
-    "skills": 347
+    "skills": 361
   },
   "documents": [
     {
@@ -28,7 +28,7 @@
         "model-ops"
       ],
       "summary": "Reliable agent execution and orchestration — contracts, transport, and runtime truth.",
-      "skillCount": 49
+      "skillCount": 51
     },
     {
       "id": "area:memory",
@@ -72,7 +72,7 @@
         "data-engineering"
       ],
       "summary": "Documents, research, and video into one truthful, cited result — no knobs to mislead.",
-      "skillCount": 66
+      "skillCount": 67
     },
     {
       "id": "area:compliance",
@@ -94,7 +94,7 @@
         "engineering-standards"
       ],
       "summary": "Evidence-grounded reasoning where a human, not the model, holds authority.",
-      "skillCount": 59
+      "skillCount": 62
     },
     {
       "id": "area:adaptive-lineage",
@@ -237,7 +237,7 @@
       ],
       "question": "How does an agent prove which browser tab actually answered?",
       "summary": "Browser transport for agents — authenticated Chrome, element refs, screenshots, proven tab provenance.",
-      "body": "Unified browser automation for AI agents. Uses surf-cli extension when available (full features), falls back to CDP (zero-config). Navigate, read with element refs, click, type, screenshot. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Surf Browser Automation for AI Agents Two modes of operation: 1. With surf cli extension (recommended): Full features, works with your existing browser 2. CDP fallback : Zero config, but requires starting a separate Chrome instance If /tmp/surf.sock exists (extension installed), all commands route through surf cli. Otherwise, commands use CDP. Runtime Entrypoint And PATH The reliable agent entrypoint is the skill local wrapper: Some interactive shells also have a bare surf command on PATH , but agents must not assume that. If surf tab.list returns command not found , that is a PATH/wrapper issue, not evidence that Surf transport, the extension, or Chrome automation is broken. Re run the command through skills/surf/run.sh before diagnosing browser failure. Use this quick distinction: Native Host And Socket Incidents When Chrome was reloaded, updated, or the Surf extension was loaded more than once, diagnose the native host path before blaming WebGPT, Ask, or the target provider: Failure code stale socket no listener means /tmp/surf.sock exists but no native host is accepting connections. The wrapper attempts to move the stale socket aside and emits a structured surf.extension incident.v1 line. Reload the single enabled Surf extension in chrome://extensions , or restart Chrome, then rerun ./run.sh tab.list json . If Chrome shows duplicate Surf extensions, keep only the intended unpacked extension enabled. Its extension id must be the only current allowed origins entry in the native host manifest. After an extension id changes, run: If /tmp/surf host.log reports Cannot find module ... , the native host can launch but the vendored CLI dependencies are incomplete. Repair from the vendored CLI directory, then reload the extension: Capability And Result Contracts Before diagnosing provider breakage after a Surf update, capture the versioned contract and normalize any provider meta receipt: capabilities json reports the vendored engine version, skill identity, provider support, lock behavior, recovery features, and update gate references. meta.normalize converts WebGPT, Claude, Gemini, Kimi, and Grok receipts into surf.provider result.v1 with proof status, controlled tab/view id, URL, model, reasoning, delivery proof, retryability, stale binding repair, bounded error details, and immutable request snapshot",
+      "body": "Unified browser automation for AI agents. Uses surf-cli extension when available (full features), falls back to CDP (zero-config). Navigate, read with element refs, click, type, screenshot. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Surf Browser Automation for AI Agents Two modes of operation: 1. With surf cli extension (recommended): Full features, works with your existing browser 2. CDP fallback : Zero config, but requires starting a separate Chrome instance If /tmp/surf.sock exists (extension installed), all commands route through surf cli. Otherwise, commands use CDP. Runtime Entrypoint And PATH The reliable agent entrypoint is the skill local wrapper: Some interactive shells also have a bare surf command on PATH , but agents must not assume that. If surf tab.list returns command not found , that is a PATH/wrapper issue, not evidence that Surf transport, the extension, or Chrome automation is broken. Re run the command through skills/surf/run.sh before diagnosing browser failure. Use this quick distinction: Native Host And Socket Incidents When Chrome was reloaded, updated, or the Surf extension was loaded more than once, diagnose the native host path before blaming WebGPT, Ask, or the target provider: Failure code stale socket no listener means /tmp/surf.sock exists but no native host is accepting connections. The wrapper attempts to move the stale socket aside and emits a structured surf.extension incident.v1 line. Reload the single enabled Surf extension in chrome://extensions , or restart Chrome, then rerun ./run.sh tab.list json . If Chrome shows duplicate Surf extensions, keep only the intended unpacked extension enabled. Its extension id must be the only current allowed origins entry in the native host manifest. After an extension id changes, run: If /tmp/surf host.log reports Cannot find module ... , the native host can launch but the vendored CLI dependencies are incomplete. Repair from the vendored CLI directory, then reload the extension: Tab Age Chrome exposes no tab creation time — tab.list returns only id, title, url, active, and windowId — so age is observed and remembered rather than read: Each tab gains first seen , age seconds , age human , and age source . age source is the field that matters. observed means the tab appeared after the ledger existed, so its age is accurate to the gap between scans. at least means the tab was already open when the ledger was first written, so its real age is unknown and only a lower bound is reported (rendered with a = prefix). Treating a lower bound as exact is how a wee",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
@@ -272,7 +272,7 @@
       ],
       "question": "What do you do with exploit code you can't trust? Breed it.",
       "summary": "Red/blue exploit evolution in isolated Docker targets, scored by deterministic proof gates.",
-      "body": "Red vs Blue team security competition orchestrator. Runs long-running overnight battles with 1000s of interactions, scoring, and insight generation. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Battle Skill Red vs Blue Team Security Competition Orchestrator Pits a Red Team (attack) against a Blue Team (defense) in a long running competitive loop. Each team leverages all .pi/skills to attack or defend a target codebase. Architecture Production Battle is an orchestration skill, not a large bespoke security engine. The host side process should schedule rounds, choose personas, dispatch subagents, provision Docker runtimes, collect receipts, score hard runtime signals, write reports, and persist learning. Target code and team generated code must execute only inside Docker. Required production invariants: Red and Blue are subagent teams. Each dispatched subagent must include an explicit persona selected by the orchestrator for that turn. Multiple personas per team may run concurrently when the turn benefits from breadth. Battle execution requires a security.target authorization.v1 manifest before Docker, QEMU, target runtime setup, Hack delegation, proof replay, or patch replay starts. The manifest binds project/operator scope and target identity; it is not a legal opinion and does not prove exploit success or patch effectiveness. Red team $hack execution is a subagent responsibility, not a Battle Python import. Battle performs or schedules scan/research/memory recall, builds the candidate exploit list, chooses the Red persona, dispatches an agent skills/agents /Tau subagent with that contract, and records the returned exploit receipt. Subagent handoffs and receipts should follow the compact Tau style JSON contract shape used by tau.agent handoff.v1 and tau.subagent receipt.v1 , with Battle specific fields layered on top rather than a separate ad hoc protocol. Battle calls modular Tau subagent contracts. Tau and the loop/agentic harness own subagent execution and use scillm as the LLM/model caller. Battle owns team selection, persona assignment, Docker runtimes, scorekeeping, artifacts, and memory promotion. SciLLM is a Tau owned provider sidecar. Battle operators and project agents must not call $scillm , /scillm , http://localhost:4001 , /v1/chat/completions , or /v1/scillm/ directly for Battle proof work. Express provider work as Tau DAGs, Tau command loop nodes, or Tau skill nodes, then consume Tau receipts and node outputs. Model choice is strategic but routed through Tau/loop: SOTA model",
+      "body": "Red vs Blue team security competition orchestrator. Runs long-running overnight battles with 1000s of interactions, scoring, and insight generation. STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Battle Skill Red vs Blue Team Security Competition Orchestrator Pits a Red Team (attack) against a Blue Team (defense) in a long running competitive loop. Each team leverages all .pi/skills to attack or defend a target codebase. Purpose Boundary Battle's purpose is the Red/Blue security competition backend: authorized target setup, isolated execution, Red attack generation, Blue defense generation, independent Judge replay, scorekeeper receipts, adaptive lineage, and durable learning. Adaptive lineage is a backend learning loop that spawns, evaluates, selects, and promotes or rejects child Red/Blue evidence from Judge backed receipts. PixiJS is only a spectator/replay surface for Battle receipts. A PixiJS pass proves that recorded receipts can be inspected in a fun replay; it does not prove the Battle orchestrator, provider driven subagents, Docker/QEMU isolation, overnight scheduler, scorekeeper, or memory learning works. Do not close core Battle readiness from PixiJS evidence alone, and do not block backend adaptive lineage on replay polish beyond truthful receipt inspectability. Architecture Production Battle is an orchestration skill, not a large bespoke security engine. The host side process should schedule rounds, choose personas, dispatch subagents, provision Docker runtimes, collect receipts, score hard runtime signals, write reports, and persist learning. Target code and team generated code must execute only inside Docker. Required production invariants: Red and Blue are subagent teams. Each dispatched subagent must include an explicit persona selected by the orchestrator for that turn. Multiple personas per team may run concurrently when the turn benefits from breadth. Battle execution requires a security.target authorization.v1 manifest before Docker, QEMU, target runtime setup, Hack delegation, proof replay, or patch replay starts. The manifest binds project/operator scope and target identity; it is not a legal opinion and does not prove exploit success or patch effectiveness. Red team $hack execution is a subagent responsibility, not a Battle Python import. Battle performs or schedules scan/research/memory recall, builds the candidate exploit list, chooses the Red persona, dispatches an agent skills/agents /Tau subagent with that contract, and records the returned exploit receipt. Suba",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
@@ -559,7 +559,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Agentic evaluation of skills using multi-trial fixtures, deterministic command assertions, trajectory checks, safety constraints, and evidence-backed readiness scoring. Use when users ask for agentic evals, multi-trial skill evaluation, skill trajectory validation, or readiness scoring for a skill workflow.",
-      "body": "agentic evals Use this skill when a normal one shot smoke test is too weak and the task needs repeatable, evidence backed evaluation of a skill or agent workflow. Current Scope This initial bundle provides a deterministic fixture runner for command based cases. It runs each case multiple times, records stdout/stderr/exit status and duration, checks explicit expectations, and emits a machine readable readiness summary. This proves only the declared fixture behavior. It does not prove semantic correctness, real service integration, LLM judge quality, or release readiness unless the fixture commands themselves exercise those live paths. Usage Fixture Contract Each case must declare: name type : positive , negative , or adversarial command : a non empty argv list expected.exit code Optional expectations: expected.stdout contains expected.stderr contains Anti Slop Contract (fail closed) A skill evaluation fixture is REJECTED at load time (non zero exit, no run) if it is self serving determi",
+      "body": "agentic evals Use this skill when a normal one shot smoke test is too weak and the task needs repeatable, evidence backed evaluation of a skill or agent workflow. Current Scope This initial bundle provides a deterministic fixture runner for command based cases. It runs each case multiple times, records stdout/stderr/exit status and duration, checks explicit expectations, and emits a machine readable readiness summary. This proves only the declared fixture behavior. It does not prove semantic correctness, real service integration, LLM judge quality, or release readiness unless the fixture commands themselves exercise those live paths. Usage Claim based readiness ( 1445) Deterministic tests prove mechanisms; real E2Es prove capabilities. A pile of passing deterministic cases must never look like readiness for a live capability that was never exercised. Readiness is therefore computed per declared capability claim , then aggregated — not from a case count. Declare capability claims (kept ",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/agentic-evals/SKILL.md"
     },
     {
@@ -719,7 +719,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Red vs Blue team security competition orchestrator. Runs long-running overnight battles with 1000s of interactions, scoring, and insight generation.",
-      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Battle Skill Red vs Blue Team Security Competition Orchestrator Pits a Red Team (attack) against a Blue Team (defense) in a long running competitive loop. Each team leverages all .pi/skills to attack or defend a target codebase. Architecture Production Battle is an orchestration skill, not a large bespoke security engine. The host side process should schedule rounds, choose personas, dispatch subagents, provision Docker runtimes, collect receipts, score hard runtime signals, write reports, and persist learning. Target code and team generated code must execute only inside Docker. Required production invariants: Red and Blue are subagent teams. Each dispatched subagent must include an explicit persona selected by the orchestrator for that turn. Multiple personas per team may run concurrently when the turn benefits from breadth. Battle execution requires a security.target authorization.v1 manifest before Docker, QEMU, target run",
+      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. Battle Skill Red vs Blue Team Security Competition Orchestrator Pits a Red Team (attack) against a Blue Team (defense) in a long running competitive loop. Each team leverages all .pi/skills to attack or defend a target codebase. Purpose Boundary Battle's purpose is the Red/Blue security competition backend: authorized target setup, isolated execution, Red attack generation, Blue defense generation, independent Judge replay, scorekeeper receipts, adaptive lineage, and durable learning. Adaptive lineage is a backend learning loop that spawns, evaluates, selects, and promotes or rejects child Red/Blue evidence from Judge backed receipts. PixiJS is only a spectator/replay surface for Battle receipts. A PixiJS pass proves that recorded receipts can be inspected in a fun replay; it does not prove the Battle orchestrator, provider driven subagents, Docker/QEMU isolation, overnight scheduler, scorekeeper, or memory learning works. Do",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/battle/SKILL.md"
     },
     {
@@ -833,6 +833,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-d3/SKILL.md"
     },
     {
+      "id": "skill:best-practices-delivery-proof",
+      "type": "skill",
+      "name": "best-practices-delivery-proof",
+      "category": "best-practices",
+      "sanity": true,
+      "summary": "Delivery-proof discipline for agents driving external effects: browser submits, pane messages, file writes, pushes, API calls. Use when an agent is about to claim something was sent, submitted, delivered, landed, or running; when a transport reports success but the destination shows nothing; when an agent is retrying the same failing operation; or when the human says the agent is lying, skimming, or thrashing. Encodes the 2026-08-18 session in which five browser submits failed and the agent twice reported delivery that had not happened — every rule below is paid for by a specific receipt from that session.",
+      "body": "best practices delivery proof Why this skill exists On 2026 08 18 an agent spent over an hour failing to deliver one prompt to one human named browser tab. Five submits failed the same way. The agent twice told the human the prompt was \"submitted and generating\" while the destination tab held nothing. The human had to say \"I'm looking at the browser tab now\" to force a read back the agent should have done first. Every failure was pre answered by a contract the agent had been told to read and had only grepped. None of the rules below are aspirations; each one names the exact receipt that paid for it. Rule 1 — A delivery claim requires a receipt from the DESTINATION A statement that something was sent, submitted, delivered, posted, or landed is a claim about the destination, so only the destination can prove it. The transport's opinion of itself is never sufficient, however official it looks. Claim The only acceptable receipt \"prompt submitted to a browser tab\" message count grew in that",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-delivery-proof/SKILL.md"
+    },
+    {
       "id": "skill:best-practices-design",
       "type": "skill",
       "name": "best-practices-design",
@@ -893,6 +903,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-kling-contact-sheet/SKILL.md"
     },
     {
+      "id": "skill:best-practices-one-shot",
+      "type": "skill",
+      "name": "best-practices-one-shot",
+      "category": "best-practices",
+      "sanity": false,
+      "summary": "Best practices for Ask one-shot runs: the same question to N seats concurrently, answers returned per seat with no consensus, no judge, and no quorum. Use when a user asks several models one question and wants to read each answer, when partial answers are still useful, or when deciding whether a request is a one-shot, a roundtable, or a competition.",
+      "body": "Best Practices: One Shot A one shot asks N seats the same question concurrently and returns N independent answers. The human reads the answers; nothing synthesizes them. It is the correct mode when the deliverable is perspectives, not a decision. Core Rule Never manufacture agreement from one shot answers. The moment you summarize the answers into \"the models agree that...\" you have run a roundtable without its equal packet, quorum, and attributed dissent guarantees. The moment you pick \"the best answer\" you have run a competition without isolation or an independent judge. If the user wants either, recompile in the right mode; do not upgrade a one shot in prose. Contract skills/ask/run.sh one shot \"<question \" handler <a handler <b ... Independence is structural. Each seat runs as its own single call Tau DAG. There is no shared node, so one seat's failure cannot reach another lane even in principle — stronger isolation than a roundtable's join gate. Nonce bound answers. The prompt embe",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-one-shot/SKILL.md"
+    },
+    {
       "id": "skill:best-practices-opportunities",
       "type": "skill",
       "name": "best-practices-opportunities",
@@ -901,6 +921,16 @@
       "summary": "Canonical rubric for evaluating, scoring, ranking, and gating career and consulting opportunities for Graham Anderson, so the \"top opportunities\" selection is principled and repeatable rather than bespoke per run. Use when discovering, evaluating, reviewing, ranking, or deciding which opportunities to apply to in monitor-opportunities, or when building or reviewing the opportunity-evaluator / opportunity-evaluation-reviewer subagents or the ranker. The evaluator scores AGAINST this rubric; the reviewer reviews AGAINST it; the ranker orders BY it. No hand-built top-N lists.",
       "body": "Best Practices: Opportunities The single source of truth for judging opportunities for Graham. It exists so no agent ever bespokes a \"top opportunities\" list from intuition. Three consumers: opportunity evaluator (creator) produces subscores + a verdict AGAINST this rubric. opportunity evaluation reviewer (reviewer) issues VERDICT PASS/FAIL AGAINST this rubric. the ranker orders the shortlist BY this rubric (mandate first, §6). If a rule here conflicts with a hand written list, the rule wins. Update the rubric; do not special case a run. 0. Candidate profile is authoritative Read skills/monitor opportunities/config/candidate profile.json and /memory ( morning opportunities ) for who Graham is. Never infer preferences. Key facts: Principal AI Architect , Buffalo NY, US citizen, authorized to work in US. Dual track: senior full time employment AND consulting clients (§7). Seniority floor: Principal / Staff+ / Architect / Senior. Below is deprioritized. Workplace: remote or hybrid preferr",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-opportunities/SKILL.md"
+    },
+    {
+      "id": "skill:best-practices-pitchdeck",
+      "type": "skill",
+      "name": "best-practices-pitchdeck",
+      "category": "best-practices",
+      "sanity": false,
+      "summary": "Deck ARCHITECTURE rules for building pitch decks from source material — measured from a real 263-slide corpus, not invented. Use when planning a deck's sections and slide sequence, when deciding which source images become slides, or when reviewing whether a generated deck is house-shaped. Exists to prevent bespoking slide architecture: sections must be DERIVED from the source document, never hardcoded in a compiler.",
+      "body": "Pitch Deck Architecture Page level design lives in $best practices slide design (ten archetypes). This skill is the layer above it: how a DECK is shaped, and how that shape is allowed to be decided. The rule that exists because it was broken Sections are DERIVED from the source document. Never hardcoded. A compiler that contains sections = [(\"The Problem\", ...), (\"How It Works\", ...)] is not compiling a source into a deck — it is decorating a hand written narrative with the source's words. Observed 2026 08 12 in $pitchdeck : a four section list authored from memory shipped as \"README to deck\" for weeks. When the same README was actually READ by a model seat, its argument turned out to be one repeated thesis restated across five contexts , not a problem/solution arc — a structure no hardcoded list would ever have found. Sectioning runs as step 1 of the pipeline, through $ask (which compiles to a Tau DAG), with the source document verbatim, a contact sheet of ALL its images attached (the",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-pitchdeck/SKILL.md"
     },
     {
       "id": "skill:best-practices-plan",
@@ -1219,7 +1249,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Assess the project to reorganize or deprecate unused/outdated files. Joins each candidate against per-candidate dependency evidence, blocks mutation per class on the evidence that class actually needs, and keeps assessment running when indexing is unavailable.",
-      "body": "Cleanup Skill This skill performs a deep assessment of the codebase to identify technical debt, unused files, and outdated documentation, then performs cleanup operations with confirmation. Key Features Artifact review : Detects binary/media files ( .wav , .mp4 , .pt , .ckpt , .parquet , etc.) but keeps root level candidates review only because they may be runtime inputs Root stray detection : Flags untracked directories at project root that don't belong (e.g. personaplex/ , data horus/ ) Junk file cleanup : Removes logs, temp files, cache dirs Unused file candidate detection : Uses lexical absence only to nominate review candidates; it never treats that signal as removal proof Per candidate dependency evidence : Joins each candidate against .cleanup evidence.json and emits a verdict per file. Aggregate ingest counters are reported with their proof limits, never as per file safety Per class mutation authority : Each mutation class carries the evidence it actually needs; no class inheri",
+      "body": "Cleanup Skill This skill performs a deep assessment of the codebase to identify technical debt, unused files, and outdated documentation, then performs cleanup operations with confirmation. Key Features Artifact review : Detects binary/media files ( .wav , .mp4 , .pt , .ckpt , .parquet , etc.) but keeps root level candidates review only because they may be runtime inputs Root stray detection : Flags untracked directories at project root that don't belong (e.g. personaplex/ , data horus/ ) Human authorized deprecated move : When the human explicitly says to move root strays or artifacts into a deprecated folder and not delete them, perform only a path scoped mv into deprecated/cleanup <date /... , write a receipt with source, destination, size, and SHA 256, read back old path absence and new path presence, and commit only that deprecated path plus the receipt. This is not execute ; it is an owner approved preservation move. Junk file cleanup : Removes logs, temp files, cache dirs Unused",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/cleanup/SKILL.md"
     },
     {
@@ -1783,6 +1813,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-styleguide/SKILL.md"
     },
     {
+      "id": "skill:create-svg",
+      "type": "skill",
+      "name": "create-svg",
+      "category": "create",
+      "sanity": true,
+      "summary": "Create, restyle, preview, and validate self-contained themed SVG diagrams and animations for any surface — READMEs, websites, pitchdecks, docs, artifacts. Use when a user asks for an animated SVG, an animated README SVG, a reusable SVG style preset, a dark neon technical diagram, deterministic CSS-keyframe animation, or a README-safe SVG generated from a semantic scene. README-grade constraints (no JS, self-contained, reduced-motion fallback) are the universal floor, which makes every artifact portable to less-hostile surfaces for free.",
+      "body": "README SVG Animator Create GitHub compatible animated SVG illustrations from three explicit inputs: 1. Theme — fonts, palette, stroke widths, shadows, radii, and timing defaults. 2. Scene — semantic content using a bounded diagram template. 3. Timeline — millisecond events compiled into one synchronized CSS cycle. The shipped fixing opus neon v1 theme reproduces the visual vocabulary of the MIT licensed disler/fixing smartass opus 5 README assets without bundling its SVG artwork or any font binaries. Use this skill when A README needs an animated hero, comparison card, or technical diagram. A user wants the same font, color, stroke, shadow, and timing language across assets. SVG output must remain self contained and work through a README <img element. A style must be extracted from existing SVG files before generating new scenes. Do not use it for raster illustration, interactive JavaScript visualization, or arbitrary untrusted HTML. It deliberately rejects scripts, event handlers, for",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/create-svg/SKILL.md"
+    },
+    {
       "id": "skill:create-table",
       "type": "skill",
       "name": "create-table",
@@ -2323,16 +2363,6 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/handoff/SKILL.md"
     },
     {
-      "id": "skill:herdr-workstation",
-      "type": "skill",
-      "name": "herdr-workstation",
-      "category": "core",
-      "sanity": true,
-      "summary": "Use this skill when a project agent needs to spin up, inspect, communicate with, or remove Herdr-managed workstations for long-running multi-agent tasks. It provides a Typer CLI for dynamic Herdr workspaces, provider-specific agent panes, pane-to-pane notifications, semantic role state reporting, and bounded creator/reviewer loops with durable receipts.",
-      "body": "Herdr Workstation Use this skill when subagent work should be visible, attachable, and recoverable in Herdr instead of hidden in opaque background jobs. Boundary Herdr is the live terminal/session fabric. It manages workspaces, tabs, panes, provider agents, agent state, pane reads, and pane input. The project agent, T'au, monitor sparta, or the calling workflow remains the source of truth for queue selection, policy gates, receipts, review verdicts, and final PASS/BLOCKED decisions. Do not use Herdr chat as the canonical approval record. Use Herdr messages as live instructions or notifications; require durable work orders, receipts, and final JSON. When to use Use Herdr workstations for long running or multi agent tasks where progress visibility and intervention matter: creator/reviewer loops Petey/Qbert/Dewey style monitor sparta work prompt health approval gates QRA generation with reviewer approval live validators, logs, and receipt tailing tasks that may block and need human/projec",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/herdr-workstation/SKILL.md"
-    },
-    {
       "id": "skill:hum",
       "type": "skill",
       "name": "hum",
@@ -2563,6 +2593,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/lie-detector/SKILL.md"
     },
     {
+      "id": "skill:live-evidence",
+      "type": "skill",
+      "name": "live-evidence",
+      "category": "core",
+      "sanity": true,
+      "summary": "Local-first, always-on interview and meeting copilot that transcribes speech with RealtimeSTT/faster-whisper and surfaces source-bound evidence from Graph Memory, indexed code, and current repositories. Use when the user says \"live interview evidence\", \"listen during my interview\", \"surface repo proof while I talk\", \"meeting copilot\", or \"find supporting code while someone is speaking\".",
+      "body": "Live Evidence Live Evidence lets the human stay in the conversation. It listens locally, assembles stable speaker turns, and retrieves compact evidence cards instead of generating a second conversation to read. Capability map (receipt backed, 31 case suite) Every row below is guarded by at least one live agentic eval case; the full suite last ran READY with all cases passing twice. Capability Mechanism Live audio card PipeWire Docker RealtimeSTT (CUDA, CPU fallback on OOM) stage 1 resolver retrieval revision fenced card Stage 1 readiness direct streaming SciLLM gate; canonical question authors the card (2 11s) Stage 2 fast answer streaming solver into the published card: p50 0.9s / p95 2.2s to first content, receipt journaled per answer; $ask tau dag is the escalation path Requirement ledger ( 1454) blocking clarifications hold the solver at zero; exactly once per revision; amendable Session purposes ( 1449) frozen backend enforced capability policies; digest bound to every artifact Br",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/live-evidence/SKILL.md"
+    },
+    {
       "id": "skill:llm-eval-lab",
       "type": "skill",
       "name": "llm-eval-lab",
@@ -2698,8 +2738,8 @@
       "name": "monitor-herdr",
       "category": "monitor",
       "sanity": true,
-      "summary": "Monitor Herdr-visible Codex/Claude agent panes for stalled, blocked, unknown, or confused state, then ask each stalled agent whether it needs human intervention or can self-unblock with brave-search or webgpt.",
-      "body": "Monitor Herdr Use this skill to monitor Herdr agent panes and restart agents that stopped before the immutable goal was met. This skill is a thin fail closed monitor. It does not replace Tau, Herdr, $brave search , $webgpt , $ask , or $ticket . It uses the Herdr socket API, writes receipts, and, only with apply , sends a bounded restart or human blocker prompt to selected stopped panes. Commands Runtime Contract tick uses the Herdr Unix socket API against ~/.config/herdr/herdr.sock by default. tick resolves the named Herdr space by workspace id, number, or label. tick reads workspace.list , pane.list , pane.read , and agent.explain . By default tick is observation only and sends nothing. tick apply sends one prompt per selected pane using herdr pane run , which submits text plus Enter atomically on supported Herdr builds. The socket pane.send text plus pane.send keys path remains a bounded fallback only when pane run fails before modifying input. tick min stopped seconds N requires a s",
+      "summary": "Monitor Herdr-visible Codex/Claude agent panes for stalled, blocked, unknown, or confused state, nudge genuinely stalled agents back to work with their repo, skill, and open tickets already resolved, and sweep stale disposable workspaces. Never re-asks an agent that stated a blocker and never re-nudges a pane that has not changed since the last prompt.",
+      "body": "Monitor Herdr Use this skill to monitor Herdr agent panes and restart agents that stopped before the immutable goal was met. This skill is a thin fail closed monitor. It does not replace Tau, Herdr, $brave search , $webgpt , $ask , or $ticket . It uses the Herdr socket API, writes receipts, and, only with apply , sends a bounded restart or human blocker prompt to selected stopped panes. Commands Reconciling pane moves Monitor state is keyed by pane id, but a cross workspace move changes that id while the terminal and the agent survive. Without reconciliation a moved agent looks brand new: its stopped since timestamp is lost, its cooldown resets, and it can be re prompted immediately after a move it never noticed. reconcile moves consumes the herdr.space operation receipt.v1 receipts written by $ops herdr agent move and migrates state.prompts[<old pane ] onto the new id. It is dry run by default and needs apply to write. Chained moves collapse to the final id, and when both ids already ",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-herdr/SKILL.md"
     },
     {
@@ -2739,7 +2779,7 @@
       "category": "monitor",
       "sanity": true,
       "summary": "Nightly opportunity monitor that researches a bounded set of target employers and clients, ranks only eligible opportunities, compiles claim-bound resume variants, and emits one interactive morning report covering human-transmitted outreach and separately gated ATS application state. Use when the user asks for today's opportunities, the morning opportunity report, a targeted resume, what needs human action, or to run or schedule the nightly opportunity sweep.",
-      "body": "monitor opportunities Immutable goal Daily top opportunities that are highly targeted, delivered in an interactive report/interview, with auto apply using a custom targeted resume given the algorithm likely employed by the employer or client. Operationally, “algorithm likely employed” means an evidence backed screening interface profile : observed ATS/provider host, observed form fields and file constraints, job description conventions, bounded presentation inferences, confidence, evidence references, limitations, and explicit unknowns. It does not mean knowledge of proprietary ranking weights, knockout logic, recruiter workflow, or a hidden scoring algorithm. Each morning the candidate opens one entry point backed by one source of truth report manifest. It exposes a small ranked set of real opportunities, every associated artifact, every blocker, and every available decision. Every message to another human is transmitted by the candidate . Architecture (2026 08 08 — see docs/PROJECT K",
+      "body": "monitor opportunities Immutable goal monitor opportunities does the grunt work of the daily job and consulting search; Graham only reviews our collaboration and approves. Each day it discovers, ranks, and surfaces the most targeted opportunities — Buffalo/WNY first, then credible remote — and surfaces where Graham is a LinkedIn top applicant or a role offers quick (Easy) apply. On Graham's authorization (per opportunity, or standing for a class such as \"top candidate\" or \"quick apply\" roles), the agent performs the entire application end to end: tailoring a truthful custom resume to the employer's likely screening algorithm, answering only from Graham's attested facts, and submitting on employer ATS and LinkedIn Easy Apply — with duplicate protection and an openable receipt for every action. Graham authorizes; the agent executes. Nothing is fabricated, and no required answer without a truthful basis is ever submitted — any genuine screening question is surfaced to Graham, never guessed",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-opportunities/SKILL.md"
     },
     {
@@ -2839,7 +2879,7 @@
       "category": "monitor",
       "sanity": true,
       "summary": "Audit and sync the public site (grahama.co, site/) against the repo README. Report-only audit detects drift between README's curated projects/inventory and site/content.json, plus live-site health; apply regenerates content.json from the README. Use for \"is the website current\", \"sync the site with the README\", \"website drift\", or after editing the README project cards or At a Glance table.",
-      "body": "monitor website RESUME.md is the source of truth for grahama.co/resume: gen resume.py parses it into site/resume.json and copies the PDF and Markdown exports into site/public/ , so the page, /resume.pdf , and /resume.md are one commit's content. The digest check below catches an edited resume whose surface was never regenerated. The public site ( site/ , served at https://grahama.co) mirrors two curated surfaces in README.md : the \"Fun Stuff I'm Working On\" project cards and the \"At a Glance\" inventory table. The README is the source of truth; the site reads site/content.json . This skill keeps them honest. Commands A disabled by default nightly service is registered at agents/website maintainer/services.yaml (repo convention: cron entries ship disabled; enable only when the scheduler environment is ready). Contract Report only by default. audit never mutates. apply writes only site/content.json ; committing, pushing, and the Pages deploy remain the caller's explicit actions (push to m",
+      "body": "monitor website RESUME.md is the source of truth for grahama.co/resume: gen resume.py parses it into site/resume.json and copies the PDF, DOCX, and Markdown exports into site/public/ , so the page, /resume.pdf , /resume.docx , and /resume.md are one commit's content. The digest check below catches an edited resume whose surface was never regenerated. The public site ( site/ , served at https://grahama.co) mirrors two curated surfaces in README.md : the \"Fun Stuff I'm Working On\" project cards and the \"At a Glance\" inventory table. The README is the source of truth; the site reads site/content.json . This skill keeps them honest. Commands A disabled by default nightly service is registered at agents/website maintainer/services.yaml (repo convention: cron entries ship disabled; enable only when the scheduler environment is ready). Contract Report only by default. audit never mutates. apply writes only site/content.json ; committing, pushing, and the Pages deploy remain the caller's expli",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-website/SKILL.md"
     },
     {
@@ -2901,6 +2941,16 @@
       "summary": "Buzz relay client for posting skill notifications, rendering Buzz-ready messages, querying recent channel messages, and checking Buzz CLI connectivity. Use when a skill needs to notify Buzz, post a morning report, inspect Buzz configuration, or prepare a Buzz agent-facing handoff.",
       "body": "ops buzz Thin, agent safe wrapper around the upstream buzz cli surface. Buzz is the chat and agent workspace. Domain skills remain the source of truth for their own artifacts. ops buzz only transports or queries Buzz messages and records receipts for what it attempted. Grounded upstream contract Use the existing Buzz CLI and relay model: buzz cli is the agent first CLI; it reads BUZZ RELAY URL and signs requests with BUZZ PRIVATE KEY . buzz messages send channel <uuid content posts a message from stdin. buzz messages get channel <uuid limit <n reads recent channel messages. buzz messages search query <text searches messages. Buzz's own agent guidance prefers Nostr events and buzz cli over new bespoke HTTP endpoints. Do not add a new Buzz relay endpoint from this skill. If a missing Buzz feature is needed, implement it upstream in buzz cli /Buzz first, then wrap it here. Current authority Allowed: render a Buzz ready Markdown message from a typed payload; dry run a post and write a rece",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-buzz/SKILL.md"
+    },
+    {
+      "id": "skill:ops-chatterbox",
+      "type": "skill",
+      "name": "ops-chatterbox",
+      "category": "ops",
+      "sanity": true,
+      "summary": "Diagnose local Chatterbox or Chatterbox-Turbo TTS services, Docker containers, health endpoints, render receipts, paralinguistic tag handling, voice delivery capability fields, and Chatterbox caller misuse. Use when the user asks for ops-chatterbox, Chatterbox health, Chatterbox Docker status, Chatterbox TTS smoke tests, or Chatterbox voice-delivery diagnostics.",
+      "body": "Ops Chatterbox Use this skill for service level Chatterbox diagnosis. Chatterbox is the speech renderer; caller skills own facts, identity, dream state, answer invariance, memory policy, and conversation logic. Commands All commands emit JSON receipts. A diagnostic command should return a receipt even when a service is unavailable; use strict when a caller needs a non zero exit for ok:false . Receipt Contract Every receipt includes: schema skill command status ok live mocked checks failures next actions Live HTTP, Docker, and render probes must also include the target URL or container, elapsed time, and the redacted source of the evidence. Never print secret environment values; container diagnostics may list env key names and which keys were redacted. Boundary Rules A /health payload that echoes a requested voice delivery field is not proof that audio changed. Per render affect effect , pace effect , tag handling , audio artifact metadata, and transcript or ASR readback are stronger ev",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-chatterbox/SKILL.md"
     },
     {
       "id": "skill:ops-chutes",
@@ -3003,6 +3053,46 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-google/SKILL.md"
     },
     {
+      "id": "skill:ops-google-calendar",
+      "type": "skill",
+      "name": "ops-google-calendar",
+      "category": "ops",
+      "sanity": false,
+      "summary": "Read and propose Google Calendar changes over OAuth for meeting-assistant scheduling. Use for \"schedule a follow-up\", \"reschedule\", \"move the meeting\", \"push this to Friday\", \"what's on my calendar\", \"calendar oauth\", or when live-evidence proposes a calendar action. Writes are PROPOSE-ONLY and require an explicit --confirm; nothing mutates a real calendar without it.",
+      "body": "Ops Google Calendar Read the calendar, and propose (never silently apply) scheduling changes an agent hears in a meeting. This is the destination for the live evidence schedule action: \"can we push this to Friday?\" becomes a proposal a human approves, not an automatic calendar write. The Google Calendar API and OAuth are free (quota limited, no per call billing). This is unrelated to ops google , which is a Gemini API budget manager. One time auth setup OAuth needs a Google Cloud OAuth client (Desktop type). You create it once: 1. In Google Cloud Console, enable the Calendar API and create an OAuth 2.0 Desktop client. Download the JSON. 2. Save it (path is configurable): 3. Run the consent flow in your own terminal (it opens a browser). Because this is interactive, run it yourself with the ! prefix: The refresh token is stored at ~/.config/ops google calendar/token.json (mode 0600). The scope is calendar.events — event read/write only, no account or contact access. Commands status and ",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-google-calendar/SKILL.md"
+    },
+    {
+      "id": "skill:ops-herdr",
+      "type": "skill",
+      "name": "ops-herdr",
+      "category": "ops",
+      "sanity": true,
+      "summary": "Use this skill when a project agent needs to spin up, inspect, communicate with, or remove Herdr-managed workstations for long-running multi-agent tasks. It provides a Typer CLI for dynamic Herdr workspaces, provider-specific agent panes, pane-to-pane notifications, semantic role state reporting, and bounded creator/reviewer loops with durable receipts.",
+      "body": "Herdr Ops Use this skill when subagent work should be visible, attachable, and recoverable in Herdr instead of hidden in opaque background jobs. Upstream Herdr (read this before trusting any command below) Herdr is third party software that ships breaking CLI changes between releases. This skill is a wrapper; upstream is the authority on command shape. What Where CLI reference (authoritative for flags) https://herdr.dev/docs/cli reference/ Quick start / concepts https://herdr.dev/docs/quick start/ Source and issues https://github.com/herdrdev/herdr Live schema on this machine herdr api schema json Installed version herdr status (client + server + protocol) Verified against Herdr 0.8.0, protocol 19 . herdr api schema json is the ground truth for socket request methods, parameter shapes, and response fields; herdr <group help is ground truth for CLI flags. Prefer both over this file and over the docs site, which can lag the installed binary. Before debugging a failing Herdr call, run her",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-herdr/SKILL.md"
+    },
+    {
+      "id": "skill:ops-huggingface",
+      "type": "skill",
+      "name": "ops-huggingface",
+      "category": "ops",
+      "sanity": false,
+      "summary": "Dry-run-first Hugging Face Hub operations: search models/datasets, inspect repos, list files, create repos, upload, snapshot, and validate/template model & dataset cards. Mutations require --execute; every receipt records an auth check without exposing token values.",
+      "body": "/ops huggingface Operate the Hugging Face Hub with dry run safety defaults. RECONSTRUCTED 2026 08 12 from the surviving .pyc bytecode after the source was lost (never tracked in git, no disk copy survived). The reconstruction is faithful to the 3.12 disassembly and is now TRACKED so the skill cannot be lost again. See scripts/hf ops.py header for provenance. Commands Safety contract create repo , upload , snapshot do nothing to the Hub without execute ; without it they emit a receipt with dry run: true, executed: false . Every command records auth checked and auth source ( env / huggingface hub cache / none ) WITHOUT printing token values. search and repo info are read only. Auth Reads HF TOKEN / HUGGINGFACE HUB TOKEN from the environment or the repository .env (loaded at startup), or a cached huggingface cli login token. No token is ever echoed. Requirements huggingface hub in the active environment. If absent, every command fails closed with a clear Missing dependency: huggingface hu",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-huggingface/SKILL.md"
+    },
+    {
+      "id": "skill:ops-linkedin",
+      "type": "skill",
+      "name": "ops-linkedin",
+      "category": "ops",
+      "sanity": true,
+      "summary": "Prepare evidence-bounded LinkedIn profile updates, posts, image-post captions, comments, connection notes, messages, manual search plans, lead-research plans, and content reviews as local drafts with typed human-execution handoff packets. Use when a user says \"update my LinkedIn\", \"draft a LinkedIn post\", \"write a connection note\", \"plan LinkedIn outreach\", \"review my LinkedIn content\", or otherwise asks for LinkedIn operations. This skill does not automate LinkedIn.",
+      "body": "LinkedIn Operations Prepare LinkedIn work locally, validate factual claims, and hand the final action to a human. The skill deliberately stops before LinkedIn access or submission. Immutable boundary The skill MUST NOT: open, drive, inspect, or modify LinkedIn through a browser, extension, DOM bridge, WebSocket bridge, browser control skill, or headless browser; inspect cookies, passwords, session tokens, local storage, or login state; scrape profiles, posts, contacts, search results, comments, or company pages; automatically post, like, comment, connect, follow, message, apply, or upload; perform bulk engagement, outreach sequences, rate limit evasion, or anti bot evasion; report PREPARED work as executed, delivered, published, or platform verified. An official LinkedIn API adapter is outside this MVP. Add one only after documented LinkedIn authorization, a separate security/policy review, and new live receipts. Read references/linkedin policy.md before proposing any expansion of this",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-linkedin/SKILL.md"
+    },
+    {
       "id": "skill:ops-llm",
       "type": "skill",
       "name": "ops-llm",
@@ -3031,6 +3121,16 @@
       "summary": "Pi Term (WezTerm fork) operations, interaction testing, and visual regression. Automated UI testing via xdotool, screenshot evidence, burst captures for animations, blind test integration via /test-lab, and design review automation.",
       "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. ops pi term Pi Term (WezTerm fork + Embry OS Lua config) operations, automated interaction testing, and visual regression. Architecture Pi Term is a two repo project: WezTerm fork (Rust): ${HOME}/workspace/experiments/wezterm/ — feature/sidebar widget branch Pi Mono Lua config : ${HOME}/workspace/experiments/pi mono/packages/wezterm/ Commands Test Groups (15 total) Group Tests What It Tests visual baseline G1.1 Sidebar + tab bar + status bar screenshot sidebar G2.1 G2.5 File explorer expand/collapse/click/hover panes G3.1 G3.7 Split V/H, navigate hjkl, resize, zoom, close tabs G4.1 G4.5 New tab, title formatting, next/prev, close workspaces G5.1 G5.5 Create, fuzzy switch, rename, number switch, jump unread command palette G6.1 G6.4 Open LEADER+SHIFT+P, fuzzy search, dismiss status bar G7.1 G7.2 pi term branding, CWD tracking copy mode G8.1 G8.2 Enter/exit copy mode font resize G9.1 G9.3 Increase/decrease/reset font (burst cap",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-pi-term/SKILL.md"
+    },
+    {
+      "id": "skill:ops-realtimestt",
+      "type": "skill",
+      "name": "ops-realtimestt",
+      "category": "ops",
+      "sanity": true,
+      "summary": "Diagnose local RealtimeSTT, Embry listener runtime, and Whisper-compatible ASR services, including health/readiness endpoints, Docker containers, OpenAI-style transcription endpoints, WebSocket ports, CUDA/cuDNN signals, and STT caller misuse. Use when the user asks for ops-realtimestt, RealtimeSTT health, Whisper ASR health, STT Docker status, voice listener readiness, or CUDA/cuDNN STT diagnosis.",
+      "body": "Ops Realtimestt Use this skill for service level STT diagnosis. RealtimeSTT, Embry listener runtime, and Whisper compatible ASR are transcript infrastructure; they do not own speaker identity, personal memory recall, or Chatterbox voice rendering. Commands All commands emit JSON receipts. A diagnostic command should return a receipt even when a service is unavailable; use strict when a caller needs a non zero exit for ok:false . Supported Service Shapes health and doctor classify the observed service instead of assuming one implementation: Embry RealtimeSTT runtime: /health and /readiness with embry.realtimestt schemas. Whisper compatible HTTP ASR: /health , /openapi.json , and /v1/audio/transcriptions . Legacy RealtimeSTT WebSocket server: separate control and data WebSocket ports. The skill must not conflate those shapes. A healthy Whisper compatible ASR container is not evidence that the Embry RealtimeSTT listener runtime is ready, and an Embry listener readiness receipt is not evid",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-realtimestt/SKILL.md"
     },
     {
       "id": "skill:ops-runpod",
@@ -3081,6 +3181,16 @@
       "summary": "Workstation diagnostics, health monitoring, and maintenance. Knows this machine and can help troubleshoot, clean up, and maintain it.",
       "body": "Workstation Ops Diagnose, monitor, and maintain this workstation. This Machine Component Spec Motherboard MSI TRX40 PRO 10G CPU AMD Threadripper 3960X (24c/48t) RAM 256 GB DDR4 GPU NVIDIA RTX A5000 (24GB) Boot WD Black SN850X 4TB → / Storage Seagate IronWolf 12TB → /mnt/storage12tb Commands Command What it does ./run.sh Quick resource check ./run.sh memory What's using RAM ./run.sh gpu GPU status & VRAM ./run.sh health Drive health & maintenance status ./run.sh net Network diagnostics (link/IP/DNS/sockets) ./run.sh temps Temperature monitoring (CPU/GPU/NVMe) ./run.sh audio Audio diagnostics (PipeWire, ALSA, XRUN, sink hijack) ./run.sh vscode VS Code health (V8 OOM, runaway workers, heap config) ./run.sh containers Docker container health ./run.sh slim Find storage savings (media, caches, models) ./run.sh duplicates Find exact duplicate files ./run.sh hogs Find sustained CPU hogs (fans always on?) ./run.sh crashes Check for OOM/crashes ./run.sh specs Hardware docs & upgrade procedures A",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-workstation/SKILL.md"
+    },
+    {
+      "id": "skill:ops-worktrees",
+      "type": "skill",
+      "name": "ops-worktrees",
+      "category": "ops",
+      "sanity": true,
+      "summary": "Git worktrees as leases that expire, with unmerged work surfaced and archived recoverably instead of stranded. Use when worktrees have accumulated, when a ticket close is blocked by the worktree retention audit, when work may have been left unmerged in a worktree, or to schedule automatic reclamation.",
+      "body": "ops worktrees Worktrees accumulate because creation is automated and reclamation is not. In this repo three skills run git worktree add and none has ever run git worktree remove ; cleanup worktree.py and audit worktrees.sh both classify and explicitly delete nothing, and no cron ran either. The count could only go up: 183 registered, 8 created in a single day. Two distinct losses come out of that, and they need different fixes. Sprawl is worktrees nobody reclaims. Stranding is work that was never merged — commits sitting in a worktree that no branch name leads back to. The second is the expensive one, and refusing to delete it does not fix it: the work is not deleted, it is simply never found again. A dirty tree is not a finding Stop re deriving this. In ~/workspace/experiments/agent skills , the primary checkout, git status is expected to be dirty and local main is expected to be diverged. Measured 2026 08 14: 192 ahead / 332 behind origin/main , 375 files differing from local HEAD . ",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-worktrees/SKILL.md"
     },
     {
       "id": "skill:orchestrate",
@@ -3673,6 +3783,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/social-bridge/SKILL.md"
     },
     {
+      "id": "skill:sparta-exposure",
+      "type": "skill",
+      "name": "sparta-exposure",
+      "category": "core",
+      "sanity": false,
+      "summary": "Route SPARTA/F-36 exposure questions through grounded Memory entity extraction, evidence-case construction, monitor-sparta freshness context, and Sparta Explorer Coverage/Supply Chain navigation without inventing controls, crosswalks, or live exposure facts.",
+      "body": "SPARTA Exposure Use this skill when a user asks about SPARTA/F 36 exposure, blast radius, coverage exposure, control exposure, or supply chain exposure. This is not a new source of truth. It is a request time adapter that composes existing SPARTA pipeline skills and Explorer read models. Scope The v1 scope is SPARTA/F 36 only. Do not generalize this skill to arbitrary enterprise risk, generic GRC, non SPARTA cyber posture, or non F 36 programs until the human explicitly asks for that next domain. Source Responsibilities /memory owns intent routing, recall, QRA retrieval, and request records. /extract entities owns entity grounding. Its proof packet.assertions , resolution map , nodes.anchors , and nodes.unsupported are the grounding authority. /create evidence case owns crosswalk chains, QRA/evidence snapshots, and candidate QRA review flow. /monitor sparta owns pipeline health, coverage findings, backlog state, and freshness/staleness receipts. It does not prove the answer by itself. ",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/sparta-exposure/SKILL.md"
+    },
+    {
       "id": "skill:sparta-qra-validator-gpt",
       "type": "skill",
       "name": "sparta-qra-validator-gpt",
@@ -3903,6 +4023,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/train-voice/SKILL.md"
     },
     {
+      "id": "skill:transcript-to-leetcode",
+      "type": "skill",
+      "name": "transcript-to-leetcode",
+      "category": "core",
+      "sanity": true,
+      "summary": "Reconstruct likely LeetCode or LeetCode-style coding questions from interview transcripts, Live Evidence transcript JSONL, or a live_evidence.question_candidate.v1 object; identify the best problem hypotheses with transcript provenance, ask only blocking clarifying questions, and generate interview-ready code only after the contract is answerable. Use when the user asks to turn a transcript into coding questions, infer a coding interview problem, identify a possible LeetCode match, clarify an underspecified algorithm prompt, or continue from Live Evidence into a code solution.",
+      "body": "Transcript to LeetCode Convert stable transcript evidence into an answerable coding contract. Treat skills/live evidence as the audio, speaker turn, and question window producer; own only the downstream path from transcript to problem hypotheses, clarification, and code. Compose with skills/interview for structured human answers and with skills/ask only after the deterministic gate authorizes a solution. Run the deterministic pass Use the bundled script before interpreting or solving the transcript: Accept these inputs: plain text with optional Interviewer: and Candidate: labels; JSON or JSONL live evidence.transcript event.v1 records; a Live Evidence session.jsonl journal envelope; one live evidence.question candidate.v1 object; stdin by passing . The script ignores interim Live Evidence turns, treats candidate speech as a hard problem window boundary, binds the result to a transcript SHA 256, and emits transcript to leetcode.analysis.v1 . Follow the state machine no coding question S",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/transcript-to-leetcode/SKILL.md"
+    },
+    {
       "id": "skill:treesitter",
       "type": "skill",
       "name": "treesitter",
@@ -4001,6 +4131,16 @@
       "summary": "Submit a readable review bundle to WebGPT through the deterministic ask-owned review command. Use when a project agent needs WebGPT/ChatGPT review of code, design, prompt, or implementation-plan evidence and should not interpret the broad $ask webgpt surface. Trigger phrases include WebGPT review, ChatGPT review bundle, ask WebGPT to review this bundle, and browser-backed review.",
       "body": "WebGPT Review Contract Use this skill instead of free form $ask webgpt ... for project agent WebGPT reviews. The supported path is the dedicated wrapper: The wrapper validates the bundle, records Surf freshness diagnostics, preflights the exact WebGPT tab when a tab id or URL is supplied, retries extension reload only when preflight cannot reach Surf/focus state, and then calls the ask owned executable command: The bundle must be exactly one browser readable artifact: one concatenated .md or .txt file, or one small .zip with at most five files. Do not pass a directory, a path only manifest, or scattered local paths. A browser reviewer cannot read those reliably. This skill composes $ask and $surf as runtimes, but callers should treat this wrapper as the stable interface. Do not hand compose broad $ask webgpt and raw $surf commands for normal review submission. Required Workflow 1. Create or select one readable review bundle. 2. Include the full review target in the bundle: full diff, c",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/webgpt-review/SKILL.md"
+    },
+    {
+      "id": "skill:writing-style",
+      "type": "skill",
+      "name": "writing-style",
+      "category": "core",
+      "sanity": true,
+      "summary": "Canonical cross-provider output contract and its broadcast runtime. Owns the single shared text block that governs how every agent reports results across Claude Code, Codex, Gemini, and Cursor, and the selectable Claude output style. Use when output style drifts between providers, when an agent reports git commit or hook status instead of results, when adding a provider, or when editing the shared writing rules.",
+      "body": "Writing Style One canonical output contract, broadcast to every provider. Edit it once. What this owns templates/<active .md is the single source of truth for how results are reported. It is not guidance to read and paraphrase — it is the exact text that gets installed into every provider's always on instruction file. This skill is preventive and always on: the contract shapes output as it is written. That is the opposite of deslop and verbosity cleaner , which are invoked after the fact to clean an existing artifact. Compose with those for cleanup; use this to stop the problem at the source. Commands run.sh is a thin wrapper over writing style.py , a Typer CLI. Logic lives in functions there; the shell script only resolves uv and the environment. Editing the contract 1. Edit the active template under templates/ . Never edit a downstream copy — the next apply overwrites it. 2. Run run.sh apply . 3. New provider instructions take effect in the next session, not the current one. The alre",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/writing-style/SKILL.md"
     }
   ]
 }
