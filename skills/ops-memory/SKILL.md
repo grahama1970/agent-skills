@@ -70,8 +70,12 @@ Qdrant directly.
   (`/recall`). It has no `arango`/`qdrant` client and no `httpx` of its own.
 - **Detection + read-only backups only.** `backup --now` and `fix --apply` are
   the only side effects, and both are explicit, gated subcommands.
-- **Semantic-sync repair is memory-repo work.** `fix` triggers the sanctioned
-  `migrate_arango_embeddings_to_qdrant.py`; it never reimplements sync.
+- **Semantic-sync repair is memory-repo work.** `fix` plans/triggers the
+  sanctioned memory-owned primitive
+  `scripts/validation/dewey_embedding_repair.py` (one collection+operation lane
+  at a time, with a rollback manifest); it never reimplements sync. Flag→op map:
+  `embedding_array_violation`→`inline-vectors`, `bm25_only`→`missing-qdrant-embeddings`,
+  `partial_sync`→`qdrant-pointer-metadata`.
 - All child calls use argument lists (never `shell=True`); every child payload
   is validated by a typed dataclass seam (`ArangoCheck`, `ArangoCoverage`,
   `QdrantHealth`) and drift raises `SeamViolation` (fail closed).
@@ -87,7 +91,7 @@ ops-memory explain "<question>"             # NL router over the above
 ops-memory recall "<query>" [--k N]         # passthrough to memory /recall
 ops-memory backups [--json]                 # list 12TB ArangoDB backups + retention
 ops-memory backup [--now]                   # create a dump on the 12TB drive (ops-arango)
-ops-memory fix [--apply]                    # plan/trigger memory-repo migration
+ops-memory fix [--collection N --operation OP --apply]  # plan/run one Dewey repair lane
 ops-memory config doctor [--json]           # non-interactive readiness
 ```
 

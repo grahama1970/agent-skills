@@ -772,29 +772,80 @@ def backup(
         raise typer.Exit(code=res.returncode or 1)
 
 
+# Which memory-owned Dewey repair operation remediates each metrics flag.
+FLAG_TO_DEWEY_OP: dict[str, str] = {
+    str(CollectionFlag.EMBEDDING_ARRAY_VIOLATION): "inline-vectors",
+    str(CollectionFlag.BM25_ONLY): "missing-qdrant-embeddings",
+    str(CollectionFlag.NO_QDRANT_EMBEDDING): "missing-qdrant-embeddings",
+    str(CollectionFlag.PARTIAL_SYNC): "qdrant-pointer-metadata",
+}
+
+
+def _dewey_repair_script(memory_repo: Path) -> Path:
+    return memory_repo / "scripts" / "validation" / "dewey_embedding_repair.py"
+
+
 @app.command()
 def fix(
-    apply: bool = typer.Option(False, "--apply", help="Confirm: run the memory-repo embedding migration."),
+    collection: str = typer.Option(None, "--collection", help="Single collection to repair (required for --apply)."),
+    operation: str = typer.Option(
+        None, "--operation",
+        help="Dewey op: inline-vectors | missing-qdrant-embeddings | qdrant-pointer-metadata.",
+    ),
+    apply: bool = typer.Option(False, "--apply", help="Confirm: run one Dewey repair lane (external write)."),
 ) -> None:
-    """Plan (default) or trigger the memory-repo migration that repairs semantic sync.
+    """Plan (default) or run one memory-owned Dewey embedding-repair lane.
 
-    Remediation is owned by the memory repo's sanctioned
-    ``migrate_arango_embeddings_to_qdrant.py``; ops-memory never reimplements sync.
+    Semantic-sync remediation is owned by the memory repo. The sanctioned,
+    tracked primitive is ``scripts/validation/dewey_embedding_repair.py`` — it
+    writes a rollback manifest before mutating and fails closed. ops-memory never
+    reimplements sync; it only plans the per-lane commands (mapping each metrics
+    flag to a Dewey operation) and, with --apply, runs ONE explicitly-named lane.
     """
     memory_repo = Path(os.environ.get("MEMORY_REPO", Path.home() / "workspace/experiments/memory"))
-    script = memory_repo / "scripts" / "migrate_arango_embeddings_to_qdrant.py"
-    logger.info("sanctioned remediation script: {}", script)
-    logger.info("exists={}", script.exists())
+    script = _dewey_repair_script(memory_repo)
+    contract = memory_repo / "docs" / "guides" / "QDRANT_SEMANTIC_SYNC_CONTRACT.md"
+    logger.info("sanctioned repair primitive: {} (exists={})", script, script.exists())
+    logger.info("sync contract: {} (exists={})", contract, contract.exists())
+
     if not apply:
-        logger.info("Plan only. Re-run with --apply to execute (external write).")
+        logger.info("Plan only — Dewey repairs one collection+operation lane at a time:")
+        for flag, op in sorted(set(FLAG_TO_DEWEY_OP.items())):
+            logger.info(
+                "  flag {:<26} -> uv run --project {} python {} {} --collection <NAME> "
+                "--output <receipt.json> --rollback-out <rollback.jsonl> --apply",
+                flag, memory_repo, script, op,
+            )
+        logger.info("Re-run with --collection <NAME> --operation <OP> --apply to execute one lane.")
         raise typer.Exit(code=0)
+
     if not script.exists():
-        logger.error("migration script not found at {}", script)
+        logger.error("Dewey repair primitive not found at {}", script)
         raise typer.Exit(code=2)
-    res = run_child(memory_repo / "run.sh" if (memory_repo / "run.sh").exists() else script, [], timeout=CHILD_TIMEOUT)
-    typer.echo(res.stdout or res.stderr)
-    if not res.ok:
-        raise typer.Exit(code=res.returncode or 1)
+    if not collection or not operation:
+        logger.error("--apply requires --collection and --operation (Dewey repairs one lane at a time)")
+        raise typer.Exit(code=2)
+    if operation not in set(FLAG_TO_DEWEY_OP.values()):
+        logger.error("unknown --operation {} (use one of {})", operation, sorted(set(FLAG_TO_DEWEY_OP.values())))
+        raise typer.Exit(code=2)
+    receipt = Path(os.environ.get("TMPDIR", "/tmp")) / f"ops-memory-dewey-{collection}-{os.getpid()}.json"
+    rollback = receipt.with_suffix(".rollback.jsonl")
+    # dewey takes `operation` positionally and runs under the memory repo's uv env.
+    argv = [
+        "uv", "run", "--project", str(memory_repo), "python", str(script),
+        operation, "--collection", collection,
+        "--output", str(receipt), "--rollback-out", str(rollback), "--apply",
+    ]
+    logger.info("invoking Dewey: {}", " ".join(argv))
+    try:
+        proc = subprocess.run(argv, check=False, capture_output=True, text=True, timeout=CHILD_TIMEOUT, env=_child_env())
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        logger.error("Dewey invocation failed: {}", exc)
+        raise typer.Exit(code=1) from exc
+    typer.echo(proc.stdout or proc.stderr)
+    logger.info("receipt: {}  rollback: {}", receipt, rollback)
+    if proc.returncode != 0:
+        raise typer.Exit(code=proc.returncode or 1)
 
 
 # --- config doctor (non-interactive readiness) -----------------------------
