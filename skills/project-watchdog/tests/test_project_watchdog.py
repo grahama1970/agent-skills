@@ -1177,6 +1177,25 @@ def test_web_model_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
     assert not dispatched.called
 
 
+def test_web_model_reviewer_is_refused_before_ask_dispatch(tmp_path) -> None:
+    project = {
+        "project_id": "tau",
+        "repo": "grahama1970/tau",
+        "worktree": str(_clean_worktree(tmp_path)),
+        "repair_creator": "gpt-5.5-high",
+        "repair_reviewer": "webclaude",
+    }
+    issue = _issue(326, labels=["agent-work"], body="type: feature\ntarget: src/tau_coding/dag_runtime\n")
+    issue["watchdog_action"] = "ticket_repair"
+    with mock.patch.object(handlers, "run_cmd") as dispatched:
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+    assert result["status"] == "BLOCKED"
+    assert "repair reviewer 'webclaude' is a browser seat" in result["summary"]
+    assert "cannot run the ticket's live proof" in result["summary"]
+    assert "webclaude" in result["summary"]
+    assert not dispatched.called
+
+
 def test_a_repair_that_moved_main_is_flagged_and_blocked(tmp_path) -> None:
     """The creator seat pushed a850e22a6 to origin/main while its own DAG node
     reported NEEDS_ATTENTION and the ticket stayed agent-blocked. Unreviewed work

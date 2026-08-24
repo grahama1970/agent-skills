@@ -246,6 +246,28 @@
       }
     },
     {
+      "name": "web-repair-reviewer-is-refused-before-ask-dispatch",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_web_model_reviewer_is_refused_before_ask_dispatch",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
       "name": "ticket-repair-uses-gpt55-high-creator-through-tau-workspace",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
