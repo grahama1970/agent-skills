@@ -80,7 +80,7 @@
    }
   ]
  ],
- "lede": "I build agent systems that can prove what they did.",
+ "lede": "I build agent systems that leave evidence of what they did.",
  "intro": [
   {
    "kind": "p",
@@ -114,7 +114,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for high-consequence environments. I have led DARPA research, delivered under ITAR constraints, and now run a one-person applied R&D practice across architecture, code, evaluation, interfaces, and technical briefing."
+       "v": "Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for regulated technical environments. Most of my recent work sits in export-controlled aerospace and software-assurance settings, so I keep public claims focused on architecture, code, evaluation, interfaces, and technical briefing."
       }
      ]
     },
@@ -123,7 +123,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "My path runs through commercial composition, Webby-recognized interactive production, data science, defense research, formal methods, and agent systems. I am most useful when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles."
+       "v": "My path has been unusual: interactive production, data science, and now defense R&D. Along the way I have built systems across games, sports/media campaigns, research programs, and aerospace work without losing the habit of staying close to the work. I work best when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles."
       }
      ]
     }
@@ -348,7 +348,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Client work is mostly export-controlled, so here is the public, verifiable side — including the fun stuff:"
+       "v": "Client work is mostly export-controlled, so here is the public, verifiable side:"
       }
      ]
     },
@@ -363,7 +363,7 @@
        },
        {
         "t": "text",
-        "v": " — my living resume: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime."
+        "v": " — public working record: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime."
        }
       ],
       [
@@ -545,10 +545,10 @@
    ]
   }
  ],
- "sourceCommit": "e1bd6f3edd",
+ "sourceCommit": "d912a17f2f",
  "asOf": "2026-08-24",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "6215fd41bf9ebe0cd22dc55b0f03cc65808e48604499f581103bfd449ac3bfe7",
+ "sourceSha256": "7adc52ae82a2a73cae215ac031e7d6654a307ef37a29c3244e93958dca6c4001",
  "downloads": {
   "pdf": "/resume.pdf",
   "docx": "/resume.docx",
@@ -718,8 +718,8 @@
    }
   ]
  },
- "pdfSha256": "6de3316fb529866682313613273295e08e36fec4a635f357bfecc91bd0415f2a",
- "pdfBytes": 159670,
- "docxSha256": "43cfe2ca930dc3bb1d6e82de60808ecf4fc8a741c5ce5ee83db5f4128246df91",
- "docxBytes": 40581
+ "pdfSha256": "78505ef9749d7c9ae160ae72a2dce1cc63b7b43eb468ce350ca15f0eb858a9e4",
+ "pdfBytes": 159474,
+ "docxSha256": "e3cb994259a266039c1ef72d477955234b92a3d8c4d6fae14a3865cdf77e2fe2",
+ "docxBytes": 40634
 }

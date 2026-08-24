@@ -3,11 +3,11 @@ import { ProjectTargetHighlighter } from '@/components/project-target-highlighte
 import './globals.css';
 
 const description =
-  'I build agent systems that can prove what they did. One-person applied research practice: multi-agent harnesses, adversarial evaluation, evidence extraction — shipped as working code, in public.';
+  'I build agent systems that leave evidence of what they did. One-person applied research practice: multi-agent harnesses, evaluation, evidence extraction, and working public code.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://grahama.co'),
-  title: 'Graham Anderson — agent systems that prove what they did',
+  title: 'Graham Anderson — agent systems with evidence',
   description,
   manifest: '/site.webmanifest',
   icons: {
@@ -23,16 +23,16 @@ export const metadata: Metadata = {
     title: 'Graham Resume',
   },
   openGraph: {
-    title: 'Graham Anderson — agent systems that prove what they did',
+    title: 'Graham Anderson — agent systems with evidence',
     description,
     url: 'https://grahama.co',
     siteName: 'grahama.co',
     type: 'website',
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'grahama.co — G꜀ mark, agent systems that prove what they did' }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'grahama.co — G꜀ mark, agent systems with evidence' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Graham Anderson — agent systems that prove what they did',
+    title: 'Graham Anderson — agent systems with evidence',
     description,
     images: ['/og.png'],
   },

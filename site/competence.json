@@ -1,8 +1,8 @@
 {
-  "commit": "2afaf6dcaa",
+  "commit": "d912a17f2f",
   "as_of": "2026-08-24",
   "generator": "site/scripts/gen_competence.py",
-  "totalSkills": 361,
+  "totalSkills": 363,
   "disciplineCount": 18,
   "disciplines": [
     {
@@ -16,7 +16,7 @@
     {
       "id": "observability-operations",
       "label": "Observability operations",
-      "skillCount": 71,
+      "skillCount": 73,
       "lenses": [],
       "areas": [],
       "projects": []
@@ -73,24 +73,9 @@
       ]
     },
     {
-      "id": "ui-design-engineering",
-      "label": "UI design engineering",
-      "skillCount": 44,
-      "lenses": [
-        "creative"
-      ],
-      "areas": [
-        {
-          "id": "design-interface",
-          "title": "Design & interface"
-        }
-      ],
-      "projects": []
-    },
-    {
       "id": "developer-tooling",
       "label": "Developer tooling",
-      "skillCount": 43,
+      "skillCount": 44,
       "lenses": [
         "technical"
       ],
@@ -122,6 +107,21 @@
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
         }
       ]
+    },
+    {
+      "id": "ui-design-engineering",
+      "label": "UI design engineering",
+      "skillCount": 44,
+      "lenses": [
+        "creative"
+      ],
+      "areas": [
+        {
+          "id": "design-interface",
+          "title": "Design & interface"
+        }
+      ],
+      "projects": []
     },
     {
       "id": "compliance-security",
@@ -239,7 +239,7 @@
     {
       "id": "memory-knowledge",
       "label": "Memory knowledge",
-      "skillCount": 30,
+      "skillCount": 31,
       "lenses": [
         "hybrid"
       ],

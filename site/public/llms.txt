@@ -1,15 +1,34 @@
 # Graham Anderson
 
-> I build agent systems that can prove what they did.
+> I build agent systems that leave evidence of what they did.
 
 Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI · LLM/RAG · Knowledge Graphs · Defense & Aerospace · Founder, grahamaco
 
-## Résumé
+## Agent entry points
 
 - [Full résumé (HTML)](https://grahama.co/resume)
 - [Résumé PDF, two pages](https://grahama.co/resume.pdf)
 - [Résumé DOCX, ATS-oriented](https://grahama.co/resume.docx)
 - [Résumé source (Markdown)](https://grahama.co/resume.md)
+- [Skill and project ledger](https://grahama.co/ledger)
+- [Capability evidence](https://grahama.co/capabilities)
+- [Project explorer](https://grahama.co/explore)
+
+## Public GitHub repositories and project entry points
+
+- [agent-skills](https://github.com/grahama1970/agent-skills) — public skill contracts, bounded agents, site generators, and resume source.
+- [tau](https://github.com/grahama1970/tau) — receipt-gated multi-agent harness.
+- [pdf_oxide fork](https://github.com/grahama1970/pdf_oxide) — document extraction and validation work.
+- [persona-dream](https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md) — persona and voice experiment docs, run records, and evidence notes.
+- [surf](https://github.com/grahama1970/agent-skills/blob/main/skills/surf/README.md) — browser-control skill contract, screenshots, and tab-provenance docs.
+- [battle](https://github.com/grahama1970/agent-skills/blob/main/skills/battle/README.md) — red/blue exploit-evaluation sandbox docs.
+- [t'au](https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md) — agent-harness skill contract inside agent-skills.
+- [extractor](https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md) — document-extraction skill contract and routing docs.
+- [dogpile](https://github.com/grahama1970/agent-skills/blob/main/skills/dogpile/README.md) — multi-source research skill contract and provider-reporting docs.
+- [watch](https://github.com/grahama1970/agent-skills/blob/main/skills/watch/README.md) — video-analysis skill contract and timestamped evidence docs.
+- [scillm](https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md) — LLM gateway and model-routing skill docs.
+- [debugger](https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md) — debugger skill contract for breakpoint-based runtime inspection.
+- [sparta explorer](https://github.com/grahama1970/sparta-public) — public overview for SPARTA Explorer; private evidence is not published.
 
 ## Experience
 
@@ -33,8 +52,12 @@ Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI ·
 
 ## Notes for agents
 
+- Use /resume.md for exact resume text; use /ledger and /capabilities
+  for generated skill and capability evidence.
+- Use GitHub links for source-level inspection. Some links point to
+  skill README files inside agent-skills rather than separate repos.
 - Client work is export-controlled (ITAR); client names are withheld by
   necessity, not omission.
 - Every count on this site is generated from the repository at the deploy
-  commit (e1bd6f3edd), not hand-maintained.
+  commit (d912a17f2f), not hand-maintained.
 - Contact: graham@grahama.co

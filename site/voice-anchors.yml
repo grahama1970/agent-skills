@@ -8,10 +8,10 @@ anchors:
   # Fragments must live in a single visible text node (JSX splits italics /
   # {' '} spacers across nodes, so keep anchors to one clean phrase).
   - id: hero-build
-    fragment: "I build agent systems that can"
+    fragment: "I build agent systems that leave"
   - id: shelved
     fragment: "the project you"
   - id: ethos-receipt
-    fragment: "No claim ships without"
+    fragment: "Claims should leave evidence"
 # Third-party plural-pronoun contexts that are NOT the site's own voice.
 allow_collective_in: []

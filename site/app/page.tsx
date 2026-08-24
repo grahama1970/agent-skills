@@ -41,11 +41,11 @@ const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string;
 
 const TRACK = [
   { t: 'Composer', d: 'Commercial work for Adidas, Pepsi, X-Games.' },
-  { t: 'Executive producer, Sony', d: 'God of War: Ascension campaign — Webby-recognized, 80-person productions.' },
+  { t: 'Interactive producer', d: 'Campaign and production work, including God of War: Ascension for Sony.' },
   { t: 'DARPA ARCOS', d: 'Principal data scientist and technical lead, alongside Honeywell, Lockheed Martin, MIT, GE, SRI.' },
-  { t: 'AFRL “Hacker” challenge coin', d: 'Recognition out of that work.' },
+  { t: 'AFRL research talk', d: 'A talk from that period led to an AFRL “Hacker” challenge coin.' },
   { t: 'Lean 4 formal methods', d: 'Proof discipline carried into agent design.' },
-  { t: 'This practice', d: 'Agent systems that produce their own evidence — shipped as working code, in public.' },
+  { t: 'This practice', d: 'Agent systems with evidence, checks, and plain limits.' },
 ];
 
 type ReceiptArtifact = {
@@ -113,11 +113,11 @@ export default function Home() {
                   methods, evidence
                 </p>
                 <h1>
-                  I build agent systems that can{' '}
+                  I build agent systems that leave{' '}
                   <span className="it proof-origin" data-proof-origin>
-                    prove
+                    evidence
                   </span>{' '}
-                  what they did.
+                  of what they did.
                 </h1>
                 <p className="hero-repo-model">
                   This site explains the work. The public{' '}
@@ -132,36 +132,29 @@ export default function Home() {
                   repository holds the source.
                 </p>
                 <p className="hero-outcomes">
-                  I take on hard-to-staff agent, compliance, and multimodal R&amp;D
-                  and deliver working source, deterministic checks, runbooks,
-                  receipts, and explicit limits your team can inspect and own.
+                  I take on agent, compliance, and multimodal R&amp;D work where
+                  the output needs to be inspectable: working source,
+                  deterministic checks, runbooks, receipts, and explicit limits.
                 </p>
                 <p className="hero-repo-model hero-repo-model--follow">
                   Browse here first, then inspect the source when you want the
                   contracts, code, checks, receipts, and visible gaps.
                 </p>
                 <p className="hero-bio">
-                  An unusual{' '}
+                  My path has moved through commercial composition, interactive
+                  production, data science, formal methods, and defense R&amp;D.
+                  The thread is practical work across disciplines, with enough
+                  evidence left behind that another team can inspect it. The{' '}
                   <a
                     href="/resume"
                     data-qid="hero:link:resume-receipt"
                     data-qs-action="HERO_OPEN_RESUME_RECEIPT"
-                    title="The résumé — the receipt for these credentials"
+                    title="Open the résumé"
                     style={{ color: 'var(--brass)', textDecoration: 'underline', textUnderlineOffset: '2px' }}
                   >
                     résumé
-                  </a>
-                  : commercial composer for{' '}
-                  <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
-                  and <em style={{ ['--i' as string]: 2 }}>Pepsi</em>,
-                  Webby-recognized producer for{' '}
-                  <em style={{ ['--i' as string]: 3 }}>Sony</em>,{' '}
-                  <em style={{ ['--i' as string]: 4 }}>DARPA</em> technical
-                  lead alongside{' '}
-                  <em style={{ ['--i' as string]: 5 }}>Lockheed Martin</em> and{' '}
-                  <em style={{ ['--i' as string]: 6 }}>MIT</em>.
-                  High-end creative and hard technical work, delivered by the
-                  same person, shipped as working code, in public.
+                  </a>{' '}
+                  has the names and dates; this page shows the public work.
                 </p>
                 <div className="hero-actions">
                   <a
@@ -180,7 +173,7 @@ export default function Home() {
                     data-qs-action="HERO_OPEN_PROOF_ROUTE"
                     title="Read how claims connect to source, checks, receipts, and gaps"
                   >
-                    See how proof works →
+                    See how evidence works →
                   </a>
                   <a
                     className="btn ghost"
@@ -313,7 +306,7 @@ export default function Home() {
                 <p className="kicker">
                   <b>Tau</b> Selected investigations
                 </p>
-                <h2 className="h2">One dominant proof, three supporting systems.</h2>
+                <h2 className="h2">One main case, three supporting systems.</h2>
               </div>
               <p className="count">preview here → full index one step deeper</p>
             </div>
@@ -323,8 +316,7 @@ export default function Home() {
               <p className="private-boundary__lead">
                 Most current work is export-controlled or sensitive. The public
                 pattern here is deliberately narrower: problem class, public
-                artifact, what it proves, and what it does not prove. Private
-                systems stay private.
+                artifact, evidence, and limits. Private systems stay private.
               </p>
               <dl className="private-boundary__grid">
                 <div>
@@ -497,7 +489,7 @@ export default function Home() {
             <div className="proofx-head proofx-head--preview">
               <div>
                 <p className="kicker">
-                  <b>Tau</b> How proof works
+                  <b>Tau</b> How evidence works
                 </p>
                 <h2 className="h2">
                   One real run, from goal to receipt.
@@ -533,7 +525,7 @@ export default function Home() {
                 <p className="kicker">
                   <b>Receipts</b> Bounded evidence
                 </p>
-                <h2 className="h2">No claim ships without one.</h2>
+                <h2 className="h2">Claims come with boundaries.</h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
                   {capturedReceiptCount === 3 ? 'Three excerpts' : `${capturedReceiptCount} captured excerpts`},
                   printed as they came out of
@@ -731,7 +723,7 @@ export default function Home() {
               </div>
               <div className="foot-c">
                 <p className="lab">Ethos</p>
-                <p className="ethos">No claim ships without a receipt.</p>
+                <p className="ethos">Claims should leave evidence and clear limits.</p>
               </div>
             </div>
             <div className="foot-boundary">

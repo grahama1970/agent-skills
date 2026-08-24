@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "2afaf6dcaa",
+  "sourceCommit": "d912a17f2f",
   "counts": {
     "areas": 8,
     "projects": 10,
-    "skills": 361
+    "skills": 363
   },
   "documents": [
     {
@@ -2669,7 +2669,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Mine real human CLI conversation transcripts into labeled training data for bridge/classifier improvement.",
-      "body": "mine transcripts Mine real human conversations from CLI agents for bridge classifier training. Purpose Train the bridge classifier on REAL human communication patterns, not synthetic templates. This enables personas like Embry to find the RIGHT experts when using /ask. Two tier training approach: 1. Developer (Graham) baseline attunement to real communication patterns 2. Client specific adaptation to individual users Integration Dependencies /taxonomy Bridge label extraction (Precision, Resilience, Fragility, Corruption, Loyalty, Stealth) /memory Deduplication against existing lessons, optional storage /episodic archiver Emotional context from archived sessions /scheduler Nightly runs Usage Output Training data in JSONL format: Emotional Context Messages are enriched with emotional detection: Satisfied signals → Resilience, Loyalty bridges Frustrated signals → Fragility bridge High satisfaction → Both Resilience AND Loyalty This helps the classifier understand that \"works great!\" indic",
+      "body": "mine transcripts Mine real human conversations from CLI agents for bridge classifier training. Purpose Train the bridge classifier on REAL human communication patterns, not synthetic templates. This enables personas like Embry to find the RIGHT experts when using /ask. Two tier training approach: 1. Developer (Graham) baseline attunement to real communication patterns 2. Client specific adaptation to individual users Integration Dependencies /taxonomy Bridge label extraction (Precision, Resilience, Fragility, Corruption, Loyalty, Stealth) /memory Deduplication against existing lessons, optional storage; mined skill chains must be written through chain learn into typed skill chains /episodic archiver Emotional context from archived sessions /scheduler Nightly runs Usage Output Training data in JSONL format: Skill chain mining writes JSONL records such as: When storage is enabled, those chains are written with /memory chain learn . They must not be stored as ordinary /memory learn lesson",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/mine-transcripts/SKILL.md"
     },
     {
@@ -2943,6 +2943,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-buzz/SKILL.md"
     },
     {
+      "id": "skill:ops-calendly",
+      "type": "skill",
+      "name": "ops-calendly",
+      "category": "ops",
+      "sanity": false,
+      "summary": "Operate the Calendly integration for grahama.co: inspect Calendly API connectivity, generate safe public scheduling metadata, manage the CALENDLY_PAT GitHub secret, and plan real capacity holds for scheduling. Use for \"calendly api\", \"calendly embed\", \"calendly secret\", \"grahama.co booking\", \"ops-calendly\", or \"meeting slot capacity\".",
+      "body": "Ops Calendly Use this skill for the grahama.co Calendly integration and related Calendly API operations. The core contract is simple: the personal access token is a server side/build time credential, public site output contains only scheduling links and display metadata, and any calendar affecting operation fails closed unless the human explicitly authorizes the exact mutation. Commands doctor , event types , and generate site metadata use CALENDLY PAT from the environment. The PAT may live in ~/.zshrc for local development, but production builds should receive it as a GitHub Actions secret named CALENDLY PAT . github secret execute sets that secret from the local environment using gh secret set ; without execute it reports the intended action only. Public Metadata generate site metadata writes calendly.json with only public fields: Calendly display name, slug, timezone, scheduling URL, active event type names, durations, kinds, and scheduling URLs. It must never write bearer tokens, A",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-calendly/SKILL.md"
+    },
+    {
       "id": "skill:ops-chatterbox",
       "type": "skill",
       "name": "ops-chatterbox",
@@ -3019,7 +3029,7 @@
       "category": "ops",
       "sanity": true,
       "summary": "Safe Docker cleanup and compose stack management. Prune unused containers/images/volumes, redeploy stacks.",
-      "body": "Docker Ops Safe Docker management with dry run defaults. Commands Environment Variables Variable Default Description DOCKER PRUNE UNTIL Default age filter for prune STACK FILE docker compose.yml Default compose file HEALTH CMD Command to run after redeploy Common Mistakes WRONG: Running prune without execute (or running execute without checking first) RIGHT: Dry run first, then execute WRONG: Redeploying without specifying the stack file RIGHT: Always specify the stack file explicitly WRONG: Pruning without age filter (removes recently used images) RIGHT: Use until to protect recent images",
+      "body": "Docker Ops Safe Docker management with dry run defaults. Commands Environment Variables Variable Default Description DOCKER PRUNE UNTIL Default age filter for prune STACK FILE docker compose.yml Default compose file HEALTH CMD Command to run after redeploy Common Mistakes WRONG: Running prune without execute (or running execute without checking first) RIGHT: Dry run first, then execute WRONG: Redeploying without specifying the stack file RIGHT: Always specify the stack file explicitly WRONG: Pruning without age filter (removes recently used images) RIGHT: Use until to protect recent images References (retrieve on demand — do not vendor) External docs drift; cite the canonical URLs and fetch them when needed with /context7 (library docs) or /fetcher (any URL/PDF) rather than caching stale copies. Verified reachable (HTTP 200) 2026 08 24. Docker documentation: <https://docs.docker.com/ llms.txt (LLM friendly doc index): <https://docs.docker.com/llms.txt",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-docker/SKILL.md"
     },
     {
@@ -3123,6 +3133,16 @@
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-pi-term/SKILL.md"
     },
     {
+      "id": "skill:ops-qdrant",
+      "type": "skill",
+      "name": "ops-qdrant",
+      "category": "ops",
+      "sanity": true,
+      "summary": "Read-only Qdrant vector-store health detector. Lists collections, flags expected-but-missing collections, reports per-collection point counts, and probes end-to-end semantic recall through the memory daemon (dense score). Detection only — it performs NO writes. All Qdrant mutation and semantic sync stay in the memory repo per the memory contract. Use for \"qdrant health\", \"check qdrant collections\", \"dense recall is zero\", \"vector store health\", \"ops-qdrant\".",
+      "body": "ops qdrant Read only health detection for the Qdrant vector store and the semantic recall path that depends on it. It answers three questions without mutating anything: 1. Is Qdrant up, and which collections exist? 2. Do the collections we expect exist, and how many points does each hold? 3. Does end to end dense (semantic) recall actually work through the memory daemon, or has it silently degraded to BM25 only ( dense == 0.0 )? Boundary (non negotiable) This skill NEVER writes to Qdrant or Arango. Per memory/SKILL.md , all AQL and all Qdrant mutation/sync logic live ONLY in ~/workspace/experiments/memory . ops qdrant detects and reports; remediation is triggered by ops memory calling the memory repo's sanctioned migration ( migrate arango embeddings to qdrant.py ) and daemon endpoints. If you find a gap here, do not \"fix\" it from this skill. Commands Environment Var Default Meaning QDRANT URL http://127.0.0.1:6333 Qdrant REST endpoint MEMORY URL http://127.0.0.1:8601 memory daemon (ow",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-qdrant/SKILL.md"
+    },
+    {
       "id": "skill:ops-realtimestt",
       "type": "skill",
       "name": "ops-realtimestt",
@@ -3159,7 +3179,7 @@
       "category": "ops",
       "sanity": true,
       "summary": "Bundle design context (screenshots, DESIGN.md, references, prompt) for Google Stitch sessions. Prepares a context-bundle directory with current-state screenshots, design tokens, reference images, and a structured prompt ready for upload to the Stitch web UI.",
-      "body": "ops stitch Bundle design context for Google Stitch sessions. What it does Takes a target view/component name and produces a context bundle/ directory containing everything needed for a Stitch design session: 1. Screenshot — headless Chrome captures the current state of the target URL 2. DESIGN.md — copied from the project (auto detected in cwd or parent, or explicit path) 3. Reference images — any inspiration/reference images you want Stitch to see 4. PROMPT.md — the prompt text plus instructions for the human on what to upload 5. manifest.json — metadata (target, timestamp, URL, prompt, image list) The output directory is ready for manual upload to the Stitch web UI. Stitch SDK is text only, but the web UI accepts image uploads — the human drags in the screenshots and references. Usage Output structure",
+      "body": "ops stitch Bundle design context for Google Stitch sessions. What it does Takes a target view/component name and produces a context bundle/ directory containing everything needed for a Stitch design session: 1. Screenshot — headless Chrome captures the current state of the target URL 2. DESIGN.md — copied from the project (auto detected in cwd or parent, or explicit path) 3. Reference images — any inspiration/reference images you want Stitch to see 4. PROMPT.md — the prompt text plus instructions for the human on what to upload 5. manifest.json — metadata (target, timestamp, URL, prompt, image list) The output directory is ready for manual upload to the Stitch web UI. Stitch SDK is text only, but the web UI accepts image uploads — the human drags in the screenshots and references. Usage Output structure References (retrieve on demand — do not vendor) External docs drift; cite the canonical URLs and fetch them when needed with /context7 (library docs) or /fetcher (any URL/PDF) rather th",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-stitch/SKILL.md"
     },
     {
@@ -3369,7 +3389,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Shared project knowledge document that human and agent can both read and update. Aggregates state from /project-state, /checkpoint, /memory into a single PROJECT_KNOWLEDGE.md file, while syncing searchable chunks into /memory. Coordinator skill — composes rather than reimplements.",
-      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. /project knowledge Shared project knowledge document for human and agent collaboration. Why This Exists The gap between individual lessons (/memory) and heavy documentation (/create walkthrough): Skill Retrieval Update /memory Requires knowing what to query Individual lessons /checkpoint Git log Append only commits /create walkthrough File on disk Heavy (interview + persona) /project knowledge Read file directly Incremental section updates This skill maintains two surfaces: 1. PROJECT KNOWLEDGE.md as the human readable projection 2. /memory as the agent retrieval surface The file is for humans. Agents should still be memory first. This skill therefore: 1. Lets humans read/edit the markdown file directly 2. Lets agents update the same knowledge incrementally 3. Automatically syncs each updated section into /memory 4. Keeps an aggregate project knowledge document for structured recall Commands File Structure PROJECT KNOWLEDGE.m",
+      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT. /project knowledge Shared project knowledge document for human and agent collaboration. Why This Exists The gap between individual lessons (/memory) and heavy documentation (/create walkthrough): Skill Retrieval Update /memory Requires knowing what to query Individual lessons /checkpoint Git log Append only commits /create walkthrough File on disk Heavy (interview + persona) /project knowledge Read file directly Incremental section updates This skill maintains two surfaces: 1. PROJECT KNOWLEDGE.md as the human readable projection 2. /memory as the agent retrieval surface It does not own skill chain records. Proven workflow chains are written by /checkpoint skills or the typed chain backfill lane in /mine transcripts into the skill chains collection. /project knowledge may mention those chains as project context, but its sync command writes only project knowledge documents and chunks. The file is for humans. Agents should stil",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-knowledge/SKILL.md"
     },
     {

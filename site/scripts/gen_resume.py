@@ -37,6 +37,20 @@ SOURCE = REPO / "RESUME.md"
 PDF_SOURCE = REPO / "docs" / "resume" / "graham-anderson-resume.pdf"
 DOCX_SOURCE = REPO / "docs" / "resume" / "graham-anderson-resume.docx"
 OUT = SITE / "resume.json"
+CONTENT = SITE / "content.json"
+
+PROJECT_LLM_SUMMARIES = {
+    "persona-dream": "persona and voice experiment docs, run records, and evidence notes.",
+    "surf": "browser-control skill contract, screenshots, and tab-provenance docs.",
+    "battle": "red/blue exploit-evaluation sandbox docs.",
+    "tau": "agent-harness skill contract inside agent-skills.",
+    "extractor": "document-extraction skill contract and routing docs.",
+    "dogpile": "multi-source research skill contract and provider-reporting docs.",
+    "watch": "video-analysis skill contract and timestamped evidence docs.",
+    "scillm": "LLM gateway and model-routing skill docs.",
+    "debugger": "debugger skill contract for breakpoint-based runtime inspection.",
+    "sparta-explorer": "public overview for SPARTA Explorer; private evidence is not published.",
+}
 
 # A role's first line is its employment period when it looks like one; pulling
 # it out lets the page render dates as their own meta line instead of burying
@@ -381,6 +395,27 @@ def git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=REPO, text=True).strip()
 
 
+def public_repo_links() -> list[str]:
+    links = [
+        "- [agent-skills](https://github.com/grahama1970/agent-skills) — public skill contracts, bounded agents, site generators, and resume source.",
+        "- [tau](https://github.com/grahama1970/tau) — receipt-gated multi-agent harness.",
+        "- [pdf_oxide fork](https://github.com/grahama1970/pdf_oxide) — document extraction and validation work.",
+    ]
+    if CONTENT.is_file():
+        content = json.loads(CONTENT.read_text(encoding="utf-8"))
+        seen = {line.split("](", 1)[1].split(")", 1)[0] for line in links}
+        for project in content.get("projects", []):
+            href = project.get("href")
+            name = project.get("name")
+            blurb = project.get("blurb")
+            if not href or not name or href in seen:
+                continue
+            seen.add(href)
+            summary = PROJECT_LLM_SUMMARIES.get(project.get("slug"), blurb)
+            links.append(f"- [{name}]({href}) — {summary}")
+    return links
+
+
 def main() -> int:
     if not SOURCE.is_file():
         print(f"error: missing resume source: {SOURCE}", file=sys.stderr)
@@ -442,12 +477,19 @@ def main() -> int:
         "",
         headline,
         "",
-        "## Résumé",
+        "## Agent entry points",
         "",
         "- [Full résumé (HTML)](https://grahama.co/resume)",
         "- [Résumé PDF, two pages](https://grahama.co/resume.pdf)",
         "- [Résumé DOCX, ATS-oriented](https://grahama.co/resume.docx)",
         "- [Résumé source (Markdown)](https://grahama.co/resume.md)",
+        "- [Skill and project ledger](https://grahama.co/ledger)",
+        "- [Capability evidence](https://grahama.co/capabilities)",
+        "- [Project explorer](https://grahama.co/explore)",
+        "",
+        "## Public GitHub repositories and project entry points",
+        "",
+        *public_repo_links(),
         "",
         "## Experience",
         "",
@@ -459,6 +501,10 @@ def main() -> int:
         "",
         "## Notes for agents",
         "",
+        "- Use /resume.md for exact resume text; use /ledger and /capabilities",
+        "  for generated skill and capability evidence.",
+        "- Use GitHub links for source-level inspection. Some links point to",
+        "  skill README files inside agent-skills rather than separate repos.",
         "- Client work is export-controlled (ITAR); client names are withheld by",
         "  necessity, not omission.",
         "- Every count on this site is generated from the repository at the deploy",
