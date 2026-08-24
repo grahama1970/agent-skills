@@ -3,9 +3,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
-export PYTHONPATH
-export OPS_LINKEDIN_USE_SYSTEM_PYTHON=1
+if command -v uv >/dev/null 2>&1; then
+  PYTHON_CMD=(uv run --project "$SCRIPT_DIR" --extra dev python)
+else
+  PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+  export PYTHONPATH
+  export OPS_LINKEDIN_USE_SYSTEM_PYTHON=1
+  PYTHON_CMD=(python3)
+fi
 
 echo "=== [ops-linkedin] Sanity Check ==="
 
@@ -17,6 +22,7 @@ required=(
   run.sh
   src/ops_linkedin/models.py
   src/ops_linkedin/service.py
+  src/ops_linkedin/profile_sync.py
   src/ops_linkedin/cli.py
   tests/test_service.py
   fixtures/agentic_eval.json
@@ -29,7 +35,7 @@ for rel in "${required[@]}"; do
 done
 
 echo "Check: Python modules parse and have module docstrings"
-python3 - "$SCRIPT_DIR" <<'PY'
+"${PYTHON_CMD[@]}" - "$SCRIPT_DIR" <<'PY'
 import ast
 import pathlib
 import sys
@@ -43,7 +49,7 @@ print("module-docstrings=PASS")
 PY
 
 echo "Check: runtime has no browser, session, scraping, or HTTP implementation"
-python3 - "$SCRIPT_DIR" <<'PY'
+"${PYTHON_CMD[@]}" - "$SCRIPT_DIR" <<'PY'
 import ast
 import pathlib
 import sys
@@ -76,15 +82,33 @@ print("no-browser-network-imports=PASS")
 PY
 
 echo "Check: unit tests"
-python3 -m pytest "$SCRIPT_DIR/tests" -q
+"${PYTHON_CMD[@]}" -m pytest "$SCRIPT_DIR/tests" -q
 
 echo "Check: policy and status entrypoints"
-bash "$SCRIPT_DIR/run.sh" policy | grep -q '"design_posture": "draft-and-human-handoff"'
+bash "$SCRIPT_DIR/run.sh" policy | grep -q '"design_posture": "draft-human-handoff-plus-opt-in-own-profile-sync"'
 bash "$SCRIPT_DIR/run.sh" status | grep -q '"overall_readiness": "READY_FOR_DRAFT_ONLY_USE"'
 
-echo "Check: positive prepare and packet validation"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
+
+echo "Check: source-derived editable profile entry and profile sync plan"
+bash "$SCRIPT_DIR/run.sh" profile-entry-export \
+  --resume-source "$SCRIPT_DIR/../../RESUME.md" \
+  --profile-url "https://www.linkedin.com/in/grahamanderson/" \
+  --output "$tmp_dir/profile-entry.json" >/dev/null
+grep -q '"schema_version": "ops-linkedin.profile_entry.v1"' "$tmp_dir/profile-entry.json"
+grep -q '"location": "Buffalo, NY (EST)"' "$tmp_dir/profile-entry.json"
+
+bash "$SCRIPT_DIR/run.sh" profile-sync-plan \
+  --entry-json "$tmp_dir/profile-entry.json" \
+  --accept-account-risk \
+  --own-profile-only \
+  --output "$tmp_dir/profile-sync.json" >/dev/null
+grep -q '"schema_version": "ops-linkedin.profile_sync.v1"' "$tmp_dir/profile-sync.json"
+grep -q '"external_effects": false' "$tmp_dir/profile-sync.json"
+grep -q '"execution_claim": "NOT_EXECUTED"' "$tmp_dir/profile-sync.json"
+
+echo "Check: positive prepare and packet validation"
 bash "$SCRIPT_DIR/run.sh" prepare \
   "$SCRIPT_DIR/assets/examples/publish-post.json" \
   --output "$tmp_dir/post-packet.json"
@@ -113,7 +137,7 @@ set -e
 test "$rt_ok" -eq 0
 grep -q '"readiness": "READY_FOR_HUMAN_REVIEW"' "$tmp_dir/rt-ok.json"
 
-python3 - "$SCRIPT_DIR" "$tmp_dir" <<'PYGATE'
+"${PYTHON_CMD[@]}" - "$SCRIPT_DIR" "$tmp_dir" <<'PYGATE'
 import json, subprocess, sys
 skill_dir, tmp_dir = sys.argv[1], sys.argv[2]
 req = json.load(open(f"{skill_dir}/assets/examples/connection-note.json"))
@@ -131,7 +155,7 @@ print("outbound-roundtable-gate=PASS")
 PYGATE
 
 echo "Check: verified claims are bound to the canonical claim ledger"
-python3 - "$SCRIPT_DIR" <<'PYCLAIM'
+"${PYTHON_CMD[@]}" - "$SCRIPT_DIR" <<'PYCLAIM'
 import json, sys, pathlib
 skill_dir = sys.argv[1]
 bad = []

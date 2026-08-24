@@ -477,7 +477,9 @@ class PolicyReport(BaseModel):
 
     schema_version: Literal[POLICY_SCHEMA] = POLICY_SCHEMA
     checked_at: str
-    design_posture: Literal["draft-and-human-handoff"] = "draft-and-human-handoff"
+    design_posture: Literal[
+        "draft-human-handoff-plus-opt-in-own-profile-sync"
+    ] = "draft-human-handoff-plus-opt-in-own-profile-sync"
     allowed: list[str]
     prohibited: list[str]
     official_sources: list[AnyHttpUrl]

@@ -3,7 +3,7 @@
  "contact": [
   {
    "t": "text",
-   "v": "Buffalo, NY · Buffalo-area hybrid/onsite or remote"
+   "v": "Buffalo, NY (EST)"
   },
   {
    "t": "link",
@@ -42,7 +42,7 @@
   [
    {
     "t": "text",
-    "v": "Buffalo, NY · Buffalo-area hybrid/onsite or remote"
+    "v": "Buffalo, NY (EST)"
    }
   ],
   [
@@ -80,7 +80,7 @@
    }
   ]
  ],
- "lede": "I build agent systems that can prove what they did.",
+ "lede": "I build agent systems that leave evidence of what they did.",
  "intro": [
   {
    "kind": "p",
@@ -114,7 +114,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for high-consequence environments. I have led DARPA research, delivered under ITAR constraints, and now run a one-person applied R&D practice across architecture, code, evaluation, interfaces, and technical briefing."
+       "v": "Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for regulated technical environments. Most of my recent work sits in export-controlled aerospace and software-assurance settings, so I keep public claims focused on architecture, code, evaluation, interfaces, and technical briefing."
       }
      ]
     },
@@ -123,7 +123,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "My path runs through commercial composition, Webby-recognized interactive production, data science, defense research, formal methods, and agent systems. I am most useful when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles."
+       "v": "My path has been unusual: interactive production, data science, and now defense R&D. Earlier on, that included commercial and interactive work around familiar names like Sony, Adidas, X-Games, Disney, Microsoft, and Toyota; more recently it has meant aerospace, software assurance, and agent systems. I work best when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles."
       }
      ]
     }
@@ -348,7 +348,7 @@
      "inline": [
       {
        "t": "text",
-       "v": "Client work is mostly export-controlled, so here is the public, verifiable side — including the fun stuff:"
+       "v": "Client work is mostly export-controlled, so here is the public, verifiable side:"
       }
      ]
     },
@@ -363,7 +363,7 @@
        },
        {
         "t": "text",
-        "v": " — my living resume: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime."
+        "v": " — public working record: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime."
        }
       ],
       [
@@ -545,10 +545,10 @@
    ]
   }
  ],
- "sourceCommit": "dc2ed51600",
- "asOf": "2026-08-23",
+ "sourceCommit": "257046ff64",
+ "asOf": "2026-08-24",
  "generator": "site/scripts/gen_resume.py",
- "sourceSha256": "6215fd41bf9ebe0cd22dc55b0f03cc65808e48604499f581103bfd449ac3bfe7",
+ "sourceSha256": "46a614a6a7ca3fc1ff30817724d4153b31ed4d007b5b5a68d4165b18a0f069d0",
  "downloads": {
   "pdf": "/resume.pdf",
   "docx": "/resume.docx",
@@ -602,7 +602,7 @@
     "familyName": "Anderson",
     "url": "https://grahama.co",
     "jobTitle": "Principal AI Engineer",
-    "description": "I build agent systems that can prove what they did.",
+    "description": "I build agent systems that leave evidence of what they did.",
     "email": "graham@grahama.co",
     "sameAs": [
      "https://www.linkedin.com/in/grahamanderson/",
@@ -680,8 +680,8 @@
    }
   ]
  },
- "pdfSha256": "61d0766adecbd70de1fca16783d76d95780b3495f16014baeb317f56fad2b598",
- "pdfBytes": 159670,
- "docxSha256": "f19a9e25be73edd17407556e3e3f3c5e561e71582336e00e5f5788fb957207ee",
- "docxBytes": 40581
+ "pdfSha256": "70920f5cd80bf7c5cc3580a08f4f5c888282a8fe7efe9eeb647d3eefaeff1842",
+ "pdfBytes": 159453,
+ "docxSha256": "eca1cc46390c03c0cf78e5173dbee7ff72848c75dcfbf7a5c8bf12760cfe6ca6",
+ "docxBytes": 40639
 }

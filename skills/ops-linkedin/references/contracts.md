@@ -114,6 +114,46 @@ The resulting packet uses:
 The statement is not a LinkedIn API receipt, browser receipt, delivery receipt, impression
 receipt, or independent verification.
 
+## Editable own-profile entry schema
+
+Schema: `ops-linkedin.profile_entry.v1`
+
+This is the project-agent editable source for Graham's LinkedIn profile. Generate it
+from `RESUME.md`, review or edit the JSON, then feed it to `profile-sync-plan`.
+
+Important fields:
+
+- `source.path`, `source.sha256`, `source.generated_at`: the resume source identity.
+- `profile_url`: must be Graham's own `https://www.linkedin.com/in/...` profile URL.
+- `name`, `location`, `headline`, `about`: primary profile text.
+- `featured_links[]`: links such as `https://grahama.co/resume`.
+- `experience[]`: editable role entries with `title`, `organization`, `dates`, `body`,
+  and `source_ref`.
+- `skills[]`: flat editable skill list.
+- `editor_notes[]`: instructions for project agents editing the JSON.
+
+The profile-entry file is easy to diff and edit. Project agents should change this JSON
+first, not LinkedIn fields directly.
+
+## Own-profile Surf sync plan schema
+
+Schema: `ops-linkedin.profile_sync.v1`
+
+`profile-sync-plan` consumes either `RESUME.md` directly or an
+`ops-linkedin.profile_entry.v1` JSON file. It emits:
+
+- `profile_entry`: the exact editable profile entry being proposed.
+- `fields[]`: flattened field-level sync targets for browser work.
+- `guardrails`: `own_profile_only=true`, `account_risk_accepted=true`,
+  `no_third_party_profile_access=true`, `no_scraping=true`,
+  `no_outbound_social_actions=true`, `external_effects=false`, and
+  `platform_verified=false`.
+- `surf_commands[]`: the bounded Surf command plan.
+- `execution_claim`: always `NOT_EXECUTED` at plan time.
+
+The plan is not proof that LinkedIn changed. A future executor must produce a separate
+Surf receipt and before/after evidence before claiming any platform mutation.
+
 ## Exit codes
 
 - `0`: command succeeded and, for `prepare`, packet is ready or `--allow-blocked` was used.

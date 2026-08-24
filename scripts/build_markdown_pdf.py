@@ -176,6 +176,33 @@ def drop_sections(markdown_text: str, headings: tuple[str, ...]) -> str:
     return "\n".join(kept)
 
 
+def preserve_contact_hard_breaks(markdown_text: str) -> str:
+    """Add render-only Markdown hard breaks inside the top contact block.
+
+    The source Markdown should not carry trailing spaces just to shape the PDF.
+    markdown-pdf still needs hard breaks to keep location and contact on
+    separate lines under the name, so apply them only to the temporary input
+    handed to the PDF renderer.
+    """
+    lines = markdown_text.splitlines()
+    contact_indexes: list[int] = []
+    saw_title = False
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith("# ") and not stripped.startswith("##"):
+            saw_title = True
+            continue
+        if not saw_title:
+            continue
+        if not stripped or stripped.startswith("> ") or stripped.startswith("## "):
+            break
+        contact_indexes.append(index)
+
+    for index in contact_indexes[:-1]:
+        lines[index] = lines[index].rstrip() + "  "
+    return "\n".join(lines)
+
+
 def build_pdf(config: PdfBuildConfig) -> None:
     try:
         from markdown_pdf import MarkdownPdf, Section
@@ -196,6 +223,7 @@ def build_pdf(config: PdfBuildConfig) -> None:
     if not markdown_text.strip():
         raise ValueError(f"Markdown file is empty: {config.markdown_path}")
     markdown_text = drop_sections(markdown_text, config.omit_sections)
+    markdown_text = preserve_contact_hard_breaks(markdown_text)
 
     pdf = MarkdownPdf(toc_level=config.toc_level, optimize=config.optimize)
     section = Section(

@@ -231,12 +231,13 @@ def policy_report() -> PolicyReport:
         checked_at=POLICY_CHECKED_AT,
         allowed=[
             "Draft profile copy, posts, comments, connection notes, and messages locally.",
+            "Prepare source-derived own-profile sync packets and Surf command plans after explicit account-risk acceptance.",
             "Analyze user-provided or exported content and metrics.",
             "Create manual search and lead-research plans using public-web sources.",
             "Create local handoff packets and record explicit human completion attestations.",
         ],
         prohibited=[
-            "Automated access to LinkedIn pages or DOM content.",
+            "Automated access to third-party LinkedIn pages, feeds, posts, messages, search results, or DOM content.",
             "Scraping profiles, posts, contacts, or search results.",
             "Reading or copying browser cookies, passwords, or session tokens.",
             "Automated posting, liking, commenting, connecting, following, or messaging.",
@@ -275,9 +276,19 @@ def status_report(*, now: datetime | None = None) -> StatusReport:
                 evidence="attest command preserves platform_verified=false",
             ),
             FeatureStatus(
-                feature="LinkedIn browser automation",
+                feature="source-derived editable profile entry",
+                state=FeatureState.READY,
+                evidence="profile-entry-export emits ops-linkedin.profile_entry.v1 from RESUME.md",
+            ),
+            FeatureStatus(
+                feature="source-derived own-profile sync planning",
+                state=FeatureState.READY,
+                evidence="profile-sync-plan emits ops-linkedin.profile_sync.v1 from RESUME.md or an editable profile-entry JSON",
+            ),
+            FeatureStatus(
+                feature="LinkedIn browser automation outside own-profile sync",
                 state=FeatureState.PROHIBITED,
-                evidence="negative guardrails and no network/browser dependencies",
+                evidence="policy and packet guardrails exclude third-party profiles, scraping, and social actions",
             ),
             FeatureStatus(
                 feature="official LinkedIn API adapter",
@@ -285,18 +296,21 @@ def status_report(*, now: datetime | None = None) -> StatusReport:
                 evidence="requires documented authorization and separate review",
             ),
             FeatureStatus(
-                feature="live LinkedIn end-to-end proof",
+                feature="live Surf own-profile execution proof",
                 state=FeatureState.NOT_ESTABLISHED,
-                evidence="outside the deliberate draft-only scope",
+                evidence="profile-sync-plan prepares a bounded Surf plan but does not execute LinkedIn edits",
             ),
         ],
         claims_proves=[
             "The CLI can validate manifests and create local handoff packets.",
+            "The CLI can derive an editable LinkedIn profile entry from a canonical resume source digest.",
+            "The CLI can derive an own-profile sync plan from the editable profile-entry JSON.",
             "Prepared packets state that no LinkedIn action was executed.",
             "A human attestation remains distinct from platform verification.",
         ],
         claims_does_not_prove=[
             "That LinkedIn accepted, displayed, or delivered any action.",
+            "That Surf executed the emitted own-profile plan or saved a profile edit.",
             "That platform terms will remain unchanged after the policy snapshot date.",
             "That an official API integration is authorized or available.",
         ],

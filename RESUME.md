@@ -1,8 +1,8 @@
 # Graham Anderson
-Buffalo, NY · Buffalo-area hybrid/onsite or remote  
+Buffalo, NY (EST)
 [graham@grahama.co](mailto:graham@grahama.co) · [grahama.co](https://grahama.co) · [linkedin.com/in/grahamanderson](https://www.linkedin.com/in/grahamanderson/) · [github.com/grahama1970](https://github.com/grahama1970)
 
-> I build agent systems that can prove what they did.
+> I build agent systems that leave evidence of what they did.
 
 **Principal AI Engineer · AI Architect · Machine Learning Engineer**  
 Agentic AI · LLM/RAG · Knowledge Graphs · Defense & Aerospace · Founder, grahamaco
@@ -13,9 +13,9 @@ U.S. citizen. Extensive experience delivering under export-controlled (ITAR) con
 This is the two-page version. The longer one — full project detail and the live capability inventory — is at [grahama.co/resume](https://grahama.co/resume).
 
 ## ABOUT
-Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for high-consequence environments. I have led DARPA research, delivered under ITAR constraints, and now run a one-person applied R&D practice across architecture, code, evaluation, interfaces, and technical briefing.
+Principal AI Engineer and AI Architect building verifiable agent systems, knowledge-graph platforms, and AI infrastructure for regulated technical environments. Most of my recent work sits in export-controlled aerospace and software-assurance settings, so I keep public claims focused on architecture, code, evaluation, interfaces, and technical briefing.
 
-My path runs through commercial composition, Webby-recognized interactive production, data science, defense research, formal methods, and agent systems. I am most useful when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles.
+My path has been unusual: interactive production, data science, and now defense R&D. Earlier on, that included commercial and interactive work around familiar names like Sony, Adidas, X-Games, Disney, Microsoft, and Toyota; more recently it has meant aerospace, software assurance, and agent systems. I work best when the problem crosses disciplines and still needs one person to take responsibility for the complete result. Open to scoped consulting and selected Principal, Staff, Architect, LLM Platform, and Security/Compliance AI roles.
 
 ## SELECTED IMPACT
 - DARPA ARCOS / ACERT — technical lead for knowledge-graph and LLM-assisted certification of mission-critical software, briefing prime-contractor teams and program collaborators while remaining hands-on with architecture and code.
@@ -55,8 +55,8 @@ Sep 2011 - Sep 2020
 - Director of Interactive Services at Dentsu America (LA division; 50% internal labor reduction, budgets $10K–$1M, teams of 3–50); Executive Producer, God of War: Ascension campaign for Sony (Webby-recognized, 80+ person productions); commercial composer for Adidas, Pepsi, and X-Games.
 
 ## PUBLIC WORK (non-ITAR) — github.com/grahama1970
-Client work is mostly export-controlled, so here is the public, verifiable side — including the fun stuff:
-- [agent-skills](https://github.com/grahama1970/agent-skills) — my living resume: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime.
+Client work is mostly export-controlled, so here is the public, verifiable side:
+- [agent-skills](https://github.com/grahama1970/agent-skills) — public working record: 340+ reusable agent skills, 90+ worker roles, ~85% with sanity gates. Public repo, private runtime.
 - [tau](https://github.com/grahama1970/tau) — receipt-gated multi-agent harness. "Agents hallucinate. Tau contains them."
 - [pdf_oxide](https://github.com/grahama1970/pdf_oxide) — heavily diverged fork of yfedoseev's Rust PDF toolkit (430 commits, ~137K lines added: Rust-core changes, Python pipeline, PDF cloning, NIST validation).
 - scillm — LLM gateway/proxy and LLMOps layer: provider routing and fallback across hosted and local models, batch inference pools, structured outputs with repair, and streaming transport for agent runtimes. Runs on Docker/Linux.

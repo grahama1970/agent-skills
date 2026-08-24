@@ -18,6 +18,11 @@ from ops_linkedin.models import (
     PacketStatus,
     Readiness,
 )
+from ops_linkedin.profile_sync import (
+    LinkedInProfileEntry,
+    build_profile_entry,
+    build_profile_sync_packet_from_entry,
+)
 from ops_linkedin.service import attest_human_completion, policy_report, prepare_handoff
 
 NOW = datetime(2026, 8, 2, 15, 0, tzinfo=UTC)
@@ -260,7 +265,7 @@ def test_policy_cli_outputs_machine_readable_json() -> None:
 
     assert result.exit_code == 0, result.output
     assert '"schema_version": "ops-linkedin.policy.v1"' in result.output
-    assert '"design_posture": "draft-and-human-handoff"' in result.output
+    assert '"design_posture": "draft-human-handoff-plus-opt-in-own-profile-sync"' in result.output
 
 
 def test_example_manifest_is_valid() -> None:
@@ -413,3 +418,49 @@ def test_profile_update_does_not_require_a_roundtable() -> None:
     )
 
     assert packet.readiness is Readiness.READY_FOR_HUMAN_REVIEW
+
+
+def test_profile_entry_export_is_editable_source_derived_json() -> None:
+    """Project agents edit a profile-entry JSON document, not LinkedIn directly."""
+
+    resume = Path(__file__).resolve().parents[3] / "RESUME.md"
+    entry = build_profile_entry(
+        resume_path=resume,
+        profile_url="https://www.linkedin.com/in/grahamanderson/",
+        now=NOW,
+    )
+    payload = entry.model_dump(mode="json")
+    round_trip = LinkedInProfileEntry.model_validate(payload)
+
+    assert round_trip.schema_version == "ops-linkedin.profile_entry.v1"
+    assert round_trip.location == "Buffalo, NY (EST)"
+    assert round_trip.name == "Graham Anderson"
+    assert "Principal AI Engineer" in round_trip.headline
+    assert any(link.label == "Resume" for link in round_trip.featured_links)
+    assert round_trip.source.sha256
+    assert round_trip.editor_notes
+
+
+def test_profile_sync_plan_consumes_editable_entry_without_execution_claim() -> None:
+    """A reviewed profile-entry JSON can become a Surf plan without claiming an edit."""
+
+    resume = Path(__file__).resolve().parents[3] / "RESUME.md"
+    entry = build_profile_entry(
+        resume_path=resume,
+        profile_url="https://www.linkedin.com/in/grahamanderson/",
+        now=NOW,
+    )
+    entry = LinkedInProfileEntry.model_validate(
+        {
+            **entry.model_dump(mode="json"),
+            "headline": "Plain edited headline from the project agent",
+        }
+    )
+    packet = build_profile_sync_packet_from_entry(profile_entry=entry)
+
+    assert packet.schema_version == "ops-linkedin.profile_sync.v1"
+    assert packet.profile_entry.headline == "Plain edited headline from the project agent"
+    assert packet.guardrails.external_effects is False
+    assert packet.guardrails.no_outbound_social_actions is True
+    assert packet.execution_claim == "NOT_EXECUTED"
+    assert any(field.field == "headline" for field in packet.fields)

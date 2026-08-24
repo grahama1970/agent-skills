@@ -243,6 +243,7 @@ def build_jsonld(doc: dict) -> dict:
     # cannot leak "hybrid/onsite or remote" into addressRegion.
     first_text = next((t["v"] for t in doc["contact"] if t["t"] == "text"), "")
     locality, _, region = re.split(r"[|·]", first_text)[0].strip().partition(", ")
+    region = re.sub(r"\s*\([^)]*\)\s*$", "", region).strip()
 
     # The headline paragraph leads with the primary title.
     headline = ""
