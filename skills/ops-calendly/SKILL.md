@@ -117,6 +117,7 @@ caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 - Calendly developer portal: <https://developer.calendly.com/>
 - Calendly API reference: <https://developer.calendly.com/api-docs>
 - llms.txt (LLM-friendly doc index): <https://developer.calendly.com/llms.txt>
+- llms-full.txt (expanded LLM index): <https://developer.calendly.com/llms-full.txt>
 
 ```bash
 skills/context7/run.sh "calendly api scheduling"

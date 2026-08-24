@@ -194,6 +194,7 @@ with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
 caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - Chutes.ai documentation: <https://docs.chutes.ai/>
+- llms.txt (LLM-friendly doc index): <https://chutes.ai/llms.txt>
 
 ```bash
 skills/context7/run.sh "chutes.ai api quota"

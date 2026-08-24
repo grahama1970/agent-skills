@@ -66,6 +66,7 @@ caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - huggingface_hub documentation: <https://huggingface.co/docs/huggingface_hub/index>
 - llms.txt (LLM-friendly doc index): <https://huggingface.co/docs/huggingface_hub/llms.txt>
+- llms-full.txt (expanded LLM index): <https://huggingface.co/docs/huggingface_hub/llms-full.txt>
 
 ```bash
 skills/context7/run.sh "huggingface_hub upload snapshot repo"

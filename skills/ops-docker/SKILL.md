@@ -99,6 +99,7 @@ caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - Docker documentation: <https://docs.docker.com/>
 - llms.txt (LLM-friendly doc index): <https://docs.docker.com/llms.txt>
+- llms-full.txt (expanded LLM index): <https://docs.docker.com/llms-full.txt>
 
 ```bash
 skills/context7/run.sh "docker compose prune cli"

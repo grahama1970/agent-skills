@@ -96,6 +96,7 @@ with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
 caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - Google Gemini API docs: <https://ai.google.dev/gemini-api/docs>
+- llms.txt (LLM-friendly doc index): <https://ai.google.dev/gemini-api/docs/llms.txt>
 
 ```bash
 skills/context7/run.sh "google gemini api models"

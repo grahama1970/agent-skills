@@ -228,6 +228,7 @@ caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - ArangoDB documentation: <https://arangodb.com/documentation/>
 - Reference manual (docs.arangodb.com, browser-only): <https://docs.arangodb.com/stable/>
+- llms.txt (LLM-friendly doc index): <https://arangodb.com/llms.txt>
 
 ```bash
 skills/context7/run.sh "arangodb aql collections backup"

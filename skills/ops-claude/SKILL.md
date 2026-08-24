@@ -220,6 +220,7 @@ caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - Claude Code documentation: <https://docs.claude.com/en/docs/claude-code/overview>
 - llms.txt (LLM-friendly doc index): <https://docs.claude.com/llms.txt>
+- llms-full.txt (expanded LLM index): <https://docs.claude.com/llms-full.txt>
 
 ```bash
 skills/context7/run.sh "claude code cli hooks settings"

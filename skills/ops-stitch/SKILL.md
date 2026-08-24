@@ -73,6 +73,7 @@ caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - Google Stitch: <https://stitch.withgoogle.com/>
 - llms.txt (LLM-friendly doc index): <https://stitch.withgoogle.com/llms.txt>
+- llms-full.txt (expanded LLM index): <https://stitch.withgoogle.com/llms-full.txt>
 
 ```bash
 skills/context7/run.sh "google stitch design"

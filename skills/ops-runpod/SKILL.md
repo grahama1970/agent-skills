@@ -210,6 +210,7 @@ caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - RunPod documentation: <https://docs.runpod.io/>
 - llms.txt (LLM-friendly doc index): <https://docs.runpod.io/llms.txt>
+- llms-full.txt (expanded LLM index): <https://docs.runpod.io/llms-full.txt>
 
 ```bash
 skills/context7/run.sh "runpod gpu pods api"

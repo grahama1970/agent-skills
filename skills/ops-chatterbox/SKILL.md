@@ -121,6 +121,7 @@ with `/context7` (library docs) or `/fetcher` (any URL/PDF) rather than
 caching stale copies. Verified reachable (HTTP 200) 2026-08-24.
 
 - Chatterbox TTS (Resemble AI): <https://github.com/resemble-ai/chatterbox>
+- llms.txt (LLM-friendly doc index): <https://www.resemble.ai/llms.txt>
 
 ```bash
 skills/context7/run.sh "chatterbox tts resemble"
