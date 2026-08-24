@@ -1,0 +1,84 @@
+{
+  "version": 2,
+  "skill": "ops-agent-instructions",
+  "trials": 3,
+  "proof_scope": "live audit of current global instruction files plus deterministic positive, negative, and adversarial controls for the checker",
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": "the skill entrypoint reads actual AGENTS.md and CLAUDE.md files, checks parity and required operational clauses, and rejects missing proof-boundary wording or mismatched canonical files",
+    "does_not_prove": "that future Codex or Claude runs will obey the instructions, that provider-specific startup injection is configured, or that every downstream project has adopted this skill"
+  },
+  "what_was_exercised": "the production run.sh audit command against /home/graham/.codex/AGENTS.md and /home/graham/.claude/CLAUDE.md, plus self-test controls that call the same audit functions against temp instruction files",
+  "what_remains_unverified": "future agent behavior, external reviewer agreement, and provider startup hook enforcement",
+  "cases": [
+    {
+      "name": "live-global-instruction-parity",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "audit",
+        "--json",
+        "--require-identical",
+        "--path",
+        "codex=/home/graham/.codex/AGENTS.md",
+        "--path",
+        "claude=/home/graham/.claude/CLAUDE.md"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"ops_agent_instructions.audit.v1\"",
+          "\"readiness\": \"READY\"",
+          "\"identical\": true"
+        ]
+      }
+    },
+    {
+      "name": "missing-proof-boundary-clause-is-rejected",
+      "type": "negative",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "../run.sh",
+        "self-test",
+        "--case",
+        "missing-clause",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"case\": \"missing-clause\"",
+          "\"proof_boundary\"",
+          "\"readiness\": \"NOT_READY\""
+        ]
+      }
+    },
+    {
+      "name": "canonical-file-mismatch-is-rejected",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "../run.sh",
+        "self-test",
+        "--case",
+        "mismatch",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"case\": \"mismatch\"",
+          "\"identical\": false",
+          "\"readiness\": \"NOT_READY\""
+        ]
+      }
+    }
+  ]
+}
