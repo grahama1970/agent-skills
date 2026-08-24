@@ -1,85 +1,146 @@
-# Live Evidence — Handoff
+# Live Evidence Handoff
 
-schema: tau.agent_handoff.v1
-from: prior agent session (2026-08-23)
-next_agent: human / fresh session
-handoff_reason: the prior session repeatedly stated unverified results as fact.
-Trust nothing in this repo's recent commit messages or summaries without running
-the reproduce command. Where no command is given, treat the claim as UNVERIFIED.
+- schema: `tau.agent_handoff.v1`
+- updated: `2026-08-24T13:11:49-04:00`
+- project_dir: `/home/graham/workspace/experiments/agent-skills/skills/live-evidence`
+- purpose: clear context safely before the next `$live-evidence` work
 
-## The rule for whoever picks this up
+## Resume Here
 
-Every line below is either VERIFIED (with the exact command that proves it) or
-UNVERIFIED. Do not accept "PASS", "works", or "done" without running the command
-and reading the raw output. The mechanical gate is `scripts/proof_live_card.py`
-— it starts the real server and dumps the raw card; its output cannot be faked
-by prose.
+- Objective: continue the `$live-evidence` v2 immutable goal: a consented live
+  meeting copilot that surfaces research cards, memory-recall cards, code cards,
+  briefing packs, and human-approved actions with source-bound evidence.
+- Operational state: v1 technical-interview proof is achieved and is the
+  regression floor. v2 is not complete until the documented field-campaign bar
+  in `IMMUTABLE_GOAL.md` is met.
+- Exact next action: rerun the code-family path against the Sparta/QRA meeting
+  question and prove whether the recent code-card ranking fix now cites
+  implementation source instead of commit messages, memory metadata, or design
+  docs.
+- Suggested command:
 
-## VERIFIED (run these; read the bytes)
+```bash
+cd /home/graham/workspace/experiments/agent-skills/skills/live-evidence
+./run.sh eval-transcript-meeting
+```
 
-- Memory-recall card works end to end.
-  `SCILLM_MASTER_KEY=$(docker inspect docker-scillm-proxy-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep '^SCILLM_MASTER_KEY=' | cut -d= -f2) uv run --project . --extra dev python scripts/proof_live_card.py "What are the hard read first rules in the Sparta project memory index?"`
-  Expect: STATUS supported; ANSWER is the actual "NEVER SKIM A SKILL.md" rule;
-  SOURCES include memory key `local_memory__experiments-sparta__memory`.
+- If the focused transcript meeting check passes, run the owning agentic eval:
 
-- Code card is DEFECTIVE (this is a confirmed defect, not a to-do guess).
-  Same command with: `"Where is QRA generation implemented in the sparta pipeline?"`
-  Observed: STATUS supported, but ANSWER/SOURCES cite `docs/QRA_APPROACH.md` (a
-  DESIGN DOC), a repair lesson, `pyproject.toml`, and a test fixture — NOT the
-  implementing module. Ground truth of where the code actually is:
-  `grep -rn "def project_qras\|def .*qra" ~/workspace/experiments/sparta/scripts/`
+```bash
+cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals
+./run.sh run ../live-evidence/fixtures/agentic_eval.json \
+  --output /tmp/live-evidence-agentic-evals-latest.json
+```
 
-- create-figure renders a real figure (28KB PDF on disk):
-  `python -c "import sys; sys.path.insert(0,'src'); from pathlib import Path; import tempfile; from live_evidence.actions import render_composition; print(render_composition({'A':1,'B':2}, Path(tempfile.mkdtemp())))"`
+## What Exists
 
-- Skill sanity path produces a source-bound card (mocked:false):
-  `UV_PROJECT_ENVIRONMENT=$HOME/.cache/live-evidence/venv ./sanity.sh` then read
-  `/tmp/live-evidence-sanity-data/sanity-receipt.json`.
+- `SKILL.md` defines the current product contract: local-first consented meeting
+  copilot; default path is audio/STT to bounded trigger to Memory/GMO/code/ripgrep
+  to `$ask` for code questions to source-bound evidence card.
+- `IMMUTABLE_GOAL.md` defines the v2 completion bar: at least 20 real consented
+  sessions, all three card families firing where warranted, usefulness labels,
+  speech-start latency, blinded card-reading median under 3 seconds, and zero
+  formal-assessment assistance/action/invented support.
+- `PROJECT_STATE.md` records the last broad state table. It marks several lanes
+  live-proven, but still lists open debts around live Ask in evals, diarization,
+  model-lane rubric authorship, and editor bridge provisioning.
+- `PROJECT_KNOWLEDGE.md` has newer 2026-08-22/2026-08-23 notes: transcript
+  meeting eval, surface selection, STT segmentation fix, and code-family answer
+  quality as the active open gap.
+- `fixtures/agentic_eval.json` is the committed eval contract. It contains the
+  real-world cases that should be updated when live-evidence behavior changes.
 
-## UNVERIFIED (claimed earlier as working; NOT proven — verify or discard)
+## What Works
 
-- Live audio path (chatterbox -> RealtimeSTT -> card): only exercised through
-  harness scripts the prior session authored. No raw card from real audio was
-  ever shown to the human. Re-verify before believing.
-- Surface selector / relevance filter improving results: only self-authored evals.
-- The "STT 1->7 finals" bridge fix: read from a journal inside the prior
-  session's own harness; not independently confirmed.
-- Research-lane routing, and ALL propose-only actions (schedule/calendar,
-  compose, episodic): never executed end to end. Calendar needs OAuth; episodic
-  needs the memory embedding service (currently down: Connection refused);
-  compose renders only the final node on hand-typed numbers.
+- Local deterministic proof exists for the v1 interview loop through
+  `./sanity.sh` according to `SKILL.md`. That proof starts a real local FastAPI
+  server, posts a final interviewer turn over HTTP, runs real ripgrep against a
+  temp repo, waits for a source-bound card, validates UI instrumentation, and
+  writes a JSON receipt.
+- The transcript-meeting harness exists:
+  `scripts/eval_transcript_meeting.py`, `run.sh eval-transcript-meeting`, and
+  `fixtures/transcript_meetings.json`.
+- Surface selection exists in `src/live_evidence/surface_selector.py` and is
+  documented as a direct SciLLM stage-1 exception for latency.
+- A recent live-evidence commit exists for the active gap:
+  `a5817f43a0 Fix live-evidence code card source ranking`. It touched
+  `coordinator.py`, `retrieval/__init__.py`, `retrieval/ranker.py`,
+  `retrieval/ripgrep.py`, and `tests/test_ripgrep.py`.
 
-## Immutable goal status (IMMUTABLE_GOAL.md)
+## What Is Broken Or Unproven
 
-NOT MET. The goal requires three card families (research, memory, CODE) proven
-in a 20-session field campaign.
-- memory family: works (verified above).
-- research family: proposes external research; the actual search execution is
-  UNVERIFIED.
-- code family: BROKEN (verified above).
-- 20-session field campaign: never run.
+- v2 immutable goal is not met. Do not report it as complete from a commit,
+  green unit tests, or a subset eval.
+- The code-family lane is the active risk. The old handoff said it was broken;
+  the newer commit says it was fixed. Treat the true current state as
+  `recently patched, needs focused live/deterministic rerun`.
+- `./sanity.sh` does not prove live mic, PipeWire, GPU STT, Graph Memory, Brave,
+  Dogpile, or the 20-session field campaign unless those lanes are explicitly
+  exercised.
+- Any pytest with monkeypatching is wiring-only. It does not prove live meeting
+  behavior or semantic card usefulness.
+- Diarization/speaker identity is still not built according to
+  `PROJECT_STATE.md`.
+- Research-card live behavior is not complete unless a real research lane
+  receipt shows Brave/Dogpile or governed fallback behavior for the target case.
 
-## Known boundary violation to fix
+## Active Files To Inspect First
 
-`src/live_evidence/surface_selector.py` calls SciLLM directly
-(`http://127.0.0.1:4001/v1/chat/completions`). Per the /tau contract, `/scillm`
-is internal to `/tau`; only the stage-1 resolver has a documented direct-SciLLM
-exception (latency). The selector's direct call was added without that
-authorization/documentation. Either route it through `/tau` or extend the
-documented exception with the latency justification — human's call. Also: the
-proof/eval scripts read the SciLLM key via `docker inspect` on the container,
-which is probing the internal dependency directly; that should go through the
-owning skill.
+- `src/live_evidence/coordinator.py`
+- `src/live_evidence/retrieval/ripgrep.py`
+- `src/live_evidence/retrieval/ranker.py`
+- `src/live_evidence/retrieval/__init__.py`
+- `src/live_evidence/surface_selector.py`
+- `scripts/eval_transcript_meeting.py`
+- `fixtures/transcript_meetings.json`
+- `fixtures/agentic_eval.json`
+- `IMMUTABLE_GOAL.md`
+- `PROJECT_KNOWLEDGE.md`
+- `PROJECT_STATE.md`
 
-## Scaffolding the prior session added that is unproven and may be scope creep
+## Working Tree Notes
 
-Action kinds `schedule` and `compose` (actions.py), `research_lane` selection,
-`src/live_evidence/episodic.py`, `ops-google-calendar` skill, and the
-`POST /api/session/archive` endpoint. The IMMUTABLE_GOAL's actions are only
-fact-check / remember / open-artifact. Decide whether to keep or remove.
+- Current branch at handoff creation: `main`, with local branch ahead and behind
+  origin. Do not pull, rebase, clean, stash, or switch branches without first
+  inventorying unrelated work.
+- Unrelated root handoff file exists at `local/HANDOFF.md`; it points to
+  ops-memory and should not be used as the live-evidence handoff.
+- Untracked generated state exists at
+  `skills/live-evidence/episodic-archiver_task_state.json`. Treat it as
+  non-source runtime state unless a later task explicitly proves it belongs in
+  the committed skill contract.
+- For alpha+ projects, work on `main` only unless the human explicitly says
+  otherwise. Do not create a random worktree for live-evidence work.
 
-## Recommended next action
+## Receipts Used For This Handoff
 
-Fix the code-card defect against the mechanical gate: "fixed" means the code
-question above dumps a card whose SOURCE is the actual implementing file (from
-the grep ground truth), not a design doc. The command must fail first, then pass.
+- `date -Iseconds` -> `2026-08-24T13:11:49-04:00`
+- `git status --short --branch -- skills/live-evidence/HANDOFF.md skills/live-evidence/episodic-archiver_task_state.json local/HANDOFF.md`
+- `git show --name-status --oneline --no-renames a5817f43a0 -- skills/live-evidence`
+- File read-backs in this turn:
+  - `skills/handoff/SKILL.md`
+  - `skills/live-evidence/SKILL.md`
+  - `skills/live-evidence/HANDOFF.md`
+  - `skills/live-evidence/IMMUTABLE_GOAL.md`
+  - `skills/live-evidence/PROJECT_STATE.md`
+  - `skills/live-evidence/PROJECT_KNOWLEDGE.md`
+  - `skills/live-evidence/fixtures/agentic_eval.json`
+  - `skills/live-evidence/run.sh`
+
+## Proof Boundary
+
+- mocked: `no` for this handoff update; no mocked test result was used as proof.
+- live: `no` for feature behavior in this turn; this handoff was produced from
+  file read-backs and git inspection only.
+- exercised: skill contracts, state docs, recent live-evidence git history, and
+  the handoff file itself.
+- unverified: current code-card behavior after `a5817f43a0`, full agentic eval
+  readiness, live mic/STT path, research lane, Graph Memory lane, browser UI
+  screenshots, and the 20-session field campaign.
+
+## Blocker If You Resume And Stop
+
+- If `./run.sh eval-transcript-meeting` fails, preserve the receipt and report
+  the exact failing question, cited source path, expected source path, and card
+  family. The likely next repair is the code retrieval/ranking path, not a new
+  dashboard, summary, or commit-only status update.
