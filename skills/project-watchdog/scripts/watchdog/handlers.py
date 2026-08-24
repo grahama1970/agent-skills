@@ -693,6 +693,10 @@ _OUTPUT_FLAG = re.compile(r"--(?:output|out|output-file|report)[ =]+([^\s`'\"]+)
 _PROOF_PATH = re.compile(
     r"(?:^|[\s`'\"(=])((?:/|\./|~/)?[\w.@+-]+(?:/[\w.@+-]+)+\.(?:json|xml|txt|log|md|csv|html))"
 )
+_AGENTIC_EVAL_INPUT = re.compile(
+    r"(?:^|[\s`'\"])(?:[\w./-]+/)?agentic-evals/run\.sh\s+run\s+([^\s`'\"]+)"
+    r"|(?:^|[\s`'\"])/agentic-evals\s+run\s+([^\s`'\"]+)"
+)
 
 
 def repair_node_id(handler: str) -> str:
@@ -767,7 +771,31 @@ def required_proof_artifacts(issue_body: str) -> list[str]:
     outputs = [m.group(1) for m in _OUTPUT_FLAG.finditer(text)]
     if outputs:
         return sorted(dict.fromkeys(outputs))
-    return sorted(dict.fromkeys(m.group(1) for m in _PROOF_PATH.finditer(text)))
+    proof_paths = [m.group(1) for m in _PROOF_PATH.finditer(text)]
+    agentic_inputs = {
+        path
+        for match in _AGENTIC_EVAL_INPUT.finditer(text)
+        for path in match.groups()
+        if path
+    }
+    return sorted(
+        dict.fromkeys(path for path in proof_paths if path not in agentic_inputs)
+    )
+
+
+def reviewer_named_proof_artifacts(response: str | None) -> list[str]:
+    """Fresh proof artifacts the reviewer explicitly named in its verdict.
+
+    Some tickets specify an ``agentic-evals run`` command without an ``--output``.
+    In that shape the fixture path is input, not proof. The repair prompt still
+    requires the reviewer to name the proof artifact it read, so use those paths
+    as the fallback proof set.
+    """
+    if not response:
+        return []
+    outputs = [m.group(1) for m in _OUTPUT_FLAG.finditer(response)]
+    proof_paths = outputs or [m.group(1) for m in _PROOF_PATH.finditer(response)]
+    return sorted(dict.fromkeys(proof_paths))
 
 
 def _result_values(payload: Any, depth: int = 0) -> list[str]:
@@ -787,7 +815,9 @@ def _result_values(payload: Any, depth: int = 0) -> list[str]:
     return found
 
 
-def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any]:
+def inspect_proof_artifact(
+    raw_path: str, *, not_before: float, base_dir: Path | None = None
+) -> dict[str, Any]:
     """Whether one named proof artifact is present, fresh, and a completed pass.
 
     Freshness is load-bearing: agent-skills#1499 had a passing receipt on disk
@@ -795,6 +825,8 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
     in this dispatch ever ran.
     """
     path = Path(raw_path).expanduser()
+    if not path.is_absolute() and base_dir is not None:
+        path = base_dir / path
     record: dict[str, Any] = {
         "path": str(path), "exists": False, "fresh": False,
         "machine_readable": False, "passed": False, "reason": "",
@@ -892,8 +924,11 @@ def evaluate_repair_proof(
     }
     reasons: list[str] = []
 
+    reviewer_response: str | None = None
     for role, handler in (("creator", creator), ("reviewer", reviewer)):
         response = seat_response_text(ask_run_dir, handler)
+        if role == "reviewer":
+            reviewer_response = response
         verdict = declared_verdict(response) if response is not None else None
         gate["seat_verdicts"][role] = {
             "handler": handler,
@@ -915,9 +950,14 @@ def evaluate_repair_proof(
             reasons.append(f"reviewer seat {handler} declared {verdict}, not PASS")
 
     artifacts = required_proof_artifacts(issue_body)
+    if not artifacts:
+        artifacts = reviewer_named_proof_artifacts(reviewer_response)
     gate["required_proof_artifacts"] = artifacts
     if artifacts:
-        results = [inspect_proof_artifact(a, not_before=not_before) for a in artifacts]
+        results = [
+            inspect_proof_artifact(a, not_before=not_before, base_dir=repair_worktree)
+            for a in artifacts
+        ]
         gate["artifact_results"] = results
         if not any(r["passed"] for r in results):
             detail = "; ".join(f"{r['path']}: {r['reason']}" for r in results)
