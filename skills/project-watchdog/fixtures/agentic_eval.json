@@ -384,6 +384,29 @@
       "notes": "Regression for graph-memory-operator#142: a required proof artifact that records repo.sha from the primary checkout must not count as proof for a repair branch commit."
     },
     {
+      "name": "timeout-kills-recorded-descendant-outside-process-group",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": false,
+      "timeout_seconds": 30,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_run_cmd_timeout_kills_recorded_descendant_outside_process_group",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression for agent-skills#1526: a timed-out watchdog command must not leave a recorded descendant process orphaned outside the launched process group."
+    },
+    {
       "name": "tick-does-not-revert-an-operator-state-change",
       "type": "adversarial",
       "command": [

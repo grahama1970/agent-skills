@@ -9,6 +9,7 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import shlex
 import subprocess
 import sys
 import time
@@ -294,6 +295,39 @@ def test_config_paths_are_absolute_and_expanded(resolver) -> None:
 def test_state_root_honours_environment_override(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
     assert config.state_root() == tmp_path.resolve()
+
+
+def test_run_cmd_timeout_kills_recorded_descendant_outside_process_group(tmp_path) -> None:
+    child_pid_file = tmp_path / "child.pid"
+    quoted_child_pid_file = shlex.quote(str(child_pid_file))
+    started = time.monotonic()
+    result = core.run_cmd(
+        [
+            "bash",
+            "-c",
+            "setsid bash -c 'echo $$ > "
+            f"{quoted_child_pid_file}; sleep 30' & "
+            f"while [ ! -s {quoted_child_pid_file} ]; do sleep 0.01; done; "
+            "wait",
+        ],
+        timeout_s=1,
+    )
+    duration = time.monotonic() - started
+
+    assert result["timed_out"] is True
+    assert result["exit_code"] == 124
+    assert duration < 10
+    child_pid = int(child_pid_file.read_text(encoding="utf-8").strip())
+    cleanup = result["process_group"]["descendant_cleanup"]
+    checked_pids = {entry["pid"] for entry in cleanup["checked"]}
+    assert child_pid in checked_pids
+
+    deadline = time.monotonic() + 3.0
+    child_proc = Path("/proc") / str(child_pid)
+    while child_proc.exists() and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert not child_proc.exists()
+    assert cleanup["still_alive"] == []
 
 
 # --------------------------------------------------------------------------- #
