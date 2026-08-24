@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-24T17:38:21.811883+00:00",
+  "verified_at": "2026-08-24T17:43:37.289479+00:00",
   "cwd": "/home/graham/workspace/experiments/agent-skills",
   "root": "/home/graham/workspace/experiments/agent-skills",
   "output_root": "/tmp/codex-ui-verification/agent-skills",
-  "url": "http://127.0.0.1:3029/resume.html",
-  "name": "resume-public-work-flourish-local",
+  "url": "http://127.0.0.1:3030/resume.html",
+  "name": "resume-caption-neutral500-local",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills/resume-public-work-flourish-local/20260824T173815Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills/resume-public-work-flourish-local/20260824T173815Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/resume-caption-neutral500-local/20260824T174331Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/resume-caption-neutral500-local/20260824T174331Z.read.json"
 }
