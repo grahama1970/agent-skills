@@ -672,8 +672,28 @@ def _validate_raw_semantics(raw: dict[str, Any]) -> None:
         decision = item.get("decision")
         if signal_type == "MEETUP_NETWORKING" and decision not in {"ATTEND_MEETUP", "WATCH_MEETUP", "SKIP_MEETUP"}:
             raise ContractError("SOURCE_INTEL_DECISION_INVALID", f"Unsupported Meetup decision: {decision}")
-        if signal_type == "LINKEDIN_LOCATOR" and item.get("action_worthy") is not False:
-            raise ContractError("LINKEDIN_LOCATOR_ACTIONABLE", "LinkedIn locator evidence is not action-worthy")
+        if signal_type == "LINKEDIN_LOCATOR":
+            allowed = {
+                "LOCATOR_ONLY",
+                "PENDING_PRIMARY_VERIFICATION",
+                "TOP_APPLICANT_REVIEW",
+                "EASY_APPLY_REVIEW",
+            }
+            if decision not in allowed:
+                raise ContractError(
+                    "SOURCE_INTEL_DECISION_INVALID",
+                    f"Unsupported LinkedIn locator decision: {decision}",
+                )
+            if decision == "LOCATOR_ONLY" and item.get("action_worthy") is not False:
+                raise ContractError(
+                    "LINKEDIN_LOCATOR_ACTIONABLE",
+                    "Plain LinkedIn locator evidence is not action-worthy",
+                )
+            if decision != "LOCATOR_ONLY" and item.get("action_worthy") is not True:
+                raise ContractError(
+                    "LINKEDIN_PRIORITY_NOT_ACTIONABLE",
+                    "LinkedIn Top Applicant, Easy Apply, and pending WNY locators must be action-worthy",
+                )
         if signal_type == "GITHUB_REPO_INTELLIGENCE" and decision != "CONTACT_INTELLIGENCE_ONLY":
             raise ContractError("SOURCE_INTEL_DECISION_INVALID", f"Unsupported GitHub decision: {decision}")
 

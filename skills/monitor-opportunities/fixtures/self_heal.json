@@ -82,22 +82,22 @@
       ]
     },
     {
-      "name": "linkedin-locator-not-action-worthy-regression",
+      "name": "linkedin-priority-source-intel-actionable-and-tabular",
       "type": "adversarial",
       "real_world": true,
       "timeout_seconds": 60,
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_source_admission.py::test_pending_linkedin_locator_remains_visible_but_not_action_worthy -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . pytest tests/test_source_admission.py::test_pending_linkedin_locator_remains_visible_and_action_worthy tests/test_source_admission.py::test_linkedin_top_applicant_and_easy_apply_are_action_worthy_source_intel tests/test_source_admission.py::test_linkedin_priority_source_intel_must_be_action_worthy tests/test_report_visibility.py::test_static_report_renders_source_intel_as_table -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "4 passed"
         ],
         "stderr_excludes": [
-          "LINKEDIN_LOCATOR_ACTIONABLE"
+          "LINKEDIN_PRIORITY_NOT_ACTIONABLE"
         ]
       },
       "seams": [

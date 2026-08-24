@@ -1459,6 +1459,8 @@
           "enum": [
             "LOCATOR_ONLY",
             "PENDING_PRIMARY_VERIFICATION",
+            "TOP_APPLICANT_REVIEW",
+            "EASY_APPLY_REVIEW",
             "ATTEND_MEETUP",
             "WATCH_MEETUP",
             "SKIP_MEETUP",

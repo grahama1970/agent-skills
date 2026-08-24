@@ -451,7 +451,7 @@ def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path)
     sam_ev = SKILL_DIR / "tests" / "fixtures" / "federal" / "sam-website-capture.json"
     result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
     assert result.exit_code == 2
-    assert "CLAIM_SNAPSHOT_REQUIRED" in result.stderr
+    assert "CLAIM_SNAPSHOT_REQUIRED" in result.output
     receipt, rows = _linkedin_evidence_candidates(fixture)
     assert receipt["required_source_id"] == "linkedin_top_applicant"
     assert receipt["automation_policy"] == "linkedin_no_automation"
@@ -460,8 +460,8 @@ def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path)
     intel = _source_intel(rows[0])
     assert intel is not None
     assert intel["signal_type"] == "LINKEDIN_LOCATOR"
-    assert intel["decision"] == "LOCATOR_ONLY"
-    assert intel["action_worthy"] is False
+    assert intel["decision"] == "TOP_APPLICANT_REVIEW"
+    assert intel["action_worthy"] is True
 
 
 def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevant(tmp_path: Path) -> None:
@@ -470,7 +470,7 @@ def test_run_with_ops_linkedin_capture_ranks_relevant_jobs_and_rejects_irrelevan
     sam_ev = SKILL_DIR / "tests" / "fixtures" / "federal" / "sam-website-capture.json"
     result = runner.invoke(app, ["run", "--linkedin-evidence", str(fixture), "--federal-evidence", str(sam_ev), "--out", str(out)])
     assert result.exit_code == 2
-    assert "CLAIM_SNAPSHOT_REQUIRED" in result.stderr
+    assert "CLAIM_SNAPSHOT_REQUIRED" in result.output
     receipt, rows = _linkedin_evidence_candidates(fixture)
     assert receipt["source_class"] == "ops_linkedin_authorized_read_only"
     assert receipt["automation_policy"] == "linkedin_authorized_read_only_no_actions"

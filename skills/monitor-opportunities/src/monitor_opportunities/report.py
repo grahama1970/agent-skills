@@ -58,6 +58,44 @@ def _link(label: str, url: str | None) -> str:
     return f'<p><strong>{safe_label}:</strong> <a href="{safe_url}">{html.escape(url)}</a></p>'
 
 
+def _table_link(label: str, url: str | None) -> str:
+    if not url:
+        return '<span class="muted">None</span>'
+    safe_url = html.escape(url, quote=True)
+    return f'<a href="{safe_url}">{html.escape(label)}</a>'
+
+
+def _yes_no(value: bool) -> str:
+    return "yes" if value else "no"
+
+
+def _source_intel_table(items: Iterable[Any]) -> str:
+    rows = []
+    for item in items:
+        rows.append(
+            "<tr>"
+            f"<td>{_badge(item.decision)}<br><span class=\"small\">Action-worthy: {_yes_no(item.action_worthy)}</span></td>"
+            f"<td>{_badge(item.signal_type)}</td>"
+            f"<td><strong>{html.escape(item.organization)}</strong><br>{html.escape(item.title)}</td>"
+            f"<td>{html.escape(item.summary)}{_list(item.reasons)}</td>"
+            f"<td>{_table_link('source', item.primary_evidence_url)}{_list(item.evidence_refs)}</td>"
+            "</tr>"
+        )
+    if not rows:
+        return "<p>None</p>"
+    return (
+        '<table class="source-intel-table">'
+        "<thead><tr>"
+        "<th>Decision</th>"
+        "<th>Signal</th>"
+        "<th>Role</th>"
+        "<th>Next action</th>"
+        "<th>Evidence</th>"
+        "</tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
 def _relationship_summary(item: Any, signals_by_id: dict[str, Any]) -> str:
     ids = list(getattr(item, "relationship_signal_ids", []) or [])
     if not ids:
@@ -160,15 +198,7 @@ def render_html(manifest: ReportManifest) -> str:
         for item in manifest.eligibility_rejections
     ) or "<li>None</li>"
 
-    source_intel = "".join(
-        f"<article><h3>{html.escape(item.title)} — {html.escape(item.organization)}</h3>"
-        f"<p>{_badge(item.signal_type)} {_badge(item.decision)}</p>"
-        f"<p>{html.escape(item.summary)}</p>"
-        f"{_link('Source evidence', item.primary_evidence_url)}"
-        f"<h4>Evidence</h4>{_list(item.evidence_refs)}"
-        f"<h4>Reasons</h4>{_list(item.reasons)}</article>"
-        for item in manifest.source_intel
-    ) or "<p>None</p>"
+    source_intel = _source_intel_table(manifest.source_intel)
 
     variants = "".join(
         f"<article><h3>{html.escape(item.variant_id)}</h3>"
@@ -270,6 +300,12 @@ def render_html(manifest: ReportManifest) -> str:
 body {{ max-width: 1100px; margin: 0 auto; padding: 2rem; line-height: 1.45; }}
 section {{ margin: 2rem 0; }} article {{ border: 1px solid #7776; padding: 1rem; margin: 1rem 0; border-radius: .5rem; }}
 table {{ border-collapse: collapse; width: 100%; }} th, td {{ border: 1px solid #7776; padding: .5rem; vertical-align: top; }}
+th {{ text-align: left; }}
+.source-intel-table td:nth-child(1), .source-intel-table td:nth-child(2) {{ white-space: nowrap; }}
+.source-intel-table th:nth-child(1) {{ width: 22%; }}
+.source-intel-table th:nth-child(2) {{ width: 16%; }}
+.source-intel-table th:nth-child(3) {{ width: 24%; }}
+.source-intel-table th:nth-child(5) {{ width: 14%; }}
 .badge {{ display: inline-block; border: 1px solid currentColor; border-radius: 999px; padding: .1rem .5rem; font-size: .85rem; }}
 .bad {{ font-weight: 700; }} .warn {{ font-style: italic; }} .small, .muted {{ opacity: .75; font-size: .9rem; }}
 pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; }} .empty {{ font-weight: 700; }}

@@ -21,10 +21,16 @@ def test_linkedin_only_candidate_is_source_intel_not_opportunity() -> None:
     assert all(not _is_report_opportunity(candidate) for candidate in candidates)
     intel = [_source_intel(candidate) for candidate in candidates]
     assert all(item and item["signal_type"] == "LINKEDIN_LOCATOR" for item in intel)
-    assert all(item and item["decision"] == "LOCATOR_ONLY" for item in intel)
+    decisions = {item["decision"] for item in intel if item}
+    assert "TOP_APPLICANT_REVIEW" in decisions
+    assert all(
+        item and item["action_worthy"] is True
+        for item in intel
+        if item and item["decision"] in {"TOP_APPLICANT_REVIEW", "EASY_APPLY_REVIEW", "PENDING_PRIMARY_VERIFICATION"}
+    )
 
 
-def test_pending_linkedin_locator_remains_visible_but_not_action_worthy() -> None:
+def test_pending_linkedin_locator_remains_visible_and_action_worthy() -> None:
     intel = _source_intel(
         {
             "candidate_id": "candidate:a:pending-linkedin",
@@ -42,7 +48,45 @@ def test_pending_linkedin_locator_remains_visible_but_not_action_worthy() -> Non
     assert intel["signal_type"] == "LINKEDIN_LOCATOR"
     assert intel["decision"] == "PENDING_PRIMARY_VERIFICATION"
     assert intel["visible_in_report"] is True
-    assert intel["action_worthy"] is False
+    assert intel["action_worthy"] is True
+
+
+def test_linkedin_top_applicant_and_easy_apply_are_action_worthy_source_intel() -> None:
+    top_applicant = _source_intel(
+        {
+            "candidate_id": "candidate:a:linkedin-top-applicant",
+            "lane": "A",
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": "src:linkedin",
+            "title": "GenAI Python Systems Engineer",
+            "organization": "PwC",
+            "posting_url": "https://www.linkedin.com/jobs/view/4453645854/",
+            "top_candidate_evidence": True,
+        }
+    )
+    easy_apply = _source_intel(
+        {
+            "candidate_id": "candidate:a:linkedin-easy-apply",
+            "lane": "A",
+            "source_provider": "ops_linkedin_authorized_read_only",
+            "source_receipt_id": "src:linkedin",
+            "title": "Applied AI Engineer",
+            "organization": "Example AI",
+            "posting_url": "https://www.linkedin.com/jobs/view/123/",
+            "easy_apply": True,
+        }
+    )
+
+    assert top_applicant is not None
+    assert top_applicant["decision"] == "TOP_APPLICANT_REVIEW"
+    assert top_applicant["visible_in_report"] is True
+    assert top_applicant["action_worthy"] is True
+    assert "Top Applicant" in top_applicant["summary"]
+    assert easy_apply is not None
+    assert easy_apply["decision"] == "EASY_APPLY_REVIEW"
+    assert easy_apply["visible_in_report"] is True
+    assert easy_apply["action_worthy"] is True
+    assert "Easy Apply" in easy_apply["summary"]
 
 
 def test_report_visible_opportunity_must_cite_known_accepted_source_receipt() -> None:
@@ -99,6 +143,32 @@ def test_report_visible_source_intel_can_cite_visible_degraded_receipt() -> None
     manifest = validate_manifest(data)
 
     assert manifest.source_intel[0].source_receipt_ids == ["src:degraded"]
+
+
+def test_linkedin_priority_source_intel_must_be_action_worthy() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    data["source_intel"] = [
+        {
+            "signal_id": "intel:top-applicant",
+            "lane": "A",
+            "signal_type": "LINKEDIN_LOCATOR",
+            "title": "GenAI Python Systems Engineer",
+            "organization": "PwC",
+            "summary": "LinkedIn Top Applicant source intelligence.",
+            "source_receipt_ids": [data["source_receipts"][0]["receipt_id"]],
+            "primary_evidence_url": "https://www.linkedin.com/jobs/view/4453645854/",
+            "evidence_refs": data["source_receipts"][0]["evidence_refs"],
+            "decision": "TOP_APPLICANT_REVIEW",
+            "reasons": ["LinkedIn Top Applicant signal."],
+            "action_worthy": False,
+            "visible_in_report": True,
+        }
+    ]
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(data)
+
+    assert exc.value.code == "LINKEDIN_PRIORITY_NOT_ACTIONABLE"
 
 
 def test_report_visible_source_intel_cannot_cite_no_matches_receipt() -> None:

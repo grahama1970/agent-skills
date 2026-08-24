@@ -126,6 +126,39 @@ def test_static_report_renders_relationship_signal_attachments() -> None:
     assert "Relationship signals</h2>" in html
 
 
+def test_static_report_renders_source_intel_as_table() -> None:
+    data = built_in_fixture()
+    receipt = data["source_receipts"][0]
+    data["source_intel"] = [
+        {
+            "signal_id": "intel:linkedin-top-applicant",
+            "lane": "A",
+            "signal_type": "LINKEDIN_LOCATOR",
+            "title": "GenAI Python Systems Engineer",
+            "organization": "PwC",
+            "summary": "LinkedIn Top Applicant source intelligence requires primary readback before application.",
+            "source_receipt_ids": [receipt["receipt_id"]],
+            "primary_evidence_url": "https://www.linkedin.com/jobs/view/4453645854/",
+            "evidence_refs": receipt["evidence_refs"],
+            "decision": "TOP_APPLICANT_REVIEW",
+            "reasons": ["LinkedIn Top Applicant signal from authorized read-only evidence."],
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    static_html = render_html(validate_manifest(data))
+
+    assert '<table class="source-intel-table">' in static_html
+    assert "<th>Decision</th>" in static_html
+    assert "<th>Next action</th>" in static_html
+    assert "TOP_APPLICANT_REVIEW" in static_html
+    assert "PwC" in static_html
+    assert "Action-worthy: yes" in static_html
+
+
 def test_reports_render_relationship_binding_diagnostics(tmp_path: Path) -> None:
     data = built_in_fixture()
     data["relationship_signals"] = [

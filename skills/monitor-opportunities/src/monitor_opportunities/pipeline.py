@@ -323,6 +323,16 @@ def _source_intel_summary(candidate: dict[str, Any], *, contacts: list[Any] | No
         decision = str(candidate.get("networking_decision") or "WATCH").upper()
         return f"{title} at {organization} is Meetup source intelligence with recommended decision {decision}."
     if _is_linkedin_locator(candidate):
+        if candidate.get("easy_apply"):
+            return (
+                f"{title} at {organization} is LinkedIn Easy Apply source intelligence; "
+                "human authorization and exact payload review are required before any platform action."
+            )
+        if candidate.get("top_candidate_evidence"):
+            return (
+                f"{title} at {organization} is LinkedIn Top Applicant source intelligence; "
+                "primary employer readback or human review is required before application action."
+            )
         return (
             f"{title} at {organization} is LinkedIn locator source intelligence; "
             "primary employer or client readback is still required before opportunity admission."
@@ -378,9 +388,38 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
         }
     if _is_linkedin_locator(candidate):
         # A WNY-priority locator that primary-source readback could not confirm
-        # this run remains visible, but LinkedIn locator evidence is still
-        # source intelligence only until primary-source readback admits it.
+        # this run remains visible. Top Applicant and Easy Apply rows are also
+        # action-worthy human review items, but still source intelligence until
+        # primary-source readback admits them or the human authorizes an exact
+        # LinkedIn payload. Plain LinkedIn locator evidence remains inert.
         pending = bool(candidate.get("pending_primary_verification"))
+        top_applicant = bool(candidate.get("top_candidate_evidence"))
+        easy_apply = bool(candidate.get("easy_apply"))
+        if easy_apply:
+            decision = "EASY_APPLY_REVIEW"
+        elif top_applicant:
+            decision = "TOP_APPLICANT_REVIEW"
+        elif pending:
+            decision = "PENDING_PRIMARY_VERIFICATION"
+        else:
+            decision = "LOCATOR_ONLY"
+        reasons = [
+            "LinkedIn row is profile/recommendation source intelligence only.",
+        ]
+        if easy_apply:
+            reasons.append(
+                "LinkedIn Easy Apply signal: prepare an exact human-authorized payload before any platform action."
+            )
+        if top_applicant:
+            reasons.append(
+                "LinkedIn Top Applicant signal: surface for Graham review even when primary-source readback is pending."
+            )
+        if pending:
+            reasons.append(
+                "WNY priority: no primary ATS source corroborated this run — verify the employer posting, then apply."
+            )
+        if decision == "LOCATOR_ONLY":
+            reasons.append("Primary employer/client source readback is required before opportunity admission.")
         return {
             "signal_id": stable_id("source-intel", candidate["candidate_id"]),
             "lane": candidate["lane"],
@@ -391,14 +430,9 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             "source_receipt_ids": [source_id],
             "primary_evidence_url": evidence_url,
             "evidence_refs": _source_intel_refs(candidate, evidence_url),
-            "decision": "PENDING_PRIMARY_VERIFICATION" if pending else "LOCATOR_ONLY",
-            "reasons": [
-                "LinkedIn row is profile/recommendation source intelligence only.",
-                "Primary employer/client source readback is required before opportunity admission."
-                if not pending else
-                "WNY priority: no primary ATS source corroborated this run — verify the employer posting, then apply.",
-            ],
-            "action_worthy": False,
+            "decision": decision,
+            "reasons": reasons,
+            "action_worthy": decision != "LOCATOR_ONLY",
             "visible_in_report": True,
         }
     if _is_github_intelligence(candidate):
