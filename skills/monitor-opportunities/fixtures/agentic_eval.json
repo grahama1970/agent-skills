@@ -247,6 +247,25 @@
       "proves": "Pacing sleeps no longer call surf wait, so a busy/unavailable surf lease cannot abort a capture that already has rows (the 2026-08-13 top-applicant failure)."
     },
     {
+      "name": "nightly-claim-authority-and-relative-evidence-regression-2026-08-24",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_claim_snapshot_binding.py::test_nightly_uses_default_authority_claim_snapshot_when_env_is_absent skills/monitor-opportunities/tests/test_pipeline.py::test_run_command_resolves_relative_evidence_paths_before_pipeline -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "timeout_seconds": 120,
+      "proves": "Direct nightly seeds the documented local authority claim snapshot into its run subprocess when MONITOR_CLAIM_SNAPSHOT_PATH is absent, and the run CLI resolves relative evidence paths before downstream code calls Path.as_uri().",
+      "does_not_prove": "Fresh browser-capture completion, Surf tab cleanup reliability, LinkedIn readback promotion quality, or full nightly scheduler reliability."
+    },
+    {
       "name": "tau-opportunity-evaluator-reviewer-smoke",
       "type": "positive",
       "real_world": true,

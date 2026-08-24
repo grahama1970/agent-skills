@@ -445,6 +445,80 @@ def test_run_clears_generated_children_before_writing_current_artifacts(tmp_path
     assert (out / "report" / "report.json").exists()
 
 
+def test_run_command_resolves_relative_evidence_paths_before_pipeline(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    for filename in (
+        "linkedin.json",
+        "roundtable.json",
+        "sam.json",
+        "meetup.json",
+        "github.json",
+        "contacts.json",
+        "indeed.json",
+        "hiddenjobs.json",
+        "effects.json",
+    ):
+        Path(filename).write_text("{}\n", encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    def fake_run_stage0(**kwargs: object) -> dict[str, object]:
+        captured.update(kwargs)
+        return {
+            "schema": "monitor_opportunities.run_receipt.v1",
+            "external_effects": False,
+        }
+
+    monkeypatch.setattr("monitor_opportunities.cli.run_stage0", fake_run_stage0)
+
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "--out",
+            "out",
+            "--linkedin-evidence",
+            "linkedin.json",
+            "--roundtable-receipts",
+            "roundtable.json",
+            "--federal-evidence",
+            "sam.json",
+            "--meetup-evidence",
+            "meetup.json",
+            "--github-evidence",
+            "github.json",
+            "--linkedin-contact-evidence",
+            "contacts.json",
+            "--indeed-evidence",
+            "indeed.json",
+            "--hiddenjobs-evidence",
+            "hiddenjobs.json",
+            "--outreach-effects",
+            "effects.json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    path_keys = {
+        "out_dir",
+        "linkedin_evidence",
+        "roundtable_receipts_path",
+        "federal_evidence",
+        "meetup_evidence",
+        "github_evidence",
+        "linkedin_contact_evidence",
+        "indeed_evidence",
+        "hiddenjobs_evidence",
+        "outreach_effects_path",
+    }
+    assert path_keys <= captured.keys()
+    for key in path_keys:
+        assert isinstance(captured[key], Path)
+        assert captured[key].is_absolute(), key
+
+
 def test_run_with_linkedin_evidence_renders_no_automation_policy(tmp_path: Path) -> None:
     fixture = Path(__file__).parent / "fixtures" / "discovery" / "linkedin-top-candidate.json"
     out = tmp_path / "nightly-linkedin"

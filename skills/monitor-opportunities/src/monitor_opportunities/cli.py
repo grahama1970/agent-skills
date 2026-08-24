@@ -142,6 +142,40 @@ def _fail(exc: ContractError) -> NoReturn:
     raise typer.Exit(code=2)
 
 
+def _resolve_cli_path(path: Path | None) -> Path | None:
+    if path is None:
+        return None
+    return path.expanduser().resolve()
+
+
+def _nightly_subprocess_env(skill_dir: Path, steps: dict[str, object]) -> dict[str, str]:
+    env = os.environ.copy()
+    configured = env.get("MONITOR_CLAIM_SNAPSHOT_PATH")
+    default_claim_snapshot = skill_dir / "local" / "nightly" / "authority" / "claim-snapshot.json"
+    if configured:
+        path = Path(configured).expanduser().resolve()
+        steps["claim_snapshot_authority"] = {
+            "source": "env",
+            "path": str(path),
+            "exists": path.is_file(),
+        }
+    elif default_claim_snapshot.is_file():
+        path = default_claim_snapshot.resolve()
+        env["MONITOR_CLAIM_SNAPSHOT_PATH"] = str(path)
+        steps["claim_snapshot_authority"] = {
+            "source": "default_authority",
+            "path": str(path),
+            "exists": True,
+        }
+    else:
+        steps["claim_snapshot_authority"] = {
+            "source": "missing",
+            "path": str(default_claim_snapshot),
+            "exists": False,
+        }
+    return env
+
+
 def _scheduler_effect_policy(*, diagnostic: bool) -> dict[str, str]:
     return {
         "tracker": "SKIPPED",
@@ -1201,6 +1235,18 @@ def run_command(
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
         out = _new_nightly_run_dir(skill_dir)
+    else:
+        out = out.expanduser().resolve()
+    fixture_dir = _resolve_cli_path(fixture_dir)
+    linkedin_evidence = _resolve_cli_path(linkedin_evidence)
+    roundtable_receipts = _resolve_cli_path(roundtable_receipts)
+    federal_evidence = _resolve_cli_path(federal_evidence)
+    meetup_evidence = _resolve_cli_path(meetup_evidence)
+    github_evidence = _resolve_cli_path(github_evidence)
+    linkedin_contact_evidence = _resolve_cli_path(linkedin_contact_evidence)
+    indeed_evidence = _resolve_cli_path(indeed_evidence)
+    hiddenjobs_evidence = _resolve_cli_path(hiddenjobs_evidence)
+    outreach_effects = _resolve_cli_path(outreach_effects)
     if disable_relationship_signals:
         import os
 
@@ -1716,8 +1762,11 @@ def nightly(
     promote_latest_on_success = out is None
     if out is None:
         out = _new_nightly_run_dir(skill_dir, promote_latest=False)
+    else:
+        out = out.expanduser().resolve()
     run_sh = skill_dir / "run.sh"
     steps: dict[str, object] = {}
+    run_env = _nightly_subprocess_env(skill_dir, steps)
 
     if diagnostic and promoted_stage0:
         _fail(ContractError("NIGHTLY_MODE_CONFLICT", "Choose diagnostic or promoted Stage 0, not both"))
@@ -2075,7 +2124,7 @@ def nightly(
         run_cmd += ["--indeed-evidence", str(indeed_evidence)]
     if hiddenjobs_evidence:
         run_cmd += ["--hiddenjobs-evidence", str(hiddenjobs_evidence)]
-    run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600)
+    run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600, env=run_env)
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:
         _fail(ContractError("NIGHTLY_RUN_FAILED", run_proc.stderr[-2000:]))
