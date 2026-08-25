@@ -1,0 +1,102 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/ticket/fixtures/agentic_eval.json",
+  "run_id": "c823c6a0dfc5",
+  "fixture_sha256": "sha256:fbcca9b412ceee4763bf912d2d25de39720c5425272f57b0ee06e46430234b5c",
+  "repo": {
+    "sha": "ff4bc58fdbe1f88536726a38d11bb6fbf9eacf04",
+    "ref": "codex/ticket-ci-policy"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "fixture wiring smoke",
+  "claims": {
+    "proves": "the existing skill entrypoint exits with the expected status",
+    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "github-actions-is-opt-in-not-default-proof"
+  ],
+  "generated_at": "2026-08-25T11:49:37.256836+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 3,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "github-actions-is-opt-in-not-default-proof",
+      "type": "adversarial",
+      "case_id": "c823c6a0dfc5-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && skill=\"$repo/skills/ticket/SKILL.md\" && grep -q 'Ticket verification defaults to deterministic local proof' \"$skill\" && grep -q 'Do not dispatch GitHub Actions by default' \"$skill\" && grep -q 'not part of default ticket verification' \"$skill\" && grep -q 'spending-limit failure blocks' \"$skill\" && grep -q 'only the CI/cloud proof path' \"$skill\" && echo GITHUB_ACTIONS_OPT_IN_ONLY"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "command does not reach a substantive production entrypoint",
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 16.788,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "GITHUB_ACTIONS_OPT_IN_ONLY\n",
+          "stderr": "",
+          "duration_ms": 17.84,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c823c6a0dfc5-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "GITHUB_ACTIONS_OPT_IN_ONLY\n",
+          "stderr": "",
+          "duration_ms": 16.734,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c823c6a0dfc5-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "GITHUB_ACTIONS_OPT_IN_ONLY\n",
+          "stderr": "",
+          "duration_ms": 15.791,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c823c6a0dfc5-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

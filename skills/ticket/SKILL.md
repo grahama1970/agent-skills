@@ -104,6 +104,29 @@ Ticket creation is preview-first. Add `--apply` to create issues. Lifecycle
 commands such as `lease`, `comment`, `block`, `release`, `close`, and
 `close-duplicate` call the guarded helper.
 
+## Proof default: local first
+
+Ticket verification defaults to deterministic local proof in the relevant
+repository or ticket-bound worktree: focused tests, scripts, service read-backs,
+generated artifacts, screenshots, database/query receipts, or other local
+checks named by the ticket. A local commit plus a local proof receipt is the
+normal closure path.
+
+Do not dispatch GitHub Actions by default. The `ci ...` commands are explicit
+opt-in helpers. Use them only when one of these is true:
+
+- The ticket acceptance criteria explicitly require GitHub Actions, CI, remote
+  runner behavior, or `.github/workflows/**` verification.
+- The change edits CI/workflow configuration and remote runner behavior is the
+  behavior under test.
+- Local proof cannot exercise a remote-only integration.
+- The human explicitly asks for GitHub Actions evidence.
+
+A GitHub Actions billing, quota, permission, or spending-limit failure blocks
+only the CI/cloud proof path. It does not block local repair, local commits, or
+local closure unless the ticket itself requires CI/cloud proof. Do not spend
+Actions minutes/runs for routine local proof.
+
 ## Commands
 
 | Command | Purpose |
@@ -115,7 +138,7 @@ commands such as `lease`, `comment`, `block`, `release`, `close`, and
 | `lease`, `comment`, `block`, `unblock`, `release`, `close`, `close-duplicate` | Guarded issue lifecycle wrappers. |
 | `verify ISSUE --cmd CMD` | Run deterministic local commands and write a proof file. |
 | `attach-proof ISSUE --file proof.md` | Comment proof on the issue. |
-| `ci status`, `ci rerun`, `ci dispatch` | Explicit GitHub Actions status/rerun/dispatch helpers. |
+| `ci status`, `ci rerun`, `ci dispatch` | Explicit opt-in GitHub Actions helpers; not part of default ticket verification. |
 
 ## Cross-repo dependencies
 
@@ -246,5 +269,9 @@ context on every dispatch.
   current state and the focused re-audit command as required proof.
 - Use `fleet --dry-run` review before `fleet --apply`.
 - Do not close without a non-empty proof file and a leased issue.
-- GitHub Actions evidence is useful, but CI green alone is not closure proof.
+- Default to local deterministic proof; do not run GitHub Actions unless the
+  ticket acceptance criteria, changed CI/workflow files, remote-only behavior,
+  or explicit human instruction require it.
+- GitHub Actions evidence is optional corroboration; CI green alone is not
+  closure proof.
 - Do not use this skill to bypass `$best-practices-github-ticket`.

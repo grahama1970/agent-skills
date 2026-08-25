@@ -71,6 +71,24 @@
         ]
       },
       "notes": "Regression guard for Markdown issue bodies such as '- **Scoped files:** ...'. The close wrapper must scope the worktree audit from the machine-readable scoped-files line instead of falling back to every dirty secondary worktree."
+    },
+    {
+      "name": "github-actions-is-opt-in-not-default-proof",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git rev-parse --show-toplevel) && skill=\"$repo/skills/ticket/SKILL.md\" && grep -q 'Ticket verification defaults to deterministic local proof' \"$skill\" && grep -q 'Do not dispatch GitHub Actions by default' \"$skill\" && grep -q 'not part of default ticket verification' \"$skill\" && grep -q 'spending-limit failure blocks' \"$skill\" && grep -q 'only the CI/cloud proof path' \"$skill\" && echo GITHUB_ACTIONS_OPT_IN_ONLY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GITHUB_ACTIONS_OPT_IN_ONLY"
+        ]
+      },
+      "notes": "Regression guard for the ticket policy that local deterministic proof is the default and GitHub Actions is an explicit, narrow opt-in path."
     }
   ]
 }
