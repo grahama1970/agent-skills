@@ -35,9 +35,10 @@ if [[ "${1:-}" == "issue" && "${2:-}" == "view" ]]; then
     exit 0
   fi
   if printf '%s\n' "$*" | grep -q -- '--json body'; then
-    printf 'type: maintenance\n'
-    printf 'target: skills/ticket\n'
-    printf 'route: backend_python_or_skill_runtime\n'
+    printf '## Type\n\nmaintenance\n\n'
+    printf '## Target paths\n\n- narrative target only\n\n'
+    printf '## Ticket type details\n\n'
+    printf -- '- **Scoped files:** skills/ticket; docs/ticket.md\n'
     exit 0
   fi
 fi
@@ -79,7 +80,7 @@ JSON
 
 grep -q '"dirty_secondary":0' "$err"
 grep -q '"dirty_secondary_ignored":1' "$err"
-grep -q '"scope_paths":\["skills/ticket"\]' "$err"
+grep -q '"scope_paths":\["skills/ticket","docs/ticket.md"\]' "$err"
 grep -q '"action":"close"' "$out"
 grep -q 'issue comment 1' "$calls"
 grep -q 'issue close 1' "$calls"

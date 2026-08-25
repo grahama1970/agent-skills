@@ -123,7 +123,12 @@ text = os.environ.get("TICKET_BODY", "")
 paths: list[str] = []
 for line in text.splitlines():
     stripped = line.strip()
-    match = re.match(r"(?i)^(?:[-*]\s*)?(?:target|scoped files|scoped-files|source-scope)\s*:\s*(.+)$", stripped)
+    match = re.match(
+        r"(?i)^(?:[-*]\s*)?(?:\*\*)?"
+        r"(?:target|target paths?|scoped files|scoped-files|source-scope)"
+        r"\s*(?::\*\*|\*\*:|:)\s*(.+)$",
+        stripped,
+    )
     if not match:
         continue
     value = match.group(1).strip().strip("`")

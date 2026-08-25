@@ -314,6 +314,14 @@ turning immediately into a repair DAG or a worktree-readiness failure.
 it. The watchdog does not drive the loop, count attempts, or decide when work is
 done; Tau owns dispatch, receipt validation, resume, timeouts, immutable-goal
 enforcement and fail-closed drift detection, and its receipt is the verdict.
+The watchdog must still monitor the Tau run continuously. It must read the
+Ask/Tau JSON stream artifacts (`events.jsonl`, `dag-progress.json`, node
+receipts, or the run-specific equivalents) from dispatch until Tau emits a
+terminal `PASS`, `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION` verdict. Status output
+must name the active run directory, current node/status, event count or latest
+event id, elapsed time, and next stop condition. If the stream stalls or is not
+readable, watchdog records that as a concrete pipeline defect instead of
+silently stopping or summarizing from stale prose.
 
 Provider boundary: project-watchdog never calls SciLLM directly, never chooses a
 SciLLM endpoint, and never passes raw `--scillm-*` auth or URL flags. The only

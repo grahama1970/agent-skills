@@ -54,7 +54,7 @@
       }
     },
     {
-      "name": "close-audit-ignores-unrelated-dirty-worktrees",
+      "name": "close-audit-parses-markdown-scoped-files",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
       "real_world": true,
@@ -69,7 +69,8 @@
         "stdout_contains": [
           "CLOSE_AUDIT_PATH_SCOPED_OK"
         ]
-      }
+      },
+      "notes": "Regression guard for Markdown issue bodies such as '- **Scoped files:** ...'. The close wrapper must scope the worktree audit from the machine-readable scoped-files line instead of falling back to every dirty secondary worktree."
     }
   ]
 }
