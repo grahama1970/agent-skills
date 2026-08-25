@@ -62,6 +62,7 @@ export interface EvidenceCard {
   confidence: number;
   status: CardStatus;
   sources: EvidenceSource[];
+  frame_refs?: string[];
   lanes: RetrievalLane[];
   clarifications: ClarificationItem[];
   pinned: boolean;
