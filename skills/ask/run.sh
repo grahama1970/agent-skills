@@ -201,6 +201,7 @@ Tau DAG Options:
   --handler <h>         Browser or API handler/model; repeat for roundtable/compete
   --workflow-mode <m>   roundtable or compete
   --criterion <c>       Reviewer criterion; repeat for multiple criteria
+  --browser-tab-lifecycle <m> Browser lifecycle: auto, reuse-bound, fresh-temporary, fresh-keep, fresh-shared-temporary, fresh-shared-keep
   --execute             Send the emitted DAG to $tau after writing dag.json
   --local-fixture       Use local command workers for deterministic scheduler proof
   --allow-provider-calls Permit real provider calls through the SciLLM container
@@ -211,20 +212,21 @@ Tau DAG Options:
 
 Simple model workflow examples:
   # One-shot: independent answers, no consensus, usable with partial results.
-  ./run.sh one-shot "Review this README packet" --handler webkimi --handler webgpt --attach-file /tmp/review-packet.md --out-dir /tmp/ask-one-shot
+  ./run.sh one-shot "Review this README packet" --handler webkimi --handler webgpt --attach-file /tmp/review-packet.md --out-dir /tmp/ask-one-shot --window-layout shared
 
   # Roundtable: one shared packet, concurrent seats, synthesized position.
-  ./run.sh tau-dag "Recommend the safest implementation plan" --repo local/agent-skills --target ask-roundtable --immutable-goal "Return one evidence-backed recommendation with dissent recorded." --dag-template roundtable --topology concurrent --handler webgpt --handler webkimi --handler gpt-5.5-high --execute --json
+  ./run.sh tau-dag "Recommend the safest implementation plan" --repo local/agent-skills --target ask-roundtable --immutable-goal "Return one evidence-backed recommendation with dissent recorded." --dag-template roundtable --topology concurrent --handler webgpt --handler webkimi --handler gpt-5.5-high --browser-tab-lifecycle fresh-shared-keep --execute --json
 
   # Compete: isolated candidates, scorecard/judge path, local proof still required.
-  ./run.sh compete "Propose the smallest patch for this bug" --repo local/agent-skills --target ask-compete --immutable-goal "Select a locally verifiable patch candidate." --handler webgpt --handler webkimi --handler gpt-5.5-high --criterion correctness --criterion minimality --execute --json
+  ./run.sh compete "Propose the smallest patch for this bug" --repo local/agent-skills --target ask-compete --immutable-goal "Select a locally verifiable patch candidate." --handler webgpt --handler webkimi --handler gpt-5.5-high --criterion correctness --criterion minimality --browser-tab-lifecycle fresh-shared-keep --execute --json
 
   Browser-window note:
-  one-shot currently runs each seat as its own single-call Tau DAG. Browser
-  seats use one reviewer window per seat so each provider tab stays visible
-  to its page runtime; Ask should place those windows on Desktop 2 by default
-  (ASK_REVIEWER_DESKTOP=1). Roundtable/compete are the collaboration modes
-  for a shared prompt packet; one-shot is for side-by-side answers only.
+  one-shot defaults to --window-layout shared: all web model tabs are opened in
+  one reviewer window and placed on Desktop 2 by default
+  (ASK_REVIEWER_DESKTOP=1). Use --window-layout isolated, or pass
+  --browser-tab-lifecycle fresh-temporary/fresh-keep to tau-dag, only when
+  per-window provider visibility isolation is more important than a
+  self-contained operator surface.
 
 Ask Options:
   --scope <scope>       Memory scope to query (default: ask)

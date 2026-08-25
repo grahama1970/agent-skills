@@ -79,7 +79,12 @@ class BrowserTabLifecycle(_SeamModel):
 
     def require_ready_tabs(self) -> list[str]:
         problems: list[str] = []
-        if self.status == "READY" and self.mode in {"fresh-temporary", "fresh-keep"}:
+        if self.status == "READY" and self.mode in {
+            "fresh-temporary",
+            "fresh-keep",
+            "fresh-shared-temporary",
+            "fresh-shared-keep",
+        }:
             for tab in self.created_tabs:
                 if not str(tab.tab_id).isdigit():
                     problems.append(

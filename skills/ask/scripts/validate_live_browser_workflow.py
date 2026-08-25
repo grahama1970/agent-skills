@@ -220,7 +220,14 @@ def _handler_tabs(lifecycle: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def _workflow_matches(lifecycle: dict[str, Any], workflow_mode: str) -> bool:
     if lifecycle.get("workflow_mode"):
         return str(lifecycle.get("workflow_mode")) == workflow_mode
-    return str(lifecycle.get("mode") or "") in {"fresh-temporary", "fresh-keep", "reuse-bound", "auto"}
+    return str(lifecycle.get("mode") or "") in {
+        "fresh-temporary",
+        "fresh-keep",
+        "fresh-shared-temporary",
+        "fresh-shared-keep",
+        "reuse-bound",
+        "auto",
+    }
 
 
 def _lifecycle_ok(lifecycle: dict[str, Any], *, reuse_bound: bool = False) -> bool:

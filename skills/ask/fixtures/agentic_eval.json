@@ -43,6 +43,24 @@
       "proves": "Every handler shortcut --help advertises really routes to tau-dag (probed behaviorally, not by text match), --help makes no blanket 'removed from /ask' claim about a command it still advertises, and the webgpt shortcut genuinely compiles to a Tau DAG."
     },
     {
+      "name": "one-shot-defaults-to-shared-reviewer-window",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh one-shot --help | grep -q -- '--window-layout' && ./run.sh one-shot --help | grep -q 'default: shared' && uv run --project . pytest -q tests/test_tau_dag.py -k 'shared_mode_creates_one_window' && echo SHARED_REVIEWER_WINDOW_CONTRACT_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SHARED_REVIEWER_WINDOW_CONTRACT_OK"
+        ]
+      },
+      "timeout_seconds": 400,
+      "proves": "The operator-facing one-shot command advertises one self-contained reviewer window by default, and the Tau browser lifecycle can provision one window with multiple provider tabs through the production test runner."
+    },
+    {
       "name": "help-contradiction-is-actually-detected",
       "type": "adversarial",
       "command": [
@@ -1789,7 +1807,7 @@
     {
       "id": "ask.browser.tab_lifecycle",
       "criticality": "critical",
-      "description": "Every browser seat opens (or is bound to) its own usable tab and answers from it; ambient rate-limited or hidden tabs never silently remove a seat.",
+      "description": "Browser seats open or bind to usable tabs; one-shot defaults to a self-contained shared reviewer window, while isolated lifecycle modes remain available when per-window visibility isolation is required.",
       "evidence_required": [
         "live_e2e"
       ]
@@ -1949,7 +1967,8 @@
       "seam_type": "browser/UI transport",
       "criticality": "critical",
       "failure_modes": [
-        "a seat submits into a hidden or rate-limited ambient tab",
+        "one-shot scatters browser model tabs across multiple windows",
+        "a shared reviewer run opens one provider window per seat",
         "an unbound run reuses another lane's tab"
       ],
       "required_evidence": [

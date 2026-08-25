@@ -76,6 +76,22 @@ BROWSER_BACKENDS = {
     "webgrok": "webgrok",
     "webdeepseek": "webdeepseek",
 }
+FRESH_BROWSER_LIFECYCLE_MODES = {
+    "fresh-temporary",
+    "fresh-keep",
+    "fresh-shared-temporary",
+    "fresh-shared-keep",
+}
+KEEP_BROWSER_LIFECYCLE_MODES = {"fresh-keep", "fresh-shared-keep"}
+SHARED_BROWSER_LIFECYCLE_MODES = {"fresh-shared-temporary", "fresh-shared-keep"}
+SUPPORTED_BROWSER_LIFECYCLE_MODES = [
+    "auto",
+    "reuse-bound",
+    "fresh-temporary",
+    "fresh-keep",
+    "fresh-shared-temporary",
+    "fresh-shared-keep",
+]
 
 
 def _browser_submit_preflight_or_exit(
@@ -285,7 +301,10 @@ def run(
         str,
         typer.Option(
             "--browser-tab-lifecycle",
-            help="Browser tab handling for Tau browser handlers: auto, reuse-bound, fresh-temporary, or fresh-keep.",
+            help=(
+                "Browser tab handling for Tau browser handlers: auto, reuse-bound, "
+                "fresh-temporary, fresh-keep, fresh-shared-temporary, or fresh-shared-keep."
+            ),
         ),
     ] = "auto",
     browser_lock_timeout: Annotated[
@@ -610,7 +629,10 @@ def compete(
         str,
         typer.Option(
             "--browser-tab-lifecycle",
-            help="Browser tab handling for Tau browser handlers: auto, reuse-bound, fresh-temporary, or fresh-keep.",
+            help=(
+                "Browser tab handling for Tau browser handlers: auto, reuse-bound, "
+                "fresh-temporary, fresh-keep, fresh-shared-temporary, or fresh-shared-keep."
+            ),
         ),
     ] = "auto",
     browser_lock_timeout: Annotated[
@@ -1227,7 +1249,7 @@ def _browser_lifecycle_creates_fresh_tabs(input_payload: Any, mode: str) -> bool
     if not browser_handlers:
         return False
     normalized = (mode or "auto").strip()
-    if normalized in {"fresh-temporary", "fresh-keep"}:
+    if normalized in FRESH_BROWSER_LIFECYCLE_MODES:
         return True
     if normalized == "auto":
         return str(getattr(input_payload, "workflow_mode", "") or "") in {"roundtable", "compete", "single"}
@@ -1755,16 +1777,19 @@ def _provision_browser_lifecycle(
         lifecycle = {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": mode}
         _write_lifecycle(run_dir, lifecycle)
         return lifecycle
-    if mode not in {"fresh-temporary", "fresh-keep"}:
+    if mode not in FRESH_BROWSER_LIFECYCLE_MODES:
         lifecycle = {
             "schema": "ask.browser_tab_lifecycle.v1",
             "status": "BLOCKED",
             "mode": mode,
             "failure_code": "unsupported_browser_tab_lifecycle",
-            "supported_modes": ["auto", "reuse-bound", "fresh-temporary", "fresh-keep"],
+            "supported_modes": SUPPORTED_BROWSER_LIFECYCLE_MODES,
         }
         _write_lifecycle(run_dir, lifecycle)
-        raise typer.BadParameter("browser_tab_lifecycle must be auto, reuse-bound, fresh-temporary, or fresh-keep")
+        raise typer.BadParameter(
+            "browser_tab_lifecycle must be one of: "
+            + ", ".join(SUPPORTED_BROWSER_LIFECYCLE_MODES)
+        )
 
     if not browser_handlers:
         lifecycle = {"schema": "ask.browser_tab_lifecycle.v1", "status": "skipped", "mode": mode, "reason": "no_browser_handlers"}
@@ -1794,54 +1819,68 @@ def _provision_browser_lifecycle(
             command_timeout_seconds,
             max(1, int(timeout_budget_seconds)) + BROWSER_COMMAND_GRACE_SECONDS,
         )
-    # One unfocused window per browser seat. Chrome reports
-    # document.visibilityState "hidden" for every tab that is not the selected
-    # tab of its window, and providers defer DOM updates while hidden - which
-    # is why N seats sharing one window left exactly one seat unthrottled and
-    # the rest timing out. Measured 2026-08-03: a tab alone in an unfocused
-    # window reports visible/hidden=false, while a non-selected tab in a shared
-    # window reports hidden=true.
+    shared_window = mode in SHARED_BROWSER_LIFECYCLE_MODES
+    shared_window_id = ""
     for handler in browser_handlers:
         project = f"{lifecycle_id}-{handler}"
-        window_command = [
-            str(surf_run),
-            "window.new",
-            BROWSER_FRESH_URLS[handler],
-            "--json",
-            "--unfocused",
-            "--lock-timeout",
-            str(lock_timeout_seconds),
-        ]
-        # Snapshot before creating: wmctrl output order is not creation order,
-        # so the diff is the only reliable way to identify the window we made.
-        pre_windows = _chrome_window_snapshot(browser_oracle_run)
-        window = _lifecycle_command(
-            window_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds
-        )
-        commands.append(window)
-        if window["returncode"] == 0:
-            # Land seat windows on the reviewer desktop instead of scattering
-            # them across whichever desktop the human is working on.
-            placement = _place_seat_window(browser_oracle_run, pre_windows)
-            if placement:
-                commands.append(placement)
-        if window["returncode"] != 0:
-            # Provisioning can fail transiently while the host settles a
-            # previous run's teardown; one bounded retry before failing closed.
-            time.sleep(10)
+        if shared_window and shared_window_id:
+            window_command = [
+                str(surf_run),
+                "tab.new",
+                BROWSER_FRESH_URLS[handler],
+                "--json",
+                "--window-id",
+                shared_window_id,
+                "--background",
+                "--lock-timeout",
+                str(lock_timeout_seconds),
+            ]
             window = _lifecycle_command(
                 window_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds
             )
             commands.append(window)
+        else:
+            window_command = [
+                str(surf_run),
+                "window.new",
+                BROWSER_FRESH_URLS[handler],
+                "--json",
+                "--unfocused",
+                "--lock-timeout",
+                str(lock_timeout_seconds),
+            ]
+            # Snapshot before creating: wmctrl output order is not creation order,
+            # so the diff is the only reliable way to identify the window we made.
+            pre_windows = _chrome_window_snapshot(browser_oracle_run)
+            window = _lifecycle_command(
+                window_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds
+            )
+            commands.append(window)
+            if window["returncode"] == 0:
+                # Land reviewer windows on Desktop 2 instead of scattering
+                # them across whichever desktop the human is working on.
+                placement = _place_seat_window(browser_oracle_run, pre_windows)
+                if placement:
+                    commands.append(placement)
+            if window["returncode"] != 0:
+                # Provisioning can fail transiently while the host settles a
+                # previous run's teardown; one bounded retry before failing closed.
+                time.sleep(10)
+                window = _lifecycle_command(
+                    window_command, cwd=surf_run.parent, timeout_seconds=command_timeout_seconds
+                )
+                commands.append(window)
         if window["returncode"] != 0:
             lifecycle = _lifecycle_blocked(
-                mode, run_dir, f"{handler}_window_create_failed", commands, created_tabs
+                mode, run_dir, f"{handler}_tab_create_failed", commands, created_tabs
             )
             _write_lifecycle(run_dir, lifecycle)
             return lifecycle
         payload = _json_or_text(window["stdout"])
         seat_window_id = _extract_window_id(payload)
         seat_tab_id = _extract_tab_id(payload)
+        if shared_window and shared_window_id and not seat_window_id:
+            seat_window_id = shared_window_id
         if not seat_tab_id:
             lifecycle = _lifecycle_blocked(
                 mode, run_dir, f"{handler}_window_missing_tab_id", commands, created_tabs
@@ -1857,6 +1896,8 @@ def _provision_browser_lifecycle(
                 "window_id": seat_window_id,
             }
         )
+        if shared_window and not shared_window_id:
+            shared_window_id = seat_window_id
         _replace_handler_project(handler_projects, handler, project)
     window_id = created_tabs[0].get("window_id") if created_tabs else None
     # Register before the identity guard and before any provider work: from
@@ -1916,6 +1957,7 @@ def _provision_browser_lifecycle(
         "status": "READY",
         "mode": mode,
         "run_dir": str(run_dir),
+        "shared_window": shared_window,
         "window_reap": window_reap,
         "window_id": window_id,
         "identity_guard": verified_identity_guard,
@@ -1923,7 +1965,11 @@ def _provision_browser_lifecycle(
         "handler_projects": handler_projects,
         "lock_timeout_seconds": lock_timeout_seconds,
         "command_timeout_seconds": command_timeout_seconds,
-        "cleanup_policy": "close_created_window_or_tabs_after_execution" if mode == "fresh-temporary" else "keep_created_tabs_for_inspection",
+        "cleanup_policy": (
+            "close_created_window_or_tabs_after_execution"
+            if mode in {"fresh-temporary", "fresh-shared-temporary"}
+            else "keep_created_tabs_for_inspection"
+        ),
         "surf_run": str(surf_run),
         "browser_oracle_run": str(browser_oracle_run),
         "commands": commands,
@@ -2258,12 +2304,33 @@ def _cleanup_browser_lifecycle(lifecycle: dict[str, Any]) -> None:
     # (a user's own tab) are never in created_tabs and are never closed here.
     # The one retention that survives is pending-recovery below: a lane whose
     # response is NOT yet recorded may hold the only copy in-tab.
-    if lifecycle.get("status") not in {"READY", "BLOCKED"} or lifecycle.get("mode") == "fresh-keep":
+    if lifecycle.get("status") not in {"READY", "BLOCKED"} or lifecycle.get("mode") in KEEP_BROWSER_LIFECYCLE_MODES:
         return
     run_dir = Path(str(lifecycle.get("run_dir") or ""))
     if run_dir.is_dir():
         pending = _lanes_pending_recovery(run_dir)
         if pending:
+            if lifecycle.get("shared_window"):
+                shared_windows = [
+                    str(tab.get("window_id"))
+                    for tab in lifecycle.get("created_tabs", [])
+                    if isinstance(tab, dict) and tab.get("window_id")
+                ]
+                browser_windows.register(
+                    list(dict.fromkeys(shared_windows)),
+                    mode="pending-recovery",
+                    run_dir=str(lifecycle.get("run_dir") or ""),
+                    source="pending_recovery_retention",
+                )
+                lifecycle["released_windows"] = []
+                lifecycle["cleanup_status"] = "skipped_pending_recovery"
+                lifecycle["pending_recovery_lanes"] = pending
+                lifecycle["cleanup_policy_note"] = (
+                    "Created shared reviewer window was kept open: one or more lanes failed "
+                    "in a state whose response may only exist in-tab."
+                )
+                _write_lifecycle(run_dir, lifecycle)
+                return
             # Retain ONLY the windows whose lane still holds the sole copy of a
             # response. Keeping every window because one lane pends recovery
             # leaked six windows for one unfinished seat (observed 2026-08-16 on

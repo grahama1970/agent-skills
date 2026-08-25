@@ -3602,6 +3602,112 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
     ]
 
 
+def test_browser_tab_lifecycle_shared_mode_creates_one_window_with_provider_tabs(tmp_path: Path) -> None:
+    log_path = tmp_path / "commands.jsonl"
+    tab_counter = tmp_path / "tab-counter.txt"
+    surf = tmp_path / "surf"
+    surf.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+log = Path(sys.argv[0]).with_name("commands.jsonl")
+counter = Path(sys.argv[0]).with_name("tab-counter.txt")
+args = sys.argv[1:]
+with log.open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(args) + "\\n")
+if args[:1] == ["window.new"]:
+    value = int(counter.read_text(encoding="utf-8").strip() or "100") + 1 if counter.exists() else 101
+    counter.write_text(str(value), encoding="utf-8")
+    print(json.dumps({"id": 900, "tabs": [{"id": value, "windowId": 900, "url": args[1]}]}))
+elif args[:1] == ["tab.new"]:
+    value = int(counter.read_text(encoding="utf-8").strip() or "101") + 1 if counter.exists() else 102
+    counter.write_text(str(value), encoding="utf-8")
+    print(json.dumps({"id": value}))
+else:
+    print(json.dumps({"ok": True}))
+""",
+        encoding="utf-8",
+    )
+    surf.chmod(0o755)
+    browser_oracle = tmp_path / "browser-oracle"
+    browser_oracle.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+log = Path(sys.argv[0]).with_name("commands.jsonl")
+with log.open("a", encoding="utf-8") as fh:
+    fh.write(json.dumps(sys.argv[1:]) + "\\n")
+print(json.dumps({"ok": True, "args": sys.argv[1:]}))
+""",
+        encoding="utf-8",
+    )
+    browser_oracle.chmod(0o755)
+    request = infer_compile_input(
+        "Roundtable webgpt, webclaude, and webkimi.",
+        repo="local/agent-skills",
+        target="shared-browser-lifecycle",
+        immutable_goal="Browser review seats live in one self-contained window.",
+        handlers=["webgpt", "webclaude", "webkimi"],
+        output_root=tmp_path / "runs",
+        ask_id="shared-browser-lifecycle",
+    )
+    bundle = compile_tau_dag_bundle(request)
+
+    lifecycle = tau_dag_cli._provision_browser_lifecycle(
+        request,
+        mode="fresh-shared-keep",
+        run_dir=Path(str(bundle["run_dir"])),
+        surf_run=surf,
+        browser_oracle_run=browser_oracle,
+    )
+
+    assert lifecycle["status"] == "READY"
+    assert lifecycle["mode"] == "fresh-shared-keep"
+    assert lifecycle["shared_window"] is True
+    assert [tab["handler"] for tab in lifecycle["created_tabs"]] == ["webgpt", "webclaude", "webkimi"]
+    assert [tab["tab_id"] for tab in lifecycle["created_tabs"]] == ["101", "102", "103"]
+    assert {tab["window_id"] for tab in lifecycle["created_tabs"]} == {"900"}
+    logged = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines()]
+    assert sum(1 for c in logged if c[:1] == ["window.new"]) == 1
+    assert [
+        "window.new",
+        "https://chatgpt.com/",
+        "--json",
+        "--unfocused",
+        "--lock-timeout",
+        "1800",
+    ] in logged
+    assert [
+        "tab.new",
+        "https://claude.ai/new",
+        "--json",
+        "--window-id",
+        "900",
+        "--background",
+        "--lock-timeout",
+        "1800",
+    ] in logged
+    assert [
+        "tab.new",
+        "https://www.kimi.ai/",
+        "--json",
+        "--window-id",
+        "900",
+        "--background",
+        "--lock-timeout",
+        "1800",
+    ] in logged
+    assert lifecycle["handler_projects"] == [
+        "webgpt=shared-browser-lifecycle-webgpt",
+        "webclaude=shared-browser-lifecycle-webclaude",
+        "webkimi=shared-browser-lifecycle-webkimi",
+    ]
+
+
 def test_browser_tab_lifecycle_auto_skips_non_browser_dag(tmp_path: Path) -> None:
     request = infer_compile_input(
         "Ask gpt-5.5-high to answer.",
