@@ -125,7 +125,7 @@ paths: list[str] = []
 FIELD_RE = re.compile(
     r"(?i)^(?:[-*]\s*)?(?:\*\*)?"
     r"(scoped files|scope files|allowed files|target files|target paths|target|scoped-files|source-scope)"
-    r"(?:\*\*)?\s*:\s*(.+)$"
+    r"\s*(?::\*\*|\*\*:|:)\s*(.+)$"
 )
 TARGET_PATHS_HEADING_RE = re.compile(r"(?i)^##\s+Target paths\s*$")
 

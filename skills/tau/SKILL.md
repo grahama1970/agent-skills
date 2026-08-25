@@ -411,6 +411,14 @@ quality, repository readiness, or human acceptance.
 - Chat UI claims require browser/CDP screenshot verification from the host app.
 - DAG visualization claims require browser/CDP screenshot verification from the
   host app and must quote the source DAG/receipt artifacts being rendered.
+- JSON streaming is part of the runtime contract. When Tau runs a DAG for a
+  project agent, the caller or supervising skill must continuously poll/read the
+  Tau progress/event artifacts (`events.jsonl`, `dag-progress.json`,
+  node receipts, or the documented run-specific equivalents) until Tau reaches
+  a terminal `PASS`, `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION` verdict. Do not
+  fire a long-running Tau DAG and stop watching it. If the stream stalls, record
+  the last event id/timestamp, current node, elapsed time, and receipt path
+  before deciding whether to continue, retry, or escalate.
 - Chat UI interaction manifests must follow `test-interactions`: live DOM
   `[data-qid]` selectors only, deterministic assertions, and no fake fixtures
   for production claims.
@@ -443,6 +451,12 @@ tests are useful evidence only when they are tied to the active task and paired
 with the required implementation or artifact evidence. The course-correction
 artifact must require a blocked report that states the blocker, what was
 attempted, why further test churn is not progress, and the next non-test action.
+
+Project agents supervising Tau must treat the JSON stream as the source of
+truth while the DAG is running. Monitor from dispatch until terminal verdict,
+report concrete node/status/event counts in status updates, and preserve the
+stream receipt when Tau blocks. A silent terminal, lost stream, or unread
+`events.jsonl` is itself a pipeline defect to file and fix.
 
 When a Tau-managed subagent has failed two attempts and still has retry budget,
 Tau must require `$brave-search` before another attempt. The requirement must be
