@@ -264,6 +264,24 @@
       }
     },
     {
+      "name": "webkimi-kimi-ai-origin-is-not-provider-drift",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest tests/test_lane_diagnostics.py::test_webkimi_accepts_signed_in_kimi_ai_origin tests/test_lane_diagnostics.py::test_webkimi_kimi_ai_tab_is_not_diagnosed_as_provider_drift -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
       "name": "oc-provider-model-unsupported-401-is-not-auth",
       "type": "adversarial",
       "real_world": true,

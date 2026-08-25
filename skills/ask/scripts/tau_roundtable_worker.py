@@ -1751,21 +1751,15 @@ def _live_provider_tab_candidates(
 
 def _is_provider_url(handler: str, tab_url: str, requested_url: str = "") -> bool:
     url = tab_url or requested_url
+    return _host_matches_provider(handler, url)
+
+
+def _host_matches_provider(handler: str, url: str) -> bool:
     if not url:
         return False
     parsed = urllib.parse.urlparse(url)
     host = parsed.netloc.lower()
-    if handler == "webgpt":
-        return host in {"chatgpt.com", "www.chatgpt.com"}
-    if handler == "webclaude":
-        return host in {"claude.ai", "www.claude.ai"}
-    if handler == "webkimi":
-        return host in {"kimi.com", "www.kimi.com"}
-    if handler == "webgemini":
-        return host in {"gemini.google.com"}
-    if handler == "webgrok":
-        return host in {"grok.com", "www.grok.com", "x.com", "www.x.com"}
-    return False
+    return host in set(PROVIDER_HOSTS.get(handler, ()))
 
 
 def _extract_tab_id(text: str) -> str:
@@ -3913,12 +3907,14 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
 #: Failure classes where retrying inside the lane cannot help: the provider
 #: itself refused, so another attempt is spray-and-pray against a wall.
 PROVIDER_HOSTS = {
-    "webgpt": "chatgpt.com",
-    "webclaude": "claude.ai",
-    "webkimi": "kimi.com",
-    "webgemini": "gemini.google.com",
-    "webgrok": "grok.com",
-    "webdeepseek": "chat.deepseek.com",
+    "webgpt": ("chatgpt.com", "www.chatgpt.com"),
+    "webclaude": ("claude.ai", "www.claude.ai"),
+    # This account is signed in on kimi.ai. Keep kimi.com as an accepted
+    # provider origin for manually bound tabs and older receipts.
+    "webkimi": ("kimi.ai", "www.kimi.ai", "kimi.com", "www.kimi.com"),
+    "webgemini": ("gemini.google.com",),
+    "webgrok": ("grok.com", "www.grok.com", "x.com", "www.x.com"),
+    "webdeepseek": ("chat.deepseek.com",),
 }
 
 # One JS payload, evaluated in the real authenticated tab. Everything the
@@ -4018,16 +4014,16 @@ def _probe_lane_state(
     live_url = str(tab.get("url") or "")
     record("tab_identity", "PASS", tab_id=tab_id, url=live_url, title=str(tab.get("title") or ""))
 
-    host = PROVIDER_HOSTS.get(handler, "")
-    if not host:
+    hosts = PROVIDER_HOSTS.get(handler, ())
+    if not hosts:
         record("provider_url", "SKIPPED", reason=f"no known host for handler {handler!r}")
-    elif host in live_url:
-        record("provider_url", "PASS", host=host, url=live_url)
+    elif _host_matches_provider(handler, live_url):
+        record("provider_url", "PASS", hosts=list(hosts), url=live_url)
     else:
         record(
             "provider_url",
             "FAIL",
-            host=host,
+            hosts=list(hosts),
             url=live_url,
             reason="controlled tab drifted off the provider surface",
         )

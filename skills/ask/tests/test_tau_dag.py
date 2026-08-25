@@ -3563,7 +3563,7 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
     ] in logged
     assert [
         "window.new",
-        "https://www.kimi.com/",
+        "https://www.kimi.ai/",
         "--json",
         "--unfocused",
         "--lock-timeout",
@@ -3573,7 +3573,7 @@ print(json.dumps({"ok": True, "args": sys.argv[1:]}))
     assert not any(c[:1] == ["tab.new"] for c in logged), "seats must not share a window"
     assert ["bind", "fresh-browser-lifecycle-webgpt", "--backend", "webgpt", "--tab-id", "101", "--url", "https://chatgpt.com/", "--auto", "--json"] in logged
     assert ["bind", "fresh-browser-lifecycle-webclaude", "--backend", "webclaude", "--tab-id", "102", "--url", "https://claude.ai/new", "--auto", "--json"] in logged
-    assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.com/", "--auto", "--json"] in logged
+    assert ["bind", "fresh-browser-lifecycle-webkimi", "--backend", "webkimi", "--tab-id", "103", "--url", "https://www.kimi.ai/", "--auto", "--json"] in logged
     assert (Path(str(bundle["run_dir"])) / "browser-tab-lifecycle.json").is_file()
 
     log_path.write_text("", encoding="utf-8")
