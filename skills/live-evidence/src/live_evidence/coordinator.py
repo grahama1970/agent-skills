@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-import re
 from time import monotonic
 
 from loguru import logger
 
 from .config import AppSettings, InterviewProfile
+from .code_context import current_source_query_from_memory
 from .models import (
     ClarificationItem,
     EvidenceCard,
@@ -40,11 +40,12 @@ from .retrieval import (
     RipgrepEvidenceClient,
     rank_sources,
 )
-from .retrieval.external import derive_manual_search_query
 from .state import RuntimeState
 from .summarizer import ExtractiveSummarizer
 from .surface_selector import SurfaceSelector
+from .surface_policy import should_force_surface_source_backed_code
 from .question_window import QuestionWindowBuilder, candidate_thread
+from .query_bounds import bounded_query
 from .trigger import TriggerDecision
 
 
@@ -210,7 +211,34 @@ class EvidenceCoordinator:
             self._state.session_id(), "surface_selection", receipt,
             policy_digest=self._state.session_policy_digest(),
         )
-        return reordered, bool(receipt.get("surface", True))
+        surface = bool(receipt.get("surface", True))
+        if not surface and should_force_surface_source_backed_code(query, reordered):
+            override = {
+                "mode": "deterministic_source_backed_code_override",
+                "applied": True,
+                "surface": True,
+                "selector_surface": False,
+                "reason": "Current-source coding evidence matched a bounded code problem.",
+            }
+            await self._journal.append(
+                self._state.session_id(),
+                "surface_selection",
+                override,
+                policy_digest=self._state.session_policy_digest(),
+            )
+            return reordered, True
+        return reordered, surface
+
+    async def _journal_latest_publication_decision(self) -> None:
+        decision = await self._state.latest_card_publication_decision()
+        if decision is None:
+            return
+        await self._journal.append(
+            self._state.session_id(),
+            "card_publication_decision",
+            decision,
+            policy_digest=self._state.session_policy_digest(),
+        )
 
     async def _propose_actions(self, verdict, decision, question_id: str,
                                question_revision: int, policy) -> None:
@@ -293,6 +321,7 @@ class EvidenceCoordinator:
             if e.status is RequirementStatus.CLARIFIED
         )
         query = held["query"]
+        display_query = held.get("card_query", held.get("display_query", query))
         seeded_query = f"{query}\n{answers_block}" if answers_block else query
         sources = held["sources"]
         ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
@@ -309,7 +338,7 @@ class EvidenceCoordinator:
                 result_count=len(ask_result.sources),
             )
             ranked = rank_sources([*sources, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
-        card = self._summarizer.build(query, held["thread"], ranked)
+        card = self._summarizer.build(display_query, held["thread"], ranked)
         verdict = held.get("verdict")
         if verdict is not None and verdict.clarifying_questions:
             answered = {
@@ -344,6 +373,7 @@ class EvidenceCoordinator:
             }
         )
         snapshot = await self._state.publish_card_fenced(card)
+        await self._journal_latest_publication_decision()
         if snapshot is None:
             await self._journal.append(
                 self._state.session_id(),
@@ -482,7 +512,8 @@ class EvidenceCoordinator:
         started = monotonic()
         # Stage 1 runs BEFORE retrieval so its canonical question drives search.
         verdict = await self._resolve_readiness(decision.query)
-        query = _bounded_query(decision.query, verdict)
+        display_query = decision.query
+        query = bounded_query(display_query, verdict)
         memory_result, ripgrep_result = await asyncio.gather(
             self._memory.retrieve(query),
             self._ripgrep.retrieve(query),
@@ -545,6 +576,25 @@ class EvidenceCoordinator:
             )
             sources.extend(ripgrep_result.sources)
 
+        if not any(source.lane is RetrievalLane.RIPGREP for source in sources):
+            expanded_query = current_source_query_from_memory(query, sources)
+            if expanded_query:
+                expanded = await self._ripgrep.retrieve(expanded_query)
+                await self._journal.append(
+                    self._state.session_id(),
+                    "current_source_query_expanded",
+                    {"query": expanded_query, "result_count": len(expanded.sources)},
+                    policy_digest=self._state.session_policy_digest(),
+                )
+                await self._state.set_lane(
+                    RetrievalLane.RIPGREP,
+                    LaneState.OK if expanded.ok else LaneState.DEGRADED,
+                    f"{expanded.detail}; expanded from Memory code context",
+                    latency_ms=expanded.latency_ms,
+                    result_count=len(expanded.sources),
+                )
+                sources.extend(expanded.sources)
+
         ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
 
         # Actions are a SEPARATE output from cards: a logistics turn ("push to
@@ -578,7 +628,7 @@ class EvidenceCoordinator:
 
         # (#1454) Requirement ledger: blocking clarifier -> UNRESOLVED, default -> ASSUMED.
         entries = build_requirement_entries(
-            question_id, question_revision, query, decision, verdict
+            question_id, question_revision, display_query, decision, verdict
         )
         digest = await self._state.open_ledger(question_id, question_revision, entries)
         await self._journal.append(
@@ -595,6 +645,8 @@ class EvidenceCoordinator:
             may_ask = False
             self._held[(question_id, question_revision)] = {
                 "query": query,
+                "card_query": query,
+                "display_query": display_query,
                 "thread": decision.thread,
                 "sources": sources,
                 "verdict": verdict,
@@ -636,7 +688,8 @@ class EvidenceCoordinator:
                 f"Holding: {verdict.blocking_reason}",
             )
 
-        card = self._summarizer.build(query, decision.thread, ranked)
+        card_query = query if ranked else display_query
+        card = self._summarizer.build(card_query, decision.thread, ranked)
         if verdict is not None and verdict.clarifying_questions:
             card = card.model_copy(
                 update={
@@ -667,6 +720,7 @@ class EvidenceCoordinator:
             }
         )
         snapshot = await self._state.publish_card_fenced(card)
+        await self._journal_latest_publication_decision()
         if snapshot is None:
             # The question moved on while this ran; keep the work as an audit
             # event rather than discarding it silently.
@@ -722,6 +776,7 @@ class EvidenceCoordinator:
                     await self._state.publish_card_fenced(
                         card.model_copy(update={"sources": merged[:8]})
                     )
+                    await self._journal_latest_publication_decision()
         logger.info(
             "evidence card status={} sources={} revision={} latency_ms={}",
             card.status.value,
@@ -746,52 +801,6 @@ class EvidenceCoordinator:
             task.result()
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
-
-
-# A sentence is question-shaped if it ends in '?' OR in a spoken tag question
-# ("... right" / "... correct"): live STT drops terminal punctuation
-# nondeterministically, and tag questions confirm constraints aloud.
-_QUESTION_SENTENCE_RE = re.compile(
-    r"([^.?!]{8,}(?:\?|,\s*(?:right|correct|okay|yes)\b[.?!]?))", re.IGNORECASE
-)
-
-
-def _bounded_query(raw: str, verdict: ReadinessVerdict | None) -> str:
-    """One bounded question for retrieval, Ask, and the card.
-
-    The collapse removed the sentence-selecting _best_retrieval_query on the
-    promise that stage-1's canonical_question would replace it, but the
-    coordinator kept feeding the raw rolling window downstream. Measured
-    consequence on the live YouTube eval: a 1200-char conversational blob as
-    the card query, and ripgrep terms so diluted that a fixture file literally
-    named valid_parentheses.py went unmatched (card: insufficient, lanes: []).
-
-    Preference order: the resolver's canonical question; else the last
-    question-shaped sentence (derive_manual_search_query, deterministic, works
-    offline -- on the same eval transcript it yields exactly "A opening
-    parentheses always has to come before closing, right?"); else the raw text.
-    """
-
-    if verdict is not None:
-        canonical = verdict.canonical_question.strip()
-        if canonical:
-            return canonical[:220]
-    # Accumulate trailing question sentences newest-first within the budget,
-    # not just the last one: a turn is often a primary question plus a
-    # confirmation tail, and keeping only the tail drops the actual question.
-    sentences = _QUESTION_SENTENCE_RE.findall(" ".join(raw.split()))
-    picked: list[str] = []
-    total = 0
-    for sentence in reversed(sentences):
-        sentence = sentence.strip()
-        if total + len(sentence) + 1 > 220:
-            break
-        picked.insert(0, sentence)
-        total += len(sentence) + 1
-    if picked:
-        return " ".join(picked)
-    derived = derive_manual_search_query(raw, max_chars=220)
-    return derived or raw
 
 
 def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:

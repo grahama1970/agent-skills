@@ -185,6 +185,50 @@ class CardStatus(StrEnum):
     INSUFFICIENT = "insufficient"
 
 
+class PublicationStatus(StrEnum):
+    """Reducer outcome for a candidate card."""
+
+    VISIBLE = "visible"
+    HELD = "held"
+    SUPERSEDED = "superseded"
+
+
+class CardPublicationDecision(BaseModel):
+    """Auditable output of the card-publication reducer.
+
+    This is the state-machine receipt that logical agents coordinate through:
+    answerers produce candidates, reviewers/policy decide, and only a VISIBLE
+    decision mutates the user-facing card list.
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    schema_id: Literal["live_evidence.card_publication_decision.v1"] = Field(
+        default="live_evidence.card_publication_decision.v1",
+        validation_alias="schema",
+        serialization_alias="schema",
+    )
+    decision_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
+    decided_at: datetime = Field(default_factory=utc_now)
+    status: PublicationStatus
+    reason_codes: list[str] = Field(min_length=1, max_length=12)
+    card_id: str = Field(min_length=8)
+    question_id: str | None = Field(default=None, min_length=8, max_length=64)
+    question_revision: int = Field(ge=0)
+    answer_revision: int = Field(ge=0)
+    transcript_refs: list[str] = Field(default_factory=list, max_length=16)
+    source_refs: list[str] = Field(default_factory=list, max_length=16)
+    rank_components: dict[str, int | float | str | bool] = Field(default_factory=dict)
+    visible_card_ids: list[str] = Field(default_factory=list, max_length=100)
+
+    @field_validator("decided_at")
+    @classmethod
+    def validate_decision_time(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("decided_at must be timezone-aware")
+        return value.astimezone(timezone.utc)
+
+
 class TranscriptEvent(BaseModel):
     """Validated transcript update from one speaker channel."""
 

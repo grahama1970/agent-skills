@@ -18,6 +18,13 @@ prepare_python_environment() {
     # override.
     export UV_PROJECT_ENVIRONMENT="${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv"
   fi
+  local env_path root_path
+  env_path="$(realpath -m "$UV_PROJECT_ENVIRONMENT")"
+  root_path="$(realpath -m "$SCRIPT_DIR")"
+  if [[ "$env_path" == "$root_path" || "$env_path" == "$root_path"/* ]]; then
+    echo "Refusing repository-local UV_PROJECT_ENVIRONMENT: $UV_PROJECT_ENVIRONMENT" >&2
+    return 2
+  fi
   export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
   mkdir -p "$(dirname "$UV_PROJECT_ENVIRONMENT")"
 }
@@ -211,6 +218,12 @@ PY
   eval-fast-solver)
     shift
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_fast_solver.py" "$SCRIPT_DIR" "$@"
+    ;;
+  test-fast-solver-churn-oracle)
+    shift
+    exec uv run --project "$SCRIPT_DIR" --extra dev pytest \
+      "$SCRIPT_DIR/tests/test_fast_solver_churn_oracle.py" \
+      "$SCRIPT_DIR/tests/test_state_card_fence.py" "$@"
     ;;
   eval-provenance)
     shift

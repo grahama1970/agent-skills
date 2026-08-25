@@ -116,6 +116,31 @@ def test_sequence_gap_prevents_unrelated_join() -> None:
     )
 
 
+def test_single_turn_imperative_code_task_is_its_own_candidate() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+
+    first = builder.ingest(
+        turn(1, "Write a function that returns the two numbers in a list summing to a target.")
+    )
+    second = builder.ingest(
+        turn(2, "Why is string concatenation in a loop quadratic, and what is the fix?")
+    )
+    third = builder.ingest(turn(3, "Implement binary search and name its failure modes on rotated arrays."))
+
+    assert first.candidate is not None
+    assert first.candidate.normalized_question == (
+        "Write a function that returns the two numbers in a list summing to a target."
+    )
+    assert second.candidate is not None
+    assert second.candidate.normalized_question == (
+        "Why is string concatenation in a loop quadratic, and what is the fix?"
+    )
+    assert third.candidate is not None
+    assert third.candidate.normalized_question == (
+        "Implement binary search and name its failure modes on rotated arrays."
+    )
+
+
 def test_short_fragment_does_not_trigger() -> None:
     builder = QuestionWindowBuilder(PROFILE)
 

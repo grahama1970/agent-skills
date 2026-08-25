@@ -23,6 +23,50 @@
         "stdout_contains": [
           "live HTTP/ripgrep canary: PASS",
           "live-evidence sanity: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/http_server",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/real_ripgrep",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/source_bound_card",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/realtimestt_live",
+            "equals": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "repository-local-python-env-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=\"../.venv\" bash ../run.sh doctor"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": [
+          "Refusing repository-local UV_PROJECT_ENVIRONMENT"
         ]
       }
     },
@@ -52,6 +96,8 @@
       "name": "youtube-derived-coding-interview-ask-cards",
       "type": "positive",
       "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
       "command": [
         "bash",
         "-c",
@@ -63,7 +109,20 @@
         "stdout_contains": [
           "youtube-derived prompt routes to Ask solution: PASS",
           "candidate explanation suppressed: PASS",
-          "youtube-derived follow-up routes to source-backed Ask card: PASS"
+          "youtube-derived follow-up routes to source-backed Ask card: PASS",
+          "youtube-derived cards pass through publication reducer: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-youtube-interview-eval-receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-youtube-interview-eval-receipt.json",
+            "json_pointer": "/checks/publication_decisions_journaled",
+            "equals": true
+          }
         ]
       }
     },
@@ -284,6 +343,48 @@
         "stdout_contains": [
           "\"status\": \"PASS\"",
           "receipt"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/bridge_pipewire_audio_captured",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/bridge_docker_realtimestt_process_ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/source_backed_expected_card",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/publication_decisions_journaled",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/visible_publication_decisions_have_refs",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/held_candidates_auditable",
+            "equals": true
+          }
         ]
       },
       "proves": "Real audio reaches a card: the YouTube interview WAV is played into PipeWire, captured by pw-record, transcribed by RealtimeSTT in the GPU container, and projected as a source-backed evidence card. Every other case in this suite posts transcript TEXT to the API and therefore proves nothing about the audio half.",
@@ -306,14 +407,36 @@
       "timeout_seconds": 240,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "realistic-length event produced a card (window not annihilated): PASS",
-          "exactly one active card for the question: PASS",
-          "active card is the corrected revision: PASS",
-          "stale revision-1 result journaled as discarded, not lost: PASS",
+          "stdout_contains": [
+            "realistic-length event produced a card (window not annihilated): PASS",
+            "exactly one active card for the question: PASS",
+            "active card is the corrected revision: PASS",
+          "completed card candidates journaled for post-run audit: PASS",
+          "corrected revision is among journaled card candidates: PASS",
+          "publication reducer decisions journaled for post-run audit: PASS",
           "revision fence: PASS"
         ]
       }
+    },
+    {
+      "name": "card-publication-reducer-decision-journal",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_state_card_fence.py::test_publication_reducer_records_visible_decision ../tests/test_state_card_fence.py::test_malformed_supported_card_is_held_with_reason ../tests/test_state_card_fence.py::test_stale_same_question_revision_is_superseded ../tests/test_state_card_fence.py::test_duplicate_current_question_reconciles_to_one_visible_card -q && echo \"card publication reducer focused tests: PASS\""
+      ],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "card publication reducer focused tests: PASS"
+        ]
+      },
+      "notes": "Focused guard for the central publication reducer: visible cards emit a typed decision with transcript/source refs and rank components; malformed supported cards are held; stale revisions are superseded; duplicate same-question candidates reconcile to one visible card."
     },
     {
       "name": "salient-fact-durable-write-proven-by-fresh-process-readback",
@@ -455,7 +578,7 @@
           "secret-shaped local redacted end to end: PASS",
           "tampered proofValid without a real stop rejected by independent validator: PASS",
           "policy-blocked request runs zero subprocesses: PASS",
-          "stale-revision debugger card discarded by the CAS fence: PASS",
+          "source-backed stale debugger proof replaces newer insufficient state card: PASS",
           "debugger lane: PASS"
         ]
       },
@@ -564,13 +687,49 @@
       ]
     },
     {
+      "name": "fast-solver-churn-oracle-regression",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh test-fast-solver-churn-oracle"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "5 passed"
+        ]
+      },
+      "notes": "Regression for the #1473 churn path: a superseded answer may complete as an evidence_card while fast_solver_receipt payloads intentionally omit query text; future oracle changes must keep recognizing the card as the completion receipt, and state projection must keep that old completed card behind the active card."
+    },
+    {
+      "name": "question-window-imperative-code-task-regression",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_question_window.py::test_single_turn_imperative_code_task_is_its_own_candidate"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression for the fast-solver parity flake: a standalone imperative coding prompt such as 'Write a function ...' or 'Implement binary search ...' must emit its own question candidate. If it waits for the next interviewer turn, unrelated questions merge, the fast solver answers a contaminated multi-question card, and live parity becomes unstable."
+    },
+    {
       "name": "fast-solver-live-latency-and-parity",
       "type": "positive",
       "real_world": true,
       "command": [
         "bash",
         "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-fast-solver"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-fast-solver-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-fast-solver --output-dir \"$O\""
       ],
       "timeout_seconds": 1800,
       "expected": {
@@ -581,6 +740,38 @@
           "zero stale publications in the steady-state run: PASS",
           "churn: new question answers under its own identity; old stream completes or is fenced: PASS",
           "fast solver: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/30_question_latency_p50_5s_and_p95_10s_to_first_answer_content",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/zero_duplicate_solver_executions_per_revision",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/churn_new_question_answers_under_its_own_identity_old_stream_completes_or_is_fenced",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/blinded_parity_vs_ask_single_call_fast_path_within_one_grade_losses_2",
+            "equals": true
+          }
         ]
       },
       "notes": "#1473 live stage-2 fast path: LIVE resolver + LIVE streaming solver, 30 heterogeneous questions, revision-churn fence, blinded parity vs the $ask single-call path. The ask fixture runner remains only as a keyless regression floor, never a live-answer claim.",
@@ -735,7 +926,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-meeting-campaign"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-meeting-campaign-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-meeting-campaign --output-dir \"$O\""
       ],
       "timeout_seconds": 900,
       "infra_blocked_when": [
@@ -750,6 +941,28 @@
           "== session pinned-coding-interview",
           "== session youtube-two-sum",
           "campaign: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/sessions/0/audio_live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/sessions/1/questions/0/family_correct",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/sessions/2/questions/0/card_matched",
+            "equals": true
+          }
         ]
       },
       "notes": "Goal v2 self-test: a chatterbox-rendered synthetic Sparta meeting plus the pinned interview wav, both through the real PipeWire null-sink -> Docker RealtimeSTT -> resolver -> retrieval path, scored per card family (memory / research / code) against oracles derived before the run, with question-onset-to-card latency recorded. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM."
@@ -795,6 +1008,8 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "source-backed declarative code prompt forces surface: PASS",
+          "source-backed partial parentheses walkthrough forces surface: PASS",
           "selector floats the answering memory doc above ripgrep noise: PASS",
           "surfaced card cites the sparta project memory (not cross-project): PASS",
           "surfaced answer is judged similar to the expected read-first rules: PASS",

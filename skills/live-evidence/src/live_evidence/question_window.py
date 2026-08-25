@@ -41,6 +41,14 @@ PROBLEM_STATEMENT_MARKERS = (
     "write a function",
 )
 
+# Single-turn coding prompts often arrive as imperatives rather than questions:
+# "Write a function ...", "Implement binary search ...". Requiring two markers
+# made the next unrelated interviewer turn join the same candidate.
+IMPERATIVE_PROBLEM_PREFIXES = (
+    "write a function",
+    "implement ",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class WindowOutcome:
@@ -177,6 +185,8 @@ class QuestionWindowBuilder:
             return f"watch-term:{matched_term}"
         if is_question:
             return "question"
+        if any(lower_text.startswith(prefix) for prefix in IMPERATIVE_PROBLEM_PREFIXES):
+            return "problem_statement"
         # Declarative problem statements: a code walkthrough or task briefing
         # states its question without interrogative form ("we're given an
         # input array ... we want to find the two values ... return the

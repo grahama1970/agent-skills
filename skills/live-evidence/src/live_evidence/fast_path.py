@@ -21,6 +21,18 @@ from .solver import FastSolver, SolverChunk, SolverOutcome
 PUBLISH_INTERVAL_S = 0.4
 
 
+async def _journal_latest_publication_decision(state: Any, journal: Any, policy_digest: str) -> None:
+    decision = await state.latest_card_publication_decision()
+    if decision is None:
+        return
+    await journal.append(
+        state.session_id(),
+        "card_publication_decision",
+        decision,
+        policy_digest=policy_digest,
+    )
+
+
 async def stream_fast_answer(
     *,
     state: Any,
@@ -77,6 +89,7 @@ async def stream_fast_answer(
                 snapshot = await state.publish_card_fenced(
                     card.model_copy(update={"answer": accumulated[:1_200]})
                 )
+                await _journal_latest_publication_decision(state, journal, policy_digest)
                 if snapshot is None:
                     stale = True
                     await journal.append(
@@ -127,6 +140,7 @@ async def stream_fast_answer(
         }
     )
     snapshot = await state.publish_card_fenced(final)
+    await _journal_latest_publication_decision(state, journal, policy_digest)
     if snapshot is None:
         await journal.append(
             state.session_id(), "fast_solver_discarded_stale_revision",

@@ -312,6 +312,17 @@ def card_sources(card: dict[str, Any]) -> list[dict[str, Any]]:
     return [source for source in card.get("sources") or [] if isinstance(source, dict)]
 
 
+def read_journal_rows(data_dir: Path) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for session_file in data_dir.rglob("session.jsonl"):
+        for line in session_file.read_text(encoding="utf-8").splitlines():
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return rows
+
+
 CAPTURE_FIDELITY_THRESHOLD = 0.30
 
 
@@ -337,7 +348,13 @@ def capture_fidelity(captured_blob: str, reference_text: str) -> float:
     return present / len(reference_tokens)
 
 
-def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracle: dict[str, Any], reference_text: str = "") -> dict[str, Any]:
+def evaluate_oracle(
+    state: dict[str, Any],
+    bridge_receipt: dict[str, Any],
+    oracle: dict[str, Any],
+    reference_text: str = "",
+    journal_rows: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     transcript = state.get("transcript") if isinstance(state.get("transcript"), list) else []
     cards = state.get("cards") if isinstance(state.get("cards"), list) else []
     transcript_blob = text_blob([event.get("text") for event in transcript if isinstance(event, dict)])
@@ -413,6 +430,21 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
         for source in card_sources(card)
         if source.get("lane") == "ask" and source.get("repository") == "ask"
     ]
+    publication_decisions = [
+        row.get("payload") or {}
+        for row in (journal_rows or [])
+        if row.get("kind") == "card_publication_decision"
+    ]
+    visible_publication_decisions = [
+        decision
+        for decision in publication_decisions
+        if decision.get("status") == "visible"
+    ]
+    held_publication_decisions = [
+        decision
+        for decision in publication_decisions
+        if decision.get("status") == "held"
+    ]
     gate_sources = [
         source
         for card in cards
@@ -436,6 +468,11 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
         ],
         "selected_query_bounded": bool(query_cards),
         "source_backed_expected_card": bool(matching_source_cards),
+        "publication_decisions_journaled": bool(publication_decisions),
+        "visible_publication_decisions_have_refs": bool(visible_publication_decisions)
+        and all(decision.get("transcript_refs") and decision.get("source_refs")
+                for decision in visible_publication_decisions),
+        "held_candidates_auditable": bool(held_publication_decisions),
         "forbidden_card_terms_absent": not any(term and term in all_card_text for term in forbidden_card_terms),
         "raw_ask_without_gate_absent": not raw_ask_without_gate or gate_contract.get("raw_ask_without_gate_allowed") is True,
         "blocked_gate_shows_seed_source": True,
@@ -449,6 +486,9 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
         and all(item["present"] for item in checks["transcript_required_terms"])
         and checks["selected_query_bounded"]
         and checks["source_backed_expected_card"]
+        and checks["publication_decisions_journaled"]
+        and checks["visible_publication_decisions_have_refs"]
+        and checks["held_candidates_auditable"]
         and checks["forbidden_card_terms_absent"]
         and checks["raw_ask_without_gate_absent"]
         and checks["blocked_gate_shows_seed_source"]
@@ -462,6 +502,7 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
             "checks": checks,
             "matching_card_ids": [],
             "selected_query_card_ids": [],
+            "publication_decision_count": len(publication_decisions),
             "gate_source_count": len(gate_sources),
             "ask_source_count": len(ask_sources),
         }
@@ -471,6 +512,7 @@ def evaluate_oracle(state: dict[str, Any], bridge_receipt: dict[str, Any], oracl
         "checks": checks,
         "matching_card_ids": [card.get("card_id") for card in matching_source_cards],
         "selected_query_card_ids": [card.get("card_id") for card in query_cards],
+        "publication_decision_count": len(publication_decisions),
         "gate_source_count": len(gate_sources),
         "ask_source_count": len(ask_sources),
     }
@@ -669,11 +711,14 @@ def main() -> int:
                 final_state = get_state(client)
                 final_state_path = output_dir / "final-state.json"
                 final_state_path.write_text(json.dumps(final_state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                journal_rows = read_journal_rows(data_dir)
                 bridge_invocation_path = output_dir / "bridge-invocation.json"
                 bridge_invocation_path.write_text(json.dumps(bridge_invocation, indent=2, sort_keys=True) + "\n", encoding="utf-8")
                 reference_path = root / "fixtures" / "live_youtube_reference_transcript.txt"
                 reference_text = reference_path.read_text(encoding="utf-8") if reference_path.is_file() else ""
-                oracle_result = evaluate_oracle(final_state, bridge_receipt, oracle, reference_text)
+                oracle_result = evaluate_oracle(
+                    final_state, bridge_receipt, oracle, reference_text, journal_rows
+                )
                 oracle_result_path = output_dir / "oracle-result.json"
                 oracle_result_path.write_text(json.dumps(oracle_result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
                 ui_required_terms = [
