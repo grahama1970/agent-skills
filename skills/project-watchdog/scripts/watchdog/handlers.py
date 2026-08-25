@@ -26,7 +26,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import signal
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -694,6 +697,199 @@ def issue_goal_hash(repo: str, issue_number: int) -> str:
     return f"sha256:{digest}"
 
 
+TAU_STREAM_TERMINAL_STATUSES = frozenset(
+    {"PASS", "FAIL", "BLOCKED", "NEEDS_ATTENTION", "COMPLETED", "LANDED"}
+)
+
+
+def _json_from_file(path: Path) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _jsonl_stats(path: Path) -> dict[str, Any]:
+    stats: dict[str, Any] = {"path": str(path), "line_count": 0}
+    latest: dict[str, Any] | None = None
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                stats["line_count"] += 1
+                try:
+                    parsed = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(parsed, dict):
+                    latest = parsed
+    except OSError as exc:
+        stats["error"] = str(exc)
+        return stats
+    if latest is not None:
+        stats["latest"] = latest
+        for key in ("event_id", "id", "timestamp", "ts", "status", "stage", "node", "node_id"):
+            if key in latest:
+                stats[f"latest_{key}"] = latest[key]
+    return stats
+
+
+def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
+    """Read Ask/Tau stream artifacts into one watchdog status snapshot."""
+    record: dict[str, Any] = {
+        "schema": "agent_skills.project_watchdog.tau_stream_monitor.v1",
+        "checked_at": iso_now(),
+        "ask_run_dir": str(ask_run_dir),
+        "stream_readable": False,
+        "terminal": False,
+        "terminal_status": None,
+        "current_node": None,
+        "current_status": None,
+        "event_count": 0,
+        "event_files": [],
+        "progress_files": [],
+        "node_receipts": [],
+        "reason": "no Ask/Tau stream artifacts observed",
+    }
+    if not ask_run_dir.exists():
+        return record
+
+    for event_path in sorted(ask_run_dir.glob("**/events.jsonl")):
+        stats = _jsonl_stats(event_path)
+        record["event_files"].append(stats)
+        record["event_count"] += int(stats.get("line_count") or 0)
+        latest = stats.get("latest")
+        if isinstance(latest, dict):
+            record["latest_event"] = latest
+
+    for progress_path in sorted(ask_run_dir.glob("**/dag-progress.json")):
+        progress = _json_from_file(progress_path)
+        item: dict[str, Any] = {"path": str(progress_path), "readable": progress is not None}
+        if progress:
+            item["status"] = progress.get("status") or progress.get("verdict") or progress.get("state")
+            item["current_node"] = (
+                progress.get("current_node")
+                or progress.get("active_node")
+                or progress.get("node_id")
+            )
+        record["progress_files"].append(item)
+
+    for receipt_path in sorted(ask_run_dir.glob("**/node-receipt.json")):
+        receipt = _json_from_file(receipt_path)
+        item: dict[str, Any] = {"path": str(receipt_path), "readable": receipt is not None}
+        if receipt:
+            item["status"] = receipt.get("status") or receipt.get("verdict") or receipt.get("state")
+            item["node_id"] = receipt.get("node_id") or receipt_path.parent.name
+        record["node_receipts"].append(item)
+
+    candidates: list[dict[str, Any]] = []
+    candidates.extend(record["progress_files"])
+    candidates.extend(record["node_receipts"])
+    for item in reversed(candidates):
+        status = item.get("status")
+        if status is not None:
+            record["current_status"] = str(status)
+            record["current_node"] = item.get("current_node") or item.get("node_id")
+            break
+
+    terminal = [
+        item for item in candidates
+        if str(item.get("status", "")).upper() in TAU_STREAM_TERMINAL_STATUSES
+    ]
+    if terminal:
+        last = terminal[-1]
+        record["terminal"] = True
+        record["terminal_status"] = str(last.get("status")).upper()
+        record["current_node"] = last.get("current_node") or last.get("node_id")
+
+    record["stream_readable"] = bool(
+        record["event_count"] or record["progress_files"] or record["node_receipts"]
+    )
+    if record["terminal"]:
+        record["reason"] = "terminal Ask/Tau stream state observed"
+    elif record["stream_readable"]:
+        record["reason"] = "Ask/Tau stream readable but no terminal status observed"
+    return record
+
+
+def run_ask_tau_dag_with_stream_monitor(
+    command: list[str],
+    *,
+    cwd: Path,
+    timeout_s: int,
+    ask_run_dir: Path,
+    monitor_path: Path,
+    poll_interval_s: float = 5.0,
+) -> dict[str, Any]:
+    """Run Ask/Tau while writing a live stream-monitor receipt."""
+    started = time.time()
+    env = os.environ.copy()
+    uv_parent = str(Path(config.resolve_uv_bin()).parent)
+    env["PATH"] = f"{uv_parent}:{env.get('PATH', '')}"
+    monitor_path.parent.mkdir(parents=True, exist_ok=True)
+    proc = subprocess.Popen(
+        command,
+        cwd=str(cwd),
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
+    poll_count = 0
+    timed_out = False
+    try:
+        while proc.poll() is None:
+            poll_count += 1
+            snapshot = inspect_tau_stream(ask_run_dir)
+            snapshot.update(
+                {
+                    "poll_count": poll_count,
+                    "process_running": True,
+                    "elapsed_seconds": round(time.time() - started, 3),
+                    "stop_condition": "process_exit_or_timeout",
+                }
+            )
+            write_json(monitor_path, snapshot)
+            if time.time() - started > timeout_s:
+                timed_out = True
+                os.killpg(proc.pid, signal.SIGTERM)
+                break
+            time.sleep(poll_interval_s)
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            os.killpg(proc.pid, signal.SIGKILL)
+            stdout, stderr = proc.communicate()
+    finally:
+        final = inspect_tau_stream(ask_run_dir)
+        final.update(
+            {
+                "poll_count": poll_count,
+                "process_running": False,
+                "elapsed_seconds": round(time.time() - started, 3),
+                "stop_condition": "terminal_status" if final.get("terminal") else "process_exit",
+            }
+        )
+        if timed_out:
+            final["stop_condition"] = "timeout"
+        write_json(monitor_path, final)
+
+    return {
+        "command": command,
+        "cwd": str(cwd),
+        "exit_code": 124 if timed_out else proc.returncode,
+        "stdout": stdout,
+        "stderr": stderr,
+        "duration_seconds": round(time.time() - started, 3),
+        "timed_out": timed_out,
+        "stream_monitor": str(monitor_path),
+    }
+
+
 def _land_repair_to_main(worktree: Path, run_id: str, issue_number: int) -> tuple[bool, list[dict[str, Any]]]:
     """Rebase the reviewer-passed repair branch onto origin/main and push to main.
 
@@ -1277,30 +1473,36 @@ def handle_ticket_repair(
     # Everything the proof gate accepts must be written after this instant: a
     # proof artifact older than the dispatch proves a previous run, not this one.
     dispatched_at = time.time()
-    dag_result = run_cmd(
-        [
-            str(config.ask_run_sh()),
-            "tau-dag",
-            task,
-            "--repo", repo,
-            "--target", ",".join(sorted(targets)),
-            "--immutable-goal", repair_immutable_goal(repo, issue_number),
-            "--dag-template", "creator-reviewer",
-            "--handler", creator,
-            "--handler-workspace", f"{creator}={repair_worktree}",
-            "--handler", reviewer,
-            "--topology", "sequential",
-            "--run-output-root", str(ask_run_dir),
-            "--execute",
-            "--execution-timeout-seconds", str(_ticket_repair_execution_timeout(project)),
-            "--allow-provider-calls",
-            "--json",
-        ],
+    dag_command = [
+        str(config.ask_run_sh()),
+        "tau-dag",
+        task,
+        "--repo", repo,
+        "--target", ",".join(sorted(targets)),
+        "--immutable-goal", repair_immutable_goal(repo, issue_number),
+        "--dag-template", "creator-reviewer",
+        "--handler", creator,
+        "--handler-workspace", f"{creator}={repair_worktree}",
+        "--handler", reviewer,
+        "--topology", "sequential",
+        "--run-output-root", str(ask_run_dir),
+        "--execute",
+        "--execution-timeout-seconds", str(_ticket_repair_execution_timeout(project)),
+        "--allow-provider-calls",
+        "--json",
+    ]
+    stream_monitor_path = receipt_dir / "tau-stream-monitor.json"
+    dag_result = run_ask_tau_dag_with_stream_monitor(
+        dag_command,
         cwd=config.ask_run_sh().parent,
         timeout_s=int(project.get("ticket_repair_timeout_s", 1800)),
+        ask_run_dir=ask_run_dir,
+        monitor_path=stream_monitor_path,
     )
     result["commands"].append(dag_result)
     result["artifacts"].append(str(ask_run_dir))
+    result["artifacts"].append(str(stream_monitor_path))
+    result["tau_stream_monitor"] = inspect_tau_stream(ask_run_dir)
 
     if dag_result["exit_code"] != 0:
         result.update(
