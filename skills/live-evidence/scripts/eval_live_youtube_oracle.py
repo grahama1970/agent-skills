@@ -445,6 +445,22 @@ def evaluate_oracle(
         for decision in publication_decisions
         if decision.get("status") == "held"
     ]
+    superseded_publication_decisions = [
+        decision
+        for decision in publication_decisions
+        if decision.get("status") == "superseded"
+    ]
+    hidden_publication_decisions = [
+        *held_publication_decisions,
+        *superseded_publication_decisions,
+    ]
+    hidden_publication_auditable = bool(hidden_publication_decisions) and all(
+        decision.get("card_id")
+        and decision.get("question_id")
+        and decision.get("reason_codes")
+        and decision.get("transcript_refs")
+        for decision in hidden_publication_decisions
+    )
     gate_sources = [
         source
         for card in cards
@@ -472,7 +488,8 @@ def evaluate_oracle(
         "visible_publication_decisions_have_refs": bool(visible_publication_decisions)
         and all(decision.get("transcript_refs") and decision.get("source_refs")
                 for decision in visible_publication_decisions),
-        "held_candidates_auditable": bool(held_publication_decisions),
+        "held_candidates_auditable": hidden_publication_auditable,
+        "hidden_candidates_auditable": hidden_publication_auditable,
         "forbidden_card_terms_absent": not any(term and term in all_card_text for term in forbidden_card_terms),
         "raw_ask_without_gate_absent": not raw_ask_without_gate or gate_contract.get("raw_ask_without_gate_allowed") is True,
         "blocked_gate_shows_seed_source": True,
@@ -503,6 +520,7 @@ def evaluate_oracle(
             "matching_card_ids": [],
             "selected_query_card_ids": [],
             "publication_decision_count": len(publication_decisions),
+            "hidden_publication_decision_count": len(hidden_publication_decisions),
             "gate_source_count": len(gate_sources),
             "ask_source_count": len(ask_sources),
         }
@@ -513,6 +531,10 @@ def evaluate_oracle(
         "matching_card_ids": [card.get("card_id") for card in matching_source_cards],
         "selected_query_card_ids": [card.get("card_id") for card in query_cards],
         "publication_decision_count": len(publication_decisions),
+        "visible_publication_decision_count": len(visible_publication_decisions),
+        "held_publication_decision_count": len(held_publication_decisions),
+        "superseded_publication_decision_count": len(superseded_publication_decisions),
+        "hidden_publication_decision_count": len(hidden_publication_decisions),
         "gate_source_count": len(gate_sources),
         "ask_source_count": len(ask_sources),
     }

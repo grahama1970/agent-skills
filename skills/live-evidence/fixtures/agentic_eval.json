@@ -408,6 +408,11 @@
             "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
             "json_pointer": "/checks/held_candidates_auditable",
             "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/hidden_candidates_auditable",
+            "equals": true
           }
         ]
       },
