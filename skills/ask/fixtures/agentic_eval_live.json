@@ -973,6 +973,43 @@
         ]
       },
       "notes": "An UNCERTAIN availability probe (auto_retry_blocked_reason provider_probe_uncertain_requires_readback) must not remove a single explicitly requested fresh-lifecycle seat; the fresh-tab worker owns the bounded retry, and the join-gate contains a genuinely dead lane. A CONFIRMED blocker (rate limit attributable to the run's own tab) may still remove and will fail this case's oracle only if it mislabels itself as an availability-selection removal."
+    },
+    {
+      "name": "live-compete-launches-unfocused-desktop2-window-populates-submits-and-closes",
+      "type": "positive",
+      "real_world": true,
+      "non_deterministic": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "seams": [
+        "browser.tab_lifecycle"
+      ],
+      "supports_claims": [
+        "ask.browser.tab_lifecycle"
+      ],
+      "infra_blocked_when": [
+        "rate_limited",
+        "removed by availability selection",
+        "browser_handler_timeout",
+        "browser_lock_timeout"
+      ],
+      "timeout_seconds": 1200,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh compete-window-proof --handler webgpt --handler webclaude --judge claude-opus-5-low --timeout 900"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPETE_WINDOWS_UNFOCUSED",
+          "COMPETE_WINDOWS_ON_DESKTOP_2",
+          "COMPETE_SUBMIT_RECORDED",
+          "COMPETE_WINDOWS_CLOSED_AFTER_RECORD",
+          "COMPETE_WINDOW_LIFECYCLE_OK"
+        ]
+      },
+      "notes": "Operator report 2026-08-25: compete must launch each browser seat in an UNFOCUSED (background, no mouse hijack -- surf default) window on KDE Desktop 2 (reviewer desktop, wmctrl index 1), populate + submit to the provisioned tab, and CLOSE the window once answers are recorded. Proven from the run's own browser-tab-lifecycle.json (--unfocused, place-window desktop_index=1 verified=true, window.close rc=0 + wmctrl leak check) and execution-status.json (seats PASS). This is the regression guard that was missing while the behavior drifted."
     }
   ],
   "capability_claims": [

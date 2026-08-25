@@ -1370,6 +1370,29 @@ def _select_available_browser_handlers(
         "browser_provider_probe_timeout",
         "browser_provider_probe_failed",
     }
+    # An UNCERTAIN probe (provider_probe_uncertain_requires_readback, surfaced
+    # as a probe timeout/failure with provider_limited False) must never remove
+    # a fresh-lifecycle browser seat, AT ANY SEAT COUNT. The fresh tab this run
+    # opens is a different tab than the ambient one the probe was unsure about,
+    # and the seat worker owns the bounded provider retry once that tab exists.
+    # This keep was previously gated on single_explicit_seat, so a 5-seat
+    # compete silently dropped an uncertain webgemini to a claude-opus-5-high
+    # API substitute -- 4 tabs in the shared window instead of 5 (operator
+    # report 2026-08-25, run compete-5seat-shared: removed_handlers
+    # ['webgemini'], failure_code browser_provider_probe_timeout, provider
+    # availability DEGRADED/provider_limited False). A CONFIRMED blocker
+    # (provider_limited True) still removes; this rescues only the uncertain.
+    if _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle):
+        rescued_uncertain = [
+            handler for handler in list(removed)
+            if handler in probe_uncertain
+            and unusable.get(handler) in fresh_lifecycle_uncertainty_codes
+            and handler not in explicit_projects
+        ]
+        for handler in rescued_uncertain:
+            removed.remove(handler)
+            active.append(handler)
+            fresh_lifecycle_kept.append(handler)
     if (
         single_explicit_seat
         and removed == browser_requested

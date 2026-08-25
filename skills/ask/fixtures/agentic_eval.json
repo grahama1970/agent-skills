@@ -1744,6 +1744,30 @@
         "tau_dag.execution"
       ],
       "notes": "Regression guard for the unmonitored Ask/Tau path: even when a caller passes --execute --no-poll, the public Ask CLI forces Tau polling and emits tau_stream_monitoring_policy."
+    },
+    {
+      "name": "multiseat-uncertain-probe-keeps-browser-seat-not-substituted",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "provider.dispatch_and_substitution"
+      ],
+      "supports_claims": [
+        "ask.provider.dispatch_and_substitution"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . python scripts/selection_multiseat_uncertain_keep_check.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "UNCERTAIN_SEAT_KEPT_CONFIRMED_SEAT_REMOVED"
+        ]
+      },
+      "notes": "Operator 2026-08-25: a 5-seat compete dropped webgemini to a claude-opus-5-high API substitute because the uncertainty-keep in _select_available_browser_handlers was gated on single_explicit_seat. Now an UNCERTAIN probe (browser_provider_probe_timeout, provider_limited False) keeps the fresh-lifecycle seat at any seat count, while a CONFIRMED provider_limited still removes. Exercises the real selection function; asserts both directions."
     }
   ],
   "capability_claims": [
