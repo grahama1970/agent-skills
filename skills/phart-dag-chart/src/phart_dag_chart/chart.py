@@ -86,7 +86,13 @@ def render_chart(dag: dict[str, Any], *, validate: bool = True, plain: bool = Fa
             hint="Run validate first; fix cycles, duplicate ids, or unknown depends_on.",
         ) from None
     graph_id = str(dag.get("graph_id") or "dag")
-    schema = str(dag.get("schema_version") or dag.get("source_graph_version") or "")
+    schema_version = str(dag.get("schema_version") or "")
+    source_graph_version = str(dag.get("source_graph_version") or "")
+    schema = (
+        f"{source_graph_version} -> {schema_version}"
+        if source_graph_version
+        else schema_version
+    )
     header = [
         f"DAG decision tree · {graph_id} (phart 1.5 git)",
         f"schema={schema}",

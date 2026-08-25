@@ -6,6 +6,7 @@ import re
 
 ASK_DAG_SCHEMA_VERSION = "ask.dag.v1"
 SCILLM_EXEC_GRAPH_VERSION = "scillm.exec.graph.v1"
+TAU_DAG_CONTRACT_VERSION = "tau.dag_contract.v1"
 NODE_ID_RE = re.compile(r"^[A-Za-z0-9_.-]{1,80}$")
 
 SCILLM_CALL_TO_NODE_TYPE: dict[str, str] = {

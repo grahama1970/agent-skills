@@ -1,7 +1,7 @@
 ---
 name: phart-dag-chart
 description: >
-  Validate ask/scillm DAG JSON and render PHART 1.5 ASCII decision-tree charts for terminals
+  Validate ask/scillm/Tau DAG JSON and render PHART 1.5 ASCII decision-tree charts for terminals
   and dry-run output. DAG.json in → chart on stdout or actionable errors on stderr (no tracebacks).
   Python 3.14+ with PHART from github.com/scottvr/phart.
 allowed-tools: Bash, Read
@@ -27,13 +27,15 @@ disciplines:
 
 # phart-dag-chart
 
-Structural validation and PHART rendering for **ask.dag.v1** (and **scillm.exec.graph.v1** input normalized for display).
+Structural validation and PHART rendering for **ask.dag.v1**, with
+**scillm.exec.graph.v1** and **tau.dag_contract.v1** inputs normalized for
+display.
 
 ## Contract
 
 | Input | Output |
 |-------|--------|
-| Valid `dag.json` | `chart` → fenced ASCII decision tree on stdout |
+| Valid `ask.dag.v1`, `scillm.exec.graph.v1`, or `tau.dag_contract.v1` JSON | `chart` → fenced ASCII decision tree on stdout |
 | Invalid JSON / schema / cycle / unknown dep | stderr `error [code]: …` + optional `hint:`; exit **1** |
 | Missing file / bad usage | exit **2** |
 

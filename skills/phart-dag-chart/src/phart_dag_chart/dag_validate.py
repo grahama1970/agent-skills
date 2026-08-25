@@ -11,6 +11,7 @@ from phart_dag_chart.constants import (
     SCILLM_CALL_TO_NODE_TYPE,
     SCILLM_EXEC_GRAPH_VERSION,
     SCILLM_RAW_TYPE_TO_NODE_TYPE,
+    TAU_DAG_CONTRACT_VERSION,
 )
 from phart_dag_chart.errors import DagChartError, ValidationIssue
 
@@ -125,6 +126,129 @@ def _normalize_scillm_for_chart(dag: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _tau_node_skill_name(raw_node: dict[str, Any]) -> str:
+    skill = raw_node.get("skill")
+    if isinstance(skill, dict):
+        provider = str(skill.get("provider") or "").strip()
+        capability = str(skill.get("capability") or "").strip()
+        if provider:
+            return provider
+        if capability:
+            return capability
+    agent = str(raw_node.get("agent") or "").strip()
+    if agent:
+        return agent
+    executor = str(raw_node.get("executor") or "").strip()
+    if executor:
+        return executor
+    return "tau"
+
+
+def _normalize_tau_for_chart(dag: dict[str, Any]) -> dict[str, Any]:
+    nodes_raw = dag.get("nodes")
+    if not isinstance(nodes_raw, list) or not nodes_raw:
+        raise DagChartError("DAG requires a non-empty nodes list.")
+
+    terminal_nodes = dag.get("terminal_nodes", [])
+    if terminal_nodes is None:
+        terminal_nodes = []
+    if isinstance(terminal_nodes, str):
+        terminal_nodes = [terminal_nodes]
+    if not isinstance(terminal_nodes, list) or not all(isinstance(item, str) for item in terminal_nodes):
+        raise DagChartError("Tau DAG terminal_nodes must be a string list.")
+
+    normalized: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, raw_node in enumerate(nodes_raw, 1):
+        if not isinstance(raw_node, dict):
+            raise DagChartError(f"Tau DAG node {index} must be an object.")
+        node_id = str(raw_node.get("id") or "").strip()
+        if not NODE_ID_RE.fullmatch(node_id) or node_id in {".", ".."}:
+            raise DagChartError(f"DAG node {index} has an unsafe id {node_id!r}.")
+        if node_id in seen:
+            raise DagChartError(f"DAG node id {node_id!r} is duplicated.")
+        depends_on = raw_node.get("depends_on", [])
+        if depends_on is None:
+            depends_on = []
+        if isinstance(depends_on, str):
+            depends_on = [depends_on]
+        if not isinstance(depends_on, list) or not all(isinstance(item, str) for item in depends_on):
+            raise DagChartError(f"DAG node {node_id!r} depends_on must be a string list.")
+
+        node_input = {
+            "skill": _tau_node_skill_name(raw_node),
+            "agent": str(raw_node.get("agent") or ""),
+            "executor": str(raw_node.get("executor") or ""),
+        }
+        command_spec = raw_node.get("command_spec")
+        if command_spec:
+            node_input["command_spec"] = str(command_spec)
+        condition = raw_node.get("condition")
+        if condition:
+            node_input["condition"] = str(condition)
+        normalized.append({
+            "id": node_id,
+            "type": "skill.run",
+            "display_type": f"tau.{node_input['skill']}",
+            "depends_on": list(depends_on),
+            "max_attempts": raw_node.get("max_attempts", 1),
+            "allow_failure": bool(raw_node.get("allow_failure", False)),
+            "input": node_input,
+        })
+        seen.add(node_id)
+
+    edges_raw = dag.get("edges", [])
+    if edges_raw is None:
+        edges_raw = []
+    if not isinstance(edges_raw, list):
+        raise DagChartError("Tau DAG edges must be a list.")
+
+    edge_dependencies: dict[str, list[str]] = {node["id"]: list(node["depends_on"]) for node in normalized}
+    for index, edge in enumerate(edges_raw, 1):
+        if not isinstance(edge, dict):
+            raise DagChartError(f"Tau DAG edge {index} must be an object.")
+        parent = str(edge.get("from") or "").strip()
+        child = str(edge.get("to") or "").strip()
+        if not parent or not child:
+            raise DagChartError(f"Tau DAG edge {index} requires from and to.")
+        if child not in seen and child in set(terminal_nodes):
+            normalized.append({
+                "id": child,
+                "type": "skill.run",
+                "display_type": "tau.human",
+                "depends_on": [],
+                "max_attempts": 1,
+                "allow_failure": False,
+                "input": {"skill": "human", "executor": "human"},
+            })
+            seen.add(child)
+            edge_dependencies[child] = []
+        if child in edge_dependencies and parent not in edge_dependencies[child]:
+            edge_dependencies[child].append(parent)
+
+    for node in normalized:
+        node["depends_on"] = edge_dependencies.get(node["id"], node.get("depends_on", []))
+
+    limits = dag.get("limits") if isinstance(dag.get("limits"), dict) else {}
+    max_concurrency = limits.get("max_concurrency", dag.get("max_concurrency", 8))
+    goal = dag.get("goal") if isinstance(dag.get("goal"), dict) else {}
+    target = dag.get("target") if isinstance(dag.get("target"), dict) else {}
+    description = str(
+        goal.get("immutable_goal")
+        or target.get("target")
+        or dag.get("description")
+        or ""
+    )
+    return {
+        "schema_version": ASK_DAG_SCHEMA_VERSION,
+        "source_graph_version": TAU_DAG_CONTRACT_VERSION,
+        "graph_id": str(dag.get("dag_id") or ""),
+        "description": description,
+        "max_concurrency": max_concurrency,
+        "nodes": normalized,
+    }
+
+
 def validate_dag(
     dag: dict[str, Any],
     *,
@@ -134,6 +258,8 @@ def validate_dag(
     warnings: list[ValidationIssue] = []
     if dag.get("exec_graph_version") == SCILLM_EXEC_GRAPH_VERSION:
         dag = _normalize_scillm_for_chart(dag)
+    if dag.get("schema") == TAU_DAG_CONTRACT_VERSION:
+        dag = _normalize_tau_for_chart(dag)
     version = str(dag.get("schema_version") or ASK_DAG_SCHEMA_VERSION)
     if version != ASK_DAG_SCHEMA_VERSION:
         raise DagChartError(
@@ -250,6 +376,7 @@ def validation_report(dag: dict[str, Any], *, chart_only: bool = True) -> dict[s
     return {
         "ok": True,
         "schema_version": normalized["schema_version"],
+        "source_graph_version": normalized.get("source_graph_version") or "",
         "graph_id": normalized.get("graph_id") or "",
         "node_count": len(normalized["nodes"]),
         "layer_count": len(layers),
