@@ -10,6 +10,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
+import browser_oracle.cli as cli
 from browser_oracle.bindings import bind, load
 from browser_oracle.cli import app
 
@@ -137,3 +138,42 @@ printf '"Created tab 837361275: https://claude.ai/new"\\n'
 
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["tab_id"] == "837361275"
+
+
+def test_window_snapshot_command_emits_current_chrome_windows(monkeypatch) -> None:
+    monkeypatch.setattr(cli, "_wmctrl_chrome_windows", lambda: ["0x001", "0x002"])
+
+    result = runner.invoke(app, ["window-snapshot", "--json"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["schema"] == "browser_oracle.window_snapshot.v1"
+    assert payload["windows"] == ["0x001", "0x002"]
+
+
+def test_place_window_command_moves_new_window_to_requested_desktop(monkeypatch) -> None:
+    observed = {}
+
+    def fake_move(before, *, desktop_override=None):
+        observed["before"] = before
+        observed["desktop_override"] = desktop_override
+        return {
+            "status": "moved",
+            "window": "0x002",
+            "desktop_index": 1,
+            "verified": True,
+        }
+
+    monkeypatch.setattr(cli, "_move_new_window_to_reviewer_desktop", fake_move)
+
+    result = runner.invoke(
+        app,
+        ["place-window", "--before", "0x001", "--desktop", "1", "--json"],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["schema"] == "browser_oracle.place_window.v1"
+    assert payload["status"] == "moved"
+    assert payload["window"] == "0x002"
+    assert observed == {"before": ["0x001"], "desktop_override": "1"}

@@ -87,6 +87,49 @@ The basics: just ask.
 Those two commands cover most daily use. Everything below is for when you need
 more control.
 
+**Need multiple model seats? Use the mode that matches the deliverable.**
+
+```bash
+# One-shot: independent answers, no consensus, usable with partial results.
+./run.sh one-shot "Review this README packet" \
+  --handler webkimi \
+  --handler webgpt \
+  --attach-file /tmp/review-packet.md \
+  --out-dir /tmp/ask-one-shot
+
+# Roundtable: one shared packet, concurrent seats, synthesized position.
+./run.sh tau-dag "Recommend the safest implementation plan" \
+  --repo local/agent-skills \
+  --target ask-roundtable \
+  --immutable-goal "Return one evidence-backed recommendation with dissent recorded." \
+  --dag-template roundtable \
+  --topology concurrent \
+  --handler webgpt \
+  --handler webkimi \
+  --handler gpt-5.5-high \
+  --execute \
+  --json
+
+# Compete: isolated candidates, scorecard/judge path, local proof still required.
+./run.sh compete "Propose the smallest patch for this bug" \
+  --repo local/agent-skills \
+  --target ask-compete \
+  --immutable-goal "Select a locally verifiable patch candidate." \
+  --handler webgpt \
+  --handler webkimi \
+  --handler gpt-5.5-high \
+  --criterion correctness \
+  --criterion minimality \
+  --execute \
+  --json
+```
+
+Browser note: `one-shot` runs each seat as its own single-call Tau DAG. Browser
+seats use one reviewer window per seat so each provider tab stays visible to
+its page runtime; Ask should place those reviewer windows on Desktop 2 by
+default (`ASK_REVIEWER_DESKTOP=1`). Use roundtable or compete when you want one
+shared prompt packet with panel/judge artifacts.
+
 **Need more reasoning firepower?**
 
 ```bash
