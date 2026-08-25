@@ -439,6 +439,54 @@
       "notes": "Focused guard for the central publication reducer: visible cards emit a typed decision with transcript/source refs and rank components; malformed supported cards are held; stale revisions are superseded; duplicate same-question candidates reconcile to one visible card."
     },
     {
+      "name": "post-run-miss-audit-journal-reconstruction",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-miss-audit"
+      ],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "post-run miss audit classifies visible/held/superseded/missed: PASS",
+          "post-run miss audit: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/visible",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/held",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/superseded",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/missed",
+            "equals": 1
+          }
+        ]
+      },
+      "notes": "Focused MVP 2 guard: post-run replay reconstructs visible, held, superseded, and deliberately missed answer-needed moments from a JSONL journal, so hidden/rejected/missed work remains auditable instead of disappearing from evaluation."
+    },
+    {
       "name": "salient-fact-durable-write-proven-by-fresh-process-readback",
       "type": "positive",
       "real_world": true,

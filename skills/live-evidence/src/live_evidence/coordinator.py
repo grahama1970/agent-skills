@@ -615,6 +615,22 @@ class EvidenceCoordinator:
                                        "Suppressed: not card-worthy")
             return
 
+        await self._journal.append(
+            self._state.session_id(),
+            "answer_needed_moment",
+            {
+                "schema": "live_evidence.answer_needed_moment.v1",
+                "question_id": question_id,
+                "question_revision": question_revision,
+                "query": query,
+                "display_query": display_query,
+                "source_event_ids": list(decision.source_event_ids),
+                "trigger_reason": decision.reason,
+                "surface_gate": "accepted",
+            },
+            policy_digest=self._state.session_policy_digest(),
+        )
+
         # No resolver -> cannot judge readiness; fall back to the legacy predicate.
         may_ask = (
             verdict.may_invoke_ask
