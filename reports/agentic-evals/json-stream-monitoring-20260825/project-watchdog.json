@@ -1,0 +1,103 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/project-watchdog/fixtures/agentic_eval.json",
+  "run_id": "964ef185d8fc",
+  "fixture_sha256": "sha256:42a8dc2f70fac92e795cb1ebbb17ec8105c540fddab0be33e1b6ffd247986d1d",
+  "repo": {
+    "sha": "17009a8f52ac0d93f279cd1fb495af4647a6a9d6",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root",
+  "claims": {
+    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, and that activate reports schedule and state together",
+    "does_not_prove": "that a live repair, closure audit, or completion attestation succeeds. Those dispatch models through $ask/Tau and are proven only by a live receipt read back from the produced artifact, not by this fixture."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "ticket-repair-monitors-ask-tau-json-stream"
+  ],
+  "generated_at": "2026-08-25T10:35:52.550611+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 3,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "ticket-repair-monitors-ask-tau-json-stream",
+      "type": "adversarial",
+      "case_id": "964ef185d8fc-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . pytest -q tests/test_project_watchdog.py::test_tau_stream_monitor_reads_terminal_progress_and_events tests/test_project_watchdog.py::test_ask_tau_dag_runner_polls_stream_until_process_exit"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [
+        "watchdog.ticket_repair",
+        "ask.tau_dag_stream",
+        "tau.json_stream"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 533.0,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed in 0.31s\n",
+          "stderr": "",
+          "duration_ms": 498.83,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "964ef185d8fc-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed in 0.38s\n",
+          "stderr": "",
+          "duration_ms": 584.798,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "964ef185d8fc-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "..                                                                       [100%]\n2 passed in 0.32s\n",
+          "stderr": "",
+          "duration_ms": 515.371,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "964ef185d8fc-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

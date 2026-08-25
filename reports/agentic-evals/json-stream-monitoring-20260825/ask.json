@@ -1,0 +1,101 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/ask/fixtures/agentic_eval.json",
+  "run_id": "d7ba39119ef1",
+  "fixture_sha256": "sha256:bbac8f4ced0cde6de92d7f8097410d3dcd922ef2a45c30aaf5905c24b05950a9",
+  "repo": {
+    "sha": "17009a8f52ac0d93f279cd1fb495af4647a6a9d6",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "ask entrypoints, browser-window reclamation, output pruning, blocker-ledger honesty gates, codex workspace receipt admission, and the MVP fail-now proof gate, exercised against real browser/filesystem state and a real captured model proposal",
+  "claims": {
+    "proves": "ask entrypoints, panel compliance with best-practices-roundtable/competition, workflow compilation, codex workspace receipt classification, and the MVP refusal gates",
+    "does_not_prove": "that any provider answers; see fixtures/agentic_eval_live.json for the live contract"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "execute-no-poll-still-monitors-tau-json-stream"
+  ],
+  "generated_at": "2026-08-25T10:35:55.769188+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 3,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "execute-no-poll-still-monitors-tau-json-stream",
+      "type": "adversarial",
+      "case_id": "d7ba39119ef1-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest -q tests/test_tau_dag.py::test_execute_no_poll_forces_tau_stream_monitoring"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [
+        "tau_dag.execution"
+      ],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1592.754,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 1.16s\n",
+          "stderr": "",
+          "duration_ms": 1567.025,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d7ba39119ef1-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 1.16s\n",
+          "stderr": "",
+          "duration_ms": 1576.258,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d7ba39119ef1-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": ".                                                                        [100%]\n1 passed in 1.20s\n",
+          "stderr": "",
+          "duration_ms": 1634.98,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d7ba39119ef1-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

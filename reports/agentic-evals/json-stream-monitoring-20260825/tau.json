@@ -1,0 +1,222 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/tau/fixtures/agentic_eval.json",
+  "run_id": "d03d1bf03352",
+  "fixture_sha256": "sha256:499f180e8a218a1fff66750dcdfd35b80160da7b679965810c79da722c226b0b",
+  "repo": {
+    "sha": "17009a8f52ac0d93f279cd1fb495af4647a6a9d6",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "Tau wrapper sanity plus retained regression guard for Ask/Tau/watchdog JSON-stream monitoring obligations.",
+  "claims": {
+    "proves": "the Tau wrapper entrypoint runs and the current Ask/Tau/project-watchdog contracts require continuous JSON-stream monitoring for executed Tau DAGs.",
+    "does_not_prove": "semantic correctness, provider/model behavior, browser transport, or full Tau product readiness."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-08-25T10:35:55.913243+00:00",
+  "case_count": 3,
+  "required_case_count": 3,
+  "outcome_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 9,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "sanity",
+      "type": "positive",
+      "case_id": "d03d1bf03352-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1551.743,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"checked_at\": \"2026-08-25T10:35:52Z\",\n  \"commands\": [\n    {\n      \"command\": [\n        \"/home/graham/.local/bin/uv\",\n        \"run\",\n        \"--project\",\n        \"/home/graham/workspace/experiments/tau\",\n        \"pytest\",\n        \"-q\",\n        \"tests/test_subagent_receipt.py\",\n        \"tests/test_agent_harness.py\",\n        \"tests/test_tui_adapter.py\",\n        \"tests/test_live_memory_chat_command_loop_proofs.py\"\n      ],\n      \"cwd\": \"/home/graham/workspace/experiments/tau\",\n      \"exit_code\": 0,\n      \"stderr\": \"warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/skills/tau/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\\n\",\n      \"stdout\": \"......................................................                   [100%]\\n54 passed in 1.03s\\n\"\n    }\n  ],\n  \"json_checks\": [\n    {\n      \"error\": null,\n      \"ok\": true,\n      \"path\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json\"\n    }\n  ],\n  \"live\": \"mixed\",\n  \"mocked\": \"mixed\",\n  \"ok\": true,\n  \"proof_boundary\": {\n    \"does_not_prove\": [\n      \"fresh browser chat UI rendering\",\n      \"fresh live provider semantics\",\n      \"production Sparta Chat readiness\"\n    ],\n    \"proves\": [\n      \"targeted Tau receipt, harness, TUI adapter, and proof-manifest checks run\",\n      \"coder command-spec JSON is readable\"\n    ]\n  },\n  \"schema\": \"agent_skills.tau.sanity_receipt.v1\"\n}\n",
+          "stderr": "",
+          "duration_ms": 1582.508,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"checked_at\": \"2026-08-25T10:35:54Z\",\n  \"commands\": [\n    {\n      \"command\": [\n        \"/home/graham/.local/bin/uv\",\n        \"run\",\n        \"--project\",\n        \"/home/graham/workspace/experiments/tau\",\n        \"pytest\",\n        \"-q\",\n        \"tests/test_subagent_receipt.py\",\n        \"tests/test_agent_harness.py\",\n        \"tests/test_tui_adapter.py\",\n        \"tests/test_live_memory_chat_command_loop_proofs.py\"\n      ],\n      \"cwd\": \"/home/graham/workspace/experiments/tau\",\n      \"exit_code\": 0,\n      \"stderr\": \"warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/skills/tau/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\\n\",\n      \"stdout\": \"......................................................                   [100%]\\n54 passed in 0.95s\\n\"\n    }\n  ],\n  \"json_checks\": [\n    {\n      \"error\": null,\n      \"ok\": true,\n      \"path\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json\"\n    }\n  ],\n  \"live\": \"mixed\",\n  \"mocked\": \"mixed\",\n  \"ok\": true,\n  \"proof_boundary\": {\n    \"does_not_prove\": [\n      \"fresh browser chat UI rendering\",\n      \"fresh live provider semantics\",\n      \"production Sparta Chat readiness\"\n    ],\n    \"proves\": [\n      \"targeted Tau receipt, harness, TUI adapter, and proof-manifest checks run\",\n      \"coder command-spec JSON is readable\"\n    ]\n  },\n  \"schema\": \"agent_skills.tau.sanity_receipt.v1\"\n}\n",
+          "stderr": "",
+          "duration_ms": 1484.278,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"checked_at\": \"2026-08-25T10:35:55Z\",\n  \"commands\": [\n    {\n      \"command\": [\n        \"/home/graham/.local/bin/uv\",\n        \"run\",\n        \"--project\",\n        \"/home/graham/workspace/experiments/tau\",\n        \"pytest\",\n        \"-q\",\n        \"tests/test_subagent_receipt.py\",\n        \"tests/test_agent_harness.py\",\n        \"tests/test_tui_adapter.py\",\n        \"tests/test_live_memory_chat_command_loop_proofs.py\"\n      ],\n      \"cwd\": \"/home/graham/workspace/experiments/tau\",\n      \"exit_code\": 0,\n      \"stderr\": \"warning: `VIRTUAL_ENV=/home/graham/workspace/experiments/agent-skills/skills/tau/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\\n\",\n      \"stdout\": \"......................................................                   [100%]\\n54 passed in 1.03s\\n\"\n    }\n  ],\n  \"json_checks\": [\n    {\n      \"error\": null,\n      \"ok\": true,\n      \"path\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json\"\n    }\n  ],\n  \"live\": \"mixed\",\n  \"mocked\": \"mixed\",\n  \"ok\": true,\n  \"proof_boundary\": {\n    \"does_not_prove\": [\n      \"fresh browser chat UI rendering\",\n      \"fresh live provider semantics\",\n      \"production Sparta Chat readiness\"\n    ],\n    \"proves\": [\n      \"targeted Tau receipt, harness, TUI adapter, and proof-manifest checks run\",\n      \"coder command-spec JSON is readable\"\n    ]\n  },\n  \"schema\": \"agent_skills.tau.sanity_receipt.v1\"\n}\n",
+          "stderr": "",
+          "duration_ms": 1588.442,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "json-stream-monitoring-contract-present",
+      "type": "positive",
+      "case_id": "d03d1bf03352-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "python3",
+        "../scripts/eval_json_stream_contract.py"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 32.739,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "JSON_STREAM_CONTRACT_OK\n",
+          "stderr": "",
+          "duration_ms": 33.188,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c001-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "JSON_STREAM_CONTRACT_OK\n",
+          "stderr": "",
+          "duration_ms": 31.092,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c001-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "JSON_STREAM_CONTRACT_OK\n",
+          "stderr": "",
+          "duration_ms": 33.936,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c001-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "json-stream-monitoring-contract-detects-missing-ask-rule",
+      "type": "adversarial",
+      "case_id": "d03d1bf03352-c002",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "python3",
+        "../scripts/eval_json_stream_contract.py",
+        "--adversarial",
+        "missing-ask-monitoring"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 34.28,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "ADVERSARIAL_CAUGHT missing-ask-monitoring\n",
+          "stderr": "",
+          "duration_ms": 36.787,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c002-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "ADVERSARIAL_CAUGHT missing-ask-monitoring\n",
+          "stderr": "",
+          "duration_ms": 34.044,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c002-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "ADVERSARIAL_CAUGHT missing-ask-monitoring\n",
+          "stderr": "",
+          "duration_ms": 32.009,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "d03d1bf03352-c002-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

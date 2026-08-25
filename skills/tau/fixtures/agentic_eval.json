@@ -2,21 +2,56 @@
   "version": 2,
   "skill": "tau",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "Tau wrapper sanity plus retained regression guard for Ask/Tau/watchdog JSON-stream monitoring obligations.",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the Tau wrapper entrypoint runs and the current Ask/Tau/project-watchdog contracts require continuous JSON-stream monitoring for executed Tau DAGs.",
+    "does_not_prove": "semantic correctness, provider/model behavior, browser transport, or full Tau product readiness."
   },
   "cases": [
     {
       "name": "sanity",
       "type": "positive",
+      "real_world": true,
       "command": [
         "bash",
         "../sanity.sh"
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "json-stream-monitoring-contract-present",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "python3",
+        "../scripts/eval_json_stream_contract.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JSON_STREAM_CONTRACT_OK"
+        ]
+      }
+    },
+    {
+      "name": "json-stream-monitoring-contract-detects-missing-ask-rule",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "python3",
+        "../scripts/eval_json_stream_contract.py",
+        "--adversarial",
+        "missing-ask-monitoring"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ADVERSARIAL_CAUGHT"
+        ]
       }
     }
   ]

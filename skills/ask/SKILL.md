@@ -958,6 +958,28 @@ project's deterministic proof command or artifact validation. Treat `DEGRADED`,
 peer receipts, read the recovery packet, and rerun only the affected lane or
 launch a new round when appropriate.
 
+### Monitor Tau JSON Streams
+
+Executed Ask/Tau DAGs must be watched from dispatch until Tau reaches a
+terminal `PASS`, `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION` verdict. The caller
+must read the run's JSON stream artifacts, not infer progress from a submitted
+command, a quiet terminal, or a later prose summary.
+
+Read these artifacts while the run is active and again before reporting:
+
+- `events.jsonl`
+- `dag-progress.json`
+- `node-artifacts/*/node-receipt.json`
+- Tau receipt files under `tau-receipts/`
+- `execution-status.json`
+
+`--no-poll` is a compatibility flag only. With `--execute`, Ask forces polling
+on and records `tau_stream_monitoring_policy` in the CLI JSON output. A caller
+that cannot read the stream must preserve the run directory and report the
+last event id/timestamp, current node/status, elapsed time, and unreadable path
+as the blocker. Do not launch a long-running Ask/Tau DAG and stop monitoring
+it.
+
 Before launching a costly live browser panel, Ask runs a standard read-only
 provider availability probe automatically. It inspects existing provider tabs
 for visible rate-limit or capacity banners and writes

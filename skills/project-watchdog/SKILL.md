@@ -323,6 +323,12 @@ event id, elapsed time, and next stop condition. If the stream stalls or is not
 readable, watchdog records that as a concrete pipeline defect instead of
 silently stopping or summarizing from stale prose.
 
+The retained watchdog receipt for this obligation is
+`tau-stream-monitor.json`. It is not optional evidence. A repair tick that
+invoked `$ask tau-dag` but did not write or read that monitor artifact is
+`NEEDS_ATTENTION`, even when the child process exited or a model response file
+exists.
+
 Provider boundary: project-watchdog never calls SciLLM directly, never chooses a
 SciLLM endpoint, and never passes raw `--scillm-*` auth or URL flags. The only
 allowed provider route for repair is:

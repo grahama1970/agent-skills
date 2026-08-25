@@ -312,7 +312,13 @@ def run(
         typer.Option("--run-output-root", help="Directory for ask Tau DAG artifacts."),
     ] = DEFAULT_OUTPUT_ROOT,
     execute: Annotated[bool, typer.Option("--execute", help="Execute the emitted DAG with Tau.")] = False,
-    poll: Annotated[bool, typer.Option("--poll/--no-poll", help="Poll Tau run-status after execution.")] = True,
+    poll: Annotated[
+        bool,
+        typer.Option(
+            "--poll/--no-poll",
+            help="Poll Tau run-status after execution. --no-poll is ignored with --execute.",
+        ),
+    ] = True,
     viewer_link: Annotated[
         bool,
         typer.Option("--viewer-link", help="Ask Tau for a React Flow DAG viewer link."),
@@ -393,6 +399,10 @@ def run(
     )
     bundle = compile_tau_dag_bundle(input_payload)
     _emit_dag_chart(bundle, execute=execute)
+    tau_stream_monitoring_policy = _tau_stream_monitoring_policy(
+        execute=execute, requested_poll=poll
+    )
+    effective_poll = bool(tau_stream_monitoring_policy["effective_poll"])
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
     browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
     if bundle.get("status") != "NEEDS_INTERVIEW" and execute and not _has_browser_handlers(input_payload):
@@ -505,7 +515,7 @@ def run(
                     execution = run_tau_dag_bundle(
                         bundle,
                         tau_project_root=tau_project_root,
-                        poll=poll,
+                        poll=effective_poll,
                         poll_interval_seconds=poll_interval_seconds,
                         poll_timeout_seconds=poll_timeout_seconds,
                         viewer_link=viewer_link,
@@ -558,6 +568,7 @@ def run(
         "browser_provider_availability": browser_availability,
         "browser_provider_selection": browser_selection,
         "browser_tab_lifecycle": lifecycle,
+        "tau_stream_monitoring_policy": tau_stream_monitoring_policy,
         "execution": execution,
         "join_artifact_path": execution.get("join_artifact_path") if isinstance(execution, dict) else None,
     }
@@ -643,7 +654,13 @@ def compete(
         typer.Option("--run-output-root", help="Directory for ask Tau DAG artifacts."),
     ] = DEFAULT_OUTPUT_ROOT,
     execute: Annotated[bool, typer.Option("--execute", help="Execute the emitted compete DAG with Tau.")] = False,
-    poll: Annotated[bool, typer.Option("--poll/--no-poll", help="Poll Tau run-status after execution.")] = True,
+    poll: Annotated[
+        bool,
+        typer.Option(
+            "--poll/--no-poll",
+            help="Poll Tau run-status after execution. --no-poll is ignored with --execute.",
+        ),
+    ] = True,
     viewer_link: Annotated[
         bool,
         typer.Option("--viewer-link", help="Ask Tau for a React Flow DAG viewer link."),
@@ -710,6 +727,10 @@ def compete(
     )
     bundle = compile_tau_dag_bundle(input_payload)
     _emit_dag_chart(bundle, execute=execute)
+    tau_stream_monitoring_policy = _tau_stream_monitoring_policy(
+        execute=execute, requested_poll=poll
+    )
+    effective_poll = bool(tau_stream_monitoring_policy["effective_poll"])
     lifecycle = {"status": "skipped", "mode": browser_tab_lifecycle}
     browser_availability = _skipped_browser_availability("not_executing" if not execute else "not_checked")
     if bundle.get("status") != "NEEDS_INTERVIEW" and execute and not _has_browser_handlers(input_payload):
@@ -797,7 +818,7 @@ def compete(
                         execution = run_tau_dag_bundle(
                             bundle,
                             tau_project_root=tau_project_root,
-                            poll=poll,
+                            poll=effective_poll,
                             poll_interval_seconds=poll_interval_seconds,
                             poll_timeout_seconds=poll_timeout_seconds,
                             viewer_link=viewer_link,
@@ -843,6 +864,7 @@ def compete(
         "browser_provider_availability": browser_availability,
         "browser_provider_selection": browser_selection,
         "browser_tab_lifecycle": lifecycle,
+        "tau_stream_monitoring_policy": tau_stream_monitoring_policy,
     }
     if json_output:
         typer.echo(json.dumps(output, indent=2, sort_keys=True))
@@ -889,6 +911,27 @@ def _skipped_browser_provider_selection() -> dict[str, Any]:
         "mocked": False,
         "live": False,
         "reason": "not_checked",
+    }
+
+
+def _tau_stream_monitoring_policy(*, execute: bool, requested_poll: bool) -> dict[str, Any]:
+    effective_poll = requested_poll or execute
+    status = "ENFORCED" if execute and not requested_poll else "READY"
+    reason = (
+        "--execute requires continuous Tau JSON stream polling; --no-poll is "
+        "accepted for backward-compatible argv parsing but ignored."
+        if execute and not requested_poll
+        else "polling policy satisfied"
+    )
+    return {
+        "schema": "ask.tau_stream_monitoring_policy.v1",
+        "status": status,
+        "requested_poll": requested_poll,
+        "effective_poll": effective_poll,
+        "must_monitor_until_terminal": bool(execute),
+        "terminal_statuses": ["PASS", "FAIL", "BLOCKED", "NEEDS_ATTENTION"],
+        "stream_sources": ["events.jsonl", "dag-progress.json", "node-receipts"],
+        "reason": reason,
     }
 
 
