@@ -293,6 +293,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_miss_audit.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-frame-evidence)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_frame_evidence.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-salient-fact-memory)
     shift || true
     prepare_python_environment

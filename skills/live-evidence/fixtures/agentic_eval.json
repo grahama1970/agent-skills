@@ -1168,6 +1168,95 @@
       "notes": "LIVE MONITORED MEETING end-to-end: an invented Sparta standup rendered turn-by-turn by the live chatterbox server, played through a PipeWire null sink, transcribed by Docker RealtimeSTT (GPU), and answered down the full resolver -> retrieval -> gpt-5.5 surface selector -> card path. The memory-recall card is judged SEMANTICALLY SIMILAR to the expected read-first rules by an agentic SciLLM judge -- the real live-audio card-surfacing capability, gated. The meeting also carries a second spoken question so the assistant is monitoring a realistic multi-question call, but the gate is the memory card because live-audio research-proposal detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically by eval_action_lane instead. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM. The denser sparta-standup-invented and meeting-campaign scenarios remain diagnostics that still expose the STT segmentation flake."
     },
     {
+      "name": "screenshot-dependent-question-requires-correct-frame",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-frame-evidence"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "frame event has stable id and hash: PASS",
+          "visual card accepts exact frame: PASS",
+          "visual card holds without frame: PASS",
+          "nearby irrelevant frame rejected: PASS",
+          "audio-only card does not require screenshot: PASS",
+          "publication receipt carries frame refs: PASS",
+          "frame evidence: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/visual_accept/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/visual_missing/reason_codes/0",
+            "equals": "visual_card_missing_frame_ref"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/visual_wrong_frame/reason_codes/0",
+            "equals": "unresolved_frame_provenance"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/audio_only/reason_codes/0",
+            "equals": "audio_only_no_frame_required"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/publication_decision/frame_refs/0",
+            "equals": "frame_913eccd6bbc97b634af13093aaeefdeb:sha256:53fc3343770c07cb423dcd410e661e9658aa36ca85ee01d61fd6f56fa7e8957d"
+          }
+        ]
+      },
+      "notes": "MVP 5 focused guard: screenshot/frame evidence is first-class and optional. Visual-dependent cards require an exact frame id plus sha256 reference; missing or nearby-wrong frames fail closed. Audio-only cards do not wait for screenshots. This does not claim live screen capture is enabled."
+    },
+    {
+      "name": "audio-only-question-does-not-require-screenshot",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-frame-evidence"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "audio-only card does not require screenshot: PASS",
+          "frame evidence: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/audio_only/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/audio_only/reason_codes/0",
+            "equals": "audio_only_no_frame_required"
+          }
+        ]
+      },
+      "notes": "MVP 5 companion guard: frame capture remains optional; audio-only cards are not blocked by absent screenshots."
+    },
+    {
       "name": "relevance-filter-adversarial",
       "type": "positive",
       "real_world": true,

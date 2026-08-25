@@ -242,11 +242,13 @@ def _decision(
         answer_revision=incoming.question_revision,
         transcript_refs=transcript_refs,
         source_refs=source_refs,
+        frame_refs=list(incoming.frame_refs),
         rank_components={
             "active_question_match": active,
             "active_question_id": active_question_id or "",
             "status_weight": 1 if incoming.status is CardStatus.SUPPORTED else 0,
             "source_count": len(incoming.sources),
+            "frame_count": len(incoming.frame_refs),
             "visible_index": _visible_index(cards, incoming.card_id),
         },
         visible_card_ids=[card.card_id for card in cards],

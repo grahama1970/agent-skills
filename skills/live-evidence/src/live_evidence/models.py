@@ -193,6 +193,22 @@ class PublicationStatus(StrEnum):
     SUPERSEDED = "superseded"
 
 
+class FrameChangeReason(StrEnum):
+    """Why a screen frame was admitted as evidence."""
+
+    INITIAL = "initial"
+    VISUAL_CHANGE = "visual_change"
+    MANUAL_MARKER = "manual_marker"
+
+
+class FrameRetention(StrEnum):
+    """How long a captured screen frame may be retained."""
+
+    SESSION_ONLY = "session_only"
+    REDACTED = "redacted"
+    EXPLICIT_RETAIN = "explicit_retain"
+
+
 class CardPublicationDecision(BaseModel):
     """Auditable output of the card-publication reducer.
 
@@ -218,6 +234,7 @@ class CardPublicationDecision(BaseModel):
     answer_revision: int = Field(ge=0)
     transcript_refs: list[str] = Field(default_factory=list, max_length=16)
     source_refs: list[str] = Field(default_factory=list, max_length=16)
+    frame_refs: list[str] = Field(default_factory=list, max_length=16)
     rank_components: dict[str, int | float | str | bool] = Field(default_factory=dict)
     visible_card_ids: list[str] = Field(default_factory=list, max_length=100)
 
@@ -282,6 +299,59 @@ class TranscriptEvent(BaseModel):
         if self.start_ms is not None and self.end_ms is not None and self.end_ms < self.start_ms:
             raise ValueError("end_ms must be greater than or equal to start_ms")
         return self
+
+
+class FrameRegion(BaseModel):
+    """One bounded region inside a captured screen frame."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    x: int = Field(ge=0)
+    y: int = Field(ge=0)
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+
+
+class FrameEvidence(BaseModel):
+    """First-class timecoded screen evidence.
+
+    Frame events are optional: audio-only cards should not depend on them. When
+    a card does depend on a frame, it must reference the exact frame id and
+    content hash rather than a nearby timestamp.
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    schema_id: Literal["live_evidence.frame_evidence.v1"] = Field(
+        default="live_evidence.frame_evidence.v1",
+        validation_alias="schema",
+        serialization_alias="schema",
+    )
+    frame_id: str = Field(min_length=8, max_length=96)
+    captured_at: datetime = Field(default_factory=utc_now)
+    source: str = Field(min_length=1, max_length=160)
+    content_sha256: str = Field(min_length=64, max_length=64)
+    change_reason: FrameChangeReason
+    retention: FrameRetention = FrameRetention.SESSION_ONLY
+    path: str | None = Field(default=None, max_length=2_000)
+    transcript_event_ids: list[str] = Field(default_factory=list, max_length=16)
+    region: FrameRegion | None = None
+    observations: list[str] = Field(default_factory=list, max_length=8)
+
+    @field_validator("captured_at")
+    @classmethod
+    def validate_frame_time(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("captured_at must be timezone-aware")
+        return value.astimezone(timezone.utc)
+
+    @field_validator("content_sha256")
+    @classmethod
+    def validate_sha256(cls, value: str) -> str:
+        normalized = value.lower()
+        if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
+            raise ValueError("content_sha256 must be a lowercase sha256 hex digest")
+        return normalized
 
 
 class EventSpan(BaseModel):
@@ -496,6 +566,7 @@ class EvidenceCard(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     status: CardStatus
     sources: list[EvidenceSource] = Field(default_factory=list, max_length=8)
+    frame_refs: list[str] = Field(default_factory=list, max_length=8)
     lanes: list[RetrievalLane] = Field(default_factory=list)
     clarifications: list[ClarificationItem] = Field(default_factory=list, max_length=6)
     # Question identity, so an answer can be fenced against the question that
