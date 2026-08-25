@@ -82,23 +82,26 @@ def main() -> None:
     for p in projects:
         slug = p["slug"]
         repo = PROJECT_REPO.get(slug)
-        vis = _repo_visibility(repo) if repo else "PUBLIC"
 
-        if vis == "PUBLIC":
-            entries.append(
-                {"slug": slug, "name": p["name"], "visibility": "public",
-                 "evidence_access": "source", "href": p["href"], "abstract": None}
-            )
-            continue
-
-        # Private work repo: prefer a curated PUBLIC overview repo if one exists
-        # and is public (the human-maintained public face). No link to private.
+        # Curated public overview repos are the intended public face for private
+        # work. Check these before local work-repo visibility, because CI only
+        # checks out agent-skills; sibling private repos are absent there and
+        # must not be misclassified as public source.
         overview = PROJECT_PUBLIC_OVERVIEW.get(slug)
         if overview and _remote_visibility(overview) == "PUBLIC":
             entries.append(
                 {"slug": slug, "name": p["name"], "visibility": "public-overview",
                  "evidence_access": "abstract", "href": f"https://github.com/{overview}",
                  "abstract": None, "note": "Public product overview; underlying system and evidence are private."}
+            )
+            continue
+
+        vis = _repo_visibility(repo) if repo else "PUBLIC"
+
+        if vis == "PUBLIC":
+            entries.append(
+                {"slug": slug, "name": p["name"], "visibility": "public",
+                 "evidence_access": "source", "href": p["href"], "abstract": None}
             )
             continue
 
