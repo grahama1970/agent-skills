@@ -162,7 +162,15 @@ class EvidenceCoordinator:
         # slow result is recognised as stale at publish time, not overwriting.
         question_id, question_revision = await self._state.revise_question(decision.query)
         await self._state.set_thread(decision.thread)
-        task = asyncio.create_task(self._retrieve(decision, question_id, question_revision))
+        task = asyncio.create_task(
+            self._retrieve(
+                decision,
+                question_id,
+                question_revision,
+                session_id=snapshot.session.session_id,
+                policy_digest=digest,
+            )
+        )
         self._tasks.add(task)
         task.add_done_callback(self._task_done)
 
@@ -195,13 +203,19 @@ class EvidenceCoordinator:
         logger.warning("salient fact UNCONFIRMED fact_id={} ({})", fact.fact_id[:12], detail)
 
     async def _surface_order(
-        self, query: str, thread: str, ranked: list[EvidenceSource]
+        self,
+        query: str,
+        thread: str,
+        ranked: list[EvidenceSource],
+        *,
+        session_id: str,
+        policy_digest: str,
     ) -> tuple[list[EvidenceSource], bool]:
         """Return ordered sources and whether the card should surface."""
         if is_code_location_query(query):
             receipt = {"mode": "deterministic_code_location", "applied": True, "surface": True}
-            await self._journal.append(self._state.session_id(), "surface_selection", receipt,
-                                       policy_digest=self._state.session_policy_digest())
+            await self._journal.append(session_id, "surface_selection", receipt,
+                                       policy_digest=policy_digest)
             return ranked, True
         if not SurfaceSelector.enabled() or not ranked:
             return ranked, True
@@ -209,8 +223,8 @@ class EvidenceCoordinator:
             self._selector.order, query, thread, ranked
         )
         await self._journal.append(
-            self._state.session_id(), "surface_selection", receipt,
-            policy_digest=self._state.session_policy_digest(),
+            session_id, "surface_selection", receipt,
+            policy_digest=policy_digest,
         )
         surface = bool(receipt.get("surface", True))
         if not surface and should_force_surface_source_backed_code(query, reordered):
@@ -222,23 +236,25 @@ class EvidenceCoordinator:
                 "reason": "Current-source coding evidence matched a bounded code problem.",
             }
             await self._journal.append(
-                self._state.session_id(),
+                session_id,
                 "surface_selection",
                 override,
-                policy_digest=self._state.session_policy_digest(),
+                policy_digest=policy_digest,
             )
             return reordered, True
         return reordered, surface
 
-    async def _journal_latest_publication_decision(self) -> None:
+    async def _journal_latest_publication_decision(
+        self, session_id: str | None = None, policy_digest: str | None = None
+    ) -> None:
         decision = await self._state.latest_card_publication_decision()
         if decision is None:
             return
         await self._journal.append(
-            self._state.session_id(),
+            session_id or self._state.session_id(),
             "card_publication_decision",
             decision,
-            policy_digest=self._state.session_policy_digest(),
+            policy_digest=policy_digest or self._state.session_policy_digest(),
         )
 
     async def _propose_actions(self, verdict, decision, question_id: str,
@@ -506,6 +522,9 @@ class EvidenceCoordinator:
         decision: TriggerDecision,
         question_id: str,
         question_revision: int,
+        *,
+        session_id: str,
+        policy_digest: str,
     ) -> None:
         await self._state.set_lane(RetrievalLane.MEMORY, LaneState.RUNNING, decision.reason)
         await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
@@ -582,10 +601,10 @@ class EvidenceCoordinator:
             if expanded_query:
                 expanded = await self._ripgrep.retrieve(expanded_query)
                 await self._journal.append(
-                    self._state.session_id(),
+                    session_id,
                     "current_source_query_expanded",
                     {"query": expanded_query, "result_count": len(expanded.sources)},
-                    policy_digest=self._state.session_policy_digest(),
+                    policy_digest=policy_digest,
                 )
                 await self._state.set_lane(
                     RetrievalLane.RIPGREP,
@@ -604,7 +623,13 @@ class EvidenceCoordinator:
         policy = self._state.session_policy()
         await self._propose_actions(verdict, decision, question_id, question_revision, policy)
 
-        ranked, surface = await self._surface_order(query, decision.thread, ranked)
+        ranked, surface = await self._surface_order(
+            query,
+            decision.thread,
+            ranked,
+            session_id=session_id,
+            policy_digest=policy_digest,
+        )
         if not surface:
             # Filtering agent judged this turn not card-worthy (rhetorical,
             # greeting, logistics, bare project mention) or its evidence
@@ -616,7 +641,7 @@ class EvidenceCoordinator:
             return
 
         await self._journal.append(
-            self._state.session_id(),
+            session_id,
             "answer_needed_moment",
             {
                 "schema": "live_evidence.answer_needed_moment.v1",
@@ -628,7 +653,7 @@ class EvidenceCoordinator:
                 "trigger_reason": decision.reason,
                 "surface_gate": "accepted",
             },
-            policy_digest=self._state.session_policy_digest(),
+            policy_digest=policy_digest,
         )
 
         # No resolver -> cannot judge readiness; fall back to the legacy predicate.
@@ -651,12 +676,12 @@ class EvidenceCoordinator:
         )
         digest = await self._state.open_ledger(question_id, question_revision, entries)
         await self._journal.append(
-            self._state.session_id(),
+            session_id,
             "requirement_ledger_opened",
             {"question_id": question_id, "question_revision": question_revision,
              "ledger_digest": digest,
              "entries": [e.model_dump(mode="json") for e in entries]},
-            policy_digest=self._state.session_policy_digest(),
+            policy_digest=policy_digest,
         )
         blocking = await self._state.blocking_unresolved(question_id, question_revision)
         if blocking:
@@ -729,7 +754,7 @@ class EvidenceCoordinator:
             update={
                 "question_id": question_id,
                 "question_revision": question_revision,
-                "policy_digest": self._state.session_policy_digest(),
+                "policy_digest": policy_digest,
                 "ledger_digest": ledger_digest(ledger_entries) if ledger_entries else None,
                 "assumptions": [
                     entry.text
@@ -739,15 +764,15 @@ class EvidenceCoordinator:
             }
         )
         snapshot = await self._state.publish_card_fenced(card)
-        await self._journal_latest_publication_decision()
+        await self._journal_latest_publication_decision(session_id, policy_digest)
         if snapshot is None:
             # The question moved on while this ran; keep the work as an audit
             # event rather than discarding it silently.
             await self._journal.append(
-                self._state.session_id(),
+                session_id,
                 "evidence_card_discarded_stale_revision",
                 card,
-                policy_digest=self._state.session_policy_digest(),
+                policy_digest=policy_digest,
             )
             logger.info(
                 "discarded stale result question_id={} revision={} latency_ms={}",
@@ -757,10 +782,10 @@ class EvidenceCoordinator:
             )
             return
         await self._journal.append(
-            snapshot.session.session_id,
+            session_id,
             "evidence_card",
             card,
-            policy_digest=self._state.session_policy_digest(),
+            policy_digest=policy_digest,
         )
         from .actions import propose_research, research_warranted
 
@@ -778,6 +803,8 @@ class EvidenceCoordinator:
                 card=card, query=query,
                 evidence_excerpts=[source.excerpt[:1_200] for source in ranked[:4]],
                 question_id=question_id, question_revision=question_revision,
+                session_id=session_id,
+                policy_digest=policy_digest,
             )
             lane_state = (
                 LaneState.OK if outcome is not None and outcome.ok else LaneState.DEGRADED
@@ -795,7 +822,7 @@ class EvidenceCoordinator:
                     await self._state.publish_card_fenced(
                         card.model_copy(update={"sources": merged[:8]})
                     )
-                    await self._journal_latest_publication_decision()
+                    await self._journal_latest_publication_decision(session_id, policy_digest)
         logger.info(
             "evidence card status={} sources={} revision={} latency_ms={}",
             card.status.value,

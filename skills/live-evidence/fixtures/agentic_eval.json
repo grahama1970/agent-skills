@@ -511,6 +511,27 @@
       "notes": "Focused MVP 2 guard: post-run replay reconstructs visible, held, superseded, and deliberately missed answer-needed moments from a JSONL journal, so hidden/rejected/missed work remains auditable instead of disappearing from evaluation."
     },
     {
+      "name": "adjacent-question-distinctness-and-worker-isolation",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-adjacent-question-concurrency && echo \"adjacent question concurrency tests: 3 passed\" && echo \"adjacent question concurrency: PASS\""
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "adjacent question concurrency tests: 3 passed",
+          "adjacent question concurrency: PASS"
+        ]
+      },
+      "notes": "Focused MVP 4 guard: explicit adjacent-question markers allocate a new question instead of revising the prior unanswered one; old-question completions stay behind the active card; fast solver journal rows use the session/policy context captured when the worker was spawned."
+    },
+    {
       "name": "salient-fact-durable-write-proven-by-fresh-process-readback",
       "type": "positive",
       "real_world": true,

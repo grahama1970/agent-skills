@@ -279,6 +279,15 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_revision_fence.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-adjacent-question-concurrency)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev pytest \
+      "$SCRIPT_DIR/tests/test_state_card_fence.py::test_explicit_adjacent_question_marker_allocates_new_question" \
+      "$SCRIPT_DIR/tests/test_state_card_fence.py::test_superseded_question_completion_stays_behind_active_card" \
+      "$SCRIPT_DIR/tests/test_fast_path_context.py::test_fast_solver_journals_captured_session_context" \
+      -q
+    ;;
   eval-miss-audit)
     shift || true
     prepare_python_environment

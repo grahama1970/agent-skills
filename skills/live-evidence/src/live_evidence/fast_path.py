@@ -21,12 +21,14 @@ from .solver import FastSolver, SolverChunk, SolverOutcome
 PUBLISH_INTERVAL_S = 0.4
 
 
-async def _journal_latest_publication_decision(state: Any, journal: Any, policy_digest: str) -> None:
+async def _journal_latest_publication_decision(
+    state: Any, journal: Any, session_id: str, policy_digest: str
+) -> None:
     decision = await state.latest_card_publication_decision()
     if decision is None:
         return
     await journal.append(
-        state.session_id(),
+        session_id,
         "card_publication_decision",
         decision,
         policy_digest=policy_digest,
@@ -43,6 +45,8 @@ async def stream_fast_answer(
     evidence_excerpts: list[str],
     question_id: str,
     question_revision: int,
+    session_id: str,
+    policy_digest: str,
 ) -> SolverOutcome | None:
     """Stream the answer into the already-published card. Returns the final
     outcome, or None when the revision went stale mid-stream."""
@@ -63,7 +67,6 @@ async def stream_fast_answer(
     last_publish = 0.0
     first_content_journaled = False
     stale = False
-    policy_digest = state.session_policy_digest()
     try:
         while True:
             item = await queue.get()
@@ -78,7 +81,7 @@ async def stream_fast_answer(
             if not first_content_journaled:
                 first_content_journaled = True
                 await journal.append(
-                    state.session_id(), "fast_solver_first_content",
+                    session_id, "fast_solver_first_content",
                     {"question_id": question_id, "question_revision": question_revision,
                      "elapsed_s": round(item.elapsed_s, 3)},
                     policy_digest=policy_digest,
@@ -89,11 +92,13 @@ async def stream_fast_answer(
                 snapshot = await state.publish_card_fenced(
                     card.model_copy(update={"answer": accumulated[:1_200]})
                 )
-                await _journal_latest_publication_decision(state, journal, policy_digest)
+                await _journal_latest_publication_decision(
+                    state, journal, session_id, policy_digest
+                )
                 if snapshot is None:
                     stale = True
                     await journal.append(
-                        state.session_id(), "fast_solver_discarded_stale_revision",
+                        session_id, "fast_solver_discarded_stale_revision",
                         {"question_id": question_id, "question_revision": question_revision,
                          "chars_discarded": len(accumulated)},
                         policy_digest=policy_digest,
@@ -105,7 +110,7 @@ async def stream_fast_answer(
         return None
     if outcome is None or not outcome.ok:
         await journal.append(
-            state.session_id(), "fast_solver_failed",
+            session_id, "fast_solver_failed",
             {"question_id": question_id, "question_revision": question_revision,
              "error": outcome.error if outcome else "no_outcome"},
             policy_digest=policy_digest,
@@ -140,10 +145,10 @@ async def stream_fast_answer(
         }
     )
     snapshot = await state.publish_card_fenced(final)
-    await _journal_latest_publication_decision(state, journal, policy_digest)
+    await _journal_latest_publication_decision(state, journal, session_id, policy_digest)
     if snapshot is None:
         await journal.append(
-            state.session_id(), "fast_solver_discarded_stale_revision",
+            session_id, "fast_solver_discarded_stale_revision",
             {**receipt, "at": "final_publish"}, policy_digest=policy_digest,
         )
         return None
@@ -151,10 +156,10 @@ async def stream_fast_answer(
     # placeholder publish -- reviewers and evals read answers from the
     # journal after cards rotate out of live state.
     await journal.append(
-        state.session_id(), "evidence_card", final, policy_digest=policy_digest
+        session_id, "evidence_card", final, policy_digest=policy_digest
     )
     await journal.append(
-        state.session_id(), "fast_solver_receipt", receipt, policy_digest=policy_digest
+        session_id, "fast_solver_receipt", receipt, policy_digest=policy_digest
     )
     logger.info(
         "fast solver answered rev={} first_content={}s total={}s chunks={}",

@@ -81,6 +81,10 @@ def test_duplicate_current_question_reconciles_to_one_visible_card(tmp_path) -> 
     asyncio.run(_assert_duplicate_current_question_reconciles_to_one_visible_card(tmp_path))
 
 
+def test_explicit_adjacent_question_marker_allocates_new_question(tmp_path) -> None:
+    asyncio.run(_assert_explicit_adjacent_question_marker_allocates_new_question(tmp_path))
+
+
 async def _assert_later_insufficient_revision_does_not_evict_supported_card(tmp_path) -> None:
     state = RuntimeState(settings(tmp_path), InterviewProfile(name="state-test"))
     await state.start_session(consent_confirmed=True)
@@ -229,6 +233,22 @@ async def _assert_superseded_question_completion_stays_behind_active_card(tmp_pa
     ]
     assert "rate-limited" in snapshot.cards[0].query
     assert "consistent hashing" in snapshot.cards[1].query
+
+
+async def _assert_explicit_adjacent_question_marker_allocates_new_question(tmp_path) -> None:
+    state = RuntimeState(settings(tmp_path), InterviewProfile(name="state-test"))
+    await state.start_session(consent_confirmed=True)
+
+    first_id, first_revision = await state.revise_question(
+        "First question, how do we cache user profile data in Redis?"
+    )
+    second_id, second_revision = await state.revise_question(
+        "Second question, how do we cache user permission data in Redis?"
+    )
+
+    assert first_revision == 1
+    assert second_revision == 1
+    assert second_id != first_id
 
 
 async def _assert_older_supported_revision_replaces_newer_insufficient_card(tmp_path) -> None:

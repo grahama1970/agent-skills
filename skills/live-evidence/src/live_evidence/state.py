@@ -34,6 +34,24 @@ from .publication import reduce_card_publication
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 
 
+NEW_QUESTION_MARKERS = (
+    "second question",
+    "third question",
+    "next question",
+    "another question",
+    "separate question",
+    "different question",
+    "last question",
+    "last thing",
+    "next thing",
+)
+
+
+def _explicit_new_question_marker(text: str) -> bool:
+    lower = text.casefold()
+    return any(marker in lower for marker in NEW_QUESTION_MARKERS)
+
+
 def _card_should_replace(displayed: EvidenceCard | None, incoming: EvidenceCard) -> bool:
     """Keep a source-backed card visible over later weak revisions.
 
@@ -425,9 +443,11 @@ class RuntimeState:
             if self._active_question_id and not self._active_question_answered:
                 prior = _content_words(self._active_question_text)
                 new = _content_words(normalized_question)
+                if _explicit_new_question_marker(normalized_question):
+                    fork = True
                 if prior and new:
                     overlap = len(prior & new) / min(len(prior), len(new))
-                    fork = overlap < 0.3
+                    fork = fork or overlap < 0.3
             if (
                 self._active_question_id is None
                 or self._active_question_answered
