@@ -36,7 +36,7 @@ PROVIDERS: dict[str, ProviderProbe] = {
         limited_pattern=r"claude is at capacity|rate limit(?:ed)?|too many requests|you'?ve reached.*limit",
     ),
     "webkimi": ProviderProbe(
-        hosts=("kimi.ai", "kimi.com"),
+        hosts=("kimi.ai",),
         limited_pattern=r"system is currently busy|capacity is busy|too many requests",
     ),
     "webgemini": ProviderProbe(

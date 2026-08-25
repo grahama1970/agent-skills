@@ -45,7 +45,7 @@ def test_probe_detects_webgpt_too_many_requests_without_submission(tmp_path: Pat
         tmp_path,
         tabs=[
             {"id": 111, "windowId": 1, "title": "ChatGPT", "url": "https://chatgpt.com/", "active": True},
-            {"id": 222, "windowId": 1, "title": "Kimi", "url": "https://www.kimi.com/", "active": True},
+            {"id": 222, "windowId": 1, "title": "Kimi", "url": "https://www.kimi.ai/", "active": True},
         ],
         tab_text={
             "111": "Too many requests\nYou're making requests too quickly. Please wait a few minutes.",
@@ -66,6 +66,33 @@ def test_probe_detects_webgpt_too_many_requests_without_submission(tmp_path: Pat
     assert report["providers"]["webgpt"]["provider_limited"] is True
     assert report["providers"]["webkimi"]["provider_limited"] is False
     assert "chatgpt" not in (tmp_path / "surf-calls.log").read_text(encoding="utf-8")
+
+
+def test_probe_ignores_kimi_com_tabs_for_webkimi(tmp_path: Path) -> None:
+    surf = _fake_surf(
+        tmp_path,
+        tabs=[
+            {"id": 222, "windowId": 1, "title": "Kimi CN", "url": "https://www.kimi.com/", "active": True},
+            {"id": 333, "windowId": 1, "title": "Kimi AI", "url": "https://www.kimi.ai/", "active": False},
+        ],
+        tab_text={
+            "222": "Kimi China-region surface",
+            "333": "Kimi AI ready",
+        },
+    )
+
+    report = probe_browser_provider_availability.probe(
+        providers=["webkimi"],
+        surf_run=surf,
+        max_tabs_per_provider=5,
+        explicit_tabs={},
+    )
+
+    webkimi = report["providers"]["webkimi"]
+    assert webkimi["tab_count"] == 1
+    assert [tab["url"] for tab in webkimi["tabs"]] == ["https://www.kimi.ai/"]
+    assert [tab["tab_id"] for tab in webkimi["checked_tabs"]] == ["333"]
+    assert "--tab-id 222" not in (tmp_path / "surf-calls.log").read_text(encoding="utf-8")
 
 
 def test_probe_uses_only_explicit_provider_tab_when_stale_same_provider_tab_exists(tmp_path: Path) -> None:
@@ -156,15 +183,15 @@ def test_probe_degrades_but_does_not_block_when_one_provider_tab_reads_cleanly(m
                 returncode=0,
                 stdout=json.dumps(
                     [
-                        {"id": 777, "windowId": 1, "title": "Kimi ready", "url": "https://www.kimi.com/", "active": True},
-                        {"id": 666, "windowId": 1, "title": "Kimi stale", "url": "https://www.kimi.com/chat/old", "active": False},
+                        {"id": 777, "windowId": 1, "title": "Kimi ready", "url": "https://www.kimi.ai/", "active": True},
+                        {"id": 666, "windowId": 1, "title": "Kimi stale", "url": "https://www.kimi.ai/chat/old", "active": False},
                     ]
                 ),
                 stderr="",
             )
         if "--tab-id" in command and command[command.index("--tab-id") + 1] == "777":
             payload = {
-                "href": "https://www.kimi.com/",
+                "href": "https://www.kimi.ai/",
                 "title": "Kimi ready",
                 "text_excerpt": "Kimi prompt ready",
                 "limited": False,

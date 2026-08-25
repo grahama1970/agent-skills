@@ -3909,9 +3909,9 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
 PROVIDER_HOSTS = {
     "webgpt": ("chatgpt.com", "www.chatgpt.com"),
     "webclaude": ("claude.ai", "www.claude.ai"),
-    # This account is signed in on kimi.ai. Keep kimi.com as an accepted
-    # provider origin for manually bound tabs and older receipts.
-    "webkimi": ("kimi.ai", "www.kimi.ai", "kimi.com", "www.kimi.com"),
+    # This account is signed in on kimi.ai. kimi.com is the China-region
+    # surface for this workflow and must be treated as provider drift.
+    "webkimi": ("kimi.ai", "www.kimi.ai"),
     "webgemini": ("gemini.google.com",),
     "webgrok": ("grok.com", "www.grok.com", "x.com", "www.x.com"),
     "webdeepseek": ("chat.deepseek.com",),

@@ -21,7 +21,7 @@ def test_plan_result_lists_required_webkimi_eval_cases(tmp_path: Path) -> None:
         run_dir=tmp_path,
         project="webkimi",
         tab_id="837359704",
-        expect_url="https://www.kimi.com/chat/demo",
+        expect_url="https://www.kimi.ai/chat/demo",
     )
 
     assert result["schema"] == "ask.webkimi_sanity_eval.v1"
@@ -63,7 +63,7 @@ def test_render_markdown_preserves_attachment_scope(tmp_path: Path) -> None:
         run_dir=tmp_path,
         project="webkimi",
         tab_id="",
-        expect_url="https://www.kimi.com/chat/demo",
+        expect_url="https://www.kimi.ai/chat/demo",
     )
 
     markdown = webkimi_sanity_eval.render_markdown(result)

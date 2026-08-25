@@ -37,7 +37,7 @@ PI_HOME = Path.home() / ".pi"
 BACKEND_HOST_SUFFIXES = {
     "webgpt": ("chatgpt.com", "chat.openai.com"),
     "webclaude": ("claude.ai",),
-    "webkimi": ("kimi.ai", "kimi.com"),
+    "webkimi": ("kimi.ai",),
     "webgemini": ("gemini.google.com",),
     "webgrok": ("grok.com",),
     "webdeepseek": ("deepseek.com",),

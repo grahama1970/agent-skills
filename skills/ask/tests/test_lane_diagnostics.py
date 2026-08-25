@@ -123,10 +123,10 @@ def test_a_failed_lane_cannot_report_without_running_the_series() -> None:
     assert any("no diagnostic checks run" in e["error"] for e in excinfo.value.errors)
 
 
-def test_webkimi_accepts_signed_in_kimi_ai_origin() -> None:
+def test_webkimi_accepts_only_signed_in_kimi_ai_origin() -> None:
     assert worker._is_provider_url("webkimi", "https://www.kimi.ai/")
     assert worker._is_provider_url("webkimi", "https://www.kimi.ai/chat/example")
-    assert worker._is_provider_url("webkimi", "https://www.kimi.com/chat/example")
+    assert not worker._is_provider_url("webkimi", "https://www.kimi.com/chat/example")
     assert not worker._is_provider_url("webkimi", "https://example.com/")
 
 
@@ -172,6 +172,7 @@ def test_webkimi_kimi_ai_tab_is_not_diagnosed_as_provider_drift(
     provider_check = next(c for c in result["checks"] if c["check"] == "provider_url")
     assert provider_check["status"] == "PASS"
     assert "kimi.ai" in provider_check["hosts"]
+    assert "kimi.com" not in provider_check["hosts"]
 
 
 def test_a_partially_run_series_is_also_refused() -> None:

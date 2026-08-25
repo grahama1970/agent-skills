@@ -377,7 +377,7 @@ def assert_surf_tab_identity(tab_id: str, expect_url: str, commands: list[dict[s
             url = str(tab.get("url") or "")
             if expect_url and normalize_url(url) != normalize_url(expect_url):
                 raise EvalFailure(f"tab {tab_id} URL mismatch: expected {expect_url}, saw {url}")
-            if "kimi.ai" not in url and "kimi.com" not in url:
+            if "kimi.ai" not in url:
                 raise EvalFailure(f"tab {tab_id} is not a Kimi tab: {url}")
             return tab
     raise EvalFailure(f"Kimi tab {tab_id} not found in surf tab.list")

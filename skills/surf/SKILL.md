@@ -296,7 +296,7 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 | Work type | Prefer `/ask` | `$surf` command | Notes |
 | --- | --- | --- | --- |
 | **Code** | `$ask webgpt` | `webgpt.submit` | `$browser-oracle` walk-up or `--project` / `--tab-id`; `--no-activate` for background |
-| **Prose** | `$ask webkimi` | `kimi.submit` | Chrome; `kimi.ai` or `kimi.com` tab |
+| **Prose** | `$ask webkimi` | `kimi.submit` | Chrome; `kimi.ai` tab |
 | **Design** | `$ask webgemini` | `gemini.submit` | Chrome; `gemini.google.com` tab |
 | **Research** | `$ask webperplexity` | `perplexity` | One-shot; not for multi-round review |
 | **Cursor IDE** | `$ask cursor-browser` | `cursor-browser.submit` | **viewId**; requires cursor-browser-bridge |
@@ -903,7 +903,7 @@ Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-c
 | "recover an already completed Grok tab" | `surf grok.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
 | "research on Perplexity", "what is current about X" | `surf perplexity "question" [--no-activate]` (one-shot; no `--tab-id`) |
 
-Tab ids from `surf tab.list` filtered to `gemini.google.com`, `kimi.ai`, `kimi.com`,
+Tab ids from `surf tab.list` filtered to `gemini.google.com`, `kimi.ai`,
 `grok.com`, or `x.com`. Always pass explicit `--tab-id` when the human named a
 tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webgrok`, or
 `/ask webperplexity` for artifacts and bundle validation.

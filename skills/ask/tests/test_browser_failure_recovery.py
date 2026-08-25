@@ -853,14 +853,14 @@ def test_kimi_composer_draft_is_submit_not_accepted_not_provider_rate_limited(tm
         submit_meta={
             "status": "failed",
             "requested_tab_id": "837362335",
-            "current_url": "https://www.kimi.com/chat/example",
+            "current_url": "https://www.kimi.ai/chat/example",
             "kimi_provider_capacity_busy": False,
             "submitted_to_kimi": False,
         },
         browser_oracle={
             "project": "pdf-oxide-mvp-webkimi",
             "tab_id": "837362335",
-            "conversation_url": "https://www.kimi.com/chat/example",
+            "conversation_url": "https://www.kimi.ai/chat/example",
         },
     )
 
@@ -875,7 +875,7 @@ def test_kimi_composer_draft_is_submit_not_accepted_not_provider_rate_limited(tm
         "--backend",
         "webkimi",
         "--url",
-        "https://www.kimi.com/chat/example",
+        "https://www.kimi.ai/chat/example",
         "--manual",
         "--json",
     ]
@@ -891,12 +891,12 @@ def test_kimi_model_selector_failure_is_provider_setup_not_prompt_size(tmp_path:
         submit_meta={
             "status": "failed",
             "requested_tab_id": "837363001",
-            "requested_url": "https://www.kimi.com/",
+            "requested_url": "https://www.kimi.ai/",
         },
         browser_oracle={
             "project": "ask-run-webkimi",
             "tab_id": "837363001",
-            "conversation_url": "https://www.kimi.com/",
+            "conversation_url": "https://www.kimi.ai/",
         },
     )
 

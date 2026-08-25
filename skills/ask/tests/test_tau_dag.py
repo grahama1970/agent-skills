@@ -2109,7 +2109,7 @@ if sys.argv[1:2] == ["resolve"]:
         "backend": "webkimi",
         "project": "webkimi",
         "tab_id": "837361015",
-        "conversation_url": "https://www.kimi.com/chat/image-proof",
+        "conversation_url": "https://www.kimi.ai/chat/image-proof",
         "status": "ok",
     }))
     raise SystemExit(0)
