@@ -123,6 +123,57 @@ def test_a_failed_lane_cannot_report_without_running_the_series() -> None:
     assert any("no diagnostic checks run" in e["error"] for e in excinfo.value.errors)
 
 
+def test_webkimi_accepts_signed_in_kimi_ai_origin() -> None:
+    assert worker._is_provider_url("webkimi", "https://www.kimi.ai/")
+    assert worker._is_provider_url("webkimi", "https://www.kimi.ai/chat/example")
+    assert worker._is_provider_url("webkimi", "https://www.kimi.com/chat/example")
+    assert not worker._is_provider_url("webkimi", "https://example.com/")
+
+
+def test_webkimi_kimi_ai_tab_is_not_diagnosed_as_provider_drift(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run_cmd(command, *, cwd, timeout):
+        if command[1] == "tab.list":
+            return worker.CmdResult(
+                command,
+                0,
+                '[{"id":837414564,"title":"Kimi AI","url":"https://www.kimi.ai/"}]',
+                "",
+                0.01,
+            )
+        if command[1] == "js":
+            return worker.CmdResult(
+                command,
+                0,
+                '{"title":"Kimi AI","url":"https://www.kimi.ai/","visibility":"visible",'
+                '"body_chars":120,"body_tail":"ready","composer_present":true,'
+                '"generating":false,"banners":[]}',
+                "",
+                0.01,
+            )
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr(worker, "_run_cmd", fake_run_cmd)
+    args = argparse.Namespace(
+        surf_run="/home/graham/workspace/experiments/agent-skills/skills/surf/run.sh",
+        handler="webkimi",
+        node_id="handler-webkimi",
+    )
+    result = worker._lane_diagnostics(
+        args,
+        failure_code="browser_submit_not_accepted",
+        submit_meta={"requested_tab_id": "837414564"},
+        browser_oracle={},
+        sentinel="<<<S>>>",
+    )
+
+    assert result["diagnosis"] == "no_live_defect_observed"
+    provider_check = next(c for c in result["checks"] if c["check"] == "provider_url")
+    assert provider_check["status"] == "PASS"
+    assert "kimi.ai" in provider_check["hosts"]
+
+
 def test_a_partially_run_series_is_also_refused() -> None:
     with pytest.raises(SeamViolation) as excinfo:
         enforce(

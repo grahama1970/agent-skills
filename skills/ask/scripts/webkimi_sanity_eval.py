@@ -30,7 +30,7 @@ SURF_RUN = SKILLS_ROOT / "surf" / "run.sh"
 BROWSER_ORACLE_RUN = SKILLS_ROOT / "browser-oracle" / "run.sh"
 DEFAULT_OUTPUT_ROOT = ASK_ROOT / ".ask_artifacts" / "webkimi-sanity"
 DEFAULT_PROJECT = "webkimi"
-DEFAULT_EXPECT_URL = "https://www.kimi.com/chat/19f7fb71-76e2-812e-8000-095c2eacb877?chat_enter_method=home"
+DEFAULT_EXPECT_URL = "https://www.kimi.ai/"
 SCHEMA = "ask.webkimi_sanity_eval.v1"
 
 app = typer.Typer(add_completion=False, help="Run opt-in WebKimi sanity evals.")
@@ -377,7 +377,7 @@ def assert_surf_tab_identity(tab_id: str, expect_url: str, commands: list[dict[s
             url = str(tab.get("url") or "")
             if expect_url and normalize_url(url) != normalize_url(expect_url):
                 raise EvalFailure(f"tab {tab_id} URL mismatch: expected {expect_url}, saw {url}")
-            if "kimi.com" not in url:
+            if "kimi.ai" not in url and "kimi.com" not in url:
                 raise EvalFailure(f"tab {tab_id} is not a Kimi tab: {url}")
             return tab
     raise EvalFailure(f"Kimi tab {tab_id} not found in surf tab.list")
