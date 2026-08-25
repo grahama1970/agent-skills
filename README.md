@@ -136,12 +136,19 @@ I maintain (and sadly break) these kinds of projects and skills continuously. My
     </td>
   </tr>
   <tr>
-    <td align="center" colspan="3">
+    <td align="center">
       <a href="https://github.com/grahama1970/sparta-public">
         <img src="docs/assets/project-cards/sparta-explorer.webp" width="320" alt="Sparta Explorer" />
       </a>
       <br/><strong>Sparta Explorer</strong><br/><em>Space-cyber evidence workbench</em>
       <br/>Public product overview for a local-first investigation workspace that traces space-cyber conclusions from framework guidance to program evidence and human review.
+    </td>
+    <td align="center" colspan="2">
+      <a href="https://github.com/grahama1970/memory-public">
+        <img src="docs/assets/project-cards/memory.webp" width="320" alt="Memory" />
+      </a>
+      <br/><strong>Memory</strong><br/><em>BM25 + graph recall for agents</em>
+      <br/>Public report for the private graph-memory operator behind memory-first recall, Qdrant pointers, and project-agent lessons.
     </td>
   </tr>
 </table>

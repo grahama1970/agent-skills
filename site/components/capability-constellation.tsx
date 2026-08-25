@@ -460,14 +460,26 @@ export function CapabilityConstellation() {
                 )}
               </g>
             );
+            const projectHref = priv && n.href ? n.href : `#project-${n.slug}`;
+            const externalOverview = !!(priv && n.href);
             return isProj && n.slug ? (
               <a
                 key={n.id}
-                href={`#project-${n.slug}`}
+                href={projectHref}
+                target={externalOverview ? '_blank' : undefined}
+                rel={externalOverview ? 'noopener noreferrer' : undefined}
                 data-qid={`constellation:jump:${n.slug}`}
                 data-qs-action="CONSTELLATION_JUMP"
-                aria-label={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
-                title={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
+                aria-label={
+                  externalOverview
+                    ? `Open public overview for ${n.label}`
+                    : n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`
+                }
+                title={
+                  externalOverview
+                    ? `Open public overview for ${n.label}`
+                    : n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`
+                }
                 onClick={(e) => {
                   if (moved.current) e.preventDefault(); // was a drag, not a click
                 }}
@@ -537,10 +549,16 @@ export function CapabilityConstellation() {
                       <li key={p!.id}>
                         {p!.slug ? (
                           <a
-                            href={`#project-${p!.slug}`}
+                            href={p!.visibility && p!.visibility !== 'public' && p!.href ? p!.href : `#project-${p!.slug}`}
+                            target={p!.visibility && p!.visibility !== 'public' && p!.href ? '_blank' : undefined}
+                            rel={p!.visibility && p!.visibility !== 'public' && p!.href ? 'noopener noreferrer' : undefined}
                             data-qid={`constellation:srjump:${p!.slug}`}
                             data-qs-action="CONSTELLATION_SR_JUMP"
-                            title={`Jump to ${p!.label}`}
+                            title={
+                              p!.visibility && p!.visibility !== 'public' && p!.href
+                                ? `Open public overview for ${p!.label}`
+                                : `Jump to ${p!.label}`
+                            }
                           >
                             {p!.label}
                           </a>

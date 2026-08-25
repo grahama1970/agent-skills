@@ -3,7 +3,7 @@
   "sourceCommit": "d912a17f2f",
   "counts": {
     "areas": 8,
-    "projects": 10,
+    "projects": 11,
     "skills": 363
   },
   "documents": [
@@ -390,6 +390,43 @@
       "boundary": "Reports what the sweep reached across sources — not exhaustive coverage."
     },
     {
+      "id": "project:memory",
+      "type": "project",
+      "slug": "memory",
+      "name": "memory",
+      "area": "Agentic memory & persona",
+      "areaId": "memory",
+      "lens": "hybrid",
+      "aliases": [
+        "memory",
+        "rag memory",
+        "persona",
+        "voice",
+        "continuity",
+        "long-lived agent",
+        "graph memory",
+        "memory first recall",
+        "ArangoDB memory",
+        "Qdrant semantic recall",
+        "BM25 graph recall",
+        "agent lessons learned"
+      ],
+      "disciplines": [
+        "memory-knowledge",
+        "persona-simulation",
+        "voice-audio"
+      ],
+      "question": "What should an agent remember before it touches the code?",
+      "summary": "BM25 + graph recall for agents",
+      "body": "What should an agent remember before it touches the code? Memory keeps project lessons, source pointers, and graph relationships queryable before an agent starts scanning. The public shape is architecture only; the operator repo and memory records stay private. Describes the architecture boundary: ArangoDB documents and graph edges, Qdrant vectors, and memory-first routing. It does not expose private repository contents or records.",
+      "href": "https://github.com/grahama1970/memory-public",
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
+      "scoutState": "abstract-only",
+      "requirements": "Public abstract only — the graph-memory operator and memory data are private.",
+      "boundary": "Describes the architecture boundary: ArangoDB documents and graph edges, Qdrant vectors, and memory-first routing. It does not expose private repository contents or records."
+    },
+    {
       "id": "project:watch",
       "type": "project",
       "slug": "watch",
@@ -526,9 +563,9 @@
       "summary": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
       "body": "Comprehensive SPARTA dataset assessment driven by Brandon Bailey persona. Unified skill merging review-sparta (final assessment) and reality-check-sparta (iterative self-correction). Brandon can /dogpile for grey-area research and /ask colleagues for cross-persona consultation. sparta review Unified SPARTA quality assessment driven by the Brandon Bailey persona . Merges final production assessment with iterative self correction, and gives Brandon access to /dogpile for research and /ask for cross persona consultation. Brandon Bailey Persona \"I created SPARTA to give the space community a common language for discussing threats. When I find a gap, I don't just flag it — I research it through /dogpile and ask my colleagues what they think. A real review is collaborative, not a checklist.\" Brandon's Colleagues (via /ask consult) Colleague Expertise When Brandon Asks SOC Analyst Real world threat detection \"Is this attack vector realistic?\" Embry Formal verification \"Can we prove this control works?\" NIST Auditor Compliance frameworks \"Does this NIST mapping hold up?\" Red Team Lead Offensive security \"How would you exploit this gap?\" Brandon's Research (via /dogpile) When a QRA falls in a grey area (Tier 3), Brandon triggers /dogpile to: Search Brave for real world space security incidents Query Perplexity for synthesized analysis Pull ArXiv papers on space system vulnerabilities Check MITRE ATT&CK for technique validation Return structured citations (URL, title, excerpt, relevance) Commands Assessment (from review sparta) Self Correction (from reality check sparta) Monitoring Research & Consultation Reports Review Dimensions Dimension Weight What Brandon Checks QRA Quality 25% Verbatim grounding, citation accuracy, no hallucination Source Fidelity 20% Does DB exactly match SPARTA Data.xlsx? CWE Relevance 20% Are CWEs applicable to space/embedded systems? Cross Reference 15% MITRE ATT&CK, NIST 800 53, D3FEND accuracy Coverage 10% All 216 techniques, 91 countermeasures represented? Control Quality 10% Control to control comparisons meaningful? Dynamic Thresholds (Annealing Schedule) Brandon adjusts standards based on corpus size: Phase QRA Range Anchoring Fail Generic Fail Grounding Min Brandon Says Bootstrap 0 5K 50% 80% 0.50 \"Let's see what we're working with\" Early Growth 5K 15K 40% 70% 0.55 \"Time to raise the bar\" Mid Growth 15K 40K 35% 65% 0.60 \"No more excuses\" Late Growth 40K 80K 30% 60% 0.65 \"Tightening the screws\" Refinement 80K 100K 25% 55% 0.70 \"Time to be strict\" Gold Standard 100K+ 20% 50% 0.75 \"No compromises\" Three Tier Intelligence Tier Source How Brandon Uses It Tier 1 (Vetted) SPARTA QRAs, grounding = 0.75 Direct citati",
       "href": "https://github.com/grahama1970/sparta-public",
-      "visibility": "public",
-      "evidenceAccess": "source",
-      "scoutState": "setup-required",
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
+      "scoutState": "abstract-only",
       "requirements": "Public overview only — the system and its evidence are private.",
       "boundary": "A public methodology overview; the implementation and evidence are under NDA."
     },

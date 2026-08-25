@@ -84,6 +84,14 @@
       "href": "https://github.com/grahama1970/sparta-public",
       "question": "Who decides, when the AI sounds sure? Humans do.",
       "why": "Evidence threads traced from framework guidance to program evidence to a human decision — relevance never becomes authority, candidate coverage never becomes credit."
+    },
+    {
+      "slug": "memory",
+      "name": "memory",
+      "blurb": "BM25 + graph recall for agents",
+      "href": "https://github.com/grahama1970/memory-public",
+      "question": "What should an agent remember before it touches the code?",
+      "why": "Memory keeps project lessons, source pointers, and graph relationships queryable before an agent starts scanning. The public shape is architecture only; the operator repo and memory records stay private."
     }
   ]
 }

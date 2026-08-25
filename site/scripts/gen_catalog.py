@@ -29,6 +29,7 @@ OUT = SITE / "catalog.json"
 # (sparta-explorer indexes the public sparta-review methodology, never the
 # private sparta application.)
 SLUG_TO_SKILL = {"sparta-explorer": "sparta-review"}
+NO_PROJECT_SKILL_BODY = {"memory"}
 
 
 def _skill_text(skill: str) -> tuple[str, str]:
@@ -113,6 +114,9 @@ def main() -> None:
         "scillm": ["multiple model providers", "provider glue", "model gateway"],
         "debugger": ["runtime truth before patching", "inspect program state",
                      "live breakpoint state"],
+        "memory": ["graph memory", "memory first recall", "ArangoDB memory",
+                   "Qdrant semantic recall", "BM25 graph recall",
+                   "agent lessons learned"],
         "sparta-explorer": ["trace compliance claims to evidence", "compliance evidence",
                             "governed evidence"],
     }
@@ -140,6 +144,8 @@ def main() -> None:
                    "Normalizes provider access behind one contract — it does not itself reason or plan."),
         "debugger": ("Python env with the target process reachable for breakpoints.",
                      "Shows real runtime state at a paused frame — it does not fix the bug for you."),
+        "memory": ("Public abstract only — the graph-memory operator and memory data are private.",
+                   "Describes the architecture boundary: ArangoDB documents and graph edges, Qdrant vectors, and memory-first routing. It does not expose private repository contents or records."),
         "sparta-explorer": ("Public overview only — the system and its evidence are private.",
                             "A public methodology overview; the implementation and evidence are under NDA."),
     }
@@ -149,7 +155,10 @@ def main() -> None:
         a = project_area.get(p["slug"], {})
         _req, _bound = SCOUT_META.get(p["slug"], ("", ""))
         skill = SLUG_TO_SKILL.get(p["slug"], p["slug"])
-        desc, body = _skill_text(skill)  # public SKILL.md text only
+        desc, body = ("", "") if p["slug"] in NO_PROJECT_SKILL_BODY else _skill_text(skill)
+        project_body = " ".join(
+            part for part in (p.get("question", ""), p.get("why", ""), _bound) if part
+        )
         docs.append(
             {
                 "id": f"project:{p['slug']}",
@@ -162,8 +171,8 @@ def main() -> None:
                 "aliases": a.get("aliases", []) + SCOUT.get(p["slug"], []),
                 "disciplines": a.get("disciplines", []),
                 "question": p.get("question", ""),
-                "summary": p.get("blurb", ""),
-                "body": f"{desc} {body}".strip(),
+                "summary": v.get("abstract") or p.get("blurb", ""),
+                "body": (project_body if p["slug"] in NO_PROJECT_SKILL_BODY else f"{desc} {body}").strip(),
                 "href": v.get("href") or p.get("href"),
                 "visibility": v.get("visibility", "public"),
                 "evidenceAccess": v.get("evidence_access", "source"),

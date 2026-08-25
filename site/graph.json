@@ -2,8 +2,8 @@
   "schema": "grahama.graph.v1",
   "sourceCommit": "d912a17f2f",
   "counts": {
-    "nodes": 19,
-    "edges": 18
+    "nodes": 20,
+    "edges": 19
   },
   "nodes": [
     {
@@ -179,8 +179,8 @@
       "abstract": "Space-cyber evidence threads traced to human decisions — relevance never becomes authority.",
       "taxonomy": "Compliance, security & governance",
       "hasSanityCheck": false,
-      "visibility": "public",
-      "evidenceAccess": "source",
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
       "img": "sparta-explorer"
     },
     {
@@ -230,6 +230,21 @@
       "title": "Creative & media research",
       "lens": "creative",
       "skillCount": 27
+    },
+    {
+      "id": "project:memory",
+      "type": "project",
+      "label": "memory",
+      "slug": "memory",
+      "lens": "hybrid",
+      "href": "https://github.com/grahama1970/memory-public",
+      "question": "What should an agent remember before it touches the code?",
+      "abstract": "BM25 + graph recall for agents",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
+      "img": "memory"
     }
   ],
   "edges": [
@@ -322,6 +337,11 @@
       "source": "practice",
       "target": "area:creative-media",
       "rel": "area"
+    },
+    {
+      "source": "area:memory",
+      "target": "project:memory",
+      "rel": "system"
     }
   ]
 }

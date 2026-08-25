@@ -68,6 +68,11 @@
           "slug": "persona-dream",
           "name": "persona-dream",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md"
+        },
+        {
+          "slug": "memory",
+          "name": "memory",
+          "href": "https://github.com/grahama1970/memory-public"
         }
       ],
       "skillCount": 28
@@ -228,6 +233,6 @@
     "human-collaboration",
     "observability-operations"
   ],
-  "projectCount": 10,
+  "projectCount": 11,
   "sourceCommit": "d912a17f2f"
 }

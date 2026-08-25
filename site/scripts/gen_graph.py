@@ -82,18 +82,20 @@ def main() -> None:
             c = content.get(slug, {})
             inv = inventory.get(slug)
             pid = f"project:{slug}"
-            nodes.append({
+            node = {
                 "id": pid, "type": "project", "label": s["name"], "slug": slug,
                 "lens": a["lens"],
                 "href": v.get("href") or c.get("href"),
                 "question": c.get("question", ""),
-                "abstract": c.get("blurb") or c.get("why", ""),
+                "abstract": v.get("abstract") or c.get("blurb") or c.get("why", ""),
                 "taxonomy": inv["c"] if inv else a["title"],
                 "hasSanityCheck": bool(inv and inv.get("s")),
                 "visibility": v.get("visibility", "public"),
                 "evidenceAccess": v.get("evidence_access", "source"),
-                "img": slug,
-            })
+            }
+            if (SITE / "public" / "projects" / "thumbs" / f"{slug}.webp").exists():
+                node["img"] = slug
+            nodes.append(node)
             edges.append({"source": aid, "target": pid, "rel": "system"})
 
     out = {

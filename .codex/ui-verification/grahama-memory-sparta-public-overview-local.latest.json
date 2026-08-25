@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-08-25T13:53:47.446167+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "root": "/home/graham/workspace/experiments/agent-skills",
+  "output_root": "/tmp/codex-ui-verification/agent-skills",
+  "url": "http://127.0.0.1:4181/#work",
+  "name": "grahama-memory-sparta-public-overview-local",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-memory-sparta-public-overview-local/20260825T135340Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-memory-sparta-public-overview-local/20260825T135340Z.read.json"
+}

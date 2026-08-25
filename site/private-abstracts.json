@@ -11,5 +11,17 @@
       "approved_by": null,
       "approved_at": null
     }
+  },
+  "projects": {
+    "memory": {
+      "name": "Memory — graph recall operator",
+      "area": "memory",
+      "lens": "hybrid",
+      "evidence_access": "abstract",
+      "abstract": "A private graph-memory operator for agent lessons, code navigation, and recall routing. Public details are limited to the architecture pattern: ArangoDB owns documents and graph edges, Qdrant owns vectors, and agents query memory before scanning code.",
+      "disclosure_boundary": "No private repository contents, database records, credentials, local service endpoints, or operational memory data. Public claims are limited to architecture, command shape, and project role.",
+      "approved_by": "Graham Anderson",
+      "approved_at": "2026-08-25"
+    }
   }
 }

@@ -77,10 +77,20 @@
     {
       "slug": "sparta-explorer",
       "name": "sparta explorer",
-      "visibility": "public",
-      "evidence_access": "source",
+      "visibility": "public-overview",
+      "evidence_access": "abstract",
       "href": "https://github.com/grahama1970/sparta-public",
-      "abstract": null
+      "abstract": null,
+      "note": "Public product overview; underlying system and evidence are private."
+    },
+    {
+      "slug": "memory",
+      "name": "memory",
+      "visibility": "public-overview",
+      "evidence_access": "abstract",
+      "href": "https://github.com/grahama1970/memory-public",
+      "abstract": null,
+      "note": "Public product overview; underlying system and evidence are private."
     }
   ],
   "hidden": []

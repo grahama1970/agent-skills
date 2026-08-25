@@ -182,70 +182,73 @@ export function KeyboardNav() {
         </kbd>
       </button>
 
-      <div
-        className={`modal-overlay${open ? ' is-active' : ''}`}
-        aria-hidden="true"
-        onClick={close}
-      />
-      <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="shortcut-modal-title"
-        aria-hidden={!open}
-        className={`shortcut-modal${open ? ' is-active' : ''}`}
-      >
-        <div className="shortcut-modal__head">
-          <div className="shortcut-modal__title-row">
-            <span aria-hidden="true" className="shortcut-modal__icon">⌨</span>
-            <h2 id="shortcut-modal-title" className="shortcut-modal__title machine">
-              Keyboard Shortcuts
-            </h2>
-          </div>
-          <button
-            type="button"
-            data-qid="shortcuts:action:close"
-            data-qs-action="SHORTCUTS_CLOSE"
-            title="Close shortcuts modal"
+      {open && (
+        <>
+          <div
+            className="modal-overlay is-active"
+            aria-hidden="true"
             onClick={close}
-            className="shortcut-modal__close"
+          />
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shortcut-modal-title"
+            className="shortcut-modal is-active"
           >
-            ×
-          </button>
-        </div>
-        <div className="shortcut-modal__body">
-          {SHORTCUTS.map((group) => (
-            <div key={group.category}>
-              <h3 className="shortcut-modal__group machine">
-                {group.category}
-              </h3>
-              <dl className="shortcut-modal__list">
-                {group.items.map((item) => (
-                  <div
-                    key={item.desc}
-                    className="shortcut-modal__item"
-                  >
-                    <dt>
-                      {item.keys.map((k, i) => (
-                        <span key={k + i}>
-                          {i > 0 && <span className="shortcut-modal__plus"> + </span>}
-                          <kbd className="shortcut-modal__kbd machine">
-                            {k}
-                          </kbd>
-                        </span>
-                      ))}
-                    </dt>
-                    <dd className="shortcut-modal__desc machine">{item.desc}</dd>
-                  </div>
-                ))}
-              </dl>
+            <div className="shortcut-modal__head">
+              <div className="shortcut-modal__title-row">
+                <span aria-hidden="true" className="shortcut-modal__icon">⌨</span>
+                <h2 id="shortcut-modal-title" className="shortcut-modal__title machine">
+                  Keyboard Shortcuts
+                </h2>
+              </div>
+              <button
+                type="button"
+                data-qid="shortcuts:action:close"
+                data-qs-action="SHORTCUTS_CLOSE"
+                title="Close shortcuts modal"
+                onClick={close}
+                className="shortcut-modal__close"
+              >
+                ×
+              </button>
             </div>
-          ))}
-        </div>
-        <div className="shortcut-modal__foot machine">
-          Press ? or Esc anytime to dismiss
-        </div>
-      </div>
+            <div className="shortcut-modal__body">
+              {SHORTCUTS.map((group) => (
+                <div key={group.category}>
+                  <h3 className="shortcut-modal__group machine">
+                    {group.category}
+                  </h3>
+                  <dl className="shortcut-modal__list">
+                    {group.items.map((item) => (
+                      <div
+                        key={item.desc}
+                        className="shortcut-modal__item"
+                      >
+                        <dt>
+                          {item.keys.map((k, i) => (
+                            <span key={k + i}>
+                              {i > 0 && <span className="shortcut-modal__plus"> + </span>}
+                              <kbd className="shortcut-modal__kbd machine">
+                                {k}
+                              </kbd>
+                            </span>
+                          ))}
+                        </dt>
+                        <dd className="shortcut-modal__desc machine">{item.desc}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ))}
+            </div>
+            <div className="shortcut-modal__foot machine">
+              Press ? or Esc anytime to dismiss
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
