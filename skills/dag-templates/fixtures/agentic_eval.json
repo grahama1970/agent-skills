@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "skill": "dag-templates",
+  "trials": 3,
+  "proof_scope": "entrypoint-backed DAG primitive discovery, customization, PHART validation, and fail-closed slot handling",
+  "claims": {
+    "proves": "agents can find a reusable Tau DAG primitive by intent, materialize a project-specific copy, preserve source metadata, and validate/chart it through phart-dag-chart",
+    "does_not_prove": "Tau runtime execution, browser/provider behavior, semantic quality of a selected primitive for every possible project, or live cross-repository deployment"
+  },
+  "cases": [
+    {
+      "name": "sanity",
+      "type": "positive",
+      "command": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "dag-templates sanity PASS"
+        ]
+      }
+    },
+    {
+      "name": "generated-materialization-real-world",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp); ../run.sh materialize immutable-goal-mvp-loop --set dag_id=eval-loop --set goal_id=eval-goal --set goal_hash=sha256:3333333333333333333333333333333333333333333333333333333333333333 --set immutable_goal='Deliver an eval MVP with receipts' --set target_repo=local/agent-skills --set target=dag-template-eval --output \"$D\" && ../run.sh chart \"$D\" && test \"$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d[\"_template\"][\"source_id\"] + \":\" + d[\"dag_id\"])' \"$D\")\" = immutable-goal-mvp-loop:eval-loop"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "eval-loop",
+          "brave-search",
+          "ask-escalation",
+          "schema=tau.dag_contract.v1 -> ask.dag.v1"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "unknown-slot-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp); rm -f \"$D\"; ../run.sh materialize immutable-goal-mvp-loop --set unknown=value --output \"$D\""
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": [
+          "unknown slot"
+        ],
+        "stderr_excludes": [
+          "Traceback"
+        ]
+      }
+    }
+  ]
+}

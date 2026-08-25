@@ -1,0 +1,190 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "immutable-goal-mvp-loop",
+  "_template": {
+    "source_id": "immutable-goal-mvp-loop",
+    "source_version": 1,
+    "customized": false
+  },
+  "goal": {
+    "goal_id": "example-immutable-goal",
+    "goal_version": 1,
+    "goal_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "immutable_goal": "Replace this with the human-approved immutable goal before execution."
+  },
+  "target": {
+    "repo": "local/example-project",
+    "target": "example-feature-or-issue"
+  },
+  "entry_node": "freeze-goal",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "max_concurrency": 2,
+    "max_total_attempts": 6,
+    "max_attempts_per_mvp": 2
+  },
+  "nodes": [
+    {
+      "id": "freeze-goal",
+      "role": "goal_guardian",
+      "agent": "goal-drift",
+      "executor": "local",
+      "required_skills": [
+        "goal-drift",
+        "best-practices-tau-dag"
+      ],
+      "required_evidence": [
+        "goal_hash",
+        "scope_boundary"
+      ]
+    },
+    {
+      "id": "decompose-mvps",
+      "role": "planner",
+      "agent": "plan-iterate",
+      "executor": "local",
+      "required_skills": [
+        "best-practices-plan",
+        "best-practices-tau-dag"
+      ],
+      "required_evidence": [
+        "ordered_mvp_list",
+        "stop_conditions"
+      ]
+    },
+    {
+      "id": "implement-mvp",
+      "role": "worker",
+      "agent": "codex",
+      "executor": "local",
+      "max_attempts": 2,
+      "required_evidence": [
+        "changed_artifacts",
+        "focused_proof"
+      ]
+    },
+    {
+      "id": "review-mvp",
+      "role": "reviewer",
+      "agent": "review",
+      "executor": "local",
+      "required_skills": [
+        "review",
+        "best-practices-delivery-proof"
+      ],
+      "required_evidence": [
+        "reviewer_verdict",
+        "missed_requirement_list",
+        "proof_boundary"
+      ]
+    },
+    {
+      "id": "mvp-pass",
+      "role": "gate",
+      "agent": "assess",
+      "executor": "local",
+      "required_evidence": [
+        "acceptance_receipt"
+      ]
+    },
+    {
+      "id": "brave-search",
+      "role": "external_research",
+      "agent": "brave-search",
+      "executor": "local",
+      "trigger": "blocked_or_confused_or_thrash_detected",
+      "required_skills": [
+        "brave-search"
+      ],
+      "required_evidence": [
+        "search_receipt",
+        "candidate_solution_summary"
+      ]
+    },
+    {
+      "id": "ask-escalation",
+      "role": "strategic_reviewer",
+      "agent": "ask",
+      "executor": "local",
+      "trigger": "still_blocked_after_brave_search",
+      "required_skills": [
+        "ask"
+      ],
+      "required_evidence": [
+        "ask_run_artifacts",
+        "external_reviewer_recommendation"
+      ]
+    },
+    {
+      "id": "audit-or-block",
+      "role": "terminal_auditor",
+      "agent": "assess",
+      "executor": "local",
+      "required_evidence": [
+        "final_status",
+        "proof_boundary",
+        "next_action_or_blocker"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "freeze-goal",
+      "to": "decompose-mvps"
+    },
+    {
+      "from": "decompose-mvps",
+      "to": "implement-mvp"
+    },
+    {
+      "from": "implement-mvp",
+      "to": "review-mvp"
+    },
+    {
+      "from": "review-mvp",
+      "to": "mvp-pass",
+      "condition": "reviewer_verdict == pass"
+    },
+    {
+      "from": "review-mvp",
+      "to": "brave-search",
+      "condition": "blocked_or_confused_or_thrash_detected"
+    },
+    {
+      "from": "brave-search",
+      "to": "ask-escalation",
+      "condition": "still_blocked_after_search"
+    },
+    {
+      "from": "ask-escalation",
+      "to": "audit-or-block"
+    },
+    {
+      "from": "mvp-pass",
+      "to": "audit-or-block"
+    },
+    {
+      "from": "audit-or-block",
+      "to": "human"
+    }
+  ],
+  "required_evidence": [
+    "mvp_plan",
+    "implementation_receipt",
+    "reviewer_verdict",
+    "escalation_receipt_when_blocked",
+    "proof_boundary"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "reviewer_goal_mismatch",
+    "blocked_without_brave_search_receipt",
+    "blocked_without_ask_receipt_after_search",
+    "human_goal_changed"
+  ]
+}

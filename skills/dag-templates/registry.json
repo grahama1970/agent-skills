@@ -1,0 +1,76 @@
+{
+  "schema": "dag_template_registry.v1",
+  "templates": [
+    {
+      "id": "immutable-goal-mvp-loop",
+      "version": 1,
+      "title": "Immutable Goal MVP Loop",
+      "schema": "tau.dag_contract.v1",
+      "path": "templates/immutable-goal-mvp-loop.tau.dag.json",
+      "owner_skill": "dag-templates",
+      "status": "active",
+      "summary": "Bound a task to an immutable goal, decompose into focused MVPs, implement one MVP at a time, review against the goal, escalate through brave-search and ask when blocked or thrashing, then either continue or stop with receipts.",
+      "use_when": [
+        "A project agent is thrashing or retrying without narrowing the work.",
+        "The human has declared an immutable goal and wants bounded progress.",
+        "Work should be decomposed into small MVPs with reviewer gates.",
+        "Blocked or confused states must trigger brave-search and ask escalation before continuing."
+      ],
+      "tags": [
+        "tau",
+        "immutable-goal",
+        "mvp",
+        "anti-thrash",
+        "reviewer-gate",
+        "brave-search",
+        "ask",
+        "goal-drift"
+      ],
+      "customization_slots": [
+        {
+          "name": "dag_id",
+          "json_pointer": "/dag_id",
+          "required": true,
+          "description": "Project-specific DAG id."
+        },
+        {
+          "name": "goal_id",
+          "json_pointer": "/goal/goal_id",
+          "required": true,
+          "description": "Stable immutable goal identifier."
+        },
+        {
+          "name": "goal_hash",
+          "json_pointer": "/goal/goal_hash",
+          "required": true,
+          "description": "Hash of the immutable goal text or receipt."
+        },
+        {
+          "name": "immutable_goal",
+          "json_pointer": "/goal/immutable_goal",
+          "required": true,
+          "description": "Plain-English goal that only the human may change."
+        },
+        {
+          "name": "target_repo",
+          "json_pointer": "/target/repo",
+          "required": true,
+          "description": "Repository or project under work."
+        },
+        {
+          "name": "target",
+          "json_pointer": "/target/target",
+          "required": true,
+          "description": "Issue, feature, file, or workflow target."
+        }
+      ],
+      "required_evidence": [
+        "mvp_plan",
+        "implementation_receipt",
+        "reviewer_verdict",
+        "escalation_receipt_when_blocked",
+        "proof_boundary"
+      ]
+    }
+  ]
+}
