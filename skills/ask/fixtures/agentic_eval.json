@@ -1758,6 +1758,28 @@
         ]
       },
       "notes": "Regression guard for reviewer lanes that complete transport but omit a parseable VERDICT line, causing project-watchdog's proof gate to refuse closure after a Tau PASS. Includes the exact project-watchdog repair prompt shape: VERDICT: PASS / FAIL / NEEDS_ATTENTION must activate the first-line verdict requirement."
+    },
+    {
+      "name": "execute-no-poll-still-monitors-tau-json-stream",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest -q tests/test_tau_dag.py::test_execute_no_poll_forces_tau_stream_monitoring"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "seams": [
+        "tau_dag.execution"
+      ],
+      "notes": "Regression guard for the unmonitored Ask/Tau path: even when a caller passes --execute --no-poll, the public Ask CLI forces Tau polling and emits tau_stream_monitoring_policy."
     }
   ],
   "capability_claims": [

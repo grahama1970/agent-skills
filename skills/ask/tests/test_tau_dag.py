@@ -3351,6 +3351,56 @@ def test_run_tau_dag_bundle_synthesizes_compete_join_when_all_browser_lanes_need
     assert len(scorecard["degradation_analysis"]["recovery_commands"]) == 2
 
 
+def test_execute_no_poll_forces_tau_stream_monitoring(monkeypatch, tmp_path: Path) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run_tau_dag_bundle(bundle, **kwargs):  # noqa: ANN001, ANN003
+        captured["poll"] = kwargs.get("poll")
+        return {
+            "schema": "ask.tau_dag_execution.v1",
+            "status": "PASS",
+            "ok": True,
+            "mocked": False,
+            "live": True,
+            "provider_live": False,
+            "receipt_dir": str(tmp_path / "receipts"),
+            "receipt_path": str(tmp_path / "receipts" / "dag-receipt.json"),
+            "polls": [{"status": "PASS"}],
+        }
+
+    monkeypatch.setattr(tau_dag_cli, "run_tau_dag_bundle", fake_run_tau_dag_bundle)
+
+    result = CliRunner().invoke(
+        tau_dag_cli.app,
+        [
+            "run",
+            "Ask gpt-5.5 for a short answer.",
+            "--repo",
+            "local/agent-skills",
+            "--target",
+            "stream-monitoring-policy",
+            "--immutable-goal",
+            "Executed Ask/Tau DAGs are monitored until terminal JSON status.",
+            "--handler",
+            "gpt-5.5",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--execute",
+            "--no-poll",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    policy = payload["tau_stream_monitoring_policy"]
+    assert captured["poll"] is True
+    assert policy["status"] == "ENFORCED"
+    assert policy["requested_poll"] is False
+    assert policy["effective_poll"] is True
+    assert policy["must_monitor_until_terminal"] is True
+
+
 def test_tau_dag_cli_json_reports_degraded_join_path(monkeypatch, tmp_path: Path) -> None:
     join_path = tmp_path / "node-artifacts" / "join" / "node-receipt.json"
     join_path.parent.mkdir(parents=True)
