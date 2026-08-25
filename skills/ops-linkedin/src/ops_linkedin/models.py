@@ -27,6 +27,7 @@ REQUEST_SCHEMA = "ops-linkedin.request.v1"
 HANDOFF_SCHEMA = "ops-linkedin.handoff.v1"
 STATUS_SCHEMA = "ops-linkedin.status.v1"
 POLICY_SCHEMA = "ops-linkedin.policy.v1"
+CONTACT_GRAPH_CAPTURE_PLAN_SCHEMA = "ops-linkedin.contact_graph_capture_plan.v1"
 
 
 def _require_utc(value: datetime, field_name: str) -> datetime:
@@ -484,3 +485,50 @@ class PolicyReport(BaseModel):
     prohibited: list[str]
     official_sources: list[AnyHttpUrl]
     caveat: str
+
+
+class ContactGraphTarget(BaseModel):
+    """One named LinkedIn profile to inspect for bounded relationship evidence."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=200)
+    company: str | None = Field(default=None, max_length=200)
+    profile_url: AnyHttpUrl = Field(description="Named https://www.linkedin.com/in/... URL")
+
+    @field_validator("profile_url")
+    @classmethod
+    def profile_url_is_linkedin_profile(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        """Keep the contact graph lane on individual profile pages."""
+
+        if str(value).startswith("https://www.linkedin.com/in/"):
+            return value
+        raise ValueError("profile_url must be an https://www.linkedin.com/in/... URL")
+
+
+class ContactGraphCapturePlan(BaseModel):
+    """Bounded plan for user-authorized read-only relationship capture."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[CONTACT_GRAPH_CAPTURE_PLAN_SCHEMA] = CONTACT_GRAPH_CAPTURE_PLAN_SCHEMA
+    created_at: datetime
+    opportunity: str = Field(min_length=1, max_length=500)
+    targets: list[ContactGraphTarget] = Field(min_length=1, max_length=12)
+    authorization: Literal["USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED"]
+    execution_claim: Literal["NOT_EXECUTED"] = "NOT_EXECUTED"
+    platform_verified: Literal[False] = False
+    allowed_observations: list[str] = Field(min_length=1)
+    prohibited_actions: list[str] = Field(min_length=1)
+    data_minimization: list[str] = Field(min_length=1)
+    output_schema: Literal[
+        "monitor_opportunities.linkedin_contact_graph_evidence.v1"
+    ] = "monitor_opportunities.linkedin_contact_graph_evidence.v1"
+    suggested_surf_commands: list[str] = Field(default_factory=list)
+
+    @field_validator("created_at")
+    @classmethod
+    def created_at_is_utc_aware(cls, value: datetime) -> datetime:
+        """Require receipt timestamps that compare deterministically."""
+
+        return _require_utc(value, "created_at")

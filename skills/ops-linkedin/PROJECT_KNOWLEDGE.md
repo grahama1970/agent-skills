@@ -5,13 +5,15 @@ Last reviewed: 2026-08-24
 ## Immutable goal
 
 Provide useful LinkedIn profile/content/outreach preparation while preventing the agent
-from accessing or acting on LinkedIn broadly. Outbound operations end in a local draft and
-a human-execution handoff with honest proof limits. Graham's own profile is handled by a
-source-derived editable JSON entry and a bounded Surf sync plan.
+from acting on LinkedIn broadly. Outbound operations end in a local draft and a
+human-execution handoff with honest proof limits. Graham's own profile is handled by a
+source-derived editable JSON entry and a bounded Surf sync plan. Named opportunity
+contacts may use a bounded read-only contact graph capture plan for relationship degree
+and visible mutual-contact evidence after explicit authorization.
 
 ## Current readiness
 
-Overall: **READY_FOR_DRAFT_AND_OWN_PROFILE_SYNC_PLANNING**
+Overall: **READY_FOR_DRAFT_PROFILE_SYNC_AND_CONTACT_GRAPH_PLANNING**
 
 | Feature | State | Evidence |
 |---|---|---|
@@ -22,7 +24,8 @@ Overall: **READY_FOR_DRAFT_AND_OWN_PROFILE_SYNC_PLANNING**
 | Human completion attestation | READY | explicit confirmation flag; `platform_verified=false` |
 | Editable own-profile JSON | READY | `profile-entry-export` emits `ops-linkedin.profile_entry.v1` from `RESUME.md` |
 | Own-profile Surf sync plan | READY | `profile-sync-plan` emits `ops-linkedin.profile_sync.v1` with `external_effects=false` |
-| Browser/session automation outside own profile | PROHIBITED | immutable boundary and static sanity gate |
+| Named contact graph capture plan | READY | `contact-graph-capture-plan` emits `ops-linkedin.contact_graph_capture_plan.v1` with `NOT_EXECUTED` |
+| Browser/session automation outside bounded plans | PROHIBITED | immutable boundary and static sanity gate |
 | Live LinkedIn execution receipt | NOT_ESTABLISHED | plan exists; Surf mutation execution is not yet implemented |
 | Official LinkedIn API adapter | NOT_IMPLEMENTED | authorization and separate review required |
 
@@ -33,6 +36,7 @@ Overall: **READY_FOR_DRAFT_AND_OWN_PROFILE_SYNC_PLANNING**
 - Typer CLI with `policy`, `status`, `prepare`, `validate`, and `attest`.
 - Pydantic request, claim, handoff, status, and policy contracts.
 - Pydantic editable profile-entry and profile-sync plan contracts.
+- Pydantic contact-graph capture plan contract for named opportunity contacts.
 - Pure service functions with no network/browser dependencies.
 - Unit tests, non-mocked sanity checks, and an agentic-evals fixture.
 - Dated LinkedIn policy and upstream adaptation reference.
@@ -42,11 +46,12 @@ Overall: **READY_FOR_DRAFT_AND_OWN_PROFILE_SYNC_PLANNING**
 - Chrome extensions or browser plug-ins.
 - WebSocket/DOM bridges.
 - Selenium, Playwright, browser-use, Surf, or equivalent LinkedIn control except the
-  explicit Graham-owned profile sync plan.
+  explicit Graham-owned profile sync plan and the explicit named-contact graph capture
+  plan.
 - Login/session/cookie inspection.
-- Scraping or systematic profile/post viewing.
-- Automated posting, comments, likes, connections, follows, messages, applications, or
-  uploads.
+- Bulk scraping or systematic unrelated profile/post viewing.
+- Automated posting, comments, likes, connections, follows, message/InMail sending,
+  applications, or uploads.
 - Behavior simulation, randomized delays, rate-limit evasion, selector maintenance, or
   anti-detection logic.
 - Bulk prospect collection or outreach sequencing.
@@ -86,8 +91,8 @@ references, sensitivity, active-version precedence, and purpose-specific field r
   consumers preserve the receipt semantics.
 - Public-web research can still collect unnecessary personal data if purpose limits are
   ignored.
-- An agent could try to bypass the skill by delegating to a browser-control tool; SKILL.md
-  explicitly forbids that route.
+- An agent could try to convert read-only contact graph capture into connection or send
+  automation; SKILL.md explicitly forbids that route.
 
 ## Verification
 
@@ -104,8 +109,10 @@ OPS_LINKEDIN_USE_SYSTEM_PYTHON=1 \
 ```
 
 `fixtures/agentic_eval.json` covers positive, negative, and adversarial lifecycle cases,
-including editable profile-entry export and own-profile sync planning.
-It does not and must not claim live LinkedIn mutation proof.
+including editable profile-entry export, own-profile sync planning, and named-contact
+graph capture planning.
+It does not and must not claim live LinkedIn mutation, send, connection, or mutual-contact
+proof.
 
 Latest local receipts on 2026-08-24:
 

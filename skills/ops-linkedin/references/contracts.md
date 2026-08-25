@@ -33,8 +33,8 @@ Unknown fields fail validation.
 | `lead-gen` | `lead-research-plan` |
 | `content-ops` | `content-review` |
 
-There are intentionally no `login`, `browse`, `search`, `send`, `publish`, `like`,
-`connect`, or `apply` execution actions.
+There are intentionally no `login`, unscoped `browse`, `search`, `send`, `publish`,
+`like`, `connect`, `follow`, or `apply` execution actions.
 
 ## Claim schema
 
@@ -153,6 +153,30 @@ Schema: `ops-linkedin.profile_sync.v1`
 
 The plan is not proof that LinkedIn changed. A future executor must produce a separate
 Surf receipt and before/after evidence before claiming any platform mutation.
+
+## Contact graph capture plan schema
+
+Schema: `ops-linkedin.contact_graph_capture_plan.v1`
+
+`contact-graph-capture-plan` emits a bounded plan for named opportunity contacts only.
+It requires both `--user-authorized-read-only` and `--accept-account-risk`.
+
+Important fields:
+
+- `opportunity`: the job/client opportunity this capture supports.
+- `targets[]`: named `NAME|COMPANY|https://www.linkedin.com/in/...` profile targets.
+- `authorization`: always `USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED` when emitted.
+- `allowed_observations`: visible relationship degree, visible mutual names when shown,
+  visible title/company/location headline, and relevance signals for the named target.
+- `prohibited_actions`: includes connect/follow/react/post/apply/save and sending any
+  message/InMail.
+- `output_schema`: `monitor_opportunities.linkedin_contact_graph_evidence.v1`.
+- `execution_claim`: always `NOT_EXECUTED` at plan time.
+- `platform_verified`: always `false` at plan time.
+
+The plan is not proof that a mutual contact exists and it is not outreach authority. A
+later browser receipt may record the allowed observations; any InMail/message copy remains
+a local handoff packet and sending is a separate human action.
 
 ## Exit codes
 

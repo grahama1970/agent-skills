@@ -1,8 +1,10 @@
 """Typer CLI for bounded LinkedIn operations and manual handoff receipts.
 
 Most commands read and write local JSON only. The profile-sync planning path can
-emit a Surf transport plan for Graham's own profile, but this CLI still does not
-open LinkedIn, read browser state, perform HTTP requests, or submit social actions.
+emit a Surf transport plan for Graham's own profile. The contact-graph planning
+path can emit a bounded read-only inspection plan for named opportunity contacts.
+This CLI still does not open LinkedIn, read browser state, perform HTTP requests,
+or submit social actions.
 """
 
 from __future__ import annotations
@@ -15,7 +17,7 @@ import typer
 from loguru import logger
 from pydantic import ValidationError
 
-from ops_linkedin.models import HandoffPacket, HandoffRequest, Readiness
+from ops_linkedin.models import ContactGraphTarget, HandoffPacket, HandoffRequest, Readiness
 from ops_linkedin.profile_sync import (
     DEFAULT_SURF_RUN,
     LinkedInProfileEntry,
@@ -25,6 +27,7 @@ from ops_linkedin.profile_sync import (
 )
 from ops_linkedin.service import (
     attest_human_completion,
+    build_contact_graph_capture_plan,
     policy_report,
     prepare_handoff,
     status_report,
@@ -255,6 +258,79 @@ def profile_sync_plan_command(
             surf_run=surf_run,
         )
     _write_json(packet, output)
+
+
+def _parse_contact_target(raw: str) -> ContactGraphTarget:
+    """Parse NAME|COMPANY|URL from a CLI option."""
+
+    parts = [part.strip() for part in raw.split("|")]
+    if len(parts) != 3 or not all(parts):
+        raise typer.BadParameter("--target must use NAME|COMPANY|https://www.linkedin.com/in/...")
+    return ContactGraphTarget(name=parts[0], company=parts[1], profile_url=parts[2])
+
+
+@app.command("contact-graph-capture-plan")
+def contact_graph_capture_plan_command(
+    opportunity: Annotated[
+        str,
+        typer.Option("--opportunity", help="Opportunity this relationship capture supports."),
+    ],
+    target: Annotated[
+        list[str],
+        typer.Option(
+            "--target",
+            help="Repeatable NAME|COMPANY|https://www.linkedin.com/in/... target.",
+        ),
+    ],
+    user_authorized_read_only: Annotated[
+        bool,
+        typer.Option(
+            "--user-authorized-read-only",
+            help="Required acknowledgement that Graham authorized read-only relationship inspection.",
+        ),
+    ] = False,
+    accept_account_risk: Annotated[
+        bool,
+        typer.Option(
+            "--accept-account-risk",
+            help="Required acknowledgement that Graham accepts account-risk tradeoffs.",
+        ),
+    ] = False,
+    tab_id: Annotated[
+        str | None,
+        typer.Option("--tab-id", help="Optional Surf tab id for emitted command hints."),
+    ] = None,
+    surf_run: Annotated[
+        str,
+        typer.Option("--surf-run", help="Surf run.sh path used in emitted command hints."),
+    ] = "/home/graham/workspace/experiments/agent-skills/skills/surf/run.sh",
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Optional plan path.")] = None,
+) -> None:
+    """Emit a bounded read-only LinkedIn relationship capture plan.
+
+    The command does not open LinkedIn. It prepares a plan for named targets so
+    monitor-opportunities can capture degree/mutual evidence without connecting,
+    messaging, following, scraping bulk results, or touching hidden browser state.
+    """
+
+    try:
+        targets = [_parse_contact_target(item) for item in target]
+        plan = build_contact_graph_capture_plan(
+            opportunity=opportunity,
+            targets=targets,
+            user_authorized_read_only=user_authorized_read_only,
+            accept_account_risk=accept_account_risk,
+            tab_id=tab_id,
+            surf_run=surf_run,
+        )
+    except ValidationError as exc:
+        typer.echo(exc.json(indent=2), err=True)
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=3) from exc
+
+    _write_json(plan, output)
 
 
 @app.command("resolve-leads")
