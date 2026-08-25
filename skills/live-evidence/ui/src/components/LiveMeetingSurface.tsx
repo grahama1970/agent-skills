@@ -56,6 +56,20 @@ function previewText(card: EvidenceCard): string {
   return raw;
 }
 
+function lineageLabel(card: EvidenceCard): string {
+  const parts: string[] = [];
+  if (card.question_id) {
+    parts.push(`q:${card.question_id.slice(0, 8)}`);
+  }
+  if (card.question_revision && card.question_revision > 0) {
+    parts.push(`rev ${card.question_revision}`);
+  }
+  if (card.frame_refs?.length) {
+    parts.push(`${card.frame_refs.length} frame${card.frame_refs.length === 1 ? "" : "s"}`);
+  }
+  return parts.join(" · ");
+}
+
 function LiveCardStream({
   cards,
   selectedCardId,
@@ -105,6 +119,11 @@ function LiveCardStream({
                 </div>
                 <div className="card-question-preview">{card.question || card.query}</div>
                 <div className="card-answer-preview">{previewText(card)}</div>
+                {lineageLabel(card) ? (
+                  <div className="mt-2 truncate font-mono text-[10px] text-slate-500" title={lineageLabel(card)}>
+                    {lineageLabel(card)}
+                  </div>
+                ) : null}
                 <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-500">
                   <span className="truncate">{sourceLabel(card)}</span>
                   <span>{Math.round(card.confidence * 100)}%</span>
@@ -146,6 +165,7 @@ function ActiveInsightStage({
 
   const kind = cardKind(card);
   const question = card.question || card.query;
+  const lineage = lineageLabel(card);
 
   return (
     <main id="active-insight-stage" className="main-stage" tabIndex={-1}>
@@ -161,6 +181,12 @@ function ActiveInsightStage({
         </div>
 
         <div className="question-anchor">"{question}"</div>
+        {lineage ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500">
+            <span>{lineage}</span>
+            <span>card:{card.card_id.slice(0, 8)}</span>
+          </div>
+        ) : null}
 
         <ClarificationCard card={card} />
         <SolutionStage card={card} busy={busy} kind={kind} onPin={onPin} onDismiss={onDismiss} />
