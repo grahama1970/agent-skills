@@ -900,9 +900,34 @@
           "LANDED_WITHOUT_PROOF",
           "MARKED_DONE_WITHOUT_PROOF",
           "NOT_NEEDS_ATTENTION",
-          "GATE_IS_A_WALL"
-        ]
+        "GATE_IS_A_WALL"
+      ]
       }
+    },
+    {
+      "name": "ticket-repair-monitors-ask-tau-json-stream",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "mocked": false,
+      "real_world": true,
+      "timeout_seconds": 180,
+      "seams": [
+        "watchdog.ticket_repair",
+        "ask.tau_dag_stream",
+        "tau.json_stream"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/project-watchdog\" && uv run --project . pytest -q tests/test_project_watchdog.py::test_tau_stream_monitor_reads_terminal_progress_and_events tests/test_project_watchdog.py::test_ask_tau_dag_runner_polls_stream_until_process_exit"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "notes": "Regression guard for the watchdog stopping opaquely during long Ask/Tau runs: the repair lane must read Tau stream artifacts and write tau-stream-monitor.json instead of treating process exit or silence as progress proof."
     }
   ]
 }

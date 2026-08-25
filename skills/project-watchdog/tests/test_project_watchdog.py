@@ -572,8 +572,9 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
         mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
         mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
         mock.patch.object(
-            handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}
+            handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag
         ) as bounded,
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
         mock.patch.object(
             handlers.registry,
             "prepare_repair_worktree",
@@ -645,8 +646,9 @@ def test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace(tmp_path)
         mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
         mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
         mock.patch.object(
-            handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}
+            handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag
         ) as dispatched,
+        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
         mock.patch.object(
             handlers.registry,
             "prepare_repair_worktree",
@@ -766,6 +768,7 @@ def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path)
                           "worktree": str(tmp_path / "wt")},
         ),
         mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
         mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
@@ -798,7 +801,9 @@ def test_failed_ticket_repair_blocks_the_issue(tmp_path) -> None:
             "issue_edit",
             side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
         ),
-        mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 1, "stderr": "x"}),
+        mock.patch.object(
+            handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_failed_ask_tau_dag
+        ),
         mock.patch.object(
             handlers.registry,
             "prepare_repair_worktree",
@@ -847,6 +852,95 @@ def _passing_repair_run_cmd(command, **_kwargs):  # noqa: ANN001, ANN003
     if command[:3] == ["git", "rev-list", "--count"]:
         return {"exit_code": 0, "stdout": "1\n", "stderr": ""}
     return {"exit_code": 0, "stdout": "", "stderr": ""}
+
+
+def _passing_ask_tau_dag(command, **kwargs):  # noqa: ANN001, ANN003
+    monitor_path = kwargs["monitor_path"]
+    handlers.write_json(
+        monitor_path,
+        {
+            "schema": "agent_skills.project_watchdog.tau_stream_monitor.v1",
+            "stream_readable": True,
+            "terminal": True,
+            "terminal_status": "PASS",
+            "current_node": "reviewer",
+            "current_status": "PASS",
+            "event_count": 1,
+            "poll_count": 1,
+        },
+    )
+    return {"command": command, "exit_code": 0, "stdout": "", "stderr": "",
+            "stream_monitor": str(monitor_path)}
+
+
+def _failed_ask_tau_dag(command, **kwargs):  # noqa: ANN001, ANN003
+    monitor_path = kwargs["monitor_path"]
+    handlers.write_json(
+        monitor_path,
+        {
+            "schema": "agent_skills.project_watchdog.tau_stream_monitor.v1",
+            "stream_readable": True,
+            "terminal": True,
+            "terminal_status": "NEEDS_ATTENTION",
+            "current_node": "creator",
+            "current_status": "NEEDS_ATTENTION",
+            "event_count": 1,
+            "poll_count": 1,
+        },
+    )
+    return {"command": command, "exit_code": 1, "stdout": "", "stderr": "x",
+            "stream_monitor": str(monitor_path)}
+
+
+def test_tau_stream_monitor_reads_terminal_progress_and_events(tmp_path) -> None:
+    run = tmp_path / "ask" / "run-1"
+    run.mkdir(parents=True)
+    (run / "events.jsonl").write_text(
+        json.dumps({"event_id": 1, "node_id": "creator", "status": "RUNNING"}) + "\n"
+        + json.dumps({"event_id": 2, "node_id": "reviewer", "status": "PASS"}) + "\n",
+        encoding="utf-8",
+    )
+    (run / "dag-progress.json").write_text(
+        json.dumps({"status": "PASS", "current_node": "reviewer"}),
+        encoding="utf-8",
+    )
+
+    monitor = handlers.inspect_tau_stream(tmp_path / "ask")
+
+    assert monitor["stream_readable"] is True
+    assert monitor["event_count"] == 2
+    assert monitor["terminal"] is True
+    assert monitor["terminal_status"] == "PASS"
+    assert monitor["current_node"] == "reviewer"
+
+
+def test_ask_tau_dag_runner_polls_stream_until_process_exit(tmp_path) -> None:
+    ask_dir = tmp_path / "ask"
+    monitor_path = tmp_path / "tau-stream-monitor.json"
+    script = (
+        "import json, pathlib, time\n"
+        f"run = pathlib.Path({str(ask_dir / 'run-1')!r})\n"
+        "run.mkdir(parents=True)\n"
+        "(run/'events.jsonl').write_text(json.dumps({'event_id':1,'status':'RUNNING'})+'\\n')\n"
+        "time.sleep(0.2)\n"
+        "(run/'dag-progress.json').write_text(json.dumps({'status':'PASS','current_node':'reviewer'}))\n"
+    )
+
+    result = handlers.run_ask_tau_dag_with_stream_monitor(
+        [sys.executable, "-c", script],
+        cwd=tmp_path,
+        timeout_s=5,
+        ask_run_dir=ask_dir,
+        monitor_path=monitor_path,
+        poll_interval_s=0.05,
+    )
+    monitor = json.loads(monitor_path.read_text(encoding="utf-8"))
+
+    assert result["exit_code"] == 0
+    assert monitor["stream_readable"] is True
+    assert monitor["terminal"] is True
+    assert monitor["terminal_status"] == "PASS"
+    assert monitor["poll_count"] >= 1
 
 
 def test_a_dirty_target_blocks_before_any_github_write(tmp_path) -> None:
@@ -949,12 +1043,14 @@ def test_a_failed_lease_stops_the_dispatch(tmp_path) -> None:
                           "worktree": str(tmp_path / "wt")},
         ),
         mock.patch.object(handlers, "run_cmd") as dispatched,
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor") as ask_dispatch,
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
 
     assert result["status"] == "BLOCKED"
     assert "ensure-labels" in result["summary"], "must name the command that fixes it"
     assert not dispatched.called, "must not dispatch a repair it could not lease"
+    assert not ask_dispatch.called, "must not dispatch Ask/Tau without a lease"
 
 
 def test_a_lease_that_takes_proceeds(tmp_path) -> None:
@@ -976,6 +1072,7 @@ def test_a_lease_that_takes_proceeds(tmp_path) -> None:
             return_value={"ok": True, "branch": "watchdog/issue-22",
                           "worktree": str(tmp_path / "wt")},
         ),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
         mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
@@ -1039,7 +1136,7 @@ def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
     memory = next(project for project in projects if project["project_id"] == "memory")
 
     assert config.auto_land_main(memory) is True
-    assert memory["repair_reviewer"] == "claude-fable-low"
+    assert memory["repair_reviewer"] == "claude-opus-4-8-high"
 
 
 def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
@@ -1052,7 +1149,7 @@ def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
     }
     issue = _issue(31, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
     issue["watchdog_action"] = "ticket_repair"
-    with mock.patch.object(handlers, "run_cmd") as dispatched:
+    with mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor") as dispatched:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "BLOCKED"
     assert "Codex CLI" in result["summary"]
@@ -1069,7 +1166,7 @@ def test_oc_chat_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
     }
     issue = _issue(85, labels=["agent-work"], body="type: bug\ntarget: src/x\n")
     issue["watchdog_action"] = "ticket_repair"
-    with mock.patch.object(handlers, "run_cmd") as dispatched:
+    with mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor") as dispatched:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "BLOCKED"
     assert "not a Tau repair authoring lane" in result["summary"]
@@ -1087,7 +1184,7 @@ def test_web_model_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
     }
     issue = _issue(146, labels=["agent-work"], body="type: bug\ntarget: src/x\n")
     issue["watchdog_action"] = "ticket_repair"
-    with mock.patch.object(handlers, "run_cmd") as dispatched:
+    with mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor") as dispatched:
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "BLOCKED"
     assert "not a Tau repair authoring lane" in result["summary"]
@@ -1119,6 +1216,7 @@ def test_a_repair_that_moved_main_is_flagged_and_blocked(tmp_path) -> None:
                           "worktree": str(tmp_path / "wt")},
         ),
         mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["aaa111", "bbb222"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
         mock.patch.object(handlers, "run_cmd", return_value={"exit_code": 0, "stderr": ""}),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
@@ -1146,6 +1244,7 @@ def test_an_untouched_main_completes_normally(tmp_path) -> None:
                           "worktree": str(tmp_path / "wt")},
         ),
         mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["aaa111", "aaa111"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
         mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
@@ -1540,6 +1639,7 @@ def test_a_tick_stepping_aside_for_a_live_tick_is_not_a_failure(tmp_path, monkey
     from watchdog import commands  # noqa: PLC0415
 
     captured: dict = {}
+    monkeypatch.setattr(commands.config, "QUIET_HOURS", "")
     monkeypatch.setattr(commands, "acquire_lock", lambda run_id: False)
     monkeypatch.setattr(commands, "lock_holder_alive", lambda: True)
     monkeypatch.setattr(
@@ -1558,6 +1658,7 @@ def test_a_lock_held_by_nothing_is_still_a_fault(tmp_path, monkeypatch) -> None:
     from watchdog import commands  # noqa: PLC0415
 
     captured: dict = {}
+    monkeypatch.setattr(commands.config, "QUIET_HOURS", "")
     monkeypatch.setattr(commands, "acquire_lock", lambda run_id: False)
     monkeypatch.setattr(commands, "lock_holder_alive", lambda: False)
     monkeypatch.setattr(
@@ -1750,6 +1851,7 @@ def test_a_completed_repair_marks_the_ticket_done(tmp_path) -> None:
                           "worktree": str(tmp_path / "wt")},
         ),
         mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
         mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
