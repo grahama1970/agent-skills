@@ -498,12 +498,26 @@ export function CapabilityConstellation() {
           ) : null}
         </div>
       </div>
-      <p className="constellation-legend">
-        <span className="cl cl--technical">▲ technical</span>
-        <span className="cl cl--hybrid">◆ hybrid</span>
-        <span className="cl cl--creative">● creative</span>
-        <span className="cl-note">dashed ring = private work, public overview only</span>
-      </p>
+      <div className="constellation-legend" aria-label="Capability graph legend">
+        <ul className="constellation-legend__items">
+          <li className="cl cl--technical">
+            <span className="cl-shape" aria-hidden="true">▲</span>
+            <span>technical</span>
+          </li>
+          <li className="cl cl--hybrid">
+            <span className="cl-shape" aria-hidden="true">◆</span>
+            <span>hybrid</span>
+          </li>
+          <li className="cl cl--creative">
+            <span className="cl-shape" aria-hidden="true">●</span>
+            <span>creative</span>
+          </li>
+        </ul>
+        <span className="cl-note">
+          <span className="cl-dashed">dashed ring</span>
+          <span>= private work, public overview only</span>
+        </span>
+      </div>
       {/* Text alternative for the graph (d3 a11y): a navigable equivalent — the
           same areas and projects, with real jump links so keyboard / screen-
           reader users reach every project the sighted graph links to. */}

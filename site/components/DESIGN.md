@@ -39,8 +39,9 @@ threshold (>1000 elements) does not apply here.
   real jump links (`#project-<slug>`), visually hidden but keyboard-focusable
   and revealed on `:focus-within` — so keyboard / screen-reader users reach the
   same projects the sighted graph links to.
-- Redundant encoding: lens is colour **and** shape (see table); the legend shows
-  both (`▲ technical · ◆ hybrid · ● creative`).
+- Redundant encoding: lens is colour **and** shape; the legend shows shape-only
+  markers (`▲ technical · ◆ hybrid · ● creative`) plus the dashed-ring private
+  work disclosure.
 
 ## Invariants
 

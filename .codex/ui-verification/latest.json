@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-08-24T18:19:01.182494+00:00",
-  "cwd": "/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-zero-opportunities-gate-20260824",
-  "root": "/home/graham/workspace/experiments/agent-skills-worktrees/monitor-opportunities-zero-opportunities-gate-20260824",
-  "output_root": "/tmp/codex-ui-verification/monitor-opportunities-zero-opportunities-gate-20260824",
-  "url": "http://127.0.0.1:8800/index.html",
-  "name": "monitor-opportunities-source-intel-table-final",
+  "verified_at": "2026-08-25T12:28:56.290826+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "root": "/home/graham/workspace/experiments/agent-skills",
+  "output_root": "/tmp/codex-ui-verification/agent-skills",
+  "url": "http://127.0.0.1:4180/",
+  "name": "grahama-constellation-legend-local",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/monitor-opportunities-zero-opportunities-gate-20260824/monitor-opportunities-source-intel-table-final/20260824T181855Z.png",
-  "read_json": "/tmp/codex-ui-verification/monitor-opportunities-zero-opportunities-gate-20260824/monitor-opportunities-source-intel-table-final/20260824T181855Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/agent-skills/grahama-constellation-legend-local/20260825T122849Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills/grahama-constellation-legend-local/20260825T122849Z.read.json"
 }
