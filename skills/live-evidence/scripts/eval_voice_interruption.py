@@ -32,6 +32,8 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from eval_live_youtube_oracle import create_virtual_sink, destroy_virtual_sink
+
 CHATTERBOX = "http://127.0.0.1:8018"
 SINK_WAV = Path("/mnt/storage12tb/skills/live-evidence/live-youtube-proof/20260816T181309Z/youtube.wav")
 CHATTERBOX_LOGS = Path.home() / "workspace/experiments/chatterbox/logs"
@@ -160,11 +162,7 @@ def main() -> int:
         subprocess.run(["sox", str(SINK_WAV), str(human_wav), "trim", "60", "22"],
                        check=True, capture_output=True)
 
-        subprocess.run(
-            ["pw-cli", "create-node", "adapter",
-             "{ factory.name=support.null-audio-sink node.name=%s media.class=Audio/Sink "
-             "audio.position=[FL,FR] object.linger=true }" % sink],
-            check=True, capture_output=True, timeout=15)
+        create_virtual_sink(sink)
         port = free_port()
         base = f"http://127.0.0.1:{port}"
         env = {
@@ -302,7 +300,7 @@ def main() -> int:
             except subprocess.TimeoutExpired:
                 server.kill()
             server_log.close()
-            subprocess.run(["pw-cli", "destroy", sink], capture_output=True)
+            destroy_virtual_sink(sink)
 
     print()
     if failures:

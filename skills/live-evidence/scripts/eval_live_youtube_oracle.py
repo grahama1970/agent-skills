@@ -61,8 +61,33 @@ def create_virtual_sink(name: str) -> None:
          "audio.position=[FL,FR] object.linger=true }" % name],
         check=True, capture_output=True, text=True, timeout=15,
     )
+def virtual_sink_node_ids(name: str) -> list[str]:
+    try:
+        proc = subprocess.run(
+            ["pw-dump"], check=True, capture_output=True, text=True, timeout=15
+        )
+        nodes = json.loads(proc.stdout)
+    except Exception:
+        return []
+    ids: list[str] = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        props = ((node.get("info") or {}).get("props") or {})
+        if (
+            node.get("type") == "PipeWire:Interface:Node"
+            and props.get("node.name") == name
+        ):
+            ids.append(str(node.get("id")))
+    return [item for item in ids if item]
 def destroy_virtual_sink(name: str) -> None:
-    subprocess.run(["pw-cli", "destroy", name], check=False, capture_output=True, text=True, timeout=15)
+    ids = virtual_sink_node_ids(name)
+    targets = ids or [name]
+    for target in targets:
+        subprocess.run(
+            ["pw-cli", "destroy", str(target)],
+            check=False, capture_output=True, text=True, timeout=15,
+        )
 def default_source_wav() -> Path:
     for candidate in DEFAULT_WAV_CANDIDATES:
         if candidate.is_file():

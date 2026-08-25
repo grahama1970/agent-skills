@@ -54,6 +54,24 @@
       }
     },
     {
+      "name": "pipewire-null-sink-cleanup-destroys-node-id",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_pipewire_sink_cleanup.py"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "notes": "Regression for operator audio safety: lingering PipeWire null sinks must be destroyed by resolved node id from pw-dump, not by a sink name string that can fail silently."
+    },
+    {
       "name": "repository-local-python-env-refused",
       "type": "adversarial",
       "real_world": true,
