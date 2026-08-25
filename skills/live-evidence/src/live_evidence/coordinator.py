@@ -156,6 +156,7 @@ class EvidenceCoordinator:
             thread=candidate_thread(candidate, self._profile),
             reason=candidate.trigger_reason,
             source_event_ids=tuple(span.event_id for span in candidate.source_spans),
+            candidate_fingerprint=candidate.fingerprint,
         )
         # Claim the revision this retrieval answers BEFORE dispatching it, so a
         # slow result is recognised as stale at publish time, not overwriting.
@@ -608,6 +609,8 @@ class EvidenceCoordinator:
             # Filtering agent judged this turn not card-worthy (rhetorical,
             # greeting, logistics, bare project mention) or its evidence
             # irrelevant; suppress to keep the HUD scannable.
+            if decision.candidate_fingerprint:
+                self._question_window.forget(decision.candidate_fingerprint)
             await self._state.set_lane(RetrievalLane.ASK, LaneState.IDLE,
                                        "Suppressed: not card-worthy")
             return

@@ -90,6 +90,34 @@ def test_stabilized_and_final_duplicate_is_suppressed() -> None:
     assert second.duplicate is True
 
 
+def test_suppressed_stabilized_candidate_can_be_forgotten_for_final() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+
+    stabilized = TranscriptEvent(
+        event_id="event-stable",
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.STABILIZED,
+        text="How would you remove the minimum invalid parentheses?",
+        sequence=1,
+    )
+    final = TranscriptEvent(
+        event_id="event-final",
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.FINAL,
+        text="How would you remove the minimum invalid parentheses?",
+        sequence=2,
+    )
+
+    first = builder.ingest(stabilized)
+    assert first.candidate is not None
+    builder.forget(first.candidate.fingerprint)
+
+    second = builder.ingest(final)
+
+    assert second.candidate is not None
+    assert second.duplicate is False
+
+
 def test_progressive_stt_restatement_extends_instead_of_repeating() -> None:
     builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
 

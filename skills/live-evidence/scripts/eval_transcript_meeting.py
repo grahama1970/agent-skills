@@ -24,6 +24,7 @@ reports INFRA_BLOCKED, never a fake pass.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.request
 from datetime import datetime, timezone
@@ -176,7 +177,11 @@ def main() -> int:
 
     spec = json.loads((root / "fixtures" / "transcript_meetings.json").read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_root = OUT_ROOT / stamp
+    out_root = (
+        Path(os.environ["LIVE_EVIDENCE_TRANSCRIPT_MEETING_OUT_DIR"]).resolve()
+        if os.environ.get("LIVE_EVIDENCE_TRANSCRIPT_MEETING_OUT_DIR")
+        else OUT_ROOT / stamp
+    )
     only = {a for a in sys.argv[2:] if not a.startswith("-")}
     reports = []
     for meeting in spec["meetings"]:

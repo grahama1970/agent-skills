@@ -131,6 +131,20 @@ class QuestionWindowBuilder:
 
         self._buffer = []
 
+    def forget(self, fingerprint: str) -> None:
+        """Allow a previously accepted candidate to be reconsidered.
+
+        Accepted stabilized STT fragments are remembered before retrieval so
+        exact repeats do not fan out into duplicate work. The downstream
+        surface gate can later determine that the fragment was only a
+        half-formed lead-in; in that case the richer final transcript should
+        still be allowed to produce the real question.
+        """
+
+        self._recent = [
+            item for item in self._recent if item[0] != fingerprint
+        ]
+
     def _append_or_replace(self, event: TranscriptEvent) -> None:
         self._buffer = [item for item in self._buffer if item.event_id != event.event_id]
         if self._buffer and is_progressive_restatement(self._buffer[-1], event):
