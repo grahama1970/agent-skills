@@ -40,24 +40,36 @@ def _cmd_str(entry: dict) -> str:
     return " ".join(c) if isinstance(c, list) else str(c)
 
 
-def _run_compete(handlers: list[str], judge: str, timeout: int) -> Path:
-    ask_id = f"compete-window-eval-{uuid.uuid4().hex[:8]}"
-    cmd = [str(SKILL_ROOT / "run.sh"), "compete",
-           "Reply with one short sentence: what is a directed acyclic graph?",
-           "--repo", "local/agent-skills", "--target", "compete-window-eval",
-           "--immutable-goal", "Each seat answers or names a blocker.",
-           "--judge-handler", judge, "--criterion", "clarity",
-           "--ask-id", ask_id, "--browser-tab-lifecycle", "fresh-temporary",
-           "--execute", "--json", "--poll-timeout-seconds", str(timeout)]
+def _run_workflow(workflow: str, handlers: list[str], judge: str, timeout: int) -> Path:
+    ask_id = f"window-eval-{workflow}-{uuid.uuid4().hex[:8]}"
+    question = "Reply with one short sentence: what is a directed acyclic graph?"
+    if workflow == "compete":
+        cmd = [str(SKILL_ROOT / "run.sh"), "compete", question,
+               "--repo", "local/agent-skills", "--target", "window-eval",
+               "--immutable-goal", "Each seat answers or names a blocker.",
+               "--judge-handler", judge, "--criterion", "clarity"]
+    else:  # roundtable
+        cmd = [str(SKILL_ROOT / "run.sh"), "tau-dag", question,
+               "--repo", "local/agent-skills", "--target", "window-eval",
+               "--immutable-goal", "Each seat answers or names a blocker.",
+               "--dag-template", "roundtable", "--topology", "concurrent"]
+    cmd += ["--ask-id", ask_id, "--browser-tab-lifecycle", "fresh-temporary",
+            "--execute", "--json", "--poll-timeout-seconds", str(timeout)]
     for h in handlers:
         cmd += ["--handler", h]
+    # webgpt with reasoning can take 20+ minutes; the eval proves the WINDOW
+    # LIFECYCLE works, not answer quality, so pin the cheapest reasoning tier
+    # unless the caller overrides. This is why a 900/1200s timeout previously
+    # killed webgpt mid-generation and looked like a hang.
+    env = dict(os.environ)
+    env.setdefault("SURF_WEBGPT_REASONING", "Instant")
     proc = subprocess.run(cmd, capture_output=True, text=True,
-                          timeout=timeout + 300, cwd=SKILL_ROOT)
+                          timeout=timeout + 300, cwd=SKILL_ROOT, env=env)
     text = proc.stdout
     try:
         result = json.loads(text[text.index("{"):text.rindex("}") + 1])
     except Exception:
-        print("COMPETE_RUNNER_ERROR", (proc.stderr or text)[-300:])
+        print("WINDOW_PROOF_RUNNER_ERROR", (proc.stderr or text)[-300:])
         raise typer.Exit(1)
     run_dir = ((result.get("execution") or {}).get("run_dir")
                or (result.get("bundle") or {}).get("run_dir") or "")
@@ -142,20 +154,49 @@ def _assert_lifecycle(run_dir: Path, handlers: list[str]) -> bool:
     return ok
 
 
+def _assert_roundtable_best_practices(run_dir: Path) -> bool:
+    """best-practices-roundtable compliance via the panel-audit gate.
+
+    Equal context, seat status from artifacts, no silent consensus, isolation,
+    and quorum (>=3 ANSWERING seats). This is the skill's own audit -- not a
+    reimplementation.
+    """
+    proc = subprocess.run(
+        [str(SKILL_ROOT / "run.sh"), "panel-audit", str(run_dir), "--mode", "roundtable"],
+        capture_output=True, text=True, timeout=120, cwd=SKILL_ROOT)
+    out = proc.stdout + proc.stderr
+    compliant = "COMPLIANT" in out and "roundtable_quorum" in out and proc.returncode == 0
+    for line in out.splitlines():
+        if any(k in line for k in ("COMPLIANT", "quorum", "equal_context", "seat_status",
+                                   "no_silent_consensus", "isolation")):
+            print("  PANEL_AUDIT:", line.strip()[:100])
+    if compliant:
+        print("ROUNDTABLE_BEST_PRACTICES_COMPLIANT")
+    else:
+        print(f"ROUNDTABLE_AUDIT_FAIL: rc={proc.returncode}")
+    return compliant
+
+
 @app.command()
 def main(
-    handler: list[str] = typer.Option(["webgpt", "webclaude"], "--handler"),
+    handler: list[str] = typer.Option(
+        ["webgpt", "webclaude", "webgemini", "webkimi", "webgrok"], "--handler"),
+    workflow: str = typer.Option("roundtable", "--workflow", help="roundtable|compete"),
     judge: str = typer.Option("claude-opus-5-low", "--judge"),
-    timeout: int = typer.Option(900, "--timeout"),
+    timeout: int = typer.Option(1800, "--timeout",
+                                help="Per-run poll timeout; webgpt reasoning can take 20+ min "
+                                     "(the eval pins SURF_WEBGPT_REASONING=Instant to stay fast)."),
     from_run_dir: Path = typer.Option(None, "--from-run-dir",
-                                      help="Assert against an existing compete run dir (dev/replay)."),
+                                      help="Assert against an existing run dir (dev/replay)."),
 ) -> None:
-    run_dir = from_run_dir if from_run_dir else _run_compete(list(handler), judge, timeout)
+    run_dir = from_run_dir if from_run_dir else _run_workflow(workflow, list(handler), judge, timeout)
     if not run_dir or not (run_dir / "browser-tab-lifecycle.json").is_file():
         print(f"NO_LIFECYCLE_JSON in {run_dir}")
         raise typer.Exit(1)
     time.sleep(2)  # let teardown settle before the wmctrl leak check
     ok = _assert_lifecycle(run_dir, list(handler))
+    if workflow == "roundtable":
+        ok = _assert_roundtable_best_practices(run_dir) and ok
     print("COMPETE_WINDOW_LIFECYCLE_OK" if ok else "COMPETE_WINDOW_LIFECYCLE_FAIL")
     raise typer.Exit(0 if ok else 1)
 
