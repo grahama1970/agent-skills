@@ -134,6 +134,8 @@ def _provenance_rejections(card: EvidenceCard) -> list[str]:
             reasons.append("supported_card_missing_sources")
         elif not all(_source_has_resolvable_provenance(source) for source in card.sources):
             reasons.append("unresolved_source_provenance")
+    elif card.status is CardStatus.INSUFFICIENT:
+        reasons.append("insufficient_card_not_publishable")
     return reasons
 
 

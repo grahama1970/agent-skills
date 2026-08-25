@@ -797,7 +797,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "5 passed"
+          "10 passed"
         ]
       },
       "notes": "Regression for the #1473 churn path: a superseded answer may complete as an evidence_card while fast_solver_receipt payloads intentionally omit query text; future oracle changes must keep recognizing the card as the completion receipt, and state projection must keep that old completed card behind the active card."

@@ -269,7 +269,10 @@ async def _assert_older_supported_revision_replaces_newer_insufficient_card(tmp_
     insufficient = card(CardStatus.INSUFFICIENT, revision=latest_revision).model_copy(
         update={"question_id": question_id}
     )
-    assert await state.publish_card_fenced(insufficient) is not None
+    assert await state.publish_card_fenced(insufficient) is None
+    decisions = await state.card_publication_journal()
+    assert decisions[-1].status is PublicationStatus.HELD
+    assert decisions[-1].reason_codes == ["insufficient_card_not_publishable"]
 
     supported = card(CardStatus.SUPPORTED, revision=1).model_copy(
         update={"question_id": question_id}

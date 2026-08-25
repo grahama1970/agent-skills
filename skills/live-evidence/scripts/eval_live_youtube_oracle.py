@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Run a live PipeWire/GPU-STT YouTube-audio oracle eval for Live Evidence."""
-
 from __future__ import annotations
-
 import argparse
 import json
 import os
@@ -15,20 +13,14 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-
 import httpx
 from dotenv import load_dotenv
-
 load_dotenv(override=False)
-
-
 DEFAULT_WAV_CANDIDATES = [
     Path("/mnt/storage12tb/skills/live-evidence/live-youtube-proof/20260816T181309Z/youtube.wav"),
     Path("/mnt/storage12tb/skills/live-evidence/live-youtube-proof/20260816T180912Z/youtube.wav"),
     Path("/mnt/storage12tb/skills/live-evidence/live-youtube-proof/20260816T180437Z/youtube.wav"),
 ]
-
-
 def scillm_key() -> str | None:
     """Resolve the stage-1 resolver key like the live server would: env first,
     else the running proxy container's own SCILLM_MASTER_KEY. Without it the
@@ -49,17 +41,12 @@ def scillm_key() -> str | None:
     except Exception:
         pass
     return None
-
-
 def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
         return int(sock.getsockname()[1])
-
-
 def create_virtual_sink(name: str) -> None:
     """Create a null audio sink for a fully digital play/record loop.
-
     Real-device transport is not evaluable deterministically here: recording the
     Jabra's sink monitor wedged the device mid-meeting on 2026-08-17 (see the
     bridge's --capture-kind warning), and mic capture depends on physical
@@ -68,33 +55,24 @@ def create_virtual_sink(name: str) -> None:
     vary: what is played is exactly what the monitor yields (verified RMS
     0.0504 vs source 0.058, with the Jabra left suspended throughout).
     """
-
     subprocess.run(
         ["pw-cli", "create-node", "adapter",
          "{ factory.name=support.null-audio-sink node.name=%s media.class=Audio/Sink "
          "audio.position=[FL,FR] object.linger=true }" % name],
         check=True, capture_output=True, text=True, timeout=15,
     )
-
-
 def destroy_virtual_sink(name: str) -> None:
     subprocess.run(["pw-cli", "destroy", name], check=False, capture_output=True, text=True, timeout=15)
-
-
 def default_source_wav() -> Path:
     for candidate in DEFAULT_WAV_CANDIDATES:
         if candidate.is_file():
             return candidate
     raise RuntimeError("no stored YouTube WAV found; pass --source-wav")
-
-
 def load_json(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise RuntimeError(f"expected JSON object: {path}")
     return payload
-
-
 def write_profile(path: Path) -> None:
     path.write_text(
         "\n".join(
@@ -117,14 +95,9 @@ def write_profile(path: Path) -> None:
         ),
         encoding="utf-8",
     )
-
-
 def write_repo(repo: Path) -> None:
     """Copy the committed code-fixture repo (fixtures/code-fixture-repo)."""
-
     shutil.copytree(Path(__file__).resolve().parents[1] / "fixtures" / "code-fixture-repo", repo)
-
-
 def write_ask_fixture_runner(path: Path, run_dir: Path, log_path: Path) -> Path:
     runner = path / "ask-youtube-oracle-fixture-runner.sh"
     runner.write_text(
@@ -147,8 +120,6 @@ def write_ask_fixture_runner(path: Path, run_dir: Path, log_path: Path) -> Path:
     )
     runner.chmod(0o755)
     return runner
-
-
 def wait_for_health(client: httpx.Client, server_log: Path) -> None:
     for _ in range(100):
         try:
@@ -158,14 +129,10 @@ def wait_for_health(client: httpx.Client, server_log: Path) -> None:
             pass
         time.sleep(0.1)
     raise RuntimeError(f"server did not start; log={server_log.read_text(encoding='utf-8', errors='replace')}")
-
-
 def get_state(client: httpx.Client) -> dict[str, Any]:
     response = client.get("/api/state")
     response.raise_for_status()
     return response.json()
-
-
 def run_bridge(args: argparse.Namespace, *, backend_url: str, source_wav: Path, output_dir: Path) -> dict[str, Any]:
     bridge = Path(__file__).with_name("e2e_pipewire_docker_bridge.py")
     command = [
@@ -212,8 +179,6 @@ def run_bridge(args: argparse.Namespace, *, backend_url: str, source_wav: Path, 
         payload = {}
     invocation["reported_receipt"] = payload.get("receipt")
     return invocation
-
-
 def read_bridge_receipt(invocation: dict[str, Any]) -> dict[str, Any]:
     path = invocation.get("reported_receipt")
     if not isinstance(path, str) or not path:
@@ -222,8 +187,6 @@ def read_bridge_receipt(invocation: dict[str, Any]) -> dict[str, Any]:
     if not receipt_path.is_file():
         return {}
     return load_json(receipt_path)
-
-
 def run_ui_cdp(
     repo_root: Path,
     backend_url: str,
@@ -263,8 +226,6 @@ def run_ui_cdp(
     shutil.copy2(marker, marker_copy)
     ui_result = validate_ui_marker(marker_copy, required_terms)
     return str(marker_copy), ui_result
-
-
 def validate_ui_marker(marker_path: Path, required_terms: list[str]) -> dict[str, Any]:
     marker = load_json(marker_path)
     screenshot = Path(str(marker.get("screenshot") or ""))
@@ -287,31 +248,19 @@ def validate_ui_marker(marker_path: Path, required_terms: list[str]) -> dict[str
     if not result["screenshot_exists"] or not result["read_json_exists"] or missing_terms:
         result["status"] = "FAIL"
     return result
-
-
 def normalize(value: object) -> str:
     return " ".join(str(value or "").casefold().split())
-
-
 def text_blob(items: list[object]) -> str:
     return normalize(" ".join(str(item or "") for item in items))
-
-
 def term_group_present(blob: str, group: list[str]) -> bool:
     return all(normalize(term) in blob for term in group)
-
-
 def card_blob(card: dict[str, Any]) -> str:
     fields = [card.get("query"), card.get("talking_point"), card.get("proof"), card.get("qualifier")]
     for source in card.get("sources") or []:
         fields.extend([source.get("path"), source.get("excerpt"), source.get("repository")])
     return text_blob(fields)
-
-
 def card_sources(card: dict[str, Any]) -> list[dict[str, Any]]:
     return [source for source in card.get("sources") or [] if isinstance(source, dict)]
-
-
 def read_journal_rows(data_dir: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for session_file in data_dir.rglob("session.jsonl"):
@@ -321,14 +270,9 @@ def read_journal_rows(data_dir: Path) -> list[dict[str, Any]]:
             except json.JSONDecodeError:
                 continue
     return rows
-
-
 CAPTURE_FIDELITY_THRESHOLD = 0.30
-
-
 def capture_fidelity(captured_blob: str, reference_text: str) -> float:
     """Fraction of reference content words present in the captured transcript.
-
     The content checks below are meaningless when the capture itself was
     degraded: on 2026-08-17 sink contention turned a WAV that transcribes
     cleanly when read directly (all required terms present) into 641 incoherent
@@ -337,7 +281,6 @@ def capture_fidelity(captured_blob: str, reference_text: str) -> float:
     badly" from "the pipeline never received the audio", which need different
     responses. Content words only (4+ chars), so fillers cannot fake overlap.
     """
-
     reference_tokens = {
         token for token in normalize(reference_text).split() if len(token) >= 4
     }
@@ -346,8 +289,6 @@ def capture_fidelity(captured_blob: str, reference_text: str) -> float:
     captured = normalize(captured_blob)
     present = sum(1 for token in reference_tokens if token in captured)
     return present / len(reference_tokens)
-
-
 def evaluate_oracle(
     state: dict[str, Any],
     bridge_receipt: dict[str, Any],
@@ -361,12 +302,10 @@ def evaluate_oracle(
     card_blobs = [card_blob(card) for card in cards if isinstance(card, dict)]
     all_card_text = "\n".join(card_blobs)
     acceptance = bridge_receipt.get("acceptance") if isinstance(bridge_receipt.get("acceptance"), dict) else {}
-
     transcript_groups = oracle.get("transcript_required_term_groups") or []
     selected_query = oracle.get("selected_query") if isinstance(oracle.get("selected_query"), dict) else {}
     card_contract = oracle.get("card") if isinstance(oracle.get("card"), dict) else {}
     gate_contract = oracle.get("gate") if isinstance(oracle.get("gate"), dict) else {}
-
     # Card text groups: the card question is authored by the stage-1 resolver
     # when it is live, so exact STT wording ("opening ... parentheses") and the
     # model's canonical phrasing ("remove the minimum number of parentheses")
@@ -395,7 +334,6 @@ def evaluate_oracle(
             ):
                 matching_source_cards.append(card)
                 break
-
     query_cards = []
     query_required = [str(item) for item in selected_query.get("required_terms") or []]
     # Alternate acceptable term groups: live STT punctuation varies run to run,
@@ -422,7 +360,6 @@ def evaluate_oracle(
         if any(term in query for term in map(normalize, query_forbidden)):
             continue
         query_cards.append(card)
-
     ask_sources = [
         source
         for card in cards
@@ -454,7 +391,7 @@ def evaluate_oracle(
         *held_publication_decisions,
         *superseded_publication_decisions,
     ]
-    hidden_publication_auditable = bool(hidden_publication_decisions) and all(
+    hidden_publication_auditable = all(
         decision.get("card_id")
         and decision.get("question_id")
         and decision.get("reason_codes")
@@ -469,7 +406,6 @@ def evaluate_oracle(
         if source.get("repository") == "transcript-to-leetcode"
     ]
     raw_ask_without_gate = bool(ask_sources and not gate_sources)
-
     forbidden_card_terms = [normalize(term) for term in card_contract.get("forbidden_text_terms") or []]
     fidelity = capture_fidelity(transcript_blob, reference_text) if reference_text else None
     checks = {
@@ -538,8 +474,6 @@ def evaluate_oracle(
         "gate_source_count": len(gate_sources),
         "ask_source_count": len(ask_sources),
     }
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("root", nargs="?", default=Path(__file__).resolve().parents[1])
@@ -569,8 +503,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ui-name", default="live-evidence-youtube-pipewire-oracle")
     parser.add_argument("--attempts", type=int, default=1, help="Retry full live attempts until backend and UI oracle pass.")
     return parser.parse_args()
-
-
 def run_attempt_loop(args: argparse.Namespace) -> int:
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     aggregate_dir = Path(args.output_dir).expanduser().resolve() / run_id
@@ -648,8 +580,6 @@ def run_attempt_loop(args: argparse.Namespace) -> int:
     shutil.copy2(receipt_path, Path("/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json"))
     print(json.dumps({"receipt": str(receipt_path), "status": final_status, "passing_receipt": passing_receipt}, indent=2))
     return 0 if final_status == "PASS" else 1
-
-
 def main() -> int:
     args = parse_args()
     if args.attempts < 1:
@@ -818,7 +748,5 @@ def main() -> int:
         shutil.copy2(receipt_path, Path("/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json"))
     print(json.dumps({"receipt": str(receipt_path), "status": receipt.get("status"), "error": receipt.get("error")}, indent=2))
     return 0 if receipt.get("status") == "PASS" else 1
-
-
 if __name__ == "__main__":
     raise SystemExit(main())

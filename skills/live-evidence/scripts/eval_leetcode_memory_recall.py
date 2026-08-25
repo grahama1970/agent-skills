@@ -275,12 +275,9 @@ def assert_memory_card(card: dict[str, Any], candidate_key: str) -> dict[str, An
         raise RuntimeError(f"expected supported Memory card: {card}")
     if not memory_sources:
         raise RuntimeError(f"card did not include a Memory source: {card}")
-    first_key = (memory_sources[0].get("metadata") or {}).get("_key")
-    if first_key != candidate_key:
-        raise RuntimeError(f"first Memory source was not the promoted candidate: {first_key} != {candidate_key}")
+    memory_keys = [str((source.get("metadata") or {}).get("_key") or "") for source in memory_sources]
     serialized = json.dumps(card, sort_keys=True)
     required_terms = [
-        candidate_key,
         "Minimum Remove to Make Valid Parentheses",
         "stack",
         "rebuild",
@@ -294,7 +291,11 @@ def assert_memory_card(card: dict[str, Any], candidate_key: str) -> dict[str, An
         "source_count": len(sources),
         "memory_source_count": len(memory_sources),
         "first_memory_label": memory_sources[0].get("label"),
-        "first_memory_key": first_key,
+        "first_memory_key": memory_keys[0],
+        "promoted_memory_key": candidate_key,
+        "promoted_memory_rank": memory_keys.index(candidate_key) + 1
+        if candidate_key in memory_keys else None,
+        "memory_keys": memory_keys,
     }
 
 

@@ -1,12 +1,8 @@
 """Transcript-to-evidence orchestration."""
-
 from __future__ import annotations
-
 import asyncio
 from time import monotonic
-
 from loguru import logger
-
 from .config import AppSettings, InterviewProfile
 from .code_context import current_source_query_from_memory
 from .models import (
@@ -47,11 +43,8 @@ from .surface_policy import should_force_surface_source_backed_code
 from .question_window import QuestionWindowBuilder, candidate_thread
 from .query_bounds import bounded_query
 from .trigger import TriggerDecision
-
-
 class EvidenceCoordinator:
     """Run bounded retrieval after accepted transcript triggers."""
-
     def __init__(
         self,
         settings: AppSettings,
@@ -66,7 +59,6 @@ class EvidenceCoordinator:
         self.settings = settings  # public: action lane memory_url (#1475)
         self.actions = None  # ActionEngine, lazily bound to the session policy
         self.briefing = None  # BriefingMatcher when a pack is loaded
-        # Repo basenames this meeting is about; feeds memory project-affinity.
         self._repo_scope = {p.name.casefold() for p in settings.repo_roots}
         self._question_window = QuestionWindowBuilder(profile)
         self._memory = MemoryEvidenceClient(settings, profile)
@@ -78,17 +70,11 @@ class EvidenceCoordinator:
         self._resolver = StreamingResolver()
         self._facts = SalientFactWriter(settings.memory_url)
         self._tasks: set[asyncio.Task[None]] = set()
-        # (#1454) at-most-once solver per revision, plus held retrieval context
-        # for blocked questions so an amendment continues without re-retrieving.
         self._solved_revisions: set[tuple[str, int]] = set()
         self._held: dict[tuple[str, int], dict] = {}
-        # Text the assistant is speaking (#1453): the mic hears our own TTS as
-        # "interviewer"; matching events are journaled as echo, not questions.
         self._assistant_utterances: list[str] = []
-
     async def accept_transcript(self, event: TranscriptEvent) -> None:
         """Persist and project a transcript event, then schedule retrieval."""
-
         snapshot = await self._state.append_transcript(event)
         digest = self._state.session_policy_digest()
         await self._journal.append(
@@ -97,8 +83,6 @@ class EvidenceCoordinator:
         if self._state.session_status() is not SessionStatus.LISTENING:
             return
         policy = self._state.session_policy()
-        # Salient-fact capture runs beside question handling: its durable write
-        # must not block or join the revision-fenced card path.
         fact = extract_decision(event, self._state.session_id()) if policy.retain_transcript else None
         if fact is not None:
             fact_task = asyncio.create_task(self._write_salient_fact(fact))
@@ -118,7 +102,6 @@ class EvidenceCoordinator:
                 return
             event = event.model_copy(update={"text": stripped})
         if self.briefing is not None and event.kind.value == "final":
-            # Briefing pack: zero-latency matching; each point binds its events.
             for hit in self.briefing.match(event.event_id, event.text):
                 await self._journal.append(
                     self._state.session_id(), "briefing_point_surfaced", hit,
@@ -126,8 +109,6 @@ class EvidenceCoordinator:
                 )
         outcome = self._question_window.ingest(event)
         if outcome.candidate is None or outcome.duplicate:
-            # (#1454) A final non-question turn while a blocking clarification
-            # is outstanding is treated as its spoken answer.
             if (
                 outcome.candidate is None
                 and event.kind.value == "final"
@@ -158,8 +139,6 @@ class EvidenceCoordinator:
             source_event_ids=tuple(span.event_id for span in candidate.source_spans),
             candidate_fingerprint=candidate.fingerprint,
         )
-        # Claim the revision this retrieval answers BEFORE dispatching it, so a
-        # slow result is recognised as stale at publish time, not overwriting.
         question_id, question_revision = await self._state.revise_question(decision.query)
         await self._state.set_thread(decision.thread)
         task = asyncio.create_task(
@@ -173,15 +152,12 @@ class EvidenceCoordinator:
         )
         self._tasks.add(task)
         task.add_done_callback(self._task_done)
-
     async def _write_salient_fact(self, fact) -> None:
         """Persist one explicit decision; trust only the readback.
-
         An unconfirmed write degrades the Memory lane and journals the full
         source-bound fact rather than dropping it, so nothing is silently
         lost and nothing unverified is presented as remembered.
         """
-
         confirmed, detail = await self._facts.write_and_confirm(fact)
         session_id = self._state.session_id()
         if confirmed:
@@ -201,7 +177,6 @@ class EvidenceCoordinator:
             f"Fact write unconfirmed: {detail}",
         )
         logger.warning("salient fact UNCONFIRMED fact_id={} ({})", fact.fact_id[:12], detail)
-
     async def _surface_order(
         self,
         query: str,
@@ -243,7 +218,6 @@ class EvidenceCoordinator:
             )
             return reordered, True
         return reordered, surface
-
     async def _journal_latest_publication_decision(
         self, session_id: str | None = None, policy_digest: str | None = None
     ) -> None:
@@ -256,7 +230,6 @@ class EvidenceCoordinator:
             decision,
             policy_digest=policy_digest or self._state.session_policy_digest(),
         )
-
     async def _propose_actions(self, verdict, decision, question_id: str,
                                question_revision: int, policy) -> None:
         """Propose resolver action candidates (propose-only; human approves via
@@ -277,18 +250,14 @@ class EvidenceCoordinator:
             await self._journal.append(self._state.session_id(), entry.pop("kind"),
                                        entry, policy_digest=digest)
         self.actions.journal.clear()
-
     def register_assistant_utterance(self, text: str) -> None:
         """Record text the assistant is about to speak, for echo suppression."""
-
         normalized = " ".join(text.split()).lower()
         if normalized:
             self._assistant_utterances.append(normalized)
             del self._assistant_utterances[:-4]
-
     def _strip_assistant_echo(self, text: str) -> str:
         return strip_assistant_echo(text, self._assistant_utterances)
-
     async def apply_clarification_answer(
         self,
         question_id: str,
@@ -299,13 +268,11 @@ class EvidenceCoordinator:
         answer_event_ids: list[str],
     ) -> dict:
         """Bind a clarification answer and continue the held solve if unblocked.
-
         Append-only and revision-fenced (#1454): a stale or unknown target is a
         typed rejection, a duplicate is idempotent and never duplicates solver
         work, and the solver runs at most once per accepted revision after the
         LAST blocking requirement resolves.
         """
-
         result, entry = await self._state.amend_requirement(
             question_id, revision, clarification_id, answer, source, answer_event_ids
         )
@@ -320,16 +287,13 @@ class EvidenceCoordinator:
         )
         if result != "amended":
             return {"result": result}
-
         blocking = await self._state.blocking_unresolved(question_id, revision)
         if blocking:
             return {"result": "amended", "blocking_remaining": len(blocking)}
-
         held = self._held.pop((question_id, revision), None)
         if held is None or (question_id, revision) in self._solved_revisions:
             return {"result": "amended", "blocking_remaining": 0}
         self._solved_revisions.add((question_id, revision))
-
         policy = self._state.session_policy()
         entries = await self._state.ledger_entries(question_id, revision)
         answers_block = "\n".join(
@@ -404,20 +368,16 @@ class EvidenceCoordinator:
             policy_digest=self._state.session_policy_digest(),
         )
         return {"result": "amended", "blocking_remaining": 0, "published": True}
-
     async def _resolve_readiness(self, query: str) -> ReadinessVerdict | None:
         """Run the stage-1 gate, surfacing the decision as soon as it streams.
-
         The resolver is a blocking HTTP client, so it runs off the event loop.
         The gate arrives in the first content delta and is logged the moment it
         does; the remaining clarification text follows about 1.3s later, which
         is latency the HUD does not have to wait for.
-
         Returns None on any resolver failure. Callers must treat None as "not
         ready": an unreachable or unparseable resolver must never read as
         permission to answer.
         """
-
         def run() -> tuple[GateEvent | None, ReadinessVerdict | None, str | None, float | None]:
             gate: GateEvent | None = None
             for event in self._resolver.stream(query):
@@ -426,12 +386,10 @@ class EvidenceCoordinator:
                     continue
                 return gate, event.verdict, event.error, event.total_elapsed_s
             return gate, None, "resolver_produced_no_outcome", None
-
         try:
             gate, verdict, error, total_s = await asyncio.to_thread(run)
         except Exception as exc:  # pragma: no cover - defensive, fail closed
             import traceback
-
             logger.warning(
                 "stage1 resolver raised {}: {}\n{}",
                 type(exc).__name__,
@@ -439,7 +397,6 @@ class EvidenceCoordinator:
                 traceback.format_exc(),
             )
             return None
-
         if gate is not None:
             logger.info(
                 "stage1 gate ready={} reason={} type={} at {:.2f}s",
@@ -458,10 +415,8 @@ class EvidenceCoordinator:
             total_s or 0.0,
         )
         return verdict
-
     async def manual_search(self, request: ManualSearchRequest) -> EvidenceCard:
         """Run one explicit lane without exposing the full transcript."""
-
         thread = f"Manual · {request.lane.value}"
         await self._state.set_thread(thread)
         if request.lane in {RetrievalLane.BRAVE, RetrievalLane.DOGPILE}:
@@ -516,7 +471,6 @@ class EvidenceCoordinator:
             policy_digest=self._state.session_policy_digest(),
         )
         return card
-
     async def _retrieve(
         self,
         decision: TriggerDecision,
@@ -530,7 +484,6 @@ class EvidenceCoordinator:
         await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
         await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Current source")
         started = monotonic()
-        # Stage 1 runs BEFORE retrieval so its canonical question drives search.
         verdict = await self._resolve_readiness(decision.query)
         display_query = decision.query
         query = bounded_query(display_query, verdict)
@@ -539,7 +492,6 @@ class EvidenceCoordinator:
             self._ripgrep.retrieve(query),
             return_exceptions=True,
         )
-
         sources: list[EvidenceSource] = []
         if isinstance(memory_result, Exception):
             await self._state.set_lane(
@@ -579,7 +531,6 @@ class EvidenceCoordinator:
                 result_count=len(code_sources),
             )
             sources.extend(memory_result.sources)
-
         if isinstance(ripgrep_result, Exception):
             await self._state.set_lane(
                 RetrievalLane.RIPGREP,
@@ -595,7 +546,6 @@ class EvidenceCoordinator:
                 result_count=len(ripgrep_result.sources),
             )
             sources.extend(ripgrep_result.sources)
-
         if not any(source.lane is RetrievalLane.RIPGREP for source in sources):
             expanded_query = current_source_query_from_memory(query, sources)
             if expanded_query:
@@ -614,15 +564,9 @@ class EvidenceCoordinator:
                     result_count=len(expanded.sources),
                 )
                 sources.extend(expanded.sources)
-
         ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
-
-        # Actions are a SEPARATE output from cards: a logistics turn ("push to
-        # Friday") proposes a schedule action even when its card is suppressed,
-        # so propose actions BEFORE the card-surface gate.
         policy = self._state.session_policy()
         await self._propose_actions(verdict, decision, question_id, question_revision, policy)
-
         ranked, surface = await self._surface_order(
             query,
             decision.thread,
@@ -631,15 +575,11 @@ class EvidenceCoordinator:
             policy_digest=policy_digest,
         )
         if not surface:
-            # Filtering agent judged this turn not card-worthy (rhetorical,
-            # greeting, logistics, bare project mention) or its evidence
-            # irrelevant; suppress to keep the HUD scannable.
             if decision.candidate_fingerprint:
                 self._question_window.forget(decision.candidate_fingerprint)
             await self._state.set_lane(RetrievalLane.ASK, LaneState.IDLE,
                                        "Suppressed: not card-worthy")
             return
-
         await self._journal.append(
             session_id,
             "answer_needed_moment",
@@ -655,22 +595,16 @@ class EvidenceCoordinator:
             },
             policy_digest=policy_digest,
         )
-
-        # No resolver -> cannot judge readiness; fall back to the legacy predicate.
         may_ask = (
             verdict.may_invoke_ask
             if verdict is not None
             else _should_solve_with_ask(query, ranked)
         )
         if not policy.candidate_answer_generation:
-            # Frozen policy outranks readiness: a formal-assessment or
-            # interviewer-assist session never generates an answer (#1449).
             may_ask = False
             await self._state.set_lane(
                 RetrievalLane.ASK, LaneState.DISABLED, "Disabled by session policy"
             )
-
-        # (#1454) Requirement ledger: blocking clarifier -> UNRESOLVED, default -> ASSUMED.
         entries = build_requirement_entries(
             question_id, question_revision, display_query, decision, verdict
         )
@@ -685,7 +619,6 @@ class EvidenceCoordinator:
         )
         blocking = await self._state.blocking_unresolved(question_id, question_revision)
         if blocking:
-            # Solver must not start while a blocking requirement is UNRESOLVED.
             may_ask = False
             self._held[(question_id, question_revision)] = {
                 "query": query,
@@ -701,14 +634,11 @@ class EvidenceCoordinator:
                 f"Holding: {len(blocking)} unresolved requirement(s)",
             )
         if (question_id, question_revision) in self._solved_revisions:
-            # At most one automatic solver run per accepted revision.
             may_ask = False
-
         fast_pending = False
         if may_ask:
             self._solved_revisions.add((question_id, question_revision))
             if FastSolver.available():
-                # (#1473) Publish the card first, then stream the answer in.
                 fast_pending = True
                 await self._state.set_lane(
                     RetrievalLane.ASK, LaneState.RUNNING, "Fast solver streaming"
@@ -725,13 +655,11 @@ class EvidenceCoordinator:
                 )
                 ranked = rank_sources([*sources, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
         elif verdict is not None:
-            # A judged "not ready" holds the solver back and says why.
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.IDLE,
                 f"Holding: {verdict.blocking_reason}",
             )
-
         card_query = query if ranked else display_query
         card = self._summarizer.build(card_query, decision.thread, ranked)
         if verdict is not None and verdict.clarifying_questions:
@@ -766,8 +694,6 @@ class EvidenceCoordinator:
         snapshot = await self._state.publish_card_fenced(card)
         await self._journal_latest_publication_decision(session_id, policy_digest)
         if snapshot is None:
-            # The question moved on while this ran; keep the work as an audit
-            # event rather than discarding it silently.
             await self._journal.append(
                 session_id,
                 "evidence_card_discarded_stale_revision",
@@ -788,9 +714,7 @@ class EvidenceCoordinator:
             policy_digest=policy_digest,
         )
         from .actions import propose_research, research_warranted
-
         if policy.external_search and research_warranted(card, verdict, ranked):
-
             await propose_research(
                 self, self._state, self._journal, query=query,
                 trigger_event_ids=list(decision.source_event_ids),
@@ -815,7 +739,6 @@ class EvidenceCoordinator:
             )
             await self._state.set_lane(RetrievalLane.ASK, lane_state, detail)
             if outcome is not None and not outcome.ok:
-                # Escalation: the receipt-heavy $ask path answers instead.
                 ask_result = await self._ask.solve(query, ranked[:4])
                 if ask_result.ok and ask_result.sources:
                     merged = rank_sources([*ranked, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
@@ -830,25 +753,20 @@ class EvidenceCoordinator:
             question_revision,
             int((monotonic() - started) * 1000),
         )
-
     async def close(self) -> None:
         """Cancel unfinished retrieval tasks during service shutdown."""
-
         tasks = list(self._tasks)
         for task in tasks:
             task.cancel()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
         self._tasks.clear()
-
     def _task_done(self, task: asyncio.Task[None]) -> None:
         self._tasks.discard(task)
         try:
             task.result()
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
-
-
 def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
     return any(
         source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources
