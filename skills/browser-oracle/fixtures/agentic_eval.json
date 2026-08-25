@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "fixture wiring smoke",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
+    "proves": "the existing skill entrypoint exits with the expected status and the Ask reviewer-window placement commands remain registered",
     "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
   },
   "cases": [
@@ -17,6 +17,23 @@
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "ask-reviewer-window-placement-commands-are-registered",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh window-snapshot --help >/tmp/browser-oracle-window-snapshot-help.txt && ./run.sh place-window --help >/tmp/browser-oracle-place-window-help.txt && grep -q 'List current Chrome/X11 window ids' /tmp/browser-oracle-window-snapshot-help.txt && grep -q 'Move exactly one newly-created Chrome window' /tmp/browser-oracle-place-window-help.txt && echo REVIEWER_WINDOW_PLACEMENT_COMMANDS_REGISTERED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REVIEWER_WINDOW_PLACEMENT_COMMANDS_REGISTERED"
+        ]
       }
     }
   ]

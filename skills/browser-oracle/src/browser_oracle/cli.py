@@ -308,14 +308,18 @@ def _wmctrl_chrome_windows() -> list[str]:
     ]
 
 
-def _move_new_window_to_reviewer_desktop(before: list[str] | None = None) -> dict[str, Any] | None:
+def _move_new_window_to_reviewer_desktop(
+    before: list[str] | None = None,
+    *,
+    desktop_override: str | None = None,
+) -> dict[str, Any] | None:
     """Best-effort: move the newest Chrome window to the reviewer desktop.
 
     Desktop 2 (wmctrl index 1) by default, BROWSER_ORACLE_REVIEWER_DESKTOP to
     override, empty value to disable. Never fails the bind — placement is a
     courtesy to the user's workspace, not a proof boundary (#1222).
     """
-    raw = os.environ.get("BROWSER_ORACLE_REVIEWER_DESKTOP", "1")
+    raw = desktop_override if desktop_override is not None else os.environ.get("BROWSER_ORACLE_REVIEWER_DESKTOP", "1")
     if raw == "":
         return None
     try:
@@ -384,6 +388,42 @@ def _move_new_window_to_reviewer_desktop(before: list[str] | None = None) -> dic
         }
     except Exception as exc:
         return {"status": "failed", "reason": str(exc)[:200]}
+
+
+@app.command("window-snapshot")
+def window_snapshot_cmd(
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """List current Chrome/X11 window ids for later diff-based placement."""
+    windows = _wmctrl_chrome_windows()
+    payload = {
+        "schema": "browser_oracle.window_snapshot.v1",
+        "status": "ok" if windows else "needs_attention",
+        "windows": windows,
+    }
+    if not windows:
+        payload["reason"] = "no_chrome_windows_or_wmctrl_unavailable"
+    _emit(payload, as_json)
+    if not windows:
+        raise typer.Exit(1)
+
+
+@app.command("place-window")
+def place_window_cmd(
+    before: str = typer.Option("", "--before", help="Comma-separated Chrome/X11 window ids observed before creation."),
+    desktop: str = typer.Option("1", "--desktop", help="wmctrl desktop index; 1 is KDE Desktop 2."),
+    as_json: bool = typer.Option(False, "--json"),
+) -> None:
+    """Move exactly one newly-created Chrome window to the reviewer desktop."""
+    before_windows = [item for item in before.split(",") if item]
+    result = _move_new_window_to_reviewer_desktop(before_windows, desktop_override=desktop)
+    payload = {
+        "schema": "browser_oracle.place_window.v1",
+        **(result or {"status": "skipped", "reason": "placement_disabled"}),
+    }
+    _emit(payload, as_json)
+    if payload.get("status") not in {"moved", "skipped"}:
+        raise typer.Exit(1)
 
 
 @app.command("open-bind")

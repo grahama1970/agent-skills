@@ -19,6 +19,8 @@ code — so it cannot pass by our code agreeing with itself):
      (15-20 min); a flat 300s node default made failure certain
   5. every browser submit path passes --stable-stall-ms, so a silently
      reasoning model is not mistaken for a stalled one
+  6. the low-cognitive-load help contains correct one-shot, roundtable, and
+     compete examples so project agents do not invent the invocation shape
 
 Usage: python check_help_dispatch_consistency.py [--skip-compile]
 """
@@ -96,6 +98,45 @@ def check_no_contradictory_removal(help_text: str) -> None:
         not offenders,
         f"{len(offenders)} line(s) declare a still-advertised command removed: {offenders[:2]}",
     )
+
+
+def check_simple_mode_examples(help_text: str) -> None:
+    required = {
+        "one-shot-example": [
+            "./run.sh one-shot",
+            "--handler webkimi",
+            "--handler webgpt",
+            "--attach-file",
+            "--out-dir",
+        ],
+        "roundtable-example": [
+            "./run.sh tau-dag",
+            "--dag-template roundtable",
+            "--topology concurrent",
+            "--immutable-goal",
+            "--execute",
+            "--json",
+        ],
+        "compete-example": [
+            "./run.sh compete",
+            "--criterion correctness",
+            "--criterion minimality",
+            "--immutable-goal",
+            "--execute",
+            "--json",
+        ],
+        "browser-window-policy-note": [
+            "one reviewer window per seat",
+            "ASK_REVIEWER_DESKTOP=1",
+            "Desktop 2",
+        ],
+    }
+    missing = {
+        name: [token for token in tokens if token not in help_text]
+        for name, tokens in required.items()
+    }
+    missing = {name: tokens for name, tokens in missing.items() if tokens}
+    gate("simple-mode-examples-present", not missing, f"missing={missing}")
 
 
 def check_shortcut_compiles_to_tau(skip: bool) -> None:
@@ -201,6 +242,7 @@ def main() -> int:
     run_src = RUN_SH.read_text(encoding="utf-8")
     check_advertised_shortcuts_dispatch(help_text, run_src)
     check_no_contradictory_removal(help_text)
+    check_simple_mode_examples(help_text)
     check_shortcut_compiles_to_tau(args.skip_compile)
     check_browser_timeouts_are_viable(args.skip_compile)
     check_reasoning_stall_guard(args.skip_compile)

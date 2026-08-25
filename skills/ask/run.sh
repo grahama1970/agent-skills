@@ -209,6 +209,23 @@ Tau DAG Options:
   --run-output-root <dir> Directory for request/DAG/Tau receipt artifacts
   --json                JSON output
 
+Simple model workflow examples:
+  # One-shot: independent answers, no consensus, usable with partial results.
+  ./run.sh one-shot "Review this README packet" --handler webkimi --handler webgpt --attach-file /tmp/review-packet.md --out-dir /tmp/ask-one-shot
+
+  # Roundtable: one shared packet, concurrent seats, synthesized position.
+  ./run.sh tau-dag "Recommend the safest implementation plan" --repo local/agent-skills --target ask-roundtable --immutable-goal "Return one evidence-backed recommendation with dissent recorded." --dag-template roundtable --topology concurrent --handler webgpt --handler webkimi --handler gpt-5.5-high --execute --json
+
+  # Compete: isolated candidates, scorecard/judge path, local proof still required.
+  ./run.sh compete "Propose the smallest patch for this bug" --repo local/agent-skills --target ask-compete --immutable-goal "Select a locally verifiable patch candidate." --handler webgpt --handler webkimi --handler gpt-5.5-high --criterion correctness --criterion minimality --execute --json
+
+  Browser-window note:
+  one-shot currently runs each seat as its own single-call Tau DAG. Browser
+  seats use one reviewer window per seat so each provider tab stays visible
+  to its page runtime; Ask should place those windows on Desktop 2 by default
+  (ASK_REVIEWER_DESKTOP=1). Roundtable/compete are the collaboration modes
+  for a shared prompt packet; one-shot is for side-by-side answers only.
+
 Ask Options:
   --scope <scope>       Memory scope to query (default: ask)
   --k <n>               Number of results (default: 5)
