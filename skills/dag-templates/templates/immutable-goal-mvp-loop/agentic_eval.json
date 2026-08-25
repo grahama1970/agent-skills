@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "skill": "dag-templates/immutable-goal-mvp-loop",
+  "trials": 2,
+  "proof_scope": "template-local immutable-goal MVP loop validation and chart rendering",
+  "claims": {
+    "proves": "the canonical primitive DAG validates through phart-dag-chart, renders a chart, and can be materialized with source metadata preserved",
+    "does_not_prove": "Tau runtime execution, browser/provider behavior, or semantic correctness for every project"
+  },
+  "cases": [
+    {
+      "name": "canonical-dag-validates-and-charts",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../run.sh validate-registry && ../../run.sh chart templates/immutable-goal-mvp-loop/dag.tau.dag.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "registry validation PASS",
+          "immutable-goal-mvp-loop",
+          "brave-search",
+          "ask-escalation"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "unknown-slot-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp); ../../run.sh materialize immutable-goal-mvp-loop --set nope=value --output \"$D\""
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": [
+          "unknown slot"
+        ],
+        "stderr_excludes": [
+          "Traceback"
+        ]
+      }
+    }
+  ]
+}

@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "dag-templates",
   "trials": 3,
-  "proof_scope": "entrypoint-backed DAG primitive discovery, customization, PHART validation, and fail-closed slot handling",
+  "proof_scope": "entrypoint-backed DAG primitive discovery, directory contract validation, customization, PHART validation, and fail-closed slot handling",
   "claims": {
-    "proves": "agents can find a reusable Tau DAG primitive by intent, materialize a project-specific copy, preserve source metadata, and validate/chart it through phart-dag-chart",
+    "proves": "agents can find a reusable Tau DAG primitive by intent, inspect its README/Ask prompt/chart/eval/DAG artifacts, materialize a project-specific copy, preserve source metadata, and validate/chart it through phart-dag-chart",
     "does_not_prove": "Tau runtime execution, browser/provider behavior, semantic quality of a selected primitive for every possible project, or live cross-repository deployment"
   },
   "cases": [
@@ -19,6 +19,29 @@
         "exit_code": 0,
         "stdout_contains": [
           "dag-templates sanity PASS"
+        ]
+      }
+    },
+    {
+      "name": "registry-directory-contract",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh validate-registry --json && ../run.sh show immutable-goal-mvp-loop --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true",
+          "\"template_dir\": \"templates/immutable-goal-mvp-loop\"",
+          "\"ask_prompt_path\": \"templates/immutable-goal-mvp-loop/ask-prompt.md\"",
+          "\"chart_path\": \"templates/immutable-goal-mvp-loop/phart-dag-chart.txt\"",
+          "\"eval_path\": \"templates/immutable-goal-mvp-loop/agentic_eval.json\"",
+          "\"readme_path\": \"templates/immutable-goal-mvp-loop/README.md\""
+        ],
+        "stdout_excludes": [
+          "Traceback"
         ]
       }
     },
@@ -45,12 +68,33 @@
       }
     },
     {
+      "name": "template-local-agentic-eval",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../agentic-evals && ./run.sh run ../dag-templates/templates/immutable-goal-mvp-loop/agentic_eval.json --report-only --output /tmp/dag-template-immutable-goal-mvp-loop-agentic-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"readiness\": \"READY\"",
+          "\"case_count\": 2",
+          "\"trial_count\": 4"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    },
+    {
       "name": "unknown-slot-fails-closed",
       "type": "negative",
       "command": [
         "bash",
         "-c",
-        "D=$(mktemp); rm -f \"$D\"; ../run.sh materialize immutable-goal-mvp-loop --set unknown=value --output \"$D\""
+        "D=$(mktemp -d)/bad.tau.dag.json; ../run.sh materialize immutable-goal-mvp-loop --set unknown=value --output \"$D\""
       ],
       "expected": {
         "exit_code": 2,

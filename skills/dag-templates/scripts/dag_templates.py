@@ -16,6 +16,13 @@ SKILL_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = SKILL_DIR.parents[1]
 REGISTRY_PATH = SKILL_DIR / "registry.json"
 PHART_RUN = REPO_ROOT / "skills" / "phart-dag-chart" / "run.sh"
+REQUIRED_TEMPLATE_FILES = (
+    "readme_path",
+    "dag_path",
+    "ask_prompt_path",
+    "chart_path",
+    "eval_path",
+)
 
 
 class UsageError(Exception):
@@ -42,7 +49,7 @@ def template_by_id(template_id: str) -> dict[str, Any]:
 
 
 def load_template_doc(entry: dict[str, Any]) -> dict[str, Any]:
-    path = SKILL_DIR / str(entry["path"])
+    path = SKILL_DIR / str(entry.get("dag_path") or entry.get("path"))
     with path.open("r", encoding="utf-8") as fh:
         return json.load(fh)
 
@@ -100,7 +107,13 @@ def public_entry(entry: dict[str, Any]) -> dict[str, Any]:
         "title": entry.get("title"),
         "schema": entry.get("schema"),
         "owner_skill": entry.get("owner_skill"),
-        "path": entry.get("path"),
+        "template_dir": entry.get("template_dir"),
+        "dag_path": entry.get("dag_path") or entry.get("path"),
+        "ask_prompt_path": entry.get("ask_prompt_path"),
+        "chart_path": entry.get("chart_path"),
+        "eval_path": entry.get("eval_path"),
+        "readme_path": entry.get("readme_path"),
+        "task_types": entry.get("task_types") or [],
         "summary": entry.get("summary"),
         "tags": entry.get("tags") or [],
         "slots": [slot.get("name") for slot in entry.get("customization_slots") or []],
@@ -117,7 +130,9 @@ def cmd_list(args: argparse.Namespace) -> int:
         emit_json({"schema": "dag_template_list.v1", "templates": entries})
     else:
         for entry in entries:
-            print(f"{entry['id']} v{entry['version']} [{', '.join(entry['tags'])}]")
+            task_types = ", ".join(entry["task_types"]) or "general"
+            print(f"{entry['id']} v{entry['version']} [{task_types}]")
+            print(f"  tags: {', '.join(entry['tags'])}")
             print(f"  {entry['summary']}")
     return 0
 
@@ -135,7 +150,8 @@ def cmd_find(args: argparse.Namespace) -> int:
         emit_json({"schema": "dag_template_search.v1", "query": args.query, "matches": matches})
     else:
         for entry in matches:
-            print(f"{entry['id']} score={entry['score']} slots={', '.join(entry['slots'])}")
+            task_types = ", ".join(entry["task_types"]) or "general"
+            print(f"{entry['id']} score={entry['score']} task_types={task_types} slots={', '.join(entry['slots'])}")
             print(f"  {entry['summary']}")
     return 0 if matches else 1
 
@@ -147,6 +163,9 @@ def cmd_show(args: argparse.Namespace) -> int:
     else:
         print(f"{entry['id']} v{entry['version']}: {entry['title']}")
         print(entry["summary"])
+        print("artifacts:")
+        for field in REQUIRED_TEMPLATE_FILES:
+            print(f"  {field}: {entry.get(field)}")
         print("slots:")
         for slot in entry.get("customization_slots") or []:
             required = "required" if slot.get("required") else "optional"
@@ -160,6 +179,69 @@ def validate_file(path: Path) -> None:
         sys.stderr.write(result.stderr)
         sys.stderr.write(result.stdout)
         raise UsageError(f"materialized DAG failed PHART validation: {path}")
+
+
+def chart_text(path: Path) -> str:
+    result = subprocess.run([str(PHART_RUN), "chart", str(path)], cwd=SKILL_DIR, text=True, capture_output=True)
+    if result.returncode != 0:
+        sys.stderr.write(result.stderr)
+        raise UsageError(f"PHART chart failed for: {path}")
+    return result.stdout
+
+
+def validate_registry_entries() -> list[str]:
+    problems: list[str] = []
+    seen: set[str] = set()
+    for entry in templates():
+        template_id = str(entry.get("id") or "")
+        if not template_id:
+            problems.append("template entry missing id")
+            continue
+        if template_id in seen:
+            problems.append(f"duplicate template id: {template_id}")
+        seen.add(template_id)
+        for field in REQUIRED_TEMPLATE_FILES:
+            value = entry.get(field)
+            if not value:
+                problems.append(f"{template_id}: missing {field}")
+                continue
+            path = SKILL_DIR / str(value)
+            if not path.is_file():
+                problems.append(f"{template_id}: {field} does not exist: {value}")
+        dag_path = entry.get("dag_path") or entry.get("path")
+        if dag_path:
+            try:
+                validate_file(SKILL_DIR / str(dag_path))
+            except UsageError as exc:
+                problems.append(f"{template_id}: {exc}")
+    return problems
+
+
+def cmd_validate_registry(args: argparse.Namespace) -> int:
+    problems = validate_registry_entries()
+    if args.json:
+        emit_json({"schema": "dag_template_registry_validation.v1", "ok": not problems, "problems": problems})
+    elif problems:
+        for problem in problems:
+            print(f"error: {problem}", file=sys.stderr)
+    else:
+        print(f"registry validation PASS ({len(templates())} templates)")
+    return 0 if not problems else 1
+
+
+def cmd_refresh_charts(args: argparse.Namespace) -> int:
+    updated: list[str] = []
+    for entry in templates():
+        dag_path = SKILL_DIR / str(entry.get("dag_path") or entry.get("path"))
+        chart_path = SKILL_DIR / str(entry["chart_path"])
+        chart_path.write_text(chart_text(dag_path), encoding="utf-8")
+        updated.append(str(chart_path.relative_to(SKILL_DIR)))
+    if args.json:
+        emit_json({"schema": "dag_template_chart_refresh.v1", "updated": updated})
+    else:
+        for path in updated:
+            print(path)
+    return 0
 
 
 def cmd_materialize(args: argparse.Namespace) -> int:
@@ -209,6 +291,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_show.add_argument("template_id")
     p_show.add_argument("--json", action="store_true")
     p_show.set_defaults(func=cmd_show)
+
+    p_validate_registry = sub.add_parser("validate-registry", help="Validate registry rows, required template files, and DAG JSON.")
+    p_validate_registry.add_argument("--json", action="store_true")
+    p_validate_registry.set_defaults(func=cmd_validate_registry)
+
+    p_refresh = sub.add_parser("refresh-charts", help="Regenerate each primitive's phart-dag-chart.txt artifact.")
+    p_refresh.add_argument("--json", action="store_true")
+    p_refresh.set_defaults(func=cmd_refresh_charts)
 
     p_materialize = sub.add_parser("materialize", help="Write a customized DAG from a primitive.")
     p_materialize.add_argument("template_id")

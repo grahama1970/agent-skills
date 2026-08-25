@@ -39,15 +39,25 @@ it for a specific project, and keep the original primitive traceable.
 
 ## Contract
 
-Canonical templates live in `templates/` and are indexed by `registry.json`.
-They are valid `tau.dag_contract.v1` JSON with safe defaults. Agents should
-materialize a project-specific copy instead of editing the canonical template.
+Canonical templates live as directories under `templates/` and are indexed by
+`registry.json` plus the scannable `REGISTRY.md`. Each primitive directory must
+carry the full task packet an agent needs:
+
+- `README.md` - when to use the primitive, slots, evidence, and customization notes.
+- `dag.tau.dag.json` - valid `tau.dag_contract.v1` with safe defaults.
+- `ask-prompt.md` - the `$ask`/Tau prompt packet for this primitive.
+- `phart-dag-chart.txt` - rendered chart from `$phart-dag-chart`.
+- `agentic_eval.json` - template-local regression checks.
+
+Agents should materialize a project-specific copy instead of editing the
+canonical DAG.
 
 ```bash
 cd skills/dag-templates
 ./run.sh list
 ./run.sh find "anti thrash immutable goal mvp"
 ./run.sh show immutable-goal-mvp-loop
+./run.sh validate-registry
 ./run.sh materialize immutable-goal-mvp-loop \
   --set dag_id=my-project-loop \
   --set goal_id=my-project \
@@ -69,6 +79,8 @@ Search by intent first, then inspect the selected template's slots:
    `$phart-dag-chart` by default.
 4. Preserve `_template.source_id` and `_template.source_version` in customized
    DAGs so reviewers can trace which primitive was used.
+5. Use the primitive directory README and `ask-prompt.md` as the source packet
+   when asking `$ask` or Tau to execute or review the workflow.
 
 ## Primitive Promotion Rule
 

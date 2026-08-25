@@ -6,10 +6,21 @@
       "version": 1,
       "title": "Immutable Goal MVP Loop",
       "schema": "tau.dag_contract.v1",
-      "path": "templates/immutable-goal-mvp-loop.tau.dag.json",
+      "template_dir": "templates/immutable-goal-mvp-loop",
+      "dag_path": "templates/immutable-goal-mvp-loop/dag.tau.dag.json",
+      "ask_prompt_path": "templates/immutable-goal-mvp-loop/ask-prompt.md",
+      "chart_path": "templates/immutable-goal-mvp-loop/phart-dag-chart.txt",
+      "eval_path": "templates/immutable-goal-mvp-loop/agentic_eval.json",
+      "readme_path": "templates/immutable-goal-mvp-loop/README.md",
       "owner_skill": "dag-templates",
       "status": "active",
       "summary": "Bound a task to an immutable goal, decompose into focused MVPs, implement one MVP at a time, review against the goal, escalate through brave-search and ask when blocked or thrashing, then either continue or stop with receipts.",
+      "task_types": [
+        "project-agent-implementation",
+        "debugging",
+        "anti-thrash-recovery",
+        "goal-locked-delivery"
+      ],
       "use_when": [
         "A project agent is thrashing or retrying without narrowing the work.",
         "The human has declared an immutable goal and wants bounded progress.",

@@ -7,6 +7,7 @@ trap 'rm -f "$TMP"' EXIT
 
 "$SCRIPT_DIR/run.sh" list --json | grep -q '"immutable-goal-mvp-loop"'
 "$SCRIPT_DIR/run.sh" find "anti thrash immutable goal mvp" --json | grep -q '"immutable-goal-mvp-loop"'
+"$SCRIPT_DIR/run.sh" validate-registry | grep -q 'registry validation PASS'
 "$SCRIPT_DIR/run.sh" materialize immutable-goal-mvp-loop \
   --set dag_id=sanity-loop \
   --set goal_id=sanity-goal \
@@ -17,5 +18,9 @@ trap 'rm -f "$TMP"' EXIT
   --output "$TMP" >/dev/null
 "$SCRIPT_DIR/run.sh" chart "$TMP" | grep -q 'schema=tau.dag_contract.v1 -> ask.dag.v1'
 "$SCRIPT_DIR/run.sh" chart "$TMP" | grep -q 'brave-search'
+test -f "$SCRIPT_DIR/templates/immutable-goal-mvp-loop/README.md"
+test -f "$SCRIPT_DIR/templates/immutable-goal-mvp-loop/ask-prompt.md"
+test -f "$SCRIPT_DIR/templates/immutable-goal-mvp-loop/phart-dag-chart.txt"
+test -f "$SCRIPT_DIR/templates/immutable-goal-mvp-loop/agentic_eval.json"
 
 echo "dag-templates sanity PASS"

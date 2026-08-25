@@ -21,6 +21,14 @@ class DagTemplatesTest(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual(payload["schema"], "dag_template_search.v1")
         self.assertEqual(payload["matches"][0]["id"], "immutable-goal-mvp-loop")
+        self.assertEqual(payload["matches"][0]["template_dir"], "templates/immutable-goal-mvp-loop")
+
+    def test_validate_registry_requires_template_artifacts(self) -> None:
+        result = self.run_cmd("validate-registry", "--json")
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["problems"], [])
 
     def test_materialize_customizes_and_preserves_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -49,6 +57,17 @@ class DagTemplatesTest(unittest.TestCase):
             self.assertEqual(doc["goal"]["immutable_goal"], "Deliver a custom MVP with receipts")
             self.assertEqual(doc["_template"]["source_id"], "immutable-goal-mvp-loop")
             self.assertTrue(doc["_template"]["customized"])
+
+    def test_show_exposes_prompt_chart_eval_and_readme_paths(self) -> None:
+        result = self.run_cmd("show", "immutable-goal-mvp-loop", "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["template_dir"], "templates/immutable-goal-mvp-loop")
+        self.assertEqual(payload["dag_path"], "templates/immutable-goal-mvp-loop/dag.tau.dag.json")
+        self.assertEqual(payload["ask_prompt_path"], "templates/immutable-goal-mvp-loop/ask-prompt.md")
+        self.assertEqual(payload["chart_path"], "templates/immutable-goal-mvp-loop/phart-dag-chart.txt")
+        self.assertEqual(payload["eval_path"], "templates/immutable-goal-mvp-loop/agentic_eval.json")
+        self.assertEqual(payload["readme_path"], "templates/immutable-goal-mvp-loop/README.md")
 
     def test_unknown_slot_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

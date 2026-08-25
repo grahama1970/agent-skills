@@ -1,0 +1,52 @@
+```text
+DAG decision tree · immutable-goal-mvp-loop (phart 1.5 git)
+schema=tau.dag_contract.v1 -> ask.dag.v1
+
+         ┌─────────────┐
+         │ freeze-goal │
+         └─────────────┘
+                │
+                │
+                v
+       ┌────────────────┐
+       │ decompose-mvps │
+       └────────────────┘
+                │
+                │
+                v
+        ┌───────────────┐
+        │ implement-mvp │
+        └───────────────┘
+                │
+                │
+                v
+         ┌────────────┐
+         │ review-mvp │
+         └────────────┘
+                ├──────────┐
+        ┌───────┘          │
+        v                  v
+┌──────────────┐     ┌──────────┐
+│ brave-search │     │ mvp-pass │
+└──────────────┘     └──────────┘
+        │       ┌──────────┘
+        └───────┤
+                v
+       ┌────────────────┐
+       │ ask-escalation │
+       └────────────────┘
+                │
+                │
+                v
+       ┌────────────────┐
+       │ audit-or-block │
+       └────────────────┘
+                │
+                │
+                v
+            ┌───────┐
+            │ human │
+            └───────┘
+
+renderer: phart@github.com/scottvr/phart · layout=layered · bboxes
+```
