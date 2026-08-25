@@ -61,7 +61,9 @@ PENDING_RECOVERY_TTL_SECONDS = 12 * 3600
 
 TTL_BY_MODE = {
     "fresh-keep": FRESH_KEEP_TTL_SECONDS,
+    "fresh-shared-keep": FRESH_KEEP_TTL_SECONDS,
     "fresh-temporary": FRESH_TEMPORARY_TTL_SECONDS,
+    "fresh-shared-temporary": FRESH_TEMPORARY_TTL_SECONDS,
     "pending-recovery": PENDING_RECOVERY_TTL_SECONDS,
 }
 
