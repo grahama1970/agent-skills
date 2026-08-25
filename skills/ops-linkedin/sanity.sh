@@ -108,6 +108,19 @@ grep -q '"schema_version": "ops-linkedin.profile_sync.v1"' "$tmp_dir/profile-syn
 grep -q '"external_effects": false' "$tmp_dir/profile-sync.json"
 grep -q '"execution_claim": "NOT_EXECUTED"' "$tmp_dir/profile-sync.json"
 
+echo "Check: bounded contact graph capture plan"
+bash "$SCRIPT_DIR/run.sh" contact-graph-capture-plan \
+  --opportunity "Moog Senior AI Engineer" \
+  --target "George Small|Moog|https://www.linkedin.com/in/george-small-moog/" \
+  --user-authorized-read-only \
+  --accept-account-risk \
+  --tab-id "837413494" \
+  --output "$tmp_dir/contact-graph-plan.json" >/dev/null
+grep -q '"schema_version": "ops-linkedin.contact_graph_capture_plan.v1"' "$tmp_dir/contact-graph-plan.json"
+grep -q '"authorization": "USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED"' "$tmp_dir/contact-graph-plan.json"
+grep -q '"execution_claim": "NOT_EXECUTED"' "$tmp_dir/contact-graph-plan.json"
+grep -q 'send any message/InMail' "$tmp_dir/contact-graph-plan.json"
+
 echo "Check: positive prepare and packet validation"
 bash "$SCRIPT_DIR/run.sh" prepare \
   "$SCRIPT_DIR/assets/examples/publish-post.json" \

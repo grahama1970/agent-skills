@@ -15,6 +15,8 @@ from uuid import uuid4
 from ops_linkedin.models import (
     OUTBOUND_ACTIONS,
     Action,
+    ContactGraphCapturePlan,
+    ContactGraphTarget,
     ClaimStatus,
     ExecutionClaim,
     FeatureState,
@@ -232,13 +234,15 @@ def policy_report() -> PolicyReport:
         allowed=[
             "Draft profile copy, posts, comments, connection notes, and messages locally.",
             "Prepare source-derived own-profile sync packets and Surf command plans after explicit account-risk acceptance.",
+            "Prepare bounded contact-graph capture plans for named opportunity contacts after explicit read-only authorization and account-risk acceptance.",
             "Analyze user-provided or exported content and metrics.",
             "Create manual search and lead-research plans using public-web sources.",
             "Create local handoff packets and record explicit human completion attestations.",
         ],
         prohibited=[
-            "Automated access to third-party LinkedIn pages, feeds, posts, messages, search results, or DOM content.",
-            "Scraping profiles, posts, contacts, or search results.",
+            "Unscoped automated access to third-party LinkedIn pages, feeds, posts, messages, search results, or DOM content.",
+            "Bulk scraping profiles, posts, contacts, or search results.",
+            "Collecting anything beyond visible relationship degree, visible mutual names, role/company headline, and recruiter/contact relevance for the named targets in one plan.",
             "Reading or copying browser cookies, passwords, or session tokens.",
             "Automated posting, liking, commenting, connecting, following, or messaging.",
             "Bulk or inauthentic engagement and attempts to evade platform controls.",
@@ -286,9 +290,14 @@ def status_report(*, now: datetime | None = None) -> StatusReport:
                 evidence="profile-sync-plan emits ops-linkedin.profile_sync.v1 from RESUME.md or an editable profile-entry JSON",
             ),
             FeatureStatus(
-                feature="LinkedIn browser automation outside own-profile sync",
+                feature="authorized read-only contact graph capture planning",
+                state=FeatureState.READY,
+                evidence="contact-graph-capture-plan emits ops-linkedin.contact_graph_capture_plan.v1 with no outbound actions and NOT_EXECUTED proof",
+            ),
+            FeatureStatus(
+                feature="general LinkedIn browser automation outside bounded plans",
                 state=FeatureState.PROHIBITED,
-                evidence="policy and packet guardrails exclude third-party profiles, scraping, and social actions",
+                evidence="policy and packet guardrails exclude bulk scraping, cookies, and social actions",
             ),
             FeatureStatus(
                 feature="official LinkedIn API adapter",
@@ -305,13 +314,69 @@ def status_report(*, now: datetime | None = None) -> StatusReport:
             "The CLI can validate manifests and create local handoff packets.",
             "The CLI can derive an editable LinkedIn profile entry from a canonical resume source digest.",
             "The CLI can derive an own-profile sync plan from the editable profile-entry JSON.",
+            "The CLI can prepare a bounded read-only contact graph capture plan for named opportunity contacts.",
             "Prepared packets state that no LinkedIn action was executed.",
             "A human attestation remains distinct from platform verification.",
         ],
         claims_does_not_prove=[
             "That LinkedIn accepted, displayed, or delivered any action.",
             "That Surf executed the emitted own-profile plan or saved a profile edit.",
+            "That Surf executed a contact graph capture plan or that mutual contacts exist.",
             "That platform terms will remain unchanged after the policy snapshot date.",
             "That an official API integration is authorized or available.",
         ],
+    )
+
+
+def build_contact_graph_capture_plan(
+    *,
+    opportunity: str,
+    targets: list[ContactGraphTarget],
+    user_authorized_read_only: bool,
+    accept_account_risk: bool,
+    tab_id: str | None = None,
+    surf_run: str = "/home/graham/workspace/experiments/agent-skills/skills/surf/run.sh",
+    now: datetime | None = None,
+) -> ContactGraphCapturePlan:
+    """Emit a non-executing plan for bounded LinkedIn relationship inspection."""
+
+    if not user_authorized_read_only:
+        raise ValueError("--user-authorized-read-only is required")
+    if not accept_account_risk:
+        raise ValueError("--accept-account-risk is required")
+
+    commands: list[str] = []
+    if tab_id:
+        for target in targets:
+            commands.append(
+                f"{surf_run} open --tab-id {tab_id} {target.profile_url}"
+            )
+            commands.append(
+                f"{surf_run} screenshot --tab-id {tab_id} --output <receipt-dir>/{target.name.replace(' ', '_')}.png"
+            )
+
+    return ContactGraphCapturePlan(
+        created_at=now or utc_now(),
+        opportunity=opportunity,
+        targets=targets,
+        authorization="USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED",
+        allowed_observations=[
+            "visible LinkedIn relationship degree for each named target",
+            "visible mutual contact names when LinkedIn shows them on the named target page",
+            "visible current title/company/location headline for target disambiguation",
+            "visible recruiter, hiring, or opportunity relevance signals for the named target",
+        ],
+        prohibited_actions=[
+            "connect, follow, react, comment, post, apply, save, or send any message/InMail",
+            "inspect cookies, passwords, tokens, local storage, or hidden browser state",
+            "export or enumerate a contact database beyond the named targets",
+            "bypass login walls, rate limits, bot checks, or visibility restrictions",
+            "claim platform delivery or outreach from this read-only plan",
+        ],
+        data_minimization=[
+            "capture at most the target URL, target name, relationship degree, visible mutual names, role/company headline, and screenshot/artifact reference",
+            "store the result as monitor_opportunities.linkedin_contact_graph_evidence.v1 for the specific opportunity",
+            "do not retain unrelated feed, profile, messaging, notification, or search-result data",
+        ],
+        suggested_surf_commands=commands,
     )

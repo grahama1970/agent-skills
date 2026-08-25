@@ -1,9 +1,10 @@
 # ops-linkedin
 
-`ops-linkedin` prepares LinkedIn work without automating outreach, scraping, posts,
-messages, comments, applications, or third-party profile access. It converts typed JSON
+`ops-linkedin` prepares LinkedIn work without automating outreach, bulk scraping, posts,
+message/InMail sending, comments, applications, or unscoped third-party profile access. It converts typed JSON
 requests into evidence-aware handoff packets, and it can export an editable JSON entry for
-Graham's own LinkedIn profile from `RESUME.md`.
+Graham's own LinkedIn profile from `RESUME.md`. It can also prepare bounded read-only
+contact graph capture plans for named opportunity contacts after explicit authorization.
 
 ## Why it differs from browser-native LinkedIn skills
 
@@ -11,7 +12,7 @@ The open-source `quantumbyte31/linkedin-skills` project demonstrates a useful si
 router, but it drives LinkedIn through a Chrome extension and local DOM bridge. LinkedIn's
 current User Agreement and Help Center prohibit unauthorized automated access, scraping,
 and automated social actions. This implementation keeps the useful lane structure while
-removing browser/session access and execution.
+removing unbounded browser/session access and execution.
 
 It is an engineering policy choice, not a representation that every possible use is
 legally approved. The policy snapshot is dated and must be rechecked before expansion.
@@ -22,11 +23,14 @@ legally approved. The policy snapshot is dated and must be rechecked before expa
 - **Explore:** prepare a manual search query and review plan.
 - **Publish:** prepare text or image-post copy and attachment checks.
 - **Interact:** prepare one comment, connection note, or message.
-- **Lead generation:** prepare public-web research and manual review criteria.
+- **Lead generation:** prepare public-web research, manual review criteria, and bounded
+  read-only contact graph capture plans for named opportunity contacts.
 - **Content operations:** analyze user-provided/exported content and metrics.
 
-Every outbound lane ends before LinkedIn access. Graham's own profile has a separate
-JSON-first sync plan that requires explicit account-risk and own-profile flags.
+Every outbound lane ends before LinkedIn send/connect/follow actions. Graham's own
+profile has a separate JSON-first sync plan that requires explicit account-risk and
+own-profile flags. Named opportunity contact graphs have a separate read-only plan that
+requires explicit read-only authorization and account-risk flags.
 
 ## Quick start
 
@@ -47,6 +51,12 @@ bash ./run.sh profile-sync-plan \
   --accept-account-risk \
   --own-profile-only \
   -o /tmp/linkedin-profile-sync.json
+bash ./run.sh contact-graph-capture-plan \
+  --opportunity "Moog Senior AI Engineer" \
+  --target "George Small|Moog|https://www.linkedin.com/in/george-small-moog/" \
+  --user-authorized-read-only \
+  --accept-account-risk \
+  -o /tmp/linkedin-contact-graph-plan.json
 bash ./sanity.sh
 ```
 
@@ -103,14 +113,14 @@ bash ./sanity.sh
 The source package intentionally has no HTTP, browser, WebSocket, cookie, or scraping
 dependencies. `sanity.sh` statically rejects those implementation surfaces and runs the
 real CLI in positive and negative cases. Surf appears only as an emitted command plan for
-the own-profile sync packet.
+the own-profile sync packet and the bounded named-contact graph capture packet.
 
 ## Current scope
 
 Ready: local manifest validation, handoff creation, claim blocking, packet validation,
 status/policy reports, editable own-profile JSON export, own-profile Surf sync planning,
-and bounded human attestation.
+bounded named-contact graph capture planning, and bounded human attestation.
 
-Not implemented: generalized login checks, third-party LinkedIn browsing, search
-execution, profile retrieval, posting, likes, comments, connections, messages, uploads,
-applications, or an official API adapter.
+Not implemented: generalized login checks, unscoped third-party LinkedIn browsing, search
+execution, bulk profile retrieval, posting, likes, comments, connections, follows,
+message/InMail sending, uploads, applications, or an official API adapter.

@@ -13,6 +13,7 @@ from ops_linkedin.cli import app
 from ops_linkedin.models import (
     Claim,
     ClaimStatus,
+    ContactGraphTarget,
     ExecutionClaim,
     HandoffRequest,
     PacketStatus,
@@ -23,7 +24,12 @@ from ops_linkedin.profile_sync import (
     build_profile_entry,
     build_profile_sync_packet_from_entry,
 )
-from ops_linkedin.service import attest_human_completion, policy_report, prepare_handoff
+from ops_linkedin.service import (
+    attest_human_completion,
+    build_contact_graph_capture_plan,
+    policy_report,
+    prepare_handoff,
+)
 
 NOW = datetime(2026, 8, 2, 15, 0, tzinfo=UTC)
 
@@ -246,16 +252,19 @@ def test_blocked_packet_cannot_be_attested() -> None:
         attest_human_completion(packet, actor="Graham", confirmed=True, now=NOW)
 
 
-def test_policy_has_no_automation_escape_hatch() -> None:
-    """The policy report must name the prohibited technical surfaces."""
+def test_policy_allows_bounded_contact_graph_plans_without_outbound_actions() -> None:
+    """The policy report must name the narrow contact-graph allowance and bans."""
 
     policy = policy_report()
+    allowed = " ".join(policy.allowed).lower()
     prohibited = " ".join(policy.prohibited).lower()
 
-    assert "automated access" in prohibited
+    assert "contact-graph capture plans" in allowed
+    assert "unscoped automated access" in prohibited
     assert "scraping" in prohibited
     assert "cookies" in prohibited
     assert "automated posting" in prohibited
+    assert "beyond visible relationship degree" in prohibited
 
 
 def test_policy_cli_outputs_machine_readable_json() -> None:
@@ -464,3 +473,95 @@ def test_profile_sync_plan_consumes_editable_entry_without_execution_claim() -> 
     assert packet.guardrails.no_outbound_social_actions is True
     assert packet.execution_claim == "NOT_EXECUTED"
     assert any(field.field == "headline" for field in packet.fields)
+
+
+def test_contact_graph_capture_plan_requires_authorization_flags() -> None:
+    """Read-only third-party inspection planning needs both explicit acknowledgements."""
+
+    target = ContactGraphTarget(
+        name="George Small",
+        company="Moog",
+        profile_url="https://www.linkedin.com/in/george-small-moog/",
+    )
+
+    with pytest.raises(ValueError, match="user-authorized-read-only"):
+        build_contact_graph_capture_plan(
+            opportunity="Moog Senior AI Engineer",
+            targets=[target],
+            user_authorized_read_only=False,
+            accept_account_risk=True,
+            now=NOW,
+        )
+
+    with pytest.raises(ValueError, match="accept-account-risk"):
+        build_contact_graph_capture_plan(
+            opportunity="Moog Senior AI Engineer",
+            targets=[target],
+            user_authorized_read_only=True,
+            accept_account_risk=False,
+            now=NOW,
+        )
+
+
+def test_contact_graph_capture_plan_is_read_only_and_not_executed() -> None:
+    """The plan permits degree/mutual capture but never social actions."""
+
+    plan = build_contact_graph_capture_plan(
+        opportunity="Moog Senior AI Engineer",
+        targets=[
+            ContactGraphTarget(
+                name="George Small",
+                company="Moog",
+                profile_url="https://www.linkedin.com/in/george-small-moog/",
+            )
+        ],
+        user_authorized_read_only=True,
+        accept_account_risk=True,
+        tab_id="837413494",
+        now=NOW,
+    )
+
+    assert plan.schema_version == "ops-linkedin.contact_graph_capture_plan.v1"
+    assert plan.authorization == "USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED"
+    assert plan.execution_claim == "NOT_EXECUTED"
+    assert plan.platform_verified is False
+    assert any("visible LinkedIn relationship degree" in item for item in plan.allowed_observations)
+    prohibited = " ".join(plan.prohibited_actions)
+    assert "connect" in prohibited
+    assert "send any message/InMail" in prohibited
+    assert plan.suggested_surf_commands
+
+
+def test_contact_graph_target_must_be_linkedin_profile_url() -> None:
+    """Search result pages and company pages are outside this bounded lane."""
+
+    with pytest.raises(ValidationError, match="linkedin.com/in"):
+        ContactGraphTarget(
+            name="Moog",
+            company="Moog",
+            profile_url="https://www.linkedin.com/company/moog-inc/",
+        )
+
+
+def test_contact_graph_capture_plan_cli() -> None:
+    """Exercise the real Typer command without opening LinkedIn."""
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "contact-graph-capture-plan",
+            "--opportunity",
+            "Moog Senior AI Engineer",
+            "--target",
+            "George Small|Moog|https://www.linkedin.com/in/george-small-moog/",
+            "--user-authorized-read-only",
+            "--accept-account-risk",
+            "--tab-id",
+            "837413494",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "ops-linkedin.contact_graph_capture_plan.v1" in result.output
+    assert "USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED" in result.output
+    assert "NOT_EXECUTED" in result.output

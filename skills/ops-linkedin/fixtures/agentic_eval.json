@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "ops-linkedin",
   "trials": 3,
-  "proof_scope": "local request validation, draft preparation, fail-closed claim gating, and bounded human attestation through the real CLI; no LinkedIn network or browser access",
+  "proof_scope": "local request validation, draft preparation, fail-closed claim gating, bounded human attestation, own-profile sync planning, and named-contact graph capture planning through the real CLI; no live LinkedIn network or browser access",
   "claims": {
-    "proves": "the skill prepares typed local handoffs, refuses unsupported evidence-sensitive requests, never upgrades a human attestation into platform verification, exports an editable ops-linkedin.profile_entry.v1 JSON from RESUME.md, and emits a source-derived own-profile Surf sync plan whose execution_claim remains NOT_EXECUTED; additionally: outbound actions without a permitting roundtable verdict are BLOCKED_MISSING_ROUNDTABLE, DO_NOT_SEND and NEEDS_HUMAN_DECISION cannot yield an executable packet, a single PASSing seat is rejected as not a panel, sequential topology is rejected as a pipeline, a verified claim without a canonical claim_key is rejected, and profile-update is correctly exempt from the outbound gate",
-    "does_not_prove": "that LinkedIn accepted, displayed, sent, or delivered any action, that Surf executed the own-profile plan, or that an official LinkedIn API integration is authorized; it also does not prove that a roundtable actually ran \u2014 the packet records a receipt path, it does not execute the panel"
+    "proves": "the skill prepares typed local handoffs, refuses unsupported evidence-sensitive requests, never upgrades a human attestation into platform verification, exports an editable ops-linkedin.profile_entry.v1 JSON from RESUME.md, emits a source-derived own-profile Surf sync plan whose execution_claim remains NOT_EXECUTED, and emits a bounded named-contact graph capture plan that prohibits connecting and sending InMail/messages; additionally: outbound actions without a permitting roundtable verdict are BLOCKED_MISSING_ROUNDTABLE, DO_NOT_SEND and NEEDS_HUMAN_DECISION cannot yield an executable packet, a single PASSing seat is rejected as not a panel, sequential topology is rejected as a pipeline, a verified claim without a canonical claim_key is rejected, and profile-update is correctly exempt from the outbound gate",
+    "does_not_prove": "that LinkedIn accepted, displayed, sent, or delivered any action, that Surf executed the own-profile plan, that Surf executed the contact-graph plan, that any mutual contact exists, or that an official LinkedIn API integration is authorized; it also does not prove that a roundtable actually ran \u2014 the packet records a receipt path, it does not execute the panel"
   },
   "cases": [
     {
@@ -87,7 +87,27 @@
           "exit_code": 0,
           "stdout_contains": [
           "draft-human-handoff-plus-opt-in-own-profile-sync",
-          "Automated access to third-party LinkedIn pages"
+          "contact-graph capture plans",
+          "Unscoped automated access"
+        ]
+      }
+    },
+    {
+      "name": "contact-graph-plan-is-read-only-and-not-executed",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "d=$(mktemp -d); bash ../run.sh contact-graph-capture-plan --opportunity 'Moog Senior AI Engineer' --target 'George Small|Moog|https://www.linkedin.com/in/george-small-moog/' --user-authorized-read-only --accept-account-risk --tab-id 837413494 -o $d/contact-plan.json >/dev/null; grep -E '\"schema_version\": \"ops-linkedin.contact_graph_capture_plan.v1\"|\"authorization\": \"USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED\"|\"execution_claim\": \"NOT_EXECUTED\"|send any message/InMail|connect' $d/contact-plan.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ops-linkedin.contact_graph_capture_plan.v1",
+          "USER_AUTHORIZED_READ_ONLY_ACCOUNT_RISK_ACCEPTED",
+          "NOT_EXECUTED",
+          "send any message/InMail"
         ]
       }
     },

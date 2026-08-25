@@ -46,6 +46,24 @@ Ideas intentionally rejected here:
 Using a real browser or making automation resemble an ordinary user does not make the
 method authorized. Frequency limits also do not resolve the underlying authorization issue.
 
+## Bounded opportunity contact graph allowance
+
+Operator update: when Graham explicitly authorizes it for a named opportunity, the
+project agent may prepare and execute a bounded read-only contact graph capture plan
+against Graham's own authenticated LinkedIn session. The only permitted purpose is to
+identify relevant contacts for that opportunity and record visible relationship evidence:
+target URL, name, title/company/location headline, visible degree, visible mutual names
+if shown, and screenshot/artifact references.
+
+This is not an outreach or connection authorization. The agent must not connect, follow,
+react, post, apply, save, or send any message/InMail. The agent may prepare a relevant
+InMail/message draft as a local handoff packet; sending remains a separate human action
+and outbound roundtable-gated workflow.
+
+The capture must stay small and named-target based. It must not enumerate a contact
+database, inspect hidden browser state, read cookies/tokens/local storage, bypass platform
+controls, or collect unrelated feed/search/profile data.
+
 No upstream code is vendored in this skill. The lane vocabulary is an independently
 implemented organizational adaptation.
 
@@ -62,3 +80,6 @@ Do not add any LinkedIn network or browser implementation until all of these are
 7. Updated SKILL.md, project knowledge, policy date, and non-claims.
 
 Without those artifacts, the correct state is `NOT_IMPLEMENTED`, not aspirational support.
+For the bounded opportunity contact graph allowance, those artifacts are represented by
+`ops-linkedin.contact_graph_capture_plan.v1` plus the later
+`monitor_opportunities.linkedin_contact_graph_evidence.v1` browser receipt.
