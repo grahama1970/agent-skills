@@ -1303,12 +1303,20 @@ def _select_available_browser_handlers(
             # Measured 2026-08-16: 20 open chatgpt tabs, two of them Ask review
             # tabs left behind holding "Too many requests", and webgpt was
             # removed from every run until they were closed by hand.
-            if _provider_limit_is_attributable(payload, name, input_payload):
+            if _provider_limit_is_attributable(payload, name, input_payload) or name in set(requested):
                 unusable[name] = "provider_limited"
             else:
                 advisory_limited[name] = "ambient_tab_rate_limited"
         elif payload.get("probe_failed") is True:
-            unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
+            packet = payload.get("provider_probe_recovery_packet")
+            if (
+                isinstance(packet, dict)
+                and packet.get("auto_retry_blocked_reason") == "provider_probe_uncertain_requires_readback"
+            ):
+                unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
+                probe_uncertain.add(name)
+            else:
+                unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
         elif payload.get("probe_degraded") is True:
             packet = payload.get("provider_probe_recovery_packet")
             blocked = isinstance(packet, dict) and packet.get("auto_retry_allowed") is False
@@ -1324,15 +1332,7 @@ def _select_available_browser_handlers(
     removed: list[str] = []
     for handler in requested:
         if handler in BROWSER_FRESH_URLS and handler in unusable:
-            if handler in probe_uncertain:
-                # Uncertainty is not unavailability (operator 2026-08-19/20):
-                # an UNCONFIRMED probe never removes a seat in ANY run shape.
-                # The fresh-tab worker owns the bounded retry, and the
-                # join-gate contains a genuinely dead lane without starving
-                # the panel. A CONFIRMED blocker still removes below.
-                active.append(handler)
-            else:
-                removed.append(handler)
+            removed.append(handler)
         else:
             active.append(handler)
 
@@ -1344,13 +1344,18 @@ def _select_available_browser_handlers(
     explicit_projects = _explicit_handler_projects(input_payload)
     fresh_lifecycle_kept: list[str] = []
     single_explicit_seat = len(browser_requested) == 1
+    fresh_lifecycle_uncertainty_codes = {
+        "browser_provider_probe_timeout",
+        "browser_provider_probe_failed",
+    }
     if (
         single_explicit_seat
         and removed == browser_requested
         and _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle)
         and browser_requested[0] not in explicit_projects
         and all(
-            unusable.get(handler) == "provider_limited" or handler in probe_uncertain
+            unusable.get(handler) == "provider_limited"
+            or (handler in probe_uncertain and unusable.get(handler) in fresh_lifecycle_uncertainty_codes)
             for handler in removed
         )
     ):

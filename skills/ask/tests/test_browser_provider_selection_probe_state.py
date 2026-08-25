@@ -44,13 +44,31 @@ def _degraded(code: str = "browser_provider_probe_timeout", auto_retry: bool = F
     }
 
 
+def _failed_uncertain(code: str = "browser_provider_probe_failed") -> dict:
+    """Shape observed when old tabs have another CDP debugger attached."""
+    return {
+        "provider_limited": False,
+        "probe_failed": True,
+        "probe_degraded": True,
+        "failure_code": code,
+        "provider_probe_recovery_packet": {
+            "auto_retry_allowed": False,
+            "auto_retry_blocked_reason": "provider_probe_uncertain_requires_readback",
+        },
+    }
+
+
 def _healthy() -> dict:
     return {"provider_limited": False, "probe_failed": False, "probe_degraded": False}
 
 
-def _payload(handlers: list[str], template: str = "single-call") -> SimpleNamespace:
+def _payload(
+    handlers: list[str],
+    template: str = "single-call",
+    workflow_mode: str = "",
+) -> SimpleNamespace:
     return SimpleNamespace(
-        handlers=handlers, workflow_mode="", dag_template=template, request="battle evals"
+        handlers=handlers, workflow_mode=workflow_mode, dag_template=template, request="battle evals"
     )
 
 
@@ -125,6 +143,20 @@ def test_fresh_single_seat_survives_ambient_probe_timeout() -> None:
     assert selection["removed_handlers"] == []
     assert selection["fresh_lifecycle_kept_handlers"] == ["webgpt"]
     assert selection["unusable_providers"] == {"webgpt": "browser_provider_probe_timeout"}
+
+
+def test_fresh_single_seat_survives_failed_uncertain_old_tab_probe() -> None:
+    """A stale/attached old tab should not prevent Ask from creating a new tab."""
+    selection = _select_available_browser_handlers(
+        _payload(["webgpt"], workflow_mode="single"),
+        _report(webgpt=_failed_uncertain("browser_provider_probe_failed")),
+        browser_tab_lifecycle="auto",
+    )
+    assert selection["status"] == "READY"
+    assert selection["active_handlers"] == ["webgpt"]
+    assert selection["removed_handlers"] == []
+    assert selection["fresh_lifecycle_kept_handlers"] == ["webgpt"]
+    assert selection["unusable_providers"] == {"webgpt": "browser_provider_probe_failed"}
 
 
 def test_fresh_single_seat_still_blocks_on_non_timeout_degraded_probe() -> None:

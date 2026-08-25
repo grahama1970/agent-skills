@@ -44,6 +44,25 @@
           "QUORUM_MET_REJECTED"
         ]
       }
+    },
+    {
+      "name": "single-webgpt-fresh-lifecycle-survives-failed-uncertain-old-tab-probe",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/ask && uv run pytest tests/test_browser_provider_selection_probe_state.py::test_fresh_single_seat_survives_failed_uncertain_old_tab_probe -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ],
+        "stderr_excludes": [
+          "FAILED"
+        ]
+      }
     }
   ]
 }
