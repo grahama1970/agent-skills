@@ -152,6 +152,30 @@
       ]
     },
     {
+      "name": "ui-card-selection-preserves-backend-order",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "bash ../run.sh ui-build >/dev/null && bash ../run.sh eval-ui-card-selection"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "App delegates visible card ordering to helper: PASS",
+          "App no longer timestamp-sorts cards: PASS",
+          "selection distinguishes auto from manual: PASS",
+          "helper preserves backend order within pinned partitions: PASS",
+          "ui card selection preserves backend reducer order: PASS"
+        ]
+      },
+      "notes": "Focused MVP 3 UI guard: the HUD must not sort by card created_at over the backend reducer order, and auto selection must follow the backend top card unless the user explicitly selected history. This is static/build proof, not visual CDP proof."
+    },
+    {
       "name": "real-stt-window-question-answer-card",
       "type": "positive",
       "real_world": true,

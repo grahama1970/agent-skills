@@ -160,6 +160,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_ui_surf_controls.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-ui-card-selection)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_ui_card_selection.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-real-stt-window)
     shift || true
     prepare_python_environment
