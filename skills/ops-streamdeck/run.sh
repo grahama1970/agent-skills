@@ -508,7 +508,10 @@ for page_id, buttons in pages.items():
             summary["checked_live_buttons"] += 1
             location = f"page={page_id} button={button_id} text={text!r}"
             scan_value("live_config", location, command)
-            if text == "MTG OFF" and summary["meeting_button_command"] is None:
+            if (
+                command == str(project_root / "scripts" / "meeting-mode.sh")
+                and summary["meeting_button_command"] is None
+            ):
                 summary["meeting_button_command"] = command
 
 template_dir = project_root / "config" / "page_templates"
