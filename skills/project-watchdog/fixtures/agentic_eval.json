@@ -384,6 +384,30 @@
       "notes": "Regression for graph-memory-operator#142: a required proof artifact that records repo.sha from the primary checkout must not count as proof for a repair branch commit."
     },
     {
+      "name": "registered-checkout-proof-is-not-repair-proof",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_repair_task_flags_registered_checkout_required_proof",
+        "../tests/test_project_watchdog.py::test_absolute_proof_artifact_under_registered_checkout_is_refused",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "notes": "Regression for agent-skills#1527 / graph-memory-operator#142: a Required proof command hardcoded to the registered project checkout must be rewritten into the repair worktree or fail closed as proof_not_bound_to_repair_worktree."
+    },
+    {
       "name": "timeout-kills-recorded-descendant-outside-process-group",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

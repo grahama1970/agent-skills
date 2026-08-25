@@ -555,6 +555,8 @@ def build_repair_task(
     issue_title: str,
     issue_body: str,
     targets: list[str],
+    registered_worktree: Path | None = None,
+    repair_worktree: Path | None = None,
 ) -> str:
     """The prose task $ask compiles into the creator-reviewer DAG.
 
@@ -562,6 +564,11 @@ def build_repair_task(
     context files and proof command that a cron-dispatched agent with no prior
     session needs.
     """
+    proof_binding = proof_binding_instruction(
+        issue_body=issue_body,
+        registered_worktree=registered_worktree,
+        repair_worktree=repair_worktree,
+    )
     return (
         f"Repair {repo}#{issue_number}: {issue_title}\n\n"
         f"Allowed paths: {', '.join(targets) or '(as stated in the ticket)'}\n\n"
@@ -583,7 +590,64 @@ def build_repair_task(
         f"and its artifact reads as a completed pass -- name the artifact path in "
         f"the review. A proof that is still running, that failed, or that was not "
         f"run is VERDICT: NEEDS_ATTENTION.\n\n"
+        f"{proof_binding}"
         f"--- ticket body ---\n{issue_body}"
+    )
+
+
+def _required_proof_section(issue_body: str) -> str:
+    section: list[str] = []
+    collecting = False
+    for line in issue_body.splitlines():
+        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
+        if heading:
+            collecting = heading.group(1).strip().lower() == "required proof"
+            continue
+        if collecting:
+            section.append(line)
+    return "\n".join(section)
+
+
+def _path_is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def proof_binding_instruction(
+    *,
+    issue_body: str,
+    registered_worktree: Path | None,
+    repair_worktree: Path | None,
+) -> str:
+    """Warn seats when the ticket proof points at the human checkout.
+
+    The registered checkout is only a readiness source. A proof command hardcoded
+    to that path can pass on ``main`` while the repair branch remains unproven.
+    """
+    if registered_worktree is None or repair_worktree is None:
+        return ""
+    proof_text = _required_proof_section(issue_body)
+    if not proof_text:
+        return ""
+    registered = str(registered_worktree)
+    if registered not in proof_text:
+        return ""
+    return (
+        "## Proof binding guard\n\n"
+        f"The ticket's Required proof section mentions the registered checkout "
+        f"`{registered}`. That checkout is not the repair branch. The repair "
+        f"branch for this dispatch is `{repair_worktree}`.\n\n"
+        "Do not run or cite a proof artifact from the registered checkout as "
+        "proof of this repair. Rewrite the proof command so it runs from the "
+        "repair worktree and writes/reads artifacts under the repair worktree, "
+        "preserving the same case, seed, and acceptance arguments when possible. "
+        "If that rewrite is not safe, report `proof_not_bound_to_repair_worktree`; "
+        "the reviewer must answer VERDICT: NEEDS_ATTENTION. Any proof artifact "
+        "whose `repo.sha` does not match the repair branch HEAD will fail the "
+        "watchdog proof gate.\n\n"
     )
 
 
@@ -763,16 +827,7 @@ def required_proof_artifacts(issue_body: str) -> list[str]:
     supposed to produce. When the section names an ``--output`` operand those
     win outright, because that is the artifact the proof command writes.
     """
-    section: list[str] = []
-    collecting = False
-    for line in issue_body.splitlines():
-        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
-        if heading:
-            collecting = heading.group(1).strip().lower() == "required proof"
-            continue
-        if collecting:
-            section.append(line)
-    text = "\n".join(section)
+    text = _required_proof_section(issue_body)
     if not text.strip():
         return []
     outputs = [m.group(1) for m in _OUTPUT_FLAG.finditer(text)]
@@ -828,6 +883,8 @@ def inspect_proof_artifact(
     not_before: float,
     base_dir: Path | None = None,
     expected_repo_sha: str | None = None,
+    registered_worktree: Path | None = None,
+    repair_worktree: Path | None = None,
 ) -> dict[str, Any]:
     """Whether one named proof artifact is present, fresh, and a completed pass.
 
@@ -842,6 +899,19 @@ def inspect_proof_artifact(
         "path": str(path), "exists": False, "fresh": False,
         "machine_readable": False, "passed": False, "reason": "",
     }
+    if path.is_absolute() and registered_worktree is not None:
+        artifact_path = path.resolve(strict=False)
+        registered_root = registered_worktree.resolve(strict=False)
+        proof_root = repair_worktree or base_dir
+        repair_root = proof_root.resolve(strict=False) if proof_root else None
+        if _path_is_relative_to(artifact_path, registered_root) and not (
+            repair_root and _path_is_relative_to(artifact_path, repair_root)
+        ):
+            record["reason"] = (
+                "proof_not_bound_to_repair_worktree: artifact path is under "
+                f"registered checkout {registered_root}, not repair worktree {repair_root}"
+            )
+            return record
     if not path.is_file():
         record["reason"] = "not written"
         return record
@@ -935,6 +1005,7 @@ def evaluate_repair_proof(
     reviewer: str,
     repair_worktree: Path,
     not_before: float,
+    registered_worktree: Path | None = None,
 ) -> dict[str, Any]:
     """Decide whether this repair may close its ticket.
 
@@ -1003,6 +1074,8 @@ def evaluate_repair_proof(
                 not_before=not_before,
                 base_dir=repair_worktree,
                 expected_repo_sha=expected_repo_sha,
+                registered_worktree=registered_worktree,
+                repair_worktree=repair_worktree,
             )
             for a in artifacts
         ]
@@ -1115,18 +1188,19 @@ def handle_ticket_repair(
     goal_hash = issue_goal_hash(repo, issue_number)
     result["goal_hash"] = goal_hash
     ask_run_dir = receipt_dir / "ask"
-    task = build_repair_task(
-        repo=repo,
-        issue_number=issue_number,
-        issue_title=str(issue.get("title", "")),
-        issue_body=str(issue.get("body", "")),
-        targets=sorted(targets),
-    )
     task_path = receipt_dir / "repair-task.md"
-    task_path.write_text(task, encoding="utf-8")
-    result["artifacts"].append(str(task_path))
 
     if not apply:
+        task = build_repair_task(
+            repo=repo,
+            issue_number=issue_number,
+            issue_title=str(issue.get("title", "")),
+            issue_body=str(issue.get("body", "")),
+            targets=sorted(targets),
+            registered_worktree=worktree,
+        )
+        task_path.write_text(task, encoding="utf-8")
+        result["artifacts"].append(str(task_path))
         result.update(
             {
                 "ok": True,
@@ -1154,6 +1228,17 @@ def handle_ticket_repair(
         log_event(run_id, "repair_worktree_failed", issue=issue_number, error=prepared.get("error"))
         return result
     result["artifacts"].append(str(repair_worktree))
+    task = build_repair_task(
+        repo=repo,
+        issue_number=issue_number,
+        issue_title=str(issue.get("title", "")),
+        issue_body=str(issue.get("body", "")),
+        targets=sorted(targets),
+        registered_worktree=worktree,
+        repair_worktree=repair_worktree,
+    )
+    task_path.write_text(task, encoding="utf-8")
+    result["artifacts"].append(str(task_path))
 
     # The creator commits on its own branch; only the reviewer's verdict should
     # move main. Observed 2026-07-28: the codex seat pushed a850e22a6 straight to
@@ -1292,6 +1377,7 @@ def handle_ticket_repair(
         reviewer=reviewer,
         repair_worktree=repair_worktree,
         not_before=dispatched_at,
+        registered_worktree=worktree,
     )
     result["proof_gate"] = gate
     gate_path = receipt_dir / "repair-proof-gate.json"

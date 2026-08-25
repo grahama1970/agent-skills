@@ -880,6 +880,57 @@ def test_proof_artifact_repo_sha_must_match_repair_branch(tmp_path) -> None:
     assert "no required proof artifact" in " | ".join(gate["reasons"])
 
 
+def test_repair_task_flags_registered_checkout_required_proof(tmp_path) -> None:
+    registered = tmp_path / "registered"
+    repair = tmp_path / "repair-worktrees" / "memory-142"
+    body = (
+        "type: bug\ntarget: scripts/validation\n\n"
+        "## Required proof\n\n"
+        f"cd {registered} && skills/agentic-evals/run.sh run "
+        "skills/project-watchdog/fixtures/agentic_eval.json "
+        f"--output {registered}/artifacts/hardening/proof.json\n"
+    )
+
+    task = handlers.build_repair_task(
+        repo="grahama1970/graph-memory-operator",
+        issue_number=142,
+        issue_title="Gate prompt-health backfills",
+        issue_body=body,
+        targets=["scripts/validation"],
+        registered_worktree=registered,
+        repair_worktree=repair,
+    )
+
+    assert "## Proof binding guard" in task
+    assert str(registered) in task
+    assert str(repair) in task
+    assert "proof_not_bound_to_repair_worktree" in task
+    assert "Rewrite the proof command so it runs from the repair worktree" in task
+
+
+def test_absolute_proof_artifact_under_registered_checkout_is_refused(tmp_path) -> None:
+    registered = tmp_path / "registered"
+    repair = tmp_path / "repair"
+    artifact = registered / "artifacts" / "hardening" / "proof.json"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text(
+        json.dumps({"readiness": "READY", "outcome_counts": {"PASS": 1, "FAIL": 0}}),
+        encoding="utf-8",
+    )
+
+    record = handlers.inspect_proof_artifact(
+        str(artifact),
+        not_before=0,
+        base_dir=repair,
+        registered_worktree=registered,
+        repair_worktree=repair,
+    )
+
+    assert record["passed"] is False
+    assert "proof_not_bound_to_repair_worktree" in record["reason"]
+    assert str(registered) in record["reason"]
+
+
 def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
     """#1499 had a July receipt on disk; accepting it would close on a stale pass."""
     artifact = tmp_path / "proof.json"

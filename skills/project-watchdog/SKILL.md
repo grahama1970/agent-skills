@@ -385,6 +385,14 @@ per dispatch under the state root. The registered checkout is a human's working
 tree; authoring there builds on whatever it happens to hold. It is still
 consulted for one thing: whether this ticket's targets are settled.
 
+The registered checkout is never repair proof. If a ticket's `Required proof`
+section hardcodes the registered checkout path, the repair task must flag it as
+a proof binding hazard. The creator must either rewrite the proof command to run
+from the isolated repair worktree and write/read artifacts under that repair
+worktree, or report `proof_not_bound_to_repair_worktree`. The reviewer must
+answer `VERDICT: NEEDS_ATTENTION` when the proof remains bound to the registered
+checkout.
+
 The creator commits to its branch and must not push — the immutable goal says
 so, and the lane records `origin/main` before and after, blocking the ticket if
 it moved. That detects the violation; preventing it belongs in branch
@@ -407,6 +415,8 @@ closes anything it checks four things and fails closed on any of them, writing
 - no seat declares `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION`;
 - if the ticket's `Required proof` section names artifacts, at least one exists,
   was written after this dispatch started, and reads as a completed pass;
+- no required proof artifact is under the registered checkout instead of the
+  isolated repair worktree;
 - the repair branch is at least one commit ahead of `origin/main`.
 
 Verdicts are read, not inferred: only a `VERDICT:` line or the first word of a
