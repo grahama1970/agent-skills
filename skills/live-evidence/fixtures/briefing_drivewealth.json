@@ -44,7 +44,8 @@
    "story": "Tau: nodes are handler/join/gate types, state travels as node receipts with an immutable goal hash, communication is receipt-passing not shared mutable state. Compiled DAG is rejected pre-dispatch with named errors.",
    "sources": [
     "tau.dag_contract.v1",
-    "skills/ask/SKILL.md"
+    "skills/ask/SKILL.md",
+    "diagram: fixtures/diagrams/dw01-blocked-account-agent.chart.txt"
    ]
   },
   {
@@ -159,7 +160,8 @@
    "story": "run dir: dag.json, events.jsonl, per-node receipts, join receipts; status --projection is one normalized read model; handoff.json chains name the next agent.",
    "sources": [
     "ask.run_projection.v1",
-    "tau.agent_handoff.v1"
+    "tau.agent_handoff.v1",
+    "diagram: fixtures/diagrams/dw04-reconciliation.chart.txt"
    ]
   },
   {
@@ -186,7 +188,8 @@
    "story": "340+ skills each with SKILL.md contract (triggers/provides/composes/complies), schema-versioned payloads (v1 suffixes everywhere), scillm gateway isolating provider churn from every consumer.",
    "sources": [
     "skills/*/SKILL.md frontmatter contract",
-    "scillm route table"
+    "scillm route table",
+    "diagram: fixtures/diagrams/dw05-platform.chart.txt"
    ]
   },
   {
@@ -350,7 +353,8 @@
    "sources": [
     "sparta/explorer/server/spartaChat/answerabilityGate.ts",
     "sparta/explorer/server/spartaChat/verifier.ts",
-    "live_evidence.evidence_card.v1"
+    "live_evidence.evidence_card.v1",
+    "diagram: memory-pipeline chart (spartaChat admission)"
    ]
   },
   {
@@ -526,12 +530,5 @@
     "agentic-evals gate"
    ]
   }
- ],
- "diagram_library": {
-  "note": "Prepared phart charts for design-shaped questions; glance the card, open the chart, narrate while redrawing.",
-  "dw01-blocked-account-agent": "fixtures/diagrams/dw01-blocked-account-agent.chart.txt",
-  "dw04-reconciliation": "fixtures/diagrams/dw04-reconciliation.chart.txt",
-  "dw05-platform": "fixtures/diagrams/dw05-platform.chart.txt",
-  "memory-pipeline": "see scratchpad memory-pipeline.chart.txt (spartaChat admission pipeline)"
- }
+ ]
 }
