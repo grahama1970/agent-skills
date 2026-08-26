@@ -853,6 +853,54 @@
       },
       "proves": "A production digest projection over a completed live nightly run writes prospect-queue relationship accounting where included + excluded equals input, unaccounted is zero, and the relationship prospect count matches included relationship signals.",
       "does_not_prove": "A fresh nightly can pass unrelated live source admission gates or that outbound reconnect effects are authorized."
+    },
+    {
+      "name": "status-exposes-scheduler-worktree-latest",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.latest_publication_readback"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && proof=/tmp/monitor-opportunities-status-scheduler-latest-proof.json && rm -f \"$proof\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/eval_scheduler_latest_status.py --out \"$proof\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SCHEDULER_LATEST_STATUS_OK"
+        ],
+        "stderr_excludes": [
+          "NO_SCHEDULER_RECEIPT",
+          "NO_LATEST_NIGHTLY_RECEIPT"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-status-scheduler-latest-proof.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-status-scheduler-latest-proof.json",
+            "json_pointer": "/run_id",
+            "equals": "mo_eval_scheduler_latest"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-status-scheduler-latest-proof.json",
+            "json_pointer": "/terminal_state",
+            "equals": "AWAITING_HUMAN"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-status-scheduler-latest-proof.json",
+            "json_pointer": "/external_effects",
+            "equals": false
+          }
+        ]
+      },
+      "proves": "The normal status command reads the scheduler receipt, follows the registered scheduler worktree, and exposes that worktree's latest nightly receipt/report path so the morning discussion starts from the cron publication instead of a stale main-checkout symlink.",
+      "does_not_prove": "That cron will run tomorrow, or that the scheduler's latest report contains high-quality opportunities."
     }
   ]
 }

@@ -337,6 +337,83 @@ def _receipt_status(path: Path) -> str:
         return "UNREADABLE"
 
 
+def _scheduler_latest_publication_status() -> dict[str, Any]:
+    scheduler_data_dir = _scheduler_data_dir()
+    schedule_receipt_path = (
+        scheduler_data_dir / "receipts" / "monitor-opportunities-nightly-receipt.json"
+    )
+    payload: dict[str, Any] = {
+        "schema": "monitor_opportunities.scheduler_latest_publication.v1",
+        "scheduler_receipt": str(schedule_receipt_path),
+        "status": "NO_SCHEDULER_RECEIPT",
+        "latest_path": None,
+        "published_run": None,
+        "nightly_receipt": None,
+        "run_receipt": None,
+        "report_html": None,
+        "log": str(scheduler_data_dir / "logs" / "monitor-opportunities-nightly.log"),
+    }
+    if not schedule_receipt_path.is_file():
+        return payload
+    try:
+        schedule_receipt = read_json(schedule_receipt_path)
+    except (OSError, json.JSONDecodeError):
+        payload["status"] = "UNREADABLE_SCHEDULER_RECEIPT"
+        return payload
+
+    readback = schedule_receipt.get("readback") or {}
+    workdir_raw = readback.get("workdir") or schedule_receipt.get("workdir")
+    if not workdir_raw:
+        payload["status"] = "NO_SCHEDULER_WORKDIR"
+        return payload
+
+    workdir = Path(str(workdir_raw))
+    latest = workdir / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
+    nightly_receipt_path = latest / "nightly-receipt.json"
+    run_receipt_path = latest / "run-receipt.json"
+    report_html = latest / "report" / "index.html"
+    payload.update(
+        {
+            "workdir": str(workdir),
+            "latest_path": str(latest),
+            "published_run": str(latest.resolve()) if latest.exists() else None,
+            "nightly_receipt": str(nightly_receipt_path),
+            "run_receipt": str(run_receipt_path),
+            "report_html": str(report_html),
+            "scheduler_status": schedule_receipt.get("status"),
+            "scheduler_mode": schedule_receipt.get("mode"),
+            "scheduler_enabled": readback.get("enabled"),
+            "cron": readback.get("cron") or schedule_receipt.get("cron"),
+        }
+    )
+    if not nightly_receipt_path.is_file():
+        payload["status"] = "NO_LATEST_NIGHTLY_RECEIPT"
+        return payload
+
+    try:
+        nightly_receipt = read_json(nightly_receipt_path)
+    except (OSError, json.JSONDecodeError):
+        payload["status"] = "UNREADABLE_LATEST_NIGHTLY_RECEIPT"
+        return payload
+
+    run_receipt = read_json(run_receipt_path) if run_receipt_path.is_file() else {}
+    payload.update(
+        {
+            "status": nightly_receipt.get("status") or "UNKNOWN",
+            "mode": nightly_receipt.get("mode"),
+            "run_id": run_receipt.get("run_id"),
+            "terminal_state": run_receipt.get("terminal_state"),
+            "completed_at": run_receipt.get("completed_at"),
+            "mocked": nightly_receipt.get("mocked"),
+            "live": nightly_receipt.get("live"),
+            "external_effects": nightly_receipt.get("external_effects"),
+            "report_acceptance_status": nightly_receipt.get("report_acceptance_status"),
+            "receipt_consistency_status": nightly_receipt.get("receipt_consistency_status"),
+        }
+    )
+    return payload
+
+
 def _scheduler_execution_equivalence_preflight(
     *,
     schedule_receipt: dict[str, Any],
@@ -706,6 +783,7 @@ def status_payload() -> dict[str, object]:
         "external_effects": False,
         "implemented_commands": IMPLEMENTED,
         "not_implemented_commands": NOT_IMPLEMENTED,
+        "scheduler_latest": _scheduler_latest_publication_status(),
         "capabilities": {
             "local_report": "IMPLEMENTED",
             "verification_receipt": "IMPLEMENTED",
@@ -760,6 +838,12 @@ def status(
     typer.echo(f"monitor-opportunities {payload['runtime_version']}")
     typer.echo(f"stage: {payload['stage']}")
     typer.echo(f"operational readiness: {payload['operational_readiness']}")
+    scheduler_latest = payload.get("scheduler_latest") or {}
+    if isinstance(scheduler_latest, dict):
+        typer.echo(f"scheduler latest: {scheduler_latest.get('status')}")
+        latest_path = scheduler_latest.get("latest_path")
+        if latest_path:
+            typer.echo(f"scheduler latest path: {latest_path}")
     typer.echo("implemented: " + ", ".join(IMPLEMENTED))
     typer.echo("external effects: blocked")
 

@@ -29,6 +29,72 @@ def test_status_json_is_truthful() -> None:
     assert payload["capabilities"]["gmail_send"] == "PERMANENTLY_FORBIDDEN"
     assert "apply" in payload["implemented_commands"]
     assert "apply" not in payload["not_implemented_commands"]
+    assert payload["scheduler_latest"]["schema"] == (
+        "monitor_opportunities.scheduler_latest_publication.v1"
+    )
+
+
+def test_status_exposes_scheduler_worktree_latest(
+    tmp_path: Path, monkeypatch
+) -> None:
+    scheduler_data = tmp_path / "scheduler"
+    cron_repo = tmp_path / "cron-worktree"
+    latest = cron_repo / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
+    latest.mkdir(parents=True)
+    (latest / "report").mkdir()
+    schedule_receipt = {
+        "schema": "monitor_opportunities.scheduler_receipt.v1",
+        "status": "PASS",
+        "mode": "PROMOTED_STAGE_0",
+        "cron": "0 2 * * *",
+        "workdir": str(cron_repo),
+        "readback": {
+            "name": "monitor-opportunities-nightly",
+            "cron": "0 2 * * *",
+            "workdir": str(cron_repo),
+            "enabled": True,
+        },
+    }
+    nightly_receipt = {
+        "schema": "monitor_opportunities.nightly_receipt.v1",
+        "status": "PASS",
+        "mode": "PROMOTED_STAGE_0",
+        "mocked": False,
+        "live": True,
+        "external_effects": False,
+        "report_acceptance_status": "PASS",
+        "receipt_consistency_status": "PASS",
+    }
+    run_receipt = {
+        "schema": "monitor_opportunities.run_receipt.v1",
+        "run_id": "mo_test_scheduler_latest",
+        "terminal_state": "AWAITING_HUMAN",
+        "completed_at": "2026-08-26T06:06:50Z",
+    }
+    (scheduler_data / "receipts").mkdir(parents=True)
+    (scheduler_data / "logs").mkdir()
+    (scheduler_data / "receipts" / "monitor-opportunities-nightly-receipt.json").write_text(
+        json.dumps(schedule_receipt),
+        encoding="utf-8",
+    )
+    (latest / "nightly-receipt.json").write_text(json.dumps(nightly_receipt), encoding="utf-8")
+    (latest / "run-receipt.json").write_text(json.dumps(run_receipt), encoding="utf-8")
+    (latest / "report" / "index.html").write_text("<h1>report</h1>\n", encoding="utf-8")
+    monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
+
+    result = runner.invoke(app, ["status", "--json"])
+
+    assert result.exit_code == 0, result.output
+    latest_payload = json.loads(result.stdout)["scheduler_latest"]
+    assert latest_payload["status"] == "PASS"
+    assert latest_payload["run_id"] == "mo_test_scheduler_latest"
+    assert latest_payload["terminal_state"] == "AWAITING_HUMAN"
+    assert latest_payload["live"] is True
+    assert latest_payload["mocked"] is False
+    assert latest_payload["external_effects"] is False
+    assert latest_payload["latest_path"] == str(latest)
+    assert latest_payload["nightly_receipt"] == str(latest / "nightly-receipt.json")
+    assert latest_payload["report_html"] == str(latest / "report" / "index.html")
 
 
 def test_report_writes_self_contained_artifacts(tmp_path: Path) -> None:
