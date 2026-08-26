@@ -1,11 +1,11 @@
 {
   "version": 2,
   "skill": "llm-eval-lab",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "trials": 2,
+  "proof_scope": "deterministic evaluators (positive+negative), best-practices-react data-qid gate, and a LIVE run-matrix cell through /ask -> tau -> scillm",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "sanity passes; code/JSON evaluators score correct answers 3 and wrong/adversarial answers 1/0; every interactive UI element carries data-qid/data-qs-action/title; run-matrix produces a real judged/executed cell with an on-disk run_dir receipt and status complete",
+    "does_not_prove": "full model-capability conclusions, plan economics, long-context/agentic capability, or that local models run under VRAM contention"
   },
   "cases": [
     {
@@ -18,6 +18,48 @@
       "expected": {
         "exit_code": 0
       }
+    },
+    {
+      "name": "deterministic_evaluators_pos_neg",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python fixtures/check_evaluators.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "EVALUATORS_OK"
+      }
+    },
+    {
+      "name": "best_practices_react_data_qid_gate",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && python3 ui/verify-data-qid.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "OK:"
+      }
+    },
+    {
+      "name": "run_matrix_live_cell",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh run-matrix -g ground_truth/live_probe.json --models zai-glm-flash --judge claude-fable-5 --trials 1 --timeout 150 -o /tmp/agentic_rm.json >/tmp/agentic_rm.log 2>&1 && uv run python scripts/assert_cell.py /tmp/agentic_rm.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "RUN_MATRIX_CELL_OK"
+      },
+      "real_world": true,
+      "note": "real production entrypoint on ground_truth/glm_smoke.json (no fixtures/ stub input), live /ask->tau->scillm",
+      "timeout_seconds": 180
     }
   ]
 }

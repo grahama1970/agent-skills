@@ -1,0 +1,25 @@
+{
+  "title": "live probe",
+  "models": [
+    "zai-glm-flash"
+  ],
+  "judge": "claude-fable-5",
+  "questions": [
+    {
+      "id": 6,
+      "category": "structured_extraction",
+      "difficulty": "easy",
+      "input": "Given this text, return ONLY JSON {\"model\":..,\"api_base\":..,\"timeout\":..}: 'Deployment zai-glm-flash uses model glm-5.3-flash at https://api.z.ai/api/paas/v4 with a 120 second timeout.'",
+      "expected": "{\"model\": \"glm-5.3-flash\", \"api_base\": \"https://api.z.ai/api/paas/v4\", \"timeout\": 120}",
+      "grading": "Full credit: valid JSON with model=glm-5.3-flash, api_base the exact URL, timeout=120 as a number, no extra keys or prose.",
+      "eval": {
+        "method": "json",
+        "expected_json": {
+          "model": "glm-5.3-flash",
+          "api_base": "https://api.z.ai/api/paas/v4",
+          "timeout": 120
+        }
+      }
+    }
+  ]
+}
