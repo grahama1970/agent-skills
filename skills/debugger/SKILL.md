@@ -48,6 +48,30 @@ disciplines:
 
 Use this skill to replace LLM inference with observed runtime state. It is primarily for the project-agent, not for the human: the agent must invoke it on itself when it is stuck, seeing confusing state, or at risk of patching from guesses.
 
+## Front door (drive it in one line)
+
+Other skills, project agents, and the human drive the debugger through
+`skills/debugger/run.sh` — the same pattern as `memory/run.sh`. Every subcommand
+owns its own env plumbing (venv, workspace detection, extension-host kind); a
+caller never exports `UV_PROJECT_ENVIRONMENT` or assembles `uv run` commands.
+
+```bash
+./run.sh break <file:line> [--local NAME ...] -- <python-cmd>   # headless breakpoint proof -> debugger.proof.v1
+./run.sh stop <file:line> [--local NAME ...] [--expand N[:D]]   # live VS Code stop; prints STATUS_PATH + settled STATUS
+./run.sh walkthrough <spec.json> [--speak] [--voice]            # narrated breakpoint tour (review/blocked)
+./run.sh session [--wait-seconds N]                             # collaborative live session with explained pauses
+./run.sh validate <proof.json> [--expect-valid] [--repo-root P] # independent proof validation
+./run.sh matrix [--suite NAME ...]                              # capability-gated eval matrix + receipts
+./run.sh recall <query>                                         # stored debugger lessons
+./run.sh verify                                                 # deterministic self-check -> DEBUGGER-VERIFY-OK
+```
+
+`break` adds the caller's cwd to `PYTHONPATH`, so a multi-module scenario runs
+from its own directory. Live subcommands default the workspace to the git
+toplevel of `$PWD` (override with `DEBUGGER_VSCODE_WORKSPACE`) and fail closed
+with `BRIDGE_BLOCKED` when no open, trusted VS Code bridge answers.
+Gate: `fixtures/front-door.json` (agentic eval).
+
 The core functions of this skill are:
 
 1. The project-agent must set breakpoints where the problem might be.
