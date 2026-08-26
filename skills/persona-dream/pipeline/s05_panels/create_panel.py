@@ -6,7 +6,7 @@ step) and generates one panel image through the selected backend. The contract
 drives the prompt so this script stays persona- and story-agnostic.
 
 Backends:
-  scillm      -> skills/create-image/run.sh (canonical receipt wrapper)
+  scillm      -> skills/ask/run.sh ask --image-generate --image-auth codex-oauth
   nano-banana -> direct Fal.ai nano-banana call (FAL_KEY required)
 """
 import sys
