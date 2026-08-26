@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import json
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -87,7 +86,7 @@ class DebugRequest(BaseModel):
 
 def default_debugger_root() -> Path | None:
     candidate = Path(__file__).resolve().parents[3] / "debugger"
-    return candidate if (candidate / "scripts" / "capture_breakpoints.py").exists() else None
+    return candidate if (candidate / "run.sh").exists() else None
 
 
 def repository_digest(root: Path) -> str:
@@ -122,8 +121,11 @@ def verified_stop_matches(canonical: dict[str, Any], request: DebugRequest) -> l
         bp for bp in canonical.get("breakpoints") or []
         if bp.get("hit") is True and bp.get("verified") is True
     ]
+    # Relative breakpoint files are relative to the request's own bound
+    # repository_root -- never to whatever cwd the lane process happens to have.
+    root = Path(request.repository_root)
     requested = {
-        (str(Path(bp.file).resolve()), bp.line)
+        (str((Path(bp.file) if Path(bp.file).is_absolute() else root / bp.file).resolve()), bp.line)
         for bp in request.requested_breakpoints
     }
     return [
@@ -199,17 +201,19 @@ class DebuggerLane:
         self._work_dir.mkdir(parents=True, exist_ok=True)
         proof_path = self._work_dir / f"proof-{digest[:16]}.json"
         canonical_path = self._work_dir / f"canonical-{digest[:16]}.json"
-        capture_cmd = [
-            sys.executable,
-            str(self._debugger_root / "scripts" / "capture_breakpoints.py"),
-            "--out", str(proof_path),
-        ]
         for breakpoint_spec in request.requested_breakpoints:
             if breakpoint_spec.line is None:
                 outcome = {**base, "result": "capture_failed",
                            "detail": "python_bdb lane requires file:line breakpoints"}
                 self._seen_digests[digest] = outcome
                 return outcome
+        first_bp, *extra_bps = request.requested_breakpoints
+        capture_cmd = [
+            "bash", str(self._debugger_root / "run.sh"), "break",
+            f"{first_bp.file}:{first_bp.line}",
+            "--out", str(proof_path),
+        ]
+        for breakpoint_spec in extra_bps:
             capture_cmd += ["--break", f"{breakpoint_spec.file}:{breakpoint_spec.line}"]
         for name in request.requested_locals:
             capture_cmd += ["--local", name]
@@ -233,10 +237,9 @@ class DebuggerLane:
         # 5. Independent validation -- the debugger skill's validator, then our
         # own readback of the canonical artifact. Neither alone suffices.
         validation = subprocess.run(
-            [sys.executable,
-             str(self._debugger_root / "scripts" / "validate_debugger_proof.py"),
+            ["bash", str(self._debugger_root / "run.sh"), "validate",
              str(proof_path), "--canonical-out", str(canonical_path), "--expect-valid"],
-            capture_output=True, text=True, timeout=60,
+            capture_output=True, text=True, timeout=120,
         )
         base["subprocess_calls"] = 2
         if validation.returncode != 0 or not canonical_path.exists():
