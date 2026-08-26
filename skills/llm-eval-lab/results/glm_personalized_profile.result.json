@@ -8,151 +8,293 @@
   ],
   "judge": "claude-fable-5",
   "totals": {
-    "local-glm": 21,
-    "gpt-5.5": 47,
-    "oc-glm": 40,
-    "zai-glm-flash": 47
+    "local-glm": 0,
+    "gpt-5.5": 46,
+    "oc-glm": 41,
+    "zai-glm-flash": 45
   },
   "max_points": 48,
   "per_category_best": {
     "local-glm": [],
     "gpt-5.5": [
       "agent_tooling",
-      "code_debugging",
       "code_generation",
       "instruction_following",
-      "structured_extraction"
+      "structured_extraction",
+      "systems_reasoning"
     ],
     "oc-glm": [
       "agent_tooling",
       "code_debugging",
       "instruction_following",
-      "structured_extraction"
+      "structured_extraction",
+      "systems_reasoning"
     ],
     "zai-glm-flash": [
       "agent_tooling",
       "code_debugging",
       "code_generation",
-      "instruction_following",
-      "systems_reasoning"
+      "instruction_following"
     ]
   },
   "rows": [
     {
       "id": 1,
       "category": "code_debugging",
+      "input": "An OpenAI-compatible LLM proxy calls a provider whose api_base is https://api.z.ai/api/paas/v4 and gets HTTP 404 with body {\"path\":\"/v4/v1/chat/completions\"}. A direct curl to https://api.z.ai/api/paas/v4/chat/completions with the same key returns 200. Name the single root cause and the one-line fix.",
+      "expected": "The proxy appends /v1/chat/completions to the api_base, but z.ai's version segment is already /v4 (no /v1), so the URL becomes /api/paas/v4/v1/chat/completions and 404s. Fix: stop appending /v1 when the base path already ends in a /vN version segment (or set the client base_url to exactly .../api/paas/v4 so only /chat/completions is appended).",
       "scores": {
-        "local-glm": 2,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 3,
         "zai-glm-flash": 3
       },
       "reasons": {
-        "local-glm": "The candidate correctly identifies the /v1 append as the cause and gives the right fix (append only /chat/completions), but never explicitly notes that the base already contains the /v4 version segment, making the version duplication the specific problem.",
-        "gpt-5.5": "The candidate correctly identifies the proxy appending /v1 to the already-versioned /v4 base as the root cause and provides a fix that removes the /v1 append, fully meeting the criterion.",
-        "oc-glm": "The candidate correctly identifies the doubled version segment (/v4 + /v1) causing the 404 and gives a fix that removes the /v1 append, fully meeting the criterion.",
-        "zai-glm-flash": "The candidate correctly identifies the doubled version segment (/v4 + appended /v1) causing the 404 and gives a fix that removes the /v1 append, fully meeting the criterion."
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate correctly identifies the doubled version segment (/v4 + auto-appended /v1) as the root cause and provides the correct fix of removing the /v1 append so the URL resolves to /api/paas/v4/chat/completions.",
+        "oc-glm": "The candidate correctly identifies the doubled version segment (/v4 + /v1) as the root cause and gives a fix that stops appending /v1 so only /chat/completions is added, fully meeting the criterion.",
+        "zai-glm-flash": "The candidate correctly identifies the doubled version segment (/v4 + auto-appended /v1) as the root cause and gives the fix of suppressing the /v1 append so only /chat/completions is added, fully meeting the criterion."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "Root cause: the proxy is auto-appending OpenAI\u2019s `/v1/chat/completions` to Z.AI\u2019s `/v4` base, producing the invalid `/v4/v1/chat/completions`.\n\nOne-line fix: configure the provider/custom endpoint so the final URL is exactly `https://api.z.ai/api/paas/v4/chat/completions`\u2014disable/remove the proxy\u2019s automatic `/v1` insertion.",
+        "oc-glm": "**Root cause:** The proxy appends OpenAI's default `/v1/chat/completions` to `api_base`, but z.ai's endpoint is `/chat/completions` directly under `/v4`\u2014producing the invalid double-versioned path `/v4/v1/chat/completions`.\n\n**One-line fix:** Set `api_base` to `https://api.z.ai/api/paas/v4` and configure the proxy to append `/chat/completions` (strip the `/v1` prefix), e.g. `api_base=https://api.z.ai/api/paas/v4` with endpoint suffix `/chat/completions`.",
+        "zai-glm-flash": "**Root cause:** The proxy appends OpenAI's default `/v1/chat/completions` suffix onto an `api_base` that already contains the provider's version segment (`/v4`), producing the duplicated path `/api/paas/v4` + `/v1/chat/completions` \u2192 `/v4/v1/chat/completions`.\n\n**Fix:** Configure the client so the final URL is exactly `https://api.z.ai/api/paas/v4/chat/completions` \u2014 i.e., suppress the auto-appended `/v1` (or set the base/suffix so only `/chat/completions` is added)."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-14ba944b",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-d2249af8",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-bf6caa84",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-77ad3870"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-4a139a36",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-3e7b239b",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-d91967c7"
       }
     },
     {
       "id": 2,
       "category": "code_debugging",
+      "input": "A model-routing proxy log shows: complete model='zai-glm-flash' -> group='zai-glm-flash', chain=['zai-glm-flash'] followed by 404 Not Found. Is the group resolution/routing broken, or is the failure downstream of routing? Justify in one sentence.",
+      "expected": "Routing is fine \u2014 the log shows the request correctly resolved to group 'zai-glm-flash' and its deployment; the 404 happens on the outbound HTTP call to the provider (URL/path), which is downstream of group resolution.",
       "scores": {
-        "local-glm": 3,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 3,
         "zai-glm-flash": 3
       },
       "reasons": {
-        "local-glm": "The candidate correctly states that routing/group resolution succeeded and attributes the 404 to a downstream failure (the provider/service call), satisfying the criterion.",
-        "gpt-5.5": "The candidate correctly states routing/group resolution succeeded and attributes the 404 to the downstream call to the routed provider/target, fully meeting the criterion.",
-        "oc-glm": "The candidate correctly states that routing/group resolution succeeded (model mapped to group and chain) and that the 404 originates downstream at the resolved provider endpoint, fully meeting the criterion.",
-        "zai-glm-flash": "The candidate correctly states routing succeeded (group and chain resolved) and attributes the 404 to the upstream endpoint downstream of routing, fully meeting the criterion."
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate correctly states that routing/group resolution succeeded and attributes the 404 to a downstream failure at the provider/backend endpoint, fully meeting the criterion.",
+        "oc-glm": "The candidate correctly states that group resolution/routing succeeded (citing the resolved group and populated chain) and that the 404 occurred downstream on the outbound call to the upstream provider endpoint, fully meeting the criterion.",
+        "zai-glm-flash": "The candidate correctly states routing/group resolution succeeded and attributes the 404 to the downstream provider call (endpoint/model on the provider side), fully matching the criterion."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "The group resolution/routing is not broken; the log shows the model correctly resolved to group `zai-glm-flash` with chain `['zai-glm-flash']`, so the 404 occurs downstream at the provider/backend endpoint.",
+        "oc-glm": "The failure is downstream of routing: group resolution completed successfully (model resolved to group `zai-glm-flash` with a populated chain), so the 404 occurred when the proxy called the resolved upstream endpoint, which either doesn't exist or isn't configured for that provider.",
+        "zai-glm-flash": "Routing is working: the log shows the model was successfully resolved to group `zai-glm-flash` with a valid chain, so the subsequent 404 originates from the upstream provider (e.g., unknown model/endpoint there), i.e., downstream of routing."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-7ce029e4",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-c65333a1",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-fb693e88",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-73dacd6a"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-4d290a8d",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-5854e1fa",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-e87119b4"
       }
     },
     {
       "id": 3,
       "category": "code_generation",
+      "input": "Write a Python function run_handler(cmd: list[str], timeout_s: int) -> str using subprocess that runs cmd, enforces a finite timeout, raises on non-zero exit, never uses shell=True, and returns stdout. Keep it minimal.",
+      "expected": "import subprocess\n\ndef run_handler(cmd: list[str], timeout_s: int) -> str:\n    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, check=True)\n    return proc.stdout",
       "scores": {
-        "local-glm": 3,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 3,
         "zai-glm-flash": 3
       },
       "reasons": {
-        "local-glm": "The candidate uses subprocess.run with a finite timeout, check=True, a list argv, no shell=True, and returns stdout, fully meeting the criterion (using stdout=PIPE instead of capture_output is equivalent for this purpose).",
-        "gpt-5.5": "The candidate uses subprocess.run with a list argv, finite timeout, check=True, explicit shell=False, and returns stdout, fully satisfying every element of the criterion.",
-        "oc-glm": "The candidate uses subprocess.run with a finite timeout, check=True, no shell=True, a list argv, and returns stdout, fully matching the criterion and reference answer.",
-        "zai-glm-flash": "The candidate uses subprocess.run with a finite timeout, check=True, no shell=True, a list argv, and returns stdout, matching the reference answer and fully satisfying the criterion."
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate uses subprocess.run with a finite timeout, check=True to raise on non-zero exit, explicit shell=False, list argv, and returns stdout, fully satisfying the criterion.",
+        "oc-glm": "The candidate uses subprocess.run with a finite timeout, check=True, no shell=True, a list argv, and returns stdout, fully matching the reference and criterion.",
+        "zai-glm-flash": "The candidate uses subprocess.run with a finite timeout, check=True for non-zero exit raising, no shell=True, a list argv, and returns stdout as text, fully matching the criterion."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "```python\nimport subprocess\n\ndef run_handler(cmd: list[str], timeout_s: int) -> str:\n    result = subprocess.run(\n        cmd,\n        stdout=subprocess.PIPE,\n        stderr=subprocess.PIPE,\n        text=True,\n        timeout=timeout_s,\n        check=True,\n        shell=False,\n    )\n    return result.stdout\n```",
+        "oc-glm": "```python\nimport subprocess\n\ndef run_handler(cmd: list[str], timeout_s: int) -> str:\n    return subprocess.run(\n        cmd,\n        timeout=timeout_s,\n        check=True,\n        capture_output=True,\n        text=True,\n    ).stdout\n```",
+        "zai-glm-flash": "```python\nimport subprocess\n\ndef run_handler(cmd: list[str], timeout_s: int) -> str:\n    return subprocess.run(\n        cmd, capture_output=True, text=True, check=True, timeout=timeout_s\n    ).stdout\n```\n\n- `check=True` raises `CalledProcessError` on non-zero exit.\n- `timeout=timeout_s` raises `subprocess.TimeoutExpired` if exceeded.\n- No `shell=True`; stdout is returned as a string via `text=True`."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-be586ec5",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-bc4bec1e",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-a79264a6",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-31468bd7"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-3c234830",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-1c4b4c8a",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-44b8b957"
       }
     },
     {
       "id": 4,
       "category": "code_generation",
+      "input": "Write a Python helper extract_json_object(text: str) -> dict | None that returns the first top-level JSON object embedded in text (e.g. an LLM reply with prose around it). It must use the JSON parser as the grammar authority, not a regex, and return None on failure.",
+      "expected": "import json\n\ndef extract_json_object(text: str) -> dict | None:\n    start = text.find('{')\n    end = text.rfind('}')\n    if start < 0 or end <= start:\n        return None\n    try:\n        value = json.loads(text[start:end + 1])\n    except json.JSONDecodeError:\n        return None\n    return value if isinstance(value, dict) else None",
       "scores": {
-        "local-glm": 1,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 0,
         "zai-glm-flash": 3
       },
       "reasons": {
-        "local-glm": "It does hand a slice to json.loads and guards JSONDecodeError, but the manual brace-counting acts as a non-JSON grammar authority that miscounts braces inside string literals (e.g. {\"a\": \"}\"}), and the loop raises an IndexError instead of returning None on unbalanced input like '{'.",
-        "gpt-5.5": "The candidate uses json.JSONDecoder.raw_decode as the grammar authority (no regex), scans candidate '{' positions, guards JSONDecodeError, returns the first parsed dict, and returns None on non-dict/failure \u2014 meeting the criterion and even handling trailing prose more robustly than the reference.",
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate uses json.JSONDecoder.raw_decode as the grammar authority (no regex), scans for '{' start points, guards JSONDecodeError, and returns None on non-dict or failure\u2014an approach that is at least as robust as the reference (it correctly handles trailing prose after the object) and fully satisfies the criterion.",
         "oc-glm": "no answer",
-        "zai-glm-flash": "The candidate uses json.JSONDecoder.raw_decode as the grammar authority (no regex), scans from each '{' candidate, guards JSONDecodeError via its ValueError superclass, and returns None on non-dict or failure\u2014actually handling trailing prose more robustly than the reference."
+        "zai-glm-flash": "The candidate uses json.JSONDecoder.raw_decode as the grammar authority (arguably more robust than the reference), catches ValueError (the parent of JSONDecodeError), returns None on failure, and since parsing always starts at '{' any successful result is necessarily a dict."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "```python\nimport json\n\ndef extract_json_object(text: str) -> dict | None:\n    decoder = json.JSONDecoder()\n\n    for i, ch in enumerate(text):\n        if ch != \"{\":\n            continue\n        try:\n            obj, _ = decoder.raw_decode(text, i)\n        except json.JSONDecodeError:\n            continue\n        if isinstance(obj, dict):\n            return obj\n\n    return None\n```",
+        "oc-glm": "",
+        "zai-glm-flash": "```python\nimport json\n\ndef extract_json_object(text: str) -> dict | None:\n    dec = json.JSONDecoder()\n    i = text.find(\"{\")\n    while i != -1:\n        try:\n            obj, _ = dec.raw_decode(text, i)\n            return obj\n        except ValueError:\n            i = text.find(\"{\", i + 1)\n    return None\n```"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-ac6e310d",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-de2b953d",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-22ab2c33",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-f8e07be5"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-81b21449",
+        "oc-glm": "",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-bda99571"
       }
     },
     {
       "id": 5,
       "category": "structured_extraction",
+      "input": "Produce a strict JSON schema-shaped example object for a model-eval question bank item with fields: id (int), category (string), difficulty (one of easy|medium|hard), input (string), expected (string), grading (string). Return ONLY one example JSON object, no prose.",
+      "expected": "{\"id\": 1, \"category\": \"code_generation\", \"difficulty\": \"easy\", \"input\": \"Write a function that returns the length of a string.\", \"expected\": \"def n(s): return len(s)\", \"grading\": \"Returns len(s) for any string.\"}",
       "scores": {
-        "local-glm": 2,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 3,
         "zai-glm-flash": 2
       },
       "reasons": {
-        "local-glm": "The object itself is valid JSON with exactly the six required fields, an integer id, and a valid difficulty enum, but it is wrapped in markdown code fences rather than being returned as only the JSON object.",
-        "gpt-5.5": "The candidate is valid JSON with exactly the six required fields, an integer id, a valid enum difficulty ('medium'), and no surrounding prose, fully satisfying the criterion.",
-        "oc-glm": "The candidate is valid JSON with exactly the six required fields, an integer id, a valid difficulty enum value, and no surrounding prose.",
-        "zai-glm-flash": "The JSON object itself is valid with exactly the six required fields, integer id, and a valid difficulty enum value, but it is wrapped in markdown code fences rather than being returned as only the JSON object."
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate is valid JSON with exactly the six required fields, an integer id, a valid enum difficulty ('medium'), and no surrounding prose, fully meeting the criterion.",
+        "oc-glm": "The candidate is valid JSON with exactly the six required fields, an integer id, a valid enum difficulty, and no surrounding prose, fully meeting the criterion.",
+        "zai-glm-flash": "The object itself is valid JSON with exactly the six required fields, an integer id, and a valid difficulty enum value, but it is wrapped in markdown code fences rather than being a bare JSON object as required."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "{\"id\":1,\"category\":\"reasoning\",\"difficulty\":\"medium\",\"input\":\"If all bloops are razzies and all razzies are lazzies, are all bloops definitely lazzies?\",\"expected\":\"Yes. Since every bloop is a razzy and every razzy is a lazzy, every bloop must be a lazzy.\",\"grading\":\"Award full credit if the answer correctly applies transitive logic and concludes that all bloops are definitely lazzies.\"}",
+        "oc-glm": "{\n  \"id\": 1,\n  \"category\": \"math\",\n  \"difficulty\": \"easy\",\n  \"input\": \"What is 2 + 2?\",\n  \"expected\": \"4\",\n  \"grading\": \"Exact match\"\n}",
+        "zai-glm-flash": "```json\n{\n  \"id\": 42,\n  \"category\": \"math_reasoning\",\n  \"difficulty\": \"medium\",\n  \"input\": \"A train travels 120 km in 1.5 hours. What is its average speed in km/h?\",\n  \"expected\": \"80\",\n  \"grading\": \"exact_match\"\n}\n```"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-b7e056ec",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-db06edab",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-da175857",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-2293c3aa"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-8c4cbb7c",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-327de01f",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-b854e467"
       }
     },
     {
       "id": 6,
       "category": "structured_extraction",
+      "input": "Given this text, return ONLY JSON {\"model\":..,\"api_base\":..,\"timeout\":..}: 'Deployment zai-glm-flash uses model glm-5.3-flash at https://api.z.ai/api/paas/v4 with a 120 second timeout.'",
+      "expected": "{\"model\": \"glm-5.3-flash\", \"api_base\": \"https://api.z.ai/api/paas/v4\", \"timeout\": 120}",
       "scores": {
-        "local-glm": 2,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 3,
         "zai-glm-flash": 3
       },
       "reasons": {
-        "local-glm": "Model and api_base are exactly correct, but timeout is the string \"120 second\" instead of the number 120, violating the criterion's requirement that timeout be a number.",
+        "local-glm": "no answer",
         "gpt-5.5": "The candidate is valid JSON with exactly the required keys, correct model, exact URL, and timeout as the number 120, with no extra prose.",
-        "oc-glm": "The candidate is valid JSON with the exact required keys and values\u2014model glm-5.3-flash, the exact URL, and timeout as the number 120\u2014with no extra keys or prose.",
-        "zai-glm-flash": "The candidate is valid JSON with model=glm-5.3-flash, the exact api_base URL, timeout=120 as a number, and no extra keys or prose, fully matching the reference and criterion."
+        "oc-glm": "The candidate is valid JSON with model=glm-5.3-flash, the exact api_base URL, timeout=120 as a number, and no extra keys or prose, fully matching the reference and criterion.",
+        "zai-glm-flash": "The candidate is valid JSON with model=glm-5.3-flash, the exact api_base URL, timeout=120 as a number, and no extra keys or prose, fully meeting the criterion."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "{\"model\":\"glm-5.3-flash\",\"api_base\":\"https://api.z.ai/api/paas/v4\",\"timeout\":120}",
+        "oc-glm": "{\"model\":\"glm-5.3-flash\",\"api_base\":\"https://api.z.ai/api/paas/v4\",\"timeout\":120}",
+        "zai-glm-flash": "{\"model\":\"glm-5.3-flash\",\"api_base\":\"https://api.z.ai/api/paas/v4\",\"timeout\":120}"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-6c061ad1",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-ee317b0b",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-d2a7f749",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-e6f81a2d"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-c6588534",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-56760022",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-44366c52"
       }
     },
     {
       "id": 7,
       "category": "agent_tooling",
+      "input": "You must choose a handler for a task DAG. The task is a single well-specified request 'summarize this 200-word changelog into 3 bullet points'. You have: a local 19GB open-weight model (cheap, ~15 tok/s, strong on single-goal extraction/summarization, weaker on multi-constraint agentic chains) and a frontier cloud model (expensive, strong everywhere). Which handler and why, in two sentences?",
+      "expected": "Use the local model: this is a single-goal summarization/extraction task with no multi-constraint or tool-use chain, exactly the regime where the local model performs at parity, so the frontier model's cost buys nothing here. Reserve the frontier model for multi-constraint or agentic tasks.",
       "scores": {
-        "local-glm": 3,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 3,
         "zai-glm-flash": 3
       },
       "reasons": {
-        "local-glm": "The candidate picks the local model and justifies it by the task being a single, well-specified summarization request aligned with the model's strengths, which satisfies the criterion.",
-        "gpt-5.5": "The candidate picks the local model and correctly justifies it as a single-goal summarization task matching the local model's strengths while avoiding unnecessary frontier cost, fully meeting the criterion.",
-        "oc-glm": "The candidate picks the local model and justifies it by the task being a single-goal summarization matching the local model's strength while noting the frontier model adds unnecessary cost, fully meeting the criterion.",
-        "zai-glm-flash": "The candidate picks the local model and justifies it precisely by the task being single-goal summarization/extraction matching the local model's strength (not raw capability), fully meeting the criterion."
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate selects the local model and justifies it by the task being single-goal summarization matching the model's strengths (plus cost savings), fully satisfying the criterion.",
+        "oc-glm": "The candidate picks the local model and justifies it by the task being a single-goal summarization that matches the local model's strength, satisfying the criterion.",
+        "zai-glm-flash": "The candidate picks the local model and justifies it by the task being single-goal extraction/summarization within the local model's strengths, matching the criterion fully."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "Use the local 19GB open-weight model. The task is short, single-goal summarization with a simple formatting constraint, which fits its strengths and avoids unnecessary frontier-model cost.",
+        "oc-glm": "Choose the local 19GB open-weight model. This task is a simple, single-goal summarization request that the local model handles well, making the expensive frontier cloud model an unnecessary overkill.",
+        "zai-glm-flash": "Choose the local 19GB open-weight model. Summarizing a 200-word changelog into 3 bullets is a single-goal extraction task squarely within its strengths, so paying the frontier model's premium buys no meaningful quality gain here."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-6842db4c",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-dd585415",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-6e97a457",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-daaf3d1b"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-d5960fdb",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-b0c2565b",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-3f2f2bb8"
       }
     },
     {
       "id": 8,
       "category": "agent_tooling",
+      "input": "Design a minimal 2-node DAG (name the nodes and the edge) that: node A asks N candidate handlers the same question concurrently, node B has one judge handler score each answer against a reference. State the topology of node A.",
+      "expected": "Node A = 'fan-out' (topology: concurrent) \u2014 dispatch the same prompt to all N candidate handlers in parallel; Node B = 'judge' \u2014 depends on A, receives every candidate answer plus the reference and emits a score per candidate. Edge: A -> B (B joins/consumes A's outputs).",
       "scores": {
         "local-glm": 0,
         "gpt-5.5": 3,
@@ -161,14 +303,34 @@
       },
       "reasons": {
         "local-glm": "no answer",
-        "gpt-5.5": "The candidate names both nodes, specifies a concurrent/parallel fan-out of the identical question to N handlers for node A, defines B as a judge node depending on A, and gives the single A->B edge, fully satisfying the criterion.",
-        "oc-glm": "The candidate names node A as a concurrent fan-out to N handlers, node B as a judge consuming A's outputs, and specifies the single A->B edge, meeting all parts of the criterion.",
-        "zai-glm-flash": "The candidate names both nodes, specifies node A as a concurrent fan-out to N parallel handlers, node B as a single judge scoring against the reference, and a single A\u2192B edge, fully meeting the criterion."
+        "gpt-5.5": "The candidate names node A as a concurrent fan-out to N handlers (topology: parallel fan-out/map), node B as a judge scoring each answer against the reference, and specifies the single A->B edge carrying candidate answers, fully satisfying the criterion.",
+        "oc-glm": "The candidate names both nodes, specifies a single A->B edge, identifies node A's topology as concurrent fan-out to N handlers, and node B as a judge depending on A, satisfying all elements of the criterion.",
+        "zai-glm-flash": "The candidate names both nodes, states node A's concurrent/parallel fan-out topology to N handlers, defines node B as a judge scoring each answer against the reference, and includes exactly one A\u2192B edge, fully satisfying the criterion."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "Nodes:\n- **A: FanOutCandidates** \u2014 asks all `N` candidate handlers the same question concurrently.\n- **B: JudgeScores** \u2014 one judge handler scores each candidate answer against a reference.\n\nEdge:\n- **A -> B: candidate_answers[]**\n\nTopology of node A:\n- **Parallel fan-out / map topology**: one input question is broadcast to `N` candidate handlers concurrently, producing an array of `N` answers.",
+        "oc-glm": "Node A: `AskCandidates`\nNode B: `JudgeAnswers`\nEdge: `AskCandidates -> JudgeAnswers`\n\nTopology of Node A: Fan-out (concurrent parallel dispatch to N handlers).",
+        "zai-glm-flash": "**DAG:** `A \u2192 B`\n\n**Node A \u2014 \"candidate_fanout\" (scatter/parallel map):**\n- Topology: one dispatcher that spawns N identical candidate-handler instances, each invoked concurrently with the same question (embarrassingly parallel; no edges between the N workers). Output: N answers.\n\n**Edge:** all N answers from A stream into B.\n\n**Node B \u2014 \"judge_score\":**\n- One judge handler receives each of the N answers plus the reference answer and emits a score per answer (N sequential or batched scoring calls).\n\nMinimal pseudocode:\n\n```python\nasync def node_a(question):\n    return await asyncio.gather(*[candidate(q=question) for _ in range(N)])\n\nasync def node_b(answers):\n    return [await judge(answer=a, reference=REF) for a in answers]\n\ndag = {\"A\": node_a, \"B\": node_b, \"edges\": [(\"A\", \"B\")]}\n```"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-b1716659",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-f976b10f",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-cfb4b74a",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-ac972aaf"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-6a030b5a",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-1cd0e56e",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-05934e1f"
       }
     },
     {
       "id": 9,
       "category": "instruction_following",
+      "input": "List these five model names sorted by context window DESC. If two tie on context window, break the tie by name A-Z. Stop after the top 3 and output nothing else. Names and windows: alpha(128k), bravo(200k), charlie(200k), delta(1M), echo(32k).",
+      "expected": "delta\nbravo\ncharlie",
       "scores": {
         "local-glm": 0,
         "gpt-5.5": 3,
@@ -177,14 +339,34 @@
       },
       "reasons": {
         "local-glm": "no answer",
-        "gpt-5.5": "The candidate lists exactly delta, bravo, charlie in the correct order with no extra output, fully matching the reference and criterion.",
-        "oc-glm": "The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, fully matching the criterion.",
-        "zai-glm-flash": "The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, fully matching the criterion."
+        "gpt-5.5": "The candidate lists exactly delta, bravo, charlie in the correct order with the tie broken alphabetically, stops at three, and includes no extra content.",
+        "oc-glm": "The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, matching the reference answer perfectly.",
+        "zai-glm-flash": "The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, matching the reference and criterion fully."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "delta\nbravo\ncharlie",
+        "oc-glm": "delta\nbravo\ncharlie",
+        "zai-glm-flash": "delta\nbravo\ncharlie"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-b38d31b4",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-f4a20c3b",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-72e5531a",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-cfd5e339"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-72ac5a1c",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-abb91f51",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-0bdf15ba"
       }
     },
     {
       "id": 10,
       "category": "instruction_following",
+      "input": "Rewrite the sentence 'the proxy appended v1 and it broke' to be exactly 8 words, in the past tense, containing the word 'router', and ending with a period. Output only the sentence.",
+      "expected": "The router appended v1 which broke the request.",
       "scores": {
         "local-glm": 0,
         "gpt-5.5": 3,
@@ -193,62 +375,142 @@
       },
       "reasons": {
         "local-glm": "no answer",
-        "gpt-5.5": "The candidate has exactly 8 words, is in past tense, contains 'router', ends with a period, and includes no extra output.",
-        "oc-glm": "The candidate sentence has exactly 8 words, is in past tense, contains 'router', ends with a period, and includes no extra output.",
-        "zai-glm-flash": "The candidate sentence has exactly 8 words, is in past tense (appended, broke), contains 'router', ends with a period, and includes no extra output."
+        "gpt-5.5": "The candidate sentence has exactly 8 words (The, router, appended, v1, and, the, request, broke), is in past tense, contains 'router', ends with a period, and includes no extra output.",
+        "oc-glm": "The candidate sentence has exactly 8 words, is in past tense, contains 'router', ends with a period, and includes no extra output, fully meeting the criterion.",
+        "zai-glm-flash": "The candidate sentence has exactly 8 words, is in past tense, contains 'router', ends with a period, and includes no extra output."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "The router appended v1, and the request broke.",
+        "oc-glm": "The proxy appended v1 and the router broke.",
+        "zai-glm-flash": "The proxy appended v1 and the router broke."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-0df86bb7",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-dc26788e",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-5bc0ea7e",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-3189b228"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-98915980",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-819b8770",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-0de8f992"
       }
     },
     {
       "id": 11,
       "category": "systems_reasoning",
+      "input": "A 19GB model runs on a 24GB GPU at ~20 tok/s when a TTS service is stopped, but drops to ~12 tok/s when that service holds ~6GB of VRAM. The model still produces correct output in both cases. Explain in two sentences why throughput drops.",
+      "expected": "With less free VRAM, the runtime offloads some model layers to CPU/system RAM, so those layers compute far slower and the per-token latency rises, cutting throughput. Correctness is unchanged because the same weights run \u2014 only where they execute (GPU vs CPU) differs.",
       "scores": {
         "local-glm": 0,
         "gpt-5.5": 2,
-        "oc-glm": 2,
-        "zai-glm-flash": 3
+        "oc-glm": 3,
+        "zai-glm-flash": 1
       },
       "reasons": {
         "local-glm": "no answer",
-        "gpt-5.5": "The candidate correctly identifies memory pressure and preserved computation semantics, but hedges the mechanism among several possibilities rather than clearly attributing the slowdown to CPU/RAM offload of model layers.",
-        "oc-glm": "The candidate correctly attributes the slowdown to offloading weights/KV cache to system RAM when VRAM is insufficient, but only notes that output remains correct without explaining that correctness is preserved because the same weights are used.",
-        "zai-glm-flash": "The candidate correctly attributes the slowdown to offloading weights to system RAM when VRAM is insufficient (with plausible added detail about PCIe transfer and KV-cache pressure) and explicitly notes correctness is preserved because the same computation runs, satisfying both parts of the criterion."
+        "gpt-5.5": "The candidate does mention spilling/offloading and notes correctness is preserved, but attributes the slowdown primarily to KV cache/activation headroom and vague memory-management inefficiency rather than clearly identifying that model layers themselves are offloaded to CPU/RAM (19GB + 6GB exceeds 24GB), which is the core mechanism required by the criterion.",
+        "oc-glm": "The candidate correctly attributes the slowdown to weights/KV cache being offloaded to host RAM due to insufficient VRAM (hybrid execution with PCIe transfer overhead) and explains correctness is preserved because the same full model is still used.",
+        "zai-glm-flash": "The candidate attributes the slowdown mainly to KV cache/batching pressure and compute contention rather than the key mechanism of offloading model layers to CPU/system RAM (only a vague parenthetical 'spillover to slower memory'), and it does not explain that correctness is preserved because the same weights execute."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "Throughput drops because with the TTS service using ~6GB VRAM, the 19GB model no longer has enough headroom for KV cache, activations, workspace, and allocator overhead, so the runtime must use less efficient memory management and/or spill/offload/recompute data. The outputs remain correct, but generation becomes memory-bandwidth/transfer/fragmentation limited rather than running entirely in the fastest on-GPU path.",
+        "oc-glm": "With the TTS service holding 6GB, only 18GB of VRAM remains for the 19GB model, forcing a portion of the weights or KV cache to offload to host RAM and transfer over PCIe each forward pass. This per-token memory transfer overhead slows generation while preserving output correctness because the full model is still used, just not fully resident on the GPU.",
+        "zai-glm-flash": "With only ~18GB free instead of ~24GB, the LLM's KV cache and activation buffers are squeezed, forcing smaller batches/shorter context headroom and more memory-allocation churn (or spillover to slower memory), which directly lowers tokens/sec. Additionally, the TTS process shares the same GPU's compute units, so its kernels contend with the LLM's kernels via time-slicing, further reducing effective throughput even though output remains correct."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-f9bb12c8",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-78260064",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-137f61eb",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-fc68aadb"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-8d8e0a91",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-df2eb591",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-aac8d886"
       }
     },
     {
       "id": 12,
       "category": "systems_reasoning",
+      "input": "An eval sends prompts to a browser-backed model seat. When the browser tab is in the background, responses stall for many minutes though the process is alive. Name the mechanism and one mitigation.",
+      "expected": "Chrome throttles background/hidden tabs \u2014 requestAnimationFrame isn't serviced and timers are clamped when document.hidden \u2014 so the page's generation/polling loop stalls. Mitigation: keep the tab foregrounded/visible (one visible tab per window) or launch Chrome with the background-throttling flags disabled.",
       "scores": {
-        "local-glm": 2,
+        "local-glm": 0,
         "gpt-5.5": 3,
         "oc-glm": 2,
         "zai-glm-flash": 3
       },
       "reasons": {
-        "local-glm": "The mechanism (background-tab timer/event-loop throttling) is correctly identified, but the mitigation\u2014offloading to a Web Worker\u2014is a partial workaround that doesn't match the criterion's mitigations (keep tab visible or disable throttling flags) and wouldn't fix rAF-driven stalls or be applicable when the page code can't be modified.",
-        "gpt-5.5": "The candidate correctly identifies background-tab throttling (timer/event-loop clamping via page visibility) as the mechanism and provides valid mitigations (keep tab visible or launch Chrome with throttling-disabling flags), fully meeting the criterion.",
-        "oc-glm": "The mechanism (background-tab throttling with timer clamping and rAF suspension) is correctly identified, but the Web Worker mitigation, while technically real for timer throttling, is not practical for an eval harness that doesn't control the page's code and differs from the criterion's mitigations (keep tab visible or disable throttling flags).",
-        "zai-glm-flash": "The candidate correctly identifies background-tab throttling (timer clamping and rAF suspension for hidden tabs) as the mechanism and provides valid mitigations including the Chrome throttling-disable flags and keeping the tab foregrounded, fully meeting the criterion."
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate correctly identifies background-tab throttling (timer/rAF clamping via Page Visibility) as the mechanism and provides valid mitigations (keep tab foregrounded or disable throttling via specific Chrome launch flags), fully meeting the criterion.",
+        "oc-glm": "The mechanism (background-tab throttling with timer clamping and rAF suspension) is correctly identified, but the proposed mitigations (Web Workers, WebSocket/SSE) require modifying the page's code, which is generally infeasible for a browser-backed third-party model seat, unlike the reference's practical mitigations of keeping the tab visible or disabling throttling via Chrome launch flags.",
+        "zai-glm-flash": "The candidate correctly identifies background-tab throttling (rAF suspension and timer clamping) as the mechanism and provides valid mitigations (disabling throttling via Chrome launch flags and keeping the tab foregrounded), fully meeting the criterion."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "Mechanism: browser background tab throttling, especially timer/requestAnimationFrame throttling via Page Visibility.\n\nMitigation: keep the model tab in the foreground/active, or launch the browser with background throttling disabled, e.g. Chrome flags like `--disable-background-timer-throttling` and `--disable-renderer-backgrounding`.",
+        "oc-glm": "**Mechanism:** Browser background-tab throttling \u2014 browsers clamp `setTimeout`/`setInterval` (often to \u22651s, then \u226560s after a grace period) and suspend `requestAnimationFrame` for hidden tabs, so timer-driven polling/streaming stalls while the process stays alive.\n\n**Mitigation:** Move the polling/streaming loop into a Web Worker (or Service Worker), whose timers are not subject to the same main-thread background throttling; alternatively use a WebSocket/SSE connection, which remains active regardless of tab visibility.",
+        "zai-glm-flash": "**Mechanism:** Browser background-tab throttling \u2014 when a tab is occluded/backgrounded, the renderer suspends `requestAnimationFrame` and heavily throttles timers (`setTimeout`/`setInterval`, including Chrome's \"intensive throttling\" after ~5 min), so the page's JS loop that drives streaming/inference stalls even though the process is alive.\n\n**Mitigation:** Launch the browser with throttling disabled, e.g. Chromium flags:\n`--disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows`\n(or keep the tab foregrounded via CDP `Page.bringToFront` / run headless with these flags)."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-7779cdbf",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-3f93785d",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-43adfd4d",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-e781f45a"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-ff021e63",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-dcb08621",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-736e931b"
       }
     },
     {
       "id": 13,
       "category": "code_debugging",
+      "input": "A pipeline kills a hung job with `pkill -f \"run.sh judge-grid\"` and the controlling shell itself dies with a non-zero exit. Why, and what is the safe replacement?",
+      "expected": "pkill -f matches against full command lines, and the pattern 'run.sh judge-grid' also matches the shell process that is currently running the pkill command (and its grep), so pkill signals itself. Safe replacement: resolve explicit PIDs first (e.g. ps/pgrep filtered to exclude the current shell and grep) and kill those PIDs individually.",
       "scores": {
         "local-glm": 0,
-        "gpt-5.5": 3,
+        "gpt-5.5": 2,
         "oc-glm": 3,
         "zai-glm-flash": 3
       },
       "reasons": {
         "local-glm": "no answer",
-        "gpt-5.5": "The candidate correctly explains that pkill -f matches the controlling shell's own command line (e.g., sh -c containing the pattern) causing self-termination, and recommends killing by explicit tracked PID/process group instead of command-line matching, fully satisfying the criterion.",
-        "oc-glm": "The candidate correctly explains that pkill -f matches the full command line including the controlling shell's own arguments (causing self-kill), and recommends explicit-PID killing\u2014both by capturing $! at launch and by pgrep filtering that excludes self ($$) and parent ($PPID)\u2014fully meeting the criterion.",
-        "zai-glm-flash": "The candidate correctly explains that pkill -f matches the full command line of the invoking shell (causing it to be signaled and exit 143) and recommends explicit-PID killing via capturing $! instead of pattern matching, fully meeting the criterion."
+        "gpt-5.5": "The candidate correctly explains that pkill -f self-matches the shell's own command line, but instead of the required explicit-PID killing (excluding self) it offers the bracket-regex trick, which solves the self-match but does not meet the criterion's prescribed fix.",
+        "oc-glm": "The candidate correctly explains that pkill -f matches the full command line of every process including the controlling shell itself, and recommends killing by explicit saved PID (or pgrep with self-exclusion via $$), fully meeting the criterion.",
+        "zai-glm-flash": "The candidate correctly explains that pkill -f matches the controlling shell's own command line containing the pattern text, and recommends explicit-PID killing (recording $! and killing that PID) plus a self-match-avoiding pattern, fully meeting the criterion."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "`pkill -f \"run.sh judge-grid\"` matches against the full command line. In CI/pipeline shells, the controlling shell\u2019s own command line often contains the literal text `run.sh judge-grid` because it is executing the script body, so `pkill` matches and kills the shell too, causing a non-zero exit.\n\nSafe replacement:\n\n```sh\npkill -f '[r]un.sh judge-grid'\n```\n\nThe regex still matches `run.sh judge-grid` in the target process, but does not match the `pkill`/shell command line containing `[r]un.sh judge-grid`.",
+        "oc-glm": "**Why:** `pkill -f` matches the pattern against the full command line of *every* process. The controlling shell (or pipeline runner) itself has `run.sh judge-grid` in its own command line \u2014 e.g. it was invoked as `bash run.sh judge-grid` \u2014 so `pkill` signals and kills the shell along with the hung child, producing the non-zero exit.\n\n**Safe replacement:** Kill by the saved child PID instead of pattern-matching:\n\n```bash\nbash run.sh judge-grid &\njob_pid=$!\n# ...later, to kill the hung job only:\nkill \"$job_pid\"\n```\n\nIf you must pattern-match, exclude the current shell's PID:\n\n```bash\npgrep -f \"run.sh judge-grid\" | grep -v \"^$$\\$\" | xargs -r kill\n```\n\nOr use a pattern unique to the child process's command line that does not appear in the parent shell's command line.",
+        "zai-glm-flash": "**Why:** `pkill -f` regex-matches the *full command line* of every process. In CI/pipeline environments each step typically runs as `bash -c '<entire script>'`, so the controlling shell's own command line contains the literal text `run.sh judge-grid`. The pattern therefore matches the shell too (pkill exempts only itself, not its parent), SIGTERM kills the shell mid-step, and the pipeline records a non-zero exit.\n\n**Safe replacement:** break the self-match so the pattern can't match the shell that contains it verbatim, and tolerate \"no match\":\n\n```bash\npkill -f '[r]un\\.sh judge-grid' || true\n```\n\nThe regex `[r]un.sh` matches `run.sh` in the target job but does **not** match the literal string `[r]un.sh` sitting in the shell's own cmdline.\n\nEven safer (no pattern matching at all): record the PID when launching and kill that directly:\n\n```bash\nbash run.sh judge-grid & JOB_PID=$!\n# ...on hang:\nkill \"$JOB_PID\"\n```"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-ff07e329",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-0a00b2de",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-32b85aaf",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-3e9e254a"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-f0286cd3",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-5e07eeb8",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-0f35ab1f"
       }
     },
     {
       "id": 14,
       "category": "code_generation",
+      "input": "Write a Python one-liner style function first_nonempty(paths: list[str]) -> str | None that returns the text of the first readable, non-empty file among paths, or None. Handle read errors.",
+      "expected": "from pathlib import Path\n\ndef first_nonempty(paths: list[str]) -> str | None:\n    for p in paths:\n        try:\n            t = Path(p).read_text(encoding='utf-8', errors='replace')\n        except OSError:\n            continue\n        if t.strip():\n            return t\n    return None",
       "scores": {
         "local-glm": 0,
         "gpt-5.5": 3,
@@ -257,30 +519,34 @@
       },
       "reasons": {
         "local-glm": "no answer",
-        "gpt-5.5": "The candidate lazily iterates paths, catches read errors (OSError and UnicodeError), returns the first non-empty file's text, and returns None when none qualify, with the only trivial difference being that whitespace-only files count as non-empty (a defensible reading of the spec).",
+        "gpt-5.5": "The candidate iterates paths, guards OSError (plus UnicodeError) in a helper, returns the first non-empty file's text via next() with a walrus, and returns None when none qualify, fully meeting the criterion.",
         "oc-glm": "no answer",
-        "zai-glm-flash": "The candidate iterates paths, catches OSError during reads, returns the first non-empty file's text via the walrus filter, and returns None otherwise, fully meeting the criterion (treating a whitespace-only file as non-empty is a defensible reading of 'non-empty')."
+        "zai-glm-flash": "The candidate iterates paths, catches OSError (and UnicodeDecodeError) on reads, returns the first non-empty file's text via the walrus filter, and returns None when none qualify, fully meeting the criterion (its only deviation is treating whitespace-only files as non-empty, which matches the literal 'non-empty' requirement)."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "```python\nfrom pathlib import Path\n\ndef _read(p: str) -> str | None:\n    try:\n        return Path(p).read_text() or None\n    except (OSError, UnicodeError):\n        return None\n\ndef first_nonempty(paths: list[str]) -> str | None:\n    return next((s for p in paths if (s := _read(p)) is not None), None)\n```",
+        "oc-glm": "",
+        "zai-glm-flash": "```python\ndef first_nonempty(paths: list[str]) -> str | None:\n    def read(p):\n        try:\n            with open(p, encoding=\"utf-8\") as f:\n                return f.read()\n        except (OSError, UnicodeDecodeError):\n            return \"\"\n    return next((t for p in paths if (t := read(p))), None)\n```\n\nReturns the text of the first file that opens and reads successfully with non-empty content (`\"\"` from failures/empty files is filtered out); `None` if none qualify."
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-045c0ad7",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-b760ae2c",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-070063f2",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-7b20ae4b"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-77dfdd75",
+        "oc-glm": "",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-1fba78b4"
       }
     },
     {
       "id": 15,
       "category": "instruction_following",
-      "scores": {
-        "local-glm": 3,
-        "gpt-5.5": 3,
-        "oc-glm": 3,
-        "zai-glm-flash": 3
-      },
-      "reasons": {
-        "local-glm": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
-        "gpt-5.5": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
-        "oc-glm": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
-        "zai-glm-flash": "The candidate answer exactly matches the reference: reverse-alphabetical order, comma-separated, no spaces, and no extra text."
-      }
-    },
-    {
-      "id": 16,
-      "category": "structured_extraction",
+      "input": "Return a comma-separated list of exactly these provider names with NO spaces, in reverse alphabetical order: zai, openai, deepseek, ollama, moonshot.",
+      "expected": "zai,openai,ollama,moonshot,deepseek",
       "scores": {
         "local-glm": 0,
         "gpt-5.5": 3,
@@ -289,9 +555,63 @@
       },
       "reasons": {
         "local-glm": "no answer",
-        "gpt-5.5": "The candidate is valid JSON with double-quoted keys/strings, True converted to true, trailing comma removed, values unchanged, and no prose; whitespace differences are stylistic and irrelevant.",
-        "oc-glm": "The candidate exactly matches the reference: keys and strings are double-quoted, True is converted to true, the trailing comma is removed, values are unchanged, and there is no prose.",
+        "gpt-5.5": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
+        "oc-glm": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
+        "zai-glm-flash": "The candidate answer exactly matches the reference: reverse-alphabetical order, comma-separated, no spaces, and no extra text."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "zai,openai,ollama,moonshot,deepseek",
+        "oc-glm": "zai,openai,ollama,moonshot,deepseek",
+        "zai-glm-flash": "zai,openai,ollama,moonshot,deepseek"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-26a71d03",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-5e6b2da5",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-b4f8a2db",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-6e18f365"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-288296ba",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-e5f16450",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-f8403b60"
+      }
+    },
+    {
+      "id": 16,
+      "category": "structured_extraction",
+      "input": "Fix this invalid JSON so it parses, changing as little as possible, and return ONLY the corrected JSON: {'model': 'glm-5.3-flash', 'timeout': 120, 'stream': True,}",
+      "expected": "{\"model\": \"glm-5.3-flash\", \"timeout\": 120, \"stream\": true}",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate is valid JSON with double-quoted keys/strings, True converted to true, trailing comma removed, values unchanged, and no prose; whitespace differences are irrelevant.",
+        "oc-glm": "The candidate exactly matches the reference: all keys/strings are double-quoted, True is converted to true, the trailing comma is removed, values are unchanged, and there is no prose.",
         "zai-glm-flash": "The candidate exactly matches the reference: double-quoted keys/strings, True converted to true, trailing comma removed, values unchanged, and no prose."
+      },
+      "answers": {
+        "local-glm": "",
+        "gpt-5.5": "{\"model\":\"glm-5.3-flash\",\"timeout\":120,\"stream\":true}",
+        "oc-glm": "{\"model\": \"glm-5.3-flash\", \"timeout\": 120, \"stream\": true}",
+        "zai-glm-flash": "{\"model\": \"glm-5.3-flash\", \"timeout\": 120, \"stream\": true}"
+      },
+      "run_dirs": {
+        "local-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-local-glm-c99715a8",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-8d9df60a",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-603aa21a",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-30616872"
+      },
+      "judge_run_dirs": {
+        "local-glm": "",
+        "gpt-5.5": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-3b7dad7c",
+        "oc-glm": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-b704f987",
+        "zai-glm-flash": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-claude-fable-5-6da3c4b1"
       }
     }
   ]

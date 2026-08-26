@@ -68,13 +68,17 @@ def _extract_json_object(text: str) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
 
 
-def _ask_call(handler: str, prompt: str, timeout: int) -> str:
+def _ask_call(handler: str, prompt: str, timeout: int) -> tuple[str, str]:
     """One model call through /ask (tau-dag single-call) -> tau -> scillm.
 
-    Returns the model's response text, or "" on any failure (the caller scores
-    an empty answer as WRONG).
+    Returns (response_text, run_dir) where run_dir is the on-disk /ask run
+    directory that holds the handler's response.md receipt. Returns ("", "")
+    on any failure (the caller scores an empty answer as WRONG). The run_dir
+    is recorded so every score in the grid traces to a file the reader can
+    open and verify -- the answer is not re-typed by the grader.
     """
     ask_id = f"llm-eval-{handler}-{uuid.uuid4().hex[:8]}".replace(".", "-")
+    run_dir = ASK_RUNS_ROOT / ask_id
     cmd = [
         str(ASK_RUN), "tau-dag", prompt,
         "--repo", "local/agent-skills", "--target", "llm-eval-lab",
@@ -86,21 +90,21 @@ def _ask_call(handler: str, prompt: str, timeout: int) -> str:
     try:
         subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 120, cwd=ASK_DIR)
     except (subprocess.TimeoutExpired, OSError):
-        return ""
-    run_dir = ASK_RUNS_ROOT / ask_id
+        return "", str(run_dir)
     for resp in sorted(run_dir.glob("node-artifacts/handler-*/response.md")):
         try:
-            return resp.read_text(encoding="utf-8", errors="replace")
+            return resp.read_text(encoding="utf-8", errors="replace"), str(run_dir)
         except OSError:
-            return ""
-    return ""
+            return "", str(run_dir)
+    return "", str(run_dir)
 
 
 def _grade_one(question: dict[str, Any], handler: str, judge_handler: str, timeout: int) -> dict[str, Any]:
     prompt = f"{CANDIDATE_SYSTEM}\n\nTASK:\n{question['input']}"
-    answer = _ask_call(handler, prompt, timeout)
+    answer, run_dir = _ask_call(handler, prompt, timeout)
+    base = {"model": handler, "answer": answer, "run_dir": run_dir, "judge_run_dir": ""}
     if not answer.strip():
-        return {"model": handler, "score": Score.WRONG, "reason": "no answer", "answer": ""}
+        return {**base, "score": Score.WRONG, "reason": "no answer"}
     judge_prompt = (
         f"{JUDGE_SYSTEM}\n\n"
         f"QUESTION:\n{question['input']}\n\n"
@@ -111,16 +115,18 @@ def _grade_one(question: dict[str, Any], handler: str, judge_handler: str, timeo
         "where 3=fully correct and meets the criterion, 2=mostly correct with a "
         "minor gap, 1=partially correct, 0=wrong or missing."
     )
-    verdict = _extract_json_object(_ask_call(judge_handler, judge_prompt, timeout))
+    judge_text, judge_run_dir = _ask_call(judge_handler, judge_prompt, timeout)
+    base["judge_run_dir"] = judge_run_dir
+    verdict = _extract_json_object(judge_text)
     if verdict is None:
-        return {"model": handler, "score": Score.WRONG, "reason": "judge returned no JSON", "answer": answer}
+        return {**base, "score": Score.WRONG, "reason": "judge returned no JSON"}
     raw = verdict.get("score")
     try:
         value = int(raw)
     except (TypeError, ValueError):
         value = 0
     score = Score(value) if value in (0, 1, 2, 3) else Score.WRONG
-    return {"model": handler, "score": score, "reason": str(verdict.get("reason", "")), "answer": answer}
+    return {**base, "score": score, "reason": str(verdict.get("reason", ""))}
 
 
 @app.command(name="judge-grid")
@@ -201,8 +207,13 @@ def judge_grid(
             "title": gt.get("title"), "candidates": candidates, "judge": judge_handler,
             "totals": totals, "max_points": maxpts, "per_category_best": excels,
             "rows": [{"id": r["question"]["id"], "category": r["question"]["category"],
+                      "input": r["question"]["input"], "expected": r["question"]["expected"],
                       "scores": {m: int(r["scores"][m]["score"]) for m in candidates},
-                      "reasons": {m: r["scores"][m]["reason"] for m in candidates}} for r in rows],
+                      "reasons": {m: r["scores"][m]["reason"] for m in candidates},
+                      "answers": {m: r["scores"][m].get("answer", "") for m in candidates},
+                      "run_dirs": {m: r["scores"][m].get("run_dir", "") for m in candidates},
+                      "judge_run_dirs": {m: r["scores"][m].get("judge_run_dir", "") for m in candidates}}
+                     for r in rows],
         }, indent=2), encoding="utf-8")
         console.print(f"[dim]wrote {output}[/dim]")
     console.print("JUDGE_GRID_COMPLETE")

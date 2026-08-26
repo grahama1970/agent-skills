@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLM Capability Profile — Evidence Report</title>
+<style>
+:root{--bg:#0f1115;--panel:#161a21;--ink:#e6e9ef;--mut:#9aa4b2;--line:#2a3140;
+--s0:#e5484d;--s1:#e59a2a;--s2:#3e9be8;--s3:#30a46c;--acc:#7c8cff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+main{max-width:1180px;margin:0 auto;padding:32px 24px 80px}
+h1{font-size:26px;margin:0 0 4px} h2{font-size:19px;margin:34px 0 10px;
+border-bottom:1px solid var(--line);padding-bottom:6px}
+h3{font-size:15px;margin:18px 0 6px}
+p,li{color:var(--ink)} .muted,small{color:var(--mut)}
+code{background:#0b0d11;padding:1px 5px;border-radius:4px;font-size:12px;color:#c7d0de}
+.lead{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--acc);
+padding:16px 18px;border-radius:8px;margin:14px 0}
+.verdict{font-size:16px;font-weight:600}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#12161d;color:var(--mut);font-weight:600}
+.cats td{text-align:center} .cats th{text-align:left}
+.score{display:inline-block;min-width:20px;text-align:center;font-weight:700;
+border-radius:5px;padding:1px 7px;color:#0b0d11}
+.s0{background:var(--s0)}.s1{background:var(--s1)}.s2{background:var(--s2)}.s3{background:var(--s3)}
+.qtable{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.qhead td{background:#12161d;border-top:2px solid var(--acc)}
+.qid{font-weight:700;color:var(--acc)} .cat{color:var(--mut);font-size:12px;margin-left:8px;text-transform:uppercase;letter-spacing:.4px}
+.inp{display:block;margin-top:6px;color:var(--ink)}
+.qrow td{width:25%} td.ans pre{white-space:pre-wrap;word-break:break-word;margin:6px 0;
+background:#0b0d11;padding:8px;border-radius:6px;max-height:230px;overflow:auto;font-size:12px}
+.ans .sc{margin-bottom:2px} .judge{color:var(--mut);font-size:12px;margin-top:4px}
+.receipt{color:#6b7686;font-size:10.5px;margin-top:5px;word-break:break-all}
+td.local{background:#18130f} pre.blocked{color:var(--s1);background:#0b0d11}
+details summary{cursor:pointer;color:var(--mut);font-size:12px;margin-top:6px}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);margin-right:6px}
+.blk{border-left:3px solid var(--s0)} .ok{border-left:3px solid var(--s3)}
+.finding{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:10px 0}
+ul{margin:6px 0 6px 18px}
+</style></head><body><main>
+
+<h1>GLM Capability Profile — Evidence Report</h1>
+<p class="muted">Persona: operator deciding whether local or cloud GLM can offload
+daily work, or replace a Claude Max plan. Source of truth:
+<code>skills/llm-eval-lab/results/glm_personalized_profile.result.json</code>.
+Every model call ran through /ask → tau → scillm; every cell links its on-disk
+<code>response.md</code> receipt.</p>
+
+<div class="lead">
+<p class="verdict">Local <code>glm-4.7-flash</code> is not a usable autonomous worker on this
+workload; cloud GLM (<code>glm-5.3-flash</code>) is near-frontier.</p>
+<p>On a 16-question bank personalized to the operator's real workload (judged 0–3 by
+<code>claude-fable-5</code>): cloud <b>glm-5.3-flash 45/48</b> and <b>gpt-5.5 46/48</b> are
+statistically tied; <b>oc-glm 5.1 41/48</b> trails; local <b>glm-4.7-flash 21/48</b>
+(run-1, well-resourced) leads or ties in <b>zero</b> categories and this run could not
+answer at all — it timed out under VRAM contention (CPU-offload, APITimeoutError).</p>
+<p class="muted">Highest-risk caveat: 16 questions, single-trial, single-judge. Directional,
+not a purchasing benchmark. A plan-replacement decision also depends on feature coverage
+(e.g. GPT Web Pro) and quota, which this report does not measure.</p>
+</div>
+
+<h2>Per-category scores (0–3 average)</h2>
+<table class="cats"><thead><tr><th>category</th>
+<th>gpt-5.5 (GPT plan)</th><th>oc-glm 5.1 (z.ai/Zen)</th><th>zai-glm-flash 5.3 (z.ai)</th>
+<th>local-glm 4.7-flash (ollama)</th></tr></thead><tbody>
+<tr><th>agent_tooling</th><td>3.0</td><td>3.0</td><td>3.0</td><td class="muted">1.5 <small>(run-1)</small></td></tr><tr><th>code_debugging</th><td>2.7</td><td>3.0</td><td>3.0</td><td class="muted">1.7 <small>(run-1)</small></td></tr><tr><th>code_generation</th><td>3.0</td><td>1.0</td><td>3.0</td><td class="muted">1.3 <small>(run-1)</small></td></tr><tr><th>instruction_following</th><td>3.0</td><td>3.0</td><td>3.0</td><td class="muted">1.0 <small>(run-1)</small></td></tr><tr><th>structured_extraction</th><td>3.0</td><td>3.0</td><td>2.7</td><td class="muted">1.3 <small>(run-1)</small></td></tr><tr><th>systems_reasoning</th><td>2.5</td><td>2.5</td><td>2.0</td><td class="muted">1.0 <small>(run-1)</small></td></tr>
+</tbody><tfoot><tr><th>TOTAL /48</th>
+<td>46</td><td>41</td><td>45</td>
+<td class="muted">21 (run-1)</td></tr></tfoot></table>
+
+<h2>Findings</h2>
+<div class="finding blk"><h3>F1 — Local glm-4.7-flash is not autonomously usable here</h3>
+<p>Run-1 (well-resourced) 21/48, leads/ties in no category; scores 0 on multi-constraint
+instructions (Q9,Q10), systems reasoning (Q11), DAG design (Q8), JSON repair (Q16),
+self-referential debugging (Q13). Failures are silent and plausible (right values, wrong
+strict format — e.g. Q6 "120 second" not 120), which is worse than loud failure.
+<b>Action:</b> do not wire into unattended automation; supervised drafting only.</p></div>
+
+<div class="finding blk"><h3>F2 — Local model is operationally blocked on this box</h3>
+<p>This run every local-glm call returned empty. Receipt: scillm log
+<code>Deployment glm-4.7-flash attempt 5/6 got APITimeoutError</code>; <code>ollama ps</code>
+shows 70%/30% CPU/GPU with VRAM 19.5/24.5 GB full (whisper/voice-mode + conda python).
+<b>Action:</b> free VRAM before trusting any local-glm result; the CPU-offload path times out.</p></div>
+
+<div class="finding ok"><h3>F3 — Cloud glm-5.3-flash ties frontier gpt-5.5</h3>
+<p>zai-glm-flash 45/48 vs gpt-5.5 46/48 — within judge noise. GLM the family is capable;
+the local quantized artifact is the weak link. The z.ai route was unblocked by a scillm
+config fix (do not append /v1 to /vN api_base). <b>Action:</b> route GLM-eligible work to the
+cloud flash endpoint, not the local model.</p></div>
+
+<h2>Question-by-question evidence</h2>
+<p class="muted">Score chips: <span class="score s0">0</span> wrong ·
+<span class="score s1">1</span> partial · <span class="score s2">2</span> minor gap ·
+<span class="score s3">3</span> correct. Each cell shows the model's actual response and the
+run-dir that holds its <code>response.md</code>. local-glm shows its run-1 score; its this-run
+cell timed out.</p>
+<div class="qtable"><table>
+<thead><tr><th>gpt-5.5 (GPT plan)</th><th>oc-glm 5.1 (z.ai/Zen)</th>
+<th>zai-glm-flash 5.3 (z.ai)</th><th>local-glm 4.7-flash (ollama)</th></tr></thead>
+<tbody><tr class="qhead"><td colspan="5"><span class="qid">Q1</span> <span class="cat">code_debugging</span> <span class="inp">An OpenAI-compatible LLM proxy calls a provider whose api_base is https://api.z.ai/api/paas/v4 and gets HTTP 404 with body {&quot;path&quot;:&quot;/v4/v1/chat/completions&quot;}. A direct curl to https://api.z.ai/api/paas/v4/chat/completions with the same key returns 200. Name the single root cause and the one-line fix.</span><details><summary>reference answer</summary><pre>The proxy appends /v1/chat/completions to the api_base, but z.ai&#x27;s version segment is already /v4 (no /v1), so the URL becomes /api/paas/v4/v1/chat/completions and 404s. Fix: stop appending /v1 when the base path already ends in a /vN version segment (or set the client base_url to exactly .../api/paas/v4 so only /chat/completions is appended).</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Root cause: the proxy is auto-appending OpenAI’s `/v1/chat/completions` to Z.AI’s `/v4` base, producing the invalid `/v4/v1/chat/completions`.
+
+One-line fix: configure the provider/custom endpoint so the final URL is exactly `https://api.z.ai/api/paas/v4/chat/completions`—disable/remove the proxy’s automatic `/v1` insertion.</pre><div class="judge"><b>judge:</b> The candidate correctly identifies the doubled version segment (/v4 + auto-appended /v1) as the root cause and provides the correct fix of removing the /v1 append so the URL resolves to /api/paas/v4/chat/completions.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-d2249af8/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>**Root cause:** The proxy appends OpenAI&#x27;s default `/v1/chat/completions` to `api_base`, but z.ai&#x27;s endpoint is `/chat/completions` directly under `/v4`—producing the invalid double-versioned path `/v4/v1/chat/completions`.
+
+**One-line fix:** Set `api_base` to `https://api.z.ai/api/paas/v4` and configure the proxy to append `/chat/completions` (strip the `/v1` prefix), e.g. `api_base=https://api.z.ai/api/paas/v4` with endpoint suffix `/chat/completions`.</pre><div class="judge"><b>judge:</b> The candidate correctly identifies the doubled version segment (/v4 + /v1) as the root cause and gives a fix that stops appending /v1 so only /chat/completions is added, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-bf6caa84/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>**Root cause:** The proxy appends OpenAI&#x27;s default `/v1/chat/completions` suffix onto an `api_base` that already contains the provider&#x27;s version segment (`/v4`), producing the duplicated path `/api/paas/v4` + `/v1/chat/completions` → `/v4/v1/chat/completions`.
+
+**Fix:** Configure the client so the final URL is exactly `https://api.z.ai/api/paas/v4/chat/completions` — i.e., suppress the auto-appended `/v1` (or set the base/suffix so only `/chat/completions` is added).</pre><div class="judge"><b>judge:</b> The candidate correctly identifies the doubled version segment (/v4 + auto-appended /v1) as the root cause and gives the fix of suppressing the /v1 append so only /chat/completions is added, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-77ad3870/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s2">2</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q2</span> <span class="cat">code_debugging</span> <span class="inp">A model-routing proxy log shows: complete model=&#x27;zai-glm-flash&#x27; -&gt; group=&#x27;zai-glm-flash&#x27;, chain=[&#x27;zai-glm-flash&#x27;] followed by 404 Not Found. Is the group resolution/routing broken, or is the failure downstream of routing? Justify in one sentence.</span><details><summary>reference answer</summary><pre>Routing is fine — the log shows the request correctly resolved to group &#x27;zai-glm-flash&#x27; and its deployment; the 404 happens on the outbound HTTP call to the provider (URL/path), which is downstream of group resolution.</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>The group resolution/routing is not broken; the log shows the model correctly resolved to group `zai-glm-flash` with chain `[&#x27;zai-glm-flash&#x27;]`, so the 404 occurs downstream at the provider/backend endpoint.</pre><div class="judge"><b>judge:</b> The candidate correctly states that routing/group resolution succeeded and attributes the 404 to a downstream failure at the provider/backend endpoint, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-c65333a1/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>The failure is downstream of routing: group resolution completed successfully (model resolved to group `zai-glm-flash` with a populated chain), so the 404 occurred when the proxy called the resolved upstream endpoint, which either doesn&#x27;t exist or isn&#x27;t configured for that provider.</pre><div class="judge"><b>judge:</b> The candidate correctly states that group resolution/routing succeeded (citing the resolved group and populated chain) and that the 404 occurred downstream on the outbound call to the upstream provider endpoint, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-fb693e88/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Routing is working: the log shows the model was successfully resolved to group `zai-glm-flash` with a valid chain, so the subsequent 404 originates from the upstream provider (e.g., unknown model/endpoint there), i.e., downstream of routing.</pre><div class="judge"><b>judge:</b> The candidate correctly states routing/group resolution succeeded and attributes the 404 to the downstream provider call (endpoint/model on the provider side), fully matching the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-73dacd6a/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s3">3</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q3</span> <span class="cat">code_generation</span> <span class="inp">Write a Python function run_handler(cmd: list[str], timeout_s: int) -&gt; str using subprocess that runs cmd, enforces a finite timeout, raises on non-zero exit, never uses shell=True, and returns stdout. Keep it minimal.</span><details><summary>reference answer</summary><pre>import subprocess
+
+def run_handler(cmd: list[str], timeout_s: int) -&gt; str:
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, check=True)
+    return proc.stdout</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>```python
+import subprocess
+
+def run_handler(cmd: list[str], timeout_s: int) -&gt; str:
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=timeout_s,
+        check=True,
+        shell=False,
+    )
+    return result.stdout
+```</pre><div class="judge"><b>judge:</b> The candidate uses subprocess.run with a finite timeout, check=True to raise on non-zero exit, explicit shell=False, list argv, and returns stdout, fully satisfying the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-bc4bec1e/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>```python
+import subprocess
+
+def run_handler(cmd: list[str], timeout_s: int) -&gt; str:
+    return subprocess.run(
+        cmd,
+        timeout=timeout_s,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+```</pre><div class="judge"><b>judge:</b> The candidate uses subprocess.run with a finite timeout, check=True, no shell=True, a list argv, and returns stdout, fully matching the reference and criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-a79264a6/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>```python
+import subprocess
+
+def run_handler(cmd: list[str], timeout_s: int) -&gt; str:
+    return subprocess.run(
+        cmd, capture_output=True, text=True, check=True, timeout=timeout_s
+    ).stdout
+```
+
+- `check=True` raises `CalledProcessError` on non-zero exit.
+- `timeout=timeout_s` raises `subprocess.TimeoutExpired` if exceeded.
+- No `shell=True`; stdout is returned as a string via `text=True`.</pre><div class="judge"><b>judge:</b> The candidate uses subprocess.run with a finite timeout, check=True for non-zero exit raising, no shell=True, a list argv, and returns stdout as text, fully matching the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-31468bd7/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s3">3</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q4</span> <span class="cat">code_generation</span> <span class="inp">Write a Python helper extract_json_object(text: str) -&gt; dict | None that returns the first top-level JSON object embedded in text (e.g. an LLM reply with prose around it). It must use the JSON parser as the grammar authority, not a regex, and return None on failure.</span><details><summary>reference answer</summary><pre>import json
+
+def extract_json_object(text: str) -&gt; dict | None:
+    start = text.find(&#x27;{&#x27;)
+    end = text.rfind(&#x27;}&#x27;)
+    if start &lt; 0 or end &lt;= start:
+        return None
+    try:
+        value = json.loads(text[start:end + 1])
+    except json.JSONDecodeError:
+        return None
+    return value if isinstance(value, dict) else None</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>```python
+import json
+
+def extract_json_object(text: str) -&gt; dict | None:
+    decoder = json.JSONDecoder()
+
+    for i, ch in enumerate(text):
+        if ch != &quot;{&quot;:
+            continue
+        try:
+            obj, _ = decoder.raw_decode(text, i)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict):
+            return obj
+
+    return None
+```</pre><div class="judge"><b>judge:</b> The candidate uses json.JSONDecoder.raw_decode as the grammar authority (no regex), scans for &#x27;{&#x27; start points, guards JSONDecodeError, and returns None on non-dict or failure—an approach that is at least as robust as the reference (it corr …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-de2b953d/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s0">0</span></div><pre><em>(empty)</em></pre><div class="judge"><b>judge:</b> no answer</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-22ab2c33/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>```python
+import json
+
+def extract_json_object(text: str) -&gt; dict | None:
+    dec = json.JSONDecoder()
+    i = text.find(&quot;{&quot;)
+    while i != -1:
+        try:
+            obj, _ = dec.raw_decode(text, i)
+            return obj
+        except ValueError:
+            i = text.find(&quot;{&quot;, i + 1)
+    return None
+```</pre><div class="judge"><b>judge:</b> The candidate uses json.JSONDecoder.raw_decode as the grammar authority (arguably more robust than the reference), catches ValueError (the parent of JSONDecodeError), returns None on failure, and since parsing always starts at &#x27;{&#x27; any succe …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-f8e07be5/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s1">1</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q5</span> <span class="cat">structured_extraction</span> <span class="inp">Produce a strict JSON schema-shaped example object for a model-eval question bank item with fields: id (int), category (string), difficulty (one of easy|medium|hard), input (string), expected (string), grading (string). Return ONLY one example JSON object, no prose.</span><details><summary>reference answer</summary><pre>{&quot;id&quot;: 1, &quot;category&quot;: &quot;code_generation&quot;, &quot;difficulty&quot;: &quot;easy&quot;, &quot;input&quot;: &quot;Write a function that returns the length of a string.&quot;, &quot;expected&quot;: &quot;def n(s): return len(s)&quot;, &quot;grading&quot;: &quot;Returns len(s) for any string.&quot;}</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{&quot;id&quot;:1,&quot;category&quot;:&quot;reasoning&quot;,&quot;difficulty&quot;:&quot;medium&quot;,&quot;input&quot;:&quot;If all bloops are razzies and all razzies are lazzies, are all bloops definitely lazzies?&quot;,&quot;expected&quot;:&quot;Yes. Since every bloop is a razzy and every razzy is a lazzy, every bloop must be a lazzy.&quot;,&quot;grading&quot;:&quot;Award full credit if the answer correctly applies transitive logic and concludes that all bloops are definitely lazzies.&quot;}</pre><div class="judge"><b>judge:</b> The candidate is valid JSON with exactly the six required fields, an integer id, a valid enum difficulty (&#x27;medium&#x27;), and no surrounding prose, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-db06edab/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{
+  &quot;id&quot;: 1,
+  &quot;category&quot;: &quot;math&quot;,
+  &quot;difficulty&quot;: &quot;easy&quot;,
+  &quot;input&quot;: &quot;What is 2 + 2?&quot;,
+  &quot;expected&quot;: &quot;4&quot;,
+  &quot;grading&quot;: &quot;Exact match&quot;
+}</pre><div class="judge"><b>judge:</b> The candidate is valid JSON with exactly the six required fields, an integer id, a valid enum difficulty, and no surrounding prose, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-da175857/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s2">2</span></div><pre>```json
+{
+  &quot;id&quot;: 42,
+  &quot;category&quot;: &quot;math_reasoning&quot;,
+  &quot;difficulty&quot;: &quot;medium&quot;,
+  &quot;input&quot;: &quot;A train travels 120 km in 1.5 hours. What is its average speed in km/h?&quot;,
+  &quot;expected&quot;: &quot;80&quot;,
+  &quot;grading&quot;: &quot;exact_match&quot;
+}
+```</pre><div class="judge"><b>judge:</b> The object itself is valid JSON with exactly the six required fields, an integer id, and a valid difficulty enum value, but it is wrapped in markdown code fences rather than being a bare JSON object as required.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-2293c3aa/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s2">2</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q6</span> <span class="cat">structured_extraction</span> <span class="inp">Given this text, return ONLY JSON {&quot;model&quot;:..,&quot;api_base&quot;:..,&quot;timeout&quot;:..}: &#x27;Deployment zai-glm-flash uses model glm-5.3-flash at https://api.z.ai/api/paas/v4 with a 120 second timeout.&#x27;</span><details><summary>reference answer</summary><pre>{&quot;model&quot;: &quot;glm-5.3-flash&quot;, &quot;api_base&quot;: &quot;https://api.z.ai/api/paas/v4&quot;, &quot;timeout&quot;: 120}</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{&quot;model&quot;:&quot;glm-5.3-flash&quot;,&quot;api_base&quot;:&quot;https://api.z.ai/api/paas/v4&quot;,&quot;timeout&quot;:120}</pre><div class="judge"><b>judge:</b> The candidate is valid JSON with exactly the required keys, correct model, exact URL, and timeout as the number 120, with no extra prose.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-ee317b0b/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{&quot;model&quot;:&quot;glm-5.3-flash&quot;,&quot;api_base&quot;:&quot;https://api.z.ai/api/paas/v4&quot;,&quot;timeout&quot;:120}</pre><div class="judge"><b>judge:</b> The candidate is valid JSON with model=glm-5.3-flash, the exact api_base URL, timeout=120 as a number, and no extra keys or prose, fully matching the reference and criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-d2a7f749/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{&quot;model&quot;:&quot;glm-5.3-flash&quot;,&quot;api_base&quot;:&quot;https://api.z.ai/api/paas/v4&quot;,&quot;timeout&quot;:120}</pre><div class="judge"><b>judge:</b> The candidate is valid JSON with model=glm-5.3-flash, the exact api_base URL, timeout=120 as a number, and no extra keys or prose, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-e6f81a2d/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s2">2</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q7</span> <span class="cat">agent_tooling</span> <span class="inp">You must choose a handler for a task DAG. The task is a single well-specified request &#x27;summarize this 200-word changelog into 3 bullet points&#x27;. You have: a local 19GB open-weight model (cheap, ~15 tok/s, strong on single-goal extraction/summarization, weaker on multi-constraint agentic chains) and a frontier cloud model (expensive, strong everywhere). Which handler and why, in two sentences?</span><details><summary>reference answer</summary><pre>Use the local model: this is a single-goal summarization/extraction task with no multi-constraint or tool-use chain, exactly the regime where the local model performs at parity, so the frontier model&#x27;s cost buys nothing here. Reserve the frontier model for multi-constraint or agentic tasks.</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Use the local 19GB open-weight model. The task is short, single-goal summarization with a simple formatting constraint, which fits its strengths and avoids unnecessary frontier-model cost.</pre><div class="judge"><b>judge:</b> The candidate selects the local model and justifies it by the task being single-goal summarization matching the model&#x27;s strengths (plus cost savings), fully satisfying the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-dd585415/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Choose the local 19GB open-weight model. This task is a simple, single-goal summarization request that the local model handles well, making the expensive frontier cloud model an unnecessary overkill.</pre><div class="judge"><b>judge:</b> The candidate picks the local model and justifies it by the task being a single-goal summarization that matches the local model&#x27;s strength, satisfying the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-6e97a457/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Choose the local 19GB open-weight model. Summarizing a 200-word changelog into 3 bullets is a single-goal extraction task squarely within its strengths, so paying the frontier model&#x27;s premium buys no meaningful quality gain here.</pre><div class="judge"><b>judge:</b> The candidate picks the local model and justifies it by the task being single-goal extraction/summarization within the local model&#x27;s strengths, matching the criterion fully.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-daaf3d1b/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s3">3</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q8</span> <span class="cat">agent_tooling</span> <span class="inp">Design a minimal 2-node DAG (name the nodes and the edge) that: node A asks N candidate handlers the same question concurrently, node B has one judge handler score each answer against a reference. State the topology of node A.</span><details><summary>reference answer</summary><pre>Node A = &#x27;fan-out&#x27; (topology: concurrent) — dispatch the same prompt to all N candidate handlers in parallel; Node B = &#x27;judge&#x27; — depends on A, receives every candidate answer plus the reference and emits a score per candidate. Edge: A -&gt; B (B joins/consumes A&#x27;s outputs).</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Nodes:
+- **A: FanOutCandidates** — asks all `N` candidate handlers the same question concurrently.
+- **B: JudgeScores** — one judge handler scores each candidate answer against a reference.
+
+Edge:
+- **A -&gt; B: candidate_answers[]**
+
+Topology of node A:
+- **Parallel fan-out / map topology**: one input question is broadcast to `N` candidate handlers concurrently, producing an array of `N` answers.</pre><div class="judge"><b>judge:</b> The candidate names node A as a concurrent fan-out to N handlers (topology: parallel fan-out/map), node B as a judge scoring each answer against the reference, and specifies the single A-&gt;B edge carrying candidate answers, fully satisfying  …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-f976b10f/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Node A: `AskCandidates`
+Node B: `JudgeAnswers`
+Edge: `AskCandidates -&gt; JudgeAnswers`
+
+Topology of Node A: Fan-out (concurrent parallel dispatch to N handlers).</pre><div class="judge"><b>judge:</b> The candidate names both nodes, specifies a single A-&gt;B edge, identifies node A&#x27;s topology as concurrent fan-out to N handlers, and node B as a judge depending on A, satisfying all elements of the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-cfb4b74a/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>**DAG:** `A → B`
+
+**Node A — &quot;candidate_fanout&quot; (scatter/parallel map):**
+- Topology: one dispatcher that spawns N identical candidate-handler instances, each invoked concurrently with the same question (embarrassingly parallel; no edges between the N workers). Output: N answers.
+
+**Edge:** all N answers from A stream into B.
+
+**Node B — &quot;judge_score&quot;:**
+- One judge handler receives each of the N answers plus the reference answer and emits a score per answer (N sequential or batched scoring calls).
+
+Minimal pseudocode:
+
+```python
+async def node_a(question):
+    return await asyncio.gather(*[ca …</pre><div class="judge"><b>judge:</b> The candidate names both nodes, states node A&#x27;s concurrent/parallel fan-out topology to N handlers, defines node B as a judge scoring each answer against the reference, and includes exactly one A→B edge, fully satisfying the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-ac972aaf/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s0">0</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q9</span> <span class="cat">instruction_following</span> <span class="inp">List these five model names sorted by context window DESC. If two tie on context window, break the tie by name A-Z. Stop after the top 3 and output nothing else. Names and windows: alpha(128k), bravo(200k), charlie(200k), delta(1M), echo(32k).</span><details><summary>reference answer</summary><pre>delta
+bravo
+charlie</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>delta
+bravo
+charlie</pre><div class="judge"><b>judge:</b> The candidate lists exactly delta, bravo, charlie in the correct order with the tie broken alphabetically, stops at three, and includes no extra content.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-f4a20c3b/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>delta
+bravo
+charlie</pre><div class="judge"><b>judge:</b> The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, matching the reference answer perfectly.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-72e5531a/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>delta
+bravo
+charlie</pre><div class="judge"><b>judge:</b> The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, matching the reference and criterion fully.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-cfd5e339/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s0">0</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q10</span> <span class="cat">instruction_following</span> <span class="inp">Rewrite the sentence &#x27;the proxy appended v1 and it broke&#x27; to be exactly 8 words, in the past tense, containing the word &#x27;router&#x27;, and ending with a period. Output only the sentence.</span><details><summary>reference answer</summary><pre>The router appended v1 which broke the request.</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>The router appended v1, and the request broke.</pre><div class="judge"><b>judge:</b> The candidate sentence has exactly 8 words (The, router, appended, v1, and, the, request, broke), is in past tense, contains &#x27;router&#x27;, ends with a period, and includes no extra output.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-dc26788e/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>The proxy appended v1 and the router broke.</pre><div class="judge"><b>judge:</b> The candidate sentence has exactly 8 words, is in past tense, contains &#x27;router&#x27;, ends with a period, and includes no extra output, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-5bc0ea7e/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>The proxy appended v1 and the router broke.</pre><div class="judge"><b>judge:</b> The candidate sentence has exactly 8 words, is in past tense, contains &#x27;router&#x27;, ends with a period, and includes no extra output.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-3189b228/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s0">0</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q11</span> <span class="cat">systems_reasoning</span> <span class="inp">A 19GB model runs on a 24GB GPU at ~20 tok/s when a TTS service is stopped, but drops to ~12 tok/s when that service holds ~6GB of VRAM. The model still produces correct output in both cases. Explain in two sentences why throughput drops.</span><details><summary>reference answer</summary><pre>With less free VRAM, the runtime offloads some model layers to CPU/system RAM, so those layers compute far slower and the per-token latency rises, cutting throughput. Correctness is unchanged because the same weights run — only where they execute (GPU vs CPU) differs.</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s2">2</span></div><pre>Throughput drops because with the TTS service using ~6GB VRAM, the 19GB model no longer has enough headroom for KV cache, activations, workspace, and allocator overhead, so the runtime must use less efficient memory management and/or spill/offload/recompute data. The outputs remain correct, but generation becomes memory-bandwidth/transfer/fragmentation limited rather than running entirely in the fastest on-GPU path.</pre><div class="judge"><b>judge:</b> The candidate does mention spilling/offloading and notes correctness is preserved, but attributes the slowdown primarily to KV cache/activation headroom and vague memory-management inefficiency rather than clearly identifying that model lay …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-78260064/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>With the TTS service holding 6GB, only 18GB of VRAM remains for the 19GB model, forcing a portion of the weights or KV cache to offload to host RAM and transfer over PCIe each forward pass. This per-token memory transfer overhead slows generation while preserving output correctness because the full model is still used, just not fully resident on the GPU.</pre><div class="judge"><b>judge:</b> The candidate correctly attributes the slowdown to weights/KV cache being offloaded to host RAM due to insufficient VRAM (hybrid execution with PCIe transfer overhead) and explains correctness is preserved because the same full model is sti …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-137f61eb/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s1">1</span></div><pre>With only ~18GB free instead of ~24GB, the LLM&#x27;s KV cache and activation buffers are squeezed, forcing smaller batches/shorter context headroom and more memory-allocation churn (or spillover to slower memory), which directly lowers tokens/sec. Additionally, the TTS process shares the same GPU&#x27;s compute units, so its kernels contend with the LLM&#x27;s kernels via time-slicing, further reducing effective throughput even though output remains correct.</pre><div class="judge"><b>judge:</b> The candidate attributes the slowdown mainly to KV cache/batching pressure and compute contention rather than the key mechanism of offloading model layers to CPU/system RAM (only a vague parenthetical &#x27;spillover to slower memory&#x27;), and it d …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-fc68aadb/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s0">0</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q12</span> <span class="cat">systems_reasoning</span> <span class="inp">An eval sends prompts to a browser-backed model seat. When the browser tab is in the background, responses stall for many minutes though the process is alive. Name the mechanism and one mitigation.</span><details><summary>reference answer</summary><pre>Chrome throttles background/hidden tabs — requestAnimationFrame isn&#x27;t serviced and timers are clamped when document.hidden — so the page&#x27;s generation/polling loop stalls. Mitigation: keep the tab foregrounded/visible (one visible tab per window) or launch Chrome with the background-throttling flags disabled.</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>Mechanism: browser background tab throttling, especially timer/requestAnimationFrame throttling via Page Visibility.
+
+Mitigation: keep the model tab in the foreground/active, or launch the browser with background throttling disabled, e.g. Chrome flags like `--disable-background-timer-throttling` and `--disable-renderer-backgrounding`.</pre><div class="judge"><b>judge:</b> The candidate correctly identifies background-tab throttling (timer/rAF clamping via Page Visibility) as the mechanism and provides valid mitigations (keep tab foregrounded or disable throttling via specific Chrome launch flags), fully meet …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-3f93785d/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s2">2</span></div><pre>**Mechanism:** Browser background-tab throttling — browsers clamp `setTimeout`/`setInterval` (often to ≥1s, then ≥60s after a grace period) and suspend `requestAnimationFrame` for hidden tabs, so timer-driven polling/streaming stalls while the process stays alive.
+
+**Mitigation:** Move the polling/streaming loop into a Web Worker (or Service Worker), whose timers are not subject to the same main-thread background throttling; alternatively use a WebSocket/SSE connection, which remains active regardless of tab visibility.</pre><div class="judge"><b>judge:</b> The mechanism (background-tab throttling with timer clamping and rAF suspension) is correctly identified, but the proposed mitigations (Web Workers, WebSocket/SSE) require modifying the page&#x27;s code, which is generally infeasible for a brows …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-43adfd4d/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>**Mechanism:** Browser background-tab throttling — when a tab is occluded/backgrounded, the renderer suspends `requestAnimationFrame` and heavily throttles timers (`setTimeout`/`setInterval`, including Chrome&#x27;s &quot;intensive throttling&quot; after ~5 min), so the page&#x27;s JS loop that drives streaming/inference stalls even though the process is alive.
+
+**Mitigation:** Launch the browser with throttling disabled, e.g. Chromium flags:
+`--disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows`
+(or keep the tab foregrounded via CDP `Page.bringToFront` / …</pre><div class="judge"><b>judge:</b> The candidate correctly identifies background-tab throttling (rAF suspension and timer clamping) as the mechanism and provides valid mitigations (disabling throttling via Chrome launch flags and keeping the tab foregrounded), fully meeting  …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-e781f45a/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s2">2</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q13</span> <span class="cat">code_debugging</span> <span class="inp">A pipeline kills a hung job with `pkill -f &quot;run.sh judge-grid&quot;` and the controlling shell itself dies with a non-zero exit. Why, and what is the safe replacement?</span><details><summary>reference answer</summary><pre>pkill -f matches against full command lines, and the pattern &#x27;run.sh judge-grid&#x27; also matches the shell process that is currently running the pkill command (and its grep), so pkill signals itself. Safe replacement: resolve explicit PIDs first (e.g. ps/pgrep filtered to exclude the current shell and grep) and kill those PIDs individually.</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s2">2</span></div><pre>`pkill -f &quot;run.sh judge-grid&quot;` matches against the full command line. In CI/pipeline shells, the controlling shell’s own command line often contains the literal text `run.sh judge-grid` because it is executing the script body, so `pkill` matches and kills the shell too, causing a non-zero exit.
+
+Safe replacement:
+
+```sh
+pkill -f &#x27;[r]un.sh judge-grid&#x27;
+```
+
+The regex still matches `run.sh judge-grid` in the target process, but does not match the `pkill`/shell command line containing `[r]un.sh judge-grid`.</pre><div class="judge"><b>judge:</b> The candidate correctly explains that pkill -f self-matches the shell&#x27;s own command line, but instead of the required explicit-PID killing (excluding self) it offers the bracket-regex trick, which solves the self-match but does not meet the …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-0a00b2de/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>**Why:** `pkill -f` matches the pattern against the full command line of *every* process. The controlling shell (or pipeline runner) itself has `run.sh judge-grid` in its own command line — e.g. it was invoked as `bash run.sh judge-grid` — so `pkill` signals and kills the shell along with the hung child, producing the non-zero exit.
+
+**Safe replacement:** Kill by the saved child PID instead of pattern-matching:
+
+```bash
+bash run.sh judge-grid &amp;
+job_pid=$!
+# ...later, to kill the hung job only:
+kill &quot;$job_pid&quot;
+```
+
+If you must pattern-match, exclude the current shell&#x27;s PID:
+
+```bash
+pgrep -f &quot;r …</pre><div class="judge"><b>judge:</b> The candidate correctly explains that pkill -f matches the full command line of every process including the controlling shell itself, and recommends killing by explicit saved PID (or pgrep with self-exclusion via $$), fully meeting the crit …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-32b85aaf/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>**Why:** `pkill -f` regex-matches the *full command line* of every process. In CI/pipeline environments each step typically runs as `bash -c &#x27;&lt;entire script&gt;&#x27;`, so the controlling shell&#x27;s own command line contains the literal text `run.sh judge-grid`. The pattern therefore matches the shell too (pkill exempts only itself, not its parent), SIGTERM kills the shell mid-step, and the pipeline records a non-zero exit.
+
+**Safe replacement:** break the self-match so the pattern can&#x27;t match the shell that contains it verbatim, and tolerate &quot;no match&quot;:
+
+```bash
+pkill -f &#x27;[r]un\.sh judge-grid&#x27; || true
+` …</pre><div class="judge"><b>judge:</b> The candidate correctly explains that pkill -f matches the controlling shell&#x27;s own command line containing the pattern text, and recommends explicit-PID killing (recording $! and killing that PID) plus a self-match-avoiding pattern, fully m …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-3e9e254a/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s0">0</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q14</span> <span class="cat">code_generation</span> <span class="inp">Write a Python one-liner style function first_nonempty(paths: list[str]) -&gt; str | None that returns the text of the first readable, non-empty file among paths, or None. Handle read errors.</span><details><summary>reference answer</summary><pre>from pathlib import Path
+
+def first_nonempty(paths: list[str]) -&gt; str | None:
+    for p in paths:
+        try:
+            t = Path(p).read_text(encoding=&#x27;utf-8&#x27;, errors=&#x27;replace&#x27;)
+        except OSError:
+            continue
+        if t.strip():
+            return t
+    return None</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>```python
+from pathlib import Path
+
+def _read(p: str) -&gt; str | None:
+    try:
+        return Path(p).read_text() or None
+    except (OSError, UnicodeError):
+        return None
+
+def first_nonempty(paths: list[str]) -&gt; str | None:
+    return next((s for p in paths if (s := _read(p)) is not None), None)
+```</pre><div class="judge"><b>judge:</b> The candidate iterates paths, guards OSError (plus UnicodeError) in a helper, returns the first non-empty file&#x27;s text via next() with a walrus, and returns None when none qualify, fully meeting the criterion.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-b760ae2c/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s0">0</span></div><pre><em>(empty)</em></pre><div class="judge"><b>judge:</b> no answer</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-070063f2/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>```python
+def first_nonempty(paths: list[str]) -&gt; str | None:
+    def read(p):
+        try:
+            with open(p, encoding=&quot;utf-8&quot;) as f:
+                return f.read()
+        except (OSError, UnicodeDecodeError):
+            return &quot;&quot;
+    return next((t for p in paths if (t := read(p))), None)
+```
+
+Returns the text of the first file that opens and reads successfully with non-empty content (`&quot;&quot;` from failures/empty files is filtered out); `None` if none qualify.</pre><div class="judge"><b>judge:</b> The candidate iterates paths, catches OSError (and UnicodeDecodeError) on reads, returns the first non-empty file&#x27;s text via the walrus filter, and returns None when none qualify, fully meeting the criterion (its only deviation is treating  …</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-7b20ae4b/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s0">0</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q15</span> <span class="cat">instruction_following</span> <span class="inp">Return a comma-separated list of exactly these provider names with NO spaces, in reverse alphabetical order: zai, openai, deepseek, ollama, moonshot.</span><details><summary>reference answer</summary><pre>zai,openai,ollama,moonshot,deepseek</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>zai,openai,ollama,moonshot,deepseek</pre><div class="judge"><b>judge:</b> The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-5e6b2da5/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>zai,openai,ollama,moonshot,deepseek</pre><div class="judge"><b>judge:</b> The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-b4f8a2db/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>zai,openai,ollama,moonshot,deepseek</pre><div class="judge"><b>judge:</b> The candidate answer exactly matches the reference: reverse-alphabetical order, comma-separated, no spaces, and no extra text.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-6e18f365/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s3">3</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr><tr class="qhead"><td colspan="5"><span class="qid">Q16</span> <span class="cat">structured_extraction</span> <span class="inp">Fix this invalid JSON so it parses, changing as little as possible, and return ONLY the corrected JSON: {&#x27;model&#x27;: &#x27;glm-5.3-flash&#x27;, &#x27;timeout&#x27;: 120, &#x27;stream&#x27;: True,}</span><details><summary>reference answer</summary><pre>{&quot;model&quot;: &quot;glm-5.3-flash&quot;, &quot;timeout&quot;: 120, &quot;stream&quot;: true}</pre></details></td></tr><tr class="qrow"><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{&quot;model&quot;:&quot;glm-5.3-flash&quot;,&quot;timeout&quot;:120,&quot;stream&quot;:true}</pre><div class="judge"><b>judge:</b> The candidate is valid JSON with double-quoted keys/strings, True converted to true, trailing comma removed, values unchanged, and no prose; whitespace differences are irrelevant.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-gpt-5-5-8d9df60a/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{&quot;model&quot;: &quot;glm-5.3-flash&quot;, &quot;timeout&quot;: 120, &quot;stream&quot;: true}</pre><div class="judge"><b>judge:</b> The candidate exactly matches the reference: all keys/strings are double-quoted, True is converted to true, the trailing comma is removed, values are unchanged, and there is no prose.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-oc-glm-603aa21a/node-artifacts/handler-*/response.md</code></div></td><td class="ans"><div class="sc"><span class="score s3">3</span></div><pre>{&quot;model&quot;: &quot;glm-5.3-flash&quot;, &quot;timeout&quot;: 120, &quot;stream&quot;: true}</pre><div class="judge"><b>judge:</b> The candidate exactly matches the reference: double-quoted keys/strings, True converted to true, trailing comma removed, values unchanged, and no prose.</div><div class="receipt">receipt: <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/llm-eval-zai-glm-flash-30616872/node-artifacts/handler-*/response.md</code></div></td><td class="ans local"><div class="sc"><span class="score s0">0</span> <small>run-1</small></div><pre class="blocked"><em>timed out this run — ollama CPU-offload, APITimeoutError; no response</em></pre></td></tr></tbody></table></div>
+
+<h2>Source-of-Truth Inventory</h2>
+<ul>
+<li><code>results/glm_personalized_profile.result.json</code> — this-run scores, answers, run-dir receipts (3 valid models + local-glm empty).</li>
+<li><code>ground_truth/glm_personalized.json</code> — 16-question bank weighted to mined workload (21,336 messages via mine-transcripts).</li>
+<li><code>/tmp/glm_personalized_full.json</code> — run-1 (local-glm 21/48, scores only, no answers).</li>
+<li>Per-cell <code>/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/&lt;ask-id&gt;/…/response.md</code> — the actual model outputs on disk.</li>
+<li>scillm proxy logs (<code>docker logs docker-scillm-proxy-1</code>) — APITimeoutError + 200 OK receipts.</li>
+</ul>
+
+<h2>Blocked / Unverified</h2>
+<ul>
+<li><span class="tag blk">Blocked</span> local-glm this-run column — VRAM-starved, all calls timed out.</li>
+<li><span class="tag">Unverified</span> plan economics (per-token cost opaque inside subscriptions); GPT Web Pro terms; long-context / multi-constraint / tool-use tail; quota headroom.</li>
+<li><span class="tag">Unverified</span> design quality — no design-lane tasks run yet (operator flagged "Claude is terrible at design").</li>
+</ul>
+
+<h2>Plan-Iterate Seed</h2>
+<p><b>Phase:</b> glm-plan-headtohead. <b>Objective:</b> decide whether a z.ai GLM plan can
+offload from or replace Claude Max, on receipts not memory.</p>
+<ul>
+<li><b>Models (plan seats):</b> claude-opus-5 + claude-sonnet-5 (Max), gpt-5.5 (GPT), zai-glm-flash + oc-glm (z.ai). Judge: claude-fable-5.</li>
+<li><b>Bank:</b> expand to ~50 questions, 3 trials each; add long-context, multi-constraint, tool-use, and a design lane (HTML/CSS/d3 judged by review-design + screenshot).</li>
+<li><b>Gates:</b> capture per-cell response + run-dir; local-glm requires freed VRAM or it is marked Blocked, not 0.</li>
+<li><b>Human decisions:</b> whether GPT Web Pro is a hard requirement (pins GPT); whether to pause voice-mode for local runs.</li>
+<li><b>Command:</b> <code>./run.sh judge-grid -g ground_truth/&lt;bank&gt;.json --judge claude-fable-5 --concurrency 4 -o results/&lt;out&gt;.json</code></li>
+<li><b>Stop:</b> a defensible per-category verdict across all three plan seats with visible receipts.</li>
+</ul>
+
+<h2>Non-Claims</h2>
+<ul>
+<li>Does not prove plan pricing, quota, or that GLM can replace Claude Max — only per-question task quality on 16 items.</li>
+<li>Does not measure long-context, sustained agentic/tool-use, or design quality.</li>
+<li>local-glm 21/48 is a run-1 single-trial estimate; the this-run 0/48 reflects infrastructure timeout, not capability.</li>
+<li>Single judge (claude-fable-5); no inter-judge agreement measured.</li>
+</ul>
+
+<p class="muted" style="margin-top:30px">Generated by <code>skills/llm-eval-lab/build_report.py</code>
+from the source-of-truth JSON. Every score chip traces to a <code>response.md</code> on disk.</p>
+</main></body></html>
