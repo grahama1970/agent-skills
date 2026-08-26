@@ -209,3 +209,68 @@ Imports shared modules from prompt-lab: `llm.py`, `evaluation.py`, `config.py`, 
 `model_memory.py`, `provider_pricing.py`.
 
 All LLM calls go through scillm at localhost:4001.
+
+## Interactive Eval Console (live, collaborative)
+
+Run model evals live and watch results stream in, with run controls and easy
+model/bank selection. Every model call routes through `/ask → tau → scillm`;
+every score cites its on-disk `response.md` receipt (no re-typed answers).
+
+### Commands
+
+- `run-matrix` — run every model × question × N trials. Deterministic-first
+  grading (code executed against a test suite, JSON parsed/schema-checked; see
+  `evaluators.py`) with LLM-judge fallback. Operational failures (empty
+  response = timeout, or VRAM-guard refusal for local models) are recorded as
+  `INFRA_BLOCKED` and kept OUT of accuracy averages. Writes results
+  incrementally so a live report can poll them. Emits pass@1 / pass@3.
+
+      ./run.sh run-matrix -g ground_truth/glm_personalized.json \
+        --models "gpt-5.5,zai-glm-flash,local-glm" --judge claude-fable-5 \
+        --trials 3 -o results/run.result.json
+
+- `report` — render an evidence report from any `run-matrix` output. Cells lead
+  with the score chip + rationale, hide the raw response in a `<details>`, and
+  cite the run-dir receipt. `--live --src <results.json>` emits a hot-reloading
+  page (polls the incrementally written file); default is a static snapshot.
+
+      ./run.sh report --live --src run.result.json -o results/live.html
+
+- `serve` — the control-plane server + React console. Owns the `run-matrix`
+  subprocess lifecycle and serves the SPA + JSON API.
+
+      cd ui && pnpm i && pnpm build && cd ..
+      ./run.sh serve --port 8792        # open http://127.0.0.1:8792/
+
+  Console: multiselect models, pick a bank + trials, Run / Pause / Resume /
+  Stop / Restart. Pause is CLEAN (between cells — never freezes an in-flight
+  `/ask` call). Model changes apply on the next run/restart. Live metrics +
+  per-question evidence grid update as cells arrive.
+
+  API: `GET /api/models|/api/banks|/api/bank?name=|/api/results|/api/state`,
+  `POST /api/run {models,bank,trials}`, `POST /api/control {action}`,
+  `POST /api/actions/register`.
+
+### Guardrails
+
+- `vram_guard.py` — refuses local-model runs below a free-VRAM floor
+  (`LLM_EVAL_MIN_FREE_GB`, default 6) so CPU-offload timeouts stop being scored
+  as capability 0s. Wired as a `run.sh` preflight for `local-*` models.
+- `ui/verify-data-qid.py` — best-practices-react gate: every interactive
+  element carries `data-qid` + `data-qs-action` + `title` (ActionButton applies
+  them from required props). Run in `sanity.sh`.
+
+### Ground-truth `eval` block (deterministic grading)
+
+Add an `eval` field to a question to grade it by execution instead of an LLM
+judge:
+
+```json
+{ "eval": { "method": "code", "test_suite": "assert f(1) == 2", "timeout": 30 } }
+{ "eval": { "method": "json", "expected_keys": ["id","category"] } }
+{ "eval": { "method": "json", "expected_json": {"model":"glm-5.3-flash"} } }
+```
+
+Files: `runner.py` (run-matrix), `build_report.py` (report), `evaluators.py`
+(deterministic grading), `control_server.py` (serve), `vram_guard.py`, `ui/`
+(Vite + React 19 + Tailwind 4 + shadcn console).
