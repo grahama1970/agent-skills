@@ -3,10 +3,10 @@
   "skill": "debugger",
   "trials": 2,
   "eval_tier": "standard",
-  "proof_scope": "Bounded typed variable expansion and the fail-closed watch policy (#1438), over the LIVE VS Code bridge: a nested dict expands to the requested depth capturing only requested locals (debugpy pseudo-children skipped), a self-referential list terminates with a cycle marker, oversized values truncate with original-size metadata, secret-shaped locals are redacted while prose-shaped big strings are NOT (hex false-positive guard), a call-shaped watch is blocked by default with a named side-effect reason while a safe comparison evaluates, an explicitly allowed risky watch is evaluated AND audited in the persisted state, and a missing expansion target invalidates only that inspection. Watch classification/redaction/truncation/limit-clamping are additionally covered deterministically by vscode-bridge/scripts/protocol-tests.mjs.",
+  "proof_scope": "Bounded typed variable expansion and the fail-closed watch policy (#1438), over the LIVE VS Code bridge: a nested dict expands to the requested depth capturing only requested locals (debugpy pseudo-children skipped), a self-referential list terminates with a cycle marker, oversized values truncate with original-size metadata, secret-shaped locals are redacted while prose-shaped big strings are NOT (hex false-positive guard), a call-shaped watch is blocked by default with a named side-effect reason while a safe comparison evaluates, an explicitly allowed risky watch is evaluated AND audited in the persisted state, and a missing expansion target invalidates only that inspection. Watch classification/redaction/truncation/limit-clamping are additionally covered deterministically by vscode-bridge/scripts/protocol-tests.mjs. TypeScript/Node parity: the same bounded expansion, cycle marking (value-path basis, since js-debug mints a fresh variablesReference per request), redaction, and watch policy over the js-debug adapter, including compound parent->child session correlation.",
   "claims": {
-    "proves": "the live bridge captures structured bounded expansions (children, cycle markers, limits), enforces allowWatchEval->classification->allowRiskyWatches fail-closed ordering with an audit trail, redacts secret-shaped values without over-redacting prose, and degrades a missing target to a named per-inspection error",
-    "does_not_prove": "behavior for TypeScript/Rust adapters (Python debugpy only here), or bounded evaluation latency enforcement where the adapter does not support it"
+    "proves": "the live bridge captures structured bounded expansions (children, cycle markers, limits), enforces allowWatchEval->classification->allowRiskyWatches fail-closed ordering with an audit trail, redacts secret-shaped values without over-redacting prose, and degrades a missing target to a named per-inspection error; and the js-debug (Node/TypeScript) adapter reaches full parity: compound child sessions bind via parent-lineage correlation, frame id 0 is a valid frame, [[Prototype]]-style internals are skipped, self-reference is cycle-marked on the value-path basis, and redaction plus the watch policy behave identically",
+    "does_not_prove": "behavior for the Rust adapter (Python debugpy and Node js-debug covered here), or bounded evaluation latency enforcement where the adapter does not support it"
   },
   "cases": [
     {
@@ -74,6 +74,31 @@
         "exit_code": 0,
         "stdout_contains": [
           "debugger bridge protocol tests passed"
+        ]
+      }
+    },
+    {
+      "name": "live-node-adapter-parity",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "One live js-debug stop on scenarios/node_state/app.js:12: expansion children are clean user data (no [[Prototype]]), the self-referential array is cycle-marked (basis value), the secret-shaped local is redacted, a safe watch evaluates and a call-shaped watch is blocked.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; RS=\"$WS/skills/debugger/run.sh\"; OUT=$(cd \"$WS\" && DEBUGGER_LAUNCH_CONFIG='Debug node_state ($debugger)' DEBUGGER_STOP_POLLS=60 \"$RS\" stop \"$WS/skills/debugger/scenarios/node_state/app.js:12\" --local payload --local blob --local apiToken --expand payload:3 --expand loop:3 --watch 'payload.count > 2' --watch 'build()' --allow-watch-eval) || { echo BRIDGE_BLOCKED; exit 0; }; SP=$(echo \"$OUT\" | grep '^STATUS_PATH' | awk '{print $2}'); python3 - \"$SP\" <<'PYEOF'\nimport json, sys\nd = json.load(open(sys.argv[1])); ss = d.get(\"stoppedState\") or {}\nexp = ss.get(\"expanded\") or {}; p = exp.get(\"payload\", {}); w = ss.get(\"watches\") or {}\nkids = list((p.get(\"children\") or {}).keys())\nassert \"count\" in kids and \"user\" in kids and not any(k.startswith(\"[[\") for k in kids), kids\nprint(\"NODE-CHILDREN-CLEAN\")\ndef cyc(n):\n    if n.get(\"cycle\"): return n.get(\"cycleBasis\")\n    for c in (n.get(\"children\") or {}).values():\n        r = cyc(c)\n        if r: return r\nassert cyc(exp.get(\"loop\", {})) == \"value\", exp.get(\"loop\")\nprint(\"NODE-CYCLE-MARKED-VALUE-BASIS\")\nassert \"<redacted\" in (ss.get(\"locals\") or {}).get(\"apiToken\",\"\"), ss.get(\"locals\")\nprint(\"NODE-REDACTION-CORRECT\")\nassert w.get(\"payload.count > 2\") == \"true\", w\nassert \"<blocked: side-effect risk\" in w.get(\"build()\",\"\"), w\nprint(\"NODE-WATCH-POLICY-CORRECT\")\nPYEOF"
+      ],
+      "timeout_seconds": 300,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NODE-CHILDREN-CLEAN",
+          "NODE-CYCLE-MARKED-VALUE-BASIS",
+          "NODE-REDACTION-CORRECT",
+          "NODE-WATCH-POLICY-CORRECT"
         ]
       }
     }

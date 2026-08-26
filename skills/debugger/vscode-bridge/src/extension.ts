@@ -1010,6 +1010,22 @@ function sessionCorrelationToken(session: vscode.DebugSession): string | undefin
   return (session.configuration as { __bridgeCorrelationToken?: string } | undefined)?.__bridgeCorrelationToken;
 }
 
+// Compound adapters (js-debug's pwa-node, extension hosts) run the program in a
+// CHILD session spawned by the launched parent; only the parent's configuration
+// carries the correlation token, while stopped events arrive in the child. A
+// session belongs to this launch if the token appears anywhere on its parent
+// lineage (#1431).
+function sessionLineageHasToken(session: vscode.DebugSession, token: string): boolean {
+  let current: vscode.DebugSession | undefined = session;
+  for (let depth = 0; current && depth < 8; depth += 1) {
+    if (sessionCorrelationToken(current) === token) {
+      return true;
+    }
+    current = current.parentSession;
+  }
+  return false;
+}
+
 function waitForStoppedState(
   request: BridgeRequest,
   outputPath: string,
@@ -1074,16 +1090,19 @@ function waitForStoppedState(
     }
 
     startSubscription = vscode.debug.onDidStartDebugSession((session) => {
-      // With a correlation token, only the session THIS launch produced may be
-      // bound; an unrelated or compound/child session that starts during the
-      // wait cannot consume this pending stop (#1431).
-      if (options.correlationToken !== undefined && sessionCorrelationToken(session) !== options.correlationToken) {
+      // With a correlation token, only sessions from THIS launch's lineage may
+      // bind -- the launched parent AND any compound children it spawns
+      // (js-debug's pwa-node runs the program in a child session, and that is
+      // where the stopped events arrive). Unrelated sessions never bind (#1431).
+      if (options.correlationToken !== undefined && !sessionLineageHasToken(session, options.correlationToken)) {
         return;
       }
       pendingBySession.set(session.id, pendingCapture);
-      if (options.sessionId || options.bindActiveSession || options.correlationToken !== undefined) {
+      if (options.sessionId || options.bindActiveSession) {
         startSubscription?.dispose();
       }
+      // Correlation-token mode keeps listening: children of this launch may
+      // start after the parent and must also bind.
     });
 
     terminateSubscription = vscode.debug.onDidTerminateDebugSession((session) => {
@@ -1259,7 +1278,9 @@ async function captureStoppedState(
     }));
   state.matchedBreakpoint = state.breakpointEvidence.some((evidence) => evidence.accepted);
 
-  if (!frame?.id) {
+  // js-debug numbers its top frame 0, so a truthiness check would wrongly
+  // treat a valid frame as missing and capture nothing (the node-parity bug).
+  if (frame === undefined || frame === null || typeof frame.id !== 'number') {
     state.error = 'No stack frame was available at the stopped breakpoint.';
     return state;
   }
@@ -1366,6 +1387,7 @@ async function expandVariableBounded(
   depth: number,
   seenReferences: Set<number>,
   budget: { bytes: number },
+  ancestorSignatures: string[] = [],
 ): Promise<ExpandedNode> {
   const name = String(variable.name ?? '');
   const rawValue = String(variable.value ?? '');
@@ -1394,6 +1416,13 @@ async function expandVariableBounded(
   }
   if (seenReferences.has(reference)) {
     node.cycle = true;
+    (node as Record<string, unknown>).cycleBasis = 'reference';
+    return node;
+  }
+  const signature = `${variable.type ?? ''}|${rawValue}`;
+  if (rawValue && ancestorSignatures.includes(signature)) {
+    node.cycle = true;
+    (node as Record<string, unknown>).cycleBasis = 'value';
     return node;
   }
   if (budget.bytes >= limits.maxBytes) {
@@ -1411,7 +1440,8 @@ async function expandVariableBounded(
       // debugpy grouping/introspection pseudo-children burn the budget without
       // informing anyone; expansion targets USER state.
       if (/^(special variables|function variables|class variables|protected variables|len\(\))$/.test(childName) ||
-          /^__.*__$/.test(childName)) {
+          /^__.*__$/.test(childName) ||
+          /^\[\[.*\]\]$/.test(childName)) {
         continue;
       }
       if (taken >= limits.maxChildren || budget.bytes >= limits.maxBytes) {
@@ -1421,6 +1451,7 @@ async function expandVariableBounded(
       }
       node.children[String(child.name ?? `#${taken}`)] = await expandVariableBounded(
         session, child, limits, depth + 1, seenReferences, budget,
+        [...ancestorSignatures, `${variable.type ?? ''}|${rawValue}`],
       );
       taken += 1;
     }
