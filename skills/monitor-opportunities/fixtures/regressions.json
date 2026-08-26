@@ -268,6 +268,47 @@
       },
       "status": "ACTIVE",
       "notes": "Ticket #1483. Guard fails until the parser recovers the real employer. To be resolved by project-watchdog."
+    },
+    {
+      "regression_id": "apply-page-location-authority-2026-08-26",
+      "claim_ids": [
+        "eligibility_and_ranking"
+      ],
+      "seam_ids": [
+        "discovery.ats_application_location_authority",
+        "ranking.linkedin_primary_readback_location_authority"
+      ],
+      "evidence_class": "live_e2e",
+      "incident": {
+        "date": "2026-08-26",
+        "summary": "A LinkedIn top-applicant/Buffalo locator promoted Cognition's Ashby Deployed Engineer posting, but the employer application page said San Francisco; New York City; Austin, Texas and workplaceType OnSite. The morning report displayed San Francisco while ranking the opportunity as ELIGIBLE_WNY_ONSITE.",
+        "discovered_during": "Review of run-20260826T060000Z report and readback receipts.",
+        "root_cause": "readback.py copied the LinkedIn locator workplace_type onto the promoted primary-source candidate when the primary posting was geographically vaguer; Ashby application-form capture also did not preserve application-page location metadata.",
+        "correct_behavior": "Employer primary/apply-page location is authoritative for eligibility. LinkedIn locator geography may trigger primary-source readback and may be retained as evidence, but it must not overwrite a primary/apply-page workplace_type. OnSite outside Buffalo/WNY is rejected before ranking."
+      },
+      "threatens": {
+        "capability": "eligibility_and_ranking",
+        "seams": [
+          "discovery.ats_application_location_authority",
+          "ranking.linkedin_primary_readback_location_authority"
+        ]
+      },
+      "retained_case": "application-page-location-authority",
+      "retained_fixture": "agentic_eval.json",
+      "fail_before_fix": {
+        "proven": true,
+        "proof_command": [
+          "python3",
+          "scripts/eval_application_page_location_truth.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "READBACK_OVERWROTE_PRIMARY_LOCATION",
+        "observed_pre_fix": "run-20260826T060000Z ranked Cognition Deployed Engineer as ELIGIBLE_WNY_ONSITE while report location.display was San Francisco and apply_url was jobs.ashbyhq.com/cognition/d72d584c-bb11-4b6a-b043-d81425ea884a/application"
+      },
+      "status": "ACTIVE",
+      "last_proven": "2026-08-26T15:47:39.865726+00:00",
+      "notes": "Guard reads the live Cognition Ashby application page and asserts application_page.workplace_type=ONSITE_ELSEWHERE, readback location_authority=primary_source, location_conflict=true, promoted_workplace_type=ONSITE_ELSEWHERE, and eligibility_state=REJECT_RELOCATION_REQUIRED."
     }
   ]
 }
