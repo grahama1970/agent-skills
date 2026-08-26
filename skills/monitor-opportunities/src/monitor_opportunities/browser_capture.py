@@ -638,6 +638,7 @@ _LINKEDIN_EXTRACT_JS = (
     "var lines=cards[i].innerText.split('\\n').map(function(s){return s.trim();}).filter(Boolean);"
     "var uniq=[]; for(var j=0;j<lines.length;j++){ if(lines[j]!==lines[j-1]) uniq.push(lines[j]); }"
     "var title=uniq[0]||''; if(!title||seen[title]) continue; seen[title]=1;"
+    "uniq=uniq.filter(function(s,idx){return idx===0||!/\\bwith verification\\b/i.test(s);});"
     "var a=cards[i].querySelector(\"a[href*='/jobs/view/'], a[href*='currentJobId']\");"
     # Easy Apply badge: LinkedIn's one-click lane, shown as a card label or a
     # button aria-label. Detect either so the ranker can reward the fast path.
@@ -1954,8 +1955,9 @@ _LI_ARIA_EXTRACT_JS = (
     "var lines=txt.split(String.fromCharCode(10))"
     ".map(function(s){return s.trim()}).filter(Boolean);"
     "var ti=lines.indexOf(title);"
-    "var company=ti>=0&&lines[ti+1]?lines[ti+1]:'';"
-    "var loc=ti>=0&&lines[ti+2]?lines[ti+2]:'';"
+    "var detail=ti>=0?lines.slice(ti+1).filter(function(s){return !/\\bwith verification\\b/i.test(s);}):[];"
+    "var company=detail[0]||'';"
+    "var loc=detail[1]||'';"
     "var warm=/connection works here|connections work here|school alumni/.test(txt);"
     "var early=/Be an early applicant/.test(txt);"
     "var age=(txt.match(/(\\d+ (?:minute|hour|day|week|month)s? ago)/)||[])[1]||null;"

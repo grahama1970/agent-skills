@@ -9,6 +9,7 @@ capture is ready and verified the moment surf is stable.
 from __future__ import annotations
 
 import json
+import subprocess
 from urllib.parse import parse_qs, urlparse
 
 import monitor_opportunities.browser_capture as bc
@@ -125,6 +126,28 @@ def test_top_applicant_capture_receipts_easy_apply_count(tmp_path, monkeypatch) 
     assert [row["easy_apply"] for row in evidence["opportunities"]] == [True, False]
 
 
+def test_top_applicant_js_skips_verification_badge_line() -> None:
+    script = f"""
+const card = {{
+  innerText: "Principal AI Architect\\nPrincipal AI Architect with verification\\nMoog\\nBuffalo, NY\\nEasy Apply",
+  querySelector: function(sel) {{
+    if (sel.indexOf('/jobs/view/') >= 0 || sel.indexOf('currentJobId') >= 0) {{
+      return {{href: 'https://www.linkedin.com/jobs/view/123/?trk=x'}};
+    }}
+    return null;
+  }}
+}};
+global.document = {{ querySelectorAll: function() {{ return [card]; }} }};
+console.log(eval({json.dumps(bc._LINKEDIN_EXTRACT_JS)}));
+"""
+    rows = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert rows[0]["title"] == "Principal AI Architect"
+    assert rows[0]["company"] == "Moog"
+    assert rows[0]["location"] == "Buffalo, NY"
+    assert rows[0]["easy_apply"] is True
+
+
 def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_counts(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(bc, "ensure_browser", lambda surf_run: None)
     monkeypatch.setattr(bc, "_surf_pause", lambda *args, **kwargs: None)
@@ -162,3 +185,34 @@ def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_count
     assert receipt["top_applicant_count"] == 0
     assert receipt["easy_apply_count"] == 0
     assert receipt["under_10_applicants_count"] == 1
+
+
+def test_premium_js_skips_verification_badge_line() -> None:
+    script = f"""
+const card = {{
+  innerText: "Senior AI Engineer\\nSenior AI Engineer with verification\\nMoog\\nBuffalo, NY\\n3 hours ago\\nBe an early applicant\\nconnection works here",
+  parentElement: null,
+  getAttribute: function(name) {{
+    if (name === 'componentkey') return 'job-card-component-ref-789';
+    return null;
+  }},
+  querySelector: function() {{ return null; }}
+}};
+const button = {{
+  parentElement: card,
+  getAttribute: function(name) {{
+    if (name === 'aria-label') return 'Dismiss Senior AI Engineer job';
+    return null;
+  }}
+}};
+global.document = {{ querySelectorAll: function() {{ return [button]; }} }};
+console.log(eval({json.dumps(bc._LI_ARIA_EXTRACT_JS)}));
+"""
+    rows = json.loads(subprocess.check_output(["node", "-e", script], text=True))
+
+    assert rows[0]["title"] == "Senior AI Engineer"
+    assert rows[0]["company"] == "Moog"
+    assert rows[0]["location"] == "Buffalo, NY"
+    assert rows[0]["early"] is True
+    assert rows[0]["warm"] is True
+    assert rows[0]["href"] == "https://www.linkedin.com/jobs/view/789/"
