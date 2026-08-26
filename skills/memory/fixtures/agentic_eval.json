@@ -11,9 +11,26 @@
     {
       "name": "sanity",
       "type": "positive",
+      "real_world": true,
       "command": [
         "bash",
-        "../sanity.sh"
+        "../run.sh",
+        "status"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Connected to ArangoDB: memory"
+        ]
+      }
+    },
+    {
+      "name": "hardening-trace-human-checkpoint-contract",
+      "type": "adversarial",
+      "command": [
+        "python3",
+        "-c",
+        "from pathlib import Path\ntext = Path('../SKILL.md').read_text()\nrequired = ['Mandatory Hardening Trace And Human Checkpoints', 'pipeline_steps[]', 'human_checkpoint', 'CLARIFY', 'DRAFT', 'Unsigned drafts are not answer authority', 'survives two focused repair attempts', '$debugger']\nmissing = [item for item in required if item not in text]\nif missing:\n    raise SystemExit('missing mandatory hardening contract text: ' + ', '.join(missing))\n"
       ],
       "expected": {
         "exit_code": 0

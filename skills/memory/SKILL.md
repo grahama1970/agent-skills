@@ -190,6 +190,53 @@ These endpoints are routing or final-response products, not raw retrieval:
 | `/clarify` | Ask targeted clean follow-up text when the query is too vague, has weak recall, unsupported entities, taxonomy gaps, or ambiguous scope, plus engine-neutral `delivery_plan`. | `memory.clarify.v1` + `memory.delivery_plan.v1` | `./run.sh clarify` and HTTP |
 | `/deflect` | Redirect off-topic, unsafe, no-match, or content-safety turns before they enter recall, evidence-case, QRA, or subagent work, returning clean text plus engine-neutral `delivery_plan`. | `memory.deflect.v1` + `memory.delivery_plan.v1` | `./run.sh deflect` and HTTP |
 
+#### Mandatory Hardening Trace And Human Checkpoints
+
+Memory hardening runs must emit a durable per-question pipeline trace. This is
+not optional debug garnish. If a hardening case has no trace, the case is
+`NOT_ESTABLISHED` even when a final route was returned.
+
+Each trace must include:
+
+- the exact `question`;
+- ordered `pipeline_steps[]` for `/intent`, entity extraction, policy gates,
+  recall/profile selection, `/create-evidence-case` when used, and terminal
+  `/answer`, `/clarify`, `/deflect`, or `/draft`;
+- per-step `duration_ms`, `status`, and `result_summary`;
+- grounded entity evidence such as `entities`, `valid_entities`,
+  `invalid_terms`, `frameworks`, and the grounding source;
+- retrieval evidence summaries, including QRA source/admission state and any
+  display-only question similarity when a QRA is chosen;
+- the terminal `final_action`;
+- a `human_checkpoint` object whenever the terminal action is `clarify` or
+  `draft`;
+- the receipt or artifact path that preserves the trace.
+
+`human_checkpoint` is mandatory for `CLARIFY` and `DRAFT` routes. For
+`CLARIFY`, it must expose the exact clarifying question, the grounded context
+that caused clarification, and the specific human response needed to continue.
+For `DRAFT`, it must expose editable `question`, `reasoning`, answer text,
+parallel question variants when present, evidence/source basis, signoff state,
+and the allowed human actions: accept, reject, amend, or request another draft.
+Unsigned drafts are not answer authority.
+
+The hardening loop is:
+
+```text
+question -> trace each Memory pipeline step -> terminal action
+  -> ANSWER/DEFLECT: record trace and continue the same failure family
+  -> CLARIFY: ask the human the exact clarification question, then resume with the response
+  -> DRAFT: ask the human to accept/reject/amend/request edit, then record signoff/rejection
+```
+
+Project agents must not keep iterating silently after a `CLARIFY` or `DRAFT`
+trace. Those routes are collaboration checkpoints. If the same failure family
+survives two focused repair attempts, stop solo patching. Use `$debugger` when
+the next edit depends on live runtime state, and show the human the concrete
+breakpoint, source line, and relevant paused values. If the problem is semantic
+or policy judgment rather than hidden runtime state, ask the human the specific
+question shown by the trace.
+
 `/create-evidence-case` depends on this boundary: `ANSWER` means evidence is
 coherent enough to synthesize; `CLARIFY` means the case should not force a
 verdict yet; `DEFLECT` means the request should not enter the evidence pipeline.
