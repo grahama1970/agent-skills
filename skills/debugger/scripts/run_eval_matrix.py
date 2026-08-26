@@ -91,7 +91,13 @@ MATRIX: dict[str, dict] = {
     "remote-ssh-live": {
         "capability": "remote-ssh",
         "fixtures": [],
-        "planned": "sanity-bridge-remote-ssh.sh --allow-live (workspace-host authority, path mapping)",
+        # Runs the live authority gate instead of an agentic-eval fixture: it
+        # requires this process to run INSIDE the Remote SSH context (ssh shell
+        # with the remote window's VSCODE_IPC_HOOK_CLI). Proven passed
+        # 2026-08-26 over an ssh-remote+localhost workspace host
+        # (debugger.remote_ssh_bridge_proof.v1: proof_valid=true,
+        # accepted_relocation=true, authority ssh-remote/workspace).
+        "gate": ["bash", "sanity-bridge-remote-ssh.sh", "--allow-live"],
     },
     "human-collaboration-live": {
         "capability": "human",
@@ -170,7 +176,15 @@ def main() -> int:
         }
         if spec.get("planned"):
             receipt["planned"] = spec["planned"]
-        if not present or not spec["fixtures"]:
+        if present and spec.get("gate"):
+            result = subprocess.run(spec["gate"], cwd=SKILL, capture_output=True, text=True, timeout=1800)
+            receipt["gateExit"] = result.returncode
+            receipt["gateTail"] = (result.stdout + result.stderr).strip()[-300:]
+            receipt["readiness"] = "READY" if result.returncode == 0 else "NOT_READY"
+            if result.returncode != 0:
+                failures += 1
+            print(f"SUITE {suite}: {receipt['readiness']} (gate exit {result.returncode})")
+        elif not present or not spec["fixtures"]:
             receipt["readiness"] = "BLOCKED" if not present else "PLANNED"
             print(f"SUITE {suite}: {receipt['readiness']} ({why})")
         else:

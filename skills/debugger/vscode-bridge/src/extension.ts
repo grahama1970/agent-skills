@@ -1462,6 +1462,22 @@ async function expandVariableBounded(
   return node;
 }
 
+// In a Remote SSH workspace the adapter reports frame sources as remote URIs
+// (vscode-remote://ssh-remote%2Bhost/abs/path); on the workspace host itself
+// that path IS the local filesystem path. Normalize to a plain fs path so
+// breakpoint-vs-frame comparison does not reject a correct stop as a different
+// file (#1441's wrong-path-mapping hostile case, observed live).
+function normalizeFrameSourcePath(sourcePath: string): string {
+  if (sourcePath.includes('://')) {
+    try {
+      return path.resolve(vscode.Uri.parse(sourcePath).path);
+    } catch {
+      return path.resolve(sourcePath);
+    }
+  }
+  return path.resolve(sourcePath);
+}
+
 async function breakpointEvidenceForFrame(frame: unknown, request: BridgeRequest): Promise<BridgeBreakpointEvidence[]> {
   const breakpoints = request.breakpoints ?? [];
   if (breakpoints.length === 0) {
@@ -1471,7 +1487,7 @@ async function breakpointEvidenceForFrame(frame: unknown, request: BridgeRequest
   const sourcePath = (frame as { source?: { path?: unknown } }).source?.path;
   const functionName = (frame as { name?: unknown }).name;
   const actual = {
-    file: typeof sourcePath === 'string' ? path.resolve(sourcePath) : undefined,
+    file: typeof sourcePath === 'string' ? normalizeFrameSourcePath(sourcePath) : undefined,
     line: typeof line === 'number' ? line : undefined,
     function: typeof functionName === 'string' ? functionName : undefined,
   };
@@ -1548,39 +1564,54 @@ async function sourceSymbolRangeForLine(filePath: string, oneBasedLine: number):
   }
   const lines = content.split(/\r?\n/);
   const index = oneBasedLine - 1;
-  const sourceLine = lines[index] ?? '';
-  const match = /^(\s*)(?:async\s+def|def|class)\s+([A-Za-z_][A-Za-z0-9_]*)/.exec(sourceLine);
   const sourceSha256 = `sha256:${crypto.createHash('sha256').update(content, 'utf8').digest('hex')}`;
-  if (!match) {
+  const declarationPattern = /^(\s*)(?:async\s+def|def|class)\s+([A-Za-z_][A-Za-z0-9_]*)/;
+
+  const rangeFromDeclaration = (declIndex: number, match: RegExpExecArray) => {
+    const declarationIndent = match[1].length;
+    let endLine = lines.length;
+    for (let i = declIndex + 1; i < lines.length; i += 1) {
+      const line = lines[i];
+      if (line.trim() === '' || line.trimStart().startsWith('#')) {
+        continue;
+      }
+      const indent = line.length - line.trimStart().length;
+      if (indent <= declarationIndent) {
+        endLine = i;
+        break;
+      }
+    }
     return {
       file: filePath,
       sourceSha256,
-      kind: 'module',
-      name: '<module>',
-      startLine: oneBasedLine,
-      endLine: oneBasedLine,
+      kind: (lines[declIndex] ?? '').trimStart().startsWith('class ') ? 'class' as const : 'function' as const,
+      name: match[2],
+      startLine: declIndex + 1,
+      endLine,
     };
-  }
-  const declarationIndent = match[1].length;
-  let endLine = lines.length;
-  for (let i = index + 1; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (line.trim() === '' || line.trimStart().startsWith('#')) {
+  };
+
+  // The requested line may be the declaration itself, or ANY line inside a
+  // function/class body (a comment or blank line an adapter will relocate).
+  // Walk upward to the innermost enclosing declaration whose body range
+  // contains the requested line; only truly top-level lines degrade to module.
+  for (let i = index; i >= 0; i -= 1) {
+    const match = declarationPattern.exec(lines[i] ?? '');
+    if (!match) {
       continue;
     }
-    const indent = line.length - line.trimStart().length;
-    if (indent <= declarationIndent) {
-      endLine = i;
-      break;
+    const range = rangeFromDeclaration(i, match);
+    if (oneBasedLine >= range.startLine && oneBasedLine <= range.endLine) {
+      return range;
     }
   }
   return {
     file: filePath,
     sourceSha256,
-    kind: sourceLine.trimStart().startsWith('class ') ? 'class' : 'function',
-    name: match[2],
+    kind: 'module',
+    name: '<module>',
     startLine: oneBasedLine,
-    endLine,
+    endLine: oneBasedLine,
   };
 }
 
@@ -1593,7 +1624,7 @@ function frameMatchesRequestedBreakpoint(frame: unknown, request: BridgeRequest)
   if (typeof line !== 'number' || typeof sourcePath !== 'string') {
     return false;
   }
-  const normalizedFramePath = path.resolve(sourcePath);
+  const normalizedFramePath = normalizeFrameSourcePath(sourcePath);
   return (request.breakpoints ?? []).some((breakpoint) => {
     const normalizedBreakpointPath = path.resolve(
       request.workspace && !path.isAbsolute(breakpoint.file)

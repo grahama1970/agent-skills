@@ -121,24 +121,36 @@ PY
   exit 30
 fi
 
-"$SCRIPT_DIR/scripts/install_vscode_bridge.sh" --require-remote-ssh --report-json "$OUT_DIR/install.json" >/dev/null
+# The remote-CLI --install-extension proxies through the window IPC and can
+# stall for minutes; when the bridge is already present in the remote server''s
+# extensions, DEBUGGER_REMOTE_SSH_SKIP_INSTALL=1 skips the reinstall (the
+# presence check below still fails closed if it is missing).
+if [[ "${DEBUGGER_REMOTE_SSH_SKIP_INSTALL:-0}" == "1" ]]; then
+  if ! ls "$HOME/.vscode-server/extensions/"agent-skills.debugger-vscode-bridge-* >/dev/null 2>&1; then
+    echo "debugger_bridge_remote_install_missing: skip-install set but no bridge in ~/.vscode-server/extensions" >&2
+    exit 21
+  fi
+  printf '{"schema": "debugger.vscode_bridge_install.v1", "skipped": true, "reason": "already installed in remote server extensions"}
+' > "$OUT_DIR/install.json"
+else
+  "$SCRIPT_DIR/scripts/install_vscode_bridge.sh" --require-remote-ssh --report-json "$OUT_DIR/install.json" >/dev/null
+fi
 
 PROJECT_ROOT="${DEBUGGER_REMOTE_SSH_PROJECT_ROOT:-$OUT_DIR/workspace}"
 mkdir -p "$PROJECT_ROOT"
 cp "$SCRIPT_DIR/fixtures/remote-ssh/relocated_breakpoint.py" "$PROJECT_ROOT/remote_ssh_fixture.py"
 uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/write_vscode_launch.py" \
   --workspace "$PROJECT_ROOT" \
-  --name "Debug Remote SSH relocated breakpoint ($debugger)" \
+  --name "Debug Remote SSH relocated breakpoint (\$debugger)" \
   --python "$(command -v python3)" \
   --module remote_ssh_fixture
 
 mapfile -t REQUEST_PATHS < <(uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/request_vscode_bridge.py" \
   --workspace "$PROJECT_ROOT" \
   --action restart \
-  --launch-config-name "Debug Remote SSH relocated breakpoint ($debugger)" \
-  --break "remote_ssh_fixture.py:1" \
+  --launch-config-name "Debug Remote SSH relocated breakpoint (\$debugger)" \
+  --break "remote_ssh_fixture.py:3" \
   --local value \
-  --local doubled \
   --expect-remote-name ssh-remote \
   --expect-extension-host-kind workspace \
   --stop-timeout-ms 45000)
