@@ -1,0 +1,117 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "simple /ask compete execution through non-browser Tau/SciLLM handlers, with admitted scorecard receipts and fail-closed evidence gating",
+  "claims": {
+    "proves": "the /ask compete CLI can execute two isolated non-browser handlers plus an independent non-browser judge through the production Tau path, skip browser transport, preserve provider receipts, and emit a PASS compete scorecard when explicit verified features and a real judge winner exist; it also fails closed when candidate answers lack explicit verified feature evidence",
+    "does_not_prove": "browser-backed webgpt/webgemini/webgrok prompt delivery, semantic quality of arbitrary candidate fixes, or that a project agent has locally implemented the winning candidate"
+  },
+  "capability_claims": [
+    {
+      "id": "ask.compete.simple_non_browser_executes",
+      "description": "A simple non-browser /ask compete run dispatches isolated candidate handlers, runs a separate judge, and settles with admitted scorecard receipts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "ask.compete.fail_closed_without_verified_features",
+      "description": "/ask compete holds the join and names stable blockers when candidate answers lack explicit verified feature evidence.",
+      "criticality": "critical",
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "ask.compete.non_browser_dispatch",
+      "seam_type": "production-entrypoint",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "ask.compete.scorecard_publication_gate",
+      "seam_type": "publication-gate",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "ask-compete-simple-non-browser-executes-with-scorecard",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "readback": true,
+      "supports_claims": [
+        "ask.compete.simple_non_browser_executes"
+      ],
+      "seams": [
+        "ask.compete.non_browser_dispatch",
+        "ask.compete.scorecard_publication_gate"
+      ],
+      "timeout_seconds": 660,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/compete_simple_agentic_eval.py",
+        "--case",
+        "positive",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_COMPETE_SIMPLE_POSITIVE_PASS",
+          "\"status\": \"PASS\"",
+          "\"provider_live\": true",
+          "ask-compete-simple-executed-gpt-5.5-low",
+          "ask-compete-simple-executed-claude-fable-low"
+        ]
+      }
+    },
+    {
+      "name": "ask-compete-simple-holds-without-verified-features",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "ask.compete.fail_closed_without_verified_features"
+      ],
+      "seams": [
+        "ask.compete.scorecard_publication_gate"
+      ],
+      "timeout_seconds": 660,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask",
+        "python",
+        "/home/graham/workspace/experiments/agent-skills/skills/ask/scripts/compete_simple_agentic_eval.py",
+        "--case",
+        "missing-verified-features",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_COMPETE_SIMPLE_FAIL_CLOSED_PASS",
+          "\"status\": \"PASS\"",
+          "no_clear_winner_from_receipts",
+          "no_explicit_verified_features_to_promote"
+        ]
+      }
+    }
+  ]
+}
