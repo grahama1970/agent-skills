@@ -88,6 +88,8 @@ const requestFileMtimes = new Map<string, number>();
 const ownedBreakpointKeys = new Set<string>();
 const temporaryBreakpointKeys = new Set<string>();
 const bridgeQueue = new AsyncKeyedQueue();
+// #1530 diagnostics: per-token launch facts, surfaced in the timeout error.
+const launchDiagnostics = new Map<string, { resolvedConfig: boolean; boundSessions: string[] }>();
 
 function breakpointKey(breakpoint: vscode.SourceBreakpoint) {
   return `${breakpoint.location.uri.fsPath}:${breakpoint.location.range.start.line + 1}`;
@@ -185,6 +187,22 @@ let extensionHostKind: BridgeAuthority['extensionHostKind'] = 'unknown';
 export function activate(context: vscode.ExtensionContext) {
   channel.appendLine('Debugger Bridge activated.');
   void loadOwnershipRegistry();
+  // Which-artifact receipt: record the running build's own file hash at
+  // activation, so a stale extension host is detectable from disk.
+  void (async () => {
+    try {
+      const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!workspacePath) return;
+      const self = await fs.readFile(__filename, 'utf8');
+      const marker = {
+        schema: 'debugger.extension_activation.v1',
+        file: __filename,
+        sha256: crypto.createHash('sha256').update(self).digest('hex'),
+        activatedAt: new Date().toISOString(),
+      };
+      await writeJsonFile(path.join(runtimeArtifactRoot(workspacePath), 'extension-activation.json'), marker);
+    } catch { /* never block activation */ }
+  })();
   extensionHostKind = context.extension.extensionKind === vscode.ExtensionKind.Workspace
     ? 'workspace'
     : context.extension.extensionKind === vscode.ExtensionKind.UI
@@ -455,6 +473,8 @@ async function processBridgeRequestForOutput(
   }
   const correlationToken = `${requestId}:${requestHash.slice(0, 16)}`;
   const correlatedConfig = resolveLaunchConfiguration(folder, request.launchConfigName, correlationToken);
+  channel.appendLine(`launch: config ${request.launchConfigName} resolved=${correlatedConfig !== undefined} token=${correlationToken}`);
+  launchDiagnostics.set(correlationToken, { resolvedConfig: correlatedConfig !== undefined, boundSessions: [] });
   const stopped = waitForStoppedState(request, outputPath, { correlationToken });
   const ok = await vscode.debug.startDebugging(
     folder,
@@ -1015,6 +1035,28 @@ function sessionCorrelationToken(session: vscode.DebugSession): string | undefin
 // carries the correlation token, while stopped events arrive in the child. A
 // session belongs to this launch if the token appears anywhere on its parent
 // lineage (#1431).
+// #1530: when a started session is rejected by the correlation filter, append a
+// diagnostic line naming the expected token and the session's actual lineage
+// tokens to bind-rejects.jsonl in the runtime dir.
+function recordBindReject(session: vscode.DebugSession, expectedToken: string) {
+  try {
+    const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspacePath) return;
+    const lineage: Array<{ id: string; type: string; name: string; token: string | null }> = [];
+    let current: vscode.DebugSession | undefined = session;
+    for (let depth = 0; current && depth < 8; depth += 1) {
+      lineage.push({ id: current.id, type: current.type, name: current.name,
+                     token: sessionCorrelationToken(current) ?? null });
+      current = current.parentSession;
+    }
+    const line = JSON.stringify({ at: new Date().toISOString(), expectedToken, lineage }) + '\n';
+    const target = path.join(runtimeArtifactRoot(workspacePath), 'bind-rejects.jsonl');
+    void fs.mkdir(path.dirname(target), { recursive: true }).then(() => fs.appendFile(target, line, 'utf8'));
+  } catch {
+    // diagnostics never break the wait
+  }
+}
+
 function sessionLineageHasToken(session: vscode.DebugSession, token: string): boolean {
   let current: vscode.DebugSession | undefined = session;
   for (let depth = 0; current && depth < 8; depth += 1) {
@@ -1070,7 +1112,11 @@ function waitForStoppedState(
       }
       settled = true;
       cleanup();
-      reject(new Error(`Timed out waiting ${timeoutMs}ms for a debug adapter stopped event.`));
+      {
+        const diag = options.correlationToken !== undefined ? launchDiagnostics.get(options.correlationToken) : undefined;
+        const detail = diag ? ` [resolvedConfig=${diag.resolvedConfig} boundSessions=${JSON.stringify(diag.boundSessions)}]` : '';
+        reject(new Error(`Timed out waiting ${timeoutMs}ms for a debug adapter stopped event.${detail}`));
+      }
     }, timeoutMs);
 
     const pendingCapture: PendingCapture = {
@@ -1095,9 +1141,25 @@ function waitForStoppedState(
       // (js-debug's pwa-node runs the program in a child session, and that is
       // where the stopped events arrive). Unrelated sessions never bind (#1431).
       if (options.correlationToken !== undefined && !sessionLineageHasToken(session, options.correlationToken)) {
+        // #1530 diagnostic: record WHY this session did not bind, so a failing
+        // run's receipt names the token mismatch instead of a bare timeout.
+        recordBindReject(session, options.correlationToken);
         return;
       }
       pendingBySession.set(session.id, pendingCapture);
+      if (options.correlationToken !== undefined) {
+        launchDiagnostics.get(options.correlationToken)?.boundSessions.push(`${session.type}:${session.id}`);
+      }
+      // #1530 late-bind recovery: the adapter may already have paused before
+      // this bind was delivered (its 'stopped' was ingested as an external
+      // pause). Resolve from the recorded state instead of waiting forever.
+      const alreadyPaused = sessionStates.get(session.id);
+      if (alreadyPaused?.status === 'paused' && typeof alreadyPaused.selectedThreadId === 'number') {
+        clearPendingCapture(pendingCapture);
+        clearTimeout(timer);
+        void resolvePendingWithStop(session, pendingCapture, alreadyPaused.selectedThreadId, 'breakpoint');
+        return;
+      }
       if (options.sessionId || options.bindActiveSession) {
         startSubscription?.dispose();
       }
@@ -1146,6 +1208,16 @@ async function ingestExternalStop(
     if (folder) {
       await writeSessionEvents(folder, session.id);
     }
+    // #1530: the bind for this session may have arrived while this ingest was
+    // in flight (the bind's own already-paused check ran before we recorded the
+    // pause). If a pending is bound now, resolve it here -- between this and
+    // the bind-side recovery, the start/stop race is closed from both ends.
+    const lateBound = pendingBySession.get(session.id);
+    if (lateBound) {
+      clearPendingCapture(lateBound);
+      clearTimeout(lateBound.timer);
+      void resolvePendingWithStop(session, lateBound, threadId, body.reason ?? 'stopped');
+    }
   } catch (error) {
     channel.appendLine(
       `Debugger bridge external stop capture failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -1177,15 +1249,28 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
   }
   clearPendingCapture(pending);
   clearTimeout(pending.timer);
-
   const body = message.body as { reason?: string; threadId?: number };
-  const threadId = body.threadId;
+  await resolvePendingWithStop(session, pending, body.threadId, body.reason ?? 'stopped');
+}
+
+// Capture the paused state and settle a pending bridge wait. Shared between the
+// tracker's live 'stopped' event and the late-bind recovery path (#1530): when
+// the adapter pauses in the same tick the session starts, the tracker can
+// process 'stopped' BEFORE onDidStartDebugSession delivers the bind, so the
+// stop lands as an external pause; the bind branch then recovers it from the
+// recorded session state instead of timing out.
+async function resolvePendingWithStop(
+  session: vscode.DebugSession,
+  pending: PendingCapture,
+  threadId: number | undefined,
+  reason: string,
+) {
   if (typeof threadId !== 'number') {
     pending.resolve({
       sessionId: session.id,
       sessionName: session.name,
       stopSequence: sessionStates.get(session.id)?.stopSequence ?? 0,
-      reason: body.reason ?? 'stopped',
+      reason,
       threadId: -1,
       error: 'Stopped event did not include a numeric threadId.',
     });
@@ -1193,7 +1278,7 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
   }
 
   try {
-    const state = await captureStoppedState(session, threadId, body.reason ?? 'stopped', pending.request);
+    const state = await captureStoppedState(session, threadId, reason, pending.request);
     const sessionState = upsertSessionState(session, pending.request, 'paused', {
       selectedThreadId: threadId,
       selectedFrameId: frameIdFromState(state),
@@ -1212,7 +1297,7 @@ async function handleDebugAdapterMessage(session: vscode.DebugSession, message: 
       sessionId: session.id,
       sessionName: session.name,
       stopSequence: sessionStates.get(session.id)?.stopSequence ?? 0,
-      reason: body.reason ?? 'stopped',
+      reason,
       threadId,
       error: error instanceof Error ? error.message : String(error),
     });
