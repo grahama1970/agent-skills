@@ -90,6 +90,24 @@
       }
     },
     {
+      "name": "visibility-public-overview-fallback-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-website\" && uv run pytest -vv tests/test_grahamaco_update.py::test_visibility_generator_keeps_configured_overview_when_remote_visibility_unknown"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "test_visibility_generator_keeps_configured_overview_when_remote_visibility_unknown",
+          "1 passed"
+        ]
+      }
+    },
+    {
       "name": "calendly-static-build-readback",
       "type": "adversarial",
       "real_world": true,

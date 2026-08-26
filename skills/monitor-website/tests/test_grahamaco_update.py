@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -98,3 +99,54 @@ def test_constellation_contract_covers_graph_click_and_private_overview_nodes(tm
     assert "https://github.com/grahama1970/sparta-public" in manifest
     assert "[data-qid='constellation:node:project:memory'] .c-ring--private" in manifest
     assert "[data-qid='constellation:node:project:sparta-explorer'] .c-ring--private" in manifest
+
+
+def test_visibility_generator_keeps_configured_overview_when_remote_visibility_unknown(
+    tmp_path, monkeypatch
+):
+    script = REPO / "site/scripts/gen_visibility.py"
+    spec = importlib.util.spec_from_file_location("gen_visibility_under_test", script)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "content.json").write_text(
+        json.dumps(
+            {
+                "projects": [
+                    {
+                        "slug": "memory",
+                        "name": "memory",
+                        "href": "https://github.com/grahama1970/private-memory",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    (site / "private-abstracts.json").write_text(
+        json.dumps({"abstracts": {}}),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(module, "REPO", tmp_path)
+    monkeypatch.setattr(module, "CONTENT", site / "content.json")
+    monkeypatch.setattr(module, "ABSTRACTS", site / "private-abstracts.json")
+    monkeypatch.setattr(module, "OUT", site / "project-visibility.json")
+    monkeypatch.setattr(module, "PROJECT_REPO", {"memory": tmp_path / "missing-memory"})
+    monkeypatch.setattr(module, "PROJECT_PUBLIC_OVERVIEW", {"memory": "grahama1970/memory-public"})
+    monkeypatch.setattr(module, "_remote_visibility", lambda _repo: "UNKNOWN")
+    monkeypatch.setattr(module.subprocess, "check_output", lambda *args, **kwargs: "testsha\n")
+
+    module.main()
+
+    generated = json.loads((site / "project-visibility.json").read_text(encoding="utf-8"))
+    [memory] = generated["projects"]
+    assert memory["slug"] == "memory"
+    assert memory["visibility"] == "public-overview"
+    assert memory["evidence_access"] == "abstract"
+    assert memory["href"] == "https://github.com/grahama1970/memory-public"
+    assert generated["hidden"] == []

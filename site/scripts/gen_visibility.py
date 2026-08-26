@@ -88,13 +88,19 @@ def main() -> None:
         # checks out agent-skills; sibling private repos are absent there and
         # must not be misclassified as public source.
         overview = PROJECT_PUBLIC_OVERVIEW.get(slug)
-        if overview and _remote_visibility(overview) == "PUBLIC":
-            entries.append(
-                {"slug": slug, "name": p["name"], "visibility": "public-overview",
-                 "evidence_access": "abstract", "href": f"https://github.com/{overview}",
-                 "abstract": None, "note": "Public product overview; underlying system and evidence are private."}
-            )
-            continue
+        if overview:
+            overview_visibility = _remote_visibility(overview)
+            if overview_visibility != "PRIVATE":
+                # A configured public overview is the safe public face for
+                # private work. In CI, sibling private repos are absent and gh
+                # visibility can be unavailable; do not let that degrade into a
+                # false "public source" node.
+                entries.append(
+                    {"slug": slug, "name": p["name"], "visibility": "public-overview",
+                     "evidence_access": "abstract", "href": f"https://github.com/{overview}",
+                     "abstract": None, "note": "Public product overview; underlying system and evidence are private."}
+                )
+                continue
 
         vis = _repo_visibility(repo) if repo else "PUBLIC"
 
