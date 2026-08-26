@@ -216,3 +216,39 @@ def test_ranker_uses_project_tags_for_memory_affinity() -> None:
     )
 
     assert ranked[0] is sparta
+
+
+def test_ranker_prefers_read_first_memory_over_same_project_hard_rule_noise() -> None:
+    unrelated_sparta_rule = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="SPARTA hyperparameter reminder",
+        excerpt=(
+            "Hard rule: REL09_MIN_INPUT_WEIGHT must remain above the rollout "
+            "threshold for explorer scoring."
+        ),
+        score=1.0,
+        freshness=Freshness.UNKNOWN,
+        path="local_memory/experiments-sparta/MEMORY.md",
+        metadata={"tags": ["local_memory", "project:experiments-sparta"]},
+    )
+    read_first = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="SPARTA Project Memory Index",
+        excerpt=(
+            "READ FIRST HARD RULES: NEVER SKIM A SKILL.md. Read the entire "
+            "SKILL.md cover to cover before running commands."
+        ),
+        score=0.84,
+        freshness=Freshness.UNKNOWN,
+        path="local_memory/experiments-sparta/MEMORY.md",
+        metadata={"tags": ["local_memory", "project:experiments-sparta"]},
+    )
+
+    ranked = rank_sources(
+        [unrelated_sparta_rule, read_first],
+        "What are the hard read-first rules recorded in the Sparta project memory index?",
+        profile(),
+        repo_scope={"sparta"},
+    )
+
+    assert ranked[0] is read_first
