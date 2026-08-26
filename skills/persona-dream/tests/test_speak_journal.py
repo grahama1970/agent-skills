@@ -77,6 +77,119 @@ def test_unresolvable_container_path_returns_none(tmp_path, monkeypatch):
     assert speak.resolve_host_audio("") is None
 
 
+def _args(tmp_path, **overrides):
+    data = {
+        "run_dir": tmp_path,
+        "out": tmp_path / "JOURNAL_AUDIO_RECEIPT.json",
+        "mood_label": "guarded_quietly_wanting",
+        "intensity": 0.6,
+        "valence": -0.1,
+        "label": "test-journal",
+        "max_chars": 1200,
+        "asr_verify": True,
+        "asr_max_candidates": 3,
+        "ref_audio": "/data/embry_ref.wav",
+    }
+    data.update(overrides)
+    return type("A", (), data)()
+
+
+def test_chatterbox_failed_gates_are_preserved_in_journal_audio_receipt(tmp_path, monkeypatch):
+    (tmp_path / "journal_spoken.txt").write_text("I woke carrying the dream.\n", encoding="utf-8")
+    captured = {}
+
+    def fake_post_json(url, payload):
+        captured["url"] = url
+        captured["payload"] = payload
+        return {
+            "ok": False,
+            "engine": "chatterbox_base",
+            "normalized_tone": payload["voice_delivery"]["tone"],
+            "finished_response_audio": "/out/test-journal/finished_response.wav",
+            "finished_response_metrics": {},
+            "failed_gates": ["accepted_candidate_present"],
+            "asr_verification": {"enabled": True},
+            "chunks": [
+                {
+                    "chunk_index": 1,
+                    "asr_verification": {
+                        "enabled": True,
+                        "failed_gates": ["accepted_candidate_present"],
+                        "candidates": [
+                            {"asr": {"ok": False, "transcript": None, "gate": {"wer": None}}}
+                        ],
+                    },
+                }
+            ],
+        }
+
+    monkeypatch.setattr(speak, "post_json", fake_post_json)
+
+    receipt = speak.run(_args(tmp_path))
+
+    assert captured["payload"]["asr_max_candidates"] == 3
+    assert receipt["status"] == "BLOCKED_JOURNAL_AUDIO"
+    assert receipt["chatterbox_ok"] is False
+    assert receipt["chatterbox_failed_gates"] == ["accepted_candidate_present"]
+    assert "chatterbox_response_not_ok" in receipt["failed_gates"]
+    assert "chatterbox_accepted_candidate_present" in receipt["failed_gates"]
+    assert "chunk_asr_not_all_ok" in receipt["failed_gates"]
+
+
+def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, monkeypatch):
+    host_root = tmp_path / "logs"
+    wav = host_root / "test-journal" / "finished_response.wav"
+    wav.parent.mkdir(parents=True)
+    wav.write_bytes(b"RIFF....WAVE")
+    monkeypatch.setattr(speak, "CHATTERBOX_OUT_HOST_ROOT", host_root)
+    (tmp_path / "journal_spoken.txt").write_text("First sentence. Second sentence.\n", encoding="utf-8")
+
+    def fake_post_json(url, payload):
+        return {
+            "ok": True,
+            "engine": "chatterbox_base",
+            "normalized_tone": payload["voice_delivery"]["tone"],
+            "finished_response_audio": "/out/test-journal/finished_response.wav",
+            "finished_response_metrics": {"bytes": wav.stat().st_size},
+            "failed_gates": [],
+            "asr_verification": {"enabled": True},
+            "chunks": [
+                {
+                    "chunk_index": 1,
+                    "asr_verification": {
+                        "enabled": True,
+                        "accepted_candidate_index": 0,
+                        "failed_gates": [],
+                        "candidates": [
+                            {"asr": {"ok": True, "transcript": "First sentence.", "gate": {"wer": 0.0}}}
+                        ],
+                    },
+                },
+                {
+                    "chunk_index": 2,
+                    "asr_verification": {
+                        "enabled": True,
+                        "accepted_candidate_index": 0,
+                        "failed_gates": [],
+                        "candidates": [
+                            {"asr": {"ok": True, "transcript": "Second sentence.", "gate": {"wer": 0.1}}}
+                        ],
+                    },
+                },
+            ],
+        }
+
+    monkeypatch.setattr(speak, "post_json", fake_post_json)
+
+    receipt = speak.run(_args(tmp_path))
+
+    assert receipt["status"] == "PASS_JOURNAL_SPOKEN"
+    assert receipt["asr_transcript"] == "First sentence.\nSecond sentence."
+    assert receipt["asr_wer"] == 0.1
+    assert receipt["asr_ok"] is True
+    assert receipt["audio_bytes"] > 0
+
+
 def test_live_receipt_binds_audio_to_text_and_disclaims_achieved_tone():
     """Read back the real receipt produced by the live run."""
     path = Path("/tmp/pd-t4/JOURNAL_AUDIO_RECEIPT.json")

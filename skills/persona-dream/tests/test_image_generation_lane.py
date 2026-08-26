@@ -55,6 +55,18 @@ def test_generation_goes_through_ask_not_create_image():
     assert '"generate.py"' not in body and "generate.py" not in body
 
 
+def test_create_panel_scillm_backend_uses_ask_oauth_lane():
+    """The retained create_panel --backend scillm path must not call $create-image."""
+    src = (Path(__file__).resolve().parents[1] / "pipeline/s05_panels/create_panel.py").read_text(
+        encoding="utf-8"
+    )
+    body = src.split("# OAuth image lane:")[1].split("res = subprocess.run")[0]
+    assert '"ask"' in body
+    assert '"--image-generate"' in body
+    assert '"--image-auth", "codex-oauth"' in body
+    assert "create_image_script" not in body
+
+
 def test_a_receipt_binds_the_bytes_to_the_call_that_made_them(tmp_path):
     """Otherwise 'generated over OAuth' is an unbacked claim about a PNG."""
     from PIL import Image

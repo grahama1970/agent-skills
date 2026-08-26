@@ -7,6 +7,7 @@ Inputs/Outputs/Failures: See functions below.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import sys
@@ -17,11 +18,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+from fulfill_storyboard_panel_work_order import fulfill  # noqa: E402
 from validate_storyboard_panel_receipt import validate_storyboard_panel_receipt  # noqa: E402
+from write_storyboard_panel_work_order import build_storyboard_panel_work_order  # noqa: E402
 
 
 def _sha256(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+TINY_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+)
 
 
 class TestStoryboardPanelReceipt(unittest.TestCase):
@@ -105,6 +113,69 @@ class TestStoryboardPanelReceipt(unittest.TestCase):
         self.assertEqual(result["status"], "BLOCKED")
         self.assertEqual(result["first_blocker"]["phase"], "work_order")
         self.assertEqual(result["first_blocker"]["reason"], "missing_artifact")
+
+    def test_fulfill_storyboard_panel_work_order_emits_panel_receipt_without_provider(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            (run_root / "receipts").mkdir()
+            (run_root / "contact_sheet.png").write_bytes(TINY_PNG)
+            (run_root / "dream_packet.json").write_text(
+                json.dumps(
+                    {
+                        "schema": "persona_dream.packet.v1",
+                        "run_id": "fixture",
+                        "persona": {"id": "embry", "display_name": "Embry"},
+                        "contact_sheet": "contact_sheet.png",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            story_contract = run_root / "story_contract.json"
+            story_contract.write_text(
+                json.dumps(
+                    {
+                        "schema": "persona_dream.story_contract.v1",
+                        "artifact_id": "fixture_story",
+                        "status": "PASS_STORY_CONTRACT",
+                        "created_at": "2026-06-28T23:56:00Z",
+                        "input_idea_contract": "dream_packet.json",
+                        "seed": "Embry dream seed",
+                        "story": "Embry tells Horus how the dream changes the mood without changing the answer.",
+                        "target_duration_s": 10.0,
+                        "speaking_characters": ["Embry", "Horus"],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            work_order = build_storyboard_panel_work_order(
+                run_root=run_root,
+                story_contract=story_contract,
+                created_at="2026-06-28T23:57:00Z",
+            )
+            work_order_path = run_root / "receipts/storyboard_panel_work_order.json"
+            work_order_path.write_text(json.dumps(work_order, indent=2) + "\n", encoding="utf-8")
+
+            receipt = fulfill(
+                work_order_path,
+                run_root=run_root,
+                output=run_root / "receipts/storyboard_panel_fulfillment.json",
+                created_at="2026-06-28T23:58:00Z",
+            )
+            validation = validate_storyboard_panel_receipt(
+                run_root / "receipts/storyboard_panel_receipt.json",
+                run_root=run_root,
+            )
+            storyboard_packet_exists = (run_root / "storyboard_packet.json").exists()
+
+        self.assertEqual(receipt["status"], "PASS_STORYBOARD_PANEL_FULFILLED")
+        self.assertEqual(validation["status"], "PASS_STORYBOARD_PANEL")
+        self.assertFalse(receipt["paid_provider_call_attempted"])
+        self.assertFalse(receipt["kling_call_attempted"])
+        self.assertFalse(receipt["nano_banana_or_gemini_final_image_used"])
+        self.assertFalse(receipt["storyboard_packet_written"])
+        self.assertFalse(storyboard_packet_exists)
 
 
 if __name__ == "__main__":

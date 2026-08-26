@@ -79,10 +79,13 @@ Commands:
   validate-story-contract    Validate story contract schema, accepted status, and semantic basics
   write-story-contract-work-order  Write story review/regeneration work order
   validate-story-contract-work-order Validate story review/regeneration work order
+  fulfill-story-contract-work-order Consume a validated story-contract work order and emit accepted story contract
   validate-visual-review     Validate visual review receipt evidence and eight-check coverage
   validate-storyboard-panel  Validate storyboard panel receipt image, timing, and continuity links
   write-storyboard-panel-work-order  Write storyboard panel generation/review work order
   validate-storyboard-panel-work-order Validate storyboard panel generation/review work order
+  fulfill-storyboard-panel-work-order Consume a validated storyboard-panel work order and emit panel receipt
+  fulfill-panel-repair-work-order Consume a validated panel-repair work order and emit panel repair gate receipt
   write-panel-source         Derive panel_source_receipt.json from a panel repair gate receipt
   write-panel-repair-work-order  Write one-panel repair-gate handoff request
   validate-panel-repair-work-order  Validate one-panel repair-gate handoff request
@@ -459,6 +462,9 @@ case "$COMMAND" in
   validate-story-contract-work-order)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_story_contract_work_order.py" "$@"
     ;;
+  fulfill-story-contract-work-order)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/fulfill_story_contract_work_order.py" "$@"
+    ;;
   validate-visual-review)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_visual_review_receipt.py" "$@"
     ;;
@@ -470,6 +476,12 @@ case "$COMMAND" in
     ;;
   validate-storyboard-panel-work-order)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_storyboard_panel_work_order.py" "$@"
+    ;;
+  fulfill-storyboard-panel-work-order)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/fulfill_storyboard_panel_work_order.py" "$@"
+    ;;
+  fulfill-panel-repair-work-order)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/fulfill_panel_repair_work_order.py" "$@"
     ;;
   write-panel-source)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_panel_source_receipt.py" "$@"

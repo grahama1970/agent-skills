@@ -20,6 +20,7 @@ import base64
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -29,7 +30,11 @@ from typing import Any
 
 REPO_SKILL = Path(__file__).resolve().parent.parent  # .../skills/persona-dream
 NODE_PATH = REPO_SKILL / "scripts" / "phase07_storyboard_tau_node.py"
-SCILLM_RUN = Path("/home/graham/workspace/experiments/agent-skills-main/skills/scillm/run.sh")
+SCILLM_RUN = Path(os.environ.get(
+    "PERSONA_DREAM_SCILLM_RUN",
+    str(REPO_SKILL.parent / "scillm" / "run.sh"),
+))
+SCILLM_IMAGE_FIRST_EVENT_TIMEOUT_S = os.environ.get("SCILLM_IMAGE_FIRST_EVENT_TIMEOUT_S", "180")
 
 # Continuity VLM reviews route through the sanctioned Tau panel-reviewer node
 # (only /tau may reach /scillm) via the persona-dream-side composite adapter.
@@ -192,6 +197,7 @@ def _generate(prompt: str, out_png: Path, gen_dir: Path, frame_id: str, attempt:
         "--size", IMAGE_SIZE,
         "--quality", "high",
         "--caller-skill", "persona-dream-phase07-panel-creator",
+        "--first-event-timeout-s", SCILLM_IMAGE_FIRST_EVENT_TIMEOUT_S,
         "--json",
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1200)

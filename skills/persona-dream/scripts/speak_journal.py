@@ -39,6 +39,7 @@ CHATTERBOX_OUT_HOST_ROOT = Path(
                    "/home/graham/workspace/experiments/chatterbox/logs")
 )
 DEFAULT_REF_AUDIO = "/data/embry_ref.wav"
+DEFAULT_ASR_MAX_CANDIDATES = int(os.environ.get("PERSONA_DREAM_JOURNAL_ASR_MAX_CANDIDATES", "3"))
 MARKDOWN_FOOTER = re.compile(r"\n---\n.*", re.DOTALL)
 
 
@@ -102,6 +103,24 @@ def post_json(url: str, payload: dict[str, Any], timeout: int = 900) -> dict[str
     )
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def accepted_chunk_asr(chunk: dict[str, Any]) -> dict[str, Any]:
+    verification = chunk.get("asr_verification") or {}
+    candidates = verification.get("candidates") or []
+    idx = verification.get("accepted_candidate_index")
+    if idx is None:
+        idx = 0
+    accepted = candidates[idx] if idx < len(candidates) else (candidates[0] if candidates else {})
+    asr = (accepted or {}).get("asr") or {}
+    gate = asr.get("gate") or {}
+    return {
+        "chunk_index": chunk.get("chunk_index"),
+        "ok": asr.get("ok"),
+        "transcript": asr.get("transcript"),
+        "wer": gate.get("wer"),
+        "failed_gates": verification.get("failed_gates") or (accepted or {}).get("failed_gates") or [],
+    }
 
 
 def ensure_spoken_text(run_dir: Path) -> tuple[Path | None, list[str]]:
@@ -201,11 +220,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "use_blessed_qra_cache": False,
         "asr_verify": bool(args.asr_verify),
         "asr_cache": False,
-        "asr_max_candidates": 1,
+        "asr_max_candidates": args.asr_max_candidates,
         "voice_delivery": mapping["voice_delivery"],
         "ref_audio": args.ref_audio,
     }
     response = post_json(f"{CHATTERBOX}/synthesize-batch", request)
+    upstream_failed_gates = list(response.get("failed_gates") or [])
+    if response.get("ok") is False:
+        failed.append("chatterbox_response_not_ok")
+        failed.extend(f"chatterbox_{gate}" for gate in upstream_failed_gates)
 
     engine = response.get("engine")
     normalized = response.get("normalized_tone")
@@ -220,19 +243,18 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     else:
         shutil.copyfile(source, dest)
 
-    # The transcript is not top-level: it sits under the accepted candidate of
-    # the first chunk's asr_verification. Reading `asr_transcript` returns None
-    # and silently loses the only evidence that she said what was written.
-    chunk = (response.get("chunks") or [{}])[0]
-    verification = chunk.get("asr_verification") or {}
-    candidates = verification.get("candidates") or []
-    idx = verification.get("accepted_candidate_index") or 0
-    accepted = candidates[idx] if idx < len(candidates) else (candidates[0] if candidates else {})
-    asr = (accepted or {}).get("asr") or {}
-    transcript = asr.get("transcript")
-    asr_gate = asr.get("gate") or {}
-    if args.asr_verify and verification.get("enabled") and not transcript:
+    # Transcripts are per accepted chunk. Aggregate them so the receipt covers
+    # the whole journal, not just the first rendered segment.
+    chunk_asr = [accepted_chunk_asr(chunk) for chunk in (response.get("chunks") or [])]
+    transcripts = [str(item["transcript"]).strip() for item in chunk_asr if item.get("transcript")]
+    transcript = "\n".join(transcripts) if transcripts else None
+    wers = [float(item["wer"]) for item in chunk_asr if item.get("wer") is not None]
+    asr_ok = bool(chunk_asr) and all(item.get("ok") is True for item in chunk_asr)
+    asr_enabled = bool((response.get("asr_verification") or {}).get("enabled"))
+    if args.asr_verify and asr_enabled and not transcript:
         failed.append("asr_transcript_missing_despite_verification_enabled")
+    if args.asr_verify and asr_enabled and chunk_asr and not asr_ok:
+        failed.append("chunk_asr_not_all_ok")
 
     receipt = {
         "schema": "persona_dream.journal_audio_receipt.v1",
@@ -258,8 +280,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "normalized_delivery_tone": normalized,
         "tone_survived": normalized == requested,
         "asr_transcript": transcript,
-        "asr_wer": asr_gate.get("wer"),
-        "asr_ok": asr.get("ok"),
+        "asr_wer": max(wers) if wers else None,
+        "asr_ok": asr_ok if asr_enabled else None,
+        "asr_max_candidates": args.asr_max_candidates,
+        "chunk_asr": chunk_asr,
+        "chatterbox_ok": response.get("ok"),
+        "chatterbox_failed_gates": upstream_failed_gates,
         "finished_response_metrics": response.get("finished_response_metrics"),
         "failed_gates": failed,
         "claims": {
@@ -288,6 +314,7 @@ def main() -> int:
     ap.add_argument("--intensity", type=float, default=0.6)
     ap.add_argument("--valence", type=float, default=-0.1)
     ap.add_argument("--ref-audio", default=DEFAULT_REF_AUDIO)
+    ap.add_argument("--asr-max-candidates", type=int, default=DEFAULT_ASR_MAX_CANDIDATES)
     ap.add_argument("--max-chars", type=int, default=1200,
                     help="Chatterbox chunks internally; this bounds a runaway entry.")
     ap.add_argument("--asr-verify", action="store_true", default=True)

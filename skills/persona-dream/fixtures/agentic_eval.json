@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, listener-gate presentation handoff, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, listener-gate presentation handoff, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, the listener gate contract routes 0/20 human-response state to presenting the rater packet instead of status-only/WebGPT substitution, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, the listener gate contract routes 0/20 human-response state to presenting the rater packet instead of status-only/WebGPT substitution, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
@@ -79,6 +79,102 @@
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_pipeline_run_crew_casting.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
+      "name": "image-generation-lane-contract-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.image_generation_oauth_lane"
+      ],
+      "seams": [
+        "image_generation.create_panel_scillm_backend"
+      ],
+      "notes": "Runs image-lane regression tests that refuse unfunded API-key backends and require create_panel --backend scillm to route through ask image generation with Codex OAuth rather than $create-image.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_image_generation_lane.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "7 passed"
+        ]
+      }
+    },
+    {
+      "name": "story-contract-work-order-executor-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.story_contract_work_order_executor"
+      ],
+      "seams": [
+        "pipeline_loop.story_contract_work_order"
+      ],
+      "notes": "Runs the retained story-contract work-order executor tests through pytest. This guards the non-bespoke repair that consumes a validated work order, emits a validated accepted story_contract.json, refuses missing dream_packet input, and does not promote storyboard_plan.json into storyboard_packet.json.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_story_contract_work_order.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed"
+        ]
+      }
+    },
+    {
+      "name": "storyboard-panel-work-order-executor-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.storyboard_panel_work_order_executor"
+      ],
+      "seams": [
+        "pipeline_loop.storyboard_panel_work_order"
+      ],
+      "notes": "Runs the retained storyboard-panel work-order executor tests through pytest. This guards the non-bespoke repair that consumes a validated work order, emits a validated panel receipt plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_storyboard_panel_receipt.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "5 passed"
+        ]
+      }
+    },
+    {
+      "name": "panel-repair-work-order-executor-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.panel_repair_work_order_executor"
+      ],
+      "seams": [
+        "pipeline_loop.panel_repair_work_order"
+      ],
+      "notes": "Runs the retained panel-repair work-order executor tests through pytest. This guards the non-bespoke repair command that consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final image backends, and refuses provider eligibility until a public media probe passes. Fixture-backed tests prove wiring only; live Scillm/Tau image generation is proven by a live command receipt.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_fulfill_panel_repair_work_order.py -q"
       ],
       "expected": {
         "exit_code": 0,
@@ -533,7 +629,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "14 passed",
+        "16 passed",
           "PASS_DISPOSITION_REGISTRY",
           "\"immutable_goal_completion_claimed\": false",
           "DISPOSITION_LIVE_READBACK_OK"
@@ -886,7 +982,7 @@
           }
         ],
         "stdout_contains": [
-          "14 passed",
+          "16 passed",
           "\"terminal_step\": \"spoken_journal\"",
           "CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK"
         ],
@@ -898,17 +994,51 @@
     }
   ],
   "capability_claims": [
-    {
-      "id": "persona_dream.pipeline_crew_casting_command_wiring",
-      "description": "The run.sh pipeline run --step crew_casting command can write a schema-valid, receipt-backed crew_contract.json from a selector payload and reject out-of-pool selections. Fixture-backed evidence proves wiring only; live ask tau-dag selector proof is separate.",
-      "criticality": "important",
+  {
+    "id": "persona_dream.pipeline_crew_casting_command_wiring",
+    "description": "The run.sh pipeline run --step crew_casting command can write a schema-valid, receipt-backed crew_contract.json from a selector payload and reject out-of-pool selections. Fixture-backed evidence proves wiring only; live ask tau-dag selector proof is separate.",
+    "criticality": "important",
+    "evidence_required": {
+      "deterministic": true,
+      "live_e2e": true
+    }
+  },
+  {
+    "id": "persona_dream.image_generation_oauth_lane",
+    "description": "Persona Dream refuses unfunded API-key image lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth instead of the unsupported $create-image scillm backend.",
+    "criticality": "critical",
+    "evidence_required": {
+      "deterministic": true,
+      "live_e2e": true
+    }
+  },
+  {
+    "id": "persona_dream.story_contract_work_order_executor",
+      "description": "The retained story-contract work-order executor consumes a validated work order, emits a validated accepted story_contract.json plus fulfillment/review/stale receipts, and refuses to promote stale storyboard or Kling artifacts.",
+      "criticality": "critical",
       "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
+        "deterministic": true
       }
     },
-    {
-      "id": "persona_dream.cycle_journal_spoken_spine_contract",
+  {
+    "id": "persona_dream.storyboard_panel_work_order_executor",
+    "description": "The retained storyboard-panel work-order executor consumes a validated work order, emits a validated storyboard_panel_receipt.json plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
+    "criticality": "critical",
+    "evidence_required": {
+      "deterministic": true
+    }
+  },
+  {
+    "id": "persona_dream.panel_repair_work_order_executor",
+    "description": "The retained panel-repair work-order executor consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final-image backends, and refuses provider eligibility until a public media probe passes.",
+    "criticality": "critical",
+    "evidence_required": {
+      "deterministic": true,
+      "live_e2e": true
+    }
+  },
+  {
+    "id": "persona_dream.cycle_journal_spoken_spine_contract",
       "description": "The executable Persona Dream spine carries the autonomous cycle journal into a spoken_journal terminal node without requiring generate-lane dream_packet artifacts.",
       "criticality": "critical",
       "evidence_required": {
