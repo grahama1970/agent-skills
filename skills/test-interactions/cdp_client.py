@@ -289,12 +289,47 @@ class CDPClient:
             f"(function() {{"
             f"  var el = document.querySelector({json.dumps(selector)});"
             f"  if (!el) return {{ok: false, found: false, error: 'selector not found: ' + {json.dumps(selector)}}};"
-            f"  el.scrollIntoView({{block: 'center'}});"
-            f"  el.click();"
-            f"  return {{ok: true, found: true, tag: el.tagName, text: (el.textContent || '').slice(0, 80)}};"
+            f"  if (typeof el.scrollIntoView === 'function') el.scrollIntoView({{block: 'center', inline: 'center'}});"
+            f"  function pickHit() {{"
+            f"    var r = el.getBoundingClientRect();"
+            f"    var hit = r;"
+            f"    if (el.namespaceURI === 'http://www.w3.org/2000/svg') {{"
+            f"    var candidates = Array.from(el.querySelectorAll('image,circle,rect,path,text')).map(function(child) {{"
+            f"      var cr = child.getBoundingClientRect();"
+            f"      return {{x: cr.x, y: cr.y, width: cr.width, height: cr.height, area: cr.width * cr.height}};"
+            f"    }}).filter(function(cr) {{ return cr.width > 0 && cr.height > 0; }});"
+            f"    candidates.sort(function(a, b) {{ return b.area - a.area; }});"
+            f"    if (candidates.length) hit = candidates[0];"
+            f"    }}"
+            f"    return hit;"
+            f"  }}"
+            f"  var hit = pickHit();"
+            f"  var cx = hit.x + hit.width / 2;"
+            f"  var cy = hit.y + hit.height / 2;"
+            f"  if (cx < 1 || cy < 1 || cx > window.innerWidth - 1 || cy > window.innerHeight - 1) {{"
+            f"    window.scrollBy({{left: cx - window.innerWidth / 2, top: cy - window.innerHeight / 2, behavior: 'instant'}});"
+            f"    hit = pickHit();"
+            f"  }}"
+            f"  return {{ok: true, found: true, tag: el.tagName, text: (el.textContent || '').slice(0, 80),"
+            f"    x: hit.x + hit.width / 2, y: hit.y + hit.height / 2, width: hit.width, height: hit.height}};"
             f"}})()"
         )
-        return result or {"ok": False, "found": False, "error": "evaluate returned null"}
+        if not result or not result.get("ok"):
+            return result or {"ok": False, "found": False, "error": "evaluate returned null"}
+        if result.get("width", 0) <= 0 or result.get("height", 0) <= 0:
+            return {"ok": False, "found": True, "error": f"selector has zero-size bounds: {selector}"}
+        x = float(result["x"])
+        y = float(result["y"])
+        self.send("Input.dispatchMouseEvent", {"type": "mouseMoved", "x": x, "y": y})
+        self.send(
+            "Input.dispatchMouseEvent",
+            {"type": "mousePressed", "x": x, "y": y, "button": "left", "clickCount": 1},
+        )
+        self.send(
+            "Input.dispatchMouseEvent",
+            {"type": "mouseReleased", "x": x, "y": y, "button": "left", "clickCount": 1},
+        )
+        return result
 
     def type_into(self, selector: str, value: str) -> dict:
         result = self.evaluate(

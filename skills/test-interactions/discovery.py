@@ -245,6 +245,10 @@ def _is_expected_link_endpoint(item: dict[str, Any], base_origin: str) -> bool:
     return _is_static_file_href(href)
 
 
+def _should_skip_discovery_activation(item: dict[str, Any], base_origin: str) -> bool:
+    return _is_expected_link_endpoint(item, base_origin)
+
+
 def _is_replay_link_endpoint(item: dict[str, Any]) -> bool:
     return str(item.get("tag") or "").lower() == "a" and bool(str(item.get("href") or ""))
 
@@ -252,6 +256,14 @@ def _is_replay_link_endpoint(item: dict[str, Any]) -> bool:
 def _should_assert_visible_after_click(item: dict[str, Any]) -> bool:
     label = " ".join(str(item.get(key) or "").lower() for key in ("qid", "text", "title", "qsAction"))
     return not any(token in label for token in ("close", "dismiss", "cancel"))
+
+
+def _is_ignorable_log_entry(entry: dict[str, Any]) -> bool:
+    level = str(entry.get("level") or "").lower()
+    text = str(entry.get("text") or "")
+    if level == "warning" and "was preloaded using link preload but not used" in text:
+        return True
+    return False
 
 
 def _events_to_findings(run_id: str, events: list[dict[str, Any]], element: dict[str, Any], state: str) -> list[dict[str, Any]]:
@@ -271,6 +283,8 @@ def _events_to_findings(run_id: str, events: list[dict[str, Any]], element: dict
             ))
         elif method == "Log.entryAdded":
             entry = params.get("entry") or {}
+            if _is_ignorable_log_entry(entry):
+                continue
             if entry.get("level") in {"error", "warning"}:
                 findings.append(_finding(
                     run_id,
@@ -402,6 +416,7 @@ def discover_live_dom(
     findings: list[dict[str, Any]] = []
     state_graph: list[dict[str, Any]] = []
     covered = _manifest_coverage(existing_manifest)
+    target_origin = _url_origin(url)
 
     queue: list[tuple[int, str | None, dict[str, Any] | None]] = [(0, None, None)]
     visited: set[str] = set()
@@ -469,6 +484,15 @@ def discover_live_dom(
         for item in candidates:
             if actions_run >= max_actions or len(snapshots) >= max_states:
                 break
+            if _should_skip_discovery_activation(item, target_origin):
+                state_graph.append({
+                    "from": state,
+                    "to": state,
+                    "via_qid": item.get("qid"),
+                    "clicked": {"ok": True, "skipped": True, "reason": "link_endpoint_inspected_without_launch"},
+                    "depth": depth + 1,
+                })
+                continue
             selector = item["selector"]
             before_url = cdp.current_url()
             before_state = state

@@ -46,6 +46,7 @@ def test_grahamaco_update_plan_covers_resume_site_and_linkedin(tmp_path):
         "linkedin_profile_entry",
         "linkedin_profile_sync_plan",
         "site_build",
+        "site_interactions",
     ]
     assert "site/public/llms.txt" in result["steps"][3]["writes"]
     assert result["linkedin_boundary"] == {
@@ -72,3 +73,28 @@ def test_linkedin_sync_plan_requires_account_risk_ack(tmp_path):
         )
 
     assert "--accept-linkedin-account-risk is required" in str(exc.value)
+
+
+def test_constellation_contract_covers_graph_click_and_private_overview_nodes(tmp_path):
+    module = load_module()
+
+    manifest_path = tmp_path / "constellation-manifest.json"
+    module._write_constellation_contract_manifest(
+        url="http://127.0.0.1:43210/",
+        output_path=manifest_path,
+    )
+
+    manifest = manifest_path.read_text(encoding="utf-8")
+    assert '"path": "/#project-watch"' in manifest
+    assert '"contains": "/explore#project-watch"' in manifest
+    assert "[data-qid='explore:card:watch']" in manifest
+    assert "project-watch exists after root hash redirect" in manifest
+    assert '"wait_ready": "body"' in manifest
+    assert "[data-qid='constellation:jump:tau']" in manifest
+    assert '"contains": "/explore#project-tau"' in manifest
+    assert "[data-qid='explore:card:tau']" in manifest
+    assert "project-tau exists on Explore index" in manifest
+    assert "https://github.com/grahama1970/memory-public" in manifest
+    assert "https://github.com/grahama1970/sparta-public" in manifest
+    assert "[data-qid='constellation:node:project:memory'] .c-ring--private" in manifest
+    assert "[data-qid='constellation:node:project:sparta-explorer'] .c-ring--private" in manifest

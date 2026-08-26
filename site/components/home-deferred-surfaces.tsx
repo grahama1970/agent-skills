@@ -63,7 +63,8 @@ export function DeferredCapabilitySearch() {
 export function DeferredCapabilityConstellation() {
   const ref = useRef<HTMLDivElement>(null);
   const near = useNearViewport(ref);
-  const [Surface, setSurface] = useState<ComponentType | null>(null);
+  const [Surface, setSurface] =
+    useState<ComponentType<{ projectTargetBase?: '' | '/explore' }> | null>(null);
 
   useEffect(() => {
     if (!near || Surface) return;
@@ -74,7 +75,7 @@ export function DeferredCapabilityConstellation() {
 
   return (
     <div ref={ref} className="deferred-surface deferred-surface--constellation">
-      {Surface ? <Surface /> : null}
+      {Surface ? <Surface projectTargetBase="/explore" /> : null}
     </div>
   );
 }

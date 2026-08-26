@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "monitor-website",
   "trials": 2,
-  "proof_scope": "grahama.co update cascade guard for README/RESUME site surfaces, resume exports, llms.txt, ops-linkedin handoff planning, Calendly static public surfaces, no-OS-protocol email behavior, and mandatory test-interactions coverage for public site surfaces",
+  "proof_scope": "grahama.co update cascade guard for README/RESUME site surfaces, resume exports, llms.txt, ops-linkedin handoff planning, Calendly static public surfaces, no-OS-protocol email behavior, graph node click/private-overview behavior, root project hash redirects, and mandatory test-interactions coverage for public site surfaces",
   "claims": {
-    "proves": "the monitor-website update entrypoint exposes a one-command cascade plan for site, resume PDF/DOCX/Markdown/llms.txt, LinkedIn profile handoff JSON, and test-interactions coverage while preserving ops-linkedin's NOT_EXECUTED platform boundary; the production static build still emits a real /resume.docx download linked from /resume and llms.txt; static Calendly booking actions render from public metadata without an inline auto-embed or exported PAT; site and resume email controls render as in-page copy buttons, not mailto links that can open an OS application chooser; the public home and resume surfaces can be checked by live CDP discovery and replay",
+    "proves": "the monitor-website update entrypoint exposes a one-command cascade plan for site, resume PDF/DOCX/Markdown/llms.txt, LinkedIn profile handoff JSON, and test-interactions coverage while preserving ops-linkedin's NOT_EXECUTED platform boundary; the production static build still emits a real /resume.docx download linked from /resume and llms.txt; static Calendly booking actions render from public metadata without an inline auto-embed or exported PAT; site and resume email controls render as in-page copy buttons, not mailto links that can open an OS application chooser; the public home and resume surfaces can be checked by live CDP discovery and replay; the home constellation contract checks root project hash redirects, clicks a public graph node, and asserts Memory/Sparta private-work nodes link to public overview repos with dashed private rings",
     "does_not_prove": "live GitHub Pages deployment, formal design certification, actual LinkedIn platform mutation, broad disclosure-map health, ATS semantic parse quality, Calendly booking completion, or Calendly API availability in CI"
   },
   "cases": [
@@ -15,7 +15,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && skills/monitor-website/run.sh update --plan --linkedin-sync-plan --accept-linkedin-account-risk --output-dir /tmp/monitor-website-agentic-linkedin --json"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && skills/monitor-website/run.sh update --plan --build --linkedin-sync-plan --accept-linkedin-account-risk --output-dir /tmp/monitor-website-agentic-linkedin --json"
       ],
       "expected": {
         "exit_code": 0,
@@ -31,15 +31,15 @@
       }
     },
     {
-      "name": "grahamaco-test-interactions-live-gate",
+      "name": "grahamaco-test-interactions-local-static-gate",
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "timeout_seconds": 240,
+      "timeout_seconds": 420,
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && out=/tmp/monitor-website-agentic-test-interactions-$$ && skills/monitor-website/run.sh interaction-check --url https://grahama.co/ --resume-url https://grahama.co/resume --output-dir \"$out\" --json"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && (cd site && npm run build >/tmp/monitor-website-agentic-local-build.log) && out=/tmp/monitor-website-agentic-test-interactions-$$ && skills/monitor-website/run.sh interaction-check --local-static --output-dir \"$out\" --json"
       ],
       "expected": {
         "exit_code": 0,
@@ -48,12 +48,13 @@
           "\"status\": \"PASS\"",
           "\"surface\": \"home\"",
           "\"surface\": \"resume\"",
+          "\"surface\": \"home-constellation-contract\"",
           "\"discovery_findings\": 0"
         ]
       },
       "readback": true,
-      "proves": "The live public grahama.co and /resume surfaces pass test-interactions discovery and replay through the monitor-website entrypoint.",
-      "does_not_prove": "A future deployment has occurred; run again against the post-deploy URL."
+      "proves": "The built local grahama.co static export and /resume surfaces pass test-interactions discovery and replay through the monitor-website entrypoint before commit/deploy.",
+      "does_not_prove": "The public host has received the deployment; run interaction-check against the post-deploy live URL."
     },
     {
       "name": "linkedin-sync-plan-requires-risk-ack",

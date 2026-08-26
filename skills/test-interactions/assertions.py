@@ -11,6 +11,7 @@ Supported assertions:
   assert_count                           — element count in {min, max} range
   assert_attribute                       — element attribute value (exact or contains)
   assert_css                             — computed CSS property value
+  assert_js                              — custom live-DOM predicate for semantic UI contracts
   assert_value                           — input/textarea/select current value
   assert_url                             — current page URL (exact or contains)
   assert_enabled / assert_disabled       — interactive element state
@@ -192,6 +193,34 @@ def run_assertions(cdp: CDPClient, interaction: dict, wait_ms: int) -> list[dict
             return (True, f"{prop}: {val!r}")
         passed, evidence = _retry(check, timeout)
         _append(results, f"assert_css({sel}, {prop})", passed, evidence)
+
+    # assert_js — semantic live-DOM predicate for components whose behavior is
+    # not captured by generic selector/link checks. The script must return the
+    # observed value; expected may assert truthy, exact equality, or substring.
+    assert_js = interaction.get("assert_js")
+    if assert_js:
+        checks = assert_js if isinstance(assert_js, list) else [assert_js]
+        for index, spec in enumerate(checks, start=1):
+            script = spec["script"] if isinstance(spec, dict) else str(spec)
+            label = spec.get("label", f"assert_js[{index}]") if isinstance(spec, dict) else f"assert_js[{index}]"
+            expected = spec.get("equals") if isinstance(spec, dict) else None
+            contains = spec.get("contains") if isinstance(spec, dict) else None
+            truthy = spec.get("truthy", expected is None and contains is None) if isinstance(spec, dict) else True
+
+            def check(script=script, expected=expected, contains=contains, truthy=truthy):
+                value = cdp.evaluate(script)
+                if expected is not None:
+                    ok = value == expected
+                    return (ok, f"value={value!r} {'==' if ok else '!='} {expected!r}")
+                if contains is not None:
+                    ok = contains in str(value)
+                    return (ok, f"value={value!r} {'contains' if ok else 'missing'} {contains!r}")
+                if truthy:
+                    return (bool(value), f"value={value!r}")
+                return (True, f"value={value!r}")
+
+            passed, evidence = _retry(check, timeout)
+            _append(results, label, passed, evidence)
 
     # assert_value
     assert_value = interaction.get("assert_value")

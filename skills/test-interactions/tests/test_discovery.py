@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from discovery import _build_manifest, _events_to_findings, _is_expected_link_endpoint, _is_expected_navigation, _is_replay_link_endpoint, _manifest_coverage, _manifest_selector_for_qid, _should_assert_visible_after_click, state_fingerprint
+from discovery import _build_manifest, _events_to_findings, _is_expected_link_endpoint, _is_expected_navigation, _is_ignorable_log_entry, _is_replay_link_endpoint, _manifest_coverage, _manifest_selector_for_qid, _should_assert_visible_after_click, _should_skip_discovery_activation, state_fingerprint
 
 
 class DiscoveryHelperTests(unittest.TestCase):
@@ -75,6 +75,16 @@ class DiscoveryHelperTests(unittest.TestCase):
         self.assertTrue(interaction["allow_external_navigation"])
         self.assertEqual(interaction["action"], "wait")
         self.assertIn("without launching", interaction["description"])
+        self.assertTrue(
+            _should_skip_discovery_activation(
+                {
+                    "qid": "hero:link:repo",
+                    "tag": "a",
+                    "href": "https://github.com/grahama1970/agent-skills",
+                },
+                "https://grahama.co",
+            )
+        )
 
     def test_generated_manifest_marks_static_file_links(self):
         manifest = _build_manifest("https://grahama.co/resume", [{
@@ -180,6 +190,21 @@ class DiscoveryHelperTests(unittest.TestCase):
             {"method": "Network.responseReceived", "params": {"response": {"status": 404, "url": "http://example.test/missing"}}},
         ], {"qid": "fixture:throws", "selector": "[data-qid='fixture:throws']", "tag": "button"}, "state-1")
         self.assertEqual([item["finding_kind"] for item in findings], ["console_exception", "network_failure"])
+
+    def test_preload_unused_warning_is_not_actionable_discovery_failure(self):
+        entry = {
+            "level": "warning",
+            "source": "javascript",
+            "text": "The resource http://127.0.0.1:58547/fonts/fraunces-site-subset.woff2 was preloaded using link preload but not used within a few seconds from the window's load event.",
+        }
+        self.assertTrue(_is_ignorable_log_entry(entry))
+        findings = _events_to_findings(
+            "run-1",
+            [{"method": "Log.entryAdded", "params": {"entry": entry}}],
+            {"qid": "fixture:link", "selector": "[data-qid='fixture:link']", "tag": "a"},
+            "state-1",
+        )
+        self.assertEqual(findings, [])
 
     def test_anchor_navigation_is_expected_not_drift(self):
         item = {

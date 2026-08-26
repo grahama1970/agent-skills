@@ -160,13 +160,18 @@ function footprintOf(n: { type: string; label: string; skillCount?: number }): n
  * projects to an outer one so the structure stays readable. Image-filled
  * glowing ovals; private work a dashed ring. Warm brass/ember/sage palette.
  */
-export function CapabilityConstellation() {
+type CapabilityConstellationProps = {
+  projectTargetBase?: '' | '/explore';
+};
+
+export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityConstellationProps = {}) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [inspector, setInspector] = useState<InspectorState | null>(null);
   const [, force] = useState(0); // bump to re-render from mutated sim positions
-  const drag = useRef<{ id: string } | null>(null);
+  const drag = useRef<{ id: string; startX: number; startY: number } | null>(null);
   const moved = useRef(false); // distinguishes a drag from a click on project nodes
+  const pointerActivated = useRef<string | null>(null);
 
   // Stable simulation nodes/edges (built once; d3 mutates them across ticks).
   const { simNodes, simEdges, byId } = useMemo(() => {
@@ -241,13 +246,16 @@ export function CapabilityConstellation() {
     const move = (ev: PointerEvent) => {
       const d = drag.current;
       if (!d) return;
-      ev.preventDefault();
       const node = byId.get(d.id);
       if (!node) return;
+      const dx = ev.clientX - d.startX;
+      const dy = ev.clientY - d.startY;
+      if (!moved.current && Math.hypot(dx, dy) < 5) return;
+      moved.current = true;
+      ev.preventDefault();
       const [x, y] = toLocal(ev.clientX, ev.clientY);
       node.fx = x;
       node.fy = y;
-      moved.current = true; // a real drag — suppress the click-through navigation
       force((t) => t + 1);
     };
     const up = () => {
@@ -270,10 +278,9 @@ export function CapabilityConstellation() {
     };
   }, [byId]);
 
-  const startDrag = (n: SimNode) => (ev: React.PointerEvent) => {
+  const startDrag = (n: SimNode) => (ev: React.PointerEvent | React.MouseEvent) => {
     if (n.type === 'practice') return; // hub stays put
-    ev.preventDefault();
-    drag.current = { id: n.id };
+    drag.current = { id: n.id, startX: ev.clientX, startY: ev.clientY };
     moved.current = false;
     n.fx = n.x;
     n.fy = n.y;
@@ -407,6 +414,22 @@ export function CapabilityConstellation() {
 
             const isProj = n.type === 'project';
             const priv = n.visibility && n.visibility !== 'public';
+            const projectHref = priv && n.href ? n.href : `${projectTargetBase}#project-${n.slug}`;
+            const externalOverview = !!(priv && n.href);
+            const activateProject = () => {
+              if (!isProj || !n.slug || moved.current || drag.current?.id !== n.id || pointerActivated.current === n.id) return;
+              if (externalOverview && n.href) {
+                pointerActivated.current = n.id;
+                window.open(n.href, '_blank', 'noopener,noreferrer');
+                return;
+              }
+              pointerActivated.current = n.id;
+              if (projectTargetBase) {
+                window.location.href = `${projectTargetBase}#project-${n.slug}`;
+              } else {
+                window.location.hash = `project-${n.slug}`;
+              }
+            };
             const inner = (
               <g
                 className={`c-node c-node--${n.type}${on ? '' : ' is-dim'}`}
@@ -419,6 +442,9 @@ export function CapabilityConstellation() {
                 onFocus={inspectAtPointer(n)}
                 onBlur={hideInspector}
                 onPointerDown={startDrag(n)}
+                onPointerUp={activateProject}
+                onMouseDown={startDrag(n)}
+                onMouseUp={activateProject}
                 style={{ cursor: 'grab' }}
               >
                 <circle cx={x} cy={y} r={r} className="c-core" />
@@ -439,7 +465,7 @@ export function CapabilityConstellation() {
                   cy={y}
                   r={r}
                   className={`c-ring${priv ? ' c-ring--private' : ''}`}
-                  style={{ stroke: glow, filter: `drop-shadow(0 0 7px ${glow}aa)` }}
+                  style={{ stroke: glow, filter: priv ? 'none' : `drop-shadow(0 0 7px ${glow}aa)` }}
                 />
                 <LensMark x={x} y={y - r - 6} lens={n.lens} color={glow} />
                 <text
@@ -460,8 +486,6 @@ export function CapabilityConstellation() {
                 )}
               </g>
             );
-            const projectHref = priv && n.href ? n.href : `#project-${n.slug}`;
-            const externalOverview = !!(priv && n.href);
             return isProj && n.slug ? (
               <a
                 key={n.id}
@@ -481,7 +505,29 @@ export function CapabilityConstellation() {
                     : n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`
                 }
                 onClick={(e) => {
-                  if (moved.current) e.preventDefault(); // was a drag, not a click
+                  if (moved.current) {
+                    e.preventDefault(); // was a drag, not a click
+                    moved.current = false;
+                    return;
+                  }
+                  if (pointerActivated.current === n.id) {
+                    e.preventDefault();
+                    pointerActivated.current = null;
+                    return;
+                  }
+                  if (externalOverview && n.href) {
+                    e.preventDefault();
+                    window.open(n.href, '_blank', 'noopener,noreferrer');
+                    return;
+                  }
+                  if (!externalOverview && n.slug) {
+                    e.preventDefault();
+                    if (projectTargetBase) {
+                      window.location.href = `${projectTargetBase}#project-${n.slug}`;
+                    } else {
+                      window.location.hash = `project-${n.slug}`;
+                    }
+                  }
                 }}
               >
                 {inner}

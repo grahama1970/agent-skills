@@ -348,11 +348,166 @@ def _run_test_interactions_surface(
     }
 
 
+def _write_constellation_contract_manifest(*, url: str, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "app": "grahama.co",
+                "base_url": url.rstrip("/"),
+                "surfaces": [
+                    {
+                        "name": "home-project-hash-redirect",
+                        "path": "/#project-watch",
+                        "wait_ready": "[data-qid='explore:card:watch']",
+                        "wait_ready_timeout_ms": 20000,
+                        "qid_compliance": False,
+                        "url_guard": f"{url.rstrip('/')}/explore#project-watch",
+                        "elements": [
+                            {
+                                "name": "root-project-hash-routes-to-explore-card",
+                                "interactions": [
+                                    {
+                                        "action": "wait",
+                                        "target": "[data-qid='explore:card:watch']",
+                                        "description": "Direct root project hash redirects to the Explore card for that project",
+                                        "assert_url": {"contains": "/explore#project-watch"},
+                                        "assert_visible": "[data-qid='explore:card:watch']",
+                                        "assert_js": [
+                                            {
+                                                "label": "project-watch exists after root hash redirect",
+                                                "script": "Boolean(document.querySelector('#project-watch [data-qid=\"explore:card:watch\"], [data-qid=\"explore:card:watch\"]'))",
+                                                "truthy": True,
+                                            }
+                                        ],
+                                    }
+                                ],
+                            }
+                        ],
+                    },
+                    {
+                        "name": "home-constellation-contract",
+                        "path": "/",
+                        "wait_ready": "body",
+                        "wait_ready_timeout_ms": 20000,
+                        "qid_compliance": False,
+                        "url_guard": url.rstrip("/"),
+                        "elements": [
+                            {
+                                "name": "constellation-visible-contract",
+                                "interactions": [
+                                    {
+                                        "action": "scroll",
+                                        "direction": "down",
+                                        "amount": 1900,
+                                        "description": "Scroll to deferred capability constellation",
+                                        "wait_ms": 900,
+                                        "assert_selector": "[data-qid='constellation:jump:tau']",
+                                        "assert_visible": "[data-qid='constellation:jump:tau']",
+                                    },
+                                    {
+                                        "action": "click",
+                                        "target": "[data-qid='constellation:jump:tau']",
+                                        "description": "Click public homepage graph node and route to the complete Explore project card",
+                                        "wait_ms": 700,
+                                        "assert_url": {"contains": "/explore#project-tau"},
+                                        "assert_visible": "[data-qid='explore:card:tau']",
+                                        "assert_js": [
+                                            {
+                                                "label": "project-tau exists on Explore index",
+                                                "script": "Boolean(document.querySelector('#project-tau [data-qid=\"explore:card:tau\"], [data-qid=\"explore:card:tau\"]'))",
+                                                "truthy": True,
+                                            }
+                                        ],
+                                    },
+                                    {
+                                        "action": "wait",
+                                        "target": "[data-qid='constellation:jump:memory']",
+                                        "description": "Memory graph node is rendered as public overview only",
+                                        "assert_attribute": {
+                                            "selector": "[data-qid='constellation:jump:memory']",
+                                            "attribute": "href",
+                                            "contains": "https://github.com/grahama1970/memory-public",
+                                        },
+                                        "assert_js": [
+                                            {
+                                                "label": "memory graph node has dashed private ring",
+                                                "script": "Boolean(document.querySelector(\"[data-qid='constellation:node:project:memory'] .c-ring--private\"))",
+                                                "truthy": True,
+                                            },
+                                            {
+                                                "label": "memory graph node declares public overview",
+                                                "script": "Boolean(document.querySelector(\"[data-qid='constellation:node:project:memory'] .c-priv\"))",
+                                                "truthy": True,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        "action": "wait",
+                                        "target": "[data-qid='constellation:jump:sparta-explorer']",
+                                        "description": "Sparta graph node is rendered as public overview only",
+                                        "assert_attribute": {
+                                            "selector": "[data-qid='constellation:jump:sparta-explorer']",
+                                            "attribute": "href",
+                                            "contains": "https://github.com/grahama1970/sparta-public",
+                                        },
+                                        "assert_js": [
+                                            {
+                                                "label": "sparta graph node has dashed private ring",
+                                                "script": "Boolean(document.querySelector(\"[data-qid='constellation:node:project:sparta-explorer'] .c-ring--private\"))",
+                                                "truthy": True,
+                                            }
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def _run_constellation_contract(*, url: str, output_dir: Path) -> dict:
+    surface_dir = output_dir / "home-constellation-contract"
+    manifest_path = surface_dir / "manifest.json"
+    run_dir = surface_dir / "run"
+    _write_constellation_contract_manifest(url=url, output_path=manifest_path)
+    run_step = _run_step(
+        "test_interactions_run_home_constellation_contract",
+        [
+            "bash",
+            str(REPO / "skills/test-interactions/run.sh"),
+            "run",
+            "--manifest",
+            str(manifest_path),
+            "--output-dir",
+            str(run_dir),
+        ],
+        timeout_seconds=300,
+    )
+    results_path = run_dir / "results.json"
+    return {
+        "surface": "home-constellation-contract",
+        "url": url,
+        "status": "PASS",
+        "manifest": str(manifest_path),
+        "results": str(results_path),
+        "commands": [run_step],
+    }
+
+
 def interaction_check(*, url: str, resume_url: str, output_dir: Path) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
     surfaces = [
         _run_test_interactions_surface(surface="home", url=url, output_dir=output_dir),
         _run_test_interactions_surface(surface="resume", url=resume_url, output_dir=output_dir),
+        _run_constellation_contract(url=url, output_dir=output_dir),
     ]
     result = {
         "schema": "monitor-website.test_interactions.v1",
@@ -382,12 +537,8 @@ def _run_static_site_interaction_check(output_dir: Path) -> dict:
         proc = subprocess.Popen(
             [
                 "python3",
-                "-m",
-                "http.server",
+                str(REPO / "skills/monitor-website/scripts/static_export_server.py"),
                 str(port),
-                "--bind",
-                "127.0.0.1",
-                "--directory",
                 str(site_out),
             ],
             cwd=REPO,
@@ -805,6 +956,9 @@ def main() -> None:
                 resume_url = args[index + 1]
             except IndexError as exc:
                 raise SystemExit("--resume-url requires a URL") from exc
+        if "--local-static" in args:
+            print(json.dumps(_run_static_site_interaction_check(output_dir), indent=2))
+            return
         print(json.dumps(interaction_check(url=url, resume_url=resume_url, output_dir=output_dir), indent=2))
         return
     if cmd in {"update", "grahamaco-update", "monitor-grahamaco"}:

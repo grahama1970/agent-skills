@@ -3539,7 +3539,9 @@ a:hover .c-img { opacity: 1; }
   stroke-width: 2;
 }
 .c-ring--private {
-  stroke-dasharray: 5 4;
+  stroke-width: 3.5;
+  stroke-dasharray: 6 5;
+  stroke-linecap: round;
 }
 .c-node {
   transition: opacity 0.2s ease;

@@ -24,6 +24,11 @@ function replayHighlight(target: HTMLElement | null) {
   }, HIGHLIGHT_MS);
 }
 
+function redirectMissingRootProjectHash(hash: string, target: HTMLElement | null) {
+  if (target || !hash.startsWith('#project-') || window.location.pathname !== '/') return;
+  window.location.replace(`/explore${hash}`);
+}
+
 export function ProjectTargetHighlighter() {
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -33,7 +38,11 @@ export function ProjectTargetHighlighter() {
       if (!hash || hash === '#') return;
       window.requestAnimationFrame(() => replayHighlight(targetFromHash(hash)));
     };
-    const onHashChange = () => replayHighlight(targetFromHash(window.location.hash));
+    const onHashChange = () => {
+      const target = targetFromHash(window.location.hash);
+      redirectMissingRootProjectHash(window.location.hash, target);
+      replayHighlight(target);
+    };
 
     document.addEventListener('click', onClick);
     window.addEventListener('hashchange', onHashChange);
