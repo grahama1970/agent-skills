@@ -1,7 +1,7 @@
 ---
 name: best-practices-bespoke-design
 description: >
-  Evidence-first art direction and review rules for creating digital experiences
+  Advisory-first, evidence-grounded art direction and review rules for creating digital experiences
   that feel genuinely custom to one brand instead of template-derived. Use when
   a user asks for bespoke web design, a distinctive visual world, personality-led
   art direction, an analysis of what makes a designer's work unique, or an audit
@@ -18,6 +18,8 @@ triggers:
 metadata:
   short-description: Evidence-backed visual-world design and bespoke-design audit
 provides:
+  - targeted-design-advice
+  - targeted-design-repair-slice
   - bespoke-design-brief
   - brand-world-grammar
   - visual-distinctiveness-audit
@@ -55,7 +57,11 @@ domains:
 ## Position
 
 A bespoke interface is not a fashionable component library with unusual colors.
-It is a traceable transformation:
+For day-to-day project work, this skill is a practical design advisor first:
+it should identify the smallest visible change that makes a site more specific,
+useful, and coherent for its real audience.
+
+For new design directions, the deeper model is a traceable transformation:
 
 **brand and audience truth → personality → narrative premise → visual grammar →
 responsive component system → rendered proof.**
@@ -79,11 +85,15 @@ The finished work must be:
    breakpoints; it is not confined to a hero illustration.
 5. **Inclusive and performant** — personality does not excuse inaccessible type,
    contrast, focus, motion, controls, or poor field performance.
-6. **Provable** — acceptance is based on source-backed artifacts, rendered screens,
-   browser behavior, and adversarial review, not prose confidence.
+6. **Grounded** — conclusions are tied to source context, rendered screens, or
+   user-provided artifacts at the tier being used. Formal proof packets are
+   required only for formal certification claims.
 
-When evidence is missing, report `NOT_TESTED`, `NOT_ESTABLISHED`, or `BLOCKED`.
-Never summarize missing proof as success.
+When evidence needed for the selected tier is missing, report `NOT_TESTED`,
+`NOT_ESTABLISHED`, or `BLOCKED`. Missing formal receipts, blind raters, crop
+manifests, or G0-G20 gates are not design failures in advisory or ordinary
+release-risk work; they are simply outside the selected tier unless the human
+asked for formal certification.
 
 ## Modes
 
@@ -95,40 +105,83 @@ Use one of three explicit modes:
 - **AUDIT** — test an existing design for specificity, coherence, usability,
   accessibility, system depth, and template residue.
 
+## Default Operating Posture
+
+Default to **targeted advisory repair**, not formal certification.
+
+This skill is commonly used to improve a live project page such as
+`grahama.co`, `grahama.co/resume`, a README, or a project microsite. In that
+context, the correct output is usually a short, source-grounded diagnosis and
+one implementable next slice: copy tone, visual hierarchy, interaction friction,
+card treatment, metadata, responsive behavior, or a section-level composition
+repair.
+
+Do not run or demand proof packets, blind raters, G0-G20 gates, formal crop
+manifests, reviewer swarms, or durable receipt validation unless one of these is
+true:
+
+- the human explicitly asks for `READY`, formal certification, a final gate, or
+  adversarial distinctiveness proof;
+- a deployment/release policy requires that formal gate;
+- the disputed claim is itself a proof claim, such as accessibility,
+  performance, originality, deployed behavior, or "verified".
+
+For ordinary advisory work, use available screenshots, live renders, source
+files, user-provided critique, and local browser checks when relevant. If those
+are enough to answer the design question, stop at the recommendation or targeted
+patch. Do not convert advisory design work into a reporting campaign.
+
 ## Evidence Tiers
 
 Do not run the formal certification path when the human only needs a design
 decision, release-risk read, or next repair slice. Choose the lightest tier that
 answers the current decision and state the tier in every report.
 
-| Tier | Use when | Evidence required | Legal conclusion |
+| Tier | Use when | Evidence required | Allowed conclusion |
 | --- | --- | --- | --- |
-| `directional` | Choosing or improving a concept | source claims, rendered crops, concrete critique | `promising`, `needs repair`, or `not established` |
-| `release-risk` | Deciding whether to keep, patch, or deploy a public candidate | current local render, focused checks, known gaps, highest-risk reviewer input | `credible with gaps`, `hold release`, or `ready for bounded deployment` |
+| `directional` | Choosing or improving a concept, copy, section, or component | source context, user-provided artifact or screenshot when available, concrete critique | `promising`, `needs repair`, or `not established` |
+| `release-risk` | Deciding whether to keep, patch, commit, or deploy a public candidate | current render or screenshot, focused local checks for changed behavior, known gaps | `credible with gaps`, `hold release`, or `ready for bounded deployment` |
 | `formal-certification` | The human asks for `READY`, a final gate, or adversarial proof | every required G0-G20 gate with current receipts | `READY` only when every gate is `PASS` |
 
-Default to `release-risk` for live website work. Escalate to
+Default to `directional` for critique, copy, visual hierarchy, and micro-polish.
+Use `release-risk` before committing, pushing, deploying, or claiming a live
+public surface is ready. Escalate to
 `formal-certification` only when the human explicitly asks for formal READY,
 when a deployment policy requires it, or when the disputed claim is itself a
 formal gate. A `release-risk` pass is not a `formal-certification` pass.
 
 ## Call Budget
 
-External reviewers are bounded by tier. No reviewer call may run until the local
-checks for the surface are `PASS` or explicitly waived with a reason. Exceeding
-the budget is a process failure, not an evidence upgrade.
-Reviewer calls must not diagnose local CSS/source defects, missing sections,
-stale receipts, missing crops, or harness failures; those stay in deterministic repair lanes. Web review before local artifacts are current is instability.
+External reviewers are optional advisory inputs unless the tier is
+`formal-certification`. No reviewer call may run until local inspection has
+identified the actual surface and question, unless the human is explicitly asking
+for early ideation. Exceeding the budget is a process failure, not an evidence
+upgrade. Reviewer calls must not diagnose local CSS/source defects, missing
+sections, stale receipts, missing crops, or harness failures; those stay in
+deterministic repair lanes. Web review before local artifacts are current is
+instability.
 
 | Tier | Local checks | Reviewer providers | Submissions | Controlled tabs |
 | --- | --- | --- | --- | --- |
-| `directional` | required | 0-1 | one compact packet | reviewer + site |
-| `release-risk` | required | 0-2 | one compact packet per provider | one per provider + site |
+| `directional` | inspect available artifact | 0-1 | one compact packet only if useful | shared reviewer window or none |
+| `release-risk` | required for changed surface | 0-2 | one compact packet per provider only if local evidence is inconclusive | shared reviewer window or one per provider |
 | `formal-certification` | required | pre-registered G11 set | one per rater seat | one per provider + site |
 
 ## Required Inputs
 
-Before art direction, collect or mark missing:
+For targeted advisory changes, collect only what is needed for the current
+slice:
+
+- target surface, route, screenshot, file, or section;
+- primary audience and job for that surface;
+- the visible problem or critique to answer;
+- source or live render when the recommendation depends on current behavior;
+- implementation boundary: advise only, patch local code, or verify live.
+
+Do not block a small repair because a full brand brief, competitor set, or formal
+proof packet is absent.
+
+Before full art direction, collect or mark missing:
 
 - authoritative brand/product claims and source locations;
 - primary audiences, jobs, anxieties, desired feelings, and decisions;
@@ -241,7 +294,8 @@ designer, or stakeholder says it feels special.
 ### Reliability Guard — Candidate Binding and Two Verdicts
 
 Do not collapse practical site judgment and formal proof status into one word.
-Every run must report two separate verdicts when both are relevant:
+Use two verdicts only when both are relevant. Advisory work usually needs only
+the practical design verdict and next slice.
 
 - `release_design_verdict` — whether the rendered site is coherent, useful, and
   appropriate for the stated audience based on the current review bundle.
@@ -272,18 +326,19 @@ screenshots or reviewer outputs.
 
 ### Live Collaboration Ledger
 
-For live site work, audits, amend loops, and disputed reviews, keep a compact
-phase ledger visible to the human. If the human cannot tell where the agent is,
-what is known, what is unknown, and what command comes next, the process is
-anti-collaborative and the gate is `NOT_READY`.
+For multi-step live site work, audits, amend loops, and disputed reviews, keep a
+compact phase ledger visible to the human. If the human cannot tell where the
+agent is, what is known, what is unknown, and what command comes next, the
+process is anti-collaborative.
 
-Every status update and handoff must name:
+For simple advisory answers, do not emit a heavy ledger. For multi-step work,
+status updates and handoffs should name:
 
 `tier=<tier> lane=<lane> gate=<gate>:<status> artifact=<path> next=<command>`
 
 Expand with facts, unknowns, blocker, and stop condition on handoff, blocker,
-tier change, or human status request. Do not make every normal update a nine-field
-report if the compact stamp answers where the work is.
+tier change, or human status request. Do not make every normal update a
+nine-field report if the compact stamp answers where the work is.
 
 Only one lane may be primary at a time. If implementation, screenshot capture,
 reviewer submission, and skill-contract repair all appear relevant, declare the
@@ -296,8 +351,8 @@ tool-debug session run as one blended task.
 The normal loop is small and visible:
 
 1. Name the current tier, lane, and stop condition.
-2. Capture or inspect section/component/page-state crops for the surface under
-   discussion.
+2. Inspect the current source, screenshot, browser render, or section crop for
+   the surface under discussion.
 3. Ask one direct design question: what should change next, and why?
 4. Apply the smallest repair that improves the brand-derived world without
    broad redesign.
@@ -330,6 +385,10 @@ Use the full phase detail only when it helps the current tier:
 | 7 System | component rules and states | identity exists only on homepage |
 
 ### Phase 8 — Render the Stress Corpus
+
+Use this phase for formal certification, significant redesigns, or release-risk
+work where responsive behavior is the risk. Do not require the stress corpus for
+ordinary copy, hierarchy, micro-interaction, metadata, or card-polish advice.
 
 Render at minimum:
 
@@ -463,8 +522,8 @@ Reject these shortcuts:
 Every required gate uses one of `PASS`, `FAIL`, `NOT_TESTED`, or `BLOCKED`.
 `READY` is legal only in `formal-certification` tier when every required gate is
 `PASS`. In `directional` and `release-risk` tiers, report a bounded decision and
-the missing formal gates; do not block useful repair work on evidence that is not
-needed for the current decision.
+known gaps. Do not list missing formal gates as failures, and do not block useful
+repair work on evidence that is not needed for the current decision.
 
 Formal certification details live in `references/formal-certification.md`. Keep
 the main workflow lean; load that reference only when formal READY is actually
@@ -486,7 +545,23 @@ design gate in either direction.
 
 ## Review Output
 
-Return:
+For targeted advisory and ordinary release-risk work, return:
+
+```markdown
+## Position
+One sentence: what is working, what feels generic, or what is off.
+## Evidence Used
+The screenshot, URL, source file, or user-provided critique inspected.
+## Recommended Slice
+The smallest change that improves specificity, clarity, or usefulness.
+## Why
+How the change supports the audience job and the site's personality.
+## Not Evaluated
+Formal receipts, broad stress corpus, accessibility/performance, or live deploy
+checks that were not part of this tier.
+```
+
+For formal certification or durable receipt requests, return:
 
 ```markdown
 ## Position

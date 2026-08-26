@@ -28,6 +28,7 @@ python -m json.tool "$ROOT/fixtures/valid-attachment-review-bundle.json" >/dev/n
 python -m json.tool "$ROOT/fixtures/valid-url-rater.json" >/dev/null
 python -m json.tool "$ROOT/fixtures/valid-attachment-rater.json" >/dev/null
 python -m json.tool "$ROOT/fixtures/valid-blocked-transport.json" >/dev/null
+python -m json.tool "$ROOT/fixtures/agentic_eval.json" >/dev/null
 
 for script in \
   "$ROOT/scripts/validate_receipt.py" \
@@ -50,6 +51,7 @@ python "$ROOT/scripts/validate_review_transport.py" "$ROOT/fixtures/valid-url-ra
 python "$ROOT/scripts/validate_review_transport.py" "$ROOT/fixtures/valid-attachment-rater.json" >/dev/null
 python "$ROOT/scripts/validate_review_transport.py" "$ROOT/fixtures/valid-blocked-transport.json" >/dev/null
 python "$ROOT/scripts/prove_sequential_threshold.py" --yes-required 4 --seat-cap 5 >/dev/null
+python "$ROOT/scripts/check_advisory_contract.py" >/dev/null
 
 if python "$ROOT/scripts/validate_receipt.py" "$ROOT/fixtures/failing-receipt.json" >/dev/null 2>&1; then
   fail "negative fixture unexpectedly passed"
