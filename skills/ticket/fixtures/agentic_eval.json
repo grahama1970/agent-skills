@@ -89,6 +89,22 @@
         ]
       },
       "notes": "Regression guard for the ticket policy that local deterministic proof is the default and GitHub Actions is an explicit, narrow opt-in path."
+    },
+    {
+      "name": "bug-preview-does-not-require-unrelated-preflight",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && ./run.sh bug 'Ticket preview preflight false-positive guard' --target skills/ticket --observed 'A Codex pre-tool hook falsely blocked ticket creation as a preflight-required batch operation while filing a non-LLM issue.' --expected 'Ticket preview generation stays a local issue-body compiler and does not invoke or require unrelated preflight.' --repro 'Preview this ticket with no --apply and inspect stdout.' --proof 'skills/agentic-evals/run.sh run skills/ticket/fixtures/agentic_eval.json --case bug-preview-does-not-require-unrelated-preflight --output /tmp/ticket_preflight_false_positive_eval.json shows READY' --route backend_python_or_skill_runtime --lane be --agent coder --label type:bug > /tmp/ticket_preflight_false_positive_preview.out 2>&1 && grep -q 'Ticket preview preflight false-positive guard' /tmp/ticket_preflight_false_positive_preview.out && ! grep -q 'Before running batch LLM operations' /tmp/ticket_preflight_false_positive_preview.out && ! grep -q 'batch-quality/cli.py preflight' /tmp/ticket_preflight_false_positive_preview.out && grep -q 'route:backend_python_or_skill_runtime' /tmp/ticket_preflight_false_positive_preview.out && grep -q 'lane:be' /tmp/ticket_preflight_false_positive_preview.out"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "notes": "Regression guard for the 2026-08-26 incident where a local Codex hook misclassified non-LLM ticket creation as requiring preflight. This proves the ticket CLI preview path is local and does not emit or depend on that gate; Codex PreToolUse hook behavior must be tested separately at the hook layer."
     }
   ]
 }
