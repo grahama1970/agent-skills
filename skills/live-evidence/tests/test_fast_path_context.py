@@ -1,7 +1,13 @@
 import asyncio
+import time
 
 from live_evidence.fast_path import stream_fast_answer
-from live_evidence.models import CardStatus, EvidenceCard
+from live_evidence.models import (
+    CardPublicationDecision,
+    CardStatus,
+    EvidenceCard,
+    PublicationStatus,
+)
 from live_evidence.solver import SolverChunk, SolverOutcome
 
 
@@ -46,8 +52,50 @@ class Solver:
         )
 
 
+class HiddenDraftState:
+    def __init__(self) -> None:
+        self.decision = None
+        self.published = []
+
+    async def publish_card_fenced(self, card):
+        self.published.append(card)
+        if len(self.published) == 1:
+            self.decision = CardPublicationDecision(
+                status=PublicationStatus.HELD,
+                reason_codes=["insufficient_card_not_publishable"],
+                card_id=card.card_id,
+                question_id=card.question_id,
+                question_revision=card.question_revision,
+                answer_revision=card.question_revision,
+            )
+            return None
+        self.decision = CardPublicationDecision(
+            status=PublicationStatus.VISIBLE,
+            reason_codes=["visible_current_question_card"],
+            card_id=card.card_id,
+            question_id=card.question_id,
+            question_revision=card.question_revision,
+            answer_revision=card.question_revision,
+            source_refs=["ask:fast:scillm://fixture/" + "a" * 64],
+            visible_card_ids=[card.card_id],
+        )
+        return object()
+
+    async def latest_card_publication_decision(self):
+        return self.decision
+
+
 def test_fast_solver_journals_captured_session_context() -> None:
     asyncio.run(_assert_fast_solver_journals_captured_session_context())
+
+
+def test_fast_solver_hidden_draft_reaches_supported_final_card() -> None:
+    asyncio.run(_assert_fast_solver_hidden_draft_reaches_supported_final_card())
+
+
+def test_fast_solver_first_content_timeout_fails_closed(monkeypatch) -> None:
+    monkeypatch.setenv("LIVE_EVIDENCE_SOLVER_FIRST_CONTENT_TIMEOUT", "0.01")
+    asyncio.run(_assert_fast_solver_first_content_timeout_fails_closed())
 
 
 async def _assert_fast_solver_journals_captured_session_context() -> None:
@@ -81,3 +129,95 @@ async def _assert_fast_solver_journals_captured_session_context() -> None:
     assert journal.rows
     assert {row[0] for row in journal.rows} == {"captured-session"}
     assert {row[3] for row in journal.rows} == {"b" * 64}
+
+
+async def _assert_fast_solver_hidden_draft_reaches_supported_final_card() -> None:
+    state = HiddenDraftState()
+    journal = Journal()
+    card = EvidenceCard(
+        query="How would you reverse a linked list in place?",
+        thread="coding",
+        talking_point="No source-bound support surfaced yet.",
+        proof="No source-bound support surfaced yet.",
+        qualifier="bounded",
+        confidence=0.0,
+        status=CardStatus.INSUFFICIENT,
+        question_id="question-hidden-draft",
+        question_revision=1,
+    )
+
+    outcome = await stream_fast_answer(
+        state=state,
+        journal=journal,
+        solver=Solver(),
+        card=card,
+        query=card.query,
+        evidence_excerpts=[],
+        question_id="question-hidden-draft",
+        question_revision=1,
+        session_id="captured-session",
+        policy_digest="b" * 64,
+    )
+
+    assert outcome is not None and outcome.ok
+    assert [row[1] for row in journal.rows].count("fast_solver_first_content") == 1
+    assert "fast_solver_discarded_stale_revision" not in {row[1] for row in journal.rows}
+    final = state.published[-1]
+    assert final.status is CardStatus.SUPPORTED
+    assert final.sources
+    assert final.sources[-1].url.startswith("scillm://fixture/")
+
+
+class NoContentBeforeDeadlineSolver:
+    _model = "fixture"
+    _effort = "fixture"
+
+    def stream(self, query, evidence_excerpts):
+        time.sleep(0.25)
+        yield SolverChunk("late answer", 0.25)
+        yield SolverOutcome(
+            ok=True,
+            answer="late answer",
+            model="fixture",
+            effort="fixture",
+            first_content_s=0.25,
+            total_s=0.25,
+            response_sha256="b" * 64,
+            chunk_count=1,
+        )
+
+
+async def _assert_fast_solver_first_content_timeout_fails_closed() -> None:
+    state = State()
+    journal = Journal()
+    card = EvidenceCard(
+        query="What if the provider stalls before first content?",
+        thread="latency",
+        talking_point="pending",
+        proof="pending",
+        qualifier="bounded",
+        confidence=0.5,
+        status=CardStatus.INSUFFICIENT,
+        question_id="question-timeout",
+        question_revision=1,
+    )
+
+    outcome = await stream_fast_answer(
+        state=state,
+        journal=journal,
+        solver=NoContentBeforeDeadlineSolver(),
+        card=card,
+        query=card.query,
+        evidence_excerpts=[],
+        question_id="question-timeout",
+        question_revision=1,
+        session_id="captured-session",
+        policy_digest="b" * 64,
+    )
+
+    kinds = [row[1] for row in journal.rows]
+    assert outcome is not None and not outcome.ok
+    assert outcome.error == "first_content_timeout_after_0.1s"
+    assert "fast_solver_first_content_timeout" in kinds
+    assert "fast_solver_failed" in kinds
+    assert "fast_solver_receipt" not in kinds

@@ -821,6 +821,42 @@
       "notes": "Regression for the #1473 churn path: a superseded answer may complete as an evidence_card while fast_solver_receipt payloads intentionally omit query text; future oracle changes must keep recognizing the card as the completion receipt, and state projection must keep that old completed card behind the active card."
     },
     {
+      "name": "fast-solver-hidden-draft-reaches-supported-card",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_fast_path_context.py::test_fast_solver_hidden_draft_reaches_supported_final_card -q && echo \"hidden draft fast solver regression: PASS\""
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "hidden draft fast solver regression: PASS"
+        ]
+      },
+      "notes": "Regression for the fast-solver card-surfacing bug: a no-source pre-answer placeholder is held by the publication reducer, but that hidden draft must not abort streaming. The final fast answer must become a supported, sourced card with scillm:// provenance."
+    },
+    {
+      "name": "fast-solver-first-content-timeout-fails-closed",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_fast_path_context.py::test_fast_solver_first_content_timeout_fails_closed -q && echo \"first content timeout fail-closed regression: PASS\""
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "first content timeout fail-closed regression: PASS"
+        ]
+      },
+      "notes": "Regression for the fast-solver latency red receipt: a provider that stalls before first answer content must journal a bounded first-content timeout and fail closed instead of surfacing a very late card or blocking the live loop."
+    },
+    {
       "name": "question-window-imperative-code-task-regression",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

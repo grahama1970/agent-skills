@@ -694,33 +694,43 @@ class EvidenceCoordinator:
         snapshot = await self._state.publish_card_fenced(card)
         await self._journal_latest_publication_decision(session_id, policy_digest)
         if snapshot is None:
+            publication_decision = await self._state.latest_card_publication_decision()
+            hidden_fast_draft = (
+                fast_pending
+                and publication_decision is not None
+                and publication_decision.status.value == "held"
+                and "insufficient_card_not_publishable"
+                in publication_decision.reason_codes
+            )
+            if not hidden_fast_draft:
+                await self._journal.append(
+                    session_id,
+                    "evidence_card_discarded_stale_revision",
+                    card,
+                    policy_digest=policy_digest,
+                )
+                logger.info(
+                    "discarded stale result question_id={} revision={} latency_ms={}",
+                    question_id,
+                    question_revision,
+                    int((monotonic() - started) * 1000),
+                )
+                return
+        else:
             await self._journal.append(
                 session_id,
-                "evidence_card_discarded_stale_revision",
+                "evidence_card",
                 card,
                 policy_digest=policy_digest,
             )
-            logger.info(
-                "discarded stale result question_id={} revision={} latency_ms={}",
-                question_id,
-                question_revision,
-                int((monotonic() - started) * 1000),
-            )
-            return
-        await self._journal.append(
-            session_id,
-            "evidence_card",
-            card,
-            policy_digest=policy_digest,
-        )
-        from .actions import propose_research, research_warranted
-        if policy.external_search and research_warranted(card, verdict, ranked):
-            await propose_research(
-                self, self._state, self._journal, query=query,
-                trigger_event_ids=list(decision.source_event_ids),
-                question_id=question_id, question_revision=question_revision,
-                policy=policy,
-            )
+            from .actions import propose_research, research_warranted
+            if policy.external_search and research_warranted(card, verdict, ranked):
+                await propose_research(
+                    self, self._state, self._journal, query=query,
+                    trigger_event_ids=list(decision.source_event_ids),
+                    question_id=question_id, question_revision=question_revision,
+                    policy=policy,
+                )
         if fast_pending:
             outcome = await stream_fast_answer(
                 state=self._state, journal=self._journal, solver=FastSolver(),
@@ -739,13 +749,17 @@ class EvidenceCoordinator:
             )
             await self._state.set_lane(RetrievalLane.ASK, lane_state, detail)
             if outcome is not None and not outcome.ok:
-                ask_result = await self._ask.solve(query, ranked[:4])
-                if ask_result.ok and ask_result.sources:
-                    merged = rank_sources([*ranked, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
-                    await self._state.publish_card_fenced(
-                        card.model_copy(update={"sources": merged[:8]})
-                    )
-                    await self._journal_latest_publication_decision(session_id, policy_digest)
+                await self._journal.append(
+                    session_id,
+                    "fast_solver_fallback_ask_skipped",
+                    {
+                        "question_id": question_id,
+                        "question_revision": question_revision,
+                        "error": outcome.error,
+                        "reason": "live_fast_path_must_fail_closed_not_block_on_slow_ask",
+                    },
+                    policy_digest=policy_digest,
+                )
         logger.info(
             "evidence card status={} sources={} revision={} latency_ms={}",
             card.status.value,

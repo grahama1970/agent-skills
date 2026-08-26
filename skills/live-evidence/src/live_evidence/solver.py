@@ -28,10 +28,11 @@ from .resolver import resolver_key
 DEFAULT_URL = "http://127.0.0.1:4001"
 # sonnet, not opus: the answer path is latency-critical and opus low still
 # spends a variable thinking phase before first content (measured live: p95
-# 16s+ first content; sonnet completes comparable answers in ~3s). Quality is
-# held by the blinded parity gate in eval_fast_solver, not by model prestige.
+# 16s+ first content; sonnet completes comparable answers in ~3s). Low effort
+# is the live-card default; quality is held by the blinded parity gate in
+# eval_fast_solver, not by model prestige.
 DEFAULT_MODEL = "claude-sonnet-5"
-DEFAULT_EFFORT = "high"
+DEFAULT_EFFORT = "low"
 
 CODE_PROMPT = (
     "Answer the interview/meeting question below directly; no roundtable or "
