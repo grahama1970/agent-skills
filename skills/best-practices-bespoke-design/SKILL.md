@@ -131,6 +131,48 @@ files, user-provided critique, and local browser checks when relevant. If those
 are enough to answer the design question, stop at the recommendation or targeted
 patch. Do not convert advisory design work into a reporting campaign.
 
+## Current Evidence Gate
+
+Before making a recommendation about an existing live design, classify the
+evidence as `current_evidence`, `historical_context`, or `not_established`.
+
+Use `current_evidence` only when the recommendation is grounded in one of these:
+
+- a live browser/render check from the target URL or local dev server in the
+  current turn;
+- a source-file read from the repository that serves the target surface, plus a
+  build/render check when the claim is visual;
+- a user-provided screenshot that the human explicitly identifies as the current
+  target state;
+- a current project monitor receipt, such as `monitor-website audit`,
+  `design-render-check`, `test-interactions`, or `verify-ui-cdp`, when it
+  directly covers the surface being discussed.
+
+Use `historical_context` for prior commits, old screenshots, old UI markers,
+previous reviewer notes, memory recall, or past recommendations. Historical
+context may explain why a decision was made, but it must not be presented as a
+current defect or current recommendation.
+
+If a prior recommendation appears in memory, chat, or old receipts, first check
+whether it has already been implemented before listing it as a next action. For
+example, do not recommend removing a Calendly auto-launch unless a current render
+or source read shows that the auto-launch still exists.
+
+Every targeted advisory output about a live surface must include enough
+freshness metadata for the human to see what was reviewed:
+
+```markdown
+## Evidence Used
+- evidence_status: current_evidence | historical_context | not_established
+- surface: <URL, route, screenshot, file, or component>
+- checked_at: <absolute timestamp or "user-provided current screenshot">
+- artifact: <command, marker, screenshot, source path, or receipt>
+```
+
+If current evidence is missing or conflicts with historical evidence, say the
+recommendation is `not_established` and name the next command that would make it
+current. Do not produce a ranked design-change list from stale evidence.
+
 ## Evidence Tiers
 
 Do not run the formal certification path when the human only needs a design
@@ -510,6 +552,10 @@ Reject these shortcuts:
   stamped-metal, or a gradient standing in for a produced texture/asset;
 - using image generation to fabricate evidence or cultural specificity;
 - hiding weak information architecture under decorative density;
+- reviewing an old screenshot, stale CDP marker, previous commit, or memory
+  recall as if it were the current live design;
+- listing a historical recommendation as a current action without first checking
+  whether it has already been implemented;
 - approving desktop beauty while mobile becomes a stacked residue;
 - sending a whole website screenshot to a web LLM as the primary design-review
   artifact; use section/page-state crops with a manifest instead;

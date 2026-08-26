@@ -34,7 +34,8 @@ for script in \
   "$ROOT/scripts/validate_receipt.py" \
   "$ROOT/scripts/validate_review_bundle.py" \
   "$ROOT/scripts/validate_review_transport.py" \
-  "$ROOT/scripts/prove_sequential_threshold.py"; do
+  "$ROOT/scripts/prove_sequential_threshold.py" \
+  "$ROOT/scripts/check_current_design_contract.py"; do
   python - "$script" <<'PYCODE'
 from pathlib import Path
 import sys
@@ -52,6 +53,7 @@ python "$ROOT/scripts/validate_review_transport.py" "$ROOT/fixtures/valid-attach
 python "$ROOT/scripts/validate_review_transport.py" "$ROOT/fixtures/valid-blocked-transport.json" >/dev/null
 python "$ROOT/scripts/prove_sequential_threshold.py" --yes-required 4 --seat-cap 5 >/dev/null
 python "$ROOT/scripts/check_advisory_contract.py" >/dev/null
+python "$ROOT/scripts/check_current_design_contract.py" >/dev/null
 
 if python "$ROOT/scripts/validate_receipt.py" "$ROOT/fixtures/failing-receipt.json" >/dev/null 2>&1; then
   fail "negative fixture unexpectedly passed"
