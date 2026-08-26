@@ -1,0 +1,298 @@
+{
+  "title": "GLM local capability profile \u2014 personalized to operator's real workload",
+  "candidates": [
+    "local-glm",
+    "gpt-5.5",
+    "oc-glm",
+    "zai-glm-flash"
+  ],
+  "judge": "claude-fable-5",
+  "totals": {
+    "local-glm": 21,
+    "gpt-5.5": 47,
+    "oc-glm": 40,
+    "zai-glm-flash": 47
+  },
+  "max_points": 48,
+  "per_category_best": {
+    "local-glm": [],
+    "gpt-5.5": [
+      "agent_tooling",
+      "code_debugging",
+      "code_generation",
+      "instruction_following",
+      "structured_extraction"
+    ],
+    "oc-glm": [
+      "agent_tooling",
+      "code_debugging",
+      "instruction_following",
+      "structured_extraction"
+    ],
+    "zai-glm-flash": [
+      "agent_tooling",
+      "code_debugging",
+      "code_generation",
+      "instruction_following",
+      "systems_reasoning"
+    ]
+  },
+  "rows": [
+    {
+      "id": 1,
+      "category": "code_debugging",
+      "scores": {
+        "local-glm": 2,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "The candidate correctly identifies the /v1 append as the cause and gives the right fix (append only /chat/completions), but never explicitly notes that the base already contains the /v4 version segment, making the version duplication the specific problem.",
+        "gpt-5.5": "The candidate correctly identifies the proxy appending /v1 to the already-versioned /v4 base as the root cause and provides a fix that removes the /v1 append, fully meeting the criterion.",
+        "oc-glm": "The candidate correctly identifies the doubled version segment (/v4 + /v1) causing the 404 and gives a fix that removes the /v1 append, fully meeting the criterion.",
+        "zai-glm-flash": "The candidate correctly identifies the doubled version segment (/v4 + appended /v1) causing the 404 and gives a fix that removes the /v1 append, fully meeting the criterion."
+      }
+    },
+    {
+      "id": 2,
+      "category": "code_debugging",
+      "scores": {
+        "local-glm": 3,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "The candidate correctly states that routing/group resolution succeeded and attributes the 404 to a downstream failure (the provider/service call), satisfying the criterion.",
+        "gpt-5.5": "The candidate correctly states routing/group resolution succeeded and attributes the 404 to the downstream call to the routed provider/target, fully meeting the criterion.",
+        "oc-glm": "The candidate correctly states that routing/group resolution succeeded (model mapped to group and chain) and that the 404 originates downstream at the resolved provider endpoint, fully meeting the criterion.",
+        "zai-glm-flash": "The candidate correctly states routing succeeded (group and chain resolved) and attributes the 404 to the upstream endpoint downstream of routing, fully meeting the criterion."
+      }
+    },
+    {
+      "id": 3,
+      "category": "code_generation",
+      "scores": {
+        "local-glm": 3,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "The candidate uses subprocess.run with a finite timeout, check=True, a list argv, no shell=True, and returns stdout, fully meeting the criterion (using stdout=PIPE instead of capture_output is equivalent for this purpose).",
+        "gpt-5.5": "The candidate uses subprocess.run with a list argv, finite timeout, check=True, explicit shell=False, and returns stdout, fully satisfying every element of the criterion.",
+        "oc-glm": "The candidate uses subprocess.run with a finite timeout, check=True, no shell=True, a list argv, and returns stdout, fully matching the criterion and reference answer.",
+        "zai-glm-flash": "The candidate uses subprocess.run with a finite timeout, check=True, no shell=True, a list argv, and returns stdout, matching the reference answer and fully satisfying the criterion."
+      }
+    },
+    {
+      "id": 4,
+      "category": "code_generation",
+      "scores": {
+        "local-glm": 1,
+        "gpt-5.5": 3,
+        "oc-glm": 0,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "It does hand a slice to json.loads and guards JSONDecodeError, but the manual brace-counting acts as a non-JSON grammar authority that miscounts braces inside string literals (e.g. {\"a\": \"}\"}), and the loop raises an IndexError instead of returning None on unbalanced input like '{'.",
+        "gpt-5.5": "The candidate uses json.JSONDecoder.raw_decode as the grammar authority (no regex), scans candidate '{' positions, guards JSONDecodeError, returns the first parsed dict, and returns None on non-dict/failure \u2014 meeting the criterion and even handling trailing prose more robustly than the reference.",
+        "oc-glm": "no answer",
+        "zai-glm-flash": "The candidate uses json.JSONDecoder.raw_decode as the grammar authority (no regex), scans from each '{' candidate, guards JSONDecodeError via its ValueError superclass, and returns None on non-dict or failure\u2014actually handling trailing prose more robustly than the reference."
+      }
+    },
+    {
+      "id": 5,
+      "category": "structured_extraction",
+      "scores": {
+        "local-glm": 2,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 2
+      },
+      "reasons": {
+        "local-glm": "The object itself is valid JSON with exactly the six required fields, an integer id, and a valid difficulty enum, but it is wrapped in markdown code fences rather than being returned as only the JSON object.",
+        "gpt-5.5": "The candidate is valid JSON with exactly the six required fields, an integer id, a valid enum difficulty ('medium'), and no surrounding prose, fully satisfying the criterion.",
+        "oc-glm": "The candidate is valid JSON with exactly the six required fields, an integer id, a valid difficulty enum value, and no surrounding prose.",
+        "zai-glm-flash": "The JSON object itself is valid with exactly the six required fields, integer id, and a valid difficulty enum value, but it is wrapped in markdown code fences rather than being returned as only the JSON object."
+      }
+    },
+    {
+      "id": 6,
+      "category": "structured_extraction",
+      "scores": {
+        "local-glm": 2,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "Model and api_base are exactly correct, but timeout is the string \"120 second\" instead of the number 120, violating the criterion's requirement that timeout be a number.",
+        "gpt-5.5": "The candidate is valid JSON with exactly the required keys, correct model, exact URL, and timeout as the number 120, with no extra prose.",
+        "oc-glm": "The candidate is valid JSON with the exact required keys and values\u2014model glm-5.3-flash, the exact URL, and timeout as the number 120\u2014with no extra keys or prose.",
+        "zai-glm-flash": "The candidate is valid JSON with model=glm-5.3-flash, the exact api_base URL, timeout=120 as a number, and no extra keys or prose, fully matching the reference and criterion."
+      }
+    },
+    {
+      "id": 7,
+      "category": "agent_tooling",
+      "scores": {
+        "local-glm": 3,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "The candidate picks the local model and justifies it by the task being a single, well-specified summarization request aligned with the model's strengths, which satisfies the criterion.",
+        "gpt-5.5": "The candidate picks the local model and correctly justifies it as a single-goal summarization task matching the local model's strengths while avoiding unnecessary frontier cost, fully meeting the criterion.",
+        "oc-glm": "The candidate picks the local model and justifies it by the task being a single-goal summarization matching the local model's strength while noting the frontier model adds unnecessary cost, fully meeting the criterion.",
+        "zai-glm-flash": "The candidate picks the local model and justifies it precisely by the task being single-goal summarization/extraction matching the local model's strength (not raw capability), fully meeting the criterion."
+      }
+    },
+    {
+      "id": 8,
+      "category": "agent_tooling",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate names both nodes, specifies a concurrent/parallel fan-out of the identical question to N handlers for node A, defines B as a judge node depending on A, and gives the single A->B edge, fully satisfying the criterion.",
+        "oc-glm": "The candidate names node A as a concurrent fan-out to N handlers, node B as a judge consuming A's outputs, and specifies the single A->B edge, meeting all parts of the criterion.",
+        "zai-glm-flash": "The candidate names both nodes, specifies node A as a concurrent fan-out to N parallel handlers, node B as a single judge scoring against the reference, and a single A\u2192B edge, fully meeting the criterion."
+      }
+    },
+    {
+      "id": 9,
+      "category": "instruction_following",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate lists exactly delta, bravo, charlie in the correct order with no extra output, fully matching the reference and criterion.",
+        "oc-glm": "The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, fully matching the criterion.",
+        "zai-glm-flash": "The candidate lists exactly delta, bravo, charlie in the correct order with proper tie-breaking and no extra content, fully matching the criterion."
+      }
+    },
+    {
+      "id": 10,
+      "category": "instruction_following",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate has exactly 8 words, is in past tense, contains 'router', ends with a period, and includes no extra output.",
+        "oc-glm": "The candidate sentence has exactly 8 words, is in past tense, contains 'router', ends with a period, and includes no extra output.",
+        "zai-glm-flash": "The candidate sentence has exactly 8 words, is in past tense (appended, broke), contains 'router', ends with a period, and includes no extra output."
+      }
+    },
+    {
+      "id": 11,
+      "category": "systems_reasoning",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 2,
+        "oc-glm": 2,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate correctly identifies memory pressure and preserved computation semantics, but hedges the mechanism among several possibilities rather than clearly attributing the slowdown to CPU/RAM offload of model layers.",
+        "oc-glm": "The candidate correctly attributes the slowdown to offloading weights/KV cache to system RAM when VRAM is insufficient, but only notes that output remains correct without explaining that correctness is preserved because the same weights are used.",
+        "zai-glm-flash": "The candidate correctly attributes the slowdown to offloading weights to system RAM when VRAM is insufficient (with plausible added detail about PCIe transfer and KV-cache pressure) and explicitly notes correctness is preserved because the same computation runs, satisfying both parts of the criterion."
+      }
+    },
+    {
+      "id": 12,
+      "category": "systems_reasoning",
+      "scores": {
+        "local-glm": 2,
+        "gpt-5.5": 3,
+        "oc-glm": 2,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "The mechanism (background-tab timer/event-loop throttling) is correctly identified, but the mitigation\u2014offloading to a Web Worker\u2014is a partial workaround that doesn't match the criterion's mitigations (keep tab visible or disable throttling flags) and wouldn't fix rAF-driven stalls or be applicable when the page code can't be modified.",
+        "gpt-5.5": "The candidate correctly identifies background-tab throttling (timer/event-loop clamping via page visibility) as the mechanism and provides valid mitigations (keep tab visible or launch Chrome with throttling-disabling flags), fully meeting the criterion.",
+        "oc-glm": "The mechanism (background-tab throttling with timer clamping and rAF suspension) is correctly identified, but the Web Worker mitigation, while technically real for timer throttling, is not practical for an eval harness that doesn't control the page's code and differs from the criterion's mitigations (keep tab visible or disable throttling flags).",
+        "zai-glm-flash": "The candidate correctly identifies background-tab throttling (timer clamping and rAF suspension for hidden tabs) as the mechanism and provides valid mitigations including the Chrome throttling-disable flags and keeping the tab foregrounded, fully meeting the criterion."
+      }
+    },
+    {
+      "id": 13,
+      "category": "code_debugging",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate correctly explains that pkill -f matches the controlling shell's own command line (e.g., sh -c containing the pattern) causing self-termination, and recommends killing by explicit tracked PID/process group instead of command-line matching, fully satisfying the criterion.",
+        "oc-glm": "The candidate correctly explains that pkill -f matches the full command line including the controlling shell's own arguments (causing self-kill), and recommends explicit-PID killing\u2014both by capturing $! at launch and by pgrep filtering that excludes self ($$) and parent ($PPID)\u2014fully meeting the criterion.",
+        "zai-glm-flash": "The candidate correctly explains that pkill -f matches the full command line of the invoking shell (causing it to be signaled and exit 143) and recommends explicit-PID killing via capturing $! instead of pattern matching, fully meeting the criterion."
+      }
+    },
+    {
+      "id": 14,
+      "category": "code_generation",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 3,
+        "oc-glm": 0,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate lazily iterates paths, catches read errors (OSError and UnicodeError), returns the first non-empty file's text, and returns None when none qualify, with the only trivial difference being that whitespace-only files count as non-empty (a defensible reading of the spec).",
+        "oc-glm": "no answer",
+        "zai-glm-flash": "The candidate iterates paths, catches OSError during reads, returns the first non-empty file's text via the walrus filter, and returns None otherwise, fully meeting the criterion (treating a whitespace-only file as non-empty is a defensible reading of 'non-empty')."
+      }
+    },
+    {
+      "id": 15,
+      "category": "instruction_following",
+      "scores": {
+        "local-glm": 3,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
+        "gpt-5.5": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
+        "oc-glm": "The candidate answer exactly matches the reference: correct reverse-alphabetical order, comma-separated, no spaces, and no extra text.",
+        "zai-glm-flash": "The candidate answer exactly matches the reference: reverse-alphabetical order, comma-separated, no spaces, and no extra text."
+      }
+    },
+    {
+      "id": 16,
+      "category": "structured_extraction",
+      "scores": {
+        "local-glm": 0,
+        "gpt-5.5": 3,
+        "oc-glm": 3,
+        "zai-glm-flash": 3
+      },
+      "reasons": {
+        "local-glm": "no answer",
+        "gpt-5.5": "The candidate is valid JSON with double-quoted keys/strings, True converted to true, trailing comma removed, values unchanged, and no prose; whitespace differences are stylistic and irrelevant.",
+        "oc-glm": "The candidate exactly matches the reference: keys and strings are double-quoted, True is converted to true, the trailing comma is removed, values are unchanged, and there is no prose.",
+        "zai-glm-flash": "The candidate exactly matches the reference: double-quoted keys/strings, True converted to true, trailing comma removed, values unchanged, and no prose."
+      }
+    }
+  ]
+}
