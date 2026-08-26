@@ -246,7 +246,7 @@ def _is_expected_link_endpoint(item: dict[str, Any], base_origin: str) -> bool:
 
 
 def _should_skip_discovery_activation(item: dict[str, Any], base_origin: str) -> bool:
-    return _is_expected_link_endpoint(item, base_origin)
+    return _is_replay_link_endpoint(item) or _is_expected_link_endpoint(item, base_origin)
 
 
 def _is_replay_link_endpoint(item: dict[str, Any]) -> bool:

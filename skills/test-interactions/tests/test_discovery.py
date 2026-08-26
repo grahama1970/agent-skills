@@ -139,6 +139,7 @@ class DiscoveryHelperTests(unittest.TestCase):
         self.assertFalse(_is_expected_link_endpoint(item, "https://grahama.co"))
         self.assertEqual(interaction["action"], "wait")
         self.assertIn("without navigating away", interaction["description"])
+        self.assertTrue(_should_skip_discovery_activation(item, "https://grahama.co"))
 
     def test_generated_manifest_keeps_root_url_and_groups_routes(self):
         manifest = _build_manifest("https://grahama.co", [

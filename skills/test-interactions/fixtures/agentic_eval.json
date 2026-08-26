@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "test-interactions",
   "trials": 2,
-  "proof_scope": "test-interactions regression guard for CLI wiring, generated-manifest helpers including static download/plaintext link endpoints, discovery-time external/static link launch suppression, pointer-based SVG-safe clicks, semantic assert_js predicates, non-actionable preload warning suppression, and fail-closed manifest loading",
+  "proof_scope": "test-interactions regression guard for CLI wiring, generated-manifest helpers including internal/static download/plaintext link endpoints, discovery-time link endpoint launch suppression, pointer-based SVG-safe clicks, semantic assert_js predicates, non-actionable preload warning suppression, and fail-closed manifest loading",
   "claims": {
-    "proves": "the test-interactions entrypoint imports, helper regressions run, static download/plaintext endpoints are not misclassified as inert DOM clicks, discovery skips launching external/static link endpoints, click_selector dispatches real pointer events for SVG-safe activation, assert_js supports truthy/equality/contains live-DOM predicates, non-actionable preload warnings do not fail discovery, and missing manifests fail closed",
+    "proves": "the test-interactions entrypoint imports, helper regressions run, internal/static download/plaintext endpoints are not misclassified as inert DOM clicks, discovery skips launching anchor link endpoints, click_selector dispatches real pointer events for SVG-safe activation, assert_js supports truthy/equality/contains live-DOM predicates, non-actionable preload warnings do not fail discovery, and missing manifests fail closed",
     "does_not_prove": "visual design quality, external website availability, or full browser end-to-end readiness"
   },
   "cases": [
