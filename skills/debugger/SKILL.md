@@ -72,6 +72,19 @@ toplevel of `$PWD` (override with `DEBUGGER_VSCODE_WORKSPACE`) and fail closed
 with `BRIDGE_BLOCKED` when no open, trusted VS Code bridge answers.
 Gate: `fixtures/front-door.json` (agentic eval).
 
+### Debug it, then explain what happened
+
+`./run.sh spec-from-proof <proof.json> --out spec.json [--workspace P]
+[--narrate <handler>]` turns any real captured session (`run.sh break`) into a
+runnable `debugger.walkthrough.v1` spec: stops in true session order (first hit
+per file:line), `expect` pinned to the first observed locals, launch module +
+PYTHONPATH derived from the capture, repeat counts narrated ("this line ran 5
+times"). No hand-authored JSON. Fail-closed: zero-hit or
+validation-failing proofs refuse to generate. `--narrate` optionally rewrites
+the say-lines naturally through /ask (fail-soft to the deterministic template).
+Gate: `fixtures/spec-from-proof.json`, including a live replay of a freshly
+generated spec to WALKTHROUGH-COMPLETE.
+
 The core functions of this skill are:
 
 1. The project-agent must set breakpoints where the problem might be.

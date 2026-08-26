@@ -8,6 +8,7 @@
 #   ./run.sh session [--wait-seconds N]                                 collaborative live session
 #   ./run.sh validate <proof.json> [--expect-valid|--expect-invalid] [--repo-root P]
 #   ./run.sh matrix [--suite NAME ...]                                  capability-gated eval matrix
+#   ./run.sh spec-from-proof <proof.json> --out spec.json          session -> walkthrough spec
 #   ./run.sh recall <query>                                             recall stored debugger lessons
 #   ./run.sh verify                                                     fast self-check + receipt
 #
@@ -101,6 +102,12 @@ case "$cmd" in
     recall)
         shift
         exec uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/recall_debugger_lessons.py" "$@"
+        ;;
+    spec-from-proof)
+        shift
+        # Turn a captured session (run.sh break proof) into a runnable
+        # walkthrough spec: debug it, then explain what happened.
+        exec uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/generate_walkthrough_spec.py" "$@"
         ;;
     verify)
         shift
