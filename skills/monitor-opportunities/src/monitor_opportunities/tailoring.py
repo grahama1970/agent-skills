@@ -187,6 +187,10 @@ def _tailor_posting(posting: dict[str, Any], claims_path: Path, out_dir: Path) -
     source = read_json(skill_dir / "config" / "resume_source.json")
     base_path = Path(source["base_markdown"])
     if not base_path.exists():
+        repo_base = skill_dir.parents[1] / "RESUME.md"
+        if repo_base.exists():
+            base_path = repo_base
+    if not base_path.exists():
         raise ValueError(f"BASE_RESUME_MISSING:{base_path}")
     base_lines = base_path.read_text(encoding="utf-8").splitlines()
     base_texts = {line.strip() for line in base_lines if line.strip()}

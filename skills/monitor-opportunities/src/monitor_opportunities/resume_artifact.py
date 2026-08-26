@@ -238,6 +238,10 @@ def tailor_artifact(
     source = read_json(skill_dir / "config" / "resume_source.json")
     base_path = Path(source["base_markdown"])
     if not base_path.exists():
+        repo_base = skill_dir.parents[1] / "RESUME.md"
+        if repo_base.exists():
+            base_path = repo_base
+    if not base_path.exists():
         raise ResumeArtifactError(f"BASE_RESUME_MISSING:{base_path}")
     claim_snapshot = read_json(skill_dir / "tests" / "fixtures" / "claims" / "approved-claims.json")
     wordings = approved_wordings(claim_snapshot, list(opportunity.get("claim_keys", [])))

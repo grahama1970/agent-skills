@@ -84,6 +84,26 @@ def test_tailor_writes_claim_bound_artifacts(tmp_path: Path) -> None:
     assert factual_docx_lines == [row["text"] for row in variant["rendered_statements"] if row["kind"] == "approved_claim"]
 
 
+def test_tailor_falls_back_to_repo_resume_when_external_base_is_missing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    original_exists = Path.exists
+
+    def exists_with_missing_external_resume(path: Path) -> bool:
+        if str(path).startswith("/home/graham/workspace/experiments/resume/"):
+            return False
+        return original_exists(path)
+
+    monkeypatch.setattr(Path, "exists", exists_with_missing_external_resume)
+    out = tmp_path / "tailor"
+    result = runner.invoke(
+        app,
+        ["tailor", "--posting", "fixture:eligible-ai-architect", "--claims", str(_claims_fixture()), "--out", str(out)],
+    )
+    assert result.exit_code == 0, result.output
+    text = (out / "resume.txt").read_text(encoding="utf-8")
+    assert "Graham Anderson" in text
+    assert "Target role: Principal AI Architect" in text
+
+
 def test_tailor_rejects_missing_claim(tmp_path: Path) -> None:
     claims_path = tmp_path / "claims.json"
     claims_path.write_text(
