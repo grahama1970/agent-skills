@@ -901,6 +901,64 @@
       },
       "proves": "The normal status command reads the scheduler receipt, follows the registered scheduler worktree, and exposes that worktree's latest nightly receipt/report path so the morning discussion starts from the cron publication instead of a stale main-checkout symlink.",
       "does_not_prove": "That cron will run tomorrow, or that the scheduler's latest report contains high-quality opportunities."
+    },
+    {
+      "name": "application-page-location-authority",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "timeout_seconds": 120,
+      "seams": [
+        "discovery.ats_application_location_authority",
+        "ranking.linkedin_primary_readback_location_authority"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && proof=/tmp/monitor-opportunities-application-page-location-proof.json && rm -f \"$proof\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/eval_application_page_location_truth.py --out \"$proof\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "APPLICATION_PAGE_LOCATION_TRUTH_OK",
+          "application_page_workplace_type=ONSITE_ELSEWHERE",
+          "eligibility_state=REJECT_RELOCATION_REQUIRED"
+        ],
+        "stderr_excludes": [
+          "READBACK_OVERWROTE_PRIMARY_LOCATION",
+          "ONSITE_ELSEWHERE_ADMITTED",
+          "APPLICATION_LOCATION_FALSE_BUFFALO"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-application-page-location-proof.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-application-page-location-proof.json",
+            "json_pointer": "/application_page/workplace_type",
+            "equals": "ONSITE_ELSEWHERE"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-application-page-location-proof.json",
+            "json_pointer": "/readback_receipt/location_authority",
+            "equals": "primary_source"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-application-page-location-proof.json",
+            "json_pointer": "/readback_receipt/location_conflict",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-application-page-location-proof.json",
+            "json_pointer": "/eligibility_state",
+            "equals": "REJECT_RELOCATION_REQUIRED"
+          }
+        ]
+      },
+      "proves": "A live employer Ashby application page is read as the location authority; OnSite outside Buffalo is classified ONSITE_ELSEWHERE; LinkedIn WNY/top-applicant locator evidence cannot overwrite that primary/apply-page geography; ranking rejects the promoted onsite-elsewhere role.",
+      "does_not_prove": "That every ATS provider exposes structured application-page location metadata, or that a complete nightly run has been regenerated with this repair."
     }
   ]
 }

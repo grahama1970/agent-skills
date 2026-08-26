@@ -1332,7 +1332,11 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             "organization": target["name"],
             "title": job.get("title") or "Untitled",
             "location_display": location,
-            "workplace_type": _workplace_type(location, str(job.get("descriptionHtml") or job.get("descriptionPlain") or "")),
+            "workplace_type": _workplace_type(
+                location,
+                str(job.get("descriptionHtml") or job.get("descriptionPlain") or ""),
+                str(job.get("workplaceType") or ""),
+            ),
             "relocation_required": _relocation_required(location, str(job)),
             "clearance_required": False,
             "posting_url": posting_url,
@@ -1600,7 +1604,7 @@ _ONSITE_BODY_MARKERS = (
 )
 
 
-def _workplace_type(location: str, content: str = "") -> str:
+def _workplace_type(location: str, content: str = "", provider_workplace_type: str = "") -> str:
     """Infer workplace from location AND posting body.
 
     Reading only the location string sent 172 candidates per night - including
@@ -1611,12 +1615,24 @@ def _workplace_type(location: str, content: str = "") -> str:
     """
 
     text = location.lower()
+    provider = (
+        provider_workplace_type.lower()
+        .replace("-", "")
+        .replace("_", "")
+        .replace(" ", "")
+    )
     if "buffalo" in text and "hybrid" in text:
+        return "WNY_HYBRID"
+    if "buffalo" in text and provider == "hybrid":
         return "WNY_HYBRID"
     if "buffalo" in text:
         return "WNY_ONSITE"
+    if provider == "remote":
+        return "REMOTE"
     if "remote" in text:
         return "REMOTE"
+    if provider in {"onsite", "inperson", "hybrid"} and text and text != "unknown":
+        return "ONSITE_ELSEWHERE"
     body = str(content or "").lower()
     if body:
         if any(marker in body for marker in _REMOTE_BODY_MARKERS):

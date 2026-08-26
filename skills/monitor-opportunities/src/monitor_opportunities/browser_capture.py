@@ -1559,6 +1559,107 @@ _ATS_SENSITIVE_NEEDLES = (
 )
 
 
+def _classify_application_workplace(location: str, provider_workplace_type: str = "") -> str:
+    text = str(location or "").lower()
+    provider = (
+        str(provider_workplace_type or "")
+        .lower()
+        .replace("-", "")
+        .replace("_", "")
+        .replace(" ", "")
+    )
+    if "buffalo" in text and provider == "hybrid":
+        return "WNY_HYBRID"
+    if "buffalo" in text:
+        return "WNY_ONSITE"
+    if provider == "remote" or "remote" in text:
+        return "REMOTE"
+    if provider in {"onsite", "inperson", "hybrid"} and text and text != "unknown":
+        return "ONSITE_ELSEWHERE"
+    return "AMBIGUOUS"
+
+
+def _extract_js_assignment_object(html: str, marker: str) -> dict[str, Any] | None:
+    idx = html.find(marker)
+    if idx < 0:
+        return None
+    start = html.find("{", idx)
+    if start < 0:
+        return None
+    depth = 0
+    in_string = False
+    escape = False
+    quote = ""
+    for pos in range(start, len(html)):
+        ch = html[pos]
+        if in_string:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == quote:
+                in_string = False
+            continue
+        if ch in {'"', "'"}:
+            in_string = True
+            quote = ch
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(html[start : pos + 1])
+                except ValueError:
+                    return None
+    return None
+
+
+def _ashby_application_metadata_from_html(html: str, url: str) -> dict[str, Any] | None:
+    app_data = _extract_js_assignment_object(html, "window.__appData")
+    if not isinstance(app_data, dict):
+        return None
+    posting = app_data.get("posting")
+    if not isinstance(posting, dict):
+        return None
+    location = str(posting.get("locationName") or "").strip()
+    secondary = [
+        str(item).strip()
+        for item in posting.get("secondaryLocationNames") or []
+        if str(item).strip()
+    ]
+    display_parts = [part for part in [location, *secondary] if part]
+    provider_workplace = str(posting.get("workplaceType") or "").strip()
+    organization = app_data.get("organization")
+    return {
+        "source": "ashby_window_app_data",
+        "authority": "apply_page",
+        "url": url,
+        "title": posting.get("title"),
+        "organization": organization.get("name") if isinstance(organization, dict) else None,
+        "location_display": "; ".join(display_parts) if display_parts else None,
+        "primary_location": location or None,
+        "secondary_locations": secondary,
+        "provider_workplace_type": provider_workplace or None,
+        "workplace_type": _classify_application_workplace(location, provider_workplace),
+    }
+
+
+def _fetch_ashby_application_metadata(apply_url: str) -> dict[str, Any] | None:
+    if "ashbyhq.com" not in str(apply_url or "").lower():
+        return None
+    try:
+        import httpx
+
+        response = httpx.get(apply_url, follow_redirects=True, timeout=20)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001 - supplemental evidence, not form capture itself
+        logger.info("ashby application metadata fetch failed for {}: {}", apply_url, exc)
+        return None
+    return _ashby_application_metadata_from_html(response.text, apply_url)
+
+
 def _ats_provider_from_url(url: str) -> tuple[str, str, str]:
     """Parse (provider, site, posting_id) from a known ATS apply URL.
 
@@ -1599,7 +1700,14 @@ def _ats_field_type(label: str, tag: str, input_type: str, has_options: bool) ->
     return "text"
 
 
-def _generic_form_from_dom(provider: str, site: str, posting_id: str, url: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
+def _generic_form_from_dom(
+    provider: str,
+    site: str,
+    posting_id: str,
+    url: str,
+    rows: list[dict[str, Any]],
+    application_page: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     fields = []
     accepted_attachments: list[str] = []
     seen: set[str] = set()
@@ -1626,17 +1734,23 @@ def _generic_form_from_dom(provider: str, site: str, posting_id: str, url: str, 
             accepted_attachments.append(label)
     if not fields:
         raise BrowserCaptureError("ATS_DOM_CAPTURE_EMPTY")
-    return {
+    form = {
         "provider": provider,
         "site": site,
         "posting_id": posting_id,
         "url": url,
+        "title": application_page.get("title") if application_page else None,
+        "organization": application_page.get("organization") if application_page else None,
+        "location": application_page.get("location_display") if application_page else None,
+        "workplace_type": application_page.get("workplace_type") if application_page else None,
+        "application_page": application_page,
         "fields": fields,
         "accepted_attachments": accepted_attachments,
         "policy_observations": [
             "Captured read-only from the rendered application form DOM; no form write, no application created.",
         ],
     }
+    return form
 
 
 def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
@@ -1663,6 +1777,7 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
         receipt["status"] = "NO_URL"
         return receipt
     form: dict[str, Any] | None = None
+    application_page = _fetch_ashby_application_metadata(apply_url) if provider == "ashby" else None
     tab_id = ""
     try:
         if provider == "greenhouse" and site and posting_id:
@@ -1682,7 +1797,7 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
             _surf_pause(surf_run, "7")
             raw = _surf(surf_run, "js", "--tab-id", tab_id, _ATS_FORM_EXTRACT_JS, timeout=25)
             rows = json.loads(json.loads(raw))
-            form = _generic_form_from_dom(provider, site, posting_id, apply_url, rows)
+            form = _generic_form_from_dom(provider, site, posting_id, apply_url, rows, application_page)
             receipt["capture_method"] = "surf_read_only_dom"
         form_path = out_dir / f"ats-form-{(site or 'site')}-{(posting_id or 'id')}.json"
         form_path.write_text(json.dumps(form, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -1694,6 +1809,11 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
         receipt["required_fields"] = required
         receipt["human_required_fields"] = human_required
         receipt["accepted_attachments"] = form.get("accepted_attachments", [])
+        if application_page:
+            receipt["application_page"] = application_page
+            receipt["application_page_location"] = application_page.get("location_display")
+            receipt["application_page_workplace_type"] = application_page.get("workplace_type")
+            receipt["application_page_location_authority"] = application_page.get("authority")
     except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
         logger.warning("ATS form capture failed for {}: {}", apply_url, exc)
         receipt["status"] = "FAILED"

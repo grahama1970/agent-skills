@@ -80,6 +80,13 @@ def test_source_locator_is_hint_only_and_admits_no_candidates() -> None:
     assert any("hint-only" in item for item in receipt["limitations"])
 
 
+def test_ashby_provider_workplace_type_disambiguates_non_buffalo_onsite() -> None:
+    assert discovery._workplace_type("San Francisco", "", "OnSite") == "ONSITE_ELSEWHERE"
+    assert discovery._workplace_type("Buffalo, NY", "", "OnSite") == "WNY_ONSITE"
+    assert discovery._workplace_type("Buffalo, NY", "", "Hybrid") == "WNY_HYBRID"
+    assert discovery._workplace_type("United States", "", "Remote") == "REMOTE"
+
+
 def test_sweep_emits_honest_browser_required_receipts_without_human_evidence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

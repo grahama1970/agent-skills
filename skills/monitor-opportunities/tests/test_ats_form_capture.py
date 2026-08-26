@@ -18,8 +18,10 @@ import pytest
 import monitor_opportunities.browser_capture as browser_capture
 from monitor_opportunities.browser_capture import (
     BrowserCaptureError,
+    _ashby_application_metadata_from_html,
     _ats_field_type,
     _ats_provider_from_url,
+    _classify_application_workplace,
     _generic_form_from_dom,
     capture_meetup_buffalo,
     capture_meetup_buffalo_isolated,
@@ -68,6 +70,38 @@ def test_generic_form_from_dom_shape() -> None:
     auth = next(f for f in form["fields"] if f["name"] == "Work authorization")
     assert auth["field_type"] == "work_authorization"
     assert auth["required"] is True
+
+
+def test_ashby_application_page_metadata_sets_actual_location() -> None:
+    html = """
+    <html><script>
+      window.__appData = {
+        "organization": {"name": "Cognition"},
+        "posting": {
+          "title": "Deployed Engineer",
+          "locationName": "San Francisco",
+          "secondaryLocationNames": ["New York City", "Austin, Texas"],
+          "workplaceType": "OnSite"
+        }
+      };
+    </script></html>
+    """
+
+    metadata = _ashby_application_metadata_from_html(html, "https://jobs.ashbyhq.com/cognition/123/application")
+
+    assert metadata is not None
+    assert metadata["authority"] == "apply_page"
+    assert metadata["organization"] == "Cognition"
+    assert metadata["location_display"] == "San Francisco; New York City; Austin, Texas"
+    assert metadata["provider_workplace_type"] == "OnSite"
+    assert metadata["workplace_type"] == "ONSITE_ELSEWHERE"
+
+
+def test_application_workplace_classifier_does_not_make_non_buffalo_onsite_wny() -> None:
+    assert _classify_application_workplace("Buffalo, NY", "OnSite") == "WNY_ONSITE"
+    assert _classify_application_workplace("Buffalo, NY", "Hybrid") == "WNY_HYBRID"
+    assert _classify_application_workplace("Remote, US", "Remote") == "REMOTE"
+    assert _classify_application_workplace("San Francisco", "OnSite") == "ONSITE_ELSEWHERE"
 
 
 def test_generic_form_from_dom_empty_raises() -> None:
