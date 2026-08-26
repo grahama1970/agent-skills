@@ -122,6 +122,9 @@ def _project_affinity(source: EvidenceSource, scope: set[str]) -> float:
     identity = " ".join(
         str(meta.get(field) or "") for field in ("_key", "source", "profile")
     ).casefold() + " " + (source.repository or "").casefold()
+    tags = meta.get("tags")
+    if isinstance(tags, list):
+        identity += " " + " ".join(str(tag).casefold() for tag in tags)
     if any(name in identity for name in scope):
         return 0.15
     # A local Claude Code memory doc that belongs to some OTHER project. The

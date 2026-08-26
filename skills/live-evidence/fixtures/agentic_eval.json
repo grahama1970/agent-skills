@@ -1105,7 +1105,7 @@
           "transcript meeting: PASS"
         ]
       },
-      "notes": "Scenario-based agentic transcript eval (Graham's design, 2026-08-23): a COMPLETE speaker transcript, questions/expected outcomes extracted in advance, played through chatterbox in real time down the live path; each produced card judged for SEMANTIC SIMILARITY by an agentic SciLLM judge, not token overlap. This CLIENT-MEETING scenario exercises the briefing-pack capability (talking points surface as the client opens doors) and passes reliably. The sibling standup scenario (sparta-standup-invented) is a stricter memory/code/research diagnostic that currently exposes retrieval-ranking and STT-segmentation gaps (see PROJECT_KNOWLEDGE) and is NOT yet a passing gate. Add scenarios (code interview, pitchdeck presentation) as fixture entries in transcript_meetings.json."
+      "notes": "Scenario-based agentic transcript eval (Graham's design, 2026-08-23): a COMPLETE speaker transcript, questions/expected outcomes extracted in advance, played through chatterbox in real time down the live path; each produced card judged for SEMANTIC SIMILARITY by an agentic SciLLM judge, not token overlap. This CLIENT-MEETING scenario exercises the briefing-pack capability (talking points surface as the client opens doors) and passes reliably. Add scenarios (code interview, pitchdeck presentation) as fixture entries in transcript_meetings.json."
     },
     {
       "name": "surface-selection-agentic",
@@ -1188,7 +1188,72 @@
           }
         ]
       },
-      "notes": "LIVE MONITORED MEETING end-to-end: an invented Sparta standup rendered turn-by-turn by the live chatterbox server, played through a PipeWire null sink, transcribed by Docker RealtimeSTT (GPU), and answered down the full resolver -> retrieval -> gpt-5.5 surface selector -> card path. The memory-recall card is judged SEMANTICALLY SIMILAR to the expected read-first rules by an agentic SciLLM judge -- the real live-audio card-surfacing capability, gated. The meeting also carries a second spoken question so the assistant is monitoring a realistic multi-question call, but the gate is the memory card because live-audio research-proposal detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically by eval_action_lane instead. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM. The denser sparta-standup-invented and meeting-campaign scenarios remain diagnostics that still expose the STT segmentation flake."
+      "notes": "LIVE MONITORED MEETING end-to-end: an invented Sparta standup rendered turn-by-turn by the live chatterbox server, played through a PipeWire null sink, transcribed by Docker RealtimeSTT (GPU), and answered down the full resolver -> retrieval -> gpt-5.5 surface selector -> card path. The memory-recall card is judged SEMANTICALLY SIMILAR to the expected read-first rules by an agentic SciLLM judge -- the real live-audio card-surfacing capability, gated. The meeting also carries a second spoken question so the assistant is monitoring a realistic multi-question call, but the gate is the memory card because live-audio research-proposal detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically by eval_action_lane instead. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM."
+    },
+    {
+      "name": "sparta-standup-memory-code-agentic",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-sparta-standup-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_TRANSCRIPT_MEETING_OUT_DIR=\"$O\" bash ../run.sh eval-transcript-meeting sparta-standup-invented"
+      ],
+      "timeout_seconds": 900,
+      "infra_blocked_when": [
+        "server did not come up",
+        "chatterbox produced no wav",
+        "INFRA_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "team working meeting / standup",
+          "memory-hard-rules (memory): detected=True card=True similar=True",
+          "research-sparta-version (research): detected=True card=True similar=True",
+          "code-qra-generation (code): detected=True card=True similar=True",
+          "transcript meeting: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/audio_live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/0/id",
+            "equals": "memory-hard-rules"
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/0/answer_similar",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/2/id",
+            "equals": "code-qra-generation"
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/2/answer_similar",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/sparta-standup-invented/meeting-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      },
+      "notes": "Retained regression for the 2026-08-26 live transcript failure where hard/read-first rules were heard but unrelated workspace memories displaced the SPARTA Project Memory Index. Runs the denser Sparta standup through chatterbox TTS, PipeWire monitor capture, Docker RealtimeSTT, resolver, retrieval, selector, and card publication, and requires both the memory hard-rules card and the QRA code-location card to remain semantically similar."
     },
     {
       "name": "screenshot-dependent-question-requires-correct-frame",

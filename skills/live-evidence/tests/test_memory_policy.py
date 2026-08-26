@@ -2,11 +2,15 @@
 """Tests for public-safe Memory and code evidence filtering."""
 
 from live_evidence.config import InterviewProfile
+from live_evidence.models import EvidenceSource, Freshness, RetrievalLane
 from live_evidence.retrieval.memory import (
     _code_item_allowed,
+    _memory_excerpt,
     _memory_item_allowed,
     _memory_items_to_sources,
+    _memory_recall_queries,
 )
+from live_evidence.retrieval.ranker import rank_sources
 
 
 def profile() -> InterviewProfile:
@@ -139,3 +143,76 @@ def test_project_memory_leetcode_record_maps_to_memory_source() -> None:
     assert sources[0].metadata["_key"] == "live-evidence-eval-minimum-remove-valid-parentheses"
     assert sources[0].metadata["source"] == "project_memory_active"
     assert sources[0].score > 0.8
+
+
+def test_workspace_doc_ingestion_summary_does_not_hide_playbook_body() -> None:
+    excerpt = _memory_excerpt(
+        {
+            "problem": "Knowledge from local memory file",
+            "solution": "Workspace doc ingestion",
+            "playbook": "READ FIRST HARD RULES: never skim a SKILL.md; read the full file.",
+        }
+    )
+
+    assert "never skim" in excerpt
+    assert excerpt != "Workspace doc ingestion"
+
+
+def test_sparta_memory_index_question_adds_exact_project_index_query() -> None:
+    queries = _memory_recall_queries(
+        "What are the hard read-first rules recorded in the Sparta project's memory index?",
+        profile(),
+    )
+
+    assert queries[0] == "SPARTA Project Memory Index read first hard rules SKILL.md"
+    assert queries[1].startswith("What are the hard read-first rules")
+
+
+def test_live_spoken_hard_rules_query_adds_project_index_queries() -> None:
+    queries = _memory_recall_queries(
+        "Remind me — what are the hard rules, the ones we learned the hard way?",
+        profile(),
+    )
+
+    assert "SPARTA Project Memory Index read first hard rules SKILL.md" in queries
+    assert queries[-1].startswith("Remind me")
+
+
+def test_spartics_stt_drift_still_targets_sparta_memory_index() -> None:
+    queries = _memory_recall_queries(
+        "Good morning everyone. Quick monitor stand up on the Spartics 4 work. "
+        "Remind you what the hard rules are. The read first rules we learned the hard way.",
+        profile(),
+    )
+
+    assert queries[0] == "SPARTA Project Memory Index read first hard rules SKILL.md"
+
+
+def test_ranker_uses_project_tags_for_memory_affinity() -> None:
+    generic = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="Generic workspace document",
+        excerpt="READ FIRST mention without Sparta project ownership.",
+        score=1.0,
+        freshness=Freshness.UNKNOWN,
+        path="lessons/generic",
+        metadata={"tags": ["workspace", "experiments"]},
+    )
+    sparta = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="SPARTA Project Memory Index",
+        excerpt="READ FIRST HARD RULES: never skim a SKILL.md.",
+        score=1.0,
+        freshness=Freshness.UNKNOWN,
+        path="local_memory/experiments-sparta/MEMORY.md",
+        metadata={"tags": ["local_memory", "project:experiments-sparta"]},
+    )
+
+    ranked = rank_sources(
+        [generic, sparta],
+        "What are the hard read-first rules recorded in the Sparta project memory index?",
+        profile(),
+        repo_scope={"sparta"},
+    )
+
+    assert ranked[0] is sparta
