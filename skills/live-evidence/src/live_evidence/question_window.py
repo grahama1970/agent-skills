@@ -8,6 +8,7 @@ question candidate while treating candidate speech as a hard boundary.
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass
 from time import monotonic
 
@@ -48,6 +49,28 @@ IMPERATIVE_PROBLEM_PREFIXES = (
     "write a function",
     "implement ",
 )
+
+# Senior interviewers assign work imperatively, often after a declarative
+# setup: "The sandbox is a production replica ... Design promotion proof,
+# shadow traffic, and kill switches." No question mark, no lead word at the
+# text start — but a clause opening with one of these verbs is a work
+# request. The stage-1 resolver remains the authority on answerability;
+# this only widens what it gets to judge (proven gap: DW-AI-04 T07/T08,
+# 2026-08-26 forensics).
+IMPERATIVE_CLAUSE_LEADS = frozenset({
+    "design", "define", "sketch", "describe", "explain", "walk", "show",
+    "give", "tell", "map", "translate", "defend", "argue", "package",
+    "reconstruct", "trace", "build", "implement", "write", "set",
+    "pressure-test", "compare", "justify", "outline", "propose",
+})
+
+
+def _has_imperative_clause(lower_text: str) -> bool:
+    for clause in re.split(r"[.;!?]\s+", lower_text):
+        first_word = clause.strip().split(" ", 1)[0].strip()
+        if first_word in IMPERATIVE_CLAUSE_LEADS:
+            return True
+    return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -200,6 +223,8 @@ class QuestionWindowBuilder:
         if is_question:
             return "question"
         if any(lower_text.startswith(prefix) for prefix in IMPERATIVE_PROBLEM_PREFIXES):
+            return "problem_statement"
+        if _has_imperative_clause(lower_text):
             return "problem_statement"
         # Declarative problem statements: a code walkthrough or task briefing
         # states its question without interrogative form ("we're given an
