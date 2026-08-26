@@ -93,6 +93,58 @@ function breakpointKey(breakpoint: vscode.SourceBreakpoint) {
   return `${breakpoint.location.uri.fsPath}:${breakpoint.location.range.start.line + 1}`;
 }
 
+// The ownership registry must survive a window reload: VS Code persists the
+// BREAKPOINTS across reloads, so an in-memory-only registry forgets which of
+// them the bridge created and starts preserving its own stale breakpoints as if
+// they were human-owned (the live defect that made a walkthrough re-stop at the
+// previous stop's line after a reload). Persist to the runtime artifact dir and
+// reload on activation; stale keys are pruned against live breakpoints by the
+// existing reconciliation loop in removeOwnedBreakpoints().
+function ownershipRegistryPath(): string | undefined {
+  const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (!workspacePath) {
+    return undefined;
+  }
+  return path.join(runtimeArtifactRoot(workspacePath), 'owned-breakpoints.json');
+}
+
+function persistOwnershipRegistry() {
+  const registryPath = ownershipRegistryPath();
+  if (!registryPath) {
+    return;
+  }
+  void writeJsonFile(registryPath, {
+    schema: 'debugger.owned_breakpoints.v1',
+    owned: [...ownedBreakpointKeys],
+    temporary: [...temporaryBreakpointKeys],
+    updatedAt: new Date().toISOString(),
+  }).catch((error) => channel.appendLine(`Ownership registry persist failed: ${String(error)}`));
+}
+
+async function loadOwnershipRegistry() {
+  const registryPath = ownershipRegistryPath();
+  if (!registryPath) {
+    return;
+  }
+  try {
+    const raw = JSON.parse(await fs.readFile(registryPath, 'utf8')) as {
+      owned?: unknown[];
+      temporary?: unknown[];
+    };
+    for (const key of raw.owned ?? []) {
+      if (typeof key === 'string') ownedBreakpointKeys.add(key);
+    }
+    for (const key of raw.temporary ?? []) {
+      if (typeof key === 'string') temporaryBreakpointKeys.add(key);
+    }
+    channel.appendLine(
+      `Ownership registry loaded: ${ownedBreakpointKeys.size} owned, ${temporaryBreakpointKeys.size} temporary.`,
+    );
+  } catch {
+    // No registry yet (fresh runtime dir) -- start empty, never fail activation.
+  }
+}
+
 function removeOwnedBreakpoints(options: { temporaryOnly?: boolean } = {}) {
   const liveSource = vscode.debug.breakpoints.filter(
     (breakpoint): breakpoint is vscode.SourceBreakpoint => breakpoint instanceof vscode.SourceBreakpoint,
@@ -121,6 +173,7 @@ function removeOwnedBreakpoints(options: { temporaryOnly?: boolean } = {}) {
       temporaryBreakpointKeys.delete(key);
     }
   }
+  persistOwnershipRegistry();
   return toRemove.map((breakpoint) => ({
     file: breakpoint.location.uri.fsPath,
     line: breakpoint.location.range.start.line + 1,
@@ -131,6 +184,7 @@ let extensionHostKind: BridgeAuthority['extensionHostKind'] = 'unknown';
 
 export function activate(context: vscode.ExtensionContext) {
   channel.appendLine('Debugger Bridge activated.');
+  void loadOwnershipRegistry();
   extensionHostKind = context.extension.extensionKind === vscode.ExtensionKind.Workspace
     ? 'workspace'
     : context.extension.extensionKind === vscode.ExtensionKind.UI
@@ -685,6 +739,7 @@ function removeRequestedBreakpoints(folder: vscode.WorkspaceFolder, breakpoints:
       temporaryBreakpointKeys.delete(breakpointKey(breakpoint));
     }
   }
+  persistOwnershipRegistry();
   return staleBreakpoints.map((breakpoint) => ({
     file: breakpoint.location.uri.fsPath,
     line: breakpoint.location.range.start.line + 1,
@@ -917,6 +972,7 @@ async function addRequestedBreakpoints(
         temporaryBreakpointKeys.add(breakpointKey(breakpoint));
       }
     }
+    persistOwnershipRegistry();
   }
   return sourceBreakpoints.map((breakpoint) => ({
     file: breakpoint.location.uri.fsPath,
