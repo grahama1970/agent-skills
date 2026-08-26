@@ -13,6 +13,7 @@ report can cite a response.md receipt for each score.
 from __future__ import annotations
 
 import json
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,32 @@ from typing import Any
 import typer
 
 from eval_app import app, console
+
+
+def _read_control(output: Path) -> dict[str, Any]:
+    """Read the sidecar control file (<output>.control): {paused, stop}.
+
+    The control server writes this; the runner honours it at cell boundaries
+    (clean pause between cells -- no in-flight /ask call is frozen).
+    """
+    cpath = Path(str(output) + ".control")
+    if not cpath.exists():
+        return {}
+    try:
+        return json.loads(cpath.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _await_resume(output: Path) -> bool:
+    """Block while paused. Returns False if a stop was requested, else True."""
+    while True:
+        ctrl = _read_control(output)
+        if ctrl.get("stop"):
+            return False
+        if not ctrl.get("paused"):
+            return True
+        time.sleep(0.5)
 from evaluators import evaluate_output
 import judge_grid
 import vram_guard
@@ -157,15 +184,22 @@ def run_matrix(
         tmp.replace(output)
 
     _flush("running")  # empty shell so the live page renders immediately
+    stopped = False
     for m in candidates:
         for it in items:
+            # Clean pause / stop between cells (never mid /ask call).
+            if not _await_resume(output):
+                stopped = True
+                break
             r = run_eval_item(m, it, judge_handler, trials=trials, timeout=timeout, min_free_gb=min_free_gb)
             rows.append(r)
             _flush("running")  # incremental: each cell appears in the live report
             p1 = "INFRA" if r["status"] == "INFRA_BLOCKED" else f"{r['pass_at_1']}"
             console.print(f"[dim]  {len(rows)}/{total}  q{r['id']:<2} {m:<16} pass@1={p1} "
                           f"pass@3={r['pass_at_3']} ({r['method']})[/dim]")
+        if stopped:
+            break
 
-    _flush("complete")
+    _flush("stopped" if stopped else "complete")
     console.print(f"[dim]wrote {output}[/dim]")
     console.print("RUN_MATRIX_COMPLETE")

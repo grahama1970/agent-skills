@@ -21,6 +21,7 @@ import models_cmd  # noqa: F401 -- models, seed-memory
 import judge_grid  # noqa: F401 -- judge-grid
 import runner  # noqa: F401 -- run-matrix (multi-trial, deterministic-first, INFRA isolation)
 import build_report  # noqa: F401 -- report (reusable evidence HTML)
+import control_server  # noqa: F401 -- serve (eval-console control plane)
 
 
 if __name__ == "__main__":
