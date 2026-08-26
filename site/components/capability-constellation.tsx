@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { SVGProps } from 'react';
 import {
   forceCenter,
   forceCollide,
@@ -375,6 +376,18 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
             const on = connected(n.id);
             const glow = n.lens ? GLOW[n.lens] : '#a99787';
             const r = radiusOf(n.type);
+            const nodeTitle =
+              n.type === 'project' && n.slug
+                ? n.visibility && n.visibility !== 'public' && n.href
+                  ? `Open public overview for ${n.label}`
+                  : n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`
+                : n.type === 'area'
+                  ? `${n.title || n.label} research area`
+                  : `${n.label} practice overview`;
+            const nodeTitleProps = {
+              title: nodeTitle,
+              'aria-label': nodeTitle,
+            } as SVGProps<SVGGElement> & { title: string };
 
             if (n.type === 'practice') {
               return (
@@ -383,6 +396,7 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
                   className={`c-node${on ? '' : ' is-dim'}`}
                   data-qid={`constellation:node:${n.id}`}
                   data-qs-action="CONSTELLATION_NODE"
+                  {...nodeTitleProps}
                   tabIndex={0}
                   onMouseEnter={inspectAtPointer(n)}
                   onMouseMove={moveInspector(n)}
@@ -435,6 +449,7 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
                 className={`c-node c-node--${n.type}${on ? '' : ' is-dim'}`}
                 data-qid={`constellation:node:${n.id}`}
                 data-qs-action="CONSTELLATION_NODE"
+                {...nodeTitleProps}
                 tabIndex={0}
                 onMouseEnter={inspectAtPointer(n)}
                 onMouseMove={moveInspector(n)}
