@@ -40,6 +40,8 @@ export const metadata: Metadata = {
     title: 'Graham Anderson | Principal AI Engineer & AI Architect',
     description,
     images: [{ url: '/og.png', alt: 'Graham Anderson - Principal AI Engineer Resume Summary' }],
+    creator: '@GAnderson95620',
+    site: '@GAnderson95620',
   },
 };
 

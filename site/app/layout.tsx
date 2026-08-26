@@ -35,6 +35,8 @@ export const metadata: Metadata = {
     title: 'Graham Anderson — agent systems with evidence',
     description,
     images: ['/og.png'],
+    creator: '@GAnderson95620',
+    site: '@GAnderson95620',
   },
 };
 
