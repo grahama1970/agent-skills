@@ -17,6 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from validate_story_contract_work_order import validate_story_contract_work_order  # noqa: E402
+from fulfill_story_contract_work_order import fulfill  # noqa: E402
+from validate_story_contract import validate_story_contract  # noqa: E402
 from write_story_contract_work_order import build_story_contract_work_order  # noqa: E402
 
 
@@ -35,6 +37,32 @@ def _write_contract(path: Path, **overrides: object) -> None:
     contract.update(overrides)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(contract, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_dream_packet(path: Path) -> None:
+    packet = {
+        "schema": "persona_dream.packet.v1",
+        "run_id": "fixture-run",
+        "persona": {"id": "embry", "display_name": "Embry"},
+        "dream_prompt": "Embry dreams about uncertainty becoming information instead of indictment.",
+        "reflection": "I should treat this as reflective material, not evidence or a durable identity change.",
+        "residue_items": [
+            {
+                "source_id": "fixture-residue-1",
+                "text": "the human requires the whole loop, receipts at every joint",
+                "synthetic": False,
+            }
+        ],
+        "frame_prompts": [
+            {
+                "frame_id": "frame_01",
+                "prompt": "Embry holds uncertainty without turning it into proof.",
+                "source_ids": ["fixture-residue-1"],
+                "synthetic": True,
+            }
+        ],
+    }
+    path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 class TestStoryContractWorkOrder(unittest.TestCase):
@@ -80,6 +108,66 @@ class TestStoryContractWorkOrder(unittest.TestCase):
 
         self.assertEqual(validation["status"], "BLOCKED")
         self.assertIn("rewrite_status_only_to_bypass_gate", validation["first_blocker"]["reason"])
+
+    def test_fulfill_story_contract_work_order_emits_accepted_story_and_receipts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            _write_dream_packet(run_root / "dream_packet.json")
+            (run_root / "storyboard_plan.json").write_text(
+                json.dumps({"schema": "fixture.storyboard_plan"}) + "\n",
+                encoding="utf-8",
+            )
+            output = run_root / "receipts/story_contract_work_order.json"
+            work_order = build_story_contract_work_order(
+                run_root=run_root,
+                created_at="2026-06-28T23:55:00Z",
+            )
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(work_order, indent=2) + "\n", encoding="utf-8")
+
+            receipt = fulfill(
+                output,
+                run_root=run_root,
+                output=run_root / "receipts/story_contract_fulfillment.json",
+                created_at="2026-06-28T23:56:00Z",
+            )
+            validation = validate_story_contract(run_root / "story_contract.json", run_root=run_root)
+            stale = json.loads((run_root / "receipts/story_contract_downstream_stale.json").read_text())
+            storyboard_packet_exists = (run_root / "storyboard_packet.json").exists()
+
+        self.assertEqual(receipt["status"], "PASS_STORY_CONTRACT_FULFILLED")
+        self.assertEqual(validation["status"], "PASS_STORY_CONTRACT")
+        self.assertEqual(receipt["owner_subagent"], "dreamer")
+        self.assertFalse(receipt["paid_provider_call_attempted"])
+        self.assertFalse(receipt["kling_call_attempted"])
+        self.assertFalse(receipt["storyboard_plan_promoted"])
+        self.assertFalse(storyboard_packet_exists)
+        self.assertEqual(stale["status"], "PASS_DOWNSTREAM_MARKED_STALE")
+        self.assertEqual(
+            stale["stale_artifacts"][0]["status"],
+            "STALE_REQUIRES_REGENERATION_FROM_ACCEPTED_STORY_CONTRACT",
+        )
+
+    def test_fulfill_story_contract_work_order_refuses_missing_dream_packet(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            output = run_root / "receipts/story_contract_work_order.json"
+            work_order = build_story_contract_work_order(run_root=run_root)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(json.dumps(work_order, indent=2) + "\n", encoding="utf-8")
+
+            receipt = fulfill(
+                output,
+                run_root=run_root,
+                output=run_root / "receipts/story_contract_fulfillment.json",
+                created_at="2026-06-28T23:56:00Z",
+            )
+
+        self.assertEqual(receipt["status"], "BLOCKED_STORY_CONTRACT_WORK_ORDER_INVALID")
+        self.assertEqual(receipt["work_order_validation"]["status"], "BLOCKED")
+        self.assertIn("missing_source_path:dream_packet", receipt["work_order_validation"]["first_blocker"]["reason"])
+        self.assertFalse(receipt["paid_provider_call_attempted"])
+        self.assertFalse(receipt["kling_call_attempted"])
 
 
 if __name__ == "__main__":

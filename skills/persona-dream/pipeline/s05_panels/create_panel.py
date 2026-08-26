@@ -77,6 +77,26 @@ def build_prompt(panel_num: str, contract: dict, extra: str | None = None) -> st
     return "".join(parts).strip()
 
 
+def parse_last_json_object(stdout: str) -> dict:
+    """Return the last JSON object printed by a run.sh wrapper."""
+    depth = 0
+    start = -1
+    best = ""
+    for index, char in enumerate(stdout):
+        if char == "{":
+            if depth == 0:
+                start = index
+            depth += 1
+        elif char == "}" and depth:
+            depth -= 1
+            if depth == 0 and start >= 0:
+                best = stdout[start : index + 1]
+    try:
+        return json.loads(best) if best else {}
+    except Exception:
+        return {}
+
+
 def generate_panel(panel_num, output_path, contract_path=None, extra_prompt=None, backend=DEFAULT_BACKEND):
     contract_path = Path(contract_path or DEFAULT_CONTRACT)
     try:
@@ -113,28 +133,47 @@ def generate_panel(panel_num, output_path, contract_path=None, extra_prompt=None
                 return {"status": "PASS", "path": output_path, "backend": backend, "prompt": prompt[:200]}
             return {"status": "FAIL", "error": f"No image URL in {backend} response"}
 
-        # scillm path: use the create-image skill wrapper so we get receipts,
-        # Codex-OAuth handling, and the canonical scillm image generation flow.
-        create_image_script = Path(__file__).resolve().parents[3] / "create-image" / "run.sh"
-        if not create_image_script.exists():
-            return {"status": "FAIL", "error": f"create-image wrapper not found: {create_image_script}"}
+        # OAuth image lane: $create-image has no scillm backend in this
+        # environment. Persona-dream's retained funded path is $ask image
+        # generation with Codex OAuth.
+        ask_script = Path(__file__).resolve().parents[3] / "ask" / "run.sh"
+        if not ask_script.exists():
+            return {"status": "FAIL", "error": f"ask wrapper not found: {ask_script}"}
 
         size = contract.get("output_size", "1536x1024")
+        prompt_path = Path(output_path).with_suffix(".prompt.md")
+        prompt_path.parent.mkdir(parents=True, exist_ok=True)
+        prompt_path.write_text(prompt + "\n", encoding="utf-8")
         cmd = [
-            "bash", str(create_image_script),
-            "generate",
+            "bash", str(ask_script),
+            "ask",
             prompt,
-            "--output", output_path,
-            "--size", size,
-            "--backend", "scillm",
-            "--model", cfg["model"],
+            "--image-generate",
+            "--image-auth", "codex-oauth",
+            "--image-model", cfg["model"],
+            "--image-size", size,
+            "--image-output", output_path,
+            "--image-output-format", "png",
+            "--image-timeout", "900",
+            "--json",
         ]
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=1020)
         if res.returncode != 0:
-            return {"status": "FAIL", "error": f"create-image failed: {res.stderr[-1200:]}"}
+            return {"status": "FAIL", "error": f"ask image generation failed: {res.stderr[-1200:] or res.stdout[-1200:]}"}
         if not Path(output_path).is_file() or Path(output_path).stat().st_size == 0:
-            return {"status": "FAIL", "error": "create-image did not write output file"}
-        return {"status": "PASS", "path": output_path, "backend": backend, "prompt": prompt[:200]}
+            return {"status": "FAIL", "error": "ask image generation did not write output file"}
+        ask_result = parse_last_json_object(res.stdout)
+        return {
+            "status": "PASS",
+            "path": output_path,
+            "backend": backend,
+            "auth": "codex-oauth",
+            "route": "ask --image-generate --image-auth codex-oauth",
+            "model": ask_result.get("model") or cfg["model"],
+            "ask_result": ask_result,
+            "prompt": prompt[:200],
+            "prompt_path": str(prompt_path),
+        }
     except Exception as e:
         return {"status": "FAIL", "error": str(e)}
 

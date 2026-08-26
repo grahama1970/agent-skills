@@ -1,0 +1,227 @@
+from __future__ import annotations
+
+import base64
+import hashlib
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from fulfill_panel_repair_work_order import fulfill_panel_repair_work_order  # noqa: E402
+from validate_panel_repair_gate import validate_receipt as validate_panel_repair_gate_receipt  # noqa: E402
+from write_panel_repair_work_order import build_panel_repair_work_order  # noqa: E402
+
+
+TINY_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+)
+
+
+def _sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_storyboard_panel_fixture(run_root: Path) -> Path:
+    (run_root / "artifacts").mkdir(parents=True, exist_ok=True)
+    (run_root / "receipts").mkdir(parents=True, exist_ok=True)
+    image = run_root / "artifacts/source_panel.png"
+    image.write_bytes(TINY_PNG)
+    ledger = run_root / "artifacts/panel_continuity_and_repair_ledger.json"
+    ledger.write_text(
+        json.dumps({"schema": "fixture.ledger", "status": "PASS"}) + "\n",
+        encoding="utf-8",
+    )
+    panel_work_order = run_root / "artifacts/panel_001_work_order.json"
+    panel_work_order.write_text(json.dumps({"panel_id": "panel_001"}) + "\n", encoding="utf-8")
+    receipt = run_root / "receipts/storyboard_panel_receipt.json"
+    receipt.write_text(
+        json.dumps(
+            {
+                "schema": "persona_dream.storyboard_panel_receipt.v1",
+                "run_id": run_root.name,
+                "panel_id": "panel_001",
+                "status": "PANEL_READY_FOR_SOURCE_REVIEW",
+                "timing": {"start_s": 0.0, "end_s": 2.5},
+                "beat": "Embry tells Horus that the dream changes the mood without changing the answer.",
+                "image": {
+                    "path": "artifacts/source_panel.png",
+                    "sha256": _sha256(image),
+                    "width": 1,
+                    "height": 1,
+                },
+                "required_visible_entities": ["Embry", "Horus"],
+                "required_props": ["dream residue", "journal tension"],
+                "required_environment": ["synthetic dream space"],
+                "required_dynamic_behaviors": ["mood shifts without changing answer content"],
+                "continuity_ledger": "artifacts/panel_continuity_and_repair_ledger.json",
+                "work_order": "artifacts/panel_001_work_order.json",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return receipt
+
+
+def _write_story_contract(run_root: Path) -> None:
+    (run_root / "story_contract.json").write_text(
+        json.dumps(
+            {
+                "schema": "persona_dream.story_contract.v1",
+                "status": "PASS_STORY_CONTRACT",
+                "artifact_id": "story_fixture",
+                "created_at": "2026-08-26T20:30:00Z",
+                "input_idea_contract": "dream_packet.json",
+                "seed": "Embry dream seed",
+                "story": "Embry and Horus discuss dream residue and emotional conflict.",
+                "target_duration_s": 8.0,
+                "speaking_characters": ["Embry", "Horus"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+class TestFulfillPanelRepairWorkOrder(unittest.TestCase):
+    def test_fulfill_writes_blocked_public_media_receipt_without_provider_claim(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            storyboard_receipt = _write_storyboard_panel_fixture(run_root)
+            _write_story_contract(run_root)
+            work_order = build_panel_repair_work_order(
+                run_root=run_root,
+                panel_id="panel_001",
+                storyboard_panel_receipt=storyboard_receipt,
+                created_at="2026-08-26T20:31:00Z",
+            )
+            work_order_path = run_root / "receipts/panel_repair_work_order.json"
+            work_order_path.write_text(json.dumps(work_order, indent=2) + "\n", encoding="utf-8")
+            output = run_root / "receipts/panel_repair_gate_receipt.json"
+
+            def fake_generation(**kwargs):
+                output_image = kwargs["output_image"]
+                output_image.parent.mkdir(parents=True, exist_ok=True)
+                output_image.write_bytes(TINY_PNG)
+                return {
+                    "schema": "persona_dream.panel_generation_receipt.v1",
+                    "created_at": "2026-08-26T20:32:00Z",
+                    "status": "PASS",
+                    "panel_id": "panel_001",
+                    "backend": "scillm",
+                    "command": ["create_panel.py", "--backend", "scillm"],
+                    "exit_code": 0,
+                    "image_path": str(output_image),
+                    "sha256": _sha256(output_image),
+                    "mime_type": "image/png",
+                    "width": 1,
+                    "height": 1,
+                    "bytes": len(TINY_PNG),
+                    "live_call_made": True,
+                    "live_call_authorized": True,
+                    "paid_provider_call_attempted": False,
+                    "kling_call_attempted": False,
+                    "nano_banana_used": False,
+                    "gemini_final_image_used": False,
+                    "forbidden_backends_used": [],
+                    "mocked": "yes",
+                    "live": "no",
+                }
+
+            def fake_review(**kwargs):
+                return {
+                    "schema": "persona_dream.visual_review_receipt.v1",
+                    "created_at": "2026-08-26T20:33:00Z",
+                    "status": "PASS",
+                    "reviewer": "panel-reviewer",
+                    "adapter": "tau_vlm",
+                    "read_only": True,
+                    "image_path": str(kwargs["image_path"]),
+                    "image_sha256": _sha256(kwargs["image_path"]),
+                    "passes_storyboard": True,
+                    "passes_continuity": True,
+                    "passes_prompt_intent": True,
+                    "passes_no_overlay": True,
+                    "blockers": [],
+                    "mocked": "yes",
+                    "live": "no",
+                }
+
+            with patch("fulfill_panel_repair_work_order.run_generation", side_effect=fake_generation), patch(
+                "fulfill_panel_repair_work_order.run_visual_review", side_effect=fake_review
+            ), patch(
+                "fulfill_panel_repair_work_order.validate_provider_media_url",
+                return_value={
+                    "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+                    "created_at": "2026-08-26T20:34:00Z",
+                    "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/main/skills/persona-dream/provider_media/fixture/panel_001.png",
+                    "expected_sha256": "sha256:" + ("1" * 64),
+                    "status": "BLOCKED",
+                    "blockers": ["fetch_failed:http404"],
+                    "http_status": None,
+                    "observed_sha256": None,
+                    "mocked": "yes",
+                    "live": "no",
+                },
+            ):
+                result = fulfill_panel_repair_work_order(
+                    run_root=run_root,
+                    work_order_path=work_order_path,
+                    output=output,
+                    backend="scillm",
+                )
+
+            receipt = json.loads(output.read_text(encoding="utf-8"))
+            validation_errors = validate_panel_repair_gate_receipt(
+                receipt,
+                require_provider_eligible=False,
+                base_dir=output.parent,
+            )
+            provider_errors = validate_panel_repair_gate_receipt(
+                receipt,
+                require_provider_eligible=True,
+                base_dir=output.parent,
+            )
+
+        self.assertEqual(result["status"], "PASS_PANEL_REPAIR_FULFILLED")
+        self.assertEqual(receipt["status"], "BLOCKED_PROVIDER_MEDIA_URLS")
+        self.assertEqual(receipt["provider_media_status"], "FAIL")
+        self.assertFalse(receipt["provider_eligibility"])
+        self.assertFalse(receipt["kling_call_attempted"])
+        self.assertFalse(receipt["paid_provider_call_attempted"])
+        self.assertEqual(validation_errors, [])
+        self.assertIn("--require-provider-eligible requires provider_eligibility=true", provider_errors)
+
+    def test_fulfill_refuses_forbidden_backend_before_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_root = Path(tmp)
+            storyboard_receipt = _write_storyboard_panel_fixture(run_root)
+            _write_story_contract(run_root)
+            work_order = build_panel_repair_work_order(
+                run_root=run_root,
+                panel_id="panel_001",
+                storyboard_panel_receipt=storyboard_receipt,
+            )
+            work_order_path = run_root / "receipts/panel_repair_work_order.json"
+            work_order_path.write_text(json.dumps(work_order, indent=2) + "\n", encoding="utf-8")
+            output = run_root / "receipts/panel_repair_gate_receipt.json"
+
+            result = fulfill_panel_repair_work_order(
+                run_root=run_root,
+                work_order_path=work_order_path,
+                output=output,
+                backend="nano-banana",
+            )
+
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["first_blocker"]["phase"], "panel_generation_backend")
+        self.assertFalse(output.exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
