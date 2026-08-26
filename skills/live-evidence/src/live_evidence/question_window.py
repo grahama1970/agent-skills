@@ -235,6 +235,14 @@ class QuestionWindowBuilder:
         markers = sum(1 for marker in PROBLEM_STATEMENT_MARKERS if marker in lower_text)
         if markers >= 2:
             return "problem_statement"
+        # Interviewer-channel fallthrough (2026-08-26, batch-2 forensics):
+        # every event here already passed the speaker boundary, and verb
+        # allowlists keep missing legitimate work requests ("We need...",
+        # "Extend that design...", "Now bound execution."). A substantive
+        # interviewer turn goes to stage-1, which is the answerability
+        # authority and returns not_a_question when it is one.
+        if len(tokens) >= 8:
+            return "interviewer_statement"
         return None
 
     def _spans(self, joined_text: str) -> list[EventSpan]:

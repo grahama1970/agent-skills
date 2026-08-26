@@ -16,55 +16,55 @@
     {
      "id": "DW-AI-01-T01",
      "text": "Design a small agent system that answers an operations analyst asking why a customer account is blocked. It may use account APIs, KYC-status events, and curated policy evidence. Give me the graph, node responsibilities, state fields, edge conditions, and terminal outcomes. Do not give me a generic box diagram.",
-     "expected_stems": "graph responsibilities state fields conditions terminal outcomes generic diagram",
+     "expected_stems": "graph responsibilities state fields conditions terminal outcomes generic diagram|design small agent system answers operations analyst asking customer account blocked status",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T02",
      "text": "You chose multiple agents. Defend that choice. What concrete failure or scaling boundary makes this better than one agent with three tools, and what evidence would make you collapse it back to a single agent?",
-     "expected_stems": "concrete failure scaling boundary makes better agent three tools evidence would collapse",
+     "expected_stems": "defend choice concrete failure scaling boundary makes better agent three tools evidence|chose multiple agents defend choice",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T03",
      "text": "Live coding now. You have ten minutes. In clean Python, implement decide_next for a run state containing retrieval_count, confidence, tool_error, loop_count, and human_required. Return one typed action: retrieve_again, ask_human, answer, or fail_closed. Cap retries and make unsupported answers impossible.",
-     "expected_stems": "return typed action retrieve again human answer closed unsupported impossible",
+     "expected_stems": "return typed action retrieve again human answer closed unsupported impossible|coding minutes",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T04",
      "text": "Assume that function is running in workers on EKS and the worker dies after retrieval but before the next node. Which state is persisted, which fields are immutable, and how do you resume without repeating a side effect or silently changing the goal?",
-     "expected_stems": "which state persisted fields immutable resume without repeating effect silently changing",
+     "expected_stems": "assume function running workers after retrieval before which state persisted fields immutable|assume function running workers after retrieval before which state persisted fields immutable",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T05",
      "text": "A previously reliable agent gives a wrong blocked-account explanation on Tuesday morning, but only for custodial accounts. Start from the observability layer. Tell me the first five trace or metric comparisons you make before touching the prompt.",
-     "expected_stems": "first trace metric comparisons before touching prompt",
+     "expected_stems": "start observability layer first trace metric comparisons before touching prompt|previously reliable agent gives wrong blocked account explanation tuesday morning custodial start",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T06",
      "text": "The trace is complete: retrieval returned zero evidence, the model still answered, latency and token usage looked normal. What control failed, what code-level change prevents recurrence, and what alert would have caught it before the analyst saw it?",
-     "expected_stems": "control failed level change prevents recurrence alert would caught before analyst",
+     "expected_stems": "trace complete retrieval returned evidence model still answered latency token usage looked|trace complete retrieval returned evidence model still answered latency token usage looked",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T07",
      "text": "DriveWealth partner updates can arrive through SQS out of order. Your agent sees an older KYC-approved event after a newer restricted event. How does it determine current state, preserve the conflicting evidence, and explain the result without inventing an event order?",
-     "expected_stems": "determine current state preserve conflicting evidence explain result without inventing event order",
+     "expected_stems": "agent older approved event after newer restricted determine current state preserve conflicting|drivewealth partner updates arrive through order agent older approved event after newer",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T08",
      "text": "Package this for a mid-level engineer who knows Python and AWS but not agent internals. What is the smallest public SDK surface, what defaults are non-overridable, and what typed errors must the engineer be able to handle?",
-     "expected_stems": "smallest public surface defaults overridable typed errors engineer handle",
+     "expected_stems": "package level engineer knows python agent internals smallest public surface defaults overridable|package level engineer knows python agent internals smallest public surface defaults overridable",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-01-T09",
      "text": "Your resume says Tau uses receipt-gated stages and immutable goal hashes. Map only the useful parts into this design using Strands or plain Python. Be specific about runaway limits and human checkpoints, and tell me what you would not port.",
-     "expected_stems": "specific about runaway limits human checkpoints would",
+     "expected_stems": "useful parts design using strands plain python specific about runaway limits human|resume receipt gated stages immutable hashes useful parts design using strands plain",
      "pause_seconds": 60
     }
    ],
@@ -81,55 +81,55 @@
     {
      "id": "DW-AI-02-T01",
      "text": "Design an internal agent platform where application graphs and the tool or MCP layer release independently. Show the contracts between them, version negotiation, ownership boundaries, and how a team upgrades one side without coordinating a firm-wide deployment.",
-     "expected_stems": "contracts between version negotiation ownership boundaries upgrades without coordinating deployment",
+     "expected_stems": "design internal agent platform where application graphs layer release independently contracts between|design internal agent platform where application graphs layer release independently contracts between",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T02",
      "text": "Now the order-status tool changes one field from status to order_status and adds a new terminal value. Walk me through compatibility, deprecation, contract tests, and rollback. Saying semantic versioning is not enough.",
-     "expected_stems": "through compatibility deprecation contract tests rollback saying semantic versioning enough",
+     "expected_stems": "through compatibility deprecation contract tests rollback saying semantic versioning enough|order status changes field terminal value through compatibility deprecation contract tests rollback",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T03",
      "text": "Live coding. You have ten minutes. Implement an async Python call_tool wrapper that accepts a tool callable, payload, timeout, and tool_version. It must return a typed result with success, value, error_code, latency_ms, and version; convert timeouts and exceptions into bounded outcomes; and never leak the raw exception text.",
-     "expected_stems": "return typed result success value error latency version convert timeouts exceptions bounded",
+     "expected_stems": "implement async python wrapper accepts callable payload timeout version return typed result|coding minutes",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T04",
      "text": "Add retries to your design without writing more code. Which failures are retryable, where does the idempotency key live, and why is the policy different for get order status versus submit order?",
-     "expected_stems": "which failures retryable where idempotency policy different order status versus submit",
+     "expected_stems": "retries design without writing which failures retryable where idempotency policy different order|retries design without writing which failures retryable where idempotency policy different order",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T05",
      "text": "After a tool-package release, end-to-end success is flat, but p95 latency and cost nearly double. Start with observability. Which spans and dimensions do you compare, and how do you distinguish a slower tool from extra agent loops or context growth?",
-     "expected_stems": "which spans dimensions compare distinguish slower extra agent loops context growth",
+     "expected_stems": "start observability which spans dimensions compare distinguish slower extra agent loops context|after package release success latency nearly double start observability",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T06",
      "text": "Only one percent of tenants show the regression. Pressure-test your diagnosis. What tenant-level configuration, version-resolution, cache, or model-routing evidence do you need before declaring a root cause?",
-     "expected_stems": "tenant level configuration version resolution cache model routing evidence before declaring cause",
+     "expected_stems": "pressure diagnosis tenant level configuration version resolution cache model routing evidence before|percent tenants regression pressure diagnosis",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T07",
      "text": "Design permissions for two brokerage tools: read order status and submit an order. Both use server-to-server session tokens. Show least privilege, tenant isolation, audit fields, human approval, and how the model is prevented from choosing a more powerful tool by wording alone.",
-     "expected_stems": "least privilege tenant isolation audit fields human approval model prevented choosing powerful",
+     "expected_stems": "server session tokens least privilege tenant isolation audit fields human approval model|design permissions brokerage tools order status submit server session tokens",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T08",
      "text": "You maintain hundreds of versioned capabilities with eval gates. I am skeptical that this becomes a catalog nobody trusts. What admission rule, ownership model, conformance suite, usage telemetry, and retirement policy keep the platform reusable rather than merely large?",
-     "expected_stems": "admission ownership model conformance suite usage telemetry retirement policy platform reusable rather",
+     "expected_stems": "skeptical becomes catalog nobody trusts admission ownership model conformance suite usage telemetry|maintain hundreds versioned capabilities gates skeptical becomes catalog nobody trusts",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-02-T09",
      "text": "A mid-level engineer asks for an escape hatch because the SDK blocks a custom retry policy. How do you decide whether to expose an extension point, change the standard, or reject the request? Give me the decision record and the proof you require.",
-     "expected_stems": "decide whether expose extension point change standard reject request",
+     "expected_stems": "decide whether expose extension point change standard reject request decision record proof|level engineer escape hatch because blocks custom retry policy decide whether expose",
      "pause_seconds": 60
     }
    ],
@@ -146,55 +146,55 @@
     {
      "id": "DW-AI-03-T01",
      "text": "Design the ingestion and retrieval path that turns DriveWealth API documentation and internal repositories into evidence for account, tax, and brokerage-operations questions. Cover chunk identity, provenance, index versions, BM25, vectors, graph traversal, reranking, and the answer contract.",
-     "expected_stems": "cover chunk identity provenance index versions vectors graph traversal reranking answer contract",
+     "expected_stems": "design ingestion retrieval turns drivewealth documentation internal repositories evidence account brokerage operations|design ingestion retrieval turns drivewealth documentation internal repositories evidence account brokerage operations",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T02",
      "text": "For a question involving W-8BEN, 871(m), and 1446(f), tell me exactly when graph traversal earns its cost over lexical and vector retrieval. What query plan would you run, and what would make you stop rather than keep expanding?",
-     "expected_stems": "query would rather expanding",
+     "expected_stems": "question involving exactly graph traversal earns lexical vector retrieval query would rather|question involving exactly graph traversal earns lexical vector retrieval query would rather",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T03",
      "text": "Live coding. You have ten minutes. Implement a pure Python publication_decision function over evidence candidates with source_id, content_hash, score, stale, and contains_pii. It must deduplicate, reject stale or disallowed evidence, and return supported, clarify, or insufficient with selected source IDs. Do not call a model.",
-     "expected_stems": "deduplicate reject stale disallowed evidence return supported clarify insufficient selected source model",
+     "expected_stems": "deduplicate reject stale disallowed evidence return supported clarify insufficient selected source model|coding minutes",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T04",
      "text": "Your function uses one score threshold, but BM25, vector similarity, and graph scores are not calibrated alike. Fix the design. How do you calibrate confidence and preserve a deterministic fail-closed decision?",
-     "expected_stems": "calibrate confidence preserve deterministic closed decision",
+     "expected_stems": "design calibrate confidence preserve deterministic closed decision|function score threshold vector similarity graph calibrated alike design",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T05",
      "text": "On Tuesday morning, hallucination reports spike for tax answers while latency, token use, and HTTP error rates stay normal. Start from observability. Trace the request through retrieval, reranking, context assembly, model invocation, and publication, and name the version dimensions you compare.",
-     "expected_stems": "trace request through retrieval reranking context assembly model invocation publication version dimensions",
+     "expected_stems": "start observability trace request through retrieval reranking context assembly model invocation publication|tuesday morning hallucination reports spike answers while latency token error rates normal",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T06",
      "text": "You say you measure groundedness. Do not use the same model as answerer and sole judge. Give me a measurement stack with deterministic attribution checks, an independent semantic check, calibrated sampling, and a human-review slice. What can each layer actually prove?",
-     "expected_stems": "measurement stack deterministic attribution checks independent semantic calibrated sampling human review slice",
+     "expected_stems": "measurement stack deterministic attribution checks independent semantic calibrated sampling human review slice|measure groundedness model answerer judge",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T07",
      "text": "Tax and account workflows contain PII. Show programmatic handling before prompts, inside traces, in stored evaluation fixtures, and in analyst views. Preserve enough correlation to debug a bad run without retaining raw taxpayer data.",
-     "expected_stems": "preserve enough correlation debug without retaining taxpayer",
+     "expected_stems": "programmatic handling before prompts inside traces stored evaluation fixtures analyst views preserve|account workflows contain programmatic handling before prompts inside traces stored evaluation fixtures",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T08",
      "text": "Your Lean pipeline uses a verifier that cannot be persuaded by fluent output. Where can that pattern genuinely strengthen this retrieval system, and where would applying it create false confidence because the requirement is semantic or policy-dependent?",
-     "expected_stems": "where pattern genuinely strengthen retrieval system would applying create false confidence because",
+     "expected_stems": "pipeline verifier cannot persuaded fluent output where pattern genuinely strengthen retrieval system|pipeline verifier cannot persuaded fluent output where pattern genuinely strengthen retrieval system",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-03-T09",
      "text": "Set the launch gate for this system. Give me segment-level thresholds for retrieval quality, unsupported-answer rate, confidence calibration, PII leakage, latency, and cost, plus the rollback trigger. A single aggregate accuracy number is not acceptable.",
-     "expected_stems": "segment level thresholds retrieval quality unsupported answer confidence calibration leakage latency rollback",
+     "expected_stems": "segment level thresholds retrieval quality unsupported answer confidence calibration leakage latency rollback|launch system segment level thresholds retrieval quality unsupported answer confidence calibration leakage",
      "pause_seconds": 60
     }
    ],
@@ -211,55 +211,55 @@
     {
      "id": "DW-AI-04-T01",
      "text": "Design a multi-agent system that helps partner operations reconcile orders, positions, cash movements, settlements, and corporate actions from APIs and SQS events. Give me the graph, state ownership, communication contract, join gates, and terminal outcomes for a partner incident.",
-     "expected_stems": "graph state ownership communication contract gates terminal outcomes partner incident",
+     "expected_stems": "design multi agent system helps partner operations reconcile orders positions movements settlements|design multi agent system helps partner operations reconcile orders positions movements settlements",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T02",
      "text": "Pressure-test the graph for duplicate, delayed, out-of-order, and permanently missing events. Which nodes may run in parallel, which state transitions require serialization, and when do you return a degraded result instead of an answer?",
-     "expected_stems": "which nodes parallel state transitions require serialization return degraded result instead answer",
+     "expected_stems": "pressure graph duplicate delayed order permanently missing events which nodes parallel state|pressure graph duplicate delayed order permanently missing events which nodes parallel state",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T03",
      "text": "Live coding. You have ten minutes. Implement a clean Python reduce_event function that takes current_status, incoming_status, event_id, seen_event_ids, and an allowed-transition map. Return apply, duplicate, ignore_stale, or quarantine with a reason. It must be deterministic and must not guess ordering from arrival time.",
-     "expected_stems": "deterministic guess ordering arrival",
+     "expected_stems": "return apply duplicate ignore stale quarantine reason deterministic guess ordering arrival|coding minutes",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T04",
      "text": "Your reducer treats filled as terminal, then a legitimate correction event arrives. How do you evolve the transition policy without rewriting history, and how do replay, audit, and old-run reproducibility work across policy versions?",
-     "expected_stems": "evolve transition policy without rewriting history replay audit reproducibility across versions",
+     "expected_stems": "reducer treats filled terminal legitimate correction event arrives evolve transition policy without|reducer treats filled terminal legitimate correction event arrives evolve transition policy without",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T05",
      "text": "One partner reports that an agent retried an order-affecting tool and caused a duplicate downstream action. Start from observability. Reconstruct the causal chain using trace IDs, tool-call IDs, idempotency keys, queue message IDs, retry reasons, and deployment versions.",
-     "expected_stems": "reconstruct causal chain using trace idempotency queue message retry reasons deployment versions",
+     "expected_stems": "start observability reconstruct causal chain using trace idempotency queue message retry reasons|partner reports agent retried order affecting caused duplicate downstream action start observability",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T06",
      "text": "The failing trace was not sampled. What always-on metrics and structured logs still let you detect and bound the incident, and what tail-sampling rule would you add without turning high-cardinality identifiers into an observability outage?",
-     "expected_stems": "always metrics structured still detect bound incident sampling would without turning cardinality",
+     "expected_stems": "failing trace sampled always metrics structured still detect bound incident would without|failing trace sampled always metrics structured still detect bound incident would without",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T07",
      "text": "The sandbox is a production replica by hostname, but your model, prompt, tool, and policy configurations can still drift. Design promotion proof, shadow traffic, synthetic SQS cases, and kill switches that never submit a real trade.",
-     "expected_stems": "design promotion proof shadow traffic synthetic cases switches never submit trade",
+     "expected_stems": "sandbox production replica hostname model prompt policy configurations still drift design promotion|sandbox production replica hostname model prompt policy configurations still drift design promotion",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T08",
      "text": "Human approval protects order-affecting actions, but a human may be too slow during a market window. Define action tiers, pre-authorized bounds, expiry, dual control, and the exact conditions that force a stop instead of autonomous execution.",
-     "expected_stems": "define action tiers authorized bounds expiry control exact conditions force instead autonomous",
+     "expected_stems": "human approval protects order affecting actions during market window define tiers authorized|human approval protects order affecting actions during market window define tiers authorized",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-04-T09",
      "text": "Your Tau system has degraded partial-failure semantics. Translate that carefully into brokerage operations. Which evidence lanes may degrade while still producing a useful incident summary, and which missing or conflicting lanes must fail the entire run?",
-     "expected_stems": "which evidence lanes degrade while still producing useful incident summary missing conflicting",
+     "expected_stems": "translate carefully brokerage operations which evidence lanes degrade while still producing useful|system degraded partial failure semantics translate carefully brokerage operations",
      "pause_seconds": 60
     }
    ],
@@ -276,55 +276,380 @@
     {
      "id": "DW-AI-05-T01",
      "text": "You own the core AI platform for foundational APIs, brokerage operations, and customer service in a regulated firm. Design it from tenant identity through policy, model and tool registries, agent execution, evaluation, deployment, observability, and audit. Be explicit about trust boundaries.",
-     "expected_stems": "design tenant identity through policy model registries agent execution evaluation deployment observability",
+     "expected_stems": "design tenant identity through policy model registries agent execution evaluation deployment observability|platform foundational brokerage operations customer service regulated design tenant identity through policy",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T02",
      "text": "What must be centralized, and what must remain owned by product teams? I want a platform, not a review committee that blocks delivery. Give me the golden path, extension boundaries, and enforcement points.",
-     "expected_stems": "centralized remain owned product teams",
+     "expected_stems": "platform review committee blocks delivery golden extension boundaries enforcement points|centralized remain owned product teams platform review committee blocks delivery",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T03",
      "text": "Live coding. You have ten minutes. Implement a Python RunBudget that tracks cycles, tokens, cost, elapsed time, and repeated tool-call signatures. It must atomically return continue or a typed stop reason and prevent one runaway node from consuming the whole run budget.",
-     "expected_stems": "atomically return continue typed reason prevent runaway consuming whole budget",
+     "expected_stems": "implement python runbudget tracks cycles tokens elapsed repeated signatures atomically return continue|coding minutes",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T04",
      "text": "Now run that budget across concurrent workers. Where is authoritative state stored, how do you avoid race-driven overspend, and what happens when the budget service is unavailable? Fail open is not an option.",
-     "expected_stems": "where authoritative state stored avoid driven overspend happens budget service unavailable",
+     "expected_stems": "where authoritative state stored avoid driven overspend happens budget service unavailable option|budget across concurrent workers where authoritative state stored avoid driven overspend happens",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T05",
      "text": "At 9:30 on Tuesday morning, bad outputs rise sharply, but service error rate is unchanged. Start from observability and build a hypothesis matrix. Include market-open load, retrieval freshness, cache behavior, model throttling or fallback, queue lag, and policy-version skew.",
-     "expected_stems": "include market retrieval freshness cache behavior model throttling fallback queue policy version",
+     "expected_stems": "start observability build hypothesis matrix include market retrieval freshness cache behavior model|tuesday morning outputs sharply service error unchanged start observability build hypothesis matrix",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T06",
      "text": "The executive incident lead says disable all AI now. Design granular kill switches that stop unsafe writes immediately, preserve read-only evidence and diagnostics where safe, record who changed what, and support a controlled restart.",
-     "expected_stems": "design granular switches unsafe writes immediately preserve evidence diagnostics where record changed",
+     "expected_stems": "executive incident disable design granular switches unsafe writes immediately preserve evidence diagnostics|executive incident disable design granular switches unsafe writes immediately preserve evidence diagnostics",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T07",
      "text": "The same platform serves IRAs, custodial accounts, options, equities, fixed income, and advisory rebalancing. Show how product, account type, jurisdiction, tenant, and user role constrain retrieval and tools so one agent cannot cross permissions or expose PII.",
-     "expected_stems": "product account jurisdiction tenant constrain retrieval tools agent cannot cross permissions expose",
+     "expected_stems": "platform serves custodial accounts options equities fixed income advisory rebalancing product jurisdiction|platform serves custodial accounts options equities fixed income advisory rebalancing product jurisdiction",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T08",
      "text": "You have mapped NIST and MITRE controls to evidence. Translate that experience into broker-dealer engineering without claiming a framework proves compliance. What is an evidence object, what makes it current and attributable, and when must the system say the control is not demonstrated?",
-     "expected_stems": "evidence object makes current attributable system control demonstrated",
+     "expected_stems": "translate experience broker dealer engineering without claiming framework proves compliance evidence object|mapped mitre controls evidence translate experience broker dealer engineering without claiming framework",
      "pause_seconds": 60
     },
     {
      "id": "DW-AI-05-T09",
      "text": "Three teams demand LangGraph, Strands, and AutoGen respectively. Decide what platform contracts stay framework-neutral, what framework-specific behavior may leak through, how you test parity, and how you mentor teams through migration without freezing innovation.",
-     "expected_stems": "decide platform contracts framework neutral specific behavior through parity mentor teams migration",
+     "expected_stems": "three teams demand langgraph strands autogen respectively decide platform contracts framework neutral|three teams demand langgraph strands autogen respectively decide platform contracts framework neutral",
+     "pause_seconds": 60
+    }
+   ],
+   "duration_minutes": 10,
+   "playback": {
+    "question_gap_seconds": 60
+   }
+  },
+  {
+   "interview_id": "DW-AI-06",
+   "difficulty": "complex",
+   "focus": "Strands-native implementation of a sandbox-to-production launch-readiness agent, including topology choice, typed tools, durable sessions, execution limits, OpenTelemetry, MCP, and A2A boundaries",
+   "turns": [
+    {
+     "id": "DW-AI-06-T01",
+     "text": "We need a launch-readiness assistant for a brokerage partner moving from a production-replica sandbox to production. It must perform read-only checks across authentication, account setup, funding, order flow, event delivery, and tax configuration, then return READY, BLOCKED, or NEEDS_HUMAN. On the whiteboard, choose among one agent, agents-as-tools, Graph, Swarm, or a deterministic Workflow. Draw the topology, mark every model-controlled edge, and defend why the autonomy level is appropriate.",
+     "expected_stems": "whiteboard choose among agent tools graph swarm deterministic workflow topology every model|launch readiness assistant brokerage partner moving production replica sandbox perform checks across",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T02",
+     "text": "Live coding: in Python, build the smallest runnable Strands-style slice. Define typed CheckResult and LaunchDecision models; implement three typed read-only tools named check_auth, check_event_delivery, and check_tax_setup; and orchestrate them with explicit dependencies. Unknown or malformed tool output must block readiness rather than be coerced to success. Include two focused tests. You may wrap an exact SDK constructor behind a thin adapter, but the types, control flow, and tests must run.",
+     "expected_stems": "include focused tests exact constructor behind adapter types control|coding python build smallest runnable strands style slice define typed checkresult launchdecision",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T03",
+     "text": "Extend that design with durable session state keyed by partner, launch identifier, and environment. Show how a session manager resumes after process loss without confusing sandbox state with production state or replaying completed work. Give me the snapshot schema, schema-version behavior, stale-snapshot rule, and the code seam that lets us swap local storage for S3 without changing the domain logic.",
+     "expected_stems": "session manager resumes after process without confusing sandbox state production replaying completed|extend design durable session state keyed partner launch identifier environment manager resumes",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T04",
+     "text": "Now bound execution. Add a total deadline, per-node timeout, tool retry budget, maximum model cycles, and a rule that stops repetitive handoffs. Show which limits belong in the Strands orchestrator, which belong in the tool wrapper, and which belong in infrastructure. Then write one deterministic test that proves a looping or hanging specialist cannot turn a launch check into an unbounded run.",
+     "expected_stems": "which limits belong strands orchestrator wrapper infrastructure write deterministic proves looping hanging|bound execution total deadline timeout retry budget maximum model cycles stops repetitive",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T05",
+     "text": "The team wants an internal OpenAPI and runbook server exposed through MCP, while a separately owned compliance-review agent is reachable over A2A. Draw both trust boundaries. Specify authentication, tenant propagation, timeout and retry policy, response validation, capability discovery, and what evidence is retained. Be explicit about why credentials and write-capable brokerage operations never cross either boundary.",
+     "expected_stems": "specify authentication tenant propagation timeout retry policy response validation capability discovery evidence|wants internal openapi runbook server exposed through while separately owned compliance review",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T06",
+     "text": "Instrument the implementation with OpenTelemetry. Name the parent and child spans you expect for one launch assessment, the attributes needed to reconstruct topology and cost, and the fields that must be redacted or hashed. Show how trace context crosses MCP and A2A calls, how you distinguish model, tool, session-restore, and human-checkpoint latency, and which three service-level indicators you would put on the first dashboard.",
+     "expected_stems": "parent child spans expect launch assessment attributes needed reconstruct topology fields redacted|instrument implementation opentelemetry parent child spans expect launch assessment attributes needed reconstruct",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T07",
+     "text": "Observability-first debugging: after a deployment, 99.8 percent of assessments return READY in under 220 milliseconds. The traces contain an agent span and session.restore=true, but no tool spans; the readiness output cites evidence from the previous day. Start with the evidence, not a rewrite. Give me your hypothesis tree, the trace or log queries you run, the smallest safe mitigation, and the regression test that proves restored state cannot bypass mandatory fresh checks.",
+     "expected_stems": "start evidence rewrite hypothesis trace queries smallest mitigation regression proves restored state|observability first debugging after deployment percent assessments return ready under milliseconds traces",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T08",
+     "text": "Design the evaluation gate for this agent. Produce a compact matrix covering deterministic output checks, topology and tool-selection assertions, snapshot-resume cases, empty or corrupt MCP responses, A2A timeouts, chaos-injected tool failures, and trace completeness. Separate what must block CI from what is measured in a staging experiment, and define the exact evidence required before anyone may claim the agent is production ready.",
+     "expected_stems": "produce compact matrix covering deterministic output checks topology selection assertions snapshot resume|design evaluation agent produce compact matrix covering deterministic output checks topology selection",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-06-T09",
+     "text": "Assume twenty internal teams will build on this pattern. Sketch the reusable package boundary: configuration, tool protocol, policy hooks, session interface, telemetry conventions, test harness, and extension points. Then give the first architecture decision record and code-review checklist you would use to teach teams when to choose Graph, Swarm, Workflow, or agents-as-tools rather than copying this topology blindly.",
+     "expected_stems": "sketch reusable package boundary configuration protocol policy hooks session interface telemetry conventions|assume twenty internal teams build pattern sketch reusable package boundary configuration protocol",
+     "pause_seconds": 60
+    }
+   ],
+   "duration_minutes": 10,
+   "playback": {
+    "question_gap_seconds": 60
+   }
+  },
+  {
+   "interview_id": "DW-AI-07",
+   "difficulty": "complex",
+   "focus": "Customer-service AI for account, funding, and tax questions with high-stakes escalation, controlled tone, authorization, and hallucination containment",
+   "turns": [
+    {
+     "id": "DW-AI-07-T01",
+     "text": "A customer says, \"I sold shares three days ago, my $3,200 withdrawal is missing, rent is due, and your company is holding my money.\" Design the first-response support system. Draw the components that authenticate the customer, inspect account and funding state, explain settlement or withholding without giving tax advice, control tone, and escalate. State which decisions are deterministic and which, if any, may be delegated to an LLM.",
+     "expected_stems": "components authenticate customer inspect account funding state explain settlement withholding without giving|customer shares three withdrawal missing company holding money design first response support",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T02",
+     "text": "Give me the support state machine and source-of-truth order. It must handle account restrictions, pending settlement, rejected or reversed funding, tax withholding, stale data, and conflicting systems. Define the allowed transitions among ANSWER, ASK_CLARIFYING_QUESTION, ESCALATE_URGENTLY, and DECLINE_UNAUTHORIZED. Include the rule that prevents a fluent answer from outranking an account ledger or an operations case.",
+     "expected_stems": "define allowed transitions among answer clarifying question escalate urgently decline unauthorized include|support state machine source truth order handle account restrictions pending settlement rejected",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T03",
+     "text": "Live coding: implement a typed SupportResolution builder in Python. Inputs are authenticated account facts, funding facts, tax facts, source timestamps, and tool errors. Output must include action, customer_message, internal_case_summary, verified_claims with evidence references, unknowns, urgency, and escalation_reason. Fail closed on conflicting money balances, stale critical data, or missing authorization. Add tests for a normal pending withdrawal, a conflict, and an unauthorized request.",
+     "expected_stems": "closed conflicting money balances stale critical missing authorization tests normal pending withdrawal|coding implement typed supportresolution builder python inputs authenticated account facts funding source",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T04",
+     "text": "Use the exact missing-withdrawal scenario now. Produce two artifacts aloud: the customer-facing response and the internal escalation note. The response must acknowledge urgency, avoid blame, avoid an invented completion time, identify what is verified versus still being checked, and give a concrete next step. The internal note must preserve amounts, timestamps, source identifiers, failed checks, and the service-level clock without exposing unnecessary personal data.",
+     "expected_stems": "response acknowledge urgency avoid blame invented completion identify verified versus still being|exact missing withdrawal scenario produce artifacts aloud customer facing response internal escalation",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T05",
+     "text": "Design the human handoff so the customer does not have to repeat the story and the human does not inherit an AI conclusion as fact. Show the handoff payload, confidence and evidence fields, queue priority rule, ownership transition, and acknowledgement back to the customer. Include what happens when no qualified agent accepts the case before the urgency threshold expires.",
+     "expected_stems": "handoff payload confidence evidence fields queue priority ownership transition acknowledgement customer include|design human handoff customer repeat story inherit conclusion payload confidence evidence fields",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T06",
+     "text": "Threat-model the support agent. The brokerage API is server-to-server, the customer may attempt prompt injection, and one partner must never see another partner's data. Give concrete controls for authentication, tenant binding, least-privilege tools, PII and financial-data redaction, transcript retention, tool-output validation, and safe logging. Then name the two controls you would verify continuously rather than only at release time.",
+     "expected_stems": "concrete controls authentication tenant binding least privilege tools financial redaction transcript retention|threat model support agent brokerage server customer attempt prompt injection partner never",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T07",
+     "text": "Observability-first debugging: after a tone-model update, first-contact resolution rises, but complaints about false reassurance double. Trace timelines show the FAQ tool completes first, the account tool completes later, and the final response span closes before the account result is attached. Tell me what you inspect, the immediate rollback or containment action, the code-level race you suspect, and the metrics and trace assertion that will prevent recurrence.",
+     "expected_stems": "trace timelines completes first account later final response closes before result attached|observability first debugging after model update contact resolution rises complaints about false",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T08",
+     "text": "Build the evaluation program. Give representative golden conversations for money owed, tax withholding, account restriction, hostile language, ambiguous identity, delayed tools, and conflicting records. Define deterministic claims checks, tone and empathy evaluation, escalation recall, unauthorized-disclosure rate, unsupported-ETA rate, and a test for the agent changing its answer under customer pressure. State which metric is a hard release blocker.",
+     "expected_stems": "define deterministic claims checks empathy evaluation escalation recall unauthorized disclosure unsupported agent|build evaluation program representative golden conversations money withholding account restriction hostile language",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-07-T09",
+     "text": "Propose a staged rollout to Customer Service. Produce the shadow-mode plan, agent-assist phase, limited autonomous-response phase, kill switch, dashboard, and daily review sample. Define SLOs for latency and handoff, but also outcome guardrails for incorrect monetary claims, missed urgent escalations, and repeat contacts. Tell me the exact artifact a support leader signs before moving between stages.",
+     "expected_stems": "define latency handoff outcome guardrails incorrect monetary claims missed urgent escalations repeat|propose staged rollout customer service produce shadow agent assist phase limited autonomous",
+     "pause_seconds": 60
+    }
+   ],
+   "duration_minutes": 10,
+   "playback": {
+    "question_gap_seconds": 60
+   }
+  },
+  {
+   "interview_id": "DW-AI-08",
+   "difficulty": "complex",
+   "focus": "Hybrid ML architecture for KYC operations using classification, ranking, anomaly detection, and narrowly bounded LLM explanations",
+   "turns": [
+    {
+     "id": "DW-AI-08-T01",
+     "text": "Design an operations-intelligence layer for incoming KYC cases. We need to classify the likely issue family, rank the human-review queue, detect anomalous partner or document patterns, and draft a concise evidence summary. Decompose the system into conventional ML, rules, statistics, and LLM components. For each component, state the target, the output contract, and why an LLM is or is not the right tool.",
+     "expected_stems": "decompose system conventional rules statistics components state target output contract right|design operations intelligence layer incoming cases classify likely issue family human review",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T02",
+     "text": "Draw the feature and label pipeline. Include event-time versus processing-time semantics, late labels, point-in-time correct joins, partner and country slices, missingness, feature freshness, and train-serve parity. Identify three leakage paths that could make offline results look excellent while production fails, and show the data contract or automated check that blocks each one.",
+     "expected_stems": "include event versus processing semantics labels point correct joins partner country slices|feature label pipeline include event versus processing semantics point correct joins partner",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T03",
+     "text": "Live coding: implement a small typed inference adapter in Python without calling an LLM. It receives feature values with timestamps, calibrated class probabilities, an anomaly score, and model metadata. It must validate freshness, compute a review-priority score, abstain on missing, low-confidence, or out-of-distribution inputs, and emit a CaseDecision with route, priority, reasons, model_version, and feature_snapshot_id. Add tests for a confident case, stale features, and an anomalous low-confidence case.",
+     "expected_stems": "validate freshness compute review priority score abstain missing confidence distribution inputs casedecision|coding implement small typed inference adapter python without calling receives feature values",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T04",
+     "text": "Create the offline evaluation scorecard. Choose metrics and acceptance thresholds separately for multiclass classification, queue ranking, and anomaly detection. Include calibration, slice performance, top-k operational value, false-positive cost, delayed-label handling, and confidence intervals. Then explain how you would build and version a golden dataset without freezing yesterday's process mistakes into permanent truth.",
+     "expected_stems": "include calibration slice performance operational value false positive delayed label handling confidence|create offline evaluation scorecard choose metrics acceptance thresholds separately multiclass classification queue",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T05",
+     "text": "Now address drift. Distinguish feature drift, prior-probability shift, concept drift, label-policy change, and partner-integration breakage. For each, name one detector, one alert threshold or statistical test, and one operational response. Tell me which drift can be handled by recalibration, which requires retraining, and which should disable the model and fall back to deterministic routing.",
+     "expected_stems": "detector alert threshold statistical operational response which drift handled recalibration requires retraining|address drift distinguish feature prior probability shift concept label policy change partner",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T06",
+     "text": "Observability-first debugging: aggregate AUC and macro F1 are unchanged, yet the manual-review backlog doubles and one partner misses its SLA. Start from telemetry. Give the queries and plots you need across feature freshness, score distributions, rank positions, queue arrivals, service times, partner slices, and event lag. Build a hypothesis tree, identify the misleading aggregate metric, and specify the smallest reversible mitigation.",
+     "expected_stems": "queries plots across feature freshness score distributions positions queue arrivals service times|observability first debugging aggregate macro unchanged manual review backlog doubles partner misses",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T07",
+     "text": "The LLM is allowed only to summarize verified evidence for a reviewer. Define its input envelope, prohibited inferences, structured output, citation requirement, and abstention behavior. Show how you keep the generated explanation from feeding back as a training label, and how a reviewer can reconstruct every sentence from source features, documents, and model outputs.",
+     "expected_stems": "define input envelope prohibited inferences structured output citation requirement abstention behavior generated|allowed summarize verified evidence reviewer define input envelope prohibited inferences structured output",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T08",
+     "text": "Design deployment and experimentation. Cover offline replay, shadow scoring, champion-challenger comparison, canary by partner, rollback, and counterfactual limits for ranking systems. State what you log for reproducibility, how you avoid contaminating the control group, and what evidence is required before the model is allowed to change human queue order.",
+     "expected_stems": "cover offline replay shadow scoring champion challenger comparison canary partner rollback counterfactual|design deployment experimentation cover offline replay shadow scoring champion challenger comparison canary",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-08-T09",
+     "text": "Turn this into a reusable internal ML component rather than a one-off notebook. Define the model interface, feature contract, registry metadata, calibration hook, evaluator plug-ins, drift monitors, trace correlation, and ownership boundaries. Finish with the code-review rubric and mentoring exercise you would give an engineer who proposes replacing the calibrated classifier with one large prompt.",
+     "expected_stems": "define model interface feature contract registry metadata calibration evaluator drift monitors trace|reusable internal component rather notebook define model feature contract registry metadata calibration",
+     "pause_seconds": 60
+    }
+   ],
+   "duration_minutes": 10,
+   "playback": {
+    "question_gap_seconds": 60
+   }
+  },
+  {
+   "interview_id": "DW-AI-09",
+   "difficulty": "complex",
+   "focus": "Behavioral-technical leadership demonstrated through concrete artifacts for standards, mentoring, incidents, compliance explanations, and operating controls",
+   "turns": [
+    {
+     "id": "DW-AI-09-T01",
+     "text": "A principal engineer wants a Swarm for customer-case routing because it is flexible; Compliance wants a deterministic Workflow because it is auditable. Do not give me a collaboration story. Draft the one-page architecture decision record: context, options, decision criteria, chosen topology, rejected alternatives, measurable risks, experiment, and reversal condition. I will challenge any criterion that cannot be observed.",
+     "expected_stems": "draft architecture decision record context options criteria chosen topology rejected alternatives measurable|principal engineer wants swarm customer routing because flexible compliance deterministic workflow auditable",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T02",
+     "text": "You are mentoring an engineer whose pull request adds an agent with free-form outputs, no deadline, broad account tools, and logs containing raw prompts. Produce five concrete review comments, each tied to a failure mode, and rewrite the acceptance criteria for the pull request. Then show the smallest test you would pair-program first rather than taking the implementation away from the engineer.",
+     "expected_stems": "produce concrete review comments failure rewrite acceptance criteria request smallest would program|mentoring engineer whose request agent outputs deadline broad account tools containing prompts",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T03",
+     "text": "An AI support assistant has told customers that pending withdrawals were complete. Produce the first fifteen minutes of the incident command log: timestamped actions, named roles, containment, evidence preservation, customer-impact query, decision owner, and internal communication. Include the exact condition for disabling only the unsafe answer path while preserving read-only case lookup.",
+     "expected_stems": "produce first fifteen minutes incident command timestamped actions named roles containment evidence|support assistant customers pending withdrawals complete produce first fifteen minutes incident command",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T04",
+     "text": "A compliance officer asks, \"Why did the agent tell this customer that tax was withheld?\" Draw a decision-lineage artifact from authenticated request through tools, source records, policy version, model invocation, output checks, and human handoff. Then give a two-paragraph explanation suitable for Compliance that distinguishes verified facts, deterministic policy, model-generated wording, and unresolved uncertainty.",
+     "expected_stems": "compliance officer agent customer withheld decision lineage artifact authenticated request through tools|compliance officer agent customer withheld decision lineage artifact authenticated request through tools",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T05",
+     "text": "Live coding: write validate_agent_manifest in Python. The manifest must declare owner, purpose, allowed_data_classes, tool capabilities, max_steps, timeout_seconds, evaluation_suite, rollback_action, and human_escalation. Return every violation in stable sorted order; do not stop at the first error. Add tests for a valid manifest and one with a write-capable tool, missing rollback action, excessive step limit, and undeclared sensitive data.",
+     "expected_stems": "return every violation stable sorted order first error tests valid manifest write|coding write validate agent manifest python declare owner purpose allowed classes capabilities",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T06",
+     "text": "Observability-first debugging: the platform dashboard reports 99.9 percent successful responses, but Customer Service has dozens of confirmed wrong-answer cases. Produce the investigation query plan, not a narrative. Show how you join request traces, tool results, publication decisions, escalation records, and downstream case outcomes; identify likely denominator or sampling bugs; and define the corrected reliability metric with its inclusion and exclusion rules.",
+     "expected_stems": "produce investigation query narrative request traces results publication decisions escalation records downstream|observability first debugging platform dashboard reports percent successful responses customer service dozens",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T07",
+     "text": "A senior stakeholder demands launch this week and calls your evaluation gate bureaucracy. Create the rollout contract you would put in front of them: non-negotiable safety conditions, negotiable scope reductions, canary population, owner, SLOs, outcome guardrails, stop conditions, and evidence review cadence. Then state exactly where you would concede and where you would escalate.",
+     "expected_stems": "create rollout contract would front negotiable safety conditions scope reductions canary population|senior stakeholder demands launch calls evaluation bureaucracy create rollout contract would front",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T08",
+     "text": "You inherit a distributed team that can operate Python services but has little agent-systems experience. Produce a thirty-day mentoring artifact with weekly deliverables, code labs, design reviews, office hours, paired incident drills, and ownership transfer. Define competency using inspectable code and operational evidence, not course completion or attendance.",
+     "expected_stems": "produce thirty mentoring artifact weekly deliverables design reviews office hours paired incident|inherit distributed operate python services little agent systems experience produce thirty mentoring",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-09-T09",
+     "text": "Close the incident with a blameless but technically sharp postmortem. Give five action items in a table with owner, due date, failure mechanism, proposed control, and proof of effectiveness. At least two actions must change the system, one must change detection, one must change rollout policy, and none may be vague items such as improve communication or add more testing.",
+     "expected_stems": "action items table owner failure mechanism proposed control proof effectiveness least change|close incident blameless technically sharp postmortem action items table owner failure mechanism",
+     "pause_seconds": 60
+    }
+   ],
+   "duration_minutes": 10,
+   "playback": {
+    "question_gap_seconds": 60
+   }
+  },
+  {
+   "interview_id": "DW-AI-10",
+   "difficulty": "complex",
+   "focus": "Adversarial defense of the candidate's claimed systems, with explicit concessions, falsifiable evidence, scalability analysis, and implementation proof",
+   "turns": [
+    {
+     "id": "DW-AI-10-T01",
+     "text": "Your receipt-gated Tau orchestration sounds like process tax wrapped in cryptographic language. Quantify it. Give me a table for latency, compute cost, storage, implementation complexity, operator friction, and failure-detection value with and without receipts. State the workload size at which receipts stop paying for themselves, and name one class of task where you would remove them entirely.",
+     "expected_stems": "table latency compute storage implementation complexity operator friction failure detection value without|receipt gated orchestration sounds process wrapped cryptographic language quantify",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T02",
+     "text": "An immutable goal hash proves only that you consistently pursued some text, not that the text was correct. Attack your own design. Give one bad-goal example, one goal-substitution attack, and one stale-evidence attack that all pass a naive hash check. Then specify the additional authority, freshness, dependency, and approval evidence needed before a receipt can support a production claim.",
+     "expected_stems": "example substitution attack stale evidence naive check specify additional authority freshness dependency|immutable proves consistently pursued correct attack design",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T03",
+     "text": "Live coding: using only the Python standard library, implement verify_run(goal_hash, planned_tasks, receipts). Each receipt has task_id, goal_hash, input_hash, output_hash, dependency_receipt_hashes, status, started_at, and completed_at. Detect missing or duplicate receipts, goal mismatch, unknown tasks, dependency-hash mismatch, execution before dependencies, failed required tasks, and impossible timestamps. Return a typed result containing all violations in deterministic order, then add three adversarial tests.",
+     "expected_stems": "detect missing duplicate receipts mismatch unknown tasks dependency execution before failed required|coding using python standard library implement verify planned tasks receipts input output",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T04",
+     "text": "You claim more than 340 eval-gated capability contracts. That could be disciplined engineering or a vanity count. Show me the evidence that distinguishes them. Define contract independence, meaningful failure coverage, external validity, mutation sensitivity, flaky-test policy, and retirement criteria. Then choose ten representative capabilities and explain how you would audit for self-serving fixtures and gates that merely assert the implementation's own output.",
+     "expected_stems": "define contract independence meaningful failure coverage external validity mutation sensitivity flaky policy|claim gated capability contracts could disciplined engineering vanity count",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T05",
+     "text": "Your realtime evidence copilot was proven on one workstation with one 24-gigabyte GPU. That is not a platform result. Redesign it for a multi-tenant AWS environment using EKS or an equally concrete deployment model. Produce the capacity model, state partitioning, autoscaling signals, GPU and CPU fallback policy, tenant isolation, backpressure, failure domains, and cost envelope. Explicitly identify which local-first properties you lose and whether that invalidates the product claim.",
+     "expected_stems": "produce capacity model state partitioning autoscaling signals fallback policy tenant isolation backpressure|realtime evidence copilot proven workstation gigabyte platform result",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T06",
+     "text": "Observability-first debugging: every CI evaluation passes, but production users report unsupported answers. Traces show retrieval.hit_count=0, no recorded fallback_reason, publication=true, and no empty-retrieval examples in the golden set. Walk me through the evidence chain before proposing a fix. Identify the production invariant that failed, the evaluation blind spot, the immediate containment, the trace assertion, and the mutation or agentic test that would demonstrate the new gate is not theater.",
+     "expected_stems": "through evidence chain before proposing identify production invariant failed evaluation blind immediate|observability first debugging every evaluation passes production users report unsupported answers traces",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T07",
+     "text": "You built ArangoDB-plus-vector retrieval and NIST or MITRE control-to-evidence mapping for defense work. Why should I believe that transfers to brokerage? Produce a four-column table: transferable mechanism, direct evidence, fintech-specific gap, and bounded pilot. Include authorization, temporal financial state, auditability, customer harm, tax or compliance interpretation, and data-retention differences. Concede at least two gaps that cannot be solved by renaming entities.",
+     "expected_stems": "include authorization temporal financial state auditability customer compliance interpretation retention differences concede|built arangodb vector retrieval mitre control evidence mapping defense should believe transfers",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T08",
+     "text": "You also cite Lean 4 compiler-in-the-loop verification. Write one theorem statement you could honestly prove about an agent workflow, list every trusted assumption outside the theorem, and give a counterexample showing how the running system can still fail while the theorem remains true. Then tell me whether formal proof is the highest-value control here or an expensive distraction.",
+     "expected_stems": "write theorem statement could honestly prove about agent workflow every trusted assumption|compiler verification write theorem statement could honestly prove about agent workflow every",
+     "pause_seconds": 60
+    },
+    {
+     "id": "DW-AI-10-T09",
+     "text": "Final challenge: you have budget to productionize one claimed system and must stop investing in another. Produce a decision table using customer value, regulatory risk, evidence maturity, scalability, operating cost, reversibility, and time to falsification. Choose, defend, and state what evidence would make you reverse the choice. Finish with a thirty-day experiment whose result can genuinely disconfirm your preferred bet.",
+     "expected_stems": "choose defend state evidence would reverse choice finish thirty experiment whose result|final challenge budget productionize claimed system investing another decision table using customer",
      "pause_seconds": 60
     }
    ],
@@ -340,5 +665,8 @@
   "reviewer": "webgpt",
   "run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-evaluate-the-attached-interview--3ee4bcd964d2",
   "thin_spot": "Strands-native implementation fluency - prescribed as a 45-minute closed-book coding drill, not an interview"
+ },
+ "batch2_authorship_receipt": {
+  "run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-author-the-five-additional-mock--b392bfbc19a9"
  }
 }

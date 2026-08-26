@@ -114,10 +114,17 @@ def main() -> int:
                 c.get("evidence")))) for c in cards]
             match = miss = 0
             for turn in iv["turns"]:
-                goal = stems(turn["expected_stems"])
-                best = max(
-                    (len(goal & stems(q)) / max(1, len(goal)) for q in extracted),
-                    default=0.0)
+                # Dual stem sets (tail|head): the '?' path canonicalizes the
+                # tail clause, interviewer_statement keeps the head. Either
+                # matching counts.
+                best = 0.0
+                for part in turn["expected_stems"].split("|"):
+                    goal = stems(part)
+                    if not goal:
+                        continue
+                    score = max((len(goal & stems(q)) / len(goal)
+                                 for q in extracted), default=0.0)
+                    best = max(best, score)
                 if best >= 0.5:
                     match += 1
                 elif best < 0.3:
