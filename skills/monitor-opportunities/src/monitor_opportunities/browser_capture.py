@@ -878,6 +878,7 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
                 "linkedin_url": _LINKEDIN_TOP_APPLICANT_URL,
                 "primary_evidence_url": r.get("href") or _LINKEDIN_TOP_APPLICANT_URL,
                 "top_candidate": True,
+                "easy_apply": bool(r.get("easy_apply")),
             }
             for r in rows
         ]
@@ -898,6 +899,8 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
         receipt["status"] = "OK" if opps else "EMPTY"
         receipt["evidence_path"] = str(evidence_path)
         receipt["opportunities_captured"] = len(opps)
+        receipt["top_applicant_count"] = len(opps)
+        receipt["easy_apply_count"] = sum(1 for o in opps if o.get("easy_apply") is True)
     except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
         logger.error("LinkedIn top-applicant capture failed: {}", exc)
         receipt["status"] = "FAILED"
@@ -2084,6 +2087,9 @@ def capture_linkedin_premium(
         receipt["status"] = "OK" if opps else "EMPTY"
         receipt["evidence_path"] = str(evidence_path)
         receipt["opportunities_captured"] = len(opps)
+        receipt["top_applicant_count"] = sum(1 for o in opps if o.get("top_candidate") is True)
+        receipt["easy_apply_count"] = sum(1 for o in opps if o.get("easy_apply") is True)
+        receipt["under_10_applicants_count"] = sum(1 for o in opps if o.get("under_10_applicants") is True)
         receipt["warm_paths_found"] = sum(1 for o in opps if o["warm_path"])
         receipt["queries_run"] = queries_run
     except (BrowserCaptureError, ValueError, json.JSONDecodeError,

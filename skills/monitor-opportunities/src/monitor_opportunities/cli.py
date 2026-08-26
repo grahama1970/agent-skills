@@ -1993,7 +1993,12 @@ def nightly(
     adv_receipt = capture_linkedin_advanced_search(capture_dir)
     steps["browser_capture_linkedin_advanced"] = {"status": adv_receipt.get("status"), "captured": adv_receipt.get("opportunities_captured")}
     li_receipt = capture_linkedin_top_applicant(capture_dir)
-    steps["browser_capture_linkedin"] = {"status": li_receipt.get("status"), "captured": li_receipt.get("opportunities_captured")}
+    steps["browser_capture_linkedin"] = {
+        "status": li_receipt.get("status"),
+        "captured": li_receipt.get("opportunities_captured"),
+        "top_applicant_count": li_receipt.get("top_applicant_count"),
+        "easy_apply_count": li_receipt.get("easy_apply_count"),
+    }
     linkedin_candidates = [r for r in (adv_receipt, li_receipt) if r.get("evidence_path")]
     linkedin_candidates.sort(key=lambda r: int(r.get("opportunities_captured") or 0), reverse=True)
     linkedin_evidence = linkedin_candidates[0].get("evidence_path") if linkedin_candidates else None
@@ -2013,6 +2018,9 @@ def nightly(
     steps["browser_capture_linkedin_premium"] = {
         "status": prem_receipt.get("status"),
         "captured": prem_receipt.get("opportunities_captured"),
+        "top_applicant_count": prem_receipt.get("top_applicant_count"),
+        "easy_apply_count": prem_receipt.get("easy_apply_count"),
+        "under_10_applicants_count": prem_receipt.get("under_10_applicants_count"),
         "warm_paths_found": prem_receipt.get("warm_paths_found"),
     }
     if prem_receipt.get("evidence_path") and linkedin_evidence:

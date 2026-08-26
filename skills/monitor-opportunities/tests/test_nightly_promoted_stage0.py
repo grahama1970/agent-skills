@@ -67,11 +67,21 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     )
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_linkedin_top_applicant",
-        lambda capture_dir: capture_ok(capture_dir),
+        lambda capture_dir: {
+            **capture_ok(capture_dir),
+            "top_applicant_count": 1,
+            "easy_apply_count": 1,
+        },
     )
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_linkedin_premium",
-        lambda capture_dir: {"status": "NO_MATCHES", "opportunities_captured": 0},
+        lambda capture_dir: {
+            "status": "NO_MATCHES",
+            "opportunities_captured": 0,
+            "top_applicant_count": 0,
+            "easy_apply_count": 0,
+            "under_10_applicants_count": 0,
+        },
     )
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_linkedin_who_viewed",
@@ -285,6 +295,11 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     assert states["buzz_summary"]["evidence_field"] == "buzz-summary-receipt.posted"
     assert states["buzz_summary"]["effect_class"] == "INTERNAL_DESTINATION_WRITTEN"
     assert states["buzz_summary"]["status"] == "WRITTEN"
+    assert payload["steps"]["browser_capture_linkedin"]["top_applicant_count"] == 1
+    assert payload["steps"]["browser_capture_linkedin"]["easy_apply_count"] == 1
+    assert payload["steps"]["browser_capture_linkedin_premium"]["top_applicant_count"] == 0
+    assert payload["steps"]["browser_capture_linkedin_premium"]["easy_apply_count"] == 0
+    assert payload["steps"]["browser_capture_linkedin_premium"]["under_10_applicants_count"] == 0
     assert payload["steps"]["tau_semantic"]["status"] == "PASS"
     assert payload["steps"]["tau_semantic"]["selected_count"] == 2
     assert payload["steps"]["tau_semantic"]["provider_live"] is True
