@@ -1738,14 +1738,24 @@ def commit_linkedin_command(
     apply_url: str = typer.Option(..., "--apply-url"),
     promotion: Path = typer.Option(..., "--promotion", exists=True, dir_okay=False, readable=True,
                                    help="Scoped human promotion receipt: ats_form_submit:linkedin:linkedin.com."),
+    authorization: Path = typer.Option(
+        ...,
+        "--authorization",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Exact post-report human authorization receipt for this candidate/posting/apply URL.",
+    ),
     allow_duplicate: bool = typer.Option(False, "--allow-duplicate"),
 ) -> None:
-    """Auto-submit one LinkedIn Easy Apply through the gated receipt chain.
+    """Submit one LinkedIn Easy Apply through the gated receipt chain.
 
-    Fills only known-answerable required fields (identity + answer-bank
-    eligibility); any unrecognized required screening question stops with
-    NEEDS_HUMAN and is surfaced to Graham -- never auto-answered. COMMITTED only
-    after reading LinkedIn's 'application was sent' confirmation back.
+    Requires post-report human authorization for this exact candidate, posting,
+    apply URL, and idempotency key. Fills only known-answerable required fields
+    (identity + answer-bank eligibility); any unrecognized required screening
+    question stops with NEEDS_HUMAN and is surfaced to Graham -- never
+    auto-answered. COMMITTED only after reading LinkedIn's 'application was
+    sent' confirmation back.
     """
     _configure_logging()
     from .ats.linkedin_easy_apply import LinkedInEasyApplyError, commit_linkedin_easy_apply
@@ -1757,6 +1767,7 @@ def commit_linkedin_command(
             posting_id=posting_id,
             apply_url=apply_url,
             promotion=read_json(promotion),
+            authorization=read_json(authorization),
             allow_duplicate=allow_duplicate,
         )
     except LinkedInEasyApplyError as exc:

@@ -576,7 +576,7 @@
     {
       "name": "linkedin-easy-apply-safety",
       "type": "adversarial",
-      "real_world": true,
+      "evidence_class": "deterministic",
       "timeout_seconds": 60,
       "command": [
         "bash",
@@ -590,6 +590,8 @@
         ],
         "stderr_excludes": [
           "GATE_ACCEPTED_BAD_PROMOTION",
+          "AUTHORIZATION_ACCEPTED_BAD_PAYLOAD",
+          "AUTHORIZATION_REJECTED_GOOD_PAYLOAD",
           "BLANK_REQUIRED_NOT_BLOCKED",
           "SHOULD_BE_HUMAN_REQUIRED"
         ]

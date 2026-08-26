@@ -152,9 +152,9 @@
       "regression_id": "linkedin-easy-apply-safety-2026-08-22",
       "incident": {
         "date": "2026-08-22",
-        "summary": "New capability: authorized LinkedIn Easy Apply auto-submit. Guards that it never fabricates a screening answer or submits a blank required field, and enforces the scoped promotion gate.",
+        "summary": "New capability: post-report human-authorized LinkedIn Easy Apply submit. Guards that it never fabricates a screening answer or submits a blank required field, and enforces the scoped promotion plus exact authorization gates.",
         "root_cause": "n/a (new-capability guard).",
-        "correct_behavior": "work-auth/sponsorship answerable from answer bank; salary/clearance/experience/free-text human_required; any required field empty after filling -> NEEDS_HUMAN, never submit; scoped promotion required."
+        "correct_behavior": "work-auth/sponsorship answerable from answer bank; salary/clearance/experience/free-text human_required; any required field empty after filling -> NEEDS_HUMAN, never submit; scoped promotion and exact post-report human authorization required."
       },
       "threatens": {
         "capability": "ats_submit",
