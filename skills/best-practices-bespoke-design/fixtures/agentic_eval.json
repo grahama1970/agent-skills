@@ -2,30 +2,70 @@
   "version": 2,
   "skill": "best-practices-bespoke-design",
   "trials": 2,
-  "proof_scope": "advisory-first skill contract regression guard",
+  "proof_scope": "advisory-first and current-evidence skill contract regression guard",
   "claims": {
-    "proves": "the skill contract still passes its sanity checks and contains explicit advisory-first guidance that prevents missing formal receipts from blocking targeted design repair work",
+    "proves": "the skill contract still passes its sanity checks, contains explicit advisory-first guidance, and requires current design evidence before presenting live-site recommendations",
     "does_not_prove": "visual quality, semantic design judgment, live website behavior, or formal bespoke-design certification readiness"
   },
+  "capability_claims": [
+    {
+      "id": "best-practices-bespoke-design.advisory_first",
+      "description": "Targeted design advice does not default to formal certification machinery.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": false
+      }
+    },
+    {
+      "id": "best-practices-bespoke-design.current_design_evidence_gate",
+      "description": "Live-surface recommendations must distinguish current evidence from historical context and reject stale design reviews.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "bespoke_design.current_surface_evidence",
+      "seam_type": "freshness_gate",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ]
+    }
+  ],
   "cases": [
     {
       "name": "sanity-entrypoint-still-passes",
       "type": "positive",
       "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "best-practices-bespoke-design.advisory_first",
+        "best-practices-bespoke-design.current_design_evidence_gate"
+      ],
+      "seams": [
+        "bespoke_design.current_surface_evidence"
+      ],
       "command": [
         "bash",
         "-c",
-        "rm -f /tmp/bespoke-design-advisory-contract-case.json && python3 ../scripts/check_advisory_contract.py && printf '{\"status\":\"PASS\",\"case\":\"advisory-contract\"}\\n' > /tmp/bespoke-design-advisory-contract-case.json && bash ../sanity.sh"
+        "rm -f /tmp/bespoke-design-current-evidence-case.json && python3 ../scripts/check_advisory_contract.py && python3 ../scripts/check_current_design_contract.py && printf '{\"status\":\"PASS\",\"case\":\"current-evidence-gate\"}\\n' > /tmp/bespoke-design-current-evidence-case.json && bash ../sanity.sh"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "PASS: advisory-first bespoke design contract",
+          "PASS: current-design evidence gate",
           "PASS: best-practices-bespoke-design sanity"
         ],
         "artifacts": [
           {
-            "path": "/tmp/bespoke-design-advisory-contract-case.json",
+            "path": "/tmp/bespoke-design-current-evidence-case.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 16
@@ -36,6 +76,9 @@
     {
       "name": "advisory-default-contract-present",
       "type": "negative",
+      "supports_claims": [
+        "best-practices-bespoke-design.advisory_first"
+      ],
       "command": [
         "python3",
         "../scripts/check_advisory_contract.py"
@@ -50,6 +93,9 @@
     {
       "name": "formal-proof-not-default-for-targeted-work",
       "type": "adversarial",
+      "supports_claims": [
+        "best-practices-bespoke-design.advisory_first"
+      ],
       "command": [
         "python3",
         "../scripts/check_advisory_contract.py"
@@ -58,6 +104,26 @@
         "exit_code": 0,
         "stdout_contains": [
           "PASS: advisory-first bespoke design contract"
+        ]
+      }
+    },
+    {
+      "name": "stale-design-review-requires-current-evidence",
+      "type": "adversarial",
+      "supports_claims": [
+        "best-practices-bespoke-design.current_design_evidence_gate"
+      ],
+      "seams": [
+        "bespoke_design.current_surface_evidence"
+      ],
+      "command": [
+        "python3",
+        "../scripts/check_current_design_contract.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS: current-design evidence gate"
         ]
       }
     }
