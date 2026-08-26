@@ -1,0 +1,312 @@
+{
+  "schema": "live_evidence.briefing_pack.v1",
+  "pack_id": "drivewealth-2026-08",
+  "audience": "DriveWealth principal engineers (AI Engineer technical assessment; two 45-minute sessions: live coding + technical deep dive)",
+  "core_concepts": [
+    "multi-agent architecture",
+    "receipt-gated orchestration",
+    "reusable AI systems and SDK design",
+    "LLM observability",
+    "agentic engineering over hand-coding"
+  ],
+  "closing_sentence": "I don't ask anyone to trust agent output -- every system I build makes the agent prove what it did, and that's exactly the posture regulated financial infrastructure needs.",
+  "points": [
+    {
+      "point_id": "agent-graph-state",
+      "title": "Agent graph structure: nodes, state, communication",
+      "opening_triggers": [
+        ["agent", "graph"],
+        ["node", "state"],
+        ["nodes", "communicate"],
+        ["structure", "agent"],
+        ["sketch", "system"],
+        ["design", "scratch"]
+      ],
+      "hook": "My graphs are frozen contracts before dispatch -- tau.dag_contract.v1 -- so state and topology are validated before any model is called.",
+      "story": "Tau: nodes are handler/join/gate types, state travels as node receipts with an immutable goal hash, communication is receipt-passing not shared mutable state. Compiled DAG is rejected pre-dispatch with named errors.",
+      "sources": [
+        "tau.dag_contract.v1",
+        "skills/ask/SKILL.md"
+      ]
+    },
+    {
+      "point_id": "failure-handling",
+      "title": "Tool call fails, retrieval empty, low-confidence output",
+      "opening_triggers": [
+        ["tool", "fails"],
+        ["retrieval", "nothing"],
+        ["low", "confidence"],
+        ["failure", "handle"],
+        ["error", "handling"]
+      ],
+      "hook": "Every failure gets a failure_code and a recovery packet -- lane-local, never whole-panel; absence is reported, never dropped.",
+      "story": "Ask/Tau: failed lane emits failure_code + recovery_packet_path + next_command; DEGRADED join keeps usable seats. Stage ladder: COMPILED/DISPATCHED/ACKNOWLEDGED/CANDIDATE/SETTLED -- an unadmitted answer cannot read as success.",
+      "sources": [
+        "skills/ask/SKILL.md stage ladder",
+        "node-receipt.json failure_code registry"
+      ]
+    },
+    {
+      "point_id": "runaway-prevention",
+      "title": "Preventing infinite loops and runaway agents",
+      "opening_triggers": [
+        ["runaway"],
+        ["infinite", "loop"],
+        ["loops", "prevent"],
+        ["budget"],
+        ["spiral"]
+      ],
+      "hook": "Immutable goal hash in every receipt, bounded attempts, and a research rung that is mandatory after two failed attempts -- a third retry from stale context is a guess, and the system refuses it.",
+      "story": "Tau receipts carry the goal hash so drift is detectable; the blocker ledger detects work done BESIDE a wall (avoidance drift); unblock competitions require a proof command that fails now.",
+      "sources": [
+        "tau/GOAL_SLICE_02.md:23",
+        "skills/ask blocker ledger"
+      ]
+    },
+    {
+      "point_id": "human-in-loop",
+      "title": "Human-in-the-loop checkpoints and when they trigger",
+      "opening_triggers": [
+        ["human", "loop"],
+        ["checkpoint"],
+        ["approval"],
+        ["escalate", "human"]
+      ],
+      "hook": "Missing required fields fail preflight into an interview packet before any provider is contacted -- the human gate is structural, not polite.",
+      "story": "NEEDS_INTERVIEW: a roundtable without an immutable goal never dispatches. Debugger ladder escalates to the human only for real decisions; complex DAGs are chart-previewed for confirmation before execution.",
+      "sources": [
+        "ask NEEDS_INTERVIEW preflight",
+        "debugger escalation ladder"
+      ]
+    },
+    {
+      "point_id": "state-manageability",
+      "title": "Managing multi-step workflow state without chaos",
+      "opening_triggers": [
+        ["state", "unmanageable"],
+        ["state", "workflow"],
+        ["multi", "step"],
+        ["manage", "state"]
+      ],
+      "hook": "State lives in artifacts on disk, one schema per seam, so any run answers 'what happened' the same way -- a roundtable, a competition, and a single call share one projection.",
+      "story": "run dir: dag.json, events.jsonl, per-node receipts, join receipts; status --projection is one normalized read model; handoff.json chains name the next agent.",
+      "sources": [
+        "ask.run_projection.v1",
+        "tau.agent_handoff.v1"
+      ]
+    },
+    {
+      "point_id": "sdk-versioning",
+      "title": "Tool/MCP layer versioned independently of the agent graph",
+      "opening_triggers": [
+        ["version", "independent"],
+        ["mcp", "layer"],
+        ["tool", "layer"],
+        ["versioned"]
+      ],
+      "hook": "Skills are versioned capability contracts -- schema-stamped artifacts at every seam mean a tool can evolve behind its contract without touching the graph.",
+      "story": "340+ skills each with SKILL.md contract (triggers/provides/composes/complies), schema-versioned payloads (v1 suffixes everywhere), scillm gateway isolating provider churn from every consumer.",
+      "sources": [
+        "skills/*/SKILL.md frontmatter contract",
+        "scillm route table"
+      ]
+    },
+    {
+      "point_id": "midlevel-usability",
+      "title": "Mid-level engineer uses the SDK without understanding internals",
+      "opening_triggers": [
+        ["mid", "level"],
+        ["without", "internals"],
+        ["engineer", "use"],
+        ["onboard"]
+      ],
+      "hook": "Every skill has one run.sh front door and a mode router table: user intent to exact command shape. You never need to know which seat is a browser and which is an API.",
+      "story": "Ask quickstart: 'do not invent a custom orchestration path' -- the table maps intent to command; handlers are peers whether browser or API; fail-closed errors name the next command.",
+      "sources": [
+        "ask Project-Agent Quickstart",
+        "run.sh convention"
+      ]
+    },
+    {
+      "point_id": "reusable-primitives",
+      "title": "Agent components as reusable primitives across workflows",
+      "opening_triggers": [
+        ["reusable", "primitive"],
+        ["plug", "workflow"],
+        ["rebuild", "scratch"],
+        ["compose"]
+      ],
+      "hook": "DAG templates are named primitives -- roundtable, compete, creator-reviewer, reflection-loop -- selected by name, not rebuilt per project.",
+      "story": "dag-templates skill catalogs the patterns; composes: frontmatter declares dependencies; the same join-gate primitive serves deliberation panels and isolated competitions.",
+      "sources": [
+        "skills/dag-templates",
+        "ask --dag-template selector"
+      ]
+    },
+    {
+      "point_id": "standards-enforcement",
+      "title": "Documenting and enforcing standards across a team",
+      "opening_triggers": [
+        ["enforce", "standards"],
+        ["document", "standards"],
+        ["team", "building"],
+        ["governance"]
+      ],
+      "hook": "Standards are executable: best-practices skills are the written contract, agentic evals are the enforcement, and panel-audit turns a prose protocol into a checkable verdict.",
+      "story": "best-practices-roundtable rules became panel-audit code: equal_context, no_silent_consensus, quorum -- 'this run complied' moved from assertion to artifact check.",
+      "sources": [
+        "best-practices-* skills",
+        "ask panel-audit"
+      ]
+    },
+    {
+      "point_id": "deterministic-boundary",
+      "title": "Why deterministic checks cover most but not all capabilities",
+      "opening_triggers": [
+        ["deterministic", "majority"],
+        ["not", "all"],
+        ["coverage", "why"]
+      ],
+      "hook": "Deterministic checks own everything mechanical; judgment work -- visual comparison, quality review -- runs as an agentic second pass, because a pixel-diff proxy for judgment lies confidently.",
+      "story": "Operator-directed rule in the repo: judgment must not be replaced by deterministic proxies; the same wrong assumption can author the code, the fixture, and the assertion.",
+      "sources": [
+        "agentic-second-pass-not-deterministic-proxies memory rule"
+      ]
+    },
+    {
+      "point_id": "observability-signals",
+      "title": "Signals tracked per agent run",
+      "opening_triggers": [
+        ["signals", "track"],
+        ["token", "cost"],
+        ["latency", "node"],
+        ["metrics"],
+        ["hallucination", "rate"]
+      ],
+      "hook": "Per node: status, failure_code, requested vs resolved model, requested vs dispatched reasoning effort with downgrade reason, latency segments, response hash -- and model_provenance, because absence of evidence is never confirmation.",
+      "story": "Live-evidence fast solver journals model, effort, latency segments, sha256 per answer; browser receipts record provenance_status confirmed/unconfirmed/mismatch -- a panel cannot claim a tier it cannot prove.",
+      "sources": [
+        "node-receipt.json fields",
+        "fast_solver_receipt",
+        "model_provenance block"
+      ]
+    },
+    {
+      "point_id": "grounded-measurement",
+      "title": "Measuring whether output is actually grounded",
+      "opening_triggers": [
+        ["grounded"],
+        ["retrieval", "quality"],
+        ["actually", "correct"],
+        ["reasoning", "quality"]
+      ],
+      "hook": "Answers are admitted, not assumed: the Sparta chat pipeline gates on answerability before generation and runs an independent verifier after -- and my evidence cards carry source path, line numbers, and content hash.",
+      "story": "spartaChat: answerabilityGate -> memoryAnswerV2Admission -> verifier -> deliveryDecision, toolTrace throughout. Evidence card schema: excerpt, path, line_start/end, content_sha256, freshness.",
+      "sources": [
+        "sparta/explorer/server/spartaChat/answerabilityGate.ts",
+        "sparta/explorer/server/spartaChat/verifier.ts",
+        "live_evidence.evidence_card.v1"
+      ]
+    },
+    {
+      "point_id": "lean4-verifier",
+      "title": "Compiler/prover feedback loops (Lean 4)",
+      "opening_triggers": [
+        ["lean"],
+        ["prover"],
+        ["formal", "verification"],
+        ["compiler", "feedback"]
+      ],
+      "hook": "The strongest observability signal is a verifier that cannot be sweet-talked: Lean 4 proofs either compile or they do not, and that binary signal trains the generator.",
+      "story": "lean4-prove: retrieval over 94k exemplars, generation, compilation across 20 parallel silos, retry on failure, GRPO training with compiler rewards. Fintech translation: independent verification of transaction integrity, not model self-report.",
+      "sources": [
+        "skills/lean4-prove/SKILL.md"
+      ]
+    },
+    {
+      "point_id": "pii-handling",
+      "title": "Programmatic PII detection in agent inputs/outputs",
+      "opening_triggers": [
+        ["pii"],
+        ["personal", "data"],
+        ["redact"],
+        ["sensitive", "data"]
+      ],
+      "hook": "Detection at the choke points, not policy prose: prompts are preflighted before submission, secrets are redacted debugger-side before capture leaves the process, and purpose policies fail closed.",
+      "story": "browser_prompt_preflight rejects unsafe payloads pre-submit; debugger lane preserves secret redaction end to end; live-evidence session purposes freeze a capability policy digest bound to every artifact.",
+      "sources": [
+        "ask browser_prompt_preflight",
+        "live-evidence policy_digest"
+      ]
+    },
+    {
+      "point_id": "tuesday-incident",
+      "title": "Bad output in production on a Tuesday morning",
+      "opening_triggers": [
+        ["tuesday"],
+        ["production", "bad"],
+        ["diagnose", "production"],
+        ["goes", "wrong"],
+        ["incident"]
+      ],
+      "hook": "I know because a gate trips, not because a user complains -- then diagnosis is a dispatch table, not a war room: the symptom names the one artifact that owns it.",
+      "story": "events.jsonl -> node receipt failure_code -> recovery packet next_command -> drift ledger -> breakpoint only for state nothing wrote down. Every rung produces an artifact before the next starts.",
+      "sources": [
+        "debugger dispatch table",
+        "ask diagnose-from-receipts table"
+      ]
+    },
+    {
+      "point_id": "framework-tradeoffs",
+      "title": "Why not LangChain/LangGraph/AutoGen; Strands openness",
+      "opening_triggers": [
+        ["langchain"],
+        ["langgraph"],
+        ["autogen"],
+        ["strands"],
+        ["framework", "choose"]
+      ],
+      "hook": "My reservation is not fashion: abstraction layers that hide the failure surface make receipts impossible -- I need to own the seam where evidence is admitted. Strands' model-driven loop plus explicit tools is closer to how I already build.",
+      "story": "Tau exists because orchestration IS the product: frozen contracts, receipts, fail-closed gates. A framework is fine when its abstractions are seams you can audit; that is the evaluation lens, not tribal preference.",
+      "sources": [
+        "tau.dag_contract.v1 design rationale"
+      ]
+    },
+    {
+      "point_id": "drivewealth-domain",
+      "title": "DriveWealth domain anchors: SQS events, KYC lifecycle, AutoPilot",
+      "opening_triggers": [
+        ["sqs"],
+        ["order", "events"],
+        ["kyc"],
+        ["corporate", "actions"],
+        ["rebalanc"],
+        ["acats"],
+        ["settlement"],
+        ["sandbox"]
+      ],
+      "hook": "Your event-driven SQS model is exactly the seam where receipt-gated agents belong: every consumed event leaves a receipt, so reconciliation and audit fall out of the architecture instead of being bolted on.",
+      "story": "Their surface: session-token server-to-server auth, sandbox/UAT by hostname, SQS topics for accounts, orders, positions, KYC status changes, settlements, corporate actions; AutoPilot rebalancing; ACATS; W-8/W-9 and 871(m) tax handling. Agent platform fit: idempotent event consumers with receipts, human-approval gates before any order mutation, PII fencing at KYC document boundaries.",
+      "sources": [
+        "developer.drivewealth.com/apis/reference/introduction",
+        "developer.drivewealth.com/apis/llms.txt"
+      ]
+    },
+    {
+      "point_id": "mentoring",
+      "title": "Mentoring engineers who are not AI specialists",
+      "opening_triggers": [
+        ["mentor"],
+        ["teach", "engineers"],
+        ["internal", "engineers"],
+        ["not", "specialists"]
+      ],
+      "hook": "Most of this work is logic and precedent, not ML research -- the rigor lives in the platform, so engineers learn contracts and receipts, not transformer internals.",
+      "story": "Mid-level engineers extend the skills library by following the SKILL.md contract and passing the eval gate; the platform enforces what a senior reviewer would have to remember.",
+      "sources": [
+        "best-practices-skills",
+        "agentic-evals gate"
+      ]
+    }
+  ]
+}

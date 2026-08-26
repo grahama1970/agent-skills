@@ -1,0 +1,6 @@
+client: fixtureco
+kb_root: /tmp/curate-client-fixture-kb
+openapi_specs:
+  - /home/graham/workspace/experiments/agent-skills/skills/curate-client/fixtures/mini_spec.yaml
+probes:
+  - list widgets endpoint

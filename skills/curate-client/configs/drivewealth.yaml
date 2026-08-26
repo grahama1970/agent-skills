@@ -1,0 +1,10 @@
+client: drivewealth
+kb_root: /home/graham/workspace/experiments/dw-openapi
+openapi_specs:
+  - /home/graham/workspace/experiments/dw-openapi/dist/InvestingAPI.yaml
+terraform_repos:
+  - /home/graham/workspace/experiments/dwt-terraform-aws-helm-release
+probes:
+  - what fields does an order object have
+  - deposits endpoints
+memory_daemon: http://127.0.0.1:8601

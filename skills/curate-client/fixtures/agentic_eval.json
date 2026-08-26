@@ -1,0 +1,61 @@
+{
+ "version": 2,
+ "skill": "curate-client",
+ "trials": 3,
+ "proof_scope": "deterministic chunk extraction from a bundled mini OpenAPI spec, fail-closed interview gating, and a live memory-daemon ingest+recall round-trip when the daemon is reachable",
+ "claims": {
+  "proves": "the skill extracts Q-A chunks through its real CLI, fails closed with a NEEDS_INTERVIEW packet on missing required config, and can ingest a fixture KB into /memory and recall it through the live daemon",
+  "does_not_prove": "arbitrary client corpora, docs fetching (delegated to fetcher/brave-search), Qdrant semantic ranking quality, or live-evidence UI rendering of the cards"
+ },
+ "cases": [
+  {
+   "name": "real-chunks-extract-drivewealth-spec",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "../run.sh chunks --config ../configs/drivewealth.yaml && test $(find /home/graham/workspace/experiments/dw-openapi/knowledge -name '*.md' | wc -l) -ge 400"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "chunks_written"
+    ]
+   }
+  },
+  {
+   "name": "missing-config-fails-closed-needs-interview",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "printf 'kb_root: /tmp/x\\n' > /tmp/curate-client-bad.yaml && ../run.sh plan --config /tmp/curate-client-bad.yaml; test $? -eq 3"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "NEEDS_INTERVIEW",
+     "missing_fields"
+    ]
+   }
+  },
+  {
+   "name": "live-verify-recall-drivewealth-e2e",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "if ! curl -s -m 5 http://127.0.0.1:8601/health >/dev/null; then echo 'probes SKIP daemon-unreachable'; exit 0; fi; ../run.sh verify --config ../configs/drivewealth.yaml"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "probes"
+    ]
+   }
+  }
+ ],
+ "eval_kind": "skill_behavior"
+}
