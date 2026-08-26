@@ -28,7 +28,14 @@ export const metadata: Metadata = {
     type: 'profile',
     images: [{ url: '/og.png', width: 1200, height: 630, alt: 'grahama.co — Graham Anderson résumé' }],
   },
-  twitter: { card: 'summary_large_image', title, description, images: ['/og.png'] },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+    images: ['/og.png'],
+    creator: '@GAnderson95620',
+    site: '@GAnderson95620',
+  },
 };
 
 // Matches --ink, so mobile browser chrome continues the page rather than
