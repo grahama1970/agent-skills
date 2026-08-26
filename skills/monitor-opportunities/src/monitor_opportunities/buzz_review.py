@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +17,7 @@ AGENT_REQUEST_SCHEMA = "ops_buzz.agent_request.v1"
 MESSAGE_SCHEMA = "ops_buzz.message.v1"
 AGENT_REQUEST_SEAM_VALIDATION = {"kind": AGENT_REQUEST_SCHEMA, "status": "PASS"}
 MESSAGE_SEAM_VALIDATION = {"kind": MESSAGE_SCHEMA, "status": "PASS"}
+OPS_BUZZ_UV_ENV_FALLBACK = "/tmp/monitor-opportunities-ops-buzz-venv"
 
 
 @dataclass(frozen=True)
@@ -79,6 +81,12 @@ def _manifest_path(run_dir: Path) -> Path:
 
 def _default_ops_buzz_run() -> Path:
     return _repo_root() / "skills" / "ops-buzz" / "run.sh"
+
+
+def _ops_buzz_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env.setdefault("UV_PROJECT_ENVIRONMENT", OPS_BUZZ_UV_ENV_FALLBACK)
+    return env
 
 
 def _summarize_opportunities(manifest: ReportManifest) -> str:
@@ -233,6 +241,7 @@ def _run_ops_buzz_dry_run(ops_buzz_run: Path, payload_path: Path, rendered_reque
         text=True,
         check=False,
         timeout=60,
+        env=_ops_buzz_env(),
     )
     parsed: Any = None
     if result.stdout.strip():
@@ -293,6 +302,7 @@ def _run_ops_buzz_post(
         text=True,
         check=False,
         timeout=60,
+        env=_ops_buzz_env(),
     )
     parsed: Any = None
     if result.stdout.strip():
