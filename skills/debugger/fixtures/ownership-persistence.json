@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Breakpoint-ownership persistence across an extension-host restart (#1433 durability): VS Code persists breakpoints across reloads, so a registry that lives only in memory turns the bridge's own stale breakpoints into preserved 'human' ones and hijacks the next stop at the previous line. The registry now persists to $XDG_RUNTIME_DIR/agent-skills-debugger/<hash>/owned-breakpoints.json and reloads on activation. DESTRUCTIVE: this case kills the VS Code extension hosts mid-run (reload equivalent); run it alone, not inside a larger live batch -- repeated kills destabilize the bridge for subsequent cases.",
+  "claims": {
+    "proves": "a live stop persists its owned breakpoint key to the runtime-dir registry (file read back), and after the extension hosts are killed and respawn, a stop at a NEW line lands on that line -- the reloaded registry still owns and removes the stale breakpoint",
+    "does_not_prove": "survival across a full VS Code application restart (only the extension host is restarted), or multi-window registry arbitration"
+  },
+  "cases": [
+    {
+      "name": "ownership-survives-extension-host-restart",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "Stop at main.py:20 (owned bp persisted to the runtime dir), kill the extension hosts (reload equivalent), then stop at main.py:21: the frame must land on 21 -- the reloaded registry still owns and removes the stale :20 breakpoint.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; RS=\"$WS/skills/debugger/run.sh\"; sleep 10; ok=''; for attempt in 1 2; do (cd \"$WS\" && \"$RS\" stop \"$WS/skills/debugger/scenarios/variable_state/main.py:20\" --local first >/dev/null) && { ok=yes; break; }; sleep 15; done; [ -n \"$ok\" ] || { echo BRIDGE_BLOCKED; exit 0; }; command ls ${XDG_RUNTIME_DIR:-/tmp}/agent-skills-debugger/*/owned-breakpoints.json >/dev/null 2>&1 && echo REGISTRY-PERSISTED || { echo NO-REGISTRY-FILE; exit 1; }; for p in $(pgrep -f 'node.mojom.NodeServic[e]'); do kill \"$p\" 2>/dev/null || true; done; sleep 30; OUT=''; for attempt in 1 2; do OUT=$(cd \"$WS\" && \"$RS\" stop \"$WS/skills/debugger/scenarios/variable_state/main.py:21\" --local second) && break; OUT=''; sleep 10; done; [ -n \"$OUT\" ] || { echo BRIDGE_BLOCKED; exit 0; }; SP=$(echo \"$OUT\" | grep '^STATUS_PATH' | awk '{print $2}'); L=$(python3 -c \"import json,sys;print((json.load(open(sys.argv[1])).get('stoppedState') or {}).get('frame',{}).get('line'))\" \"$SP\"); echo \"frame-line=$L\"; [ \"$L\" = \"21\" ] && echo OWNERSHIP-SURVIVED-RESTART || { echo STALE-BREAKPOINT-HIJACKED-STOP; exit 1; }"
+      ],
+      "timeout_seconds": 900,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REGISTRY-PERSISTED",
+          "frame-line=21",
+          "OWNERSHIP-SURVIVED-RESTART"
+        ]
+      }
+    }
+  ]
+}
