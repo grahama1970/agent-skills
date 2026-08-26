@@ -154,6 +154,10 @@ def run_command(argv: list[str]) -> None:
         return
     script = Path(argv[0]).resolve()
     sys.argv = [str(script), *argv[1:]]
+    # `python3 script.py` always puts the script's own directory first on
+    # sys.path; the in-process harness must match, or a script that imports its
+    # sibling modules dies on import before any breakpoint can hit.
+    sys.path.insert(0, str(script.parent))
     runpy.run_path(str(script), run_name="__main__")
 
 

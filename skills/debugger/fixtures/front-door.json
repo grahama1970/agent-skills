@@ -3,7 +3,7 @@
   "skill": "debugger",
   "trials": 2,
   "eval_tier": "standard",
-  "proof_scope": "The run.sh front door: one line drives every debugger capability from any skill, agent, or human with zero env assembly -- headless breakpoint proof (break), live bridge stop (stop), narrated walkthrough (walkthrough), proof validation (validate), self-check (verify) -- and unknown subcommands fail closed with usage. The break subcommand puts the caller's cwd on PYTHONPATH so multi-module scenarios work from their own directory. Live cases are capability-gated on an open, trusted VS Code workspace with the bridge extension.",
+  "proof_scope": "The run.sh front door: one line drives every debugger capability from any skill, agent, or human with zero env assembly -- headless breakpoint proof (break), live bridge stop (stop), narrated walkthrough (walkthrough), proof validation (validate), self-check (verify) -- and unknown subcommands fail closed with usage. The break subcommand puts the caller's cwd on PYTHONPATH so multi-module scenarios work from their own directory. Live cases are capability-gated on an open, trusted VS Code workspace with the bridge extension. Includes the foreign-cwd multi-module case: the in-process capture harness must put the script's own directory on sys.path like `python3 script.py` does.",
   "claims": {
     "proves": "run.sh break produces a validating debugger.proof.v1 with real hit locals from the scenario directory with no exported env; run.sh stop settles a live bridge pause and prints the runtime status path + terminal STATUS; run.sh walkthrough completes a 2-stop live tour; run.sh verify passes the deterministic self-check; run.sh validate accepts the canonical proof; and an unknown subcommand exits 2 with usage",
     "does_not_prove": "the voice/two-model layers through the front door (owned by walkthrough-voice/voice-delivery/walkthrough-e2e), or matrix suite completeness (owned by run_eval_matrix receipts)"
@@ -23,7 +23,10 @@
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["BREAK-CAPTURED-5-HITS", "validation passed"]
+        "stdout_contains": [
+          "BREAK-CAPTURED-5-HITS",
+          "validation passed"
+        ]
       }
     },
     {
@@ -38,10 +41,15 @@
         "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; OUT=$(cd \"$WS\" && \"$WS/skills/debugger/run.sh\" stop \"$WS/skills/debugger/scenarios/variable_state/main.py:20\" --local first) || { echo BRIDGE_BLOCKED; exit 0; }; echo \"$OUT\"; SP=$(echo \"$OUT\" | grep '^STATUS_PATH' | awk '{print $2}'); python3 -c \"import json,sys; d=json.load(open(sys.argv[1])); print('LOCAL-FIRST=', (d.get('stoppedState') or {}).get('locals',{}).get('first'))\" \"$SP\""
       ],
       "timeout_seconds": 300,
-      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["STATUS stopped", "LOCAL-FIRST= 6"]
+        "stdout_contains": [
+          "STATUS stopped",
+          "LOCAL-FIRST= 6"
+        ]
       }
     },
     {
@@ -56,10 +64,14 @@
         "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; (cd \"$WS\" && timeout 280 \"$WS/skills/debugger/run.sh\" walkthrough skills/debugger/scenarios/variable_state/walkthrough.e2e.json --commands 'continue;continue' --wait-seconds 60) | grep -E 'WALKTHROUGH-COMPLETE' || { echo BRIDGE_BLOCKED; exit 0; }"
       ],
       "timeout_seconds": 320,
-      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["WALKTHROUGH-COMPLETE"]
+        "stdout_contains": [
+          "WALKTHROUGH-COMPLETE"
+        ]
       }
     },
     {
@@ -76,7 +88,9 @@
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["DEBUGGER-VERIFY-OK"]
+        "stdout_contains": [
+          "DEBUGGER-VERIFY-OK"
+        ]
       }
     },
     {
@@ -92,7 +106,29 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 0,
-        "stderr_contains": ["unknown subcommand"]
+        "stderr_contains": [
+          "unknown subcommand"
+        ]
+      }
+    },
+    {
+      "name": "break-multimodule-from-foreign-cwd",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "run.sh break on a multi-module scenario invoked from a FOREIGN cwd (like the live-evidence lane does): the harness must put the script's own directory on sys.path, exactly as `python3 script.py` would, so sibling imports work and the breakpoint hits.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); cd \"$T\"; P=\"$T/proof.json\"; \"$SKILL/run.sh\" break \"$SKILL/scenarios/variable_state/tally.py:12\" --local seen --out \"$P\" -- python3 \"$SKILL/scenarios/variable_state/main.py\" >/dev/null 2>&1 || true; python3 -c \"import json,sys; d=json.load(open(sys.argv[1])); assert d['hit_count']==5, d['hit_count']; print('FOREIGN-CWD-5-HITS')\" \"$P\"; \"$SKILL/run.sh\" validate \"$P\" --expect-valid"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FOREIGN-CWD-5-HITS",
+          "validation passed"
+        ]
       }
     }
   ]

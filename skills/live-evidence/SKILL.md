@@ -243,8 +243,9 @@ Live Evidence composes the sibling `skills/debugger` through a bounded,
 read-only proof lane (`src/live_evidence/debugger_lane.py`): a
 `live_evidence.debug_request.v1` binds repository identity, question revision,
 and the frozen session policy; capture runs through the debugger skill's
-`capture_breakpoints.py`; the proof becomes evidence only after
-`validate_debugger_proof.py --expect-valid` passes AND the adapter's own
+front door (`skills/debugger/run.sh break`, which owns the venv/env plumbing);
+the proof becomes evidence only after
+`skills/debugger/run.sh validate --expect-valid` passes AND the adapter's own
 readback confirms a verified stop at a requested location. Dispatch success,
 exit 0, or a producer-authored `proofValid` never satisfies the card gate.
 Secret redaction is debugger-side and preserved end to end. `vscode_bridge`
