@@ -1,0 +1,95 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "Session-trace -> walkthrough generation (run.sh spec-from-proof): a real captured debug session (debugger.proof.v1 from run.sh break) becomes a runnable debugger.walkthrough.v1 spec with no hand-authored JSON -- stops in true session order (first hit per file:line), expect pinned to the first observed locals, launch module + PYTHONPATH derived, repeat-counts narrated. Fail-closed: a zero-hit proof and a proof that fails independent validation both refuse to generate. The live case runs a freshly generated spec through the real VS Code bridge to WALKTHROUGH-COMPLETE.",
+  "claims": {
+    "proves": "run.sh break -> spec-from-proof produces a schema-valid spec whose stops/expect mirror the session's first hits in chronological order; zero-hit and tampered proofs are refused with SPEC-GENERATION-REFUSED; and a generated spec replays over the live bridge to WALKTHROUGH-COMPLETE with every expect matching",
+    "does_not_prove": "narration quality of the optional --narrate rewrite (fail-soft, model-dependent), or generation from bridge stop receipts (proof.v1 headless captures only)"
+  },
+  "cases": [
+    {
+      "name": "capture-to-spec-session-order",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A real 2-breakpoint capture (6 hits) generates a 2-stop spec in session order (tally:12 hits before main:20), with expect pinned to first-hit locals and the launch module derived.",
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); P=\"$T/proof.json\"; S=\"$T/spec.json\"; cd \"$SKILL/scenarios/variable_state\"; \"$SKILL/run.sh\" break main.py:20 --break \"$PWD/tally.py:12\" --local seen --local value --local first --out \"$P\" -- python3 main.py >/dev/null 2>&1 || true; \"$SKILL/run.sh\" spec-from-proof \"$P\" --out \"$S\" --workspace \"$(cd \"$SKILL/../..\" && pwd)\"; python3 - \"$S\" <<'PYEOF'\nimport json, sys\nd = json.load(open(sys.argv[1]))\nassert d[\"schema\"] == \"debugger.walkthrough.v1\"\nstops = d[\"stops\"]\nassert [ (s[\"file\"].split(\"/\")[-1], s[\"line\"]) for s in stops ] == [(\"tally.py\", 12), (\"main.py\", 20)], stops\nassert stops[0][\"expect\"] == {\"seen\": \"[1]\", \"value\": \"1\"}, stops[0]\nassert stops[1][\"expect\"] == {\"first\": \"6\"}, stops[1]\nassert d[\"launch\"][\"module\"] == \"main\" and \"variable_state\" in d[\"launch\"][\"env\"][0], d[\"launch\"]\nassert \"5 times\" in stops[0][\"say\"], stops[0][\"say\"]\nprint(\"SPEC-SESSION-ORDER-CORRECT\")\nPYEOF"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SPEC-GENERATED",
+          "SPEC-SESSION-ORDER-CORRECT"
+        ]
+      }
+    },
+    {
+      "name": "zero-hit-proof-refused",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "A proof with zero hits refuses generation: there is no session to walk through.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); printf '{\"hit_count\": 0, \"hits\": [], \"command\": [\"python3\", \"x.py\"]}' > \"$T/empty.json\"; \"$SKILL/run.sh\" spec-from-proof \"$T/empty.json\" --out \"$T/spec.json\"; rc=$?; [ $rc -eq 1 ] && [ ! -f \"$T/spec.json\" ] && exit 0 || { echo \"UNEXPECTED rc=$rc\"; exit 1; }"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stderr_contains": [
+          "SPEC-GENERATION-REFUSED",
+          "zero breakpoint hits"
+        ]
+      }
+    },
+    {
+      "name": "tampered-proof-refused",
+      "type": "adversarial",
+      "required": true,
+      "real_world": true,
+      "description": "A proof that fails independent validation (hand-edited proofValid over a stop that never happened) refuses generation via the run.sh validate gate.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; SKILL=\"$(cd .. && pwd)\"; T=$(mktemp -d); python3 - \"$T\" <<'PYEOF'\nimport json, sys\nd = json.load(open('proofs/canonical-tampered-proofvalid.json'))\nd['hit_count'] = 1\nd['hits'] = [{'file': '/tmp/sample.py', 'function': 'classify', 'line': 2, 'locals': {'value': '14'}, 'source': 'label = value'}]\nd['command'] = ['python3', '/tmp/sample.py']\njson.dump(d, open(sys.argv[1] + '/tampered.json', 'w'))\nPYEOF\n\"$SKILL/run.sh\" spec-from-proof \"$T/tampered.json\" --out \"$T/spec.json\"; rc=$?; [ $rc -eq 1 ] && [ ! -f \"$T/spec.json\" ] && exit 0 || { echo \"UNEXPECTED rc=$rc\"; exit 1; }"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stderr_contains": [
+          "SPEC-GENERATION-REFUSED",
+          "failed independent validation"
+        ]
+      }
+    },
+    {
+      "name": "generated-spec-replays-live",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A freshly captured-and-generated spec runs through the live VS Code bridge to WALKTHROUGH-COMPLETE with every expect matching.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; SKILL=\"$WS/skills/debugger\"; T=$(mktemp -d); P=\"$T/proof.json\"; S=\"$T/spec.json\"; cd \"$SKILL/scenarios/variable_state\"; \"$SKILL/run.sh\" break main.py:20 --break \"$PWD/tally.py:12\" --local seen --local value --local first --out \"$P\" -- python3 main.py >/dev/null 2>&1 || true; \"$SKILL/run.sh\" spec-from-proof \"$P\" --out \"$S\" --workspace \"$WS\" >/dev/null; (cd \"$WS\" && timeout 280 \"$SKILL/run.sh\" walkthrough \"$S\" --commands 'continue;continue' --wait-seconds 60) | grep -E 'WALKTHROUGH-COMPLETE' || { echo BRIDGE_BLOCKED; exit 0; }"
+      ],
+      "timeout_seconds": 340,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WALKTHROUGH-COMPLETE"
+        ]
+      }
+    }
+  ]
+}
