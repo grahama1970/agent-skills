@@ -4827,6 +4827,7 @@ h1 .proof-origin::after {
   /* Chrome, nav, and anything that is not the document itself. */
   .topbar,
   .cv-actions,
+  .cv-contact-actions,
   .cv-foot,
   .ambient {
     display: none !important;
@@ -4840,6 +4841,46 @@ h1 .proof-origin::after {
   .cv-role h3,
   .cv-lede {
     color: #0c0908 !important;
+  }
+  .cv-facts,
+  .cv-public-card,
+  .cv-cluster,
+  .cv-tech-pill,
+  .cv-evidence {
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .cv-facts,
+  .cv-public-card,
+  .cv-cluster,
+  .cv-tech-pill {
+    border-color: #d8d0c8 !important;
+  }
+  .cv-facts h2,
+  .cv-facts-grid dt,
+  .cv-facts-context span,
+  .cv-public-facts,
+  .cv-clusters dt,
+  .cv-tech-pill {
+    color: #5d5147 !important;
+  }
+  .cv-facts-grid dd,
+  .cv-facts-context p,
+  .cv-public-card p,
+  .cv-clusters dd {
+    color: #0c0908 !important;
+  }
+  .cv .cv-facts-chips li {
+    background: #fff !important;
+    border-color: #d8d0c8 !important;
+    box-shadow: none !important;
+    color: #0c0908 !important;
+  }
+  .cv .cv-facts-chips li:first-child {
+    background: #fff8ef !important;
+  }
+  .cv-facts-status {
+    color: #2f8a48 !important;
   }
   .cv-contact,
   .cv-period,
@@ -4859,9 +4900,19 @@ h1 .proof-origin::after {
   }
   .cv-role {
     break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .cv-facts,
+  .cv-public-card,
+  .cv-cluster,
+  .cv-evidence,
+  .cv-impact-list li {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   .cv-section > h2 {
     break-after: avoid;
+    page-break-after: avoid;
   }
 }
 
