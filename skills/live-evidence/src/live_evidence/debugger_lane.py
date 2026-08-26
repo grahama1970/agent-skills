@@ -21,6 +21,7 @@ read_only at the schema level.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -107,6 +108,15 @@ def repository_digest(root: Path) -> str:
         digest.update(str(path.relative_to(root)).encode("utf-8"))
         digest.update(path.read_bytes())
     return digest.hexdigest()
+
+
+def _debugger_subprocess_env() -> dict[str, str]:
+    """Call sibling debugger through its front door without caller uv state."""
+
+    env = os.environ.copy()
+    for key in ("UV_PROJECT_ENVIRONMENT", "VIRTUAL_ENV", "UV_LINK_MODE"):
+        env.pop(key, None)
+    return env
 
 
 def verified_stop_matches(canonical: dict[str, Any], request: DebugRequest) -> list[dict[str, Any]]:
@@ -219,7 +229,12 @@ class DebuggerLane:
             capture_cmd += ["--local", name]
         capture_cmd += ["--", *request.reproduction_command]
         capture = subprocess.run(
-            capture_cmd, capture_output=True, text=True, timeout=180, cwd=str(root)
+            capture_cmd,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            cwd=str(root),
+            env=_debugger_subprocess_env(),
         )
         base["subprocess_calls"] = 1
         if not proof_path.exists():
@@ -239,7 +254,10 @@ class DebuggerLane:
         validation = subprocess.run(
             ["bash", str(self._debugger_root / "run.sh"), "validate",
              str(proof_path), "--canonical-out", str(canonical_path), "--expect-valid"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env=_debugger_subprocess_env(),
         )
         base["subprocess_calls"] = 2
         if validation.returncode != 0 or not canonical_path.exists():

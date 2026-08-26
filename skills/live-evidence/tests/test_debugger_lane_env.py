@@ -1,0 +1,15 @@
+from live_evidence.debugger_lane import _debugger_subprocess_env
+
+
+def test_debugger_subprocess_env_does_not_inherit_caller_uv_state(monkeypatch):
+    monkeypatch.setenv("UV_PROJECT_ENVIRONMENT", "/tmp/live-evidence-env")
+    monkeypatch.setenv("VIRTUAL_ENV", "/tmp/live-evidence-env")
+    monkeypatch.setenv("UV_LINK_MODE", "copy")
+    monkeypatch.setenv("LIVE_EVIDENCE_DATA_DIR", "/tmp/live-evidence-data")
+
+    env = _debugger_subprocess_env()
+
+    assert "UV_PROJECT_ENVIRONMENT" not in env
+    assert "VIRTUAL_ENV" not in env
+    assert "UV_LINK_MODE" not in env
+    assert env["LIVE_EVIDENCE_DATA_DIR"] == "/tmp/live-evidence-data"
