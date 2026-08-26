@@ -7,6 +7,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TMPDIR="$(mktemp -d)"
 export UV_PROJECT_ENVIRONMENT="$TMPDIR/uv-env"
 trap 'rm -rf "$TMPDIR"' EXIT
+AGENTIC_LIVE_PROOF="skills/agentic-evals/run.sh run skills/ticket/fixtures/agentic_eval.json --case bug-preview-does-not-require-unrelated-preflight --output /tmp/ticket_preflight_false_positive_eval.json shows READY; ./run.sh sanity-live.sh --allow-live then read back receipt.json"
 
 echo "=== [ticket] Sanity Check ==="
 
@@ -39,7 +40,7 @@ echo -n "Check 4 - bug dry-run body contract: "
   --observed "Observed failure" \
   --expected "Expected behavior" \
   --repro "Run the focused repro" \
-  --proof "focused test AND ./run.sh sanity-live.sh --allow-live with receipt read-back" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime \
   --agent coder \
   --json > "$TMPDIR/bug.json"
@@ -56,7 +57,7 @@ echo -n "Check 5 - maintenance labels are preserved: "
   --invariant "Invariant stays true" \
   --cleanup "Concrete cleanup target" \
   --scoped-files "skills/ticket/SKILL.md" \
-  --proof "focused test AND ./run.sh sanity-live.sh --allow-live with receipt read-back" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime \
   --agent agent-skill-maintainer \
   --label monitor-skill-health \
@@ -89,7 +90,7 @@ EOF
   --target skills/hum/ui \
   --route design_or_ux \
   --agent designer \
-  --proof "screenshot plus focused UI test" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --json > "$TMPDIR/fleet.json"
 grep -q 'Add compact sidebar' "$TMPDIR/fleet.json"
 grep -q 'Replace vague status card' "$TMPDIR/fleet.json"
@@ -140,7 +141,7 @@ echo -n "Check 11 - bootstrap context renders and is machine-readable: "
 # sections are the only project context a stateless cron agent receives (#1046).
 "$SCRIPT_DIR/run.sh" bug "bootstrap probe" \
   --target skills/x --observed o --expected e --repro r \
-  --proof "live run against 127.0.0.1:8018 read back from the written receipt" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime --agent agent-skill-maintainer \
   --context-file GOAL.md --context-file src/a.py \
   --required-skill best-practices-python \
@@ -158,7 +159,7 @@ echo "PASS"
 echo -n "Check 12 - omitting bootstrap fields changes nothing: "
 "$SCRIPT_DIR/run.sh" bug "no bootstrap probe" \
   --target skills/x --observed o --expected e --repro r \
-  --proof "live run against 127.0.0.1:8018 read back from the written receipt" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime > "$TMPDIR/nobootstrap.out"
 if grep -qE 'Required repository context|Required skills|## Dependencies|context_files:' "$TMPDIR/nobootstrap.out"; then
   echo "FAIL bootstrap sections rendered without the flags"
@@ -183,7 +184,7 @@ echo "PASS"
 
 echo -n "Check 15 - filing accepts a live proof: "
 OUT="$("$SCRIPT_DIR/run.sh" bug "p" --target src/x.py --observed o --expected e --repro r \
-  --proof "./run.sh sanity-live.sh --allow-live then read back receipt.json" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime 2>&1 || true)"
 grep -q "^Labels" <<<"$OUT" || { echo "FAIL"; echo "$OUT" | tail -3; exit 1; }
 echo "PASS"
@@ -235,7 +236,7 @@ echo "PASS"
 
 echo -n "Check 19 - agent-routable tickets carry the orientation block: "
 OUT="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
-  --proof "./run.sh sanity-live.sh --allow-live; read back receipt.json" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime 2>&1 || true)"
 grep -q "Orientation for a stateless agent" <<<"$OUT" || { echo "FAIL"; exit 1; }
 grep -q "skills/memory/run.sh recall" <<<"$OUT" || { echo "FAIL missing memory-first step"; exit 1; }
@@ -248,7 +249,7 @@ echo -n "Check 20 - human-first tickets do not carry it: "
 # so without an exit check a crashing command satisfies it. That is exactly how
 # a NameError in `question` shipped past a green sanity run.
 if OUT="$("$SCRIPT_DIR/run.sh" question "p" --target skills/x --question q --answer-format prose \
-  --source-scope src --proof "./run.sh sanity-live.sh --allow-live" \
+  --source-scope src --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime 2>&1)"; then :; else
   echo "FAIL question exited nonzero:"; echo "$OUT" | tail -3; exit 1
 fi
@@ -264,11 +265,11 @@ echo "PASS"
 
 echo -n "Check 22 - lane is derived from route and overridable: "
 FE="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
-  --proof "./run.sh sanity-live.sh --allow-live" --route frontend_code 2>&1 | grep '^Labels' || true)"
+  --proof "$AGENTIC_LIVE_PROOF" --route frontend_code 2>&1 | grep '^Labels' || true)"
 OV="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
-  --proof "./run.sh sanity-live.sh --allow-live" --route backend_python_or_skill_runtime --lane data 2>&1 | grep '^Labels' || true)"
+  --proof "$AGENTIC_LIVE_PROOF" --route backend_python_or_skill_runtime --lane data 2>&1 | grep '^Labels' || true)"
 BAD="$("$SCRIPT_DIR/run.sh" bug "p" --target skills/x --observed o --expected e --repro r \
-  --proof "./run.sh sanity-live.sh --allow-live" --route backend_python_or_skill_runtime --lane nope 2>&1 || true)"
+  --proof "$AGENTIC_LIVE_PROOF" --route backend_python_or_skill_runtime --lane nope 2>&1 || true)"
 grep -q 'lane:fe' <<<"$FE" || { echo "FAIL frontend_code did not derive lane:fe"; exit 1; }
 grep -q 'lane:data' <<<"$OV" || { echo "FAIL --lane override ignored"; exit 1; }
 grep -q "unknown --lane" <<<"$BAD" || { echo "FAIL bad lane not refused"; exit 1; }
@@ -287,7 +288,7 @@ echo -n "Check 24 - every ticket type builds a draft without crashing: "
 # `question` and `triage` both raised NameError on main while sanity stayed
 # green, because no check required any command to actually succeed. Every ticket
 # type is exercised here, and each must exit zero and emit a Labels line.
-PROOF="./run.sh sanity-live.sh --allow-live"
+PROOF="$AGENTIC_LIVE_PROOF"
 run_type() {
   local name="$1"; shift
   local out status=0
@@ -386,7 +387,7 @@ echo "PASS"
 echo -n "Check 27 - memory marker options render compact fields: "
 OUT="$("$SCRIPT_DIR/run.sh" feature "memory marker probe" \
   --target skills/ticket --limitation l --capability c --workflow w --acceptance a \
-  --proof "./run.sh sanity-live.sh --allow-live; read back receipt.json" \
+  --proof "$AGENTIC_LIVE_PROOF" \
   --route backend_python_or_skill_runtime \
   --memory-recipe ticket-repair-context-v1 \
   --memory-symbol DiagramNode \
