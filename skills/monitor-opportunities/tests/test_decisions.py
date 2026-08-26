@@ -8,7 +8,9 @@ Inputs/Outputs/Failures: See functions below.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -61,6 +63,44 @@ def test_decision_idempotency_and_replay(tmp_path: Path) -> None:
     assert replay_receipt["checks"]["projection_external_effects_false"] is True
     assert replay_receipt["checks"]["decision_events_external_effects_false"] is True
     assert replay_receipt["external_effects"] is False
+
+
+def test_concurrent_decision_writes_keep_every_idempotency_key(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    script = (
+        "from pathlib import Path\n"
+        "import sys\n"
+        "from monitor_opportunities.decisions import append_decision\n"
+        "run_dir = Path(sys.argv[1])\n"
+        "key = sys.argv[2]\n"
+        "append_decision(run_dir=run_dir, item_id='opp:' + key, action='KEEP', "
+        "actor='agent', idempotency_key=key, reason='concurrent-regression')\n"
+    )
+    env = dict(os.environ)
+    env["MONITOR_OPPORTUNITIES_DECISION_APPEND_DELAY_SECONDS"] = "0.03"
+    processes = [
+        subprocess.Popen(
+            [sys.executable, "-c", script, str(run_dir), f"parallel-{idx:02d}"],
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        for idx in range(12)
+    ]
+    results = [process.communicate(timeout=10) + (process.returncode,) for process in processes]
+    failures = [(stdout, stderr, returncode) for stdout, stderr, returncode in results if returncode != 0]
+    assert not failures
+
+    ledger_rows = [
+        json.loads(line)
+        for line in (run_dir / "decision-ledger.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    keys = {row["idempotency_key"] for row in ledger_rows}
+    assert len(ledger_rows) == 12
+    assert keys == {f"parallel-{idx:02d}" for idx in range(12)}
+    assert all(row["external_effects"] is False for row in ledger_rows)
 
 
 def test_human_sent_markers_require_explicit_human_actor(tmp_path: Path) -> None:

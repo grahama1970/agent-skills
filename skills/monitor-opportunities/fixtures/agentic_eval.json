@@ -162,6 +162,30 @@
       "does_not_prove": "A fresh live Moog Workday request is reachable tonight, that every Moog role is semantically relevant after ranking, or that Graham has authorized any application submission."
     },
     {
+      "name": "decision-ledger-concurrent-authorization-regression",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_decisions.py::test_concurrent_decision_writes_keep_every_idempotency_key -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "Concurrent local decision writes preserve every idempotency key instead of losing one authorization during bulk Moog-style application decisions.",
+      "does_not_prove": "External ATS submission, Workday submit support, or semantic quality of the application answers.",
+      "seams": [
+        "decisions.append_decision",
+        "applications.authorization_ledger"
+      ]
+    },
+    {
       "name": "no-fabricated-god-of-war-claim",
       "type": "adversarial",
       "command": [
