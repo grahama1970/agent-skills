@@ -27,5 +27,19 @@ if [ -f ".env" ]; then
     set +a
 fi
 
+# VRAM preflight: if this invocation targets a local Ollama model, refuse when
+# free VRAM is below the floor so the run fails fast here instead of timing out
+# inside scillm (APITimeoutError) and scoring capability as 0. Override the
+# floor with LLM_EVAL_MIN_FREE_GB; local models are matched by name.
+case " $* " in
+  *" local-glm "*|*"local-glm,"*|*",local-glm"*|*" local-text "*|*"local-text,"*|*",local-text"*)
+    if ! uv run python vram_guard.py "${LLM_EVAL_MIN_FREE_GB:-6.0}"; then
+      echo "[run.sh] Aborting: VRAM guard refused a local-model run (free VRAM below floor)." >&2
+      echo "[run.sh] Free VRAM (stop voice-mode/other GPU procs) or lower LLM_EVAL_MIN_FREE_GB." >&2
+      exit 3
+    fi
+    ;;
+esac
+
 # Run with uv (handles venv automatically via pyproject.toml)
 exec uv run python llm_eval_lab.py "$@"

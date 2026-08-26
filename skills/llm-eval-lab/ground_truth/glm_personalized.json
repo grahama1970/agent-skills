@@ -1,7 +1,12 @@
 {
-  "title": "GLM local capability profile — personalized to operator's real workload",
+  "title": "GLM local capability profile \u2014 personalized to operator's real workload",
   "provenance": "Categories and weighting derived from mine-transcripts data/mined.jsonl (21,336 real human messages; 2,981 technical questions). Topic distribution: scillm/model-routing 464, tau/DAG+ask 406, ArangoDB memory 333, surf browser automation 203, evals/fixtures 201, JSON schema/contract 180, Python best-practices 110, git/worktree/CI 88. Near-zero pure math or general trivia. Questions authored directly (webgpt browser seat was occupied by another active lane); grading is reference+criterion for an LLM judge.",
-  "models": ["local-glm", "gpt-5.5", "oc-glm", "zai-glm-flash"],
+  "models": [
+    "local-glm",
+    "gpt-5.5",
+    "oc-glm",
+    "zai-glm-flash"
+  ],
   "judge": "claude-fable-5",
   "questions": [
     {
@@ -17,7 +22,7 @@
       "category": "code_debugging",
       "difficulty": "easy",
       "input": "A model-routing proxy log shows: complete model='zai-glm-flash' -> group='zai-glm-flash', chain=['zai-glm-flash'] followed by 404 Not Found. Is the group resolution/routing broken, or is the failure downstream of routing? Justify in one sentence.",
-      "expected": "Routing is fine — the log shows the request correctly resolved to group 'zai-glm-flash' and its deployment; the 404 happens on the outbound HTTP call to the provider (URL/path), which is downstream of group resolution.",
+      "expected": "Routing is fine \u2014 the log shows the request correctly resolved to group 'zai-glm-flash' and its deployment; the 404 happens on the outbound HTTP call to the provider (URL/path), which is downstream of group resolution.",
       "grading": "Full credit states routing succeeded and the fault is downstream (the outbound provider call/URL), not group resolution."
     },
     {
@@ -26,7 +31,11 @@
       "difficulty": "medium",
       "input": "Write a Python function run_handler(cmd: list[str], timeout_s: int) -> str using subprocess that runs cmd, enforces a finite timeout, raises on non-zero exit, never uses shell=True, and returns stdout. Keep it minimal.",
       "expected": "import subprocess\n\ndef run_handler(cmd: list[str], timeout_s: int) -> str:\n    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_s, check=True)\n    return proc.stdout",
-      "grading": "Full credit: subprocess.run with a finite timeout, check=True (or explicit returncode raise), no shell=True, list argv, returns stdout."
+      "grading": "Full credit: subprocess.run with a finite timeout, check=True (or explicit returncode raise), no shell=True, list argv, returns stdout.",
+      "eval": {
+        "method": "code",
+        "test_suite": "out = run_handler([\"printf\",\"hi\"], 5)\nassert out == \"hi\", repr(out)\ntry:\n    run_handler([\"false\"], 5)\n    assert False, \"should raise on nonzero\"\nexcept AssertionError:\n    raise\nexcept Exception:\n    pass\n"
+      }
     },
     {
       "id": 4,
@@ -34,7 +43,11 @@
       "difficulty": "medium",
       "input": "Write a Python helper extract_json_object(text: str) -> dict | None that returns the first top-level JSON object embedded in text (e.g. an LLM reply with prose around it). It must use the JSON parser as the grammar authority, not a regex, and return None on failure.",
       "expected": "import json\n\ndef extract_json_object(text: str) -> dict | None:\n    start = text.find('{')\n    end = text.rfind('}')\n    if start < 0 or end <= start:\n        return None\n    try:\n        value = json.loads(text[start:end + 1])\n    except json.JSONDecodeError:\n        return None\n    return value if isinstance(value, dict) else None",
-      "grading": "Full credit locates outer braces and hands the slice to json.loads (no regex as the parser), guards JSONDecodeError, and returns None on non-dict/failure."
+      "grading": "Full credit locates outer braces and hands the slice to json.loads (no regex as the parser), guards JSONDecodeError, and returns None on non-dict/failure.",
+      "eval": {
+        "method": "code",
+        "test_suite": "assert extract_json_object('x {\"a\": 1, \"b\": 2} y') == {\"a\":1,\"b\":2}\nassert extract_json_object(\"no json here\") is None\n"
+      }
     },
     {
       "id": 5,
@@ -42,7 +55,18 @@
       "difficulty": "medium",
       "input": "Produce a strict JSON schema-shaped example object for a model-eval question bank item with fields: id (int), category (string), difficulty (one of easy|medium|hard), input (string), expected (string), grading (string). Return ONLY one example JSON object, no prose.",
       "expected": "{\"id\": 1, \"category\": \"code_generation\", \"difficulty\": \"easy\", \"input\": \"Write a function that returns the length of a string.\", \"expected\": \"def n(s): return len(s)\", \"grading\": \"Returns len(s) for any string.\"}",
-      "grading": "Full credit: valid JSON, exactly the six named fields, id integer, difficulty one of the enum, and no surrounding prose."
+      "grading": "Full credit: valid JSON, exactly the six named fields, id integer, difficulty one of the enum, and no surrounding prose.",
+      "eval": {
+        "method": "json",
+        "expected_keys": [
+          "id",
+          "category",
+          "difficulty",
+          "input",
+          "expected",
+          "grading"
+        ]
+      }
     },
     {
       "id": 6,
@@ -50,7 +74,15 @@
       "difficulty": "easy",
       "input": "Given this text, return ONLY JSON {\"model\":..,\"api_base\":..,\"timeout\":..}: 'Deployment zai-glm-flash uses model glm-5.3-flash at https://api.z.ai/api/paas/v4 with a 120 second timeout.'",
       "expected": "{\"model\": \"glm-5.3-flash\", \"api_base\": \"https://api.z.ai/api/paas/v4\", \"timeout\": 120}",
-      "grading": "Full credit: valid JSON with model=glm-5.3-flash, api_base the exact URL, timeout=120 as a number, no extra keys or prose."
+      "grading": "Full credit: valid JSON with model=glm-5.3-flash, api_base the exact URL, timeout=120 as a number, no extra keys or prose.",
+      "eval": {
+        "method": "json",
+        "expected_json": {
+          "model": "glm-5.3-flash",
+          "api_base": "https://api.z.ai/api/paas/v4",
+          "timeout": 120
+        }
+      }
     },
     {
       "id": 7,
@@ -65,7 +97,7 @@
       "category": "agent_tooling",
       "difficulty": "medium",
       "input": "Design a minimal 2-node DAG (name the nodes and the edge) that: node A asks N candidate handlers the same question concurrently, node B has one judge handler score each answer against a reference. State the topology of node A.",
-      "expected": "Node A = 'fan-out' (topology: concurrent) — dispatch the same prompt to all N candidate handlers in parallel; Node B = 'judge' — depends on A, receives every candidate answer plus the reference and emits a score per candidate. Edge: A -> B (B joins/consumes A's outputs).",
+      "expected": "Node A = 'fan-out' (topology: concurrent) \u2014 dispatch the same prompt to all N candidate handlers in parallel; Node B = 'judge' \u2014 depends on A, receives every candidate answer plus the reference and emits a score per candidate. Edge: A -> B (B joins/consumes A's outputs).",
       "grading": "Full credit: node A concurrent fan-out to N handlers, node B a judge depending on A, and a single A->B edge."
     },
     {
@@ -74,7 +106,7 @@
       "difficulty": "medium",
       "input": "List these five model names sorted by context window DESC. If two tie on context window, break the tie by name A-Z. Stop after the top 3 and output nothing else. Names and windows: alpha(128k), bravo(200k), charlie(200k), delta(1M), echo(32k).",
       "expected": "delta\nbravo\ncharlie",
-      "grading": "Full credit: exactly delta, bravo, charlie in that order — delta first (1M), bravo before charlie (200k tie broken A-Z), and stops at 3 with no extra lines/prose."
+      "grading": "Full credit: exactly delta, bravo, charlie in that order \u2014 delta first (1M), bravo before charlie (200k tie broken A-Z), and stops at 3 with no extra lines/prose."
     },
     {
       "id": 10,
@@ -89,7 +121,7 @@
       "category": "systems_reasoning",
       "difficulty": "medium",
       "input": "A 19GB model runs on a 24GB GPU at ~20 tok/s when a TTS service is stopped, but drops to ~12 tok/s when that service holds ~6GB of VRAM. The model still produces correct output in both cases. Explain in two sentences why throughput drops.",
-      "expected": "With less free VRAM, the runtime offloads some model layers to CPU/system RAM, so those layers compute far slower and the per-token latency rises, cutting throughput. Correctness is unchanged because the same weights run — only where they execute (GPU vs CPU) differs.",
+      "expected": "With less free VRAM, the runtime offloads some model layers to CPU/system RAM, so those layers compute far slower and the per-token latency rises, cutting throughput. Correctness is unchanged because the same weights run \u2014 only where they execute (GPU vs CPU) differs.",
       "grading": "Full credit attributes the slowdown to CPU/RAM offload of layers when VRAM is scarce (hybrid split), and notes correctness is unaffected because the same weights are used."
     },
     {
@@ -97,7 +129,7 @@
       "category": "systems_reasoning",
       "difficulty": "medium",
       "input": "An eval sends prompts to a browser-backed model seat. When the browser tab is in the background, responses stall for many minutes though the process is alive. Name the mechanism and one mitigation.",
-      "expected": "Chrome throttles background/hidden tabs — requestAnimationFrame isn't serviced and timers are clamped when document.hidden — so the page's generation/polling loop stalls. Mitigation: keep the tab foregrounded/visible (one visible tab per window) or launch Chrome with the background-throttling flags disabled.",
+      "expected": "Chrome throttles background/hidden tabs \u2014 requestAnimationFrame isn't serviced and timers are clamped when document.hidden \u2014 so the page's generation/polling loop stalls. Mitigation: keep the tab foregrounded/visible (one visible tab per window) or launch Chrome with the background-throttling flags disabled.",
       "grading": "Full credit names background-tab throttling (hidden-tab rAF/timer clamping) as the mechanism and gives a real mitigation (keep tab visible, or disable throttling via launch flags)."
     },
     {
@@ -114,7 +146,11 @@
       "difficulty": "easy",
       "input": "Write a Python one-liner style function first_nonempty(paths: list[str]) -> str | None that returns the text of the first readable, non-empty file among paths, or None. Handle read errors.",
       "expected": "from pathlib import Path\n\ndef first_nonempty(paths: list[str]) -> str | None:\n    for p in paths:\n        try:\n            t = Path(p).read_text(encoding='utf-8', errors='replace')\n        except OSError:\n            continue\n        if t.strip():\n            return t\n    return None",
-      "grading": "Full credit iterates paths, guards OSError, returns the first non-empty file's text, and returns None when none qualify."
+      "grading": "Full credit iterates paths, guards OSError, returns the first non-empty file's text, and returns None when none qualify.",
+      "eval": {
+        "method": "code",
+        "test_suite": "import tempfile, os\ndd = tempfile.mkdtemp()\ne = os.path.join(dd,\"e.txt\"); open(e,\"w\").close()\nf = os.path.join(dd,\"f.txt\"); open(f,\"w\").write(\"hello\")\nassert first_nonempty([e, f]) == \"hello\"\nassert first_nonempty([\"/no/such/path\", e]) is None\n"
+      }
     },
     {
       "id": 15,
@@ -122,7 +158,7 @@
       "difficulty": "easy",
       "input": "Return a comma-separated list of exactly these provider names with NO spaces, in reverse alphabetical order: zai, openai, deepseek, ollama, moonshot.",
       "expected": "zai,openai,ollama,moonshot,deepseek",
-      "grading": "Full credit: exactly zai,openai,ollama,moonshot,deepseek — reverse-alphabetical, comma-separated, no spaces, no extra text."
+      "grading": "Full credit: exactly zai,openai,ollama,moonshot,deepseek \u2014 reverse-alphabetical, comma-separated, no spaces, no extra text."
     },
     {
       "id": 16,
@@ -130,7 +166,15 @@
       "difficulty": "hard",
       "input": "Fix this invalid JSON so it parses, changing as little as possible, and return ONLY the corrected JSON: {'model': 'glm-5.3-flash', 'timeout': 120, 'stream': True,}",
       "expected": "{\"model\": \"glm-5.3-flash\", \"timeout\": 120, \"stream\": true}",
-      "grading": "Full credit: double-quoted keys/strings, Python True -> JSON true, trailing comma removed, values otherwise unchanged, no prose."
+      "grading": "Full credit: double-quoted keys/strings, Python True -> JSON true, trailing comma removed, values otherwise unchanged, no prose.",
+      "eval": {
+        "method": "json",
+        "expected_json": {
+          "model": "glm-5.3-flash",
+          "timeout": 120,
+          "stream": true
+        }
+      }
     }
   ]
 }

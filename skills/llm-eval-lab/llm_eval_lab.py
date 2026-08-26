@@ -19,6 +19,8 @@ import grid_eval  # noqa: F401 -- grid-eval
 import judge  # noqa: F401 -- judge, compare
 import models_cmd  # noqa: F401 -- models, seed-memory
 import judge_grid  # noqa: F401 -- judge-grid
+import runner  # noqa: F401 -- run-matrix (multi-trial, deterministic-first, INFRA isolation)
+import build_report  # noqa: F401 -- report (reusable evidence HTML)
 
 
 if __name__ == "__main__":
