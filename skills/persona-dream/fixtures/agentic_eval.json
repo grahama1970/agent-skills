@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, listener-gate presentation handoff, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, the listener gate contract routes 0/20 human-response state to presenting the rater packet instead of status-only/WebGPT substitution, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
@@ -138,6 +138,32 @@
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
+        ]
+      }
+    },
+    {
+      "name": "listener-gate-presentation-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.listener_gate_presentation_contract"
+      ],
+      "seams": [
+        "listener_study.human_collection_handoff"
+      ],
+      "notes": "Regression guard for #1058 confusion: once the rater page and four stimuli exist but human responses remain incomplete, the skill must keep the agent-owned next action on presenting/playing the packet and collecting rows into responses_v2.jsonl. WebGPT can review or diagnose broken artifacts, but it cannot replace listener rows or a signed interpretation.",
+      "command": [
+        "bash",
+        "../run.sh",
+        "check-listener-gate-presentation-contract"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LISTENER_GATE_PRESENTATION_CONTRACT_OK",
+          "stimuli=4",
+          "next_action=present_rater_packet"
         ]
       }
     },
@@ -1015,6 +1041,14 @@
       }
     },
     {
+      "id": "persona_dream.listener_gate_presentation_contract",
+      "description": "When #1058 lacks human listener rows, Persona Dream keeps the agent-owned next action on presenting/playing the rater packet and collecting responses rather than stopping at a status report or substituting WebGPT.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.cross_mood_identity_matrix",
       "description": "Embry speaker identity can be preregistered, rendered, and scored across a frozen 4 mood x 3 text x 3 seed matrix with calibration-derived identity thresholds and adversarial comparisons.",
       "criticality": "critical",
@@ -1165,6 +1199,14 @@
       "required_evidence": [
         "deterministic",
         "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "listener_study.human_collection_handoff",
+      "seam_type": "human_evaluation_handoff",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
       ]
     },
     {

@@ -242,6 +242,36 @@ specialist validators, provider lanes, and historical commands. Use
 Current phase, blockers, and next step are NOT in this file. Read
 [`CURRENT_STATUS.json`](CURRENT_STATUS.json).
 
+### Human listener gate protocol
+
+When `CURRENT_STATUS.json`, #1058, or the blinded listener-study receipts show
+`human_responses_complete` still failing, the agent-owned next action is to
+surface the existing rater packet and audio stimuli for actual human listening.
+Do not stop at a status report, create another reviewer packet, or ask WebGPT to
+substitute for listener rows. WebGPT may review instructions or diagnose broken
+artifacts, but it cannot supply human listener responses or a signed
+interpretation.
+
+The current collection packet lives under:
+
+```text
+reports/goal_v5/continuity/blinded_listener_study/rater_page.html
+reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S01.wav
+reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S02.wav
+reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S03.wav
+reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S04.wav
+reports/goal_v5/continuity/blinded_listener_study/responses_v2.jsonl
+```
+
+The agent owns opening or otherwise presenting the rater page, playing or
+making available the four blinded WAV files, recording append-only rater rows
+into `responses_v2.jsonl`, and then running
+`./run.sh analyze-blinded-listener-study` once enough valid rows exist. The
+human owns the perceptual judgments and any signed interpretation. A legitimate
+blocker at this gate is limited to missing or unplayable rater/stimulus files,
+no available human listener, a listener declining to rate, or unavailable local
+playback/GUI after concrete attempts.
+
 ### Examples
 
 ```bash
