@@ -80,6 +80,89 @@ def test_source_locator_is_hint_only_and_admits_no_candidates() -> None:
     assert any("hint-only" in item for item in receipt["limitations"])
 
 
+def test_workday_employment_target_is_dispatched_and_deduped() -> None:
+    seen_searches: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == "https://moog.wd5.myworkdayjobs.com/wday/cxs/moog/MOOG_External_Career_Site/jobs"
+        payload = json.loads(request.content.decode("utf-8"))
+        seen_searches.append(payload["searchText"])
+        if payload["searchText"] == "AI":
+            rows = [
+                {
+                    "title": "Training Systems Manager",
+                    "locationsText": "Blacksburg, VA",
+                    "externalPath": "/job/Blacksburg-VA/Training-Systems-Manager_R-26-18863-1",
+                    "bulletFields": ["Training delivery."],
+                    "postedOn": "2026-08-21",
+                },
+                {
+                    "title": "AI Program Manager",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/AI-Program-Manager_R-26-19530",
+                    "bulletFields": ["Artificial intelligence program delivery."],
+                    "postedOn": "2026-08-20",
+                },
+                {
+                    "title": "Corporate AI Security Engineer",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/Corporate-AI-Security-Engineer_R-26-19039",
+                    "bulletFields": ["AI security engineering."],
+                    "postedOn": "2026-08-19",
+                },
+            ]
+        else:
+            rows = [
+                {
+                    "title": "Corporate AI Security Engineer",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/Corporate-AI-Security-Engineer_R-26-19039",
+                    "bulletFields": ["Duplicate returned by another Workday query."],
+                    "postedOn": "2026-08-19",
+                },
+                {
+                    "title": "AI Systems Analyst",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/AI-Systems-Analyst_R-26-18765",
+                    "bulletFields": ["AI systems analysis."],
+                    "postedOn": "2026-08-18",
+                },
+            ]
+        return httpx.Response(200, json={"jobPostings": rows})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, candidates = _employment_candidates(
+        client,
+        {
+            "name": "Moog",
+            "provider": "workday",
+            "slug": "moog",
+            "workday_tenant": "moog",
+            "workday_dc": "wd5",
+            "workday_site": "MOOG_External_Career_Site",
+            "search_texts": ["AI", "machine learning"],
+            "title_keywords": ["AI", "machine learning"],
+            "primary_source_url": "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site",
+            "limit": 20,
+            "default_fit_score": 0.86,
+        },
+    )
+
+    assert receipt["provider"] == "workday"
+    assert receipt["result_status"] == "MATCHES"
+    assert seen_searches == ["AI", "machine learning"]
+    assert [row["title"] for row in candidates] == [
+        "AI Program Manager",
+        "Corporate AI Security Engineer",
+        "AI Systems Analyst",
+    ]
+    assert {row["workplace_type"] for row in candidates} == {"WNY_ONSITE"}
+    assert candidates[0]["apply_url"] == (
+        "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site"
+        "/job/Buffalo-NY/AI-Program-Manager_R-26-19530"
+    )
+
+
 def test_ashby_provider_workplace_type_disambiguates_non_buffalo_onsite() -> None:
     assert discovery._workplace_type("San Francisco", "", "OnSite") == "ONSITE_ELSEWHERE"
     assert discovery._workplace_type("Buffalo, NY", "", "OnSite") == "WNY_ONSITE"

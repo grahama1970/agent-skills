@@ -1367,6 +1367,26 @@ def _workday_job_url(host: str, site: str, external_path: str) -> str:
     return f"https://{host}/{site}{path}"
 
 
+def _keyword_in_text(keyword: str, text: str) -> bool:
+    needle = keyword.strip().lower()
+    if not needle:
+        return False
+    haystack = text.lower()
+    if len(needle) <= 3 and needle.isalnum():
+        return re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack) is not None
+    return needle in haystack
+
+
+def _workday_title_allowed(job: dict[str, Any], target: dict[str, Any]) -> bool:
+    keywords = target.get("title_keywords")
+    if not isinstance(keywords, list) or not keywords:
+        return True
+    title = str(job.get("title") or "")
+    bullets = " ".join(str(item) for item in (job.get("bulletFields") or []))
+    text = f"{title}\n{bullets}"
+    return any(_keyword_in_text(str(keyword), text) for keyword in keywords)
+
+
 def _workday_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Read-only Workday CXS board reader.
 
@@ -1387,31 +1407,55 @@ def _workday_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[d
     explicit = target.get("workday_dc") and target.get("workday_site")
     datacenters = (str(target["workday_dc"]),) if explicit else _WORKDAY_DATACENTERS
     sites = [str(target["workday_site"])] if explicit else list(dict.fromkeys([tenant, *(_WORKDAY_SITE_HINTS)]))
-    # Search by the locator title so the specific posting is returned rather than
-    # an arbitrary page of a large board (Roswell Park has 130 postings).
-    body = {"appliedFacets": {}, "limit": _registry_limit(target, 20), "offset": 0,
-            "searchText": str(target.get("search_text") or "")}
+    search_texts = target.get("search_texts")
+    if isinstance(search_texts, list):
+        search_terms = [str(term).strip() for term in search_texts if str(term).strip()]
+    else:
+        search_terms = [str(target.get("search_text") or "").strip()]
+    search_terms = list(dict.fromkeys(search_terms or [""]))
     attempts: list[str] = []
     postings: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
     resolved_host = ""
     resolved_site = ""
     for dc in datacenters:
         host = f"{tenant}.{dc}.myworkdayjobs.com"
         for site in sites:
             url = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
-            attempts.append(url)
-            try:
-                response = client.post(url, json=body, headers={"Accept": "application/json"})
-                if response.status_code != 200:
+            host_site_postings: list[dict[str, Any]] = []
+            for search_text in search_terms:
+                attempts.append(f"{url}?searchText={search_text}")
+                body = {
+                    "appliedFacets": {},
+                    "limit": _registry_limit(target, 20),
+                    "offset": 0,
+                    "searchText": search_text,
+                }
+                try:
+                    response = client.post(url, json=body, headers={"Accept": "application/json"})
+                    if response.status_code != 200:
+                        continue
+                    if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
+                        continue
+                    data = response.json()
+                except (httpx.HTTPError, ValueError):
                     continue
-                if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
+                jobs = data.get("jobPostings", []) if isinstance(data, dict) else []
+                if not isinstance(jobs, list):
                     continue
-                data = response.json()
-            except (httpx.HTTPError, ValueError):
-                continue
-            jobs = data.get("jobPostings", []) if isinstance(data, dict) else []
-            if isinstance(jobs, list) and jobs:
-                postings = jobs
+                for job in jobs:
+                    if not isinstance(job, dict):
+                        continue
+                    if not _workday_title_allowed(job, target):
+                        continue
+                    external_path = str(job.get("externalPath") or "")
+                    dedupe_key = external_path or str(job)
+                    if dedupe_key in seen_paths:
+                        continue
+                    seen_paths.add(dedupe_key)
+                    host_site_postings.append(job)
+            if host_site_postings:
+                postings = host_site_postings
                 resolved_host, resolved_site = host, site
                 break
         if postings:
@@ -1877,6 +1921,8 @@ def _employment_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
         return _lever_candidates(client, target)
     if provider == "ashby":
         return _ashby_candidates(client, target)
+    if provider == "workday":
+        return _workday_candidates(client, target)
     if provider == "builtin":
         return _builtin_candidates(client, target)
     receipt = _base_receipt("A", str(provider or "unknown"), target.get("name", "Unknown"), "employer_ats")

@@ -143,6 +143,25 @@
       "does_not_prove": "A fresh full nightly can pass unrelated browser/auth gates or that non-Ashby/non-Greenhouse providers parse oversized responses."
     },
     {
+      "name": "moog-workday-source-discovery",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_workday_employment_target_is_dispatched_and_deduped -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "A Moog-style Workday employment target is routed through the Workday adapter, multiple Workday search terms are attempted, duplicate postings are collapsed, and Buffalo AI postings produce official Workday apply URLs.",
+      "does_not_prove": "A fresh live Moog Workday request is reachable tonight, that every Moog role is semantically relevant after ranking, or that Graham has authorized any application submission."
+    },
+    {
       "name": "no-fabricated-god-of-war-claim",
       "type": "adversarial",
       "command": [
