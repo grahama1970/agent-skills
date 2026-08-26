@@ -1680,7 +1680,9 @@ def _ats_provider_from_url(url: str) -> tuple[str, str, str]:
         posting = parts[parts.index("jobs") + 1] if "jobs" in parts and parts.index("jobs") + 1 < len(parts) else (parts[-1] if parts else "")
         return "greenhouse", site, posting
     if "ashbyhq.com" in host:
-        return "ashby", (parts[0] if parts else ""), (parts[-1] if parts else "")
+        posting_parts = [part for part in parts[1:] if part != "application"]
+        posting_id = posting_parts[-1] if posting_parts else (parts[-1] if parts else "")
+        return "ashby", (parts[0] if parts else ""), posting_id
     if "lever.co" in host:
         return "lever", (parts[0] if parts else ""), (parts[-1] if parts else "")
     return "unknown", host, (parts[-1] if parts else "")

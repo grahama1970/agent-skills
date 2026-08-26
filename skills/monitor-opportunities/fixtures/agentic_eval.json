@@ -247,26 +247,27 @@
       "proves": "Pacing sleeps no longer call surf wait, so a busy/unavailable surf lease cannot abort a capture that already has rows (the 2026-08-13 top-applicant failure)."
     },
     {
-      "name": "surf-tab-close-circuit-breaks-repeated-timeouts",
+      "name": "ats-form-capture-failure-family-regressions",
       "type": "negative",
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_ats_form_capture.py::test_close_tab_circuit_defers_after_three_pending_failures -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_ats_form_capture.py::test_provider_parse_ashby_and_lever skills/monitor-opportunities/tests/test_ats_form_capture.py::test_close_tab_circuit_defers_after_three_pending_failures -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ],
         "stderr_excludes": [
           "TimeoutExpired"
         ]
       },
       "timeout_seconds": 60,
-      "proves": "After three pending Surf tab-close timeouts, monitor-opportunities stops spending per-tab timeout budget on new close attempts and defers later tabs to the existing final cleanup sweep.",
-      "does_not_prove": "The underlying Surf tab.close command is repaired, or that every browser tab will close promptly in a live nightly.",
+      "proves": "Ashby /application URLs are keyed by the real posting id instead of the literal application suffix, and after three pending Surf tab-close timeouts monitor-opportunities stops spending per-tab timeout budget on new close attempts.",
+      "does_not_prove": "The underlying Surf tab.close command is repaired, that every browser tab will close promptly in a live nightly, or that every live ATS page will return field rows before its timeout.",
       "seams": [
+        "browser_capture.ats_form_artifact_key",
         "browser_capture.tab_close_cleanup"
       ]
     },

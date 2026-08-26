@@ -34,7 +34,12 @@ def test_provider_parse_greenhouse() -> None:
 
 
 def test_provider_parse_ashby_and_lever() -> None:
-    assert _ats_provider_from_url("https://jobs.ashbyhq.com/reducto/abc-uuid")[0] == "ashby"
+    assert _ats_provider_from_url("https://jobs.ashbyhq.com/reducto/abc-uuid") == ("ashby", "reducto", "abc-uuid")
+    assert _ats_provider_from_url("https://jobs.ashbyhq.com/reducto/abc-uuid/application") == (
+        "ashby",
+        "reducto",
+        "abc-uuid",
+    )
     assert _ats_provider_from_url("https://jobs.lever.co/fleet/def-uuid")[0] == "lever"
 
 
