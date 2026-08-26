@@ -1,0 +1,75 @@
+{
+ "schema": "ask.dag.v1",
+ "nodes": [
+  {
+   "id": "tenant-identity",
+   "type": "skill.run",
+   "depends_on": []
+  },
+  {
+   "id": "policy-engine",
+   "type": "skill.run",
+   "depends_on": [
+    "tenant-identity"
+   ]
+  },
+  {
+   "id": "tool-registry",
+   "type": "skill.run",
+   "depends_on": [
+    "policy-engine"
+   ]
+  },
+  {
+   "id": "model-registry",
+   "type": "skill.run",
+   "depends_on": [
+    "policy-engine"
+   ]
+  },
+  {
+   "id": "agent-runtime",
+   "type": "skill.run",
+   "depends_on": [
+    "tool-registry",
+    "model-registry"
+   ]
+  },
+  {
+   "id": "run-budget",
+   "type": "skill.run",
+   "depends_on": [
+    "agent-runtime"
+   ]
+  },
+  {
+   "id": "eval-gate",
+   "type": "skill.run",
+   "depends_on": [
+    "agent-runtime"
+   ]
+  },
+  {
+   "id": "observability",
+   "type": "skill.run",
+   "depends_on": [
+    "run-budget",
+    "eval-gate"
+   ]
+  },
+  {
+   "id": "audit-journal",
+   "type": "skill.run",
+   "depends_on": [
+    "observability"
+   ]
+  },
+  {
+   "id": "kill-switch",
+   "type": "skill.run",
+   "depends_on": [
+    "observability"
+   ]
+  }
+ ]
+}

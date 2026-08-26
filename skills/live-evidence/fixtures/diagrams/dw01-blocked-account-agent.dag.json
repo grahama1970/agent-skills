@@ -1,0 +1,75 @@
+{
+ "schema": "ask.dag.v1",
+ "nodes": [
+  {
+   "id": "analyst-question",
+   "type": "skill.run",
+   "depends_on": []
+  },
+  {
+   "id": "intent-gate",
+   "type": "skill.run",
+   "depends_on": [
+    "analyst-question"
+   ]
+  },
+  {
+   "id": "account-api-fetch",
+   "type": "skill.run",
+   "depends_on": [
+    "intent-gate"
+   ]
+  },
+  {
+   "id": "kyc-event-history",
+   "type": "skill.run",
+   "depends_on": [
+    "intent-gate"
+   ]
+  },
+  {
+   "id": "policy-evidence",
+   "type": "memory.recall",
+   "depends_on": [
+    "intent-gate"
+   ]
+  },
+  {
+   "id": "evidence-admission",
+   "type": "skill.run",
+   "depends_on": [
+    "account-api-fetch",
+    "kyc-event-history",
+    "policy-evidence"
+   ]
+  },
+  {
+   "id": "answer-composer",
+   "type": "skill.run",
+   "depends_on": [
+    "evidence-admission"
+   ]
+  },
+  {
+   "id": "verifier",
+   "type": "skill.run",
+   "depends_on": [
+    "answer-composer"
+   ]
+  },
+  {
+   "id": "human-checkpoint",
+   "type": "skill.run",
+   "depends_on": [
+    "verifier"
+   ]
+  },
+  {
+   "id": "analyst-answer",
+   "type": "skill.run",
+   "depends_on": [
+    "human-checkpoint"
+   ]
+  }
+ ]
+}

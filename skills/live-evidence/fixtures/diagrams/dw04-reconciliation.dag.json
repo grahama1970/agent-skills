@@ -1,0 +1,81 @@
+{
+ "schema": "ask.dag.v1",
+ "nodes": [
+  {
+   "id": "sqs-events",
+   "type": "skill.run",
+   "depends_on": []
+  },
+  {
+   "id": "api-snapshots",
+   "type": "skill.run",
+   "depends_on": []
+  },
+  {
+   "id": "event-reducer",
+   "type": "skill.run",
+   "depends_on": [
+    "sqs-events"
+   ]
+  },
+  {
+   "id": "position-differ",
+   "type": "skill.run",
+   "depends_on": [
+    "api-snapshots",
+    "event-reducer"
+   ]
+  },
+  {
+   "id": "orders-lane",
+   "type": "skill.run",
+   "depends_on": [
+    "position-differ"
+   ]
+  },
+  {
+   "id": "cash-lane",
+   "type": "skill.run",
+   "depends_on": [
+    "position-differ"
+   ]
+  },
+  {
+   "id": "corporate-actions-lane",
+   "type": "skill.run",
+   "depends_on": [
+    "position-differ"
+   ]
+  },
+  {
+   "id": "join-gate",
+   "type": "skill.run",
+   "depends_on": [
+    "orders-lane",
+    "cash-lane",
+    "corporate-actions-lane"
+   ]
+  },
+  {
+   "id": "incident-composer",
+   "type": "skill.run",
+   "depends_on": [
+    "join-gate"
+   ]
+  },
+  {
+   "id": "ops-approval",
+   "type": "skill.run",
+   "depends_on": [
+    "incident-composer"
+   ]
+  },
+  {
+   "id": "morning-report",
+   "type": "skill.run",
+   "depends_on": [
+    "ops-approval"
+   ]
+  }
+ ]
+}
