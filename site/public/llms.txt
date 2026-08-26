@@ -29,6 +29,7 @@ Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI ·
 - [scillm](https://github.com/grahama1970/agent-skills/blob/main/skills/scillm/README.md) — LLM gateway and model-routing skill docs.
 - [debugger](https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md) — debugger skill contract for breakpoint-based runtime inspection.
 - [sparta explorer](https://github.com/grahama1970/sparta-public) — public overview for SPARTA Explorer; private evidence is not published.
+- [memory](https://github.com/grahama1970/memory-public) — BM25 + graph recall for agents
 
 ## Experience
 
@@ -59,5 +60,5 @@ Principal AI Engineer · AI Architect · Machine Learning Engineer Agentic AI ·
 - Current/export-controlled client and program details are withheld by
   necessity, not omission.
 - Every count on this site is generated from the repository at the deploy
-  commit (401edbfd24), not hand-maintained.
+  commit (b2a2b9235d), not hand-maintained.
 - Contact: graham@grahama.co

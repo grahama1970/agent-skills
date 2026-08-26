@@ -46,6 +46,8 @@ composes:
   - classifier-lab
   - mailbox-mining
   - ops-linkedin
+  - monitor-website
+  - test-interactions
   - gmail
   - ask
   - scheduler
@@ -348,6 +350,30 @@ presentation, and appear in the morning report before use. The public workflow r
 only the public canonical resume; the tailoring runtime owns per-opportunity rendering
 after claim validation passes.
 
+## Public website interaction gate — no exceptions
+
+`grahama.co` and `grahama.co/resume` are opportunity-facing artifacts. Any
+morning report, targeted resume handoff, LinkedIn profile handoff, or outreach
+packet that relies on the public site must require a fresh `monitor-website`
+interaction receipt from `$test-interactions` discovery plus replay.
+
+Use the executable gate:
+
+```bash
+./run.sh website-gate --output-dir <dir> --json
+```
+
+This delegates to `monitor-website interaction-check` for:
+
+- `https://grahama.co/`
+- `https://grahama.co/resume`
+
+The gate is required before committing or pushing UI-visible grahama.co changes
+or using those public surfaces as current opportunity evidence. A stale
+screenshot, stale CDP marker, DOM-only grep, or successful static build is not a
+substitute. This gate does not authorize LinkedIn mutation, ATS submit, email
+send, or Calendly booking effects.
+
 ## Intended command surface
 
 The command list is the target contract. Current implementation status is authoritative
@@ -370,6 +396,7 @@ only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 ./run.sh apply --posting <key>                 # separately gated ATS effect only
 ./run.sh status --json                         # readiness, stage, feeds, blockers
 ./run.sh verify --out <dir>                    # machine-readable verification receipt
+./run.sh website-gate --output-dir <dir>       # live grahama.co + /resume test-interactions gate
 ./run.sh schedule --cron "0 2 * * *"           # register the full run, then read back
 ./sanity.sh                                    # deterministic behavioral gates
 ```

@@ -1,10 +1,10 @@
 {
   "schema": "grahama.catalog.v1",
-  "sourceCommit": "d912a17f2f",
+  "sourceCommit": "b2a2b9235d",
   "counts": {
     "areas": 8,
     "projects": 11,
-    "skills": 363
+    "skills": 364
   },
   "documents": [
     {
@@ -390,43 +390,6 @@
       "boundary": "Reports what the sweep reached across sources — not exhaustive coverage."
     },
     {
-      "id": "project:memory",
-      "type": "project",
-      "slug": "memory",
-      "name": "memory",
-      "area": "Agentic memory & persona",
-      "areaId": "memory",
-      "lens": "hybrid",
-      "aliases": [
-        "memory",
-        "rag memory",
-        "persona",
-        "voice",
-        "continuity",
-        "long-lived agent",
-        "graph memory",
-        "memory first recall",
-        "ArangoDB memory",
-        "Qdrant semantic recall",
-        "BM25 graph recall",
-        "agent lessons learned"
-      ],
-      "disciplines": [
-        "memory-knowledge",
-        "persona-simulation",
-        "voice-audio"
-      ],
-      "question": "What should an agent remember before it touches the code?",
-      "summary": "BM25 + graph recall for agents",
-      "body": "What should an agent remember before it touches the code? Memory keeps project lessons, source pointers, and graph relationships queryable before an agent starts scanning. The public shape is architecture only; the operator repo and memory records stay private. Describes the architecture boundary: ArangoDB documents and graph edges, Qdrant vectors, and memory-first routing. It does not expose private repository contents or records.",
-      "href": "https://github.com/grahama1970/memory-public",
-      "visibility": "public-overview",
-      "evidenceAccess": "abstract",
-      "scoutState": "abstract-only",
-      "requirements": "Public abstract only — the graph-memory operator and memory data are private.",
-      "boundary": "Describes the architecture boundary: ArangoDB documents and graph edges, Qdrant vectors, and memory-first routing. It does not expose private repository contents or records."
-    },
-    {
       "id": "project:watch",
       "type": "project",
       "slug": "watch",
@@ -526,7 +489,7 @@
       ],
       "question": "What was true at the moment the bug happened?",
       "summary": "Real breakpoints and paused-frame state — prove runtime truth before patching.",
-      "body": "Force the project-agent to use a real debugger instead of guessing: set breakpoints where the problem might be, stop execution at those breakpoints, inspect live variable state, and analyze the observed runtime state before patching. Use when a project agent is stuck, sees confusing or repeated failures, suspects state mutation, routing, async, serialization, cache, closure, test fixture, UI/backend mismatch, or any bug where logs/static reading would lead to speculation. Use before further patching after two failed attempts or whenever the user asks for debugger, breakpoints, debug mode, variable state, inspect locals, step through, VS Code debugger, or prove runtime behavior. Debugger Use this skill to replace LLM inference with observed runtime state. It is primarily for the project agent, not for the human: the agent must invoke it on itself when it is stuck, seeing confusing state, or at risk of patching from guesses. The core functions of this skill are: 1. The project agent must set breakpoints where the problem might be. 2. The project agent must stop at a breakpoint and analyze live variable state before deciding what to patch. 3. When reporting debugger work to the human, the project agent must provide a concrete breakpoint location the human can examine, with the expected relevant variable state at that pause. If these functions are not demonstrated, the skill has not been used. When To Use And Why Use $debugger when the next correct action depends on live runtime state, not on what the code appears to do. The purpose is to prevent the project agent from patching by inference when a debugger can show the actual value, branch, frame, request, response, object mutation, or adapter payload. When in doubt, ask this gate question: If yes, use $debugger . Mandatory triggers: The human asks for $debugger , debugger, VS Code debugger, breakpoints, debug mode, stepping, locals, variable state, or proof of runtime behavior. The same defect, failed test, bad UI state, or confusing behavior survives two focused fix/verification attempts. A prior success claim is disproved by the human, a screenshot, a runtime artifact, or a visible UI state. The suspected bug involves state that changes at runtime: async order, routing, request parsing, branch selection, cache, mutation, serialization, fixture setup, closure state, subprocess output, model payloads, browser state, or UI/backend adapter state. The project agent is about to patch code based on a guess about what a variable contains, which branch runs, which handler receives a request, or which object is passed across a boundary. Logs, static reading, DOM assertions, or test pass/fail status do not explain why the observed behavior is wrong. The human wants a collaborative breakpoint review: the agent pauses execution, reports the relevant variables, asks whether the state is semantically correct, then continues to the next breakpoint. Use $debugger before patching in these cases because it gives positive evidence: the breakpoint was set and verified execution stopped at the expected s",
+      "body": "Force the project-agent to use a real debugger instead of guessing: set breakpoints where the problem might be, stop execution at those breakpoints, inspect live variable state, and analyze the observed runtime state before patching. Use when a project agent is stuck, sees confusing or repeated failures, suspects state mutation, routing, async, serialization, cache, closure, test fixture, UI/backend mismatch, or any bug where logs/static reading would lead to speculation. Use before further patching after two failed attempts or whenever the user asks for debugger, breakpoints, debug mode, variable state, inspect locals, step through, VS Code debugger, or prove runtime behavior. Debugger Use this skill to replace LLM inference with observed runtime state. It is primarily for the project agent, not for the human: the agent must invoke it on itself when it is stuck, seeing confusing state, or at risk of patching from guesses. Front door (drive it in one line) Other skills, project agents, and the human drive the debugger through skills/debugger/run.sh — the same pattern as memory/run.sh . Every subcommand owns its own env plumbing (venv, workspace detection, extension host kind); a caller never exports UV PROJECT ENVIRONMENT or assembles uv run commands. break adds the caller's cwd to PYTHONPATH , so a multi module scenario runs from its own directory. Live subcommands default the workspace to the git toplevel of $PWD (override with DEBUGGER VSCODE WORKSPACE ) and fail closed with BRIDGE BLOCKED when no open, trusted VS Code bridge answers. Gate: fixtures/front door.json (agentic eval). Debug it, then explain what happened ./run.sh spec from proof <proof.json out spec.json [ workspace P] [ narrate <handler ] turns any real captured session ( run.sh break ) into a runnable debugger.walkthrough.v1 spec: stops in true session order (first hit per file:line), expect pinned to the first observed locals, launch module + PYTHONPATH derived from the capture, repeat counts narrated (\"this line ran 5 times\"). No hand authored JSON. Fail closed: zero hit or validation failing proofs refuse to generate. narrate optionally rewrites the say lines naturally through /ask (fail soft to the deterministic template). Gate: fixtures/spec from proof.json , including a live replay of a freshly generated spec to WALKTHROUGH COMPLETE. The core functions of this skill are: 1. The project agent must set breakpoints where the problem might be. 2. The project agent must stop at a breakpoint and analyze live variable state before deciding what to patch. 3. When reporting debugger work to the human, the project agent must provide a concrete breakpoint location the human can examine, with the expected relevant variable state at that pause. If these functions are not demonstrated, the skill has not been used. When To Use And Why Use $debugger when the next correct action depends on live runtime state, not on what the code appears to do. The purpose is to prevent the project agent from patching by inference when a debugger can show the actual value, branch, frame, req",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
       "visibility": "public",
       "evidenceAccess": "source",
@@ -568,6 +531,43 @@
       "scoutState": "abstract-only",
       "requirements": "Public overview only — the system and its evidence are private.",
       "boundary": "A public methodology overview; the implementation and evidence are under NDA."
+    },
+    {
+      "id": "project:memory",
+      "type": "project",
+      "slug": "memory",
+      "name": "memory",
+      "area": "Agentic memory & persona",
+      "areaId": "memory",
+      "lens": "hybrid",
+      "aliases": [
+        "memory",
+        "rag memory",
+        "persona",
+        "voice",
+        "continuity",
+        "long-lived agent",
+        "graph memory",
+        "memory first recall",
+        "ArangoDB memory",
+        "Qdrant semantic recall",
+        "BM25 graph recall",
+        "agent lessons learned"
+      ],
+      "disciplines": [
+        "memory-knowledge",
+        "persona-simulation",
+        "voice-audio"
+      ],
+      "question": "What should an agent remember before it touches the code?",
+      "summary": "BM25 + graph recall for agents",
+      "body": "What should an agent remember before it touches the code? Memory keeps project lessons, source pointers, and graph relationships queryable before an agent starts scanning. The public shape is architecture only; the operator repo and memory records stay private. Describes the architecture boundary: ArangoDB documents and graph edges, Qdrant vectors, and memory-first routing. It does not expose private repository contents or records.",
+      "href": "https://github.com/grahama1970/memory-public",
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
+      "scoutState": "abstract-only",
+      "requirements": "Public abstract only — the graph-memory operator and memory data are private.",
+      "boundary": "Describes the architecture boundary: ArangoDB documents and graph edges, Qdrant vectors, and memory-first routing. It does not expose private repository contents or records."
     },
     {
       "id": "skill:agent-inbox",
@@ -795,8 +795,8 @@
       "name": "best-practices-bespoke-design",
       "category": "best-practices",
       "sanity": true,
-      "summary": "Evidence-first art direction and review rules for creating digital experiences that feel genuinely custom to one brand instead of template-derived. Use when a user asks for bespoke web design, a distinctive visual world, personality-led art direction, an analysis of what makes a designer's work unique, or an audit of whether a website is memorable without copying another designer's signature.",
-      "body": "Best Practices: Bespoke Digital Design Position A bespoke interface is not a fashionable component library with unusual colors. It is a traceable transformation: brand and audience truth → personality → narrative premise → visual grammar → responsive component system → rendered proof. This skill was informed by Meagan Fisher Couldwell's Owltastic portfolio. The lesson to retain is her method of making each project feel authored for its subject. Do not reproduce her owls, celestial engravings, exact typography, page compositions, palettes, illustrations, or other signature surfaces. Immutable Outcome The finished work must be: 1. Specific — it could not be swapped onto a close competitor without visible conceptual tension. 2. Useful — the expressive system strengthens the user job and content hierarchy rather than competing with them. 3. Coherent — typography, palette, imagery, motifs, composition, motion, and voice express the same premise. 4. Systemic — the premise survives across pag",
+      "summary": "Advisory-first, evidence-grounded art direction and review rules for creating digital experiences that feel genuinely custom to one brand instead of template-derived. Use when a user asks for bespoke web design, a distinctive visual world, personality-led art direction, an analysis of what makes a designer's work unique, or an audit of whether a website is memorable without copying another designer's signature.",
+      "body": "Best Practices: Bespoke Digital Design Position A bespoke interface is not a fashionable component library with unusual colors. For day to day project work, this skill is a practical design advisor first: it should identify the smallest visible change that makes a site more specific, useful, and coherent for its real audience. For new design directions, the deeper model is a traceable transformation: brand and audience truth → personality → narrative premise → visual grammar → responsive component system → rendered proof. This skill was informed by Meagan Fisher Couldwell's Owltastic portfolio. The lesson to retain is her method of making each project feel authored for its subject. Do not reproduce her owls, celestial engravings, exact typography, page compositions, palettes, illustrations, or other signature surfaces. Immutable Outcome The finished work must be: 1. Specific — it could not be swapped onto a close competitor without visible conceptual tension. 2. Useful — the expressive",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/best-practices-bespoke-design/SKILL.md"
     },
     {
@@ -1966,7 +1966,7 @@
       "category": "core",
       "sanity": true,
       "summary": "Force the project-agent to use a real debugger instead of guessing: set breakpoints where the problem might be, stop execution at those breakpoints, inspect live variable state, and analyze the observed runtime state before patching. Use when a project agent is stuck, sees confusing or repeated failures, suspects state mutation, routing, async, serialization, cache, closure, test fixture, UI/backend mismatch, or any bug where logs/static reading would lead to speculation. Use before further patching after two failed attempts or whenever the user asks for debugger, breakpoints, debug mode, variable state, inspect locals, step through, VS Code debugger, or prove runtime behavior.",
-      "body": "Debugger Use this skill to replace LLM inference with observed runtime state. It is primarily for the project agent, not for the human: the agent must invoke it on itself when it is stuck, seeing confusing state, or at risk of patching from guesses. The core functions of this skill are: 1. The project agent must set breakpoints where the problem might be. 2. The project agent must stop at a breakpoint and analyze live variable state before deciding what to patch. 3. When reporting debugger work to the human, the project agent must provide a concrete breakpoint location the human can examine, with the expected relevant variable state at that pause. If these functions are not demonstrated, the skill has not been used. When To Use And Why Use $debugger when the next correct action depends on live runtime state, not on what the code appears to do. The purpose is to prevent the project agent from patching by inference when a debugger can show the actual value, branch, frame, request, respon",
+      "body": "Debugger Use this skill to replace LLM inference with observed runtime state. It is primarily for the project agent, not for the human: the agent must invoke it on itself when it is stuck, seeing confusing state, or at risk of patching from guesses. Front door (drive it in one line) Other skills, project agents, and the human drive the debugger through skills/debugger/run.sh — the same pattern as memory/run.sh . Every subcommand owns its own env plumbing (venv, workspace detection, extension host kind); a caller never exports UV PROJECT ENVIRONMENT or assembles uv run commands. break adds the caller's cwd to PYTHONPATH , so a multi module scenario runs from its own directory. Live subcommands default the workspace to the git toplevel of $PWD (override with DEBUGGER VSCODE WORKSPACE ) and fail closed with BRIDGE BLOCKED when no open, trusted VS Code bridge answers. Gate: fixtures/front door.json (agentic eval). Debug it, then explain what happened ./run.sh spec from proof <proof.json ou",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/SKILL.md"
     },
     {
@@ -2816,7 +2816,7 @@
       "category": "monitor",
       "sanity": true,
       "summary": "Nightly opportunity monitor that researches a bounded set of target employers and clients, ranks only eligible opportunities, compiles claim-bound resume variants, and emits one interactive morning report covering human-transmitted outreach and separately gated ATS application state. Use when the user asks for today's opportunities, the morning opportunity report, a targeted resume, what needs human action, or to run or schedule the nightly opportunity sweep.",
-      "body": "monitor opportunities Immutable goal monitor opportunities does the grunt work of the daily job and consulting search; Graham only reviews our collaboration and approves. Each day it discovers, ranks, and surfaces the most targeted opportunities — Buffalo/WNY first, then credible remote — and surfaces where Graham is a LinkedIn top applicant or a role offers quick (Easy) apply. On Graham's authorization (per opportunity, or standing for a class such as \"top candidate\" or \"quick apply\" roles), the agent performs the entire application end to end: tailoring a truthful custom resume to the employer's likely screening algorithm, answering only from Graham's attested facts, and submitting on employer ATS and LinkedIn Easy Apply — with duplicate protection and an openable receipt for every action. Graham authorizes; the agent executes. Nothing is fabricated, and no required answer without a truthful basis is ever submitted — any genuine screening question is surfaced to Graham, never guessed",
+      "body": "monitor opportunities Immutable goal monitor opportunities does the grunt work of the daily job and consulting search; Graham only reviews our collaboration and approves. Each day it discovers, ranks, and surfaces the most targeted opportunities — Buffalo/WNY first, then credible remote — and surfaces where Graham is a LinkedIn top applicant or a role offers quick (Easy) apply. On Graham's authorization for one exact opportunity after reviewing the morning report), the agent may perform the application end to end: tailoring a truthful custom resume to the employer's likely screening algorithm, answering only from Graham's attested facts, and submitting on employer ATS or LinkedIn Easy Apply with duplicate protection and an openable receipt for every action. Graham authorizes a specific payload after collaboration; the agent executes that authorized payload. Nothing is fabricated, and no required answer without a truthful basis is ever submitted — any genuine screening question is surfa",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-opportunities/SKILL.md"
     },
     {
@@ -2915,7 +2915,7 @@
       "name": "monitor-website",
       "category": "monitor",
       "sanity": true,
-      "summary": "Audit and sync the public site (grahama.co, site/) against the repo README. Report-only audit detects drift between README's curated projects/inventory and site/content.json, plus live-site health; apply regenerates content.json from the README. Use for \"is the website current\", \"sync the site with the README\", \"website drift\", or after editing the README project cards or At a Glance table.",
+      "summary": "Audit, sync, and update the public grahama.co site and resume surfaces from README.md and RESUME.md. Report-only audit detects drift between README's curated projects/inventory and site/content.json, plus live-site health; apply regenerates content.json from the README; update cascades README/RESUME changes into site content, resume JSON, Markdown, PDF, DOCX, llms.txt, and ops-linkedin JSON handoffs. Use for \"is the website current\", \"sync the site with the README\", \"website drift\", \"monitor grahamaco\", or after editing README project cards, the At a Glance table, or RESUME.md.",
       "body": "monitor website RESUME.md is the source of truth for grahama.co/resume: gen resume.py parses it into site/resume.json and copies the PDF, DOCX, and Markdown exports into site/public/ , so the page, /resume.pdf , /resume.docx , and /resume.md are one commit's content. The digest check below catches an edited resume whose surface was never regenerated. The public site ( site/ , served at https://grahama.co) mirrors two curated surfaces in README.md : the \"Fun Stuff I'm Working On\" project cards and the \"At a Glance\" inventory table. The README is the source of truth; the site reads site/content.json . This skill keeps them honest. Commands A disabled by default nightly service is registered at agents/website maintainer/services.yaml (repo convention: cron entries ship disabled; enable only when the scheduler environment is ready). Contract Report only by default. audit never mutates. apply writes only site/content.json ; committing, pushing, and the Pages deploy remain the caller's expli",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/monitor-website/SKILL.md"
     },
@@ -3066,7 +3066,7 @@
       "category": "ops",
       "sanity": true,
       "summary": "Safe Docker cleanup and compose stack management. Prune unused containers/images/volumes, redeploy stacks.",
-      "body": "Docker Ops Safe Docker management with dry run defaults. Commands Environment Variables Variable Default Description DOCKER PRUNE UNTIL Default age filter for prune STACK FILE docker compose.yml Default compose file HEALTH CMD Command to run after redeploy Common Mistakes WRONG: Running prune without execute (or running execute without checking first) RIGHT: Dry run first, then execute WRONG: Redeploying without specifying the stack file RIGHT: Always specify the stack file explicitly WRONG: Pruning without age filter (removes recently used images) RIGHT: Use until to protect recent images References (retrieve on demand — do not vendor) External docs drift; cite the canonical URLs and fetch them when needed with /context7 (library docs) or /fetcher (any URL/PDF) rather than caching stale copies. Verified reachable (HTTP 200) 2026 08 24. Docker documentation: <https://docs.docker.com/ llms.txt (LLM friendly doc index): <https://docs.docker.com/llms.txt",
+      "body": "Docker Ops Safe Docker management with dry run defaults. Commands Environment Variables Variable Default Description DOCKER PRUNE UNTIL Default age filter for prune STACK FILE docker compose.yml Default compose file HEALTH CMD Command to run after redeploy Common Mistakes WRONG: Running prune without execute (or running execute without checking first) RIGHT: Dry run first, then execute WRONG: Redeploying without specifying the stack file RIGHT: Always specify the stack file explicitly WRONG: Pruning without age filter (removes recently used images) RIGHT: Use until to protect recent images References (retrieve on demand — do not vendor) External docs drift; cite the canonical URLs and fetch them when needed with /context7 (library docs) or /fetcher (any URL/PDF) rather than caching stale copies. Verified reachable (HTTP 200) 2026 08 24. Docker documentation: <https://docs.docker.com/ llms.txt (LLM friendly doc index): <https://docs.docker.com/llms.txt llms full.txt (expanded LLM index)",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-docker/SKILL.md"
     },
     {
@@ -3135,8 +3135,8 @@
       "name": "ops-linkedin",
       "category": "ops",
       "sanity": true,
-      "summary": "Prepare evidence-bounded LinkedIn profile updates, posts, image-post captions, comments, connection notes, messages, manual search plans, lead-research plans, and content reviews as local drafts with typed human-execution handoff packets. Use when a user says \"update my LinkedIn\", \"draft a LinkedIn post\", \"write a connection note\", \"plan LinkedIn outreach\", \"review my LinkedIn content\", or otherwise asks for LinkedIn operations. This skill does not automate LinkedIn.",
-      "body": "LinkedIn Operations Prepare LinkedIn work locally, validate factual claims, and hand the final action to a human. The skill deliberately stops before LinkedIn access or submission. Immutable boundary The skill MUST NOT: open, drive, inspect, or modify LinkedIn through a browser, extension, DOM bridge, WebSocket bridge, browser control skill, or headless browser; inspect cookies, passwords, session tokens, local storage, or login state; scrape profiles, posts, contacts, search results, comments, or company pages; automatically post, like, comment, connect, follow, message, apply, or upload; perform bulk engagement, outreach sequences, rate limit evasion, or anti bot evasion; report PREPARED work as executed, delivered, published, or platform verified. An official LinkedIn API adapter is outside this MVP. Add one only after documented LinkedIn authorization, a separate security/policy review, and new live receipts. Read references/linkedin policy.md before proposing any expansion of this",
+      "summary": "Prepare evidence-bounded LinkedIn profile updates, posts, image-post captions, comments, connection notes, messages, manual search plans, lead-research plans, and content reviews as local drafts with typed human-execution handoff packets; export editable JSON for Graham's own LinkedIn profile; prepare bounded Surf own-profile sync plans after explicit account-risk acknowledgement; and prepare bounded read-only contact graph capture plans for named opportunity contacts after explicit account-risk acknowledgement. Use when a user says \"update my LinkedIn\", \"draft a LinkedIn post\", \"write a connection note\", \"plan LinkedIn outreach\", \"review my LinkedIn content\", \"find mutual LinkedIn contacts\", or otherwise asks for LinkedIn operations. This skill does not automate outreach, bulk scraping, messages, posts, comments, or applications.",
+      "body": "LinkedIn Operations Prepare LinkedIn work locally, validate factual claims, and hand final outbound actions to a human. For Graham's own profile, the skill can export an editable ops linkedin.profile entry.v1 JSON file from RESUME.md and prepare a bounded Surf sync plan. For named opportunity contacts, after explicit user authorization and account risk acknowledgement, it can prepare a bounded read only contact graph capture plan for relationship degree and visible mutual contact evidence. The normal content/outreach lanes still stop before LinkedIn access. Immutable boundary The skill MUST NOT: open, drive, inspect, or modify LinkedIn through a browser, extension, DOM bridge, WebSocket bridge, browser control skill, or headless browser, except for an explicit own profile sync plan generated by profile sync plan or a bounded read only opportunity contact graph plan generated by contact graph capture plan ; inspect cookies, passwords, session tokens, local storage, or login state; scrap",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-linkedin/SKILL.md"
     },
     {
@@ -3148,6 +3148,16 @@
       "summary": "Local LLM operations: health checks, cache management, Ollama model management, Docker service control, and performance monitoring. Probe Ollama/vLLM/SGLang endpoints, manage Docker-based Ollama models, monitor GPU usage and running models.",
       "body": "LLM Ops Manage local LLM runtimes, caches, Docker based Ollama models, and performance monitoring. Commands Watchdog (auto restart hung Ollama) The watchdog detects the specific failure mode where the Ollama runner process hangs (1000%+ CPU spin) and all chat requests timeout, while /api/tags still responds. It probes /api/chat with a timeout and restarts Ollama if hung. Default Endpoints Checked Ollama: http://127.0.0.1:11434 vLLM: http://127.0.0.1:8000 SGLang: http://127.0.0.1:30000 Default Cache Directories ~/.cache/ollama ~/.cache/huggingface ~/.cache/vllm Docker based Ollama All Ollama model and service management commands interact with Ollama running in a Docker container: Container name : scillm ollama Port : 11434 (HTTP API) Image : ollama/ollama:0.14.3 rc2 Commands use docker exec scillm ollama ollama <command pattern or HTTP API http://localhost:11434/api/... Environment Variables Variable Default Description LLM HEALTH TIMEOUT 2 Seconds to wait per endpoint LLM CACHE DIRS (s",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-llm/SKILL.md"
+    },
+    {
+      "id": "skill:ops-memory",
+      "type": "skill",
+      "name": "ops-memory",
+      "category": "ops",
+      "sanity": true,
+      "summary": "Natural-language front door that de-opaques the /memory stack — ArangoDB + Qdrant + the jina embedder + the memory daemon. Merges health, renders the topology as an ASCII chart, and prints a per-collection metrics matrix that flags collections which went stale, lost their Qdrant vector sync, hold no secondary index, are empty, or violate the \"Arango stores no embedding arrays\" contract. Also lists and triggers ArangoDB backups on the 12TB drive. Detection and read-only backups only — all Arango/Qdrant mutation and semantic sync stay in the memory repo. Use for \"is the memory database healthy\", \"how does /memory work\", \"which collections aren't vector-synced\", \"show me stale collections\", \"how many embeddings are stored\", \"backup arangodb\", \"memory health\", \"ops-memory\".",
+      "body": "STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY COMMAND. ops memory The memory/database setup is no longer opaque. ops memory is the one place to ask \"is /memory healthy, how is it built, and what is quietly rotting?\" — and to take a backup. It composes the owning skills ; it never touches ArangoDB or Qdrant directly. Boundary (non negotiable) No direct DB access. ops memory shells out to ops arango (Arango admin + read only coverage ), ops qdrant (read only vector health), and memory ( /recall ). It has no arango / qdrant client and no httpx of its own. Detection + read only backups only. backup now and fix apply are the only side effects, and both are explicit, gated subcommands. Semantic sync repair is memory repo work. fix plans/triggers the sanctioned memory owned primitive scripts/validation/dewey embedding repair.py (one collection+operation lane at a time, with a rollback manifest); it never reimplements sync. Flag→op map: embedding array violation → inline vectors , bm25 on",
+      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-memory/SKILL.md"
     },
     {
       "id": "skill:ops-nzbgeek",
@@ -3176,7 +3186,7 @@
       "category": "ops",
       "sanity": true,
       "summary": "Read-only Qdrant vector-store health detector. Lists collections, flags expected-but-missing collections, reports per-collection point counts, and probes end-to-end semantic recall through the memory daemon (dense score). Detection only — it performs NO writes. All Qdrant mutation and semantic sync stay in the memory repo per the memory contract. Use for \"qdrant health\", \"check qdrant collections\", \"dense recall is zero\", \"vector store health\", \"ops-qdrant\".",
-      "body": "ops qdrant Read only health detection for the Qdrant vector store and the semantic recall path that depends on it. It answers three questions without mutating anything: 1. Is Qdrant up, and which collections exist? 2. Do the collections we expect exist, and how many points does each hold? 3. Does end to end dense (semantic) recall actually work through the memory daemon, or has it silently degraded to BM25 only ( dense == 0.0 )? Boundary (non negotiable) This skill NEVER writes to Qdrant or Arango. Per memory/SKILL.md , all AQL and all Qdrant mutation/sync logic live ONLY in ~/workspace/experiments/memory . ops qdrant detects and reports; remediation is triggered by ops memory calling the memory repo's sanctioned migration ( migrate arango embeddings to qdrant.py ) and daemon endpoints. If you find a gap here, do not \"fix\" it from this skill. Commands Environment Var Default Meaning QDRANT URL http://127.0.0.1:6333 Qdrant REST endpoint MEMORY URL http://127.0.0.1:8601 memory daemon (ow",
+      "body": "ops qdrant Read only health detection for the Qdrant vector store and the semantic recall path that depends on it. It answers three questions without mutating anything: 1. Is Qdrant up, and which collections exist? 2. Do the collections we expect exist, and how many points does each hold? 3. Does end to end dense (semantic) recall actually work through the memory daemon, or has it silently degraded to BM25 only ( dense == 0.0 )? Boundary (non negotiable) This skill NEVER writes to Qdrant or Arango. Per memory/SKILL.md , all AQL and all Qdrant mutation/sync logic live ONLY in ~/workspace/experiments/memory . ops qdrant detects and reports; remediation is triggered by ops memory calling the memory repo's sanctioned migration ( migrate arango embeddings to qdrant.py ) and daemon endpoints. If you find a gap here, do not \"fix\" it from this skill. Commands assess — Qdrant single owner boundary linter Qdrant is a single owner store: the memory repo ( graph memory ) owns all collection config",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/ops-qdrant/SKILL.md"
     },
     {
@@ -3455,7 +3465,7 @@
       "name": "project-watchdog",
       "category": "core",
       "sanity": true,
-      "summary": "Global cross-project watchdog registry and cron dispatcher that scans registered GitHub repos for routable issues, takes one lease at a time, runs one bounded tick through each project's Tau or project-local harness, and requires a receipt before it mutates anything. Use when asked about the project watchdog, the GitHub issue cron, why the watchdog is idle or not picking up tickets, pausing or resuming automated issue dispatch, or registering a new project with the shared cron.",
+      "summary": "Global cross-project watchdog registry and cron dispatcher that scans registered GitHub repos for routable issues, takes bounded independent leases across projects, runs each through its Tau or project-local harness, and requires a receipt before it mutates anything. Use when asked about the project watchdog, the GitHub issue cron, why the watchdog is idle or not picking up tickets, pausing or resuming automated issue dispatch, or registering a new project with the shared cron.",
       "body": "Project Watchdog project watchdog is the shared control plane for the global GitHub issue watchdog. It keeps the cross project registry next to the shared skills and subagents so individual projects do not each invent their own cron loop. Commands Exit codes: 0 success or deliberate refusal, 1 operational failure, 2 caller error (unknown project id, invalid state name). Routing: which issues are eligible An issue must carry agent work and none of the hold labels ( agent active , agent blocked , needs human , maintainer blocked , next:human , status:deferred ). Eligible issues take the first matching route: Route Condition Dispatch add tau coder command spec next:coder + executor:local + repair marker in body tau handoff command loop tau handoff dispatch executor:local + handoff marker in body tau handoff command loop ticket repair anything else carrying agent work $ask tau dag creator reviewer DAG, executed by Tau ticket repair is the route ordinary /ticket filed tickets take. /ticket ",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/project-watchdog/SKILL.md"
     },

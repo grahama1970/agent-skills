@@ -117,6 +117,7 @@ site/design-roundtable/font-receipt*.json
 site/design-roundtable/*rater*.json
 site/design-roundtable/*rater*.md
 site/design-roundtable/live-collaboration-ledger.html
+skills/monitor-website/local/test-interactions/
 
 # Generated bulk that made `git status` unreadable (2026-08-14).
 # Each of these had ZERO tracked files, so ignoring hides no real change --

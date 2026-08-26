@@ -302,7 +302,7 @@ section {
 }
 .nav .nav-calendly-link {
   color: var(--brass);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -609,7 +609,7 @@ h1 .it::after {
   background: var(--brass);
   border-color: var(--brass);
   color: #170f09;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -4234,7 +4234,7 @@ h1 .proof-origin::after {
   color: var(--text);
   cursor: pointer;
   display: inline-flex;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.78rem;
   gap: 0.45rem;
   line-height: 1.2;
@@ -4436,7 +4436,7 @@ h1 .proof-origin::after {
 .cv-facts-context span {
   color: var(--faint);
   display: block;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   line-height: 1.35;
@@ -4464,7 +4464,7 @@ h1 .proof-origin::after {
 
 .cv-facts-grid dt {
   color: var(--faint);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.68rem;
   letter-spacing: 0.07em;
   line-height: 1.35;
@@ -4497,7 +4497,7 @@ h1 .proof-origin::after {
   border-radius: 4px;
   color: var(--text);
   display: inline-flex;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.76em;
   font-weight: 600;
   line-height: 1.35;
@@ -4566,7 +4566,7 @@ h1 .proof-origin::after {
 
 .cv-public-arrow {
   color: var(--faint);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.72em;
   transform: translateY(-0.03em);
   transition: color var(--dur-state) var(--ease-state),
@@ -4588,7 +4588,7 @@ h1 .proof-origin::after {
 .cv-public-facts {
   color: var(--brass);
   flex: 0 0 auto;
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 0.72rem;
   line-height: 1.45;
   max-width: 13rem;

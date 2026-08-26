@@ -1,8 +1,8 @@
 {
-  "commit": "d912a17f2f",
-  "as_of": "2026-08-24",
+  "commit": "b2a2b9235d",
+  "as_of": "2026-08-26",
   "generator": "site/scripts/gen_competence.py",
-  "totalSkills": 363,
+  "totalSkills": 364,
   "disciplineCount": 18,
   "disciplines": [
     {
@@ -251,6 +251,11 @@
       ],
       "projects": [
         {
+          "slug": "memory",
+          "name": "memory",
+          "href": "https://github.com/grahama1970/memory-public"
+        },
+        {
           "slug": "persona-dream",
           "name": "persona-dream",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md"
@@ -318,6 +323,11 @@
       ],
       "projects": [
         {
+          "slug": "memory",
+          "name": "memory",
+          "href": "https://github.com/grahama1970/memory-public"
+        },
+        {
           "slug": "persona-dream",
           "name": "persona-dream",
           "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/persona-dream/README.md"
@@ -338,6 +348,11 @@
         }
       ],
       "projects": [
+        {
+          "slug": "memory",
+          "name": "memory",
+          "href": "https://github.com/grahama1970/memory-public"
+        },
         {
           "slug": "persona-dream",
           "name": "persona-dream",

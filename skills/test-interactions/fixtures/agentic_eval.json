@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "test-interactions",
   "trials": 2,
-  "proof_scope": "test-interactions regression guard for CLI wiring, generated-manifest helpers, and fail-closed manifest loading",
+  "proof_scope": "test-interactions regression guard for CLI wiring, generated-manifest helpers including static download/plaintext link endpoints, and fail-closed manifest loading",
   "claims": {
-    "proves": "the test-interactions entrypoint imports, helper regressions run, and missing manifests fail closed",
+    "proves": "the test-interactions entrypoint imports, helper regressions run, static download/plaintext endpoints are not misclassified as inert DOM clicks, and missing manifests fail closed",
     "does_not_prove": "visual design quality, external website availability, or full browser end-to-end readiness"
   },
   "cases": [

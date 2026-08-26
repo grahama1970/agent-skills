@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from discovery import _build_manifest, _events_to_findings, _is_expected_navigation, _manifest_coverage, _manifest_selector_for_qid, _should_assert_visible_after_click, state_fingerprint
+from discovery import _build_manifest, _events_to_findings, _is_expected_link_endpoint, _is_expected_navigation, _is_replay_link_endpoint, _manifest_coverage, _manifest_selector_for_qid, _should_assert_visible_after_click, state_fingerprint
 
 
 class DiscoveryHelperTests(unittest.TestCase):
@@ -75,6 +75,60 @@ class DiscoveryHelperTests(unittest.TestCase):
         self.assertTrue(interaction["allow_external_navigation"])
         self.assertEqual(interaction["action"], "wait")
         self.assertIn("without launching", interaction["description"])
+
+    def test_generated_manifest_marks_static_file_links(self):
+        manifest = _build_manifest("https://grahama.co/resume", [{
+            "url": "https://grahama.co/resume",
+            "title": "fixture",
+            "interactives": [
+                {
+                    "qid": "resume:link:docx",
+                    "visible": True,
+                    "enabled": True,
+                    "title": "DOCX",
+                    "qsAction": "RESUME_DOWNLOAD_DOCX",
+                    "href": "https://grahama.co/resume.docx",
+                    "tag": "a",
+                },
+            ],
+        }])
+        item = {
+            "qid": "resume:link:docx",
+            "tag": "a",
+            "href": "https://grahama.co/resume.docx",
+        }
+        interaction = manifest["surfaces"][0]["elements"][0]["interactions"][0]
+        self.assertTrue(_is_expected_link_endpoint(item, "https://grahama.co"))
+        self.assertTrue(_is_expected_navigation(item, "https://grahama.co/resume", "https://grahama.co/resume"))
+        self.assertEqual(interaction["action"], "wait")
+        self.assertIn("static link endpoint", interaction["description"])
+
+    def test_generated_manifest_marks_internal_links_as_replay_endpoints(self):
+        manifest = _build_manifest("https://grahama.co", [{
+            "url": "https://grahama.co",
+            "title": "fixture",
+            "interactives": [
+                {
+                    "qid": "nav:link:resume",
+                    "visible": True,
+                    "enabled": True,
+                    "title": "Resume",
+                    "qsAction": "NAV_RESUME",
+                    "href": "https://grahama.co/resume",
+                    "tag": "a",
+                },
+            ],
+        }])
+        item = {
+            "qid": "nav:link:resume",
+            "tag": "a",
+            "href": "https://grahama.co/resume",
+        }
+        interaction = manifest["surfaces"][0]["elements"][0]["interactions"][0]
+        self.assertTrue(_is_replay_link_endpoint(item))
+        self.assertFalse(_is_expected_link_endpoint(item, "https://grahama.co"))
+        self.assertEqual(interaction["action"], "wait")
+        self.assertIn("without navigating away", interaction["description"])
 
     def test_generated_manifest_keeps_root_url_and_groups_routes(self):
         manifest = _build_manifest("https://grahama.co", [

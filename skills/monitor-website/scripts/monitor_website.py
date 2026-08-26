@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+import socket
 import subprocess
 import sys
 import urllib.request
@@ -217,8 +218,24 @@ def sync_content_stats_to_inventory() -> bool:
     return True
 
 
-def _run_step(name: str, argv: list[str], cwd: Path = REPO) -> dict:
-    proc = subprocess.run(argv, cwd=cwd, capture_output=True, text=True)
+def _run_step(
+    name: str,
+    argv: list[str],
+    cwd: Path = REPO,
+    timeout_seconds: int | None = None,
+) -> dict:
+    try:
+        proc = subprocess.run(
+            argv,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise SystemExit(
+            f"{name} timed out after {timeout_seconds}s: {' '.join(argv)}"
+        ) from exc
     if proc.returncode != 0:
         raise SystemExit(
             f"{name} failed ({proc.returncode}): {proc.stderr[-500:] or proc.stdout[-500:]}"
@@ -231,6 +248,169 @@ def _run_step(name: str, argv: list[str], cwd: Path = REPO) -> dict:
         "stdout_tail": proc.stdout[-500:],
         "stderr_tail": proc.stderr[-500:],
     }
+
+
+def _read_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _count_jsonl(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+
+
+def _choose_free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
+
+
+def _wait_for_http(url: str, *, timeout_seconds: float = 8.0) -> None:
+    import time
+
+    deadline = time.monotonic() + timeout_seconds
+    last_error = ""
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=1.0) as response:
+                if response.status < 500:
+                    return
+        except Exception as exc:  # noqa: BLE001 - report final retry context
+            last_error = str(exc)
+        time.sleep(0.2)
+    raise SystemExit(f"static test server did not become ready at {url}: {last_error}")
+
+
+def _run_test_interactions_surface(
+    *,
+    surface: str,
+    url: str,
+    output_dir: Path,
+    max_actions: int = 30,
+) -> dict:
+    surface_dir = output_dir / surface
+    discovery_dir = surface_dir / "discovery"
+    run_dir = surface_dir / "run"
+    manifest_path = surface_dir / "manifest.json"
+    discover_step = _run_step(
+        f"test_interactions_discover_{surface}",
+        [
+            "bash",
+            str(REPO / "skills/test-interactions/run.sh"),
+            "discover",
+            "--url",
+            url,
+            "--output-dir",
+            str(discovery_dir),
+            "--manifest-output",
+            str(manifest_path),
+            "--max-depth",
+            "1",
+            "--max-states",
+            "6",
+            "--max-actions",
+            str(max_actions),
+        ],
+        timeout_seconds=180,
+    )
+    findings_path = discovery_dir / "discovery-findings.jsonl"
+    findings = _count_jsonl(findings_path)
+    if findings:
+        raise SystemExit(
+            f"test-interactions discovery found {findings} finding(s) for {surface}; "
+            f"see {findings_path}"
+        )
+    run_step = _run_step(
+        f"test_interactions_run_{surface}",
+        [
+            "bash",
+            str(REPO / "skills/test-interactions/run.sh"),
+            "run",
+            "--manifest",
+            str(manifest_path),
+            "--output-dir",
+            str(run_dir),
+        ],
+        timeout_seconds=300,
+    )
+    results_path = run_dir / "results.json"
+    return {
+        "surface": surface,
+        "url": url,
+        "status": "PASS",
+        "discovery_findings": findings,
+        "manifest": str(manifest_path),
+        "discovery": str(discovery_dir),
+        "results": str(results_path),
+        "results_summary": _read_json(results_path).get("summary", {}),
+        "commands": [discover_step, run_step],
+    }
+
+
+def interaction_check(*, url: str, resume_url: str, output_dir: Path) -> dict:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    surfaces = [
+        _run_test_interactions_surface(surface="home", url=url, output_dir=output_dir),
+        _run_test_interactions_surface(surface="resume", url=resume_url, output_dir=output_dir),
+    ]
+    result = {
+        "schema": "monitor-website.test_interactions.v1",
+        "status": "PASS",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "output_dir": str(output_dir),
+        "surfaces": surfaces,
+        "mocked": False,
+        "live": True,
+    }
+    summary_path = output_dir / "summary.json"
+    summary_path.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    result["summary"] = str(summary_path)
+    return result
+
+
+def _run_static_site_interaction_check(output_dir: Path) -> dict:
+    import time
+
+    site_out = REPO / "site/out"
+    if not site_out.exists():
+        raise SystemExit("site/out missing; run the static build before interaction check")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    port = _choose_free_port()
+    log_path = output_dir / "static-server.log"
+    with log_path.open("w", encoding="utf-8") as log:
+        proc = subprocess.Popen(
+            [
+                "python3",
+                "-m",
+                "http.server",
+                str(port),
+                "--bind",
+                "127.0.0.1",
+                "--directory",
+                str(site_out),
+            ],
+            cwd=REPO,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    try:
+        root = f"http://127.0.0.1:{port}/"
+        _wait_for_http(root)
+        return interaction_check(
+            url=root,
+            resume_url=f"http://127.0.0.1:{port}/resume.html",
+            output_dir=output_dir,
+        )
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=3)
+        time.sleep(0.1)
 
 
 def _update_step(name: str, action: str, writes: list[str], command: list[str] | None = None) -> dict:
@@ -338,6 +518,13 @@ def _grahamaco_update_plan(
         )
     if build:
         steps.append(_update_step("site_build", "run site qid/copy/build gates", ["site/out/"]))
+        steps.append(
+            _update_step(
+                "site_interactions",
+                "run test-interactions discovery and replay against the built grahama.co and /resume surfaces",
+                [str(output_dir / "test-interactions" / "summary.json")],
+            )
+        )
     return steps
 
 
@@ -434,7 +621,7 @@ def grahamaco_update(
         )
     if site:
         content_result = apply_sync()
-        refresh_result = refresh(commit=False, push=False)
+        refresh_result = refresh(commit=False, push=False, interaction_gate=not build)
         executed.append({"name": "site_content", "result": content_result})
         executed.append({"name": "site_generated_surfaces", "result": refresh_result})
     if linkedin_draft:
@@ -480,11 +667,17 @@ def grahamaco_update(
             ["npm", "run", "build"],
         ):
             executed.append(_run_step("site_build", check, cwd=REPO / "site"))
+        executed.append(
+            {
+                "name": "site_interactions",
+                "result": _run_static_site_interaction_check(output_dir / "test-interactions"),
+            }
+        )
     result["executed"] = executed
     return result
 
 
-def refresh(commit: bool, push: bool) -> dict:
+def refresh(commit: bool, push: bool, interaction_gate: bool = True) -> dict:
     """Regenerate the site's generated surfaces from current repo state,
     prove the build, and optionally commit. Copy (questions/blurbs) is
     never touched — that stays doc-grounded and human/agent-authored."""
@@ -537,9 +730,11 @@ def refresh(commit: bool, push: bool) -> dict:
             ["python3", "scripts/copy_audit.py"],
             ["npm", "run", "build"],
         ):
-            proc = subprocess.run(check, cwd=REPO / "site")
-            if proc.returncode != 0:
-                raise SystemExit(f"post-refresh gate failed: {' '.join(check)}")
+            _run_step("post_refresh_gate", check, cwd=REPO / "site")
+        if interaction_gate:
+            result["interactions"] = _run_static_site_interaction_check(
+                REPO / "skills/monitor-website/local/test-interactions"
+            )
         result["build"] = "ok"
         if commit:
             subprocess.run(["git", "add"] + changed, cwd=REPO, check=True)
@@ -573,16 +768,44 @@ def main() -> None:
         if "--build" in args and result["changed"]:
             for check in (
                 ["python3", "scripts/verify-data-qid.py"],
+                ["python3", "scripts/copy_audit.py"],
                 ["npm", "run", "build"],
             ):
-                proc = subprocess.run(check, cwd=REPO / "site")
-                if proc.returncode != 0:
-                    raise SystemExit(f"post-apply check failed: {' '.join(check)}")
+                _run_step("post_apply_gate", check, cwd=REPO / "site")
+            result["interactions"] = _run_static_site_interaction_check(
+                REPO / "skills/monitor-website/local/test-interactions"
+            )
             result["build"] = "ok"
         print(json.dumps(result, indent=2))
         return
     if cmd == "refresh":
         print(json.dumps(refresh(commit="--commit" in args, push="--push" in args), indent=2))
+        return
+    if cmd == "interaction-check":
+        output_dir = REPO / "skills/monitor-website/local/test-interactions-live"
+        url = SITE_URL + "/"
+        resume_url = SITE_URL + "/resume"
+        if "--output-dir" in args:
+            index = args.index("--output-dir")
+            try:
+                output_dir = Path(args[index + 1])
+            except IndexError as exc:
+                raise SystemExit("--output-dir requires a path") from exc
+            if not output_dir.is_absolute():
+                output_dir = REPO / output_dir
+        if "--url" in args:
+            index = args.index("--url")
+            try:
+                url = args[index + 1]
+            except IndexError as exc:
+                raise SystemExit("--url requires a URL") from exc
+        if "--resume-url" in args:
+            index = args.index("--resume-url")
+            try:
+                resume_url = args[index + 1]
+            except IndexError as exc:
+                raise SystemExit("--resume-url requires a URL") from exc
+        print(json.dumps(interaction_check(url=url, resume_url=resume_url, output_dir=output_dir), indent=2))
         return
     if cmd in {"update", "grahamaco-update", "monitor-grahamaco"}:
         output_dir = REPO / "skills/monitor-website/local/grahama-update"
@@ -608,7 +831,7 @@ def main() -> None:
         return
     raise SystemExit(
         "unknown command: "
-        f"{cmd} (use audit|apply|refresh|update|grahamaco-update|monitor-grahamaco)"
+        f"{cmd} (use audit|apply|refresh|interaction-check|update|grahamaco-update|monitor-grahamaco)"
     )
 
 

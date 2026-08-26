@@ -11,6 +11,14 @@ if [ "${1:-}" = "eval" ]; then
   exec "${HOME}/.claude/skills/agentic-evals/run.sh" run "${SCRIPT_DIR}/fixtures/agentic_eval.json" "$@"
 fi
 
+if [ "${1:-}" = "website-gate" ]; then
+  shift
+  exec "${SCRIPT_DIR}/../monitor-website/run.sh" interaction-check \
+    --url "https://grahama.co/" \
+    --resume-url "https://grahama.co/resume" \
+    "$@"
+fi
+
 
 # Local untracked environment (e.g. BUZZ_IDENTITY_KEY) for cron runs whose
 # daemon env is empty; safe no-op when absent.

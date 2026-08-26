@@ -33,12 +33,13 @@ export function CopyEmailButton({
   const [copied, setCopied] = useState(false);
 
   async function copyEmail() {
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
     try {
       await navigator.clipboard.writeText(email);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
     } catch {
-      setCopied(false);
+      // Keep the visible click acknowledgement even when the desktop/browser
+      // blocks clipboard writes; the page should not look inert.
     }
   }
 

@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "monitor-website",
   "trials": 2,
-  "proof_scope": "grahama.co update cascade guard for README/RESUME site surfaces, resume exports, llms.txt, ops-linkedin handoff planning, Calendly static public surfaces, and no-OS-protocol email behavior",
+  "proof_scope": "grahama.co update cascade guard for README/RESUME site surfaces, resume exports, llms.txt, ops-linkedin handoff planning, Calendly static public surfaces, no-OS-protocol email behavior, and mandatory test-interactions coverage for public site surfaces",
   "claims": {
-    "proves": "the monitor-website update entrypoint exposes a one-command cascade plan for site, resume PDF/DOCX/Markdown/llms.txt, and LinkedIn profile handoff JSON while preserving ops-linkedin's NOT_EXECUTED platform boundary; the production static build still emits a real /resume.docx download linked from /resume and llms.txt; static Calendly booking actions render from public metadata without an inline auto-embed or exported PAT; site and resume email controls render as in-page copy buttons, not mailto links that can open an OS application chooser",
+    "proves": "the monitor-website update entrypoint exposes a one-command cascade plan for site, resume PDF/DOCX/Markdown/llms.txt, LinkedIn profile handoff JSON, and test-interactions coverage while preserving ops-linkedin's NOT_EXECUTED platform boundary; the production static build still emits a real /resume.docx download linked from /resume and llms.txt; static Calendly booking actions render from public metadata without an inline auto-embed or exported PAT; site and resume email controls render as in-page copy buttons, not mailto links that can open an OS application chooser; the public home and resume surfaces can be checked by live CDP discovery and replay",
     "does_not_prove": "live GitHub Pages deployment, formal design certification, actual LinkedIn platform mutation, broad disclosure-map health, ATS semantic parse quality, Calendly booking completion, or Calendly API availability in CI"
   },
   "cases": [
@@ -24,10 +24,36 @@
           "\"name\": \"resume_pdf\"",
           "\"name\": \"resume_docx\"",
           "site/public/llms.txt",
+          "\"name\": \"site_interactions\"",
           "\"name\": \"linkedin_profile_sync_plan\"",
           "\"execution_claim\": \"NOT_EXECUTED\""
         ]
       }
+    },
+    {
+      "name": "grahamaco-test-interactions-live-gate",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && out=/tmp/monitor-website-agentic-test-interactions-$$ && skills/monitor-website/run.sh interaction-check --url https://grahama.co/ --resume-url https://grahama.co/resume --output-dir \"$out\" --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"monitor-website.test_interactions.v1\"",
+          "\"status\": \"PASS\"",
+          "\"surface\": \"home\"",
+          "\"surface\": \"resume\"",
+          "\"discovery_findings\": 0"
+        ]
+      },
+      "readback": true,
+      "proves": "The live public grahama.co and /resume surfaces pass test-interactions discovery and replay through the monitor-website entrypoint.",
+      "does_not_prove": "A future deployment has occurred; run again against the post-deploy URL."
     },
     {
       "name": "linkedin-sync-plan-requires-risk-ack",

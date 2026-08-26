@@ -2,12 +2,37 @@
   "version": 2,
   "skill": "monitor-opportunities",
   "trials": 2,
-  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, and the enforcement gates + fabrication guard hold",
+  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold",
   "claims": {
-    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, refuses to silently skip a dead-API source, enforces the 2-week recency window, and carries no fabricated 'God of War' claim",
+    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim",
     "does_not_prove": "real successful application submissions (deliberately human-gated), long-run scheduler reliability, or semantic quality of tailored resumes"
   },
   "cases": [
+    {
+      "name": "grahamaco-public-surface-test-interactions-gate",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && out=/tmp/monitor-opportunities-website-gate-$$ && skills/monitor-opportunities/run.sh website-gate --output-dir \"$out\" --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"monitor-website.test_interactions.v1\"",
+          "\"status\": \"PASS\"",
+          "\"surface\": \"home\"",
+          "\"surface\": \"resume\"",
+          "\"discovery_findings\": 0"
+        ]
+      },
+      "readback": true,
+      "proves": "The opportunity monitor's public grahama.co prerequisite invokes the real monitor-website/test-interactions gate against live home and resume surfaces.",
+      "does_not_prove": "That LinkedIn, ATS, email, or Calendly external effects are authorized or executed."
+    },
     {
       "name": "live-e2e-nightly-real-world",
       "type": "positive",

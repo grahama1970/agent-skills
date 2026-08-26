@@ -1,6 +1,6 @@
 {
-  "commit": "d912a17f2f",
-  "as_of": "2026-08-24",
+  "commit": "b2a2b9235d",
+  "as_of": "2026-08-26",
   "artifacts": [
     {
       "id": "roundtable-receipt",
@@ -23,21 +23,21 @@
       "judgment": "UNAVAILABLE",
       "proves": "No audit receipt was captured.",
       "does_not_prove": "That local generated surfaces agreed or public endpoints responded.",
-      "caption": "{\n  \"drift\": [\n    \"stats.skills: README=361 site=363\",\n    \"stats.sanity: README=301 site=302\"\n  ],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_docx\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}",
+      "caption": "{\n  \"drift\": [\n    \"stats.skills: README=361 site=364\",\n    \"stats.sanity: README=301 site=303\"\n  ],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_docx\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}",
       "body": "",
-      "unavailable_reason": "{\n  \"drift\": [\n    \"stats.skills: README=361 site=363\",\n    \"stats.sanity: README=301 site=302\"\n  ],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_docx\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}"
+      "unavailable_reason": "{\n  \"drift\": [\n    \"stats.skills: README=361 site=364\",\n    \"stats.sanity: README=301 site=303\"\n  ],\n  \"live\": {\n    \"home\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"sitemap\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_pdf\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_docx\": {\n      \"status\": 200,\n      \"ok\": true\n    },\n    \"resume_md\": {\n      \"status\": 200,\n      \"ok\": true\n    }\n  }\n}"
     },
     {
       "id": "inventory-provenance",
       "title": "inventory provenance \u2014 where the numbers come from",
       "capture_status": "captured",
       "source": "site/inventory.json",
-      "digest": "sha256:b1353dd34910d454f1b4e70ac0bb038b05fb14c145f47b0fd04ff12f1ba409d5",
-      "judgment": "BUILD: d912a17f2f",
+      "digest": "sha256:cf7841e48d9b8df7b7b9e5d06d35eca54731d8878908ce3428517781c306a727",
+      "judgment": "BUILD: b2a2b9235d",
       "proves": "The numbers above came from checked source state, not marketing copy.",
       "does_not_prove": "That every skill is complete, useful, or production-ready.",
-      "caption": "site/inventory.json \u00b7 sha256 b1353dd34910d454\u2026",
-      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"d912a17f2f\",\n  \"as_of\": \"2026-08-24\",\n  \"stats\": {\n    \"skills\": 363,\n    \"sanity\": 302,\n    \"agents\": 92\n  }\n}"
+      "caption": "site/inventory.json \u00b7 sha256 cf7841e48d9b8df7\u2026",
+      "body": "{\n  \"generator\": \"site/scripts/gen_inventory.py\",\n  \"commit\": \"b2a2b9235d\",\n  \"as_of\": \"2026-08-26\",\n  \"stats\": {\n    \"skills\": 364,\n    \"sanity\": 303,\n    \"agents\": 92\n  }\n}"
     }
   ]
 }
