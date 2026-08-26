@@ -1,0 +1,35 @@
+{
+  "title": "glm-4.7-flash capability profile",
+  "models": [
+    "local-glm",
+    "gpt-5.5",
+    "oc-glm"
+  ],
+  "judge": "claude-fable-5",
+  "questions": [
+    {
+      "id": 14,
+      "category": "instruction_following",
+      "difficulty": "medium",
+      "input": "Given these records, output exactly three CSV lines with no header. Sort by descending score, then ascending name for ties. Format each line as name,score. Records: Mira 88; Chen 94; Ava 88.",
+      "expected": "Chen,94\nAva,88\nMira,88",
+      "grading": "A correct answer must contain only the three CSV rows in the specified two-key sort order and include no header or commentary."
+    },
+    {
+      "id": 15,
+      "category": "agent_tooling",
+      "difficulty": "easy",
+      "input": "You have three tools: file_search(query) searches attached files, web_search(query) searches the public web, and calculator(expression) performs arithmetic. The user asks, \"According to the attached contract, what is the cancellation notice period?\" Which single tool should be called first, and with what query?",
+      "expected": "Call file_search(\"cancellation notice period\") first because the requested fact must come from the attached contract.",
+      "grading": "A correct answer must choose file_search first with a query targeting the cancellation notice period and must not choose public web search."
+    },
+    {
+      "id": 16,
+      "category": "agent_tooling",
+      "difficulty": "medium",
+      "input": "You have tools search_docs(query), read_doc(id), and create_ticket(title, body). A user asks you to create one repair ticket based on the repository's documented retry policy. State the minimal safe tool sequence, including when ticket creation must stop.",
+      "expected": "1. Call search_docs with a query for the retry policy. 2. Call read_doc on the relevant result. 3. Verify the document provides enough evidence for a focused ticket. 4. Call create_ticket once with an evidence-based title and body. Stop without creating a ticket if the policy is missing, ambiguous, or unsupported.",
+      "grading": "A correct answer must search before reading, read before writing, create at most one ticket, and fail closed when the source evidence is insufficient."
+    }
+  ]
+}

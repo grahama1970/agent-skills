@@ -1,0 +1,139 @@
+{
+  "title": "glm-4.7-flash capability profile",
+  "models": [
+    "local-glm",
+    "gpt-5.5",
+    "oc-glm"
+  ],
+  "judge": "claude-fable-5",
+  "questions": [
+    {
+      "id": 1,
+      "category": "code_generation",
+      "difficulty": "easy",
+      "input": "Write a Python function dedupe(items) that returns a new list with duplicate values removed while preserving first-seen order. Assume every item is hashable.",
+      "expected": "def dedupe(items):\n    return list(dict.fromkeys(items))",
+      "grading": "A correct answer must return unique hashable items in first-seen order without modifying the input list."
+    },
+    {
+      "id": 2,
+      "category": "code_generation",
+      "difficulty": "medium",
+      "input": "Write a Python function merge_intervals(intervals) that merges overlapping closed intervals. Input is a list of [start, end] pairs with start <= end; output must be sorted by start. Example: [[1,3],[2,6],[8,10]] becomes [[1,6],[8,10]].",
+      "expected": "def merge_intervals(intervals):\n    merged = []\n    for start, end in sorted(intervals):\n        if not merged or start > merged[-1][1]:\n            merged.append([start, end])\n        else:\n            merged[-1][1] = max(merged[-1][1], end)\n    return merged",
+      "grading": "A correct answer must sort the intervals, merge every overlap including shared endpoints, and return the merged pairs in ascending order."
+    },
+    {
+      "id": 3,
+      "category": "code_debugging",
+      "difficulty": "easy",
+      "input": "This Python function unexpectedly remembers tasks from earlier calls. Identify the bug and provide a corrected function.\n\ndef add_task(task, tasks=[]):\n    tasks.append(task)\n    return tasks",
+      "expected": "The default list is created once and shared across calls. Use None:\n\ndef add_task(task, tasks=None):\n    if tasks is None:\n        tasks = []\n    tasks.append(task)\n    return tasks",
+      "grading": "A correct answer must identify the mutable default argument and replace it with a per-call list, normally using None."
+    },
+    {
+      "id": 4,
+      "category": "code_debugging",
+      "difficulty": "medium",
+      "input": "The following JavaScript function returns an array of Promise objects instead of user records. Explain why and fix it.\n\nasync function loadUsers(ids) {\n  return ids.map(id => fetch(`/users/${id}`).then(r => r.json()));\n}",
+      "expected": "Array.map returns the promises immediately; await them together:\n\nasync function loadUsers(ids) {\n  return Promise.all(ids.map(async id => {\n    const r = await fetch(`/users/${id}`);\n    return r.json();\n  }));\n}",
+      "grading": "A correct answer must explain that map produces promises and use Promise.all or an equivalent awaited aggregation to return resolved records."
+    },
+    {
+      "id": 5,
+      "category": "math_reasoning",
+      "difficulty": "easy",
+      "input": "A service handled 240 requests per minute before an upgrade and 300 afterward. What was the percentage increase? Show the calculation.",
+      "expected": "Increase = 300 - 240 = 60. Percentage increase = 60 / 240 \u00d7 100% = 25%.",
+      "grading": "A correct answer must compute the change relative to the original value and conclude that the increase was 25%."
+    },
+    {
+      "id": 6,
+      "category": "math_reasoning",
+      "difficulty": "medium",
+      "input": "A bag contains 5 red, 3 blue, and 2 green marbles. Two marbles are drawn without replacement. What is the probability that both are red? Give the simplified fraction.",
+      "expected": "P(both red) = 5/10 \u00d7 4/9 = 20/90 = 2/9.",
+      "grading": "A correct answer must account for drawing without replacement and give the simplified probability 2/9."
+    },
+    {
+      "id": 7,
+      "category": "factual_knowledge",
+      "difficulty": "easy",
+      "input": "What does an HTTP 404 response mean, and does it necessarily prove that the server itself is offline?",
+      "expected": "HTTP 404 means the server was reached but could not find the requested resource. It does not prove the server is offline; an offline or unreachable server usually produces a connection or DNS error instead of an HTTP response.",
+      "grading": "A correct answer must define 404 as resource not found and state that receiving it implies an HTTP server responded."
+    },
+    {
+      "id": 8,
+      "category": "factual_knowledge",
+      "difficulty": "medium",
+      "input": "In a relational database, what is the practical difference between a primary key and a UNIQUE constraint? Mention nullability and how many of each a table can have.",
+      "expected": "A table has one primary key, which uniquely identifies each row and is non-null. A table may have multiple UNIQUE constraints. UNIQUE columns also prevent duplicate non-null values, while treatment of NULL values can vary by database system.",
+      "grading": "A correct answer must distinguish one non-null primary key from potentially multiple UNIQUE constraints and acknowledge database-specific NULL behavior."
+    },
+    {
+      "id": 9,
+      "category": "summarization",
+      "difficulty": "easy",
+      "input": "Summarize the following in no more than two sentences: The team moved nightly backups from 1:00 a.m. to 3:00 a.m. because batch analytics often ran past midnight. Backup duration did not change, but conflicts with analytics jobs dropped from twelve per month to one. The team will review storage costs after thirty days.",
+      "expected": "Moving nightly backups from 1:00 a.m. to 3:00 a.m. reduced monthly conflicts with analytics jobs from twelve to one without changing backup duration. The team will review storage costs after thirty days.",
+      "grading": "A correct answer must mention the schedule change, the conflict reduction, unchanged duration, and the planned thirty-day cost review in at most two sentences."
+    },
+    {
+      "id": 10,
+      "category": "summarization",
+      "difficulty": "medium",
+      "input": "Summarize this decision in at most 70 words, preserving the decision, rationale, restriction, and review date: Starting September 1, customer-support agents may use the internal response assistant for drafting replies. Agents must verify every factual claim and may not enter payment-card data, passwords, or medical information. The pilot is intended to reduce average response time without lowering satisfaction scores. Security and support leadership will review results on October 15 before approving wider use.",
+      "expected": "Starting September 1, support agents may use the internal assistant to draft replies in a pilot aimed at reducing response time without lowering satisfaction. Agents must verify factual claims and must not enter payment-card data, passwords, or medical information. Security and support leaders will review the pilot on October 15 before considering wider use.",
+      "grading": "A correct answer must retain the September 1 decision, performance rationale, verification and data restrictions, and October 15 review."
+    },
+    {
+      "id": 11,
+      "category": "structured_extraction",
+      "difficulty": "easy",
+      "input": "Extract the meeting details into exactly this JSON shape: {\"date\":\"YYYY-MM-DD\",\"time\":\"HH:MM\",\"timezone\":\"string\",\"attendees\":[\"string\"],\"topic\":\"string\"}. Text: Priya and Mateo will meet on 2026-09-03 at 14:30 Eastern Time to review the Atlas migration plan.",
+      "expected": "{\"date\":\"2026-09-03\",\"time\":\"14:30\",\"timezone\":\"Eastern Time\",\"attendees\":[\"Priya\",\"Mateo\"],\"topic\":\"Atlas migration plan review\"}",
+      "grading": "A correct answer must be valid JSON with exactly the requested keys and all five details accurately extracted."
+    },
+    {
+      "id": 12,
+      "category": "structured_extraction",
+      "difficulty": "medium",
+      "input": "Extract the two incidents into exactly this JSON shape: {\"incidents\":[{\"id\":\"string\",\"severity\":\"low|medium|high\",\"owner\":\"string|null\",\"resolved\":true|false}]}. Text: INC-104 was a high-severity database timeout owned by Lena and was resolved. INC-105 is a medium-severity login failure; no owner has been assigned and it remains open.",
+      "expected": "{\"incidents\":[{\"id\":\"INC-104\",\"severity\":\"high\",\"owner\":\"Lena\",\"resolved\":true},{\"id\":\"INC-105\",\"severity\":\"medium\",\"owner\":null,\"resolved\":false}]}",
+      "grading": "A correct answer must produce valid JSON in the exact shape with normalized severity values, null for the missing owner, and correct resolution booleans."
+    },
+    {
+      "id": 13,
+      "category": "instruction_following",
+      "difficulty": "easy",
+      "input": "Return exactly one line containing the three words below in reverse order, joined by a vertical bar, with no spaces and no punctuation beyond the separators: alpha beta gamma",
+      "expected": "gamma|beta|alpha",
+      "grading": "A correct answer must exactly equal gamma|beta|alpha with no additional text or whitespace."
+    },
+    {
+      "id": 14,
+      "category": "instruction_following",
+      "difficulty": "medium",
+      "input": "Given these records, output exactly three CSV lines with no header. Sort by descending score, then ascending name for ties. Format each line as name,score. Records: Mira 88; Chen 94; Ava 88.",
+      "expected": "Chen,94\nAva,88\nMira,88",
+      "grading": "A correct answer must contain only the three CSV rows in the specified two-key sort order and include no header or commentary."
+    },
+    {
+      "id": 15,
+      "category": "agent_tooling",
+      "difficulty": "easy",
+      "input": "You have three tools: file_search(query) searches attached files, web_search(query) searches the public web, and calculator(expression) performs arithmetic. The user asks, \"According to the attached contract, what is the cancellation notice period?\" Which single tool should be called first, and with what query?",
+      "expected": "Call file_search(\"cancellation notice period\") first because the requested fact must come from the attached contract.",
+      "grading": "A correct answer must choose file_search first with a query targeting the cancellation notice period and must not choose public web search."
+    },
+    {
+      "id": 16,
+      "category": "agent_tooling",
+      "difficulty": "medium",
+      "input": "You have tools search_docs(query), read_doc(id), and create_ticket(title, body). A user asks you to create one repair ticket based on the repository's documented retry policy. State the minimal safe tool sequence, including when ticket creation must stop.",
+      "expected": "1. Call search_docs with a query for the retry policy. 2. Call read_doc on the relevant result. 3. Verify the document provides enough evidence for a focused ticket. 4. Call create_ticket once with an evidence-based title and body. Stop without creating a ticket if the policy is missing, ambiguous, or unsupported.",
+      "grading": "A correct answer must search before reading, read before writing, create at most one ticket, and fail closed when the source evidence is insufficient."
+    }
+  ]
+}

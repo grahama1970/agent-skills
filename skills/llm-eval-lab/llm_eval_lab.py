@@ -18,6 +18,7 @@ import find_minimum  # noqa: F401 -- find-minimum
 import grid_eval  # noqa: F401 -- grid-eval
 import judge  # noqa: F401 -- judge, compare
 import models_cmd  # noqa: F401 -- models, seed-memory
+import judge_grid  # noqa: F401 -- judge-grid
 
 
 if __name__ == "__main__":

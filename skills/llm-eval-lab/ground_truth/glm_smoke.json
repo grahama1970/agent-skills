@@ -1,0 +1,27 @@
+{
+  "title": "glm-4.7-flash capability profile",
+  "models": [
+    "local-glm",
+    "gpt-5.5",
+    "zai-glm-4"
+  ],
+  "judge": "claude-fable-5",
+  "questions": [
+    {
+      "id": 1,
+      "category": "code_generation",
+      "difficulty": "easy",
+      "input": "Write a Python function dedupe(items) that returns a new list with duplicate values removed while preserving first-seen order. Assume every item is hashable.",
+      "expected": "def dedupe(items):\n    return list(dict.fromkeys(items))",
+      "grading": "A correct answer must return unique hashable items in first-seen order without modifying the input list."
+    },
+    {
+      "id": 11,
+      "category": "structured_extraction",
+      "difficulty": "easy",
+      "input": "Extract the meeting details into exactly this JSON shape: {\"date\":\"YYYY-MM-DD\",\"time\":\"HH:MM\",\"timezone\":\"string\",\"attendees\":[\"string\"],\"topic\":\"string\"}. Text: Priya and Mateo will meet on 2026-09-03 at 14:30 Eastern Time to review the Atlas migration plan.",
+      "expected": "{\"date\":\"2026-09-03\",\"time\":\"14:30\",\"timezone\":\"Eastern Time\",\"attendees\":[\"Priya\",\"Mateo\"],\"topic\":\"Atlas migration plan review\"}",
+      "grading": "A correct answer must be valid JSON with exactly the requested keys and all five details accurately extracted."
+    }
+  ]
+}

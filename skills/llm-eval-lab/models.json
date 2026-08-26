@@ -1,0 +1,6 @@
+{
+  "local-glm": {"provider": "scillm", "model": "local-glm", "params_b": 30, "json_mode": false, "note": "GLM-4.7-flash local via Ollama (subject)"},
+  "gpt-5.5": {"provider": "scillm", "model": "gpt-5.5", "params_b": 0, "json_mode": true, "note": "frontier GPT baseline"},
+  "zai-glm-4": {"provider": "scillm", "model": "zai-glm-4", "params_b": 355, "json_mode": true, "note": "cloud GLM-4.7 (Z.AI) sibling"},
+  "claude-fable-5": {"provider": "scillm", "model": "claude-fable-5", "params_b": 0, "json_mode": true, "note": "independent judge (non-GPT, non-GLM family)"}
+}
