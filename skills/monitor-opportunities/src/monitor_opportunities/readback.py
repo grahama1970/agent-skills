@@ -152,13 +152,20 @@ def resolve_primary_source(
     promoted["locator_url"] = locator_url
     promoted["locator_candidate_id"] = locator.get("candidate_id")
     promoted["readback_receipt_id"] = receipt["receipt_id"]
-    # Keep the priority geography from the locator when the primary posting is
-    # geographically vaguer; the locator already established WNY.
-    if locator.get("workplace_type") in READBACK_PRIORITY_GEO and not promoted.get("workplace_type") in READBACK_PRIORITY_GEO:
-        promoted["workplace_type"] = locator["workplace_type"]
     receipt["status"] = "PRIMARY_CONFIRMED"
     receipt["primary_url"] = match.get("primary_evidence_url") or match.get("posting_url")
     receipt["primary_provider"] = match.get("source_provider")
+    receipt["primary_workplace_type"] = promoted.get("workplace_type")
+    receipt["locator_workplace_type"] = locator.get("workplace_type")
+    receipt["location_authority"] = "primary_source"
+    if (
+        locator.get("workplace_type") in READBACK_PRIORITY_GEO
+        and promoted.get("workplace_type") not in READBACK_PRIORITY_GEO
+    ):
+        receipt["location_conflict"] = True
+        receipt["location_conflict_resolution"] = (
+            "primary_source_workplace_type_retained; linkedin_locator_not_used_for_wny_eligibility"
+        )
     return promoted, receipt
 
 
