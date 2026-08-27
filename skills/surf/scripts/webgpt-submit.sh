@@ -1513,9 +1513,44 @@ stop_background_watcher() {
   kill "$pid" 2>/dev/null || true
 }
 
+# Surface the pre-submit DOM doctor's verdict from the host log INTO the /ask
+# run dir (the artifact dir), so webgpt bug diagnosis is unified in one place
+# instead of fragmented across /tmp/surf-host.log. Best-effort; never fails the
+# submit. The doctor line is logged by chatgpt-client.cjs query() immediately
+# before typing, so it is the last "preflight-doctor: verdict=" line at or
+# before this submit's sentinel acceptance.
+write_preflight_receipt() {
+  local art_dir line
+  art_dir="$(dirname "$meta_output")"
+  [[ -d "$art_dir" && -f "$host_log_file" ]] || return 0
+  if grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
+    local ln
+    ln="$(grep -nF "Prompt accepted: sentinel=$sentinel" "$host_log_file" | tail -1 | cut -d: -f1)"
+    line="$(head -n "$ln" "$host_log_file" | grep -aE 'preflight-doctor: verdict=' | tail -1)"
+  else
+    line="$(grep -aE 'preflight-doctor: verdict=' "$host_log_file" | tail -1)"
+  fi
+  [[ -n "$line" ]] || return 0
+  python3 - "$art_dir/preflight-doctor.json" "$line" <<'PY' 2>/dev/null || true
+import sys, re, json, pathlib
+out = pathlib.Path(sys.argv[1]); line = sys.argv[2]
+m = re.search(r"verdict=(\w+)(?:\s+reason=(\S+))?", line)
+ts = re.match(r"(\S+)", line)
+out.write_text(json.dumps({
+    "schema": "surf.preflight_doctor.lane.v1",
+    "verdict": m.group(1) if m else None,
+    "reason": m.group(2) if (m and m.group(2)) else None,
+    "timestamp": ts.group(1) if ts else None,
+    "source": "surf_host_log",
+    "raw": line.strip()[:400],
+}, indent=2))
+PY
+}
+
 cleanup_submit_processes() {
   local rc=$?
   trap - EXIT INT TERM HUP
+  write_preflight_receipt || true
   stop_background_watcher "${poll_pid:-}"
   stop_background_watcher "${receipt_pid:-}"
   terminate_process_tree "${submit_pid:-}"
@@ -1530,6 +1565,7 @@ receipt_marker="$(mktemp /tmp/surf-webgpt-submit-receipt.XXXXXX.mark)"
       write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
       write_inflight_marker "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
       write_webgpt_heartbeat "submitted" "generating" "$receipt_output" "$raw_output" "$timeout_s"
+      write_preflight_receipt || true
       printf 'submitted_to_chatgpt\n' > "$receipt_marker"
       exit 0
     fi
