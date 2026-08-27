@@ -22,7 +22,11 @@ export function ProjectBadge({ type }: { type: BadgeType }) {
   if (!config) return null;
   const { Icon } = config;
   return (
-    <span className={config.className} title={config.title}>
+    <span
+      className={config.className}
+      title={config.title}
+      aria-label={config.title ? `${config.label}: ${config.title}` : undefined}
+    >
       <Icon className="badge-icon" size={12} strokeWidth={2.2} aria-hidden="true" />
       {config.label}
     </span>
