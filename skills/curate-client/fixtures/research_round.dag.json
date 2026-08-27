@@ -1,0 +1,53 @@
+{
+ "schema": "ask.dag.v1",
+ "nodes": [
+  {
+   "id": "coarse-sweep",
+   "type": "dogpile.search",
+   "depends_on": [],
+   "note": "client landscape: <client> engineering AI architecture leadership"
+  },
+  {
+   "id": "refine-questions",
+   "type": "ask.oracle",
+   "depends_on": [
+    "coarse-sweep"
+   ],
+   "note": "From the coarse findings, derive 3-5 granular questions scored against anchor_terms; emit one query per targeted node"
+  },
+  {
+   "id": "targeted-people",
+   "type": "dogpile.search",
+   "depends_on": [
+    "refine-questions"
+   ],
+   "note": "named executives/engineers positions and talks"
+  },
+  {
+   "id": "targeted-stack",
+   "type": "dogpile.search",
+   "depends_on": [
+    "refine-questions"
+   ],
+   "note": "specific systems, events, infra surfaced by round 1"
+  },
+  {
+   "id": "targeted-bridge",
+   "type": "dogpile.search",
+   "depends_on": [
+    "refine-questions"
+   ],
+   "note": "intersections with operator anchor terms"
+  },
+  {
+   "id": "synthesize",
+   "type": "ask.oracle",
+   "depends_on": [
+    "targeted-people",
+    "targeted-stack",
+    "targeted-bridge"
+   ],
+   "note": "chunk-ready Q-A findings + next-round questions or DRY"
+  }
+ ]
+}

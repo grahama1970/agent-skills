@@ -126,7 +126,14 @@ run the loop as LINKED ROUND-DAGS under one immutable goal hash - each round
 compiled by $ask tau-dag with the prior round's run dir cited as evidence in
 the request, the same pattern ask prescribes for iterative competitions.
 This is the dynamically-expanding-DAG intent expressed in today's supported
-runtime.
+runtime. Within one round, the ask.dag.v1 node types already support the
+coarse-to-granular shape directly - `fixtures/research_round.dag.json` is
+the validated reference graph (phart: 6 nodes, 4 layers): one coarse
+dogpile.search -> an ask.oracle refine node deriving anchor-scored granular
+questions -> three parallel targeted dogpile.search leaves (people, stack,
+bridge) -> a synthesize oracle emitting chunk-ready findings plus the next
+round's questions or DRY. Run it with
+`skills/ask/run.sh ask "<round goal>" --dag-file fixtures/research_round.dag.json --json`.
 
 Rounds continue until two consecutive rounds surface no new anchor-relevant
 finding (loop-until-dry). The output of each round is: findings as chunks,
