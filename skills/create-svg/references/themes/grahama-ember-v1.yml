@@ -1,0 +1,63 @@
+schema_version: 1
+name: grahama-ember-v1
+provenance:
+  repository: grahama1970/agent-skills
+  commit: derived-from site/app/globals.css tokens (--ink, --brass, --ember, --sage, --text, --muted)
+  license: proprietary-site-theme
+canvas:
+  width: 1920
+  height: 1080
+  view_box: [0, 0, 1920, 1080]
+  background: "#0c0908"
+  radius: 24
+fonts:
+  display: [Fraunces, Georgia, "Times New Roman", serif]
+  mono: [JetBrains Mono, ui-monospace, SF Mono, Menlo, Consolas, monospace]
+palette:
+  cyan: "#e2ac62"
+  green: "#93a289"
+  amber: "#d1703c"
+  red: "#b3543f"
+  orange: "#d1703c"
+  white: "#ece2d3"
+  dark_text: "#0c0908"
+  deep_panel: "#141009"
+opacity:
+  panel_fill: 0.78
+  soft_panel_accent: 0.10
+  secondary_text: 0.60
+  secondary_border: 0.22
+  halo_peak: 0.30
+strokes:
+  thin: 3
+  normal: 4
+  emphasis: 5
+  icon: 6
+  linecap: round
+  linejoin: round
+shadows:
+  text: "drop-shadow(2px 2px 4px rgba(0,0,0,.8))"
+  strong: "drop-shadow(3px 3px 6px rgba(0,0,0,.9))"
+radii:
+  canvas: 24
+  outer_card: 24
+  card: 18
+  chip: 14
+  small: 10
+  pill: 35
+typography:
+  title_size: 46
+  heading_size: 38
+  body_size: 34
+  supporting_size: 26
+  caption_size: 30
+  title_tracking: 6
+  heading_tracking: 2
+  caption_tracking: 3
+animation:
+  ambient_cycle_ms: 3000
+  narrative_cycle_ms: 12000
+  hero_cycle_ms: 14000
+  enter_easing: "cubic-bezier(.33,1,.68,1)"
+  morph_easing: "cubic-bezier(.65,0,.35,1)"
+  pulse_easing: ease-in-out

@@ -17,9 +17,9 @@
     "kind": "scene-to-svg",
     "status": "PASS"
   },
-  "source_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/5e6a6422-febb-4d0d-9b66-2199157e6396/scratchpad/memory-intent-pipeline.svg",
-  "source_sha256": "9382d287bf8f0f04d0819b7c49938148800b22e3a41315d476deeb304bf6a93e",
+  "source_path": "/home/graham/workspace/experiments/agent-skills/docs/assets/project-cards/memory-recall-card.svg",
+  "source_sha256": "de870312afdf8442e4cb0aa4ba726f4b5e4180febd202e03582642f09325217b",
   "status": "PASS",
-  "theme": "fixing-opus-neon-v1",
+  "theme": "grahama-ember-v1",
   "tool_version": "0.1.0"
 }
