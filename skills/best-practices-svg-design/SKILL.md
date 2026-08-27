@@ -126,6 +126,17 @@ draft. Session-proven intake steps (grahama.co memory card, 2026-08):
    never restructure a design the human chose.
 4. Keep the human's structure. If your earlier draft loses, it loses.
 
+## Slot Contract (read the CSS before authoring)
+
+Before choosing a viewBox, read the destination slot's CSS: its
+`aspect-ratio` and `object-fit`. Author the SVG at the slot's EXACT ratio.
+With `object-fit: cover`, any ratio mismatch silently crops the edges of the
+composition (a 16:9 card in a 16:10 slot loses ~10% of its width), which
+reads as "cramped" even when the artwork itself is fine. grahama.co project
+cards use `.shot { aspect-ratio: 16/10; object-fit: cover }` → author at
+1920x1200. Fill freed space with layout (e.g. headline in a side column),
+never with decoration.
+
 ## Screenshot Protocol (hard-won)
 
 - Headless Chrome at t=0 captures fade-in animations at opacity 0: pass
