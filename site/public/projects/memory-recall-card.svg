@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200" role="img" aria-labelledby="memory-pipeline-title memory-pipeline-desc" tabindex="0">
-  <title id="memory-pipeline-title">Graph Memory evidence-first pipeline</title>
-  <desc id="memory-pipeline-desc">A question passes through intent, then hybrid BM25 and Qdrant recall. BM25 and Qdrant candidate ids seed ArangoDB multi-hop edge expansion that returns graph paths and receipts. An evidence gate chooses answer, clarify, draft, or scan fresh, while unsupported requests can deflect before recall.</desc>
+  <title id="memory-pipeline-title">Graph Memory: memory-first recall pipeline</title>
+  <desc id="memory-pipeline-desc">A question is recalled from memory before any agent call: it passes through intent, then hybrid BM25 and Qdrant recall. BM25 and Qdrant candidate ids seed ArangoDB multi-hop edge expansion that returns graph paths and receipts. An evidence gate chooses answer, clarify, draft, or scan fresh, while unsupported requests can deflect before recall.</desc>
 
   <defs>
     <radialGradient id="bg-glow" cx="58%" cy="52%" r="66%">
@@ -337,10 +337,10 @@
 
     <g aria-label="Card heading">
       <text x="110" y="446" class="sans eyebrow">GRAPH MEMORY</text>
-      <text x="104" y="564" class="serif headline">Ask before</text>
-      <text x="104" y="686" class="serif headline">you scan.</text>
-      <text x="110" y="762" class="sans subhead">Intent routes. Hybrid recall finds.</text>
-      <text x="110" y="808" class="sans subhead">Evidence decides.</text>
+      <text x="104" y="564" class="serif headline">Memory</text>
+      <text x="104" y="686" class="serif headline">first.</text>
+      <text x="110" y="762" class="sans subhead">Recall before the agent runs.</text>
+      <text x="110" y="808" class="sans subhead">Evidence decides what happens next.</text>
       <text x="110" y="880" class="sans footer">A semantic match is a lead—not proof.</text>
     </g>
 
