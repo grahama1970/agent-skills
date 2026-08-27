@@ -12,6 +12,12 @@
       <stop offset="0" stop-color="#93a289" stop-opacity="0.17"/>
       <stop offset="1" stop-color="#93a289" stop-opacity="0.05"/>
     </linearGradient>
+    <marker id="flow-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="rgba(236,226,211,0.38)"/>
+    </marker>
+    <marker id="flow-arrow-brass" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#e2ac62"/>
+    </marker>
     <filter id="soft-glow" x="-80%" y="-80%" width="260%" height="260%">
       <feGaussianBlur stdDeviation="10" result="blur"/>
       <feMerge>
@@ -70,7 +76,7 @@
         letter-spacing: 2px;
       }
       #memory-pipeline .stage-note {
-        fill: #a99787;
+        fill: #b5a494;
         font-size: 20px;
         font-weight: 480;
       }
@@ -241,6 +247,10 @@
       }
       #memory-pipeline .active-dot { fill: #93a289; }
       #memory-pipeline .deflect-dot { fill: #8f7f72; }
+      #memory-pipeline .panel-02a { stroke: rgba(226, 172, 98, 0.34); }
+      #memory-pipeline .panel-02b { stroke: rgba(209, 112, 60, 0.38); }
+      #memory-pipeline .panel-03  { stroke: rgba(147, 162, 137, 0.40); }
+      #memory-pipeline .panel-02g { stroke: rgba(147, 162, 137, 0.38); }
 
       @media (prefers-reduced-motion: no-preference) {
         @keyframes draw-query {
@@ -304,11 +314,16 @@
         }
         #memory-pipeline .split-flow { animation: draw-split 9s ease-in-out infinite; }
         #memory-pipeline .bm25-halo {
-          transform-origin: 900px 535px;
+          transform-origin: 770px 535px;
           animation: pulse-recall 9s ease-in-out infinite;
         }
+        #memory-pipeline .graph-halo {
+          transform-origin: 1070px 535px;
+          animation: pulse-recall 9s ease-in-out infinite;
+          animation-delay: 0.09s;
+        }
         #memory-pipeline .qdrant-halo {
-          transform-origin: 1240px 535px;
+          transform-origin: 1370px 535px;
           animation: pulse-recall 9s ease-in-out infinite;
           animation-delay: 0.18s;
         }
@@ -355,7 +370,7 @@
     </g>
 
     <g aria-label="Intent stage">
-      <path d="M1070 214 V268" class="base-path"/>
+      <path d="M1070 214 V264" class="base-path" marker-end="url(#flow-arrow)"/>
       <path d="M1070 214 V268" class="flow-path flow-amber query-flow" pathLength="1"/>
 
       <rect x="850" y="266" width="440" height="128" rx="26" class="stage-halo halo-amber intent-halo" filter="url(#soft-glow)"/>
@@ -380,48 +395,41 @@
     </g>
 
     <g aria-label="Hybrid recall stage">
-      <path d="M1070 386 V424 C1070 442 1050 450 1028 450 H900 V466" class="base-path"/>
-      <path d="M1070 386 V424 C1070 442 1090 450 1112 450 H1240 V466" class="base-path"/>
-      <path d="M1070 386 V424 C1070 442 1050 450 1028 450 H900 V466" class="flow-path flow-amber split-flow" pathLength="1"/>
-      <path d="M1070 386 V424 C1070 442 1090 450 1112 450 H1240 V466" class="flow-path flow-violet split-flow" pathLength="1"/>
+      <path d="M1070 386 V420 C1070 438 1050 446 1028 446 H770 V462" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 386 V458" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 386 V420 C1070 438 1090 446 1112 446 H1370 V462" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 386 V420 C1070 438 1050 446 1028 446 H770 V466" class="flow-path flow-amber split-flow" pathLength="1"/>
+      <path d="M1070 386 V466" class="flow-path flow-mint split-flow" pathLength="1"/>
+      <path d="M1070 386 V420 C1070 438 1090 446 1112 446 H1370 V466" class="flow-path flow-violet split-flow" pathLength="1"/>
 
-      <rect x="730" y="466" width="340" height="138" rx="26" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)"/>
-      <rect x="740" y="474" width="320" height="122" rx="22" class="panel"/>
-      <g transform="translate(776 508)" aria-hidden="true">
-        <line x1="0" y1="4" x2="35" y2="4" class="bm25-line" opacity="0.45"/>
-        <line x1="0" y1="14" x2="46" y2="14" class="bm25-line"/>
-        <line x1="0" y1="24" x2="27" y2="24" class="bm25-line" opacity="0.68"/>
-        <line x1="0" y1="34" x2="40" y2="34" class="bm25-line" opacity="0.35"/>
-      </g>
-      <text x="848" y="514" class="mono step">02A · EXACT</text>
-      <text x="848" y="552" class="mono stage-name">BM25</text>
-      <text x="848" y="582" class="sans stage-note">exact terms</text>
+      <rect x="620" y="466" width="300" height="138" rx="26" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)"/>
+      <rect x="630" y="474" width="280" height="122" rx="22" class="panel panel-02a"/>
+      <text x="662" y="514" class="mono step">02A · EXACT</text>
+      <text x="662" y="552" class="mono stage-name">BM25</text>
+      <text x="662" y="582" class="sans stage-note">exact terms</text>
 
-      <rect x="1070" y="466" width="340" height="138" rx="26" class="stage-halo halo-violet qdrant-halo" filter="url(#soft-glow)"/>
-      <rect x="1080" y="474" width="320" height="122" rx="22" class="panel"/>
-      <g transform="translate(1112 506)" aria-hidden="true">
-        <line x1="8" y1="10" x2="28" y2="4" class="q-edge"/>
-        <line x1="28" y1="4" x2="42" y2="20" class="q-edge"/>
-        <line x1="8" y1="10" x2="18" y2="30" class="q-edge"/>
-        <line x1="18" y1="30" x2="42" y2="20" class="q-edge"/>
-        <circle cx="8" cy="10" r="4" class="q-node"/>
-        <circle cx="28" cy="4" r="4" class="q-node"/>
-        <circle cx="42" cy="20" r="4" class="q-node"/>
-        <circle cx="18" cy="30" r="4" class="q-node"/>
-      </g>
-      <text x="1176" y="514" class="mono step">02B · SEMANTIC</text>
-      <text x="1176" y="552" class="mono stage-name">QDRANT</text>
-      <text x="1176" y="582" class="sans stage-note">candidates</text>
+      <rect x="920" y="466" width="300" height="138" rx="26" class="stage-halo halo-mint graph-halo" filter="url(#soft-glow)"/>
+      <rect x="930" y="474" width="280" height="122" rx="22" class="panel panel-02g"/>
+      <text x="962" y="514" class="mono step">02B · TRAVERSE</text>
+      <text x="962" y="552" class="mono stage-name">GRAPH</text>
+      <text x="962" y="582" class="sans stage-note">1..3-hop expansion</text>
+
+      <rect x="1220" y="466" width="300" height="138" rx="26" class="stage-halo halo-violet qdrant-halo" filter="url(#soft-glow)"/>
+      <rect x="1230" y="474" width="280" height="122" rx="22" class="panel panel-02b"/>
+      <text x="1262" y="514" class="mono step">02C · SEMANTIC</text>
+      <text x="1262" y="552" class="mono stage-name">QDRANT</text>
+      <text x="1262" y="582" class="sans stage-note">dense vectors</text>
     </g>
 
     <g aria-label="Canonical record and graph evidence stage">
-      <path d="M900 596 V626 C900 644 918 652 938 652 H1010" class="base-path"/>
-      <path d="M1240 596 V626 C1240 644 1222 652 1202 652 H1130" class="base-path"/>
-      <path d="M900 596 V626 C900 644 918 652 938 652 H1010" class="flow-path flow-amber merge-flow" pathLength="1"/>
-      <path d="M1240 596 V626 C1240 644 1222 652 1202 652 H1130" class="flow-path flow-violet merge-flow" pathLength="1"/>
+      <path d="M770 596 V624 C770 642 788 650 808 650 H1002" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 610 V648" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1370 596 V624 C1370 642 1352 650 1332 650 H1138" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M770 596 V624 C770 642 788 650 808 650 H1006" class="flow-path flow-amber merge-flow" pathLength="1"/>
+      <path d="M1370 596 V624 C1370 642 1352 650 1332 650 H1134" class="flow-path flow-violet merge-flow" pathLength="1"/>
 
       <rect x="808" y="648" width="524" height="162" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)"/>
-      <rect x="822" y="656" width="496" height="146" rx="26" class="panel"/>
+      <rect x="822" y="656" width="496" height="146" rx="26" class="panel panel-03"/>
       <g transform="translate(872 684)" aria-hidden="true">
         <line x1="8" y1="10" x2="32" y2="4" class="graph-edge"/>
         <line x1="32" y1="4" x2="45" y2="24" class="graph-edge"/>
@@ -432,10 +440,10 @@
         <circle cx="45" cy="24" r="5" class="graph-node"/>
         <circle cx="18" cy="34" r="5" class="graph-node"/>
       </g>
-      <text x="944" y="694" class="mono step">03 · RESOLVE</text>
+      <text x="944" y="694" class="mono step">03 · FUSE + RESOLVE</text>
       <text x="944" y="730" class="mono stage-name">ARANGODB</text>
-      <text x="944" y="758" class="sans stage-note">seeds: bm25 ids + qdrant ids</text>
-      <text x="944" y="786" class="sans stage-note">1..3-hop edge expansion → paths</text>
+      <text x="944" y="758" class="sans stage-note">blend: bm25 + graph + dense</text>
+      <text x="944" y="786" class="sans stage-note">canonical record → paths + receipts</text>
 
       <g class="proof-1" aria-label="Source evidence">
         <path d="M920 802 V836" class="graph-edge"/>
@@ -458,7 +466,7 @@
     </g>
 
     <g aria-label="Evidence gate">
-      <path d="M1070 878 V908" class="base-path"/>
+      <path d="M1070 878 V904" class="base-path" marker-end="url(#flow-arrow-brass)"/>
       <path d="M1070 878 V908" class="flow-path flow-mint gate-flow" pathLength="1"/>
       <circle cx="1070" cy="936" r="38" class="stage-halo halo-mint gate-halo" filter="url(#soft-glow)"/>
       <line x1="830" y1="936" x2="1034" y2="936" class="gate-line"/>
@@ -470,10 +478,10 @@
     </g>
 
     <g aria-label="Bounded outcomes">
-      <path d="M1070 960 V1036 H659 V1058" class="base-path"/>
-      <path d="M1070 960 V1036 H933 V1058" class="base-path"/>
-      <path d="M1070 960 V1036 H1207 V1058" class="base-path"/>
-      <path d="M1070 960 V1036 H1481 V1058" class="base-path"/>
+      <path d="M1070 960 V1036 H659 V1054" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 960 V1036 H933 V1054" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 960 V1036 H1207 V1054" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 960 V1036 H1481 V1054" class="base-path" marker-end="url(#flow-arrow)"/>
       <path d="M1070 960 V1036 H659 V1058" class="flow-path flow-mint gate-flow" pathLength="1"/>
 
       <g class="answer-state" aria-label="Answer outcome">
