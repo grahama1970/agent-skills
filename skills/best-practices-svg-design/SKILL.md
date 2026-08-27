@@ -137,6 +137,14 @@ card dropped the service's real DRAFT route and shipped that omission until
 the human caught it. Every named element the human asked for appears, or its
 exclusion is called out explicitly at handoff.
 
+All same-class outcomes present as one uniform row of equal pills at the
+diagram's true boundary — an outcome pulled out of line (a side DEFLECT, a
+special exit) claims a semantic difference the caller cannot observe.
+Node = icon + name, centered as one group, in the surface's human face
+(sans/serif); mono only on machine-tagged tokens like a QUERY kicker.
+Deleting elements leaves dead CSS — strip unused keyframes and classes so
+the animation cycle only targets elements that exist.
+
 Every label must be self-explanatory to a stranger: internal shorthand
 ("SCAN FRESH") that only insiders can decode fails even when short — use the
 project's own plain phrasing ("SCAN CODEBASE", from the README's "Scan
