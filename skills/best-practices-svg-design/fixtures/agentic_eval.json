@@ -75,6 +75,34 @@
         "exit_code": 1,
         "stdout_contains": "GRID_FAIL"
       }
+    },
+    {
+      "name": "svg-spacing-check-live-artwork",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/check_svg_spacing.py",
+        "../../../docs/assets/project-cards/memory-recall-card.svg"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "SPACING_OK"
+      }
+    },
+    {
+      "name": "svg-spacing-check-rejects-shifted-row",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.svg); sed 's/<rect x=\"822\" y=\"603\"/<rect x=\"822\" y=\"585\"/' ../../../docs/assets/project-cards/memory-recall-card.svg > \"$T\"; python3 ../scripts/check_svg_spacing.py \"$T\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "SPACING_FAIL"
+      }
     }
   ]
 }
