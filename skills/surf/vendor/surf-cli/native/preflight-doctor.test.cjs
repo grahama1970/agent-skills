@@ -3,6 +3,9 @@
 // Run: node --test preflight-doctor.test.cjs
 const test = require("node:test");
 const assert = require("node:assert");
+const _os = require("node:os"), _path = require("node:path"), _fs = require("node:fs");
+process.env.SURF_PREFLIGHT_BASELINE = _path.join(
+  _fs.mkdtempSync(_path.join(_os.tmpdir(), "surfpf-")), "baselines.json");
 const { preflightDoctor } = require("./chatgpt-client.cjs");
 
 function mockCdp(scn) {
@@ -67,4 +70,23 @@ test("rate limited (surf two-marker detector) -> STOP_HANDOFF", async () => {
   const r = await preflightDoctor(mockCdp({ title: "chatgpt", cf: false, capture }));
   assert.equal(r.verdict, "STOP_HANDOFF");
   assert.equal(r.reason, "rate_limited");
+});
+
+test("baseline: first run for a provider -> baselineFirstSeen, no cross-run drift", async () => {
+  const cap = { ...healthy, href: "https://baseline-probe.local/" };
+  const r = await preflightDoctor(mockCdp({ title: "chatgpt", cf: false, capture: cap }));
+  assert.equal(r.baselineFirstSeen, true);
+  assert.equal(r.driftSinceBaseline.length, 0);
+  assert.equal(r.baselinePersisted, true);
+});
+
+test("baseline: matched selector changed since last run -> driftSinceBaseline", async () => {
+  const host = "https://baseline-probe2.local/";
+  await preflightDoctor(mockCdp({ title: "chatgpt", cf: false, capture: { ...healthy, href: host } }));
+  const changed = { ...healthy, href: host, send: { primary: 'button[data-testid="send-button"]', matched: 'form button[type="submit"]' } };
+  const r = await preflightDoctor(mockCdp({ title: "chatgpt", cf: false, capture: changed }));
+  assert.equal(r.baselineFirstSeen, false);
+  assert.equal(r.driftSinceBaseline.length, 1);
+  assert.equal(r.driftSinceBaseline[0].target, "send");
+  assert.equal(r.driftSinceBaseline[0].now, 'form button[type="submit"]');
 });

@@ -1,4 +1,6 @@
 const path = require("path");
+const fs = require("fs");
+const os = require("os");
 const { abortableDelay, raceAbort, throwIfAborted } = require("./abort.cjs");
 const { insertPromptText } = require("./prompt-insert.cjs");
 
@@ -1747,6 +1749,47 @@ async function query(options) {
   }
 }
 
+/** Per-provider selector-baseline store: detect DOM drift ACROSS runs (early
+ * warning that the page changed since the last successful submit, even when a
+ * fallback still matches). Best-effort and fail-open — baseline problems never
+ * block a submit. Override the path with SURF_PREFLIGHT_BASELINE. */
+function _baselinePath() {
+  return (
+    process.env.SURF_PREFLIGHT_BASELINE ||
+    path.join(os.homedir() || os.tmpdir(), ".surf", "preflight-baselines.json")
+  );
+}
+
+function _providerKey(href) {
+  let host = "";
+  try {
+    host = new URL(href || "").host;
+  } catch (e) {
+    host = "";
+  }
+  if (/chatgpt\.com|chat\.openai\.com/.test(host)) return "chatgpt";
+  return host || "unknown";
+}
+
+function _loadBaselines() {
+  try {
+    return JSON.parse(fs.readFileSync(_baselinePath(), "utf8")) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function _saveBaselines(all) {
+  try {
+    const p = _baselinePath();
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, JSON.stringify(all, null, 2));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 /**
  * Pre-submit DOM doctor. Captures the live page ONCE right before typing and
  * verifies that the exact targets surf will drive still resolve, diagnoses
@@ -1822,10 +1865,36 @@ async function preflightDoctor(cdp, { log } = {}) {
     reason = "rate_limited";
   }
 
+  // Cross-run baseline: compare the matched selectors against the last stored
+  // fingerprint for this provider, and refresh it on a usable page.
+  const provider = _providerKey(cap.href);
+  const baselines = _loadBaselines();
+  const prev = baselines[provider];
+  const driftSinceBaseline = [];
+  if (prev) {
+    if (prev.composer !== composer.matched) {
+      driftSinceBaseline.push({ target: "composer", was: prev.composer || null, now: composer.matched || null });
+    }
+    if (prev.send !== send.matched) {
+      driftSinceBaseline.push({ target: "send", was: prev.send || null, now: send.matched || null });
+    }
+  }
+  let baselinePersisted = false;
+  if (verdict === "PROCEED") {
+    baselines[provider] = {
+      composer: composer.matched,
+      send: send.matched,
+      href_host: provider,
+      updated_at: Date.now(),
+    };
+    baselinePersisted = _saveBaselines(baselines);
+  }
+
   const receipt = {
     schema: "surf.preflight_doctor.v1",
     verdict,
     reason,
+    provider,
     href: cap.href || null,
     title: cap.title || null,
     cloudflare,
@@ -1835,9 +1904,14 @@ async function preflightDoctor(cdp, { log } = {}) {
     composer,
     send,
     drift,
+    driftSinceBaseline,
+    baselineFirstSeen: !prev,
+    baselinePersisted,
   };
   if (log) {
     if (drift.length) log(`preflight-doctor: selector drift ${JSON.stringify(drift)}`);
+    if (driftSinceBaseline.length)
+      log(`preflight-doctor: DOM changed since baseline ${JSON.stringify(driftSinceBaseline)}`);
     log(`preflight-doctor: verdict=${verdict}${reason ? " reason=" + reason : ""}`);
   }
   return receipt;
