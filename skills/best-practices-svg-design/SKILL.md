@@ -137,6 +137,12 @@ card dropped the service's real DRAFT route and shipped that omission until
 the human caught it. Every named element the human asked for appears, or its
 exclusion is called out explicitly at handoff.
 
+Every label must be self-explanatory to a stranger: internal shorthand
+("SCAN FRESH") that only insiders can decode fails even when short — use the
+project's own plain phrasing ("SCAN CODEBASE", from the README's "Scan
+codebase"). If the human maintaining the project hesitates on a label, an
+outside visitor has no chance.
+
 Copy is domain content too: name the pattern the way the PROJECT names it
 (the memory card's headline is "Memory first." because the README calls it
 the Memory First pattern). Clever wordplay that depends on the reader
