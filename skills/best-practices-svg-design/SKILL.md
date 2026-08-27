@@ -150,10 +150,14 @@ perspective.
   before authoring: mono ≈ 0.62em/char, sans ≈ 0.5em/char, plus
   letter-spacing; if `label_px + gap + note_px > panel_width - 2*padding`,
   restructure — never let it ride.
-- Kickers carry only the stage number. A verb or category word in the kicker
-  ("01 · UNDERSTAND" over INTENT, "02A · EXACT" over BM25) restates the node
-  name or the icon and dies in the prune. Side exits (deflect branches) are
-  compact pills, never stage-sized panels with subtitles.
+- Kickers die entirely in a connected pipeline: sequence is the arrows' job,
+  so numbered/labeled kickers ("01 · UNDERSTAND", "02A") restate what the
+  graph topology already shows. A node is icon + name. Side exits (deflect
+  branches) are compact pills, never stage-sized panels with subtitles.
+- End the diagram at its real boundary: if everything happens before an
+  external event (the agent's response to the human), draw that terminal
+  (e.g. an AGENT RESPONSE baseline all routes converge into) so the
+  before/after boundary is visible, not implied.
 - A dot/bullet glyph inside a bordered pill is decoration pretending to be
   state: the border already delimits the label, so the dot reads as a stray
   bullet point. Encode state in the shell (fill, border style) and center
