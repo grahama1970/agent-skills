@@ -59,10 +59,10 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EXPECT: SERVED_VERSIONED_OK
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=31f50f8107a28dfc2da6246b96169625ad25dc7a160890ec9ef4ef5bb3aca358; output-bytes=187
 
-- [ ] G13: painted pixel rhythm is uniform (closing oracle from rendered screenshot)
-  CHECK: bash -c "google-chrome --headless=new --disable-gpu --force-prefers-reduced-motion --user-data-dir=/tmp/g13-profile --window-size=1920,1200 --screenshot=/tmp/g13-card.png file:///home/graham/workspace/experiments/agent-skills/docs/assets/project-cards/memory-recall-card.svg 2>/dev/null; skills/best-practices-svg-design/run.sh pixels /tmp/g13-card.png"
+- [x] G13: painted pixel rhythm is uniform (closing oracle from rendered screenshot)
+  CHECK: bash -c "google-chrome --headless=new --disable-gpu --force-prefers-reduced-motion --user-data-dir=/tmp/g13-profile --window-size=1920,1200 --screenshot=/tmp/g13-card.png file:///home/graham/workspace/experiments/agent-skills/docs/assets/project-cards/memory-recall-card.svg 2>/dev/null; cd /home/graham/workspace/experiments/agent-skills && skills/best-practices-svg-design/run.sh pixels /tmp/g13-card.png"
   EXPECT: PIXELS_OK
-  EVIDENCE: pending
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=d818da739ef6b94a76c6cf366f88c2fbe4793c06103fb60ec78ee0cac7ce7bcf; output-bytes=356
 
 - [ ] G9: MANUAL - human accepts the brand-palette design (create-svg Stage-2 gate)
   Human review of the rendered card at full and 400px sizes. Until Graham
