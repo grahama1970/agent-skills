@@ -40,13 +40,13 @@
         font-family: Fraunces, Georgia, "Times New Roman", serif;
       }
       #memory-pipeline .headline {
-        fill: #ece2d3;
+        fill: #f5efe4;
         font-size: 118px;
-        font-weight: 600;
+        font-weight: 720;
         letter-spacing: -2px;
       }
       #memory-pipeline .subhead {
-        fill: #a99787;
+        fill: #c9bba8;
         font-size: 35px;
         font-weight: 430;
       }
