@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "skill": "surf",
+  "trials": 2,
+  "proof_scope": "the pre-submit ChatGPT DOM doctor: verdict/drift/cross-run-baseline logic (positive + adversarial) and its wiring into the submit flow, as a reliability + regression guard",
+  "claims": {
+    "proves": "preflightDoctor returns PROCEED on a healthy page, flags in-run selector drift, returns STOP_HANDOFF on logged-out/composer-gone/rate-limited, RETRY_AFTER_RELOAD on cloudflare, and records cross-run baseline drift; and that the doctor stays wired BEFORE typePrompt with a fail-fast throw and no captcha-solving",
+    "does_not_prove": "an authenticated live WebGPT completion end-to-end, or that real-world lane failure rate dropped (needs a live seat)"
+  },
+  "capability_claims": [
+    {
+      "id": "surf.preflight_dom_doctor",
+      "description": "Surf verifies ChatGPT submit targets before typing, diagnoses selector drift (in-run and cross-run), fails fast on blocking states, and never solves a captcha.",
+      "criticality": "critical",
+      "evidence_required": { "deterministic": true }
+    }
+  ],
+  "cases": [
+    {
+      "name": "preflight-doctor-logic-positive-and-adversarial",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["surf.preflight_dom_doctor"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash", "-c",
+        "cd .. && node --test vendor/surf-cli/native/preflight-doctor.test.cjs && ./run.sh capabilities --json >/dev/null"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["# pass 8", "# fail 0", "STOP_HANDOFF", "driftSinceBaseline"]
+      }
+    },
+    {
+      "name": "preflight-doctor-wired-into-submit-regression-guard",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["surf.preflight_dom_doctor"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash", "-c",
+        "cd .. && python3 scripts/check_preflight_wired.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PREFLIGHT_WIRED_OK"]
+      }
+    }
+  ]
+}
