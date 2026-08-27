@@ -1,0 +1,80 @@
+{
+  "version": 2,
+  "skill": "unlazy",
+  "trials": 3,
+  "proof_scope": "local gate-ledger parser, linter, malformed-ledger rejection, and upstream Node self-test posture",
+  "claims": {
+    "proves": "the vendored unlazy entrypoint can parse a valid ledger without executing checks, lint the local ledger, reject a malformed runnable gate, and run the upstream Node test suite through the skill wrapper",
+    "does_not_prove": "that unlazy repairs tasks automatically, that a ledger's English title matches its command oracle, or that any downstream project such as persona-dream is complete"
+  },
+  "capability_claims": [
+    {
+      "id": "unlazy.gate_discipline",
+      "description": "The unlazy skill exposes a local run.sh surface for gate checking, linting, sanity, and upstream tests, and it fails closed on malformed ledgers.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "unlazy.runsh.node_tools",
+      "seam_type": "cli_wrapper",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "unlazy-sanity",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "unlazy.gate_discipline"
+      ],
+      "seams": [
+        "unlazy.runsh.node_tools"
+      ],
+      "command": [
+        "bash",
+        "../run.sh",
+        "sanity"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "UNLAZY_SANITY_OK"
+        ]
+      }
+    },
+    {
+      "name": "unlazy-upstream-node-tests",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "required": false,
+      "supports_claims": [
+        "unlazy.gate_discipline"
+      ],
+      "seams": [
+        "unlazy.runsh.node_tools"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "../run.sh",
+        "test"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "self-check ok (12/12)"
+        ]
+      }
+    }
+  ]
+}
