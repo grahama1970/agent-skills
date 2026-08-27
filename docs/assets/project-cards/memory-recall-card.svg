@@ -354,7 +354,7 @@
     <rect width="1920" height="1200" fill="#0c0908"/>
     <rect width="1920" height="1200" fill="url(#bg-glow)"/>
 
-    <g aria-label="Card heading">
+    <g aria-label="Card heading" transform="translate(0 -62)">
       <text x="110" y="446" class="sans eyebrow">GRAPH MEMORY</text>
       <text x="104" y="564" class="serif headline">Memory</text>
       <text x="104" y="686" class="serif headline">first.</text>
@@ -363,9 +363,9 @@
       <text x="110" y="880" class="sans footer">A semantic match is a lead—not proof.</text>
     </g>
 
-    <line x1="730" y1="340" x2="730" y2="1080" stroke="rgba(236,226,211,0.07)" stroke-dasharray="4 10" stroke-width="1.5"/>
+    <line x1="730" y1="300" x2="730" y2="1060" stroke="rgba(236,226,211,0.07)" stroke-dasharray="4 10" stroke-width="1.5"/>
 
-    <g transform="translate(200 0)">
+    <g transform="translate(200 -30)">
     <g aria-label="Example question">
       <rect x="760" y="130" width="620" height="84" rx="42" class="query-shell"/>
       <circle cx="806" cy="172" r="7" fill="#e2ac62" class="query-dot"/>
