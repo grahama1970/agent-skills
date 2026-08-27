@@ -90,6 +90,15 @@ function scannablePoints(text: string): { header: string; bullet: string }[] {
   return points;
 }
 
+function solutionDeckCards(card: EvidenceCard, answer: string): { title: string; body: string }[] {
+  const typed = (card.solution_deck ?? [])
+    .map((point) => ({ title: point.title.trim(), body: point.trigger.trim() }))
+    .filter((point) => point.title && point.body)
+    .slice(0, 4);
+  if (typed.length >= 2) return typed;
+  return scannablePoints(answer).map((point) => ({ title: point.header, body: point.bullet }));
+}
+
 function coreLogicSnippet(text: string): string {
   const lines = text.split("\n");
   const loopStart = lines.findIndex((line) => line.trim().startsWith("for "));
@@ -199,6 +208,7 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss, voiceEnabled
   const sections = useMemo(() => parseSolutionSections(askAnswerText(card)), [card]);
   const answer = takeaway(card);
   const displayedCode = code ? (expandedCode ? code.code : coreLogicSnippet(code.code)) : null;
+  const deckCards = useMemo(() => solutionDeckCards(card, answer), [card, answer]);
   const copyQid = `live-evidence:solution:copy:${card.card_id}`;
   const copyCodeQid = `live-evidence:solution:copy-code:${card.card_id}`;
   const foldCodeQid = `live-evidence:solution:toggle-code-fold:${card.card_id}`;
@@ -292,16 +302,12 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss, voiceEnabled
         </div>
       </div>
 
-      {scannablePoints(answer).length >= 2 ? (
+      {deckCards.length >= 2 ? (
         <div data-aoi="AOI_SOLUTION">
           {voiceEnabled ? (
-            <ScannableCardStackWithAudio
-              cards={scannablePoints(answer).map((point) => ({ title: point.header, body: point.bullet }))}
-            />
+            <ScannableCardStackWithAudio cards={deckCards} />
           ) : (
-            <CardDeckMatrix
-              cards={scannablePoints(answer).map((point) => ({ title: point.header, body: point.bullet }))}
-            />
+            <CardDeckMatrix cards={deckCards} />
           )}
         </div>
       ) : (

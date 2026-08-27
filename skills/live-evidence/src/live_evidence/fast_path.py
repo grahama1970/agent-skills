@@ -16,8 +16,8 @@ from typing import Any, Awaitable, Callable
 
 from loguru import logger
 
-from .models import CardStatus, EvidenceCard, EvidenceSource, PublicationStatus, RetrievalLane
-from .solver import FastSolver, SolverChunk, SolverOutcome
+from .models import CardStatus, EvidenceCard, EvidenceSource, PublicationStatus, RetrievalLane, SolutionDeckPoint
+from .solver import FastSolver, SolverChunk, SolverOutcome, extract_solution_deck
 
 PUBLISH_INTERVAL_S = 0.4
 DEFAULT_FIRST_CONTENT_TIMEOUT_S = 8.0
@@ -145,8 +145,12 @@ async def stream_fast_answer(
             now = monotonic()
             if now - last_publish >= PUBLISH_INTERVAL_S:
                 last_publish = now
+                display_answer, deck_points = extract_solution_deck(accumulated)
                 snapshot = await state.publish_card_fenced(
-                    card.model_copy(update={"answer": accumulated[:1_200]})
+                    card.model_copy(update={
+                        "answer": (display_answer or accumulated)[:1_200],
+                        "solution_deck": [SolutionDeckPoint(**point) for point in deck_points],
+                    })
                 )
                 decision = await _journal_latest_publication_decision(
                     state, journal, session_id, policy_digest
@@ -186,13 +190,14 @@ async def stream_fast_answer(
         "response_sha256": outcome.response_sha256,
         "chunk_count": outcome.chunk_count,
     }
-    answer_excerpt = outcome.answer[:1_200]
+    clean_answer, deck_points = extract_solution_deck(outcome.answer)
+    answer_excerpt = (clean_answer or outcome.answer)[:1_200]
     final_sources = [
         *card.sources,
         EvidenceSource(
             lane=RetrievalLane.ASK,
             label=f"fast solver {outcome.model} ({outcome.effort})",
-            excerpt=outcome.answer[:4_000],
+            excerpt=(clean_answer or outcome.answer)[:4_000],
             # locator contract: the response digest IS the stable key
             # for this generated artifact; there is no file path.
             url=f"scillm://{outcome.model}/{outcome.response_sha256}",
@@ -219,6 +224,7 @@ async def stream_fast_answer(
             "confidence": max(card.confidence, 0.7),
             "status": CardStatus.SUPPORTED,
             "sources": final_sources,
+            "solution_deck": [SolutionDeckPoint(**point) for point in deck_points],
             "lanes": final_lanes,
         }
     )

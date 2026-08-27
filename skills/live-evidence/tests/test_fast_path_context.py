@@ -105,6 +105,10 @@ def test_fast_solver_first_content_timeout_fails_closed(monkeypatch) -> None:
     asyncio.run(_assert_fast_solver_first_content_timeout_fails_closed())
 
 
+def test_fast_solver_promotes_typed_solution_deck() -> None:
+    asyncio.run(_assert_fast_solver_promotes_typed_solution_deck())
+
+
 async def _assert_fast_solver_journals_captured_session_context() -> None:
     state = State()
     journal = Journal()
@@ -175,6 +179,30 @@ async def _assert_fast_solver_hidden_draft_reaches_supported_final_card() -> Non
     assert final.sources[-1].url.startswith("scillm://fixture/")
 
 
+class DeckJsonSolver:
+    _model = "fixture"
+    _effort = "fixture"
+
+    def stream(self, query, evidence_excerpts):
+        answer = '''```json
+{"schema":"live_evidence.solution_deck.v1","points":[{"title":"Gate Evidence","trigger":"Require attribution before publishing"},{"title":"Hold Unsupported","trigger":"No citation means no visible card"}]}
+```
+## APPROACH
+Use an admission gate before publication.
+'''
+        yield SolverChunk(answer, 0.01)
+        yield SolverOutcome(
+            ok=True,
+            answer=answer,
+            model="fixture",
+            effort="fixture",
+            first_content_s=0.01,
+            total_s=0.02,
+            response_sha256="c" * 64,
+            chunk_count=1,
+        )
+
+
 class NoContentBeforeDeadlineSolver:
     _model = "fixture"
     _effort = "fixture"
@@ -192,6 +220,42 @@ class NoContentBeforeDeadlineSolver:
             response_sha256="b" * 64,
             chunk_count=1,
         )
+
+
+async def _assert_fast_solver_promotes_typed_solution_deck() -> None:
+    state = HiddenDraftState()
+    journal = Journal()
+    card = EvidenceCard(
+        query="How do we prevent unsupported answers?",
+        thread="grounding",
+        talking_point="No source-bound support surfaced yet.",
+        proof="No source-bound support surfaced yet.",
+        qualifier="bounded",
+        confidence=0.0,
+        status=CardStatus.INSUFFICIENT,
+        question_id="question-deck-json",
+        question_revision=1,
+    )
+
+    outcome = await stream_fast_answer(
+        state=state,
+        journal=journal,
+        solver=DeckJsonSolver(),
+        card=card,
+        query=card.query,
+        evidence_excerpts=[],
+        question_id="question-deck-json",
+        question_revision=1,
+        session_id="captured-session",
+        policy_digest="b" * 64,
+    )
+
+    assert outcome is not None and outcome.ok
+    final = state.published[-1]
+    assert final.answer.startswith("## APPROACH")
+    assert "live_evidence.solution_deck.v1" not in final.answer
+    assert [point.title for point in final.solution_deck] == ["Gate Evidence", "Hold Unsupported"]
+    assert final.solution_deck[0].trigger == "Require attribution before publishing"
 
 
 async def _assert_fast_solver_first_content_timeout_fails_closed() -> None:

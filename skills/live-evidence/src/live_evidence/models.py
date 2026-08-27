@@ -543,6 +543,19 @@ class ClarificationItem(BaseModel):
     answer_source_event_ids: list[str] = Field(default_factory=list, max_length=8)
 
 
+class SolutionDeckPoint(BaseModel):
+    """One solver-authored glance card point.
+
+    The browser may render these directly. It must not reverse-engineer deck
+    structure from Markdown prose when this typed field is present.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=80)
+    trigger: str = Field(min_length=1, max_length=180)
+
+
 class EvidenceCard(BaseModel):
     """Compact human-facing evidence prompt derived only from selected sources."""
 
@@ -566,6 +579,7 @@ class EvidenceCard(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     status: CardStatus
     sources: list[EvidenceSource] = Field(default_factory=list, max_length=8)
+    solution_deck: list[SolutionDeckPoint] = Field(default_factory=list, max_length=4)
     frame_refs: list[str] = Field(default_factory=list, max_length=8)
     lanes: list[RetrievalLane] = Field(default_factory=list)
     clarifications: list[ClarificationItem] = Field(default_factory=list, max_length=6)
