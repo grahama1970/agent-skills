@@ -259,6 +259,25 @@ padding, label after them — never centered as a floating cluster.
   a reviewer critiquing their own mock's numbers can name flaws your card
   does not have. Verify each claimed flaw with the real geometry first.
 
+## Spacing Grid (required)
+
+- Vertical: lay pipeline rows on a computed grid — sum the row heights,
+  subtract from the content span, divide by the gap count, and place every
+  row on that uniform gap (memory card: 7 rows, 74px gaps). Ad-hoc gaps
+  (60/108/90/38 in one column) read as drift even when each row is fine.
+- Horizontal: siblings share one width and one gutter; icon and label
+  offsets inside a row repeat identically across that row's nodes.
+- Any row edit re-runs the grid — a moved or shrunk row must pull the rows
+  below it, never leave a doubled gap.
+- Free-floating labels near junctions need a background plate in the ground
+  color, and must render AFTER the connectors in document order — an
+  element drawn in an earlier group is painted over by later lines no
+  matter how it looks in the editor.
+- Animation choreography follows the geometry: a stage may only light when
+  the flow reaches it. Audit the timeline as arrival times (draw ends at
+  t=X → highlight starts at t>=X), not as percentages that merely look
+  ordered.
+
 ## Slot Contract (read the CSS before authoring)
 
 Before choosing a viewBox, read the destination slot's CSS: its
