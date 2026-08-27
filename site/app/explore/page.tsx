@@ -1,3 +1,4 @@
+import { ProjectBadge } from '../../components/project-badge';
 import { CapabilitySearch } from '@/components/capability-search';
 import { CapabilityConstellation } from '@/components/capability-constellation';
 import { SiteNav } from '@/components/site-nav';
@@ -106,21 +107,8 @@ export default function ExplorePage() {
                     </h3>
                     <p className="q">{p.question}</p>
                     <p className="d">{p.blurb}</p>
-                    <span className={`chip${external ? ' ext' : ''}`}>
-                      {external
-                        ? 'external repo'
-                        : skillFlags.get(p.slug)
-                          ? 'sanity-checked'
-                          : 'contract only'}
-                    </span>
-                    {evidencePrivate && (
-                      <span
-                        className="evidence-private"
-                        title="Public product overview; the underlying system and its evidence are private."
-                      >
-                        product overview · evidence private
-                      </span>
-                    )}
+                    <ProjectBadge type={external ? 'external-repo' : skillFlags.get(p.slug) ? 'sanity-checked' : 'contract-only'} />
+                    {evidencePrivate && <ProjectBadge type="private-evidence" />}
                     <div className="project-actions">
                       <a
                         href={linkHref}

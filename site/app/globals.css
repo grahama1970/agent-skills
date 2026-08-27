@@ -1147,6 +1147,9 @@ h1 .it::after {
 .chip {
   grid-column: 2;
   justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.85em;
   font-family: var(--sans);
   font-size: 0.63rem;
@@ -3641,16 +3644,25 @@ a:hover .c-plabel { fill: var(--brass); }
 
 /* Private project shown via its public overview — dashed, marked abstract. */
 .evidence-private {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.5rem;
   padding: 0.25rem 0.6rem;
-  border: 1px dashed rgba(226, 172, 98, 0.5);
+  border: 1px solid rgba(226, 172, 98, 0.3);
+  background: rgba(226, 172, 98, 0.08);
   border-radius: 3px;
   font-family: var(--mono);
   font-size: 0.66rem;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--brass);
+  white-space: nowrap;
+}
+.chip .badge-icon,
+.evidence-private .badge-icon {
+  flex-shrink: 0;
 }
 
 /* Research-area mini-map — a scan layer above the collage. Text + rules. */
