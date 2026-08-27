@@ -469,20 +469,17 @@
       <g class="proof-1" aria-label="Source evidence">
         <path d="M920 776 V810" class="graph-edge"/>
         <rect x="858" y="810" width="124" height="42" rx="21" class="token"/>
-        <circle cx="884" cy="831" r="4" fill="#93a289"/>
-        <text x="900" y="837" class="mono token-label">SOURCE</text>
+        <text x="920" y="837" text-anchor="middle" class="mono token-label">SOURCE</text>
       </g>
       <g class="proof-2" aria-label="Graph path evidence">
         <path d="M1070 776 V810" class="graph-edge"/>
         <rect x="1016" y="810" width="108" height="42" rx="21" class="token"/>
-        <circle cx="1042" cy="831" r="4" fill="#93a289"/>
-        <text x="1058" y="837" class="mono token-label">PATH</text>
+        <text x="1070" y="837" text-anchor="middle" class="mono token-label">PATH</text>
       </g>
       <g class="proof-3" aria-label="Receipt evidence">
         <path d="M1220 776 V810" class="graph-edge"/>
         <rect x="1158" y="810" width="132" height="42" rx="21" class="token"/>
-        <circle cx="1184" cy="831" r="4" fill="#93a289"/>
-        <text x="1200" y="837" class="mono token-label">RECEIPT</text>
+        <text x="1224" y="837" text-anchor="middle" class="mono token-label">RECEIPT</text>
       </g>
     </g>
 
@@ -506,26 +503,22 @@
 
       <g class="answer-state" aria-label="Answer outcome">
         <rect x="534" y="1058" width="250" height="64" rx="20" class="answer-shell"/>
-        <circle cx="578" cy="1090" r="6" class="active-dot"/>
-        <text x="600" y="1099" class="mono outcome-name">ANSWER</text>
+        <text x="659" y="1099" text-anchor="middle" class="mono outcome-name">ANSWER</text>
       </g>
 
       <g aria-label="Clarify outcome">
         <rect x="808" y="1058" width="250" height="64" rx="20" class="clarify-shell"/>
-        <circle cx="852" cy="1090" r="5" fill="#e2ac62" opacity="0.55"/>
-        <text x="874" y="1099" class="mono outcome-name">CLARIFY</text>
+        <text x="933" y="1099" text-anchor="middle" class="mono outcome-name">CLARIFY</text>
       </g>
 
       <g aria-label="Draft outcome">
         <rect x="1082" y="1058" width="250" height="64" rx="20" class="clarify-shell"/>
-        <circle cx="1126" cy="1090" r="5" fill="#ece2d3" opacity="0.45"/>
-        <text x="1148" y="1099" class="mono outcome-name">DRAFT</text>
+        <text x="1207" y="1099" text-anchor="middle" class="mono outcome-name">DRAFT</text>
       </g>
 
       <g aria-label="Scan fresh outcome">
         <rect x="1356" y="1058" width="250" height="64" rx="20" class="scan-shell"/>
-        <circle cx="1400" cy="1090" r="5" fill="#d1703c" opacity="0.5"/>
-        <text x="1422" y="1099" class="mono outcome-name">SCAN FRESH</text>
+        <text x="1481" y="1099" text-anchor="middle" class="mono outcome-name">SCAN FRESH</text>
         <path d="M1606 1090 H1650" class="base-path" stroke="#d1703c" opacity="0.8" marker-end="url(#flow-arrow-ember)"/>
       </g>
     </g>
