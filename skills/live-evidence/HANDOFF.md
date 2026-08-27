@@ -1,146 +1,115 @@
-# Live Evidence Handoff
+# HANDOFF — live-evidence (2026-08-27, DriveWealth interview prep)
 
-- schema: `tau.agent_handoff.v1`
-- updated: `2026-08-24T13:11:49-04:00`
-- project_dir: `/home/graham/workspace/experiments/agent-skills/skills/live-evidence`
-- purpose: clear context safely before the next `$live-evidence` work
+For the next agent. Everything below is receipt-backed; commands named were
+run and read back in the sessions of 2026-08-26/27. Do not trust this file
+over live state — verify with the named commands.
 
 ## Resume Here
 
-- Objective: continue the `$live-evidence` v2 immutable goal: a consented live
-  meeting copilot that surfaces research cards, memory-recall cards, code cards,
-  briefing packs, and human-approved actions with source-bound evidence.
-- Operational state: v1 technical-interview proof is achieved and is the
-  regression floor. v2 is not complete until the documented field-campaign bar
-  in `IMMUTABLE_GOAL.md` is met.
-- Exact next action: rerun the code-family path against the Sparta/QRA meeting
-  question and prove whether the recent code-card ranking fix now cites
-  implementation source instead of commit messages, memory metadata, or design
-  docs.
-- Suggested command:
+- **Objective**: live-evidence is the interview copilot for the DriveWealth
+  AI Engineer technical assessment (two 45-min principal sessions). It must
+  listen to call audio, identify questions, and glance-serve answer cards
+  from the curated KB. Interview-day bring-up is ONE command:
+  `scripts/interview_day.sh` (fail-closed probes: scillm, memory daemon, KB
+  recall, doctor, pack load, session, listener, HUD).
+- **Exact next action**: nothing is blocking interview use. Highest-value
+  remaining increments, in order: (1) solver-side JSON deck schema
+  ({title, trigger} points instead of markdown prose parsed in the browser
+  — see ui/src/components/SolutionStage.tsx scannablePoints comment);
+  (2) clean full-suite eval rerun on a quiet box (last full run
+  USABLE_WITH_GAPS 41/47, all 6 failures individually re-proven or
+  root-caused after fixes — receipts below); (3) the 19-item defect ledger
+  at scratchpad tickets_to_file.md (session-local; re-derive from this file
+  if gone).
 
-```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/live-evidence
-./run.sh eval-transcript-meeting
-```
+## What works (verified live)
 
-- If the focused transcript meeting check passes, run the owning agentic eval:
+- Physical audio chain: chatterbox voice -> speaker/null-sink -> PipeWire
+  monitor capture -> CPU whisper -> stage-1 -> cards. Attended run 7/9
+  matches with all 9 questions carded; batch-2 campaign 38/45 at realistic
+  pacing. CPU whisper is LOAD-SENSITIVE: identical wav scored 0/9 at load
+  80 and 8/9 at load 30. Keep the box quiet during use; the CUDA/torch
+  driver mismatch (warning in listener log) forces CPU STT.
+- Blind question extraction: all 10 webgpt-authored interviews pass
+  (77/90+), fixture fixtures/mock_interviews_drivewealth.json (status:
+  final, webgpt coverage-approval receipt embedded).
+- KB: 856+ units in /memory scope drivewealth incl. a 90-question answer
+  key (knowledge/answer-key/ in the dw-openapi repo). Recall verified with
+  interviewer-phrased probes via daemon POST :8601/recall. KNOWN: CLI
+  `memory recall --scope` returns found:false while the daemon path works
+  (memory-repo bug); `memory learn` 422s on agent-written lessons
+  ("no extractable taxonomy").
+- HUD (rebuilt 2026-08-27 through four external design-review rounds):
+  teleprompter single column (root cause of earlier crushed layout:
+  .app-layout reserved the rail grid track), 2x2 CardDeckMatrix with 1-4
+  hotkeys and focus dimming, trigger-length bullets, diagnostics hidden via
+  .answer-provenance (data stays in DOM), TTS earcons policy-gated on
+  voice_output (silent in meeting purpose BY DESIGN — do not "fix").
+  Serve on PORT 8799 — 8765 is owned by task-monitor on this machine.
+- Trigger pipeline fixes this week (committed): imperative-clause detection
+  and interviewer-statement fallthrough in question_window.py — principal
+  phrasing ("Design X", "We need Y") now reaches stage-1; candidate-channel
+  suppression regression-proven (eval-interview-loop 6/6 PASS, latest run
+  2026-08-27). Publication: INSUFFICIENT cards are held, observable at
+  GET /api/cards/publications (causal assertions in eval_interview_loop.py).
 
-```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/agentic-evals
-./run.sh run ../live-evidence/fixtures/agentic_eval.json \
-  --output /tmp/live-evidence-agentic-evals-latest.json
-```
+## Known-broken / unfinished
 
-## What Exists
+- Full 47-case suite: no clean READY receipt exists. Last full run 41/47;
+  the 6 fails were: stray .venv (removed, then RESTORED deliberately — a
+  concurrent skill-maintainer workflow uses it; contract conflict
+  unresolved), chatterbox CUDA-OOM crash + scillm restart (environmental,
+  cases re-proven individually), fast-solver latency (a concurrent
+  workflow was mid-fix; final state unknown), interview-loop (fixed:
+  publication-hold migration). Background eval runs on this box get killed
+  by concurrent workflows (exit 144) — run long suites foreground/chunked.
+- STT jargon mishears: "immutable"->"a mutable" observed, self-corrected by
+  revision fencing. Hotword biasing for RealtimeSTT is the standard fix
+  (unimplemented).
+- Compound questions on the '?' path canonicalize the tail clause only
+  (imperative path keeps full turn). DW-AI-02 T05 forensics.
+- ANOTHER AGENT has uncommitted work in this skill right now (SKILL.md,
+  run.sh, fixtures, scripts/compile_drivewealth_oracle_pack.py,
+  prep_pack_drivewealth.json, validate_prep_pack.py) — the prep-pack lane.
+  Coordinate before committing over it.
 
-- `SKILL.md` defines the current product contract: local-first consented meeting
-  copilot; default path is audio/STT to bounded trigger to Memory/GMO/code/ripgrep
-  to `$ask` for code questions to source-bound evidence card.
-- `IMMUTABLE_GOAL.md` defines the v2 completion bar: at least 20 real consented
-  sessions, all three card families firing where warranted, usefulness labels,
-  speech-start latency, blinded card-reading median under 3 seconds, and zero
-  formal-assessment assistance/action/invented support.
-- `PROJECT_STATE.md` records the last broad state table. It marks several lanes
-  live-proven, but still lists open debts around live Ask in evals, diarization,
-  model-lane rubric authorship, and editor bridge provisioning.
-- `PROJECT_KNOWLEDGE.md` has newer 2026-08-22/2026-08-23 notes: transcript
-  meeting eval, surface selection, STT segmentation fix, and code-family answer
-  quality as the active open gap.
-- `fixtures/agentic_eval.json` is the committed eval contract. It contains the
-  real-world cases that should be updated when live-evidence behavior changes.
+## Key artifacts
 
-## What Works
+- fixtures/: briefing_drivewealth.json (18 points + diagram sources),
+  mock_interviews_drivewealth.json (10 interviews, final),
+  drivewealth_bridge.md, tuesday_runbook.md, metrics_cold.md,
+  debugger_walkthrough.md (4 breakpoint seams incl. exact file:line),
+  diagrams/ (authority-stack + 3 architecture charts, phart + SVG).
+- Rehearsal audio: /mnt/storage12tb/skills/live-evidence/synthetic-interviews/
+  DW-AI-01..10.wav (~11-13 min each) + timecoded .transcript.txt.
+- Blind grader: run.sh eval-synthetic-interviews [--interview ID] [--gap N]
+  (dual tail|head stems — both canonicalization styles count).
+- .vscode/launch.json (repo root, gitignored): debugger demo configs.
 
-- Local deterministic proof exists for the v1 interview loop through
-  `./sanity.sh` according to `SKILL.md`. That proof starts a real local FastAPI
-  server, posts a final interviewer turn over HTTP, runs real ripgrep against a
-  temp repo, waits for a source-bound card, validates UI instrumentation, and
-  writes a JSON receipt.
-- The transcript-meeting harness exists:
-  `scripts/eval_transcript_meeting.py`, `run.sh eval-transcript-meeting`, and
-  `fixtures/transcript_meetings.json`.
-- Surface selection exists in `src/live_evidence/surface_selector.py` and is
-  documented as a direct SciLLM stage-1 exception for latency.
-- A recent live-evidence commit exists for the active gap:
-  `a5817f43a0 Fix live-evidence code card source ranking`. It touched
-  `coordinator.py`, `retrieval/__init__.py`, `retrieval/ranker.py`,
-  `retrieval/ripgrep.py`, and `tests/test_ripgrep.py`.
+## Environment gotchas (each cost real time)
 
-## What Is Broken Or Unproven
+- LIVE_EVIDENCE_REPOS is COLON-separated; 5 repos incl.
+  ~/workspace/experiments/dw-openapi.
+- SciLLM key: export LIVE_EVIDENCE_SCILLM_KEY from the container
+  (docker exec docker-scillm-proxy-1 printenv SCILLM_MASTER_KEY); ambient
+  SCILLM_PROXY_KEY is drifted and 401s.
+- Listener needs --backend-url (default 8765 = wrong service, dies with a
+  404 buried in its log).
+- GPU: chatterbox TTS + CUDA whisper cannot run concurrently (OOM crash
+  receipt 2026-08-26). Do not run TTS during live capture.
+- pkill patterns containing "live_evidence" match your own shell (exit 144).
 
-- v2 immutable goal is not met. Do not report it as complete from a commit,
-  green unit tests, or a subset eval.
-- The code-family lane is the active risk. The old handoff said it was broken;
-  the newer commit says it was fixed. Treat the true current state as
-  `recently patched, needs focused live/deterministic rerun`.
-- `./sanity.sh` does not prove live mic, PipeWire, GPU STT, Graph Memory, Brave,
-  Dogpile, or the 20-session field campaign unless those lanes are explicitly
-  exercised.
-- Any pytest with monkeypatching is wiring-only. It does not prove live meeting
-  behavior or semantic card usefulness.
-- Diarization/speaker identity is still not built according to
-  `PROJECT_STATE.md`.
-- Research-card live behavior is not complete unless a real research lane
-  receipt shows Brave/Dogpile or governed fallback behavior for the target case.
+## Last verified commands (2026-08-27)
 
-## Active Files To Inspect First
+- eval-interview-loop: 6/6 PASS
+- eval-synthetic-interviews per interview: 01..10 all ok:true (dual-stem)
+- HUD screenshot after teleprompter commit 9bd753c0fd: matrix deck renders,
+  hotkeys work, diagnostics hidden (commits 6473c4e358, 4ae2d62d76,
+  9bd753c0fd)
 
-- `src/live_evidence/coordinator.py`
-- `src/live_evidence/retrieval/ripgrep.py`
-- `src/live_evidence/retrieval/ranker.py`
-- `src/live_evidence/retrieval/__init__.py`
-- `src/live_evidence/surface_selector.py`
-- `scripts/eval_transcript_meeting.py`
-- `fixtures/transcript_meetings.json`
-- `fixtures/agentic_eval.json`
-- `IMMUTABLE_GOAL.md`
-- `PROJECT_KNOWLEDGE.md`
-- `PROJECT_STATE.md`
+## Proof boundary
 
-## Working Tree Notes
-
-- Current branch at handoff creation: `main`, with local branch ahead and behind
-  origin. Do not pull, rebase, clean, stash, or switch branches without first
-  inventorying unrelated work.
-- Unrelated root handoff file exists at `local/HANDOFF.md`; it points to
-  ops-memory and should not be used as the live-evidence handoff.
-- Untracked generated state exists at
-  `skills/live-evidence/episodic-archiver_task_state.json`. Treat it as
-  non-source runtime state unless a later task explicitly proves it belongs in
-  the committed skill contract.
-- For alpha+ projects, work on `main` only unless the human explicitly says
-  otherwise. Do not create a random worktree for live-evidence work.
-
-## Receipts Used For This Handoff
-
-- `date -Iseconds` -> `2026-08-24T13:11:49-04:00`
-- `git status --short --branch -- skills/live-evidence/HANDOFF.md skills/live-evidence/episodic-archiver_task_state.json local/HANDOFF.md`
-- `git show --name-status --oneline --no-renames a5817f43a0 -- skills/live-evidence`
-- File read-backs in this turn:
-  - `skills/handoff/SKILL.md`
-  - `skills/live-evidence/SKILL.md`
-  - `skills/live-evidence/HANDOFF.md`
-  - `skills/live-evidence/IMMUTABLE_GOAL.md`
-  - `skills/live-evidence/PROJECT_STATE.md`
-  - `skills/live-evidence/PROJECT_KNOWLEDGE.md`
-  - `skills/live-evidence/fixtures/agentic_eval.json`
-  - `skills/live-evidence/run.sh`
-
-## Proof Boundary
-
-- mocked: `no` for this handoff update; no mocked test result was used as proof.
-- live: `no` for feature behavior in this turn; this handoff was produced from
-  file read-backs and git inspection only.
-- exercised: skill contracts, state docs, recent live-evidence git history, and
-  the handoff file itself.
-- unverified: current code-card behavior after `a5817f43a0`, full agentic eval
-  readiness, live mic/STT path, research lane, Graph Memory lane, browser UI
-  screenshots, and the 20-session field campaign.
-
-## Blocker If You Resume And Stop
-
-- If `./run.sh eval-transcript-meeting` fails, preserve the receipt and report
-  the exact failing question, cited source path, expected source path, and card
-  family. The likely next repair is the code retrieval/ranking path, not a new
-  dashboard, summary, or commit-only status update.
+mocked: no for everything labeled verified above; live: yes. Unverified:
+full-suite READY, fast-solver final state, Qdrant vectors + graph edges for
+the drivewealth scope (BM25 carries recall today), authenticated HCP token
+lane (ops-terraform hcp-status PASS path needs a real TFE_TOKEN).
