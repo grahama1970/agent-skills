@@ -302,7 +302,7 @@ section {
 }
 .nav .nav-calendly-link {
   color: var(--brass);
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   white-space: nowrap;
@@ -609,7 +609,7 @@ h1 .it::after {
   background: var(--brass);
   border-color: var(--brass);
   color: #170f09;
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1036,9 +1036,10 @@ h1 .it::after {
   grid-row: auto;
   margin-top: 0;
 }
-.selected-cards .card:nth-child(1) { grid-column: 1 / span 4; }
-.selected-cards .card:nth-child(2) { grid-column: 5 / span 4; }
-.selected-cards .card:nth-child(3) { grid-column: 9 / span 4; }
+.selected-cards .card:nth-child(1) { grid-column: 1 / span 6; }
+.selected-cards .card:nth-child(2) { grid-column: 7 / span 6; }
+.selected-cards .card:nth-child(3) { grid-column: 1 / span 6; }
+.selected-cards .card:nth-child(4) { grid-column: 7 / span 6; }
 .selected-cards .c10 .shot {
   aspect-ratio: 16/10;
 }
@@ -1075,20 +1076,9 @@ h1 .it::after {
   height: 100%;
   object-fit: cover;
 }
-.shot-img-contain {
-  transition:
-    filter 220ms ease,
-    transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  transform-origin: center;
-}
 .card:hover .shot,
 .card:focus-visible .shot {
   border-color: rgba(226, 172, 98, 0.35);
-}
-.card:hover .shot-img-contain,
-.card:focus-visible .shot-img-contain {
-  filter: saturate(1.08) contrast(1.04) drop-shadow(0 0 10px rgba(226, 172, 98, 0.2));
-  transform: scale(1.012);
 }
 .shot::after {
   content: '';
@@ -1157,6 +1147,9 @@ h1 .it::after {
 .chip {
   grid-column: 2;
   justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.85em;
   font-family: var(--sans);
   font-size: 0.63rem;
@@ -1833,26 +1826,17 @@ footer .lab {
   color: var(--faint);
   margin-bottom: 0.7rem;
 }
-footer a,
-.footer-copy-email {
-  appearance: none;
-  background: transparent;
-  border: 0;
+footer a {
   font-family: var(--sans);
   font-size: 0.76rem;
   color: var(--muted);
-  cursor: pointer;
   text-decoration: none;
   display: block;
   line-height: 2;
-  margin: 0;
-  padding: 0;
-  text-align: left;
   word-break: break-all;
   transition: color 0.2s ease;
 }
-footer a:hover,
-.footer-copy-email:hover {
+footer a:hover {
   color: var(--brass);
 }
 .ethos {
@@ -3328,16 +3312,8 @@ a.fig:hover .l::after,
   line-height: 1.55;
   color: var(--muted);
 }
-.capsearch-empty-body a,
-.capsearch-email-copy {
-  appearance: none;
-  background: transparent;
-  border: 0;
+.capsearch-empty-body a {
   color: var(--brass);
-  cursor: pointer;
-  font: inherit;
-  margin: 0;
-  padding: 0;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -3550,9 +3526,7 @@ a:hover .c-img { opacity: 1; }
   stroke-width: 2;
 }
 .c-ring--private {
-  stroke-width: 3.5;
-  stroke-dasharray: 6 5;
-  stroke-linecap: round;
+  stroke-dasharray: 5 4;
 }
 .c-node {
   transition: opacity 0.2s ease;
@@ -3635,9 +3609,8 @@ a:hover .c-plabel { fill: var(--brass); }
 }
 .constellation-legend {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 0.65rem 1rem;
+  gap: 1rem;
   margin: 0.7rem 0 0;
   font-family: var(--sans);
   font-size: 0.66rem;
@@ -3645,37 +3618,16 @@ a:hover .c-plabel { fill: var(--brass); }
   text-transform: uppercase;
   color: var(--faint);
 }
-.constellation-legend__items {
-  display: contents;
+.cl::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 0.4em; vertical-align: middle;
 }
-.cl {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.36rem;
-  color: var(--text);
-  white-space: nowrap;
-}
-.cl-shape {
-  font-size: 0.72rem;
-  line-height: 1;
-}
-.cl--technical .cl-shape { color: var(--brass); }
-.cl--hybrid .cl-shape { color: var(--sage); }
-.cl--creative .cl-shape { color: var(--ember); }
-.cl-note {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.cl-dashed {
-  padding: 0.12rem 0.36rem;
-  border: 1px dashed rgba(236, 226, 211, 0.5);
-  border-radius: 3px;
-  color: var(--muted);
-}
+.cl--technical::before { background: var(--brass); }
+.cl--hybrid::before { background: var(--sage); }
+.cl--creative::before { background: var(--ember); }
+.cl-note { text-transform: none; letter-spacing: 0; }
 /* Mobile is list-first: the graph is hard to operate on a phone, so hide it —
    the search results and the research-area list below carry the structure. */
 @media (max-width: 640px) {
@@ -3692,16 +3644,25 @@ a:hover .c-plabel { fill: var(--brass); }
 
 /* Private project shown via its public overview — dashed, marked abstract. */
 .evidence-private {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   margin-top: 0.5rem;
   padding: 0.25rem 0.6rem;
-  border: 1px dashed rgba(226, 172, 98, 0.5);
+  border: 1px solid rgba(226, 172, 98, 0.3);
+  background: rgba(226, 172, 98, 0.08);
   border-radius: 3px;
   font-family: var(--mono);
   font-size: 0.66rem;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--brass);
+  white-space: nowrap;
+}
+.chip .badge-icon,
+.evidence-private .badge-icon {
+  flex-shrink: 0;
 }
 
 /* Research-area mini-map — a scan layer above the collage. Text + rules. */
@@ -4247,7 +4208,7 @@ h1 .proof-origin::after {
   color: var(--text);
   cursor: pointer;
   display: inline-flex;
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.78rem;
   gap: 0.45rem;
   line-height: 1.2;
@@ -4449,7 +4410,7 @@ h1 .proof-origin::after {
 .cv-facts-context span {
   color: var(--faint);
   display: block;
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   line-height: 1.35;
@@ -4477,7 +4438,7 @@ h1 .proof-origin::after {
 
 .cv-facts-grid dt {
   color: var(--faint);
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.68rem;
   letter-spacing: 0.07em;
   line-height: 1.35;
@@ -4510,7 +4471,7 @@ h1 .proof-origin::after {
   border-radius: 4px;
   color: var(--text);
   display: inline-flex;
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.76em;
   font-weight: 600;
   line-height: 1.35;
@@ -4579,7 +4540,7 @@ h1 .proof-origin::after {
 
 .cv-public-arrow {
   color: var(--faint);
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.72em;
   transform: translateY(-0.03em);
   transition: color var(--dur-state) var(--ease-state),
@@ -4601,7 +4562,7 @@ h1 .proof-origin::after {
 .cv-public-facts {
   color: var(--brass);
   flex: 0 0 auto;
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-size: 0.72rem;
   line-height: 1.45;
   max-width: 13rem;
@@ -4840,7 +4801,6 @@ h1 .proof-origin::after {
   /* Chrome, nav, and anything that is not the document itself. */
   .topbar,
   .cv-actions,
-  .cv-contact-actions,
   .cv-foot,
   .ambient {
     display: none !important;
@@ -4854,46 +4814,6 @@ h1 .proof-origin::after {
   .cv-role h3,
   .cv-lede {
     color: #0c0908 !important;
-  }
-  .cv-facts,
-  .cv-public-card,
-  .cv-cluster,
-  .cv-tech-pill,
-  .cv-evidence {
-    background: #fff !important;
-    box-shadow: none !important;
-  }
-  .cv-facts,
-  .cv-public-card,
-  .cv-cluster,
-  .cv-tech-pill {
-    border-color: #d8d0c8 !important;
-  }
-  .cv-facts h2,
-  .cv-facts-grid dt,
-  .cv-facts-context span,
-  .cv-public-facts,
-  .cv-clusters dt,
-  .cv-tech-pill {
-    color: #5d5147 !important;
-  }
-  .cv-facts-grid dd,
-  .cv-facts-context p,
-  .cv-public-card p,
-  .cv-clusters dd {
-    color: #0c0908 !important;
-  }
-  .cv .cv-facts-chips li {
-    background: #fff !important;
-    border-color: #d8d0c8 !important;
-    box-shadow: none !important;
-    color: #0c0908 !important;
-  }
-  .cv .cv-facts-chips li:first-child {
-    background: #fff8ef !important;
-  }
-  .cv-facts-status {
-    color: #2f8a48 !important;
   }
   .cv-contact,
   .cv-period,
@@ -4913,19 +4833,9 @@ h1 .proof-origin::after {
   }
   .cv-role {
     break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  .cv-facts,
-  .cv-public-card,
-  .cv-cluster,
-  .cv-evidence,
-  .cv-impact-list li {
-    break-inside: avoid;
-    page-break-inside: avoid;
   }
   .cv-section > h2 {
     break-after: avoid;
-    page-break-after: avoid;
   }
 }
 

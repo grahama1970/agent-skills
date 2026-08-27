@@ -1,3 +1,4 @@
+import { ProjectBadge } from '../components/project-badge';
 import artifacts from '@/artifacts.json';
 import lineage from '@/generated/battle-lineage.json';
 import { HeroLineage, type HeroLineageData } from '@/components/hero-lineage';
@@ -14,9 +15,6 @@ import { SiteNav } from '@/components/site-nav';
 import { StripVideo } from '@/components/strip-video';
 import { UnusualPath } from '@/components/unusual-path';
 import { TauCase } from '@/components/cases/tau-case';
-import { CalendlyPopupLink } from '@/components/calendly-scheduler';
-import { CopyEmailButton } from '@/components/copy-email-button';
-import calendly from '@/calendly.json';
 import content from '@/content.json';
 import { HomeJsonLd } from '@/components/home-json-ld';
 import inventory from '@/inventory.json';
@@ -25,32 +23,29 @@ import visibility from '@/project-visibility.json';
 const REPO = 'https://github.com/grahama1970/agent-skills';
 
 /** Per-card collage placement + tint from the winning comp. */
-const SUPPORTING_SLUGS = ['sparta-explorer', 'persona-dream', 'battle'] as const;
+const SUPPORTING_SLUGS = ['sparta-explorer', 'persona-dream', 'memory', 'battle'] as const;
 
-const PROJECT_VISUALS: Record<
-  string,
-  { cls: string; tint: string; img?: string; src?: string; decode?: string; fit?: 'cover' | 'contain' }
-> = {
+const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string; asset?: string; decode?: string }> = {
   tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
   surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
   'persona-dream': { cls: 'c4', tint: 'rgba(226,172,98,.5)', decode: 'dream-affect voice study' },
-  memory: { cls: 'c4', tint: 'rgba(147,162,137,.45)', img: 'memory', src: '/projects/memory.svg', decode: 'memory-first graph recall', fit: 'contain' },
   extractor: { cls: 'c5', tint: 'rgba(196,142,86,.45)' },
   dogpile: { cls: 'c6', tint: 'rgba(160,120,150,.4)' },
   watch: { cls: 'c7', tint: 'rgba(209,112,60,.42)' },
   scillm: { cls: 'c8', tint: 'rgba(147,162,137,.42)' },
   debugger: { cls: 'c9', tint: 'rgba(196,142,86,.42)' },
   'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)', img: 'sparta-montage', decode: 'space-cyber evidence workbench' },
+  memory: { cls: 'c11', tint: 'rgba(147,162,137,.45)', asset: 'memory-recall-card.svg', decode: 'memory-first graph recall' },
 };
 
 const TRACK = [
   { t: 'Composer', d: 'Commercial work for Adidas, Pepsi, X-Games.' },
-  { t: 'Interactive producer', d: 'Campaign and production work, including God of War: Ascension for Sony.' },
+  { t: 'Executive producer, Sony', d: 'God of War: Ascension campaign — Webby-recognized, 80-person productions.' },
   { t: 'DARPA ARCOS', d: 'Principal data scientist and technical lead, alongside Honeywell, Lockheed Martin, MIT, GE, SRI.' },
-  { t: 'AFRL research talk', d: 'A talk from that period led to an AFRL “Hacker” challenge coin.' },
+  { t: 'AFRL “Hacker” challenge coin', d: 'Recognition out of that work.' },
   { t: 'Lean 4 formal methods', d: 'Proof discipline carried into agent design.' },
-  { t: 'This practice', d: 'Agent systems with evidence, checks, and plain limits.' },
+  { t: 'This practice', d: 'Agent systems that produce their own evidence — shipped as working code, in public.' },
 ];
 
 type ReceiptArtifact = {
@@ -99,7 +94,6 @@ export default function Home() {
   const supportingProjects = SUPPORTING_SLUGS
     .map((slug) => projectBySlug.get(slug))
     .filter((p): p is ContentProject => Boolean(p));
-  const calendlyUrl = calendly.primarySchedulingUrl || calendly.user.schedulingUrl;
   return (
     <>
       <HomeJsonLd />
@@ -118,11 +112,11 @@ export default function Home() {
                   methods, evidence
                 </p>
                 <h1>
-                  I build agent systems that leave{' '}
+                  I build agent systems that can{' '}
                   <span className="it proof-origin" data-proof-origin>
-                    evidence
+                    prove
                   </span>{' '}
-                  of what they did.
+                  what they did.
                 </h1>
                 <p className="hero-repo-model">
                   This site explains the work. The public{' '}
@@ -137,29 +131,36 @@ export default function Home() {
                   repository holds the source.
                 </p>
                 <p className="hero-outcomes">
-                  I take on agent, compliance, and multimodal R&amp;D work where
-                  the output needs to be inspectable: working source,
-                  deterministic checks, runbooks, receipts, and explicit limits.
+                  I take on hard-to-staff agent, compliance, and multimodal R&amp;D
+                  and deliver working source, deterministic checks, runbooks,
+                  receipts, and explicit limits your team can inspect and own.
                 </p>
                 <p className="hero-repo-model hero-repo-model--follow">
                   Browse here first, then inspect the source when you want the
                   contracts, code, checks, receipts, and visible gaps.
                 </p>
                 <p className="hero-bio">
-                  My path has moved through commercial composition, interactive
-                  production, data science, formal methods, and defense R&amp;D.
-                  The thread is practical work across disciplines, with enough
-                  evidence left behind that another team can inspect it. The{' '}
+                  An unusual{' '}
                   <a
                     href="/resume"
                     data-qid="hero:link:resume-receipt"
                     data-qs-action="HERO_OPEN_RESUME_RECEIPT"
-                    title="Open the résumé"
+                    title="The résumé — the receipt for these credentials"
                     style={{ color: 'var(--brass)', textDecoration: 'underline', textUnderlineOffset: '2px' }}
                   >
                     résumé
-                  </a>{' '}
-                  has the names and dates; this page shows the public work.
+                  </a>
+                  : commercial composer for{' '}
+                  <em style={{ ['--i' as string]: 1 }}>Adidas</em>{' '}
+                  and <em style={{ ['--i' as string]: 2 }}>Pepsi</em>,
+                  Webby-recognized producer for{' '}
+                  <em style={{ ['--i' as string]: 3 }}>Sony</em>,{' '}
+                  <em style={{ ['--i' as string]: 4 }}>DARPA</em> technical
+                  lead alongside{' '}
+                  <em style={{ ['--i' as string]: 5 }}>Lockheed Martin</em> and{' '}
+                  <em style={{ ['--i' as string]: 6 }}>MIT</em>.
+                  High-end creative and hard technical work, delivered by the
+                  same person, shipped as working code, in public.
                 </p>
                 <div className="hero-actions">
                   <a
@@ -178,7 +179,7 @@ export default function Home() {
                     data-qs-action="HERO_OPEN_PROOF_ROUTE"
                     title="Read how claims connect to source, checks, receipts, and gaps"
                   >
-                    See how evidence works →
+                    See how proof works →
                   </a>
                   <a
                     className="btn ghost"
@@ -311,7 +312,7 @@ export default function Home() {
                 <p className="kicker">
                   <b>Tau</b> Selected investigations
                 </p>
-                <h2 className="h2">One main case, three supporting systems.</h2>
+                <h2 className="h2">One dominant proof, four supporting systems.</h2>
               </div>
               <p className="count">preview here → full index one step deeper</p>
             </div>
@@ -321,7 +322,8 @@ export default function Home() {
               <p className="private-boundary__lead">
                 Most current work is export-controlled or sensitive. The public
                 pattern here is deliberately narrower: problem class, public
-                artifact, evidence, and limits. Private systems stay private.
+                artifact, what it proves, and what it does not prove. Private
+                systems stay private.
               </p>
               <dl className="private-boundary__grid">
                 <div>
@@ -377,10 +379,9 @@ export default function Home() {
                         aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer — governed evidence thread from program manager and engineer through policy gate to pilot, Embry OS' : `${p.name} — concept art`}
                       >
                         <img
-                          className={`shot-img${meta.fit === 'contain' ? ' shot-img-contain' : ''}`}
-                          src={meta.src ?? `/projects/${meta.img ?? p.slug}.webp`}
+                          className="shot-img"
+                          src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}?v=${inventory.commit}`}
                           alt=""
-                          style={{ objectFit: meta.fit ?? 'cover' }}
                           loading="eager"
                           decoding="async"
                           aria-hidden="true"
@@ -398,21 +399,8 @@ export default function Home() {
                       <p className="q">{p.question}</p>
                       <p className="d">{p.blurb}</p>
                       <p className="why">{p.why}</p>
-                      <span className={`chip${external ? ' ext' : ''}`}>
-                        {external
-                          ? 'external repo'
-                          : skillFlags.get(p.slug)
-                            ? 'sanity-checked'
-                            : 'contract only'}
-                      </span>
-                      {evidencePrivate && (
-                        <span
-                          className="evidence-private"
-                          title="Public product overview; the underlying system and its evidence are private."
-                        >
-                          product overview · evidence private
-                        </span>
-                      )}
+                      <ProjectBadge type={external ? 'external-repo' : skillFlags.get(p.slug) ? 'sanity-checked' : 'contract-only'} />
+                      {evidencePrivate && <ProjectBadge type="private-evidence" />}
                       <div className="project-actions">
                         <a
                           href={linkHref}
@@ -495,7 +483,7 @@ export default function Home() {
             <div className="proofx-head proofx-head--preview">
               <div>
                 <p className="kicker">
-                  <b>Tau</b> How evidence works
+                  <b>Tau</b> How proof works
                 </p>
                 <h2 className="h2">
                   One real run, from goal to receipt.
@@ -531,7 +519,7 @@ export default function Home() {
                 <p className="kicker">
                   <b>Receipts</b> Bounded evidence
                 </p>
-                <h2 className="h2">Claims come with boundaries.</h2>
+                <h2 className="h2">No claim ships without one.</h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
                   {capturedReceiptCount === 3 ? 'Three excerpts' : `${capturedReceiptCount} captured excerpts`},
                   printed as they came out of
@@ -660,23 +648,15 @@ export default function Home() {
                   source your team owns, deterministic checks, runbooks, and
                   plain boundary notes so another engineer can continue the work.
                 </p>
-                <CopyEmailButton
+                <a
                   className="btn"
-                  email="graham@grahama.co"
-                  qid="contact:action:email"
-                  qsAction="CONTACT_COPY_EMAIL"
-                  title="Copy graham@grahama.co"
-                  showStatus={false}
+                  href="mailto:graham@grahama.co"
+                  data-qid="contact:action:email"
+                  data-qs-action="CONTACT_EMAIL"
+                  title="Email graham@grahama.co"
                 >
                   graham@grahama.co <span className="arrow">→</span>
-                </CopyEmailButton>
-                <CalendlyPopupLink
-                  className="btn cta-calendly-btn"
-                  url={calendlyUrl}
-                  qid="contact:action:calendly"
-                >
-                  Book a 30-minute meeting
-                </CalendlyPopupLink>
+                </a>
               </div>
             </div>
           </div>
@@ -687,16 +667,14 @@ export default function Home() {
             <div className="foot-grid">
               <div className="foot-a">
                 <p className="lab">Contact</p>
-                <CopyEmailButton
-                  className="footer-copy-email"
-                  email="graham@grahama.co"
-                  qid="footer:link:email"
-                  qsAction="FOOTER_COPY_EMAIL"
-                  title="Copy graham@grahama.co"
-                  showStatus={false}
+                <a
+                  href="mailto:graham@grahama.co"
+                  data-qid="footer:link:email"
+                  data-qs-action="FOOTER_EMAIL"
+                  title="Email graham@grahama.co"
                 >
                   graham@grahama.co
-                </CopyEmailButton>
+                </a>
                 <a
                   href={REPO}
                   data-qid="footer:link:repo"
@@ -731,7 +709,7 @@ export default function Home() {
               </div>
               <div className="foot-c">
                 <p className="lab">Ethos</p>
-                <p className="ethos">Claims should leave evidence and clear limits.</p>
+                <p className="ethos">No claim ships without a receipt.</p>
               </div>
             </div>
             <div className="foot-boundary">

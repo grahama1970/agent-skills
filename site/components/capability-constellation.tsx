@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { SVGProps } from 'react';
 import {
   forceCenter,
   forceCollide,
@@ -134,6 +133,10 @@ function LensMark({ x, y, lens, color }: { x: number; y: number; lens?: string; 
 const radiusOf = (t: string) => (t === 'practice' ? 46 : t === 'project' ? 30 : 26);
 // The ring the node settles onto — keeps the physics legible instead of a hairball.
 const orbitOf = (t: string) => (t === 'practice' ? 0 : t === 'area' ? 234 : 392);
+const imageHrefOf = (n: GNode) =>
+  n.slug === 'memory'
+    ? '/projects/thumbs/memory-recall-card.svg'
+    : `/projects/thumbs/${n.img}.webp`;
 // Node and Chromium can differ at the final decimal for trig-derived SVG values.
 // Round rendered coordinates so SSR markup and hydrated client props match.
 const coord = (n: number) => Number(n.toFixed(3));
@@ -161,18 +164,13 @@ function footprintOf(n: { type: string; label: string; skillCount?: number }): n
  * projects to an outer one so the structure stays readable. Image-filled
  * glowing ovals; private work a dashed ring. Warm brass/ember/sage palette.
  */
-type CapabilityConstellationProps = {
-  projectTargetBase?: '' | '/explore';
-};
-
-export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityConstellationProps = {}) {
+export function CapabilityConstellation() {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<string | null>(null);
   const [inspector, setInspector] = useState<InspectorState | null>(null);
   const [, force] = useState(0); // bump to re-render from mutated sim positions
   const drag = useRef<{ id: string; startX: number; startY: number } | null>(null);
   const moved = useRef(false); // distinguishes a drag from a click on project nodes
-  const pointerActivated = useRef<string | null>(null);
 
   // Stable simulation nodes/edges (built once; d3 mutates them across ticks).
   const { simNodes, simEdges, byId } = useMemo(() => {
@@ -249,10 +247,10 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
       if (!d) return;
       const node = byId.get(d.id);
       if (!node) return;
-      const dx = ev.clientX - d.startX;
-      const dy = ev.clientY - d.startY;
-      if (!moved.current && Math.hypot(dx, dy) < 5) return;
-      moved.current = true;
+      if (Math.hypot(ev.clientX - d.startX, ev.clientY - d.startY) > 5) {
+        moved.current = true; // a real drag — suppress click-through navigation
+      }
+      if (!moved.current) return;
       ev.preventDefault();
       const [x, y] = toLocal(ev.clientX, ev.clientY);
       node.fx = x;
@@ -279,7 +277,7 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
     };
   }, [byId]);
 
-  const startDrag = (n: SimNode) => (ev: React.PointerEvent | React.MouseEvent) => {
+  const startDrag = (n: SimNode) => (ev: React.PointerEvent) => {
     if (n.type === 'practice') return; // hub stays put
     drag.current = { id: n.id, startX: ev.clientX, startY: ev.clientY };
     moved.current = false;
@@ -376,18 +374,6 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
             const on = connected(n.id);
             const glow = n.lens ? GLOW[n.lens] : '#a99787';
             const r = radiusOf(n.type);
-            const nodeTitle =
-              n.type === 'project' && n.slug
-                ? n.visibility && n.visibility !== 'public' && n.href
-                  ? `Open public overview for ${n.label}`
-                  : n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`
-                : n.type === 'area'
-                  ? `${n.title || n.label} research area`
-                  : `${n.label} practice overview`;
-            const nodeTitleProps = {
-              title: nodeTitle,
-              'aria-label': nodeTitle,
-            } as SVGProps<SVGGElement> & { title: string };
 
             if (n.type === 'practice') {
               return (
@@ -396,7 +382,6 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
                   className={`c-node${on ? '' : ' is-dim'}`}
                   data-qid={`constellation:node:${n.id}`}
                   data-qs-action="CONSTELLATION_NODE"
-                  {...nodeTitleProps}
                   tabIndex={0}
                   onMouseEnter={inspectAtPointer(n)}
                   onMouseMove={moveInspector(n)}
@@ -428,28 +413,11 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
 
             const isProj = n.type === 'project';
             const priv = n.visibility && n.visibility !== 'public';
-            const projectHref = priv && n.href ? n.href : `${projectTargetBase}#project-${n.slug}`;
-            const externalOverview = !!(priv && n.href);
-            const activateProject = () => {
-              if (!isProj || !n.slug || moved.current || drag.current?.id !== n.id || pointerActivated.current === n.id) return;
-              if (externalOverview && n.href) {
-                pointerActivated.current = n.id;
-                window.open(n.href, '_blank', 'noopener,noreferrer');
-                return;
-              }
-              pointerActivated.current = n.id;
-              if (projectTargetBase) {
-                window.location.href = `${projectTargetBase}#project-${n.slug}`;
-              } else {
-                window.location.hash = `project-${n.slug}`;
-              }
-            };
             const inner = (
               <g
                 className={`c-node c-node--${n.type}${on ? '' : ' is-dim'}`}
                 data-qid={`constellation:node:${n.id}`}
                 data-qs-action="CONSTELLATION_NODE"
-                {...nodeTitleProps}
                 tabIndex={0}
                 onMouseEnter={inspectAtPointer(n)}
                 onMouseMove={moveInspector(n)}
@@ -457,15 +425,12 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
                 onFocus={inspectAtPointer(n)}
                 onBlur={hideInspector}
                 onPointerDown={startDrag(n)}
-                onPointerUp={activateProject}
-                onMouseDown={startDrag(n)}
-                onMouseUp={activateProject}
                 style={{ cursor: 'grab' }}
               >
                 <circle cx={x} cy={y} r={r} className="c-core" />
                 {n.img && (
                   <image
-                    href={`/projects/thumbs/${n.img}.webp`}
+                    href={imageHrefOf(n)}
                     x={x - r}
                     y={y - r}
                     width={r * 2}
@@ -480,7 +445,7 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
                   cy={y}
                   r={r}
                   className={`c-ring${priv ? ' c-ring--private' : ''}`}
-                  style={{ stroke: glow, filter: priv ? 'none' : `drop-shadow(0 0 7px ${glow}aa)` }}
+                  style={{ stroke: glow, filter: `drop-shadow(0 0 7px ${glow}aa)` }}
                 />
                 <LensMark x={x} y={y - r - 6} lens={n.lens} color={glow} />
                 <text
@@ -504,45 +469,13 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
             return isProj && n.slug ? (
               <a
                 key={n.id}
-                href={projectHref}
-                target={externalOverview ? '_blank' : undefined}
-                rel={externalOverview ? 'noopener noreferrer' : undefined}
+                href={`#project-${n.slug}`}
                 data-qid={`constellation:jump:${n.slug}`}
                 data-qs-action="CONSTELLATION_JUMP"
-                aria-label={
-                  externalOverview
-                    ? `Open public overview for ${n.label}`
-                    : n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`
-                }
-                title={
-                  externalOverview
-                    ? `Open public overview for ${n.label}`
-                    : n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`
-                }
+                aria-label={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
+                title={n.question ? `${n.label} — ${n.question}` : `Jump to ${n.label}`}
                 onClick={(e) => {
-                  if (moved.current) {
-                    e.preventDefault(); // was a drag, not a click
-                    moved.current = false;
-                    return;
-                  }
-                  if (pointerActivated.current === n.id) {
-                    e.preventDefault();
-                    pointerActivated.current = null;
-                    return;
-                  }
-                  if (externalOverview && n.href) {
-                    e.preventDefault();
-                    window.open(n.href, '_blank', 'noopener,noreferrer');
-                    return;
-                  }
-                  if (!externalOverview && n.slug) {
-                    e.preventDefault();
-                    if (projectTargetBase) {
-                      window.location.href = `${projectTargetBase}#project-${n.slug}`;
-                    } else {
-                      window.location.hash = `project-${n.slug}`;
-                    }
-                  }
+                  if (moved.current) e.preventDefault(); // was a drag, not a click
                 }}
               >
                 {inner}
@@ -571,26 +504,12 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
           ) : null}
         </div>
       </div>
-      <div className="constellation-legend" aria-label="Capability graph legend">
-        <ul className="constellation-legend__items">
-          <li className="cl cl--technical">
-            <span className="cl-shape" aria-hidden="true">▲</span>
-            <span>technical</span>
-          </li>
-          <li className="cl cl--hybrid">
-            <span className="cl-shape" aria-hidden="true">◆</span>
-            <span>hybrid</span>
-          </li>
-          <li className="cl cl--creative">
-            <span className="cl-shape" aria-hidden="true">●</span>
-            <span>creative</span>
-          </li>
-        </ul>
-        <span className="cl-note">
-          <span className="cl-dashed">dashed ring</span>
-          <span>= private work, public overview only</span>
-        </span>
-      </div>
+      <p className="constellation-legend">
+        <span className="cl cl--technical">▲ technical</span>
+        <span className="cl cl--hybrid">◆ hybrid</span>
+        <span className="cl cl--creative">● creative</span>
+        <span className="cl-note">dashed ring = private work, public overview only</span>
+      </p>
       {/* Text alternative for the graph (d3 a11y): a navigable equivalent — the
           same areas and projects, with real jump links so keyboard / screen-
           reader users reach every project the sighted graph links to. */}
@@ -610,16 +529,10 @@ export function CapabilityConstellation({ projectTargetBase = '' }: CapabilityCo
                       <li key={p!.id}>
                         {p!.slug ? (
                           <a
-                            href={p!.visibility && p!.visibility !== 'public' && p!.href ? p!.href : `#project-${p!.slug}`}
-                            target={p!.visibility && p!.visibility !== 'public' && p!.href ? '_blank' : undefined}
-                            rel={p!.visibility && p!.visibility !== 'public' && p!.href ? 'noopener noreferrer' : undefined}
+                            href={`#project-${p!.slug}`}
                             data-qid={`constellation:srjump:${p!.slug}`}
                             data-qs-action="CONSTELLATION_SR_JUMP"
-                            title={
-                              p!.visibility && p!.visibility !== 'public' && p!.href
-                                ? `Open public overview for ${p!.label}`
-                                : `Jump to ${p!.label}`
-                            }
+                            title={`Jump to ${p!.label}`}
                           >
                             {p!.label}
                           </a>

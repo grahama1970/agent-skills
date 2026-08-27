@@ -1,3 +1,4 @@
+import { ProjectBadge } from '../../components/project-badge';
 import { CapabilitySearch } from '@/components/capability-search';
 import { CapabilityConstellation } from '@/components/capability-constellation';
 import { SiteNav } from '@/components/site-nav';
@@ -5,21 +6,18 @@ import content from '@/content.json';
 import inventory from '@/inventory.json';
 import visibility from '@/project-visibility.json';
 
-const PROJECT_VISUALS: Record<
-  string,
-  { tint: string; img?: string; src?: string; decode?: string; fit?: 'cover' | 'contain' }
-> = {
+const PROJECT_VISUALS: Record<string, { tint: string; img?: string; asset?: string; decode?: string }> = {
   tau: { tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
   surf: { tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
   'persona-dream': { tint: 'rgba(226,172,98,.5)', decode: 'dream-affect voice study' },
-  memory: { tint: 'rgba(147,162,137,.45)', img: 'memory', src: '/projects/memory.svg', decode: 'memory-first graph recall', fit: 'contain' },
   extractor: { tint: 'rgba(196,142,86,.45)' },
   dogpile: { tint: 'rgba(160,120,150,.4)' },
   watch: { tint: 'rgba(209,112,60,.42)' },
   scillm: { tint: 'rgba(147,162,137,.42)' },
   debugger: { tint: 'rgba(196,142,86,.42)' },
   'sparta-explorer': { tint: 'rgba(120,140,170,.38)', img: 'sparta-montage', decode: 'space-cyber evidence workbench' },
+  memory: { tint: 'rgba(147,162,137,.45)', asset: 'memory-recall-card.svg', decode: 'memory-first graph recall' },
 };
 
 const skillFlags = new Map(
@@ -92,10 +90,9 @@ export default function ExplorePage() {
                       aria-label={`${p.name} — public project preview`}
                     >
                       <img
-                        className={`shot-img${meta.fit === 'contain' ? ' shot-img-contain' : ''}`}
-                        src={meta.src ?? `/projects/${meta.img ?? p.slug}.webp`}
+                        className="shot-img"
+                        src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}?v=${inventory.commit}`}
                         alt=""
-                        style={{ objectFit: meta.fit ?? 'cover' }}
                         loading="eager"
                         decoding="async"
                         aria-hidden="true"
@@ -110,21 +107,8 @@ export default function ExplorePage() {
                     </h3>
                     <p className="q">{p.question}</p>
                     <p className="d">{p.blurb}</p>
-                    <span className={`chip${external ? ' ext' : ''}`}>
-                      {external
-                        ? 'external repo'
-                        : skillFlags.get(p.slug)
-                          ? 'sanity-checked'
-                          : 'contract only'}
-                    </span>
-                    {evidencePrivate && (
-                      <span
-                        className="evidence-private"
-                        title="Public product overview; the underlying system and its evidence are private."
-                      >
-                        product overview · evidence private
-                      </span>
-                    )}
+                    <ProjectBadge type={external ? 'external-repo' : skillFlags.get(p.slug) ? 'sanity-checked' : 'contract-only'} />
+                    {evidencePrivate && <ProjectBadge type="private-evidence" />}
                     <div className="project-actions">
                       <a
                         href={linkHref}
