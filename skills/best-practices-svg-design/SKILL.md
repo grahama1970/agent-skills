@@ -168,6 +168,27 @@ A kicker set at the title's weight ("01 · UNDERSTAND" competing with
 equal weight is the usual culprit — drop the kicker two weight steps and
 one opacity step below the title.
 
+## Iconography and State Semantics
+
+- **Micro-icons anchor nodes.** Pair each stage's kicker with a small inline
+  glyph (12-45px) drawn from the card's own stroke/fill classes — a doc-lines
+  glyph for lexical search, a node-mesh for graph traversal, a point cluster
+  for vectors, a check ring for gates. Icons cut label-parsing time and give
+  the eye a landing point; text shifts right to keep containment.
+- **Encode cost/state boundaries in the border, not just color.** Outcomes
+  that leave the cheap path (a live-execution fallback like SCAN FRESH) get a
+  dashed border plus an explicit exit arrow; equivalent-cost outcomes share
+  the solid treatment. A reader should see which pill is the expensive escape
+  hatch without reading it.
+- **Directional arrowheads on every flow connector** (`<marker>`); flow that
+  is only implied by proximity fails the 3-second read. Accent the decisive
+  edge (into the gate) with the brand's primary.
+- In HTML surfaces (React cards), use the site's icon library (lucide-react
+  here) instead of hand-drawn glyphs; in self-contained SVG artifacts, embed
+  the glyphs inline — no external requests.
+- Never adopt reviewer suggestions that cannot function in an `<img>` context
+  (hover states, tooltips, transitions) — note them as skipped instead.
+
 ## Slot Contract (read the CSS before authoring)
 
 Before choosing a viewBox, read the destination slot's CSS: its
