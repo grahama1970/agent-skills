@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200" role="img" aria-labelledby="memory-pipeline-title memory-pipeline-desc" tabindex="0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="memory-pipeline-title memory-pipeline-desc" tabindex="0">
   <title id="memory-pipeline-title">Graph Memory: memory-first recall pipeline</title>
   <desc id="memory-pipeline-desc">A question is recalled from memory before any agent call: it passes through intent, then hybrid BM25 and Qdrant recall. BM25 and Qdrant candidate ids seed ArangoDB multi-hop edge expansion that returns graph paths and receipts. Four example questions cycle through the pipeline, each lighting its route and its reply. An evidence gate chooses answer, clarify, or draft; weak evidence sends the agent to scan the codebase and learn the result back, while unsupported requests can deflect before recall. Every route resolves before the agent sends its response to the human.</desc>
 
