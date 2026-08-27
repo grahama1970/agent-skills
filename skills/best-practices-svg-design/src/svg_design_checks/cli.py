@@ -41,6 +41,9 @@ def spacing(
     waived_all = w and "spacing" in w.get("rules", [])
     for line in findings:
         print(line)
+    for line in findings:
+        if "SPACING_FAIL" in line:
+            print(">>", line)
     if ok or waived_all:
         print("SPACING_OK" + (" (WAIVED)" if not ok else ""))
         raise typer.Exit(0)
@@ -92,3 +95,7 @@ def solve(spec: Path) -> None:
     import sys
     script = Path(__file__).resolve().parents[2] / "scripts" / "solve_grid.py"
     raise typer.Exit(subprocess.call([sys.executable, str(script), str(spec)]))
+
+
+if __name__ == "__main__":
+    app()

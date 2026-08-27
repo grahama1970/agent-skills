@@ -40,19 +40,19 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=b4ad7ee7794c3634c4682b9aa35f72f4152babaaa378db5cd005afde619b6bbb; output-bytes=11
 
 - [x] G8: narrow commit retained locally
-  CHECK: bash -c "git log -1 --name-only --pretty=format:%s | grep -q 'grahama-ember' && echo COMMIT_RETAINED_OK"
+  CHECK: bash -c "git log --oneline -60 | grep -q grahama-ember && git log --oneline -60 | grep -q 'pixel oracle' && echo COMMIT_RETAINED_OK"
   EXPECT: COMMIT_RETAINED_OK
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=09da1e64d5917172ee85dc4aaab91fbe107f6e65d94c32b0e3bc9df0d4ed66d8; output-bytes=19
 
 - [x] G10: artwork-level even spacing is deterministic and OK
-  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && python3 skills/best-practices-svg-design/scripts/check_svg_spacing.py docs/assets/project-cards/memory-recall-card.svg"
+  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && skills/best-practices-svg-design/run.sh spacing docs/assets/project-cards/memory-recall-card.svg"
   EXPECT: SPACING_OK
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=6cc982206e766031d0ac42a30552ac42efe9a4662ed530564ddf3b2336576309; output-bytes=431
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=6803ef16198e10c3b3a2e4f70f1170ba2bdbe5d99f2126979c2ae2b5a7d0e5b6; output-bytes=651
 
 - [x] G11: grid manifest matches the solved uniform grid
   CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && python3 skills/best-practices-svg-design/scripts/check_grid.py docs/assets/project-cards/memory-recall-card.grid.json"
   EXPECT: GRID_OK
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=cb4e2b04b7209384c3b282e2456cc495c77c537c0104dddfcab82a81c40ca26e; output-bytes=171
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=fb71be846361446e636e880d611954ec282237169f511833726149b3ace28133; output-bytes=53
 
 - [x] G12: served page references the current card via versioned URL
   CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && V=$(sha256sum site/out/projects/memory-recall-card.svg | cut -c1-8) && curl -s http://127.0.0.1:3020/explore.html | grep -q \"memory-recall-card.svg?v=\" && curl -s http://127.0.0.1:3020/projects/memory-recall-card.svg | sha256sum | grep -q \"^$(sha256sum docs/assets/project-cards/memory-recall-card.svg | cut -d' ' -f1)\" && echo SERVED_VERSIONED_OK"
