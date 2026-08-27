@@ -39,10 +39,10 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EXPECT: EVAL_READY
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=b4ad7ee7794c3634c4682b9aa35f72f4152babaaa378db5cd005afde619b6bbb; output-bytes=11
 
-- [ ] G8: narrow commit retained locally
+- [x] G8: narrow commit retained locally
   CHECK: bash -c "git log -1 --name-only --pretty=format:%s | grep -q 'grahama-ember' && echo COMMIT_RETAINED_OK"
   EXPECT: COMMIT_RETAINED_OK
-  EVIDENCE: pending
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=09da1e64d5917172ee85dc4aaab91fbe107f6e65d94c32b0e3bc9df0d4ed66d8; output-bytes=19
 
 - [ ] G9: MANUAL - human accepts the brand-palette design (create-svg Stage-2 gate)
   Human review of the rendered card at full and 400px sizes. Until Graham
