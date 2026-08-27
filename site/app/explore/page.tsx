@@ -5,11 +5,15 @@ import content from '@/content.json';
 import inventory from '@/inventory.json';
 import visibility from '@/project-visibility.json';
 
-const PROJECT_VISUALS: Record<string, { tint: string; img?: string; decode?: string }> = {
+const PROJECT_VISUALS: Record<
+  string,
+  { tint: string; img?: string; src?: string; decode?: string; fit?: 'cover' | 'contain' }
+> = {
   tau: { tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
   surf: { tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
   'persona-dream': { tint: 'rgba(226,172,98,.5)', decode: 'dream-affect voice study' },
+  memory: { tint: 'rgba(147,162,137,.45)', img: 'memory', src: '/projects/memory.svg', decode: 'memory-first graph recall', fit: 'contain' },
   extractor: { tint: 'rgba(196,142,86,.45)' },
   dogpile: { tint: 'rgba(160,120,150,.4)' },
   watch: { tint: 'rgba(209,112,60,.42)' },
@@ -88,9 +92,10 @@ export default function ExplorePage() {
                       aria-label={`${p.name} — public project preview`}
                     >
                       <img
-                        className="shot-img"
-                        src={`/projects/${meta.img ?? p.slug}.webp`}
+                        className={`shot-img${meta.fit === 'contain' ? ' shot-img-contain' : ''}`}
+                        src={meta.src ?? `/projects/${meta.img ?? p.slug}.webp`}
                         alt=""
+                        style={{ objectFit: meta.fit ?? 'cover' }}
                         loading="eager"
                         decoding="async"
                         aria-hidden="true"

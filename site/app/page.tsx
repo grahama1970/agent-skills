@@ -27,11 +27,15 @@ const REPO = 'https://github.com/grahama1970/agent-skills';
 /** Per-card collage placement + tint from the winning comp. */
 const SUPPORTING_SLUGS = ['sparta-explorer', 'persona-dream', 'battle'] as const;
 
-const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string; decode?: string }> = {
+const PROJECT_VISUALS: Record<
+  string,
+  { cls: string; tint: string; img?: string; src?: string; decode?: string; fit?: 'cover' | 'contain' }
+> = {
   tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
   surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
   'persona-dream': { cls: 'c4', tint: 'rgba(226,172,98,.5)', decode: 'dream-affect voice study' },
+  memory: { cls: 'c4', tint: 'rgba(147,162,137,.45)', img: 'memory', src: '/projects/memory.svg', decode: 'memory-first graph recall', fit: 'contain' },
   extractor: { cls: 'c5', tint: 'rgba(196,142,86,.45)' },
   dogpile: { cls: 'c6', tint: 'rgba(160,120,150,.4)' },
   watch: { cls: 'c7', tint: 'rgba(209,112,60,.42)' },
@@ -373,9 +377,10 @@ export default function Home() {
                         aria-label={p.slug === 'sparta-explorer' ? 'Sparta Explorer — governed evidence thread from program manager and engineer through policy gate to pilot, Embry OS' : `${p.name} — concept art`}
                       >
                         <img
-                          className="shot-img"
-                          src={`/projects/${meta.img ?? p.slug}.webp`}
+                          className={`shot-img${meta.fit === 'contain' ? ' shot-img-contain' : ''}`}
+                          src={meta.src ?? `/projects/${meta.img ?? p.slug}.webp`}
                           alt=""
+                          style={{ objectFit: meta.fit ?? 'cover' }}
                           loading="eager"
                           decoding="async"
                           aria-hidden="true"

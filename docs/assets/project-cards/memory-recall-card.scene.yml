@@ -1,0 +1,72 @@
+schema_version: 1
+theme: grahama-memory-theme.yml
+template: fanout-anatomy
+metadata:
+  title: Memory-first graph recall
+  description: A user question moves through semantic candidates, canonical records, graph relationships, and an evidence-bound response route.
+source:
+  title: Solved this before?
+  subtitle: memory-first recall
+targets:
+  - number: 1
+    heading: FIND RELATED
+    detail: Qdrant similarity
+    accent: amber
+  - number: 2
+    heading: RESOLVE RECORDS
+    detail: ArangoDB source and edges
+    accent: green
+  - number: 3
+    heading: EVIDENCE PATH
+    detail: prior fix, file path, skill chain
+    accent: cyan
+  - number: 4
+    heading: ROUTE RESPONSE
+    detail: answer, clarify, or deflect
+    accent: orange
+caption: "MEMORY FIRST: RELATED WORK BECOMES TRACEABLE CONTEXT BEFORE CODE SCANNING."
+timeline:
+  cycle_ms: 10500
+  events:
+    - target: source-node
+      recipe: fade-slide-y
+      start_ms: 120
+      end_ms: 820
+      from_y: -18
+    - target: connector-0
+      recipe: draw-stroke
+      start_ms: 820
+      end_ms: 1320
+    - target: target-card-0
+      recipe: fade
+      start_ms: 1260
+      end_ms: 1740
+    - target: connector-1
+      recipe: draw-stroke
+      start_ms: 1060
+      end_ms: 1560
+    - target: target-card-1
+      recipe: fade
+      start_ms: 1500
+      end_ms: 1980
+    - target: connector-2
+      recipe: draw-stroke
+      start_ms: 1300
+      end_ms: 1800
+    - target: target-card-2
+      recipe: fade
+      start_ms: 1740
+      end_ms: 2220
+    - target: connector-3
+      recipe: draw-stroke
+      start_ms: 1540
+      end_ms: 2040
+    - target: target-card-3
+      recipe: fade
+      start_ms: 1980
+      end_ms: 2460
+    - target: source-glow
+      recipe: halo-pulse
+      start_ms: 6200
+      end_ms: 10100
+      peak_opacity: 0.24

@@ -117,6 +117,78 @@ assets:
     owner: Graham Anderson
     license: all-rights-reserved
     third_party_basis: null
+- id: grahama-android-icon-192
+  path: site/public/android-chrome-192x192.png
+  kind: image
+  source: grahama.co generated PWA icon
+  creation_method: generated_site_icon
+  sha256: 3809e2f5233d0b71385cb06815acfc8d28bc702bb19ba4393046ddc1a1fdb368
+  project_ids:
+  - grahama-co
+  public_approval: true
+  role: decoration
+  caption: Android 192px site icon.
+  alt_text: Graham co Android icon.
+  crop: square
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: grahama-android-icon-512
+  path: site/public/android-chrome-512x512.png
+  kind: image
+  source: grahama.co generated PWA icon
+  creation_method: generated_site_icon
+  sha256: a23ea8f9a32511f8c0ae846b85e2d4716629f724809a3241cdaf1640e477f987
+  project_ids:
+  - grahama-co
+  public_approval: true
+  role: decoration
+  caption: Android 512px site icon.
+  alt_text: Graham co Android icon.
+  crop: square
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: grahama-apple-touch-icon
+  path: site/public/apple-touch-icon.png
+  kind: image
+  source: grahama.co generated touch icon
+  creation_method: generated_site_icon
+  sha256: 80ef25e46775b0367896b27489eaa036ed8f3a722080eac850e38bf69028e3e1
+  project_ids:
+  - grahama-co
+  public_approval: true
+  role: decoration
+  caption: Apple touch icon.
+  alt_text: Graham co touch icon.
+  crop: square
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: grahama-maskable-icon-512
+  path: site/public/icon-maskable-512x512.png
+  kind: image
+  source: grahama.co generated maskable PWA icon
+  creation_method: generated_site_icon
+  sha256: 39d474f49d369a3da90c9909cf94ebb77599aa2b9f251ba6ed0f741b244747f8
+  project_ids:
+  - grahama-co
+  public_approval: true
+  role: decoration
+  caption: Maskable 512px PWA icon.
+  alt_text: Graham co maskable icon.
+  crop: maskable square
+  does_not_establish: Any technical claim, evidence state, or project outcome.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
 - id: project-tau-concept
   path: site/public/projects/tau.webp
   kind: image
@@ -185,6 +257,46 @@ assets:
   alt_text: Synthetic illustration for persona-dream.
   crop: cover
   does_not_establish: Pipeline validity, memory grounding, or receipt quality.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-memory-recall-svg
+  path: site/public/projects/memory.svg
+  kind: image
+  source: docs/assets/project-cards/memory-recall-card.svg
+  creation_method: create-svg_rendered_animation
+  sha256: f737c420676c5e9db3d78bb947f84b4dafcad8e087ba43baa20a0ef76f3d1a46
+  project_ids:
+  - memory
+  public_approval: true
+  role: explanation
+  caption: Animated memory-first recall card showing a user question moving through related work, records, evidence path,
+    and answer/clarify/deflect routing.
+  alt_text: Memory-first recall diagram asking solved this before and showing related work, source records, evidence path,
+    and response route.
+  crop: contain
+  does_not_establish: Private graph-memory-operator internals, live daemon readiness, recall correctness, corpus coverage,
+    endpoint availability, or retrieval quality.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-memory-recall-webp
+  path: site/public/projects/memory.webp
+  kind: image
+  source: docs/assets/project-cards/memory-recall-card.svg
+  creation_method: create-svg_rasterized_with_rsvg-convert
+  sha256: 1653fd88828f37e9d57e302eca9b27e9c092f0cb173ebaa31441a9a844f5cb49
+  project_ids:
+  - memory
+  public_approval: true
+  role: explanation
+  caption: Static fallback rendering of the memory-first recall card.
+  alt_text: Static memory-first recall diagram.
+  crop: contain
+  does_not_establish: Private graph-memory-operator internals, live daemon readiness, recall correctness, corpus coverage,
+    endpoint availability, or retrieval quality.
   rights:
     owner: Graham Anderson
     license: all-rights-reserved
@@ -311,6 +423,24 @@ assets:
   alt_text: Synthetic illustration for watch.
   crop: cover
   does_not_establish: Monitoring coverage or live operational state.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
+- id: project-memory-node-thumb
+  path: site/public/projects/thumbs/memory.webp
+  kind: image
+  source: site/public/projects/memory.svg
+  creation_method: downsampled_from_registered_project_diagram
+  sha256: ca23d60a6ddfd02e3ad0a05692fdf7bdc6b5430d29a24e2db53782ffce6c46ad
+  project_ids:
+  - memory
+  public_approval: true
+  role: decoration
+  caption: Square constellation thumbnail for graph memory.
+  alt_text: Decorative graph node thumbnail for graph memory.
+  crop: center square thumbnail
+  does_not_establish: Any technical claim, evidence state, recall correctness, or project outcome.
   rights:
     owner: Graham Anderson
     license: all-rights-reserved

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="rsa-title rsa-desc">
+  <title id="rsa-title">Memory-first graph recall</title>
+  <desc id="rsa-desc">A user question moves through semantic candidates, canonical records, graph relationships, and an evidence-bound response route.</desc>
+  <style>.rsa-sans{font-family:Georgia,'Times New Roman',serif}.rsa-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.rsa-shadow{filter:drop-shadow(2px 3px 4px rgba(0,0,0,.75))}.rsa-shadow-strong{filter:drop-shadow(0 18px 30px rgba(0,0,0,.55))}.rsa-target{transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion: no-preference){@keyframes rsa_k000{0%{opacity:0;transform:translateY(-18.0px)}1.143%{opacity:0;transform:translateY(-18.0px);animation-timing-function:cubic-bezier(.33,1,.68,1)}7.81%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}.rsa_a000{animation:rsa_k000 10.5s linear 0s infinite both}@keyframes rsa_k001{0%{opacity:0;stroke-dashoffset:1}7.81%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}12.571%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a001{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k001 10.5s linear 0s infinite both}@keyframes rsa_k002{0%{opacity:0}12%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}16.571%{opacity:1}100%{opacity:1}}.rsa_a002{animation:rsa_k002 10.5s linear 0s infinite both}@keyframes rsa_k003{0%{opacity:0;stroke-dashoffset:1}10.095%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}14.857%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a003{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k003 10.5s linear 0s infinite both}@keyframes rsa_k004{0%{opacity:0}14.286%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}18.857%{opacity:1}100%{opacity:1}}.rsa_a004{animation:rsa_k004 10.5s linear 0s infinite both}@keyframes rsa_k005{0%{opacity:0;stroke-dashoffset:1}12.381%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}17.143%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a005{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k005 10.5s linear 0s infinite both}@keyframes rsa_k006{0%{opacity:0}16.571%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}21.143%{opacity:1}100%{opacity:1}}.rsa_a006{animation:rsa_k006 10.5s linear 0s infinite both}@keyframes rsa_k007{0%{opacity:0;stroke-dashoffset:1}14.667%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}19.429%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a007{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k007 10.5s linear 0s infinite both}@keyframes rsa_k008{0%{opacity:0}18.857%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}23.429%{opacity:1}100%{opacity:1}}.rsa_a008{animation:rsa_k008 10.5s linear 0s infinite both}@keyframes rsa_k009{0%{opacity:0}59.048%{opacity:0;animation-timing-function:ease-in-out}77.619%{opacity:0.24;animation-timing-function:ease-in-out}96.19%{opacity:0}100%{opacity:0}}.rsa_a009{animation:rsa_k009 10.5s linear 0s infinite both}}</style>
+  <rect width="1920" height="1080" rx="20.0" fill="#0a0705"/>
+  <rect x="629" y="119" width="662" height="222" rx="26" fill="none" stroke="#93A289" opacity="0.28" stroke-width="2.5" data-target="source-glow" class="rsa-target rsa_a009"/>
+  <g data-target="source-node" class="rsa-target rsa_a000">
+    <rect x="640" y="130" width="640" height="200" rx="14.0" fill="rgba(17,16,13,0.84)" stroke="#93A289" stroke-width="4.5"/>
+    <text x="960" y="196" class="rsa-mono rsa-shadow" font-size="36" fill="#93A289" text-anchor="middle" dominant-baseline="central">Solved this before?</text>
+    <text x="960" y="272" class="rsa-sans" font-size="26" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">memory-first recall</text>
+  </g>
+  <path d="M 960 341 V 440 H 330 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-0" class="rsa-target rsa_a001"/>
+  <path d="M 960 341 V 440 H 750 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-1" class="rsa-target rsa_a003"/>
+  <path d="M 960 341 V 440 H 1170 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-2" class="rsa-target rsa_a005"/>
+  <path d="M 960 341 V 440 H 1590 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-3" class="rsa-target rsa_a007"/>
+  <g data-target="target-card-0" class="rsa-target rsa_a002">
+    <rect x="150.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
+    <circle cx="210.0" cy="700" r="26" fill="#E0A84E"/>
+    <text x="210.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">1</text>
+    <text x="330.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">FIND RELATED</text>
+    <text x="330.0" y="820.0" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">Qdrant similarity</text>
+  </g>
+  <g data-target="target-card-1" class="rsa-target rsa_a004">
+    <rect x="570.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
+    <circle cx="630.0" cy="700" r="26" fill="#A7B89D"/>
+    <text x="630.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">2</text>
+    <text x="750.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">RESOLVE RECORDS</text>
+    <text x="750.0" y="804.4" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">ArangoDB source and</text>
+    <text x="750.0" y="835.6" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">edges</text>
+  </g>
+  <g data-target="target-card-2" class="rsa-target rsa_a006">
+    <rect x="990.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
+    <circle cx="1050.0" cy="700" r="26" fill="#93A289"/>
+    <text x="1050.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">3</text>
+    <text x="1170.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">EVIDENCE PATH</text>
+    <text x="1170.0" y="804.4" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">prior fix, file path,</text>
+    <text x="1170.0" y="835.6" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">skill chain</text>
+  </g>
+  <g data-target="target-card-3" class="rsa-target rsa_a008">
+    <rect x="1410.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
+    <circle cx="1470.0" cy="700" r="26" fill="#C8844F"/>
+    <text x="1470.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">4</text>
+    <text x="1590.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">ROUTE RESPONSE</text>
+    <text x="1590.0" y="804.4" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">answer, clarify, or</text>
+    <text x="1590.0" y="835.6" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">deflect</text>
+  </g>
+  <text x="960" y="960" class="rsa-sans" font-size="25.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central" letter-spacing="3.0">MEMORY FIRST: RELATED WORK BECOMES TRACEABLE CONTEXT BEFORE CODE SCANNING.</text>
+</svg>
