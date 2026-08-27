@@ -1,5 +1,46 @@
 # HANDOFF — live-evidence (2026-08-27, DriveWealth interview prep)
 
+## Addendum — 2026-08-27 evening session (GLM, pre-handoff)
+
+- **Prep-pack lane LANDED LOCALLY, not on origin.** The previously uncommitted
+  prep-pack work (validate_prep_pack.py, validate_precomputed_oracles.py,
+  compile_drivewealth_oracle_pack.py, prep_pack_drivewealth.json, route_plan
+  fixture blocks, 4 agentic-eval cases, run.sh/SKILL.md wiring) was reviewed,
+  validated, and committed as `cfda4a9bab` on local main. Gates proven:
+  eval-prep-pack PASS, eval-precomputed-oracles PASS, dry compile PASS
+  (10 interviews / 90 questions / 808 docs), memory write HTTP 200 + 3/3
+  recall probes, 12/12 touched tests.
+- **Push is blocked by pre-existing repo divergence, not by this skill.**
+  Local main: ahead 186 / behind 126. `git merge origin/main` refuses on 14
+  dirty files owned by unidentified lanes (incl. substantive monitor-
+  opportunities policy edits — the auto-submit standing-authorization removal).
+  Do NOT stash or reset them; incoming commit a686cb0263 also touches this
+  skill's SKILL.md, so expect a merge conflict there when integration happens.
+- **HUD verified working end-to-end, live.** Serve :8799 serves the current
+  dist (byte-identical, rebuilt 16:11, post-9bd753c0fd). Pumped DW-AI-01's 9
+  turns through POST /api/transcript → 3 cards published, all `supported` →
+  HUD rendered live: SAY ALOUD banner, answer-key card, lane badges. An idle
+  HUD (no listener, stale session) LOOKS broken — that is the "trash fire"
+  report explained. The listener was NOT running; interview day still needs:
+  `./run.sh listen --mode pipewire --backend-url http://127.0.0.1:8799 --device
+  cpu --consent-confirmed` (default backend-url 8765 = wrong service).
+- **DEFECT (unfixed): replay clobbers the active session.** `live_evidence
+  replay` (and any bare `POST /api/session/start {"consent_confirmed": false}`)
+  silently resets a live session: LISTENING·MEETING → ARMED·CONSENT NEEDED,
+  visible cards wiped, no warning. Suggested fix: 409 on active session
+  without explicit reset flag, or replay attaches to the active session.
+- **HUD session state right now is synthetic** (my replay turns + 3 demo
+  cards). Stop → Start clears it before a real session.
+- **ask skill CLI drift:** SKILL.md documents `./run.sh ask --handler <seat>
+  --execute --json`, but the installed CLI has no `--handler` option (error:
+  "No such option: --handler. Did you mean --chain?"). Reconcile docs or CLI
+  before the next consult attempt.
+- **Untouched next increment:** solver JSON deck schema — solver emits
+  {title, trigger} points; replace browser markdown parsing in
+  scannablePoints() (ui/src/components/SolutionStage.tsx:73) and
+  parseSolutionSections(). Scoped, zero code written.
+
+
 For the next agent. Everything below is receipt-backed; commands named were
 run and read back in the sessions of 2026-08-26/27. Do not trust this file
 over live state — verify with the named commands.
