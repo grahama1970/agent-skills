@@ -12,14 +12,14 @@
       <stop offset="0" stop-color="#93a289" stop-opacity="0.17"/>
       <stop offset="1" stop-color="#93a289" stop-opacity="0.05"/>
     </linearGradient>
-    <marker id="flow-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="rgba(236,226,211,0.38)"/>
+    <marker id="flow-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="rgba(236,226,211,0.38)"/>
     </marker>
-    <marker id="flow-arrow-ember" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#d1703c"/>
+    <marker id="flow-arrow-ember" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#d1703c"/>
     </marker>
-    <marker id="flow-arrow-brass" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 1 L 8 5 L 0 9 z" fill="#e2ac62"/>
+    <marker id="flow-arrow-brass" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#e2ac62"/>
     </marker>
     <filter id="soft-glow" x="-80%" y="-80%" width="260%" height="260%">
       <feGaussianBlur stdDeviation="10" result="blur"/>
