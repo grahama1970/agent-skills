@@ -1,25 +1,25 @@
 {
   "browser": {
     "animation_observed": true,
-    "changed_pixel_ratio": 0.10746654,
+    "changed_pixel_ratio": 0.06530517,
     "details": "two img-mode Chromium frames sampled 1000ms apart",
     "loaded": true,
     "natural_height": 1080,
     "natural_width": 1920,
     "status": "PASS"
   },
-  "deterministic_rebuild": true,
+  "deterministic_rebuild": null,
   "does_not_prove": "pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior",
   "findings": [],
   "kind": "readme-svg-validation.v1",
   "proof_scope": "XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion",
   "seam_validation": {
-    "kind": "scene-to-svg",
+    "kind": "svg-to-receipt",
     "status": "PASS"
   },
   "source_path": "/home/graham/workspace/experiments/agent-skills/.worktrees/grahama-project-watch-nav-20260826T232431Z/docs/assets/project-cards/memory-recall-card.svg",
-  "source_sha256": "f737c420676c5e9db3d78bb947f84b4dafcad8e087ba43baa20a0ef76f3d1a46",
+  "source_sha256": "1e71741360337ce025596149499993763998ebe0e2c80ff0e54117586dbb7527",
   "status": "PASS",
-  "theme": "grahama-memory-card-v1",
+  "theme": null,
   "tool_version": "0.1.0"
 }

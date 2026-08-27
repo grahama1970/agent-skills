@@ -1,48 +1,155 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="rsa-title rsa-desc">
-  <title id="rsa-title">Memory-first graph recall</title>
-  <desc id="rsa-desc">A user question moves through semantic candidates, canonical records, graph relationships, and an evidence-bound response route.</desc>
-  <style>.rsa-sans{font-family:Georgia,'Times New Roman',serif}.rsa-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.rsa-shadow{filter:drop-shadow(2px 3px 4px rgba(0,0,0,.75))}.rsa-shadow-strong{filter:drop-shadow(0 18px 30px rgba(0,0,0,.55))}.rsa-target{transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion: no-preference){@keyframes rsa_k000{0%{opacity:0;transform:translateY(-18.0px)}1.143%{opacity:0;transform:translateY(-18.0px);animation-timing-function:cubic-bezier(.33,1,.68,1)}7.81%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}.rsa_a000{animation:rsa_k000 10.5s linear 0s infinite both}@keyframes rsa_k001{0%{opacity:0;stroke-dashoffset:1}7.81%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}12.571%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a001{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k001 10.5s linear 0s infinite both}@keyframes rsa_k002{0%{opacity:0}12%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}16.571%{opacity:1}100%{opacity:1}}.rsa_a002{animation:rsa_k002 10.5s linear 0s infinite both}@keyframes rsa_k003{0%{opacity:0;stroke-dashoffset:1}10.095%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}14.857%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a003{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k003 10.5s linear 0s infinite both}@keyframes rsa_k004{0%{opacity:0}14.286%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}18.857%{opacity:1}100%{opacity:1}}.rsa_a004{animation:rsa_k004 10.5s linear 0s infinite both}@keyframes rsa_k005{0%{opacity:0;stroke-dashoffset:1}12.381%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}17.143%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a005{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k005 10.5s linear 0s infinite both}@keyframes rsa_k006{0%{opacity:0}16.571%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}21.143%{opacity:1}100%{opacity:1}}.rsa_a006{animation:rsa_k006 10.5s linear 0s infinite both}@keyframes rsa_k007{0%{opacity:0;stroke-dashoffset:1}14.667%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}19.429%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a007{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k007 10.5s linear 0s infinite both}@keyframes rsa_k008{0%{opacity:0}18.857%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}23.429%{opacity:1}100%{opacity:1}}.rsa_a008{animation:rsa_k008 10.5s linear 0s infinite both}@keyframes rsa_k009{0%{opacity:0}59.048%{opacity:0;animation-timing-function:ease-in-out}77.619%{opacity:0.24;animation-timing-function:ease-in-out}96.19%{opacity:0}100%{opacity:0}}.rsa_a009{animation:rsa_k009 10.5s linear 0s infinite both}}</style>
-  <rect width="1920" height="1080" rx="20.0" fill="#0a0705"/>
-  <rect x="629" y="119" width="662" height="222" rx="26" fill="none" stroke="#93A289" opacity="0.28" stroke-width="2.5" data-target="source-glow" class="rsa-target rsa_a009"/>
-  <g data-target="source-node" class="rsa-target rsa_a000">
-    <rect x="640" y="130" width="640" height="200" rx="14.0" fill="rgba(17,16,13,0.84)" stroke="#93A289" stroke-width="4.5"/>
-    <text x="960" y="196" class="rsa-mono rsa-shadow" font-size="36" fill="#93A289" text-anchor="middle" dominant-baseline="central">Solved this before?</text>
-    <text x="960" y="272" class="rsa-sans" font-size="26" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">memory-first recall</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="memory-title memory-desc">
+  <title id="memory-title">Memory-first recall trace</title>
+  <desc id="memory-desc">A bespoke memory trace showing a question resolving through semantic echoes, source records, graph context, prior fixes, and a grounded response choice.</desc>
+  <defs>
+    <radialGradient id="bg-glow" cx="50%" cy="46%" r="72%">
+      <stop offset="0%" stop-color="#1c1710"/>
+      <stop offset="48%" stop-color="#0d0906"/>
+      <stop offset="100%" stop-color="#070504"/>
+    </radialGradient>
+    <radialGradient id="gold-halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f2be67" stop-opacity="0.46"/>
+      <stop offset="42%" stop-color="#e0a84e" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#e0a84e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="green-halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a7b89d" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#a7b89d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trace-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6d5630" stop-opacity="0.14"/>
+      <stop offset="48%" stop-color="#e0a84e" stop-opacity="0.86"/>
+      <stop offset="100%" stop-color="#93a289" stop-opacity="0.46"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.44"/>
+    </filter>
+    <filter id="tiny-glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .serif { font-family: Georgia, "Times New Roman", serif; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .label { fill: #eee6d8; font-size: 31px; letter-spacing: 0.01em; }
+      .micro { fill: #a99b89; font-size: 20px; letter-spacing: 0.09em; }
+      .trace { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .node-ring { fill: #0e0a07; stroke-width: 3.5; filter: url(#soft-shadow); }
+      .pin { filter: url(#tiny-glow); }
+      @media (prefers-reduced-motion: no-preference) {
+        @keyframes trace-flow {
+          from { stroke-dashoffset: 128; }
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes breathe {
+          0%, 100% { opacity: 0.22; transform: scale(0.96); }
+          50% { opacity: 0.58; transform: scale(1.05); }
+        }
+        @keyframes enter-soft {
+          0% { opacity: 0; transform: translateY(12px); }
+          16%, 100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes amber-pulse {
+          0%, 100% { opacity: 0.52; }
+          45% { opacity: 1; }
+        }
+        .animated-flow { stroke-dasharray: 12 18; animation: trace-flow 6.4s linear infinite; }
+        .slow-flow { stroke-dasharray: 4 22; animation: trace-flow 9.6s linear infinite reverse; }
+        .halo-breathe { transform-box: fill-box; transform-origin: center; animation: breathe 5.8s ease-in-out infinite; }
+        .phase-a { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease both infinite; }
+        .phase-b { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 0.7s both infinite; }
+        .phase-c { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 1.4s both infinite; }
+        .phase-d { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 2.1s both infinite; }
+        .phase-e { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 2.8s both infinite; }
+        .pulse { animation: amber-pulse 3.6s ease-in-out infinite; }
+      }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1080" rx="28" fill="url(#bg-glow)"/>
+  <path d="M130 190 C360 82 560 152 770 96 C1020 28 1190 155 1420 94 C1575 54 1710 92 1810 168" class="trace slow-flow" stroke="#31271a" stroke-width="2.5" opacity="0.72"/>
+  <path d="M150 835 C380 920 586 808 760 902 C980 1021 1140 812 1335 874 C1510 930 1670 875 1800 812" class="trace slow-flow" stroke="#302d22" stroke-width="2" opacity="0.68"/>
+
+  <g opacity="0.42">
+    <circle cx="250" cy="245" r="2.5" fill="#e0a84e"/>
+    <circle cx="374" cy="170" r="2" fill="#93a289"/>
+    <circle cx="570" cy="250" r="2" fill="#c8844f"/>
+    <circle cx="760" cy="152" r="2.5" fill="#e0a84e"/>
+    <circle cx="1128" cy="162" r="2" fill="#93a289"/>
+    <circle cx="1412" cy="238" r="2" fill="#e0a84e"/>
+    <circle cx="1624" cy="168" r="2.5" fill="#c8844f"/>
+    <circle cx="1718" cy="302" r="2" fill="#93a289"/>
+    <circle cx="310" cy="840" r="2" fill="#93a289"/>
+    <circle cx="612" cy="910" r="2.5" fill="#e0a84e"/>
+    <circle cx="1200" cy="920" r="2" fill="#c8844f"/>
+    <circle cx="1550" cy="820" r="2.5" fill="#93a289"/>
   </g>
-  <path d="M 960 341 V 440 H 330 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-0" class="rsa-target rsa_a001"/>
-  <path d="M 960 341 V 440 H 750 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-1" class="rsa-target rsa_a003"/>
-  <path d="M 960 341 V 440 H 1170 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-2" class="rsa-target rsa_a005"/>
-  <path d="M 960 341 V 440 H 1590 V 630" fill="none" stroke="#93A289" opacity="0.9" pathLength="1" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-3" class="rsa-target rsa_a007"/>
-  <g data-target="target-card-0" class="rsa-target rsa_a002">
-    <rect x="150.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
-    <circle cx="210.0" cy="700" r="26" fill="#E0A84E"/>
-    <text x="210.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">1</text>
-    <text x="330.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">FIND RELATED</text>
-    <text x="330.0" y="820.0" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">Qdrant similarity</text>
+
+  <g class="phase-a">
+    <ellipse cx="386" cy="504" rx="172" ry="110" fill="url(#gold-halo)" class="halo-breathe"/>
+    <rect x="205" y="388" width="362" height="142" rx="18" fill="#11100d" fill-opacity="0.78" stroke="#e0a84e" stroke-opacity="0.42" stroke-width="2"/>
+    <text x="240" y="435" class="mono micro" fill="#e0a84e">USER TURN</text>
+    <text x="240" y="480" class="serif label">Have we seen</text>
+    <text x="240" y="520" class="serif label">this before?</text>
+    <path d="M238 556 H505" stroke="#e0a84e" stroke-opacity="0.36" stroke-width="2"/>
+    <text x="240" y="592" class="mono" font-size="19" fill="#a99b89">ask memory before scanning</text>
   </g>
-  <g data-target="target-card-1" class="rsa-target rsa_a004">
-    <rect x="570.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
-    <circle cx="630.0" cy="700" r="26" fill="#A7B89D"/>
-    <text x="630.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">2</text>
-    <text x="750.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">RESOLVE RECORDS</text>
-    <text x="750.0" y="804.4" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">ArangoDB source and</text>
-    <text x="750.0" y="835.6" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">edges</text>
+
+  <path d="M568 474 C675 394 788 382 904 420" class="trace" stroke="#4a3a22" stroke-width="12" opacity="0.16"/>
+  <path d="M568 474 C675 394 788 382 904 420" class="trace animated-flow" stroke="url(#trace-gold)" stroke-width="4" opacity="0.9"/>
+  <path d="M556 537 C676 654 820 662 944 608" class="trace" stroke="#4a3a22" stroke-width="10" opacity="0.13"/>
+  <path d="M556 537 C676 654 820 662 944 608" class="trace slow-flow" stroke="#93a289" stroke-width="3" opacity="0.48"/>
+
+  <g class="phase-b">
+    <circle cx="936" cy="426" r="86" fill="url(#green-halo)" class="halo-breathe"/>
+    <circle cx="936" cy="426" r="54" class="node-ring" stroke="#93a289"/>
+    <circle cx="936" cy="426" r="11" fill="#e0a84e" class="pin"/>
+    <text x="936" y="337" class="mono micro" text-anchor="middle">SEMANTIC ECHO</text>
+    <text x="936" y="522" class="serif" font-size="29" fill="#eee6d8" text-anchor="middle">similar meaning</text>
+    <text x="936" y="558" class="mono" font-size="18" fill="#a99b89" text-anchor="middle">Qdrant candidates</text>
   </g>
-  <g data-target="target-card-2" class="rsa-target rsa_a006">
-    <rect x="990.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
-    <circle cx="1050.0" cy="700" r="26" fill="#93A289"/>
-    <text x="1050.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">3</text>
-    <text x="1170.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">EVIDENCE PATH</text>
-    <text x="1170.0" y="804.4" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">prior fix, file path,</text>
-    <text x="1170.0" y="835.6" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">skill chain</text>
+
+  <g class="phase-c">
+    <circle cx="982" cy="628" r="74" fill="url(#gold-halo)" class="halo-breathe"/>
+    <circle cx="982" cy="628" r="46" class="node-ring" stroke="#e0a84e"/>
+    <path d="M962 620 H1002 M962 638 H992 M962 602 H1002" stroke="#eee6d8" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+    <text x="982" y="725" class="serif" font-size="29" fill="#eee6d8" text-anchor="middle">source record</text>
+    <text x="982" y="760" class="mono" font-size="18" fill="#a99b89" text-anchor="middle">ArangoDB document</text>
   </g>
-  <g data-target="target-card-3" class="rsa-target rsa_a008">
-    <rect x="1410.0" y="640" width="360" height="220" rx="16" fill="rgba(17,16,13,0.84)" stroke="rgba(238,230,216,0.48)" stroke-width="2.5"/>
-    <circle cx="1470.0" cy="700" r="26" fill="#C8844F"/>
-    <text x="1470.0" y="700" class="rsa-sans" font-size="34" fill="#0A0705" text-anchor="middle" dominant-baseline="central" font-weight="700">4</text>
-    <text x="1590.0" y="770" class="rsa-sans rsa-shadow" font-size="36.0" fill="#EEE6D8" text-anchor="middle" dominant-baseline="central" letter-spacing="1.0">ROUTE RESPONSE</text>
-    <text x="1590.0" y="804.4" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">answer, clarify, or</text>
-    <text x="1590.0" y="835.6" class="rsa-mono" font-size="24.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central">deflect</text>
+
+  <path d="M1014 411 C1164 336 1310 362 1428 460" class="trace" stroke="#4a3a22" stroke-width="12" opacity="0.15"/>
+  <path d="M1014 411 C1164 336 1310 362 1428 460" class="trace animated-flow" stroke="#e0a84e" stroke-width="4" opacity="0.72"/>
+  <path d="M1028 638 C1165 660 1270 590 1428 506" class="trace" stroke="#33352a" stroke-width="9" opacity="0.16"/>
+  <path d="M1028 638 C1165 660 1270 590 1428 506" class="trace slow-flow" stroke="#93a289" stroke-width="3" opacity="0.58"/>
+
+  <g class="phase-d">
+    <ellipse cx="1452" cy="488" rx="162" ry="122" fill="url(#green-halo)" class="halo-breathe"/>
+    <path d="M1362 458 C1402 394 1506 392 1548 456 C1590 520 1530 594 1452 592 C1376 590 1320 520 1362 458 Z" fill="#11100d" fill-opacity="0.72" stroke="#93a289" stroke-width="3"/>
+    <circle cx="1395" cy="463" r="12" fill="#e0a84e" class="pulse"/>
+    <circle cx="1488" cy="430" r="10" fill="#93a289"/>
+    <circle cx="1518" cy="526" r="11" fill="#c8844f"/>
+    <path d="M1395 463 C1430 442 1456 438 1488 430 M1488 430 C1510 468 1516 492 1518 526 M1395 463 C1435 500 1468 516 1518 526" fill="none" stroke="#eee6d8" stroke-opacity="0.38" stroke-width="2.5"/>
+    <text x="1452" y="646" class="serif" font-size="31" fill="#eee6d8" text-anchor="middle">graph path</text>
+    <text x="1452" y="684" class="mono" font-size="18" fill="#a99b89" text-anchor="middle">prior fix + file + skill chain</text>
   </g>
-  <text x="960" y="960" class="rsa-sans" font-size="25.0" fill="rgba(238,230,216,1)" text-anchor="middle" dominant-baseline="central" letter-spacing="3.0">MEMORY FIRST: RELATED WORK BECOMES TRACEABLE CONTEXT BEFORE CODE SCANNING.</text>
+
+  <path d="M1456 610 C1410 778 1226 820 1056 786 C862 748 710 804 590 894" class="trace" stroke="#4a3a22" stroke-width="11" opacity="0.14"/>
+  <path d="M1456 610 C1410 778 1226 820 1056 786 C862 748 710 804 590 894" class="trace animated-flow" stroke="url(#trace-gold)" stroke-width="4" opacity="0.82"/>
+
+  <g class="phase-e">
+    <rect x="454" y="832" width="728" height="126" rx="20" fill="#11100d" fill-opacity="0.76" stroke="#eee6d8" stroke-opacity="0.24" stroke-width="2"/>
+    <text x="500" y="880" class="mono micro" fill="#e0a84e">RECALL PACKET</text>
+    <text x="500" y="928" class="serif" font-size="34" fill="#eee6d8">reuse proven context or ask narrowly</text>
+    <circle cx="1130" cy="886" r="8" fill="#e0a84e" class="pulse"/>
+    <circle cx="1160" cy="886" r="8" fill="#93a289" opacity="0.72"/>
+  </g>
+
+  <g transform="translate(1340 834)" class="phase-e">
+    <text x="0" y="0" class="mono micro">MEMORY FIRST</text>
+    <text x="0" y="48" class="serif" font-size="38" fill="#eee6d8">search less.</text>
+    <text x="0" y="93" class="serif" font-size="38" fill="#eee6d8">reuse proven context.</text>
+  </g>
 </svg>
