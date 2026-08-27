@@ -494,10 +494,10 @@
           <circle cx="11" cy="22" r="2.2" fill="#93a289" stroke="none" />
           <circle cx="23" cy="22" r="2.2" fill="#93a289" stroke="none" />
         </g>
-        <text x="778" y="1099" class="sans query-text r1">CWE-23: relative path traversal…</text>
-        <text x="778" y="1099" class="sans query-text r2" opacity="0">Which system do you mean?</text>
-        <text x="778" y="1099" class="sans query-text r3" opacity="0">Draft ready for your signoff.</text>
-        <text x="778" y="1099" class="sans query-text r4" opacity="0">That's outside this project.</text>
+        <text x="778" y="1104" class="sans query-text r1">CWE-23: relative path traversal…</text>
+        <text x="778" y="1104" class="sans query-text r2" opacity="0">Which system do you mean?</text>
+        <text x="778" y="1104" class="sans query-text r3" opacity="0">Draft ready for your signoff.</text>
+        <text x="778" y="1104" class="sans query-text r4" opacity="0">That's outside this project.</text>
       </g>
     </g>
     </g>

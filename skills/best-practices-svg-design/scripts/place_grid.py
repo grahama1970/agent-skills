@@ -12,6 +12,8 @@ Usage: place_grid.py <svg> <manifest>
   edge snap so connector clearances stay exact.
 - Updates CSS transform-origin y values by their row's delta (halo/dot
   origins are element centers in local coords).
+- Applies optional per-row absolute text baselines from manifest `label_offset`
+  (row top + offset), never cumulative `label_dy` nudges.
 Exemptions (named): full-canvas rects (h>=500), the headline column group,
 defs/style blocks, relative-command paths (icons inside translated groups),
 and background divider lines (x1 == 730).
@@ -194,20 +196,24 @@ def main() -> int:
 
     walk(root)
 
-    # Optional per-row label baseline offsets (manifest "label_dy"), in local px.
-    import json as _json
-    man2 = _json.load(open(manifest_path))
-    for r in man2["rows"]:
-        dy = r.get("label_dy")
-        if not dy:
+    # Optional per-row absolute label baseline offsets (manifest "label_offset"),
+    # measured from the row top in canvas px. This is idempotent: repeated place
+    # runs set the same y, never add another nudge.
+    for r in rows_new:
+        if "label_dy" in r:
+            print("PLACING_FAIL label_dy is cumulative drift; use absolute label_offset")
+            return 1
+        if "label_offset" not in r:
             continue
-        top, bottom = float(r["y"]) - ty, float(r["y"]) - ty + float(r["h"])
+        top = float(r["y"]) - ty
+        bottom = top + float(r["h"])
+        desired = top + float(r["label_offset"])
         for t in root.iter(f"{NS}text"):
             if t.get("y") is None or t.get("transform") is not None:
                 continue
             v = float(t.get("y"))
             if top <= v <= bottom:
-                t.set("y", fmt(v + float(dy)))
+                t.set("y", fmt(desired))
 
     # CSS transform-origin y values follow their row (halo/dot origins are centers)
     style = root.find(f"{NS}defs/{NS}style")

@@ -75,6 +75,34 @@ shrunk.
 6. **Rejection means subtraction.** When a human rejects an SVG as cluttered,
    the fix is fewer elements and a narrower idea — never rearranging the same
    density.
+7. **Ambiguity blocks edits.** A screenshot with arrows/circles is a geometry
+   spec, not vibes: first name the exact relation being changed (`row gap`,
+   `label baseline`, `connector clearance`, `margin`, `ink weight`). If the
+   target is ambiguous, ask ONE blocking clarifying question and do not edit.
+   A user phrase with a question mark ("move X down 5px?") is not permission
+   to mutate until the target relation is confirmed.
+8. **No option menus after a direct visual instruction.** Convert the marked
+   defect into one deterministic relation, run the grid toolchain, and show
+   the result. Do not offer several design directions unless the human asked
+   for alternatives.
+
+## Deterministic Grid Workflow (mandatory)
+
+Every alignment/spacing fix follows this exact chain:
+
+1. Record the intended relation in the machine-readable grid manifest, using
+   absolute fields only: row `y`/`h`, `gap`, `margin`, and optional
+   `label_offset` (baseline from row top). Never store cumulative `dx`, `dy`,
+   or "move another 5px" instructions.
+2. Run `skills/best-practices-svg-design/run.sh place <svg> <grid.json>`.
+   `place` must be idempotent: running it twice produces the same coordinates.
+3. Run `grid`, `spacing`, `/create-svg validate`, and rendered `pixels
+   --manifest`. Any failure means the spec/tool is wrong; do not bypass it.
+4. Copy/install the served asset, rebuild the surface if required, read back
+   the served versioned URL/bytes, then use `/surf` on the real page. A source
+   SVG or build success is not visual proof.
+5. If the screenshot misses the marked element, say it missed; scroll/select
+   the exact `<img>` and retry once. Never present a wrong crop as evidence.
 
 ## Review Checklist (run before showing the human)
 
@@ -280,12 +308,14 @@ padding, label after them — never centered as a floating cluster.
   row on that uniform gap (memory card: 7 rows, 74px gaps). Ad-hoc gaps
   (60/108/90/38 in one column) read as drift even when each row is fine.
 - This is not advisory. Every card MAINTAINS a grid manifest next to its
-  artwork (`<card>.grid.json`: canvas, origin, rows with y+h) and every
-  layout edit ends with `scripts/check_grid.py <manifest>` printing
-  `GRID_OK` (uniform gaps within tolerance, symmetric margins). Prose
-  rules did not stop drift in the session that created this skill;
-  dozens of local coordinate nudges did the damage — only the computed
-  check catches it. Edit → update manifest → run checker → screenshot.
+  artwork (`<card>.grid.json`: canvas, origin, rows with y+h, and any
+  `label_offset` baselines) and every layout edit ends with
+  `scripts/check_grid.py <manifest>` printing `GRID_OK` (uniform gaps within
+  tolerance, symmetric margins). Prose rules did not stop drift in the session
+  that created this skill; dozens of local coordinate nudges did the damage —
+  only the computed check catches it. Edit the manifest/spec → run `place` →
+  run checker → screenshot. Raw SVG coordinate edits are allowed only inside
+  the placer or a bounded generator, never as manual layout work.
 - Horizontal: siblings share one width and one gutter; icon and label
   offsets inside a row repeat identically across that row's nodes.
 - Any row edit re-runs the grid — a moved or shrunk row must pull the rows
