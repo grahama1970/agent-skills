@@ -1725,3 +1725,31 @@ kbd {
   opacity: 0.4;
   font-size: 0.7rem;
 }
+
+/* ============ TELEPROMPTER MODE (reviewer round 3, verbatim intent) ======= */
+/* 1. This is a teleprompter, not a dashboard: kill the side feed and noise */
+.card-stream,
+.provenance-footer,
+.suggested-actions,
+.code-placeholder-empty { display: none !important; }
+
+/* 2. Narrow central teleprompter column. Root cause of the crushed layout:
+   .app-layout reserves a fixed rail track; with .card-stream hidden the
+   main stage fell into that 360px track. Single full-width track instead. */
+.app-layout { grid-template-columns: minmax(0, 1fr) !important; }
+.main-stage { max-width: 720px; margin: 0 auto; width: 100%; }
+
+/* 3. Only the active clarification survives */
+.hero-clarify-card:not(.active) { display: none !important; }
+
+/* 4. Teleprompter typography and focus dimming */
+.scannable-card {
+  background: transparent !important;
+  border-left: 6px solid #334155;
+  padding: 1rem 1.25rem;
+  opacity: 0.25;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+.scannable-card.active { opacity: 1.0; border-left-color: #facc15; }
+.card-title { font-size: 1.6rem !important; font-weight: 900 !important; color: #ffffff; }
+.card-bullet { font-size: 1.15rem !important; font-weight: 600; color: #cbd5e1; }

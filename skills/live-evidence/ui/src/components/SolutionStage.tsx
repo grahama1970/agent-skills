@@ -1,6 +1,6 @@
 import { Check, Clipboard, Code2, DatabaseZap, Pin, SearchCode, ShieldAlert, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { ScannableCardStack, ScannableCardStackWithAudio } from "./ScanCard";
+import { CardDeckMatrix, ScannableCardStackWithAudio } from "./ScanCard";
 import { useMemo, useState } from "react";
 
 import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
@@ -84,7 +84,8 @@ function scannablePoints(text: string): { header: string; bullet: string }[] {
       .slice(indices[i].start, end > 0 ? end : undefined)
       .replace(/\*\*/g, "")
       .trim();
-    points.push({ header: `${indices[i].idx}. ${indices[i].header.replace(/\*\*/g, "")}`, bullet });
+    const trigger = bullet.split(/[.;\u2014]/)[0].split(/\s+/).slice(0, 9).join(" ");
+    points.push({ header: `${indices[i].idx}. ${indices[i].header.replace(/\*\*/g, "")}`, bullet: trigger });
   }
   return points;
 }
@@ -298,7 +299,7 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss, voiceEnabled
               cards={scannablePoints(answer).map((point) => ({ title: point.header, body: point.bullet }))}
             />
           ) : (
-            <ScannableCardStack
+            <CardDeckMatrix
               cards={scannablePoints(answer).map((point) => ({ title: point.header, body: point.bullet }))}
             />
           )}
