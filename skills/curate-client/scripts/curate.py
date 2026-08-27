@@ -288,6 +288,10 @@ def cmd_research_plan(cfg: dict) -> dict:
                 f"{cfg['client']} conference talks and executive speeches",
                 f"{cfg['client']} engineering deep-dive videos",
             ],
+            "arxiv_via_dogpile": [
+                f"{cfg['client']} authored papers",
+                "domain-relevant literature scored against anchor_terms (e.g. LLM evaluation in regulated domains)",
+            ],
             "webgpt_deep_seat": [
                 f"expected interview/meeting questions about {cfg['client']} {k}"
                 for k in list(hits)[:4]
