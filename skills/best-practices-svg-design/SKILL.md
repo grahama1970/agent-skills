@@ -137,6 +137,13 @@ card dropped the service's real DRAFT route and shipped that omission until
 the human caught it. Every named element the human asked for appears, or its
 exclusion is called out explicitly at handoff.
 
+Copy is domain content too: name the pattern the way the PROJECT names it
+(the memory card's headline is "Memory first." because the README calls it
+the Memory First pattern). Clever wordplay that depends on the reader
+guessing the subject ("Ask before you scan" — ask whom?) fails the
+3-second test and misstates the architecture when read from the caller's
+perspective.
+
 ## Text Containment (no label escapes its box)
 
 - Every label must fit INSIDE its container with visible padding. Estimate
