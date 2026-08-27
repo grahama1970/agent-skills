@@ -1,5 +1,6 @@
 import { Check, Clipboard, Code2, DatabaseZap, Pin, SearchCode, ShieldAlert, X } from "lucide-react";
 import type { ReactNode } from "react";
+import { ScannableCardStack, ScannableCardStackWithAudio } from "./ScanCard";
 import { useMemo, useState } from "react";
 
 import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
@@ -11,6 +12,7 @@ interface SolutionStageProps {
   card: EvidenceCard;
   busy: boolean;
   kind: string;
+  voiceEnabled?: boolean;
   onPin: (cardId: string) => void;
   onDismiss: (cardId: string) => void;
 }
@@ -61,6 +63,30 @@ function takeaway(card: EvidenceCard): string {
   const answer = card.answer || card.talking_point;
   if (answer && answer !== "No source-bound support surfaced yet.") return answer;
   return answer || "No formatted solution is available yet.";
+}
+
+/**
+ * Reviewer directive (2026-08-27): the center pane must scan as a vertical
+ * stack of 2-3 word headers with 2-line bullets, never prose. Parse the
+ * answer's numbered/bolded structure; below two items, prose remains.
+ */
+function scannablePoints(text: string): { header: string; bullet: string }[] {
+  const points: { header: string; bullet: string }[] = [];
+  const pattern = /(?:^|\s)(\d+)\.\s+\*\*(.+?)\*\*\s*[—:-]?\s*/g;
+  const indices: { idx: number; header: string; start: number }[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(text)) !== null) {
+    indices.push({ idx: Number(match[1]), header: match[2], start: pattern.lastIndex });
+  }
+  for (let i = 0; i < indices.length; i += 1) {
+    const end = i + 1 < indices.length ? text.indexOf(`${indices[i + 1].idx}.`, indices[i].start) : text.length;
+    const bullet = text
+      .slice(indices[i].start, end > 0 ? end : undefined)
+      .replace(/\*\*/g, "")
+      .trim();
+    points.push({ header: `${indices[i].idx}. ${indices[i].header.replace(/\*\*/g, "")}`, bullet });
+  }
+  return points;
 }
 
 function coreLogicSnippet(text: string): string {
@@ -163,7 +189,7 @@ function askAnswerText(card: EvidenceCard): string {
   return askSource?.excerpt ?? "";
 }
 
-export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionStageProps) {
+export function SolutionStage({ card, busy, kind, onPin, onDismiss, voiceEnabled = false }: SolutionStageProps) {
   const [copiedInsight, setCopiedInsight] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [expandedCode, setExpandedCode] = useState(false);
@@ -265,7 +291,21 @@ export function SolutionStage({ card, busy, kind, onPin, onDismiss }: SolutionSt
         </div>
       </div>
 
-      <div className="takeaway-box" data-aoi="AOI_SOLUTION">{semanticTakeaway(answer)}</div>
+      {scannablePoints(answer).length >= 2 ? (
+        <div data-aoi="AOI_SOLUTION">
+          {voiceEnabled ? (
+            <ScannableCardStackWithAudio
+              cards={scannablePoints(answer).map((point) => ({ title: point.header, body: point.bullet }))}
+            />
+          ) : (
+            <ScannableCardStack
+              cards={scannablePoints(answer).map((point) => ({ title: point.header, body: point.bullet }))}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="takeaway-box" data-aoi="AOI_SOLUTION">{semanticTakeaway(answer)}</div>
+      )}
       {sections ? (
         <div className="solution-stages" data-aoi="AOI_SOLUTION_STAGES">
           {sections.approach ? (

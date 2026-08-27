@@ -143,11 +143,13 @@ function ActiveInsightStage({
   busy,
   onPin,
   onDismiss,
+  voiceEnabled = false,
 }: {
   card?: EvidenceCard;
   busy: boolean;
   onPin: (cardId: string) => void;
   onDismiss: (cardId: string) => void;
+  voiceEnabled?: boolean;
 }) {
   if (!card) {
     return (
@@ -189,7 +191,7 @@ function ActiveInsightStage({
         ) : null}
 
         <ClarificationCard card={card} />
-        <SolutionStage card={card} busy={busy} kind={kind} onPin={onPin} onDismiss={onDismiss} />
+        <SolutionStage card={card} busy={busy} kind={kind} onPin={onPin} onDismiss={onDismiss} voiceEnabled={voiceEnabled} />
       </div>
     </main>
   );
@@ -225,7 +227,7 @@ export function LiveMeetingSurface(props: LiveMeetingSurfaceProps) {
       <SpeechTeleprompterBar prompt={sayAloudPrompt} />
       <div className="app-layout">
         <LiveCardStream cards={props.cards} selectedCardId={props.selectedCardId} onSelectCard={props.onSelectCard} />
-        <ActiveInsightStage card={props.activeCard} busy={props.busy} onPin={props.onPin} onDismiss={props.onDismiss} />
+        <ActiveInsightStage card={props.activeCard} busy={props.busy} onPin={props.onPin} onDismiss={props.onDismiss} voiceEnabled={props.session?.policy?.voice_output === true} />
       </div>
     </div>
   );

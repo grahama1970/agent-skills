@@ -1638,3 +1638,76 @@ kbd {
     animation: none;
   }
 }
+
+/* ============================================================
+   Interview glance overlay (2026-08-27) - four directives from
+   the design reviewer, mapped onto real component classes.
+   ============================================================ */
+
+/* 1. Hide diagnostic noise; provenance reveals on hover only */
+.diag-drawer { display: none !important; }
+.evidence-card:hover .diag-drawer,
+.solution-stage:hover .diag-drawer { display: block; opacity: 0.5; font-size: 0.7rem; }
+
+/* 2. Glanceable answer hierarchy: talking points as anchor cards */
+.takeaway-box {
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: #f8fafc;
+}
+.takeaway-box p:first-child { display: none; }
+.takeaway-box li {
+  background: #1e293b;
+  border-left: 4px solid #38bdf8;
+  margin-bottom: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  font-weight: 600;
+  border-radius: 0 0.375rem 0.375rem 0;
+  list-style: none;
+}
+.takeaway-box li strong {
+  color: #38bdf8;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 3. Say-aloud banner as the immediate script line */
+.teleprompter-bar {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid #facc15;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+.hero-clarify-card {
+  background: #0f172a;
+  border: 1px solid #334155;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+}
+.hero-clarify-card:focus-within,
+.hero-clarify-card.active {
+  border-color: #facc15;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.3);
+}
+
+/* 4. Code viewport real estate */
+.code-block-container {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/* 5. Center-pane scannable card stack (reviewer directive) */
+.card-stack { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; }
+.scannable-card { background: #0f172a; border-left: 5px solid #38bdf8; border-radius: 0.375rem; padding: 0.75rem 1rem; }
+.scannable-card.active { background: #1e293b; border-left-color: #facc15; box-shadow: 0 4px 12px rgba(250, 204, 21, 0.15); }
+.scannable-card .card-header { font-size: 1.15rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.025em; margin-bottom: 0.35rem; }
+.scannable-card .card-bullet { font-size: 0.95rem; font-weight: 500; color: #cbd5e1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
