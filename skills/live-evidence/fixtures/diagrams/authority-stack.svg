@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="rsa-title rsa-desc">
+  <title id="rsa-title">Agent platform authority map</title>
+  <desc id="rsa-desc">Okta-authenticated /ask fans into four bounded authority planes</desc>
+  <style>.rsa-sans{font-family:Play,'Trebuchet MS','Segoe UI',system-ui,sans-serif}.rsa-mono{font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace}.rsa-shadow{filter:drop-shadow(2px 2px 4px rgba(0,0,0,.8))}.rsa-shadow-strong{filter:drop-shadow(3px 3px 6px rgba(0,0,0,.9))}.rsa-target{transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion: no-preference){@keyframes rsa_k000{0%{opacity:0;transform:translateY(-24.0px)}1.25%{opacity:0;transform:translateY(-24.0px);animation-timing-function:cubic-bezier(.33,1,.68,1)}7.5%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}.rsa_a000{animation:rsa_k000 12s linear 0s infinite both}@keyframes rsa_k001{0%{opacity:0;stroke-dashoffset:1}7.5%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}11.25%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a001{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k001 12s linear 0s infinite both}@keyframes rsa_k002{0%{opacity:0}11.25%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}15%{opacity:1}100%{opacity:1}}.rsa_a002{animation:rsa_k002 12s linear 0s infinite both}@keyframes rsa_k003{0%{opacity:0;stroke-dashoffset:1}9.167%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}12.917%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a003{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k003 12s linear 0s infinite both}@keyframes rsa_k004{0%{opacity:0}12.917%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}16.667%{opacity:1}100%{opacity:1}}.rsa_a004{animation:rsa_k004 12s linear 0s infinite both}@keyframes rsa_k005{0%{opacity:0;stroke-dashoffset:1}10.833%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}14.583%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a005{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k005 12s linear 0s infinite both}@keyframes rsa_k006{0%{opacity:0}14.583%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}18.333%{opacity:1}100%{opacity:1}}.rsa_a006{animation:rsa_k006 12s linear 0s infinite both}@keyframes rsa_k007{0%{opacity:0;stroke-dashoffset:1}12.5%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}16.25%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a007{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k007 12s linear 0s infinite both}@keyframes rsa_k008{0%{opacity:0}16.25%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}20%{opacity:1}100%{opacity:1}}.rsa_a008{animation:rsa_k008 12s linear 0s infinite both}}</style>
+  <rect width="1920" height="1080" rx="24.0" fill="#0d1117"/>
+  <rect x="629" y="119" width="662" height="222" rx="26" fill="none" stroke="#00F3FF" opacity="0.35" stroke-width="3.0" data-target="source-glow" class="rsa-target"/>
+  <g data-target="source-node" class="rsa-target rsa_a000">
+    <rect x="640" y="130" width="640" height="200" rx="18.0" fill="rgba(8,18,26,0.78)" stroke="#00F3FF" stroke-width="5.0"/>
+    <text x="960" y="196" class="rsa-mono rsa-shadow" font-size="36" fill="#00F3FF" text-anchor="middle" dominant-baseline="central">/ask front door</text>
+    <text x="960" y="272" class="rsa-sans" font-size="26" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">Okta principal, NL compiler, DAG emitter</text>
+  </g>
+  <path d="M 960 341 V 440 H 330 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-0" class="rsa-target rsa_a001"/>
+  <path d="M 960 341 V 440 H 750 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-1" class="rsa-target rsa_a003"/>
+  <path d="M 960 341 V 440 H 1170 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-2" class="rsa-target rsa_a005"/>
+  <path d="M 960 341 V 440 H 1590 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-3" class="rsa-target rsa_a007"/>
+  <g data-target="target-card-0" class="rsa-target rsa_a002">
+    <rect x="150.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="210.0" cy="700" r="26" fill="#00FF10"/>
+    <text x="210.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">1</text>
+    <text x="330.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">TAU</text>
+    <text x="330.0" y="803.1" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">admission, tools,</text>
+    <text x="330.0" y="836.9" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">receipts, settlement</text>
+  </g>
+  <g data-target="target-card-1" class="rsa-target rsa_a004">
+    <rect x="570.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="630.0" cy="700" r="26" fill="#00F3FF"/>
+    <text x="630.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">2</text>
+    <text x="750.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">SCILLM</text>
+    <text x="750.0" y="803.1" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">model transport,</text>
+    <text x="750.0" y="836.9" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">profiles, keys</text>
+  </g>
+  <g data-target="target-card-2" class="rsa-target rsa_a006">
+    <rect x="990.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="1050.0" cy="700" r="26" fill="#FFB020"/>
+    <text x="1050.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">3</text>
+    <text x="1170.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">MEMORY</text>
+    <text x="1170.0" y="803.1" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">recall, evidence,</text>
+    <text x="1170.0" y="836.9" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">graph</text>
+  </g>
+  <g data-target="target-card-3" class="rsa-target rsa_a008">
+    <rect x="1410.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="1470.0" cy="700" r="26" fill="#E5683C"/>
+    <text x="1470.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">4</text>
+    <text x="1590.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">TERRAFORM</text>
+    <text x="1590.0" y="803.1" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">plan hash, approval,</text>
+    <text x="1590.0" y="836.9" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">apply</text>
+  </g>
+  <text x="960" y="960" class="rsa-sans" font-size="30.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central" letter-spacing="3.0">COMPILE ABOVE, AUTHORIZE BELOW - NO PLANE SELF-CERTIFIES</text>
+</svg>

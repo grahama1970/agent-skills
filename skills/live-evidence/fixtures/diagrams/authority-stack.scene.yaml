@@ -1,0 +1,67 @@
+schema_version: 1
+theme: fixing-opus-neon-v1
+template: fanout-anatomy
+metadata:
+  title: Agent platform authority map
+  description: Okta-authenticated /ask fans into four bounded authority planes
+source:
+  title: /ask front door
+  subtitle: Okta principal, NL compiler, DAG emitter
+targets:
+  - number: 1
+    heading: TAU
+    detail: admission, tools, receipts, settlement
+    accent: green
+  - number: 2
+    heading: SCILLM
+    detail: model transport, profiles, keys
+    accent: cyan
+  - number: 3
+    heading: MEMORY
+    detail: recall, evidence, graph
+    accent: amber
+  - number: 4
+    heading: TERRAFORM
+    detail: plan hash, approval, apply
+    accent: orange
+caption: COMPILE ABOVE, AUTHORIZE BELOW - NO PLANE SELF-CERTIFIES
+timeline:
+  cycle_ms: 12000
+  events:
+    - target: source-node
+      recipe: fade-slide-y
+      start_ms: 150
+      end_ms: 900
+      from_y: -24
+    - target: connector-0
+      recipe: draw-stroke
+      start_ms: 900
+      end_ms: 1350
+    - target: target-card-0
+      recipe: fade
+      start_ms: 1350
+      end_ms: 1800
+    - target: connector-1
+      recipe: draw-stroke
+      start_ms: 1100
+      end_ms: 1550
+    - target: target-card-1
+      recipe: fade
+      start_ms: 1550
+      end_ms: 2000
+    - target: connector-2
+      recipe: draw-stroke
+      start_ms: 1300
+      end_ms: 1750
+    - target: target-card-2
+      recipe: fade
+      start_ms: 1750
+      end_ms: 2200
+    - target: connector-3
+      recipe: draw-stroke
+      start_ms: 1500
+      end_ms: 1950
+    - target: target-card-3
+      recipe: fade
+      start_ms: 1950
+      end_ms: 2400
