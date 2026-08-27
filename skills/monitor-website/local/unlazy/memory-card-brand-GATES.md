@@ -14,10 +14,10 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EXPECT: THEME_TOKENS_OK
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=5a7f1a7b6eabd1345fd6eaaae3dc4bbcaa42cfe672ddac13a9be95f4e603993b; output-bytes=16
 
-- [x] G3: rendered card passes create-svg verify with receipt
-  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && skills/create-svg/run.sh verify docs/assets/project-cards/memory-recall-card.scene.yml docs/assets/project-cards/memory-recall-card.svg --receipt docs/assets/project-cards/memory-recall-card.receipt.json >/dev/null 2>&1; python3 -c \"import json;r=json.load(open('docs/assets/project-cards/memory-recall-card.receipt.json'));print('RECEIPT_'+r['status'])\""
-  EXPECT: RECEIPT_PASS
-  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=cc85bb84056f77f0330e4296ee9d2ad177ed91398ec87dceaa161261d431f37b; output-bytes=13
+- [x] G3: adopted webgpt-v2 card passes create-svg validate (hand-authored, no scene)
+  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && skills/create-svg/run.sh validate docs/assets/project-cards/memory-recall-card.svg 2>/dev/null | tail -1"
+  EXPECT: PASS
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431; output-bytes=5
 
 - [x] G4: identical artifact installed on all four card surfaces
   CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && python3 skills/monitor-website/local/unlazy/scripts/gate_hash_check.py"

@@ -8,18 +8,18 @@
     "natural_width": 0,
     "status": "NOT_RUN"
   },
-  "deterministic_rebuild": true,
+  "deterministic_rebuild": null,
   "does_not_prove": "pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior",
   "findings": [],
   "kind": "readme-svg-validation.v1",
   "proof_scope": "XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion",
   "seam_validation": {
-    "kind": "scene-to-svg",
+    "kind": "svg-to-receipt",
     "status": "PASS"
   },
   "source_path": "/home/graham/workspace/experiments/agent-skills/docs/assets/project-cards/memory-recall-card.svg",
-  "source_sha256": "de870312afdf8442e4cb0aa4ba726f4b5e4180febd202e03582642f09325217b",
+  "source_sha256": "711a13ed7f99d85a5d4f9cddac9a23fa0807ffc584df8d4e51d91c19a317225a",
   "status": "PASS",
-  "theme": "grahama-ember-v1",
+  "theme": null,
   "tool_version": "0.1.0"
 }

@@ -109,6 +109,34 @@ accessibility.perpendicularangel.com):
 - Animated variants keep the complete composition as the reduced-motion base
   state and never gate meaning behind motion or interaction.
 
+## External / AI-Contributed SVG Intake
+
+When a human or external reviewer (WebGPT, another agent) supplies a candidate
+SVG, treat it as a design proposal to ADOPT AND HARDEN, not a rival to your own
+draft. Session-proven intake steps (grahama.co memory card, 2026-08):
+
+1. Render and screenshot it at full and slot size before judging it.
+2. Run `/create-svg validate` — external SVGs typically fail `REDUCED_MOTION`
+   because authors write motion-first CSS with a `reduce { animation: none }`
+   override. The required pattern is no-motion-first (tatianamac.com/posts/
+   prefers-reduced-motion, MDN prefers-reduced-motion): the static base state
+   is the complete composition, and every `@keyframes` and `animation:`
+   assignment lives inside `@media (prefers-reduced-motion: no-preference)`.
+3. Re-tone to the destination brand tokens (bespoke rule) — palette swap only,
+   never restructure a design the human chose.
+4. Keep the human's structure. If your earlier draft loses, it loses.
+
+## Screenshot Protocol (hard-won)
+
+- Headless Chrome at t=0 captures fade-in animations at opacity 0: pass
+  `--force-prefers-reduced-motion` for the base state, plus
+  `--virtual-time-budget` for a mid-cycle frame.
+- A window smaller than the viewBox screenshots a crop, not the card — wrap
+  the SVG in an `<img style="width:...">` page or match window to aspect.
+- After install, read back the SERVED bytes (curl + sha256 against source);
+  static exports (`site/out`) and browser caches both serve stale art. A
+  correct file on disk proves nothing about what the reader sees.
+
 ## Failure Recovery
 
 | Symptom | Action |
