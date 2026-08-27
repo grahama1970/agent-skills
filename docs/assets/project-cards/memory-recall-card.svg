@@ -1,18 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="memory-pipeline-title memory-pipeline-desc" tabindex="0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200" role="img" aria-labelledby="memory-pipeline-title memory-pipeline-desc" tabindex="0">
   <title id="memory-pipeline-title">Graph Memory evidence-first pipeline</title>
   <desc id="memory-pipeline-desc">A question passes through intent, then hybrid BM25 and Qdrant recall. Qdrant candidates resolve to canonical ArangoDB records and graph evidence. An evidence gate chooses answer, clarify, or scan fresh, while unsupported requests can deflect before recall.</desc>
 
   <defs>
-    <radialGradient id="bg-glow" cx="50%" cy="56%" r="66%">
+    <radialGradient id="bg-glow" cx="58%" cy="52%" r="66%">
       <stop offset="0" stop-color="#261f1b" stop-opacity="0.78"/>
       <stop offset="0.46" stop-color="#151210" stop-opacity="0.42"/>
       <stop offset="1" stop-color="#0c0908" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="spine-gradient" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#e2ac62"/>
-      <stop offset="0.42" stop-color="#d1703c"/>
-      <stop offset="1" stop-color="#93a289"/>
-    </linearGradient>
     <linearGradient id="answer-fill" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#93a289" stop-opacity="0.17"/>
       <stop offset="1" stop-color="#93a289" stop-opacity="0.05"/>
@@ -37,104 +32,95 @@
       }
       #memory-pipeline .eyebrow {
         fill: #e2ac62;
-        font-size: 25px;
+        font-size: 27px;
         font-weight: 760;
-        letter-spacing: 8px;
+        letter-spacing: 9px;
       }
       #memory-pipeline .headline {
         fill: #ece2d3;
-        font-size: 76px;
+        font-size: 84px;
         font-weight: 690;
         letter-spacing: -3px;
       }
       #memory-pipeline .subhead {
         fill: #a99787;
-        font-size: 27px;
+        font-size: 29px;
         font-weight: 430;
+      }
+      #memory-pipeline .footer {
+        fill: #8f7f72;
+        font-size: 22px;
+        font-weight: 480;
+        font-style: italic;
       }
       #memory-pipeline .step {
         fill: #8f7f72;
-        font-size: 16px;
+        font-size: 19px;
         font-weight: 760;
         letter-spacing: 3px;
       }
       #memory-pipeline .stage-name {
         fill: #ece2d3;
-        font-size: 25px;
+        font-size: 31px;
         font-weight: 760;
         letter-spacing: 2px;
       }
       #memory-pipeline .stage-note {
         fill: #a99787;
-        font-size: 17px;
+        font-size: 20px;
         font-weight: 480;
       }
       #memory-pipeline .query-label {
         fill: #e2ac62;
-        font-size: 17px;
+        font-size: 19px;
         font-weight: 760;
         letter-spacing: 3px;
       }
       #memory-pipeline .query-text {
         fill: #ece2d3;
-        font-size: 29px;
+        font-size: 33px;
         font-weight: 570;
       }
       #memory-pipeline .token-label {
         fill: #93a289;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 730;
         letter-spacing: 2px;
       }
       #memory-pipeline .gate-name {
         fill: #ece2d3;
-        font-size: 21px;
+        font-size: 26px;
         font-weight: 760;
         letter-spacing: 3px;
       }
       #memory-pipeline .gate-note {
         fill: #a99787;
-        font-size: 17px;
+        font-size: 20px;
         font-weight: 480;
       }
       #memory-pipeline .outcome-name {
         fill: #ece2d3;
-        font-size: 22px;
+        font-size: 26px;
         font-weight: 760;
         letter-spacing: 2px;
       }
       #memory-pipeline .outcome-note {
         fill: #a99787;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 490;
       }
       #memory-pipeline .aside-name {
         fill: #a99787;
-        font-size: 17px;
+        font-size: 20px;
         font-weight: 720;
         letter-spacing: 2px;
       }
       #memory-pipeline .aside-note {
         fill: #8f7f72;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 470;
       }
-      #memory-pipeline .footer {
-        fill: #a99787;
-        font-size: 19px;
-        font-weight: 480;
-      }
 
-      #memory-pipeline .ambient {
-        fill: none;
-        stroke: #292521;
-        stroke-width: 1.5;
-        opacity: 0.5;
-      }
-      #memory-pipeline .ambient-node {
-        fill: #292521;
-        opacity: 0.58;
-      }
       #memory-pipeline .panel {
         fill: rgba(18, 17, 15, 0.86);
         stroke: rgba(236, 226, 211, 0.16);
@@ -167,7 +153,6 @@
       }
       #memory-pipeline .flow-path {
         fill: none;
-        stroke: url(#spine-gradient);
         stroke-width: 4;
         stroke-linecap: round;
         stroke-linejoin: round;
@@ -251,163 +236,163 @@
         stroke-width: 1.5;
       }
       #memory-pipeline .active-dot { fill: #93a289; }
-      #memory-pipeline .branch-dot { fill: #39332e; }
       #memory-pipeline .deflect-dot { fill: #8f7f72; }
 
-
       @media (prefers-reduced-motion: no-preference) {
-      @keyframes draw-query {
-        0%, 4% { stroke-dashoffset: 1; opacity: 0; }
-        14%, 28% { stroke-dashoffset: 0; opacity: 1; }
-        36%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-      }
-      @keyframes pulse-intent {
-        0%, 8%, 100% { opacity: 0; transform: scale(0.96); }
-        16%, 28% { opacity: 0.75; transform: scale(1); }
-        36% { opacity: 0.12; transform: scale(1.04); }
-      }
-      @keyframes draw-split {
-        0%, 18% { stroke-dashoffset: 1; opacity: 0; }
-        32%, 46% { stroke-dashoffset: 0; opacity: 1; }
-        54%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-      }
-      @keyframes pulse-recall {
-        0%, 22%, 100% { opacity: 0; transform: scale(0.97); }
-        32%, 47% { opacity: 0.72; transform: scale(1); }
-        55% { opacity: 0.10; transform: scale(1.03); }
-      }
-      @keyframes draw-merge {
-        0%, 36% { stroke-dashoffset: 1; opacity: 0; }
-        50%, 62% { stroke-dashoffset: 0; opacity: 1; }
-        70%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-      }
-      @keyframes pulse-record {
-        0%, 42%, 100% { opacity: 0; transform: scale(0.98); }
-        52%, 68% { opacity: 0.7; transform: scale(1); }
-        76% { opacity: 0.10; transform: scale(1.035); }
-      }
-      @keyframes proof-on {
-        0%, 52%, 100% { opacity: 0.35; }
-        62%, 76% { opacity: 1; }
-        84% { opacity: 0.48; }
-      }
-      @keyframes draw-gate {
-        0%, 58% { stroke-dashoffset: 1; opacity: 0; }
-        72%, 84% { stroke-dashoffset: 0; opacity: 1; }
-        92%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-      }
-      @keyframes pulse-gate {
-        0%, 62%, 100% { opacity: 0; transform: scale(0.9); }
-        74%, 88% { opacity: 0.8; transform: scale(1); }
-        96% { opacity: 0.14; transform: scale(1.06); }
-      }
-      @keyframes answer-on {
-        0%, 72%, 100% { opacity: 0.48; }
-        84%, 96% { opacity: 1; }
-      }
-      @keyframes query-dot {
-        0%, 2% { transform: scale(0.7); opacity: 0.3; }
-        10%, 22% { transform: scale(1.25); opacity: 1; }
-        32%, 100% { transform: scale(1); opacity: 0.55; }
-      }
-
-      #memory-pipeline .query-flow { animation: draw-query 9s ease-in-out infinite; }
-      #memory-pipeline .intent-halo {
-        transform-origin: 960px 452px;
-        animation: pulse-intent 9s ease-in-out infinite;
-      }
-      #memory-pipeline .split-flow { animation: draw-split 9s ease-in-out infinite; }
-      #memory-pipeline .bm25-halo {
-        transform-origin: 800px 566px;
-        animation: pulse-recall 9s ease-in-out infinite;
-      }
-      #memory-pipeline .qdrant-halo {
-        transform-origin: 1120px 566px;
-        animation: pulse-recall 9s ease-in-out infinite;
-        animation-delay: 0.18s;
-      }
-      #memory-pipeline .merge-flow { animation: draw-merge 9s ease-in-out infinite; }
-      #memory-pipeline .record-halo {
-        transform-origin: 960px 688px;
-        animation: pulse-record 9s ease-in-out infinite;
-      }
-      #memory-pipeline .proof-1 { animation: proof-on 9s ease-in-out infinite; }
-      #memory-pipeline .proof-2 { animation: proof-on 9s ease-in-out infinite; animation-delay: 0.18s; }
-      #memory-pipeline .proof-3 { animation: proof-on 9s ease-in-out infinite; animation-delay: 0.36s; }
-      #memory-pipeline .gate-flow { animation: draw-gate 9s ease-in-out infinite; }
-      #memory-pipeline .gate-halo {
-        transform-origin: 960px 818px;
-        animation: pulse-gate 9s ease-in-out infinite;
-      }
-      #memory-pipeline .answer-state { animation: answer-on 9s ease-in-out infinite; }
-      #memory-pipeline .query-dot { transform-origin: 696px 336px; animation: query-dot 9s ease-in-out infinite; }
+        @keyframes draw-query {
+          0%, 4% { stroke-dashoffset: 1; opacity: 0; }
+          14%, 28% { stroke-dashoffset: 0; opacity: 1; }
+          36%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
+        }
+        @keyframes pulse-intent {
+          0%, 8%, 100% { opacity: 0; transform: scale(0.96); }
+          16%, 28% { opacity: 0.75; transform: scale(1); }
+          36% { opacity: 0.12; transform: scale(1.04); }
+        }
+        @keyframes draw-split {
+          0%, 18% { stroke-dashoffset: 1; opacity: 0; }
+          32%, 46% { stroke-dashoffset: 0; opacity: 1; }
+          54%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
+        }
+        @keyframes pulse-recall {
+          0%, 22%, 100% { opacity: 0; transform: scale(0.97); }
+          32%, 47% { opacity: 0.72; transform: scale(1); }
+          55% { opacity: 0.10; transform: scale(1.03); }
+        }
+        @keyframes draw-merge {
+          0%, 36% { stroke-dashoffset: 1; opacity: 0; }
+          50%, 62% { stroke-dashoffset: 0; opacity: 1; }
+          70%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
+        }
+        @keyframes pulse-record {
+          0%, 42%, 100% { opacity: 0; transform: scale(0.98); }
+          52%, 68% { opacity: 0.7; transform: scale(1); }
+          76% { opacity: 0.10; transform: scale(1.035); }
+        }
+        @keyframes proof-on {
+          0%, 52%, 100% { opacity: 0.35; }
+          62%, 76% { opacity: 1; }
+          84% { opacity: 0.48; }
+        }
+        @keyframes draw-gate {
+          0%, 58% { stroke-dashoffset: 1; opacity: 0; }
+          72%, 84% { stroke-dashoffset: 0; opacity: 1; }
+          92%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
+        }
+        @keyframes pulse-gate {
+          0%, 62%, 100% { opacity: 0; transform: scale(0.9); }
+          74%, 88% { opacity: 0.8; transform: scale(1); }
+          96% { opacity: 0.14; transform: scale(1.06); }
+        }
+        @keyframes answer-on {
+          0%, 72%, 100% { opacity: 0.48; }
+          84%, 96% { opacity: 1; }
+        }
+        @keyframes query-dot {
+          0%, 2% { transform: scale(0.7); opacity: 0.3; }
+          10%, 22% { transform: scale(1.25); opacity: 1; }
+          32%, 100% { transform: scale(1); opacity: 0.55; }
+        }
+        #memory-pipeline .query-flow { animation: draw-query 9s ease-in-out infinite; }
+        #memory-pipeline .intent-halo {
+          transform-origin: 1070px 317px;
+          animation: pulse-intent 9s ease-in-out infinite;
+        }
+        #memory-pipeline .split-flow { animation: draw-split 9s ease-in-out infinite; }
+        #memory-pipeline .bm25-halo {
+          transform-origin: 900px 498px;
+          animation: pulse-recall 9s ease-in-out infinite;
+        }
+        #memory-pipeline .qdrant-halo {
+          transform-origin: 1240px 498px;
+          animation: pulse-recall 9s ease-in-out infinite;
+          animation-delay: 0.18s;
+        }
+        #memory-pipeline .merge-flow { animation: draw-merge 9s ease-in-out infinite; }
+        #memory-pipeline .record-halo {
+          transform-origin: 1070px 673px;
+          animation: pulse-record 9s ease-in-out infinite;
+        }
+        #memory-pipeline .proof-1 { animation: proof-on 9s ease-in-out infinite; }
+        #memory-pipeline .proof-2 { animation: proof-on 9s ease-in-out infinite; animation-delay: 0.18s; }
+        #memory-pipeline .proof-3 { animation: proof-on 9s ease-in-out infinite; animation-delay: 0.36s; }
+        #memory-pipeline .gate-flow { animation: draw-gate 9s ease-in-out infinite; }
+        #memory-pipeline .gate-halo {
+          transform-origin: 1070px 866px;
+          animation: pulse-gate 9s ease-in-out infinite;
+        }
+        #memory-pipeline .answer-state { animation: answer-on 9s ease-in-out infinite; }
+        #memory-pipeline .query-dot { transform-origin: 806px 172px; animation: query-dot 9s ease-in-out infinite; }
       }
     </style>
   </defs>
 
   <g id="memory-pipeline">
-    <rect width="1920" height="1080" fill="#0c0908"/>
-    <rect width="1920" height="1080" fill="url(#bg-glow)"/>
+    <rect width="1920" height="1200" fill="#0c0908"/>
+    <rect width="1920" height="1200" fill="url(#bg-glow)"/>
 
     <g aria-label="Card heading">
-      <text x="520" y="120" class="sans eyebrow">GRAPH MEMORY</text>
-      <text x="520" y="208" class="sans headline">Ask before you scan.</text>
-      <text x="520" y="258" class="sans subhead">Intent routes. Hybrid recall finds. Evidence decides.</text>
+      <text x="110" y="480" class="sans eyebrow">GRAPH MEMORY</text>
+      <text x="106" y="570" class="sans headline">Ask before</text>
+      <text x="106" y="660" class="sans headline">you scan.</text>
+      <text x="110" y="728" class="sans subhead">Intent routes. Hybrid recall finds.</text>
+      <text x="110" y="766" class="sans subhead">Evidence decides.</text>
+      <text x="110" y="838" class="sans footer">A semantic match is a lead—not proof.</text>
     </g>
 
     <g aria-label="Example question">
-      <rect x="650" y="300" width="620" height="72" rx="36" class="query-shell"/>
-      <circle cx="696" cy="336" r="7" fill="#e2ac62" class="query-dot"/>
-      <text x="720" y="342" class="mono query-label">QUERY</text>
-      <text x="824" y="344" class="sans query-text">Have we fixed this before?</text>
+      <rect x="760" y="130" width="620" height="84" rx="42" class="query-shell"/>
+      <circle cx="806" cy="172" r="7" fill="#e2ac62" class="query-dot"/>
+      <text x="830" y="179" class="mono query-label">QUERY</text>
+      <text x="936" y="183" class="sans query-text">Have we fixed this before?</text>
     </g>
 
     <g aria-label="Intent stage">
-      <path d="M960 372 V408" class="base-path"/>
-      <path d="M960 372 V408" class="flow-path flow-amber query-flow" pathLength="1"/>
+      <path d="M1070 214 V268" class="base-path"/>
+      <path d="M1070 214 V268" class="flow-path flow-amber query-flow" pathLength="1"/>
 
-      <rect x="780" y="410" width="360" height="84" rx="24" class="stage-halo halo-amber intent-halo" filter="url(#soft-glow)"/>
-      <rect x="790" y="418" width="340" height="68" rx="20" class="panel"/>
-      <g transform="translate(822 438)" aria-hidden="true">
+      <rect x="850" y="266" width="440" height="102" rx="26" class="stage-halo halo-amber intent-halo" filter="url(#soft-glow)"/>
+      <rect x="860" y="274" width="420" height="86" rx="22" class="panel"/>
+      <g transform="translate(896 300)" aria-hidden="true">
         <circle cx="16" cy="14" r="12" class="intent-mark"/>
         <path d="M16 2 V8 M16 20 V26 M4 14 H10 M22 14 H28" class="intent-mark" opacity="0.68"/>
         <circle cx="16" cy="14" r="3.5" fill="#e2ac62"/>
       </g>
-      <text x="872" y="444" class="mono step">01 · UNDERSTAND</text>
-      <text x="872" y="471" class="mono stage-name">INTENT</text>
-      <text x="1000" y="471" class="sans stage-note">route before recall</text>
+      <text x="956" y="308" class="mono step">01 · UNDERSTAND</text>
+      <text x="956" y="344" class="mono stage-name">INTENT</text>
+      <text x="1108" y="342" class="sans stage-note">route before recall</text>
 
-      <path d="M1130 452 H1228" class="base-path-faint"/>
-      <circle cx="1178" cy="452" r="4" class="deflect-dot"/>
+      <path d="M1290 317 H1400" class="base-path-faint"/>
+      <circle cx="1345" cy="317" r="4" class="deflect-dot"/>
       <g aria-label="Deflect branch">
-        <rect x="1228" y="422" width="202" height="60" rx="18" class="panel-soft"/>
-        <circle cx="1252" cy="443" r="5" class="deflect-dot"/>
-        <text x="1270" y="449" class="mono aside-name">DEFLECT</text>
-        <text x="1252" y="470" class="sans aside-note">off-topic or unsupported</text>
+        <rect x="1400" y="280" width="280" height="74" rx="20" class="panel-soft"/>
+        <circle cx="1430" cy="306" r="5" class="deflect-dot"/>
+        <text x="1450" y="313" class="mono aside-name">DEFLECT</text>
+        <text x="1430" y="340" class="sans aside-note">off-topic or unsupported</text>
       </g>
     </g>
 
     <g aria-label="Hybrid recall stage">
-      <path d="M960 486 V512 C960 528 944 536 926 536 H800 V530" class="base-path"/>
-      <path d="M960 486 V512 C960 528 976 536 994 536 H1120 V530" class="base-path"/>
-      <path d="M960 486 V512 C960 528 944 536 926 536 H800 V530" class="flow-path flow-amber split-flow" pathLength="1"/>
-      <path d="M960 486 V512 C960 528 976 536 994 536 H1120 V530" class="flow-path flow-violet split-flow" pathLength="1"/>
+      <path d="M1070 360 V400 C1070 418 1050 426 1028 426 H900 V442" class="base-path"/>
+      <path d="M1070 360 V400 C1070 418 1090 426 1112 426 H1240 V442" class="base-path"/>
+      <path d="M1070 360 V400 C1070 418 1050 426 1028 426 H900 V442" class="flow-path flow-amber split-flow" pathLength="1"/>
+      <path d="M1070 360 V400 C1070 418 1090 426 1112 426 H1240 V442" class="flow-path flow-violet split-flow" pathLength="1"/>
 
-      <rect x="640" y="526" width="320" height="84" rx="24" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)"/>
-      <rect x="650" y="534" width="300" height="68" rx="20" class="panel"/>
-      <g transform="translate(684 550)" aria-hidden="true">
+      <rect x="730" y="442" width="340" height="112" rx="26" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)"/>
+      <rect x="740" y="450" width="320" height="96" rx="22" class="panel"/>
+      <g transform="translate(776 478)" aria-hidden="true">
         <line x1="0" y1="4" x2="35" y2="4" class="bm25-line" opacity="0.45"/>
         <line x1="0" y1="14" x2="46" y2="14" class="bm25-line"/>
         <line x1="0" y1="24" x2="27" y2="24" class="bm25-line" opacity="0.68"/>
         <line x1="0" y1="34" x2="40" y2="34" class="bm25-line" opacity="0.35"/>
       </g>
-      <text x="752" y="558" class="mono step">02A · EXACT</text>
-      <text x="752" y="585" class="mono stage-name">BM25</text>
-      <text x="848" y="585" class="sans stage-note">exact terms</text>
+      <text x="848" y="488" class="mono step">02A · EXACT</text>
+      <text x="848" y="526" class="mono stage-name">BM25</text>
+      <text x="952" y="524" class="sans stage-note">exact terms</text>
 
-      <rect x="960" y="526" width="320" height="84" rx="24" class="stage-halo halo-violet qdrant-halo" filter="url(#soft-glow)"/>
-      <rect x="970" y="534" width="300" height="68" rx="20" class="panel"/>
-      <g transform="translate(1002 548)" aria-hidden="true">
+      <rect x="1070" y="442" width="340" height="112" rx="26" class="stage-halo halo-violet qdrant-halo" filter="url(#soft-glow)"/>
+      <rect x="1080" y="450" width="320" height="96" rx="22" class="panel"/>
+      <g transform="translate(1112 476)" aria-hidden="true">
         <line x1="8" y1="10" x2="28" y2="4" class="q-edge"/>
         <line x1="28" y1="4" x2="42" y2="20" class="q-edge"/>
         <line x1="8" y1="10" x2="18" y2="30" class="q-edge"/>
@@ -417,20 +402,20 @@
         <circle cx="42" cy="20" r="4" class="q-node"/>
         <circle cx="18" cy="30" r="4" class="q-node"/>
       </g>
-      <text x="1058" y="558" class="mono step">02B · SEMANTIC</text>
-      <text x="1058" y="585" class="mono stage-name">QDRANT</text>
-      <text x="1164" y="585" class="sans stage-note">candidates</text>
+      <text x="1176" y="488" class="mono step">02B · SEMANTIC</text>
+      <text x="1176" y="526" class="mono stage-name">QDRANT</text>
+      <text x="1318" y="524" class="sans stage-note">candidates</text>
     </g>
 
     <g aria-label="Canonical record and graph evidence stage">
-      <path d="M800 602 V618 C800 632 814 640 830 640 H902" class="base-path"/>
-      <path d="M1120 602 V618 C1120 632 1106 640 1090 640 H1018" class="base-path"/>
-      <path d="M800 602 V618 C800 632 814 640 830 640 H902" class="flow-path flow-amber merge-flow" pathLength="1"/>
-      <path d="M1120 602 V618 C1120 632 1106 640 1090 640 H1018" class="flow-path flow-violet merge-flow" pathLength="1"/>
+      <path d="M900 546 V576 C900 594 918 602 938 602 H1010" class="base-path"/>
+      <path d="M1240 546 V576 C1240 594 1222 602 1202 602 H1130" class="base-path"/>
+      <path d="M900 546 V576 C900 594 918 602 938 602 H1010" class="flow-path flow-amber merge-flow" pathLength="1"/>
+      <path d="M1240 546 V576 C1240 594 1222 602 1202 602 H1130" class="flow-path flow-violet merge-flow" pathLength="1"/>
 
-      <rect x="744" y="632" width="432" height="120" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)"/>
-      <rect x="758" y="642" width="404" height="96" rx="26" class="panel"/>
-      <g transform="translate(790 664)" aria-hidden="true">
+      <rect x="820" y="608" width="500" height="130" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)"/>
+      <rect x="834" y="616" width="472" height="114" rx="26" class="panel"/>
+      <g transform="translate(872 644)" aria-hidden="true">
         <line x1="8" y1="10" x2="32" y2="4" class="graph-edge"/>
         <line x1="32" y1="4" x2="45" y2="24" class="graph-edge"/>
         <line x1="8" y1="10" x2="18" y2="34" class="graph-edge"/>
@@ -440,70 +425,68 @@
         <circle cx="45" cy="24" r="5" class="graph-node"/>
         <circle cx="18" cy="34" r="5" class="graph-node"/>
       </g>
-      <text x="850" y="670" class="mono step">03 · RESOLVE</text>
-      <text x="862" y="700" class="mono stage-name">ARANGODB</text>
-      <text x="862" y="724" class="sans stage-note">canonical record · graph evidence</text>
+      <text x="944" y="654" class="mono step">03 · RESOLVE</text>
+      <text x="944" y="690" class="mono stage-name">ARANGODB</text>
+      <text x="944" y="718" class="sans stage-note">canonical record · graph evidence</text>
 
       <g class="proof-1" aria-label="Source evidence">
-        <path d="M840 738 V758" class="graph-edge"/>
-        <rect x="788" y="758" width="104" height="36" rx="18" class="token"/>
-        <circle cx="810" cy="776" r="4" fill="#93a289"/>
-        <text x="824" y="781" class="mono token-label">SOURCE</text>
+        <path d="M920 730 V764" class="graph-edge"/>
+        <rect x="858" y="764" width="124" height="42" rx="21" class="token"/>
+        <circle cx="884" cy="785" r="4" fill="#93a289"/>
+        <text x="900" y="791" class="mono token-label">SOURCE</text>
       </g>
       <g class="proof-2" aria-label="Graph path evidence">
-        <path d="M960 738 V758" class="graph-edge"/>
-        <rect x="914" y="758" width="92" height="36" rx="18" class="token"/>
-        <circle cx="935" cy="776" r="4" fill="#93a289"/>
-        <text x="949" y="781" class="mono token-label">PATH</text>
+        <path d="M1070 730 V764" class="graph-edge"/>
+        <rect x="1016" y="764" width="108" height="42" rx="21" class="token"/>
+        <circle cx="1042" cy="785" r="4" fill="#93a289"/>
+        <text x="1058" y="791" class="mono token-label">PATH</text>
       </g>
       <g class="proof-3" aria-label="Receipt evidence">
-        <path d="M1080 738 V758" class="graph-edge"/>
-        <rect x="1028" y="758" width="112" height="36" rx="18" class="token"/>
-        <circle cx="1050" cy="776" r="4" fill="#93a289"/>
-        <text x="1064" y="781" class="mono token-label">RECEIPT</text>
+        <path d="M1220 730 V764" class="graph-edge"/>
+        <rect x="1158" y="764" width="132" height="42" rx="21" class="token"/>
+        <circle cx="1184" cy="785" r="4" fill="#93a289"/>
+        <text x="1200" y="791" class="mono token-label">RECEIPT</text>
       </g>
     </g>
 
     <g aria-label="Evidence gate">
-      <path d="M960 794 V808" class="base-path"/>
-      <path d="M960 794 V808" class="flow-path flow-mint gate-flow" pathLength="1"/>
-      <circle cx="960" cy="818" r="34" class="stage-halo halo-mint gate-halo" filter="url(#soft-glow)"/>
-      <line x1="760" y1="818" x2="928" y2="818" class="gate-line"/>
-      <line x1="992" y1="818" x2="1160" y2="818" class="gate-line"/>
-      <circle cx="960" cy="818" r="22" class="gate-ring"/>
-      <path d="M951 818 L958 825 L971 810" class="gate-check"/>
-      <text x="960" y="858" text-anchor="middle" class="mono gate-name">04 · EVIDENCE GATE</text>
-      <text x="960" y="880" text-anchor="middle" class="sans gate-note">candidate → supported memory</text>
+      <path d="M1070 806 V836" class="base-path"/>
+      <path d="M1070 806 V836" class="flow-path flow-mint gate-flow" pathLength="1"/>
+      <circle cx="1070" cy="866" r="38" class="stage-halo halo-mint gate-halo" filter="url(#soft-glow)"/>
+      <line x1="830" y1="866" x2="1034" y2="866" class="gate-line"/>
+      <line x1="1106" y1="866" x2="1310" y2="866" class="gate-line"/>
+      <circle cx="1070" cy="866" r="24" class="gate-ring"/>
+      <path d="M1060 866 L1068 874 L1082 858" class="gate-check"/>
+      <text x="1070" y="932" text-anchor="middle" class="mono gate-name">04 · EVIDENCE GATE</text>
+      <text x="1070" y="960" text-anchor="middle" class="sans gate-note">candidate → supported memory</text>
     </g>
 
     <g aria-label="Bounded outcomes">
-      <path d="M960 840 V890 H752 V900" class="base-path"/>
-      <path d="M960 840 V900" class="base-path"/>
-      <path d="M960 840 V890 H1182 V900" class="base-path"/>
-      <path d="M960 840 V890 H752 V900" class="flow-path flow-mint gate-flow" pathLength="1"/>
+      <path d="M1070 890 V986 H796 V1000" class="base-path"/>
+      <path d="M1070 976 V1000" class="base-path"/>
+      <path d="M1070 890 V986 H1344 V1000" class="base-path"/>
+      <path d="M1070 890 V986 H796 V1000" class="flow-path flow-mint gate-flow" pathLength="1"/>
 
       <g class="answer-state" aria-label="Answer outcome">
-        <rect x="638" y="902" width="228" height="78" rx="22" class="answer-shell"/>
-        <circle cx="674" cy="930" r="6" class="active-dot"/>
-        <text x="696" y="938" class="mono outcome-name">ANSWER</text>
-        <text x="674" y="962" class="sans outcome-note">evidence holds</text>
+        <rect x="650" y="1000" width="292" height="92" rx="24" class="answer-shell"/>
+        <circle cx="692" cy="1034" r="6" class="active-dot"/>
+        <text x="716" y="1043" class="mono outcome-name">ANSWER</text>
+        <text x="692" y="1072" class="sans outcome-note">evidence holds</text>
       </g>
 
       <g aria-label="Clarify outcome">
-        <rect x="872" y="902" width="206" height="78" rx="22" class="clarify-shell"/>
-        <circle cx="905" cy="930" r="5" fill="#e2ac62" opacity="0.55"/>
-        <text x="925" y="938" class="mono outcome-name">CLARIFY</text>
-        <text x="905" y="962" class="sans outcome-note">ask one question</text>
+        <rect x="962" y="1000" width="272" height="92" rx="24" class="clarify-shell"/>
+        <circle cx="1000" cy="1034" r="5" fill="#e2ac62" opacity="0.55"/>
+        <text x="1022" y="1043" class="mono outcome-name">CLARIFY</text>
+        <text x="1000" y="1072" class="sans outcome-note">ask one question</text>
       </g>
 
       <g aria-label="Scan fresh outcome">
-        <rect x="1084" y="902" width="250" height="78" rx="22" class="scan-shell"/>
-        <circle cx="1118" cy="930" r="5" fill="#d1703c" opacity="0.5"/>
-        <text x="1138" y="938" class="mono outcome-name">SCAN FRESH</text>
-        <text x="1118" y="962" class="sans outcome-note">verify + learn back</text>
+        <rect x="1254" y="1000" width="320" height="92" rx="24" class="scan-shell"/>
+        <circle cx="1294" cy="1034" r="5" fill="#d1703c" opacity="0.5"/>
+        <text x="1316" y="1043" class="mono outcome-name">SCAN FRESH</text>
+        <text x="1294" y="1072" class="sans outcome-note">verify + learn back</text>
       </g>
     </g>
-
-    <text x="960" y="1035" text-anchor="middle" class="sans footer">A semantic match is a lead—not proof.</text>
   </g>
 </svg>
