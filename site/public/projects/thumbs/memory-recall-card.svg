@@ -344,6 +344,9 @@
       <text x="110" y="880" class="sans footer">A semantic match is a lead—not proof.</text>
     </g>
 
+    <line x1="730" y1="340" x2="730" y2="1080" stroke="rgba(236,226,211,0.07)" stroke-dasharray="4 10" stroke-width="1.5"/>
+
+    <g transform="translate(200 0)">
     <g aria-label="Example question">
       <rect x="760" y="130" width="620" height="84" rx="42" class="query-shell"/>
       <circle cx="806" cy="172" r="7" fill="#e2ac62" class="query-dot"/>
@@ -499,6 +502,7 @@
         <text x="1414" y="1075" class="mono outcome-name">SCAN FRESH</text>
         <text x="1392" y="1104" class="sans outcome-note">verify + learn back</text>
       </g>
+    </g>
     </g>
   </g>
 </svg>
