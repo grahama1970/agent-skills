@@ -126,6 +126,31 @@ draft. Session-proven intake steps (grahama.co memory card, 2026-08):
    never restructure a design the human chose.
 4. Keep the human's structure. If your earlier draft loses, it loses.
 
+## Domain Completeness (verify content against source truth)
+
+A diagram of a system is a CLAIM about that system. Before accepting any
+design — your own or an external contributor's — enumerate the domain's real
+elements from source (routes, states, stages: grep the enums, endpoints, and
+route emitters) and diff the diagram against that list. Adopting an external
+design does not transfer responsibility for its accuracy: WebGPT's memory
+card dropped the service's real DRAFT route and shipped that omission until
+the human caught it. Every named element the human asked for appears, or its
+exclusion is called out explicitly at handoff.
+
+## Text Containment (no label escapes its box)
+
+- Every label must fit INSIDE its container with visible padding. Estimate
+  before authoring: mono ≈ 0.62em/char, sans ≈ 0.5em/char, plus
+  letter-spacing; if `label_px + gap + note_px > panel_width - 2*padding`,
+  restructure — never let it ride.
+- Inline name+note pairs on one baseline are the primary overflow source.
+  Default to stacking: step line, name line, note line, each starting at the
+  same left edge, panel height grown to fit.
+- The mandatory screenshot inspection includes a containment sweep: check
+  every label's right edge against its panel edge at full size. "Roughly
+  fits" at authoring time is how "candidates" ended up outside the QDRANT
+  panel.
+
 ## Slot Contract (read the CSS before authoring)
 
 Before choosing a viewBox, read the destination slot's CSS: its
