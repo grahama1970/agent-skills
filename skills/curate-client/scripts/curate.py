@@ -271,11 +271,29 @@ def cmd_research_plan(cfg: dict) -> dict:
         ],
         "interview_packet": {"title": f"{cfg['client']} coverage interview",
                              "questions": questions},
-        "deep_research_directives": [
-            f"dogpile: {cfg['client']} {k} integration architecture"
-            for k in hits
-        ] + [f"webgpt: expected interview/meeting questions about {cfg['client']} {k}"
-             for k in list(hits)[:4]],
+        "deep_research_directives": {
+            "brave_search_concurrent": [
+                f"{cfg['client']} {k} architecture" for k in hits
+            ] + [f"{cfg['client']} engineering blog",
+                 f"{cfg['client']} CTO OR 'VP engineering' talk"],
+            "fetcher_or_surf_sites": [
+                "client developer docs and llms.txt index",
+                "client engineering blog posts found by brave",
+            ],
+            "github_search_or_gh": [
+                f"org:{cfg['client']} repos, languages, infra forks",
+                f"{cfg['client']} in READMEs of popular integration repos",
+            ],
+            "ingest_youtube": [
+                f"{cfg['client']} conference talks and executive speeches",
+                f"{cfg['client']} engineering deep-dive videos",
+            ],
+            "webgpt_deep_seat": [
+                f"expected interview/meeting questions about {cfg['client']} {k}"
+                for k in list(hits)[:4]
+            ],
+            "note": "brave queries run concurrently; each modality is blind to the others (multi-modal sweep); results feed chunks then re-run research-plan",
+        },
         "note": "Deterministic derivation from the built KB; agentic research is delegated to the named skills. Empty hits mean the KB is too thin to plan from - build first.",
     }
     if not hits:
