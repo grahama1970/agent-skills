@@ -18,6 +18,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPTS = [
   "scripts/gate-check.mjs",
   "scripts/gate-lint.mjs",
+  "scripts/receipt-check.mjs",
   "scripts/dispatch-check.mjs",
   "scripts/stop-hook.mjs",
   "scripts/install-hooks.mjs",
@@ -32,6 +33,7 @@ const SCRIPTS = [
   "tests/stress-tests.mjs",
   "tests/lint-tests.mjs",
   "tests/contract-tests.mjs",
+  "tests/receipt-check-tests.mjs",
   "tests/self-check.mjs",
 ];
 
@@ -91,6 +93,20 @@ check("approval identity binds execution semantics", () => {
   ];
   const missing = required.filter(token => !src.includes(token));
   return missing.length ? "approval oracle missing source tokens: " + missing.join(", ") : null;
+});
+
+check("receipt checker enforces acceptance refs and rejects forged completion", () => {
+  const src = read("scripts/receipt-check.mjs");
+  const required = [
+    "unlazy.acceptance_ref.v1",
+    "project_watchdog.goal_completion.v1",
+    "claims global completion",
+    "goal hash mismatch",
+    "ledger hash mismatch",
+    "resolves outside project root",
+  ];
+  const missing = required.filter((token) => !src.includes(token));
+  return missing.length ? "receipt checker missing guard tokens: " + missing.join(", ") : null;
 });
 
 check("the hook resolves a scope rather than globbing the tree", () => {

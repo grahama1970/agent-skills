@@ -10,6 +10,7 @@ Usage: skills/unlazy/run.sh <command> [args...]
 Commands:
   gate-check [args...]       Run scripts/gate-check.mjs
   gate-lint [args...]        Run scripts/gate-lint.mjs
+  receipt-check [args...]    Validate acceptance refs and receipt bindings
   dispatch-check [args...]   Run scripts/dispatch-check.mjs
   install-hooks [args...]    Run scripts/install-hooks.mjs
   stop-hook [args...]        Run scripts/stop-hook.mjs
@@ -29,6 +30,9 @@ case "$cmd" in
     ;;
   gate-lint)
     exec node "$SCRIPT_DIR/scripts/gate-lint.mjs" "$@"
+    ;;
+  receipt-check)
+    exec node "$SCRIPT_DIR/scripts/receipt-check.mjs" "$@"
     ;;
   dispatch-check)
     exec node "$SCRIPT_DIR/scripts/dispatch-check.mjs" "$@"

@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "unlazy",
   "trials": 3,
-  "proof_scope": "local gate-ledger parser, linter, malformed-ledger rejection, and upstream Node self-test posture",
+  "proof_scope": "local gate-ledger parser, linter, malformed-ledger rejection, receipt binding validation, forged-completion rejection, and upstream Node self-test posture",
   "claims": {
-    "proves": "the vendored unlazy entrypoint can parse a valid ledger without executing checks, lint the local ledger, reject a malformed runnable gate, and run the upstream Node test suite through the skill wrapper",
+    "proves": "the vendored unlazy entrypoint can parse a valid ledger without executing checks, lint the local ledger, reject a malformed runnable gate, validate acceptance_ref-bound receipts, reject forged global completion claims, and run the upstream Node test suite through the skill wrapper",
     "does_not_prove": "that unlazy repairs tasks automatically, that a ledger's English title matches its command oracle, or that any downstream project such as persona-dream is complete"
   },
   "capability_claims": [
@@ -15,12 +15,28 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "unlazy.receipt_boundary",
+      "description": "The unlazy skill validates acceptance_ref-bound receipts, project-contained artifact hashes, and rejects non-watchdog global completion claims.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
     {
       "seam_id": "unlazy.runsh.node_tools",
       "seam_type": "cli_wrapper",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "unlazy.acceptance_ref_receipt_boundary",
+      "seam_type": "receipt_contract",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
@@ -52,6 +68,28 @@
       }
     },
     {
+      "name": "unlazy-receipt-boundary",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "unlazy.receipt_boundary"
+      ],
+      "seams": [
+        "unlazy.acceptance_ref_receipt_boundary"
+      ],
+      "command": [
+        "node",
+        "../tests/receipt-check-tests.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "receipt-check tests ok (4/4)"
+        ]
+      }
+    },
+    {
       "name": "unlazy-upstream-node-tests",
       "type": "positive",
       "real_world": true,
@@ -72,7 +110,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "self-check ok (12/12)"
+          "self-check ok (13/13)"
         ]
       }
     }
