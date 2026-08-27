@@ -2,51 +2,77 @@
   "version": 2,
   "skill": "surf",
   "trials": 2,
-  "proof_scope": "the pre-submit ChatGPT DOM doctor: verdict/drift/cross-run-baseline logic (positive + adversarial) and its wiring into the submit flow, as a reliability + regression guard",
+  "proof_scope": "the pre-submit ChatGPT DOM doctor as a reliability + regression guard: verdict/drift/cross-run-baseline logic, ADVERSARIAL self-correction when the page changed or is incorrect, the live-found send-absence fix, and wiring. Live receipt (host log /tmp/surf-host.log): verdict=STOP_HANDOFF (false, pre-fix 2026-08-27T12:53:54Z) -> verdict=PROCEED + response DOCTOR-FIX-OK (post-fix 13:06:45Z).",
   "claims": {
-    "proves": "preflightDoctor returns PROCEED on a healthy page, flags in-run selector drift, returns STOP_HANDOFF on logged-out/composer-gone/rate-limited, RETRY_AFTER_RELOAD on cloudflare, and records cross-run baseline drift; and that the doctor stays wired BEFORE typePrompt with a fail-fast throw and no captcha-solving",
-    "does_not_prove": "an authenticated live WebGPT completion end-to-end, or that real-world lane failure rate dropped (needs a live seat)"
+    "proves": "on a healthy page PROCEED; a drifted primary selector self-corrects to a working fallback and PROCEEDs; a fully-missing composer, logged-out, or rate-limited page STOP_HANDOFFs; cloudflare RETRY_AFTER_RELOADs (never solved); send-button absence BEFORE typing is advisory (not a false STOP); cross-run DOM change is flagged; and the doctor stays wired before typing with no captcha-solving",
+    "does_not_prove": "a measured drop in real-world lane failure rate, or authenticated live WebGPT completion inside this fixture (the live receipt is in the host log, needs a seat to reproduce in-fixture)"
   },
   "capability_claims": [
     {
-      "id": "surf.preflight_dom_doctor",
-      "description": "Surf verifies ChatGPT submit targets before typing, diagnoses selector drift (in-run and cross-run), fails fast on blocking states, and never solves a captcha.",
+      "id": "surf.preflight_dom_doctor_selfcorrect",
+      "description": "Surf verifies ChatGPT submit targets before typing, self-corrects to a working fallback selector when the primary drifts, stops fast on blocking states, treats pre-typing send absence as advisory, and never solves a captcha.",
       "criticality": "critical",
       "evidence_required": { "deterministic": true }
     }
   ],
   "cases": [
     {
-      "name": "preflight-doctor-logic-positive-and-adversarial",
+      "name": "preflight-doctor-adversarial-selfcorrection-suite",
       "type": "negative",
       "real_world": true,
       "evidence_class": "deterministic",
-      "supports_claims": ["surf.preflight_dom_doctor"],
+      "supports_claims": ["surf.preflight_dom_doctor_selfcorrect"],
       "timeout_seconds": 120,
       "command": [
         "bash", "-c",
-        "cd .. && node --test vendor/surf-cli/native/preflight-doctor.test.cjs && ./run.sh capabilities --json >/dev/null"
+        "cd .. && node --test scripts/preflight_doctor_adversarial.test.cjs && node --test vendor/surf-cli/native/preflight-doctor.test.cjs && ./run.sh capabilities --json >/dev/null"
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["# pass 8", "# fail 0", "STOP_HANDOFF", "driftSinceBaseline"]
+        "stdout_contains": ["# pass 9", "# pass 8", "# fail 0", "self-correct", "send button absent"]
       }
     },
     {
-      "name": "preflight-doctor-wired-into-submit-regression-guard",
+      "name": "preflight-doctor-runner-selfcorrects-drifted-composer",
       "type": "positive",
       "real_world": true,
       "evidence_class": "deterministic",
-      "supports_claims": ["surf.preflight_dom_doctor"],
+      "supports_claims": ["surf.preflight_dom_doctor_selfcorrect"],
       "timeout_seconds": 120,
       "command": [
         "bash", "-c",
-        "cd .. && python3 scripts/check_preflight_wired.py"
+        "cd .. && printf '%s' '{\"href\":\"https://chatgpt.com/\",\"composer\":{\"primary\":\"#prompt-textarea\",\"matched\":\".ProseMirror\"},\"send\":{\"primary\":\"b\",\"matched\":null},\"bodyText\":\"ok\"}' > /tmp/surf-pf-adv.json && SURF_PREFLIGHT_BASELINE=/tmp/surf-pf-eval.json node scripts/preflight_run.cjs --capture-file /tmp/surf-pf-adv.json"
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PREFLIGHT_WIRED_OK"]
+        "stdout_contains": ["\"verdict\": \"PROCEED\"", "\"selfCorrected\": true", ".ProseMirror", "send_button_absent_pre_typing_expected"]
       }
+    },
+    {
+      "name": "preflight-doctor-runner-stops-on-logged-out",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["surf.preflight_dom_doctor_selfcorrect"],
+      "timeout_seconds": 120,
+      "command": [
+        "bash", "-c",
+        "cd .. && printf '%s' '{\"href\":\"https://auth.openai.com/log-in\",\"loggedOut\":true,\"composer\":{\"primary\":\"#prompt-textarea\",\"matched\":null},\"send\":{\"primary\":\"b\",\"matched\":null},\"bodyText\":\"\"}' > /tmp/surf-pf-out.json && (SURF_PREFLIGHT_BASELINE=/tmp/surf-pf-eval.json node scripts/preflight_run.cjs --capture-file /tmp/surf-pf-out.json; test $? -eq 3 && echo STOP_EXIT_3_OK)"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"verdict\": \"STOP_HANDOFF\"", "logged_out", "STOP_EXIT_3_OK"]
+      }
+    },
+    {
+      "name": "preflight-doctor-wired-and-no-false-send-stop-regression-guard",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["surf.preflight_dom_doctor_selfcorrect"],
+      "timeout_seconds": 120,
+      "command": ["bash", "-c", "cd .. && python3 scripts/check_preflight_wired.py"],
+      "expected": { "exit_code": 0, "stdout_contains": ["PREFLIGHT_WIRED_OK"] }
     }
   ]
 }

@@ -1857,10 +1857,11 @@ async function preflightDoctor(cdp, { log } = {}) {
   } else if (!composer.matched) {
     verdict = "STOP_HANDOFF";
     reason = "composer_selector_drift_all_missing";
-  } else if (!send.matched) {
-    verdict = "STOP_HANDOFF";
-    reason = "send_selector_drift_all_missing";
   } else if (rateLimited) {
+    // NOTE (live-verified 2026-08-27): send-button absence BEFORE typing is
+    // expected -- ChatGPT renders it only once the composer has text. Hard-
+    // failing here gave a false STOP that broke real submits. Send is advisory
+    // pre-typing; surf's post-submit "Prompt accepted" check verifies it worked.
     verdict = "STOP_HANDOFF";
     reason = "rate_limited";
   }

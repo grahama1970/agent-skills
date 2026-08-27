@@ -42,6 +42,12 @@ def main() -> int:
         if banned in lowered:
             problems.append(f"forbidden captcha-solving token present: {banned}")
 
+    # Live-found regression guard (2026-08-27): send-button absence BEFORE typing
+    # is expected on ChatGPT; a STOP on it gave a false STOP that broke real
+    # submits. That reason string must NOT be a hard-stop condition anymore.
+    if 'reason = "send_selector_drift_all_missing"' in src:
+        problems.append("regressed: send-button absence hard-STOPs pre-typing (false STOP; broke live submits)")
+
     if problems:
         print("PREFLIGHT_WIRING_FAIL")
         for p in problems:
