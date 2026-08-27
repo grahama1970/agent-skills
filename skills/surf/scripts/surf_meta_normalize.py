@@ -50,6 +50,25 @@ def read_text_arg(value: str | None, file_value: str | None) -> str:
     return value or ""
 
 
+def triage_classify(text: str, layer: str = "surf") -> dict[str, Any] | None:
+    """Delegate to /triage-error to canonicalize a raw failure signal.
+
+    Fail-open: any import/lookup problem returns None so meta finalization is
+    never blocked. Composes triage-error (best-practices-skills error policy).
+    """
+    try:
+        import sys
+
+        te_dir = Path(__file__).resolve().parents[2] / "triage-error"
+        if str(te_dir) not in sys.path:
+            sys.path.insert(0, str(te_dir))
+        import classifier  # type: ignore
+
+        return classifier.classify(text, layer)
+    except Exception:  # noqa: BLE001 -- best-effort enrichment, never fatal
+        return None
+
+
 def command_returncode_kind(returncode: int | None, stderr_text: str) -> str | None:
     if returncode is None:
         return None
@@ -128,6 +147,17 @@ def finalize_nonterminal_meta(
         "not_submitted": "BROWSER_SUBMIT_NOT_ACCEPTED",
     }.get(failure_code, "BROWSER_HANDLER_FAILED")
     finished["proof_status"] = unproven_proof_status(meta, failure_code)
+    # Canonicalize the failure via /triage-error: when the catalog has a more
+    # specific code than the generic browser_handler_* one, attach it so
+    # diagnosis is unambiguous (e.g. an attach-preflight rejection is not a
+    # generic timeout). Best-effort; never overrides the primary failure field.
+    _triage = triage_classify(f"{failure_code}\n{stderr_text}", "surf")
+    if _triage and not _triage.get("ambiguous") and _triage.get("code") != failure_code:
+        finished["triage"] = {
+            "code": _triage["code"],
+            "cause": _triage.get("cause"),
+            "next_command": _triage.get("next_command"),
+        }
     finished["returncode"] = returncode
     finished["exit_code"] = returncode
     if duration_seconds is not None:

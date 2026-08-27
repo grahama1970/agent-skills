@@ -90,6 +90,7 @@ provides:
   - surf
 composes:
   - browser-oracle
+  - triage-error
   - memory
   - fetcher
   - extractor

@@ -24,6 +24,8 @@ from typing import Any
 import typer
 from loguru import logger
 
+from classifier import classify, load_catalog, _normalize, _mint_code, _first_error_line  # noqa: F401
+
 app = typer.Typer(add_completion=False, help="Classify ambiguous pipeline errors into unambiguous codes.")
 
 HERE = Path(__file__).resolve().parent
@@ -34,65 +36,9 @@ EVALS_RUN = SKILLS_ROOT / "agentic-evals" / "run.sh"
 MEMORY_RUN = SKILLS_ROOT / "memory" / "run.sh"
 
 
-def load_catalog() -> list[dict[str, Any]]:
-    """Return the catalog's code entries (empty list if unreadable)."""
-    try:
-        return json.loads(CATALOG_PATH.read_text(encoding="utf-8")).get("codes", [])
-    except (OSError, json.JSONDecodeError) as err:
-        logger.warning("catalog unreadable: {}", err)
-        return []
 
 
-def _normalize(text: str) -> str:
-    return " ".join(str(text or "").lower().split())
 
-
-def _mint_code(text: str, layer: str | None) -> str:
-    digest = hashlib.sha256(_normalize(text).encode("utf-8")).hexdigest()[:8]
-    return f"{(layer or 'unknown').strip() or 'unknown'}_unclassified_{digest}"
-
-
-def _first_error_line(text: str) -> str:
-    for line in str(text or "").splitlines():
-        low = line.lower()
-        if any(k in low for k in ("error", "fail", "reject", "not accepted", "timeout", "404", "denied")):
-            return line.strip()[:300]
-    return str(text or "").strip()[:300]
-
-
-def classify(text: str, layer: str | None = None) -> dict[str, Any]:
-    """Map raw error text to a canonical catalog code, or mint an ambiguous one.
-
-    A catalog entry matches when ANY of its `match` tokens appears in the
-    normalized text and (if the entry names a layer and a layer is given) the
-    layers agree.
-    """
-    norm = _normalize(text)
-    for entry in load_catalog():
-        if layer and entry.get("layer") and entry["layer"] != layer:
-            continue
-        tokens = [t.lower() for t in entry.get("match", []) if t]
-        if any(tok in norm for tok in tokens):
-            return {
-                "code": entry["code"],
-                "layer": entry.get("layer"),
-                "cause": entry.get("cause"),
-                "next_command": entry.get("next_command"),
-                "recoverable": entry.get("recoverable"),
-                "not_this": entry.get("not_this", []),
-                "ambiguous": False,
-                "matched_tokens": [tok for tok in tokens if tok in norm],
-            }
-    return {
-        "code": _mint_code(text, layer),
-        "layer": layer,
-        "cause": f"Unclassified error signal: {_first_error_line(text)}",
-        "next_command": None,
-        "recoverable": None,
-        "not_this": [],
-        "ambiguous": True,
-        "matched_tokens": [],
-    }
 
 
 def _read_signal(text: str | None, receipt: Path | None) -> str:
