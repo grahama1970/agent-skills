@@ -1,0 +1,53 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "skill": "best-practices-svg-design",
+  "regressions": [
+    {
+      "regression_id": "svg-label-unit-text-only-2026-08-27",
+      "incident": {
+        "date": "2026-08-27",
+        "summary": "A request to move the bottom answer label was implemented by changing only the SVG <text> y-coordinate, leaving the shell and icon in place. The visible label component did not move and internal padding was damaged.",
+        "root_cause": "The skill contract used ambiguous label_offset wording and did not define label as a whole visual unit: shell/border + icon + text + related connector anchors.",
+        "correct_behavior": "A label move changes row/node geometry so shell, icon, text, halo/glow, and connector anchors move together. Text-only changes require explicit text_baseline/internal-padding wording. Ambiguous label_offset manifests fail closed."
+      },
+      "threatens": {
+        "capability": "deterministic_svg_grid_layout",
+        "seams": [
+          "placer.label_unit_semantics",
+          "grid.visual_gap_relations"
+        ]
+      },
+      "retained_fixture": "agentic_eval.json",
+      "retained_case": "place-row-move-moves-whole-label-unit",
+      "additional_retained_cases": [
+        "place-rejects-ambiguous-label-offset",
+        "grid-rejects-row-equal-but-visual-gap-mismatch",
+        "grid-rejects-terminal-label-gap-mismatch"
+      ],
+      "fail_before_fix": {
+        "proof_command": [
+          "bash",
+          "-c",
+          "./skills/agentic-evals/run.sh run skills/best-practices-svg-design/fixtures/agentic_eval.json --output /tmp/best-practices-svg-design-agentic-eval.json"
+        ],
+        "expected_fail": false,
+        "observed_pre_fix": "Before the retained cases, the suite could reach READY while a human instruction 'move the answer label' was satisfied by text-only movement. After adding the guard, the retained cases verify shell+icon+text move together and ambiguous label_offset is rejected.",
+        "proven": true,
+        "proven_date": "2026-08-27",
+        "cwd": "../.."
+      },
+      "fixed_by": "local session 2026-08-27",
+      "status": "ACTIVE",
+      "claim_ids": [
+        "best-practices-svg-design.deterministic_grid_label_units"
+      ],
+      "seam_ids": [
+        "placer.label_unit_semantics",
+        "grid.visual_gap_relations"
+      ],
+      "evidence_class": "fault_injected_deterministic",
+      "last_proven": "2026-08-27T22:07:57+00:00",
+      "repair_revision": "local session 2026-08-27; full agentic eval run 981208787c3b READY 14/14 cases, 42/42 trials"
+    }
+  ]
+}

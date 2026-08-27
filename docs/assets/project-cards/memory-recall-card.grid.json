@@ -39,7 +39,21 @@
       "name": "response",
       "y": 1016,
       "h": 84,
-      "label_offset": 53
+      "text_baseline_offset": 53
+    }
+  ],
+  "relations": [
+    {
+      "type": "equal_gap",
+      "name": "terminal_label_gap_match",
+      "a": [
+        "request",
+        "intent"
+      ],
+      "b": [
+        "outcomes",
+        "response"
+      ]
     }
   ]
 }

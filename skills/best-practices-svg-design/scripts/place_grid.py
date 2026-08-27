@@ -12,8 +12,10 @@ Usage: place_grid.py <svg> <manifest>
   edge snap so connector clearances stay exact.
 - Updates CSS transform-origin y values by their row's delta (halo/dot
   origins are element centers in local coords).
-- Applies optional per-row absolute text baselines from manifest `label_offset`
-  (row top + offset), never cumulative `label_dy` nudges.
+- Applies optional per-row absolute text baselines from manifest
+  `text_baseline_offset` (row top + offset), never cumulative `label_dy`
+  nudges. `label_offset` is rejected because "label" means the whole visual
+  unit (shell + icon + text), not text alone.
 Exemptions (named): full-canvas rects (h>=500), the headline column group,
 defs/style blocks, relative-command paths (icons inside translated groups),
 and background divider lines (x1 == 730).
@@ -196,18 +198,22 @@ def main() -> int:
 
     walk(root)
 
-    # Optional per-row absolute label baseline offsets (manifest "label_offset"),
-    # measured from the row top in canvas px. This is idempotent: repeated place
-    # runs set the same y, never add another nudge.
+    # Optional per-row absolute TEXT baseline offsets, measured from the row
+    # top in canvas px. This is idempotent: repeated place runs set the same y,
+    # never add another nudge. "label" means the whole shell+icon+text unit, so
+    # ambiguous label_offset is rejected.
     for r in rows_new:
         if "label_dy" in r:
-            print("PLACING_FAIL label_dy is cumulative drift; use absolute label_offset")
+            print("PLACING_FAIL label_dy is cumulative drift; use absolute text_baseline_offset")
             return 1
-        if "label_offset" not in r:
+        if "label_offset" in r:
+            print("PLACING_FAIL label_offset is ambiguous; label means shell+icon+text. Use row y for a label move or text_baseline_offset for text-only internal padding")
+            return 1
+        if "text_baseline_offset" not in r:
             continue
         top = float(r["y"]) - ty
         bottom = top + float(r["h"])
-        desired = top + float(r["label_offset"])
+        desired = top + float(r["text_baseline_offset"])
         for t in root.iter(f"{NS}text"):
             if t.get("y") is None or t.get("transform") is not None:
                 continue

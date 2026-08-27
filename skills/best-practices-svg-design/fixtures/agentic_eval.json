@@ -97,7 +97,7 @@
       "command": [
         "bash",
         "-c",
-        "T=$(mktemp --suffix=.svg); sed 's/y=\"484\" class=\"sans stage-name\"/y=\"470\" class=\"sans stage-name\"/' ../../../docs/assets/project-cards/memory-recall-card.svg > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
+        "T=$(mktemp --suffix=.svg); python3 - ../../../docs/assets/project-cards/memory-recall-card.svg \"$T\" <<'PY'\nimport sys\ns=open(sys.argv[1]).read()\ns=s.replace('<rect x=\"920\" y=\"288\" width=\"320\" height=\"92\" rx=\"22\" class=\"panel\" />','<rect x=\"920\" y=\"300\" width=\"320\" height=\"92\" rx=\"22\" class=\"panel\" />')\nopen(sys.argv[2],'w').write(s)\nPY\ncd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
       ],
       "expected": {
         "exit_code": 1,
@@ -111,7 +111,7 @@
       "command": [
         "bash",
         "-c",
-        "T=$(mktemp --suffix=.svg); printf '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 900\" width=\"900\" height=\"900\"\"><rect x=\"150\" y=\"150\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"360\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"710\" width=\"600\" height=\"100\"/></svg>' > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
+        "T=$(mktemp --suffix=.svg); printf '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 900\" width=\"900\" height=\"900\"><rect x=\"150\" y=\"150\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"360\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"710\" width=\"600\" height=\"100\"/></svg>' > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
       ],
       "expected": {
         "exit_code": 1,
@@ -125,7 +125,7 @@
       "command": [
         "bash",
         "-c",
-        "T=$(mktemp --suffix=.svg); printf '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 900\" width=\"900\" height=\"900\"\"><rect x=\"150\" y=\"150\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"400\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"650\" width=\"600\" height=\"100\"/></svg>' > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
+        "T=$(mktemp --suffix=.svg); printf '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 900\" width=\"900\" height=\"900\"><rect x=\"150\" y=\"150\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"400\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"650\" width=\"600\" height=\"100\"/></svg>' > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
       ],
       "expected": {
         "exit_code": 0,
@@ -144,6 +144,62 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": "PIXELS_OK"
+      }
+    },
+    {
+      "name": "place-rejects-ambiguous-label-offset",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); cp ../../../docs/assets/project-cards/memory-recall-card.svg \"$T/card.svg\"; cp ../../../docs/assets/project-cards/memory-recall-card.grid.json \"$T/grid.json\"; python3 - \"$T/grid.json\" <<'PY'\nimport json,sys\np=sys.argv[1]\nm=json.load(open(p))\nfor r in m['rows']:\n    if r['name']=='response':\n        r['label_offset']=r.pop('text_baseline_offset', 53)\nopen(p,'w').write(json.dumps(m))\nPY\n../run.sh place \"$T/card.svg\" \"$T/grid.json\"; rc=$?; rm -rf \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "label_offset is ambiguous"
+      }
+    },
+    {
+      "name": "place-row-move-moves-whole-label-unit",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); cp ../../../docs/assets/project-cards/memory-recall-card.svg \"$T/card.svg\"; cp ../../../docs/assets/project-cards/memory-recall-card.grid.json \"$T/grid.json\"; python3 - \"$T/card.svg\" \"$T/grid.json\" <<'PY'\nimport json,re,subprocess,sys,pathlib\nsvg=pathlib.Path(sys.argv[1]); man=pathlib.Path(sys.argv[2])\ndef read_vals():\n    s=svg.read_text()\n    def one(pat):\n        m=re.search(pat, s)\n        if not m:\n            raise SystemExit('missing '+pat)\n        return float(m.group(1))\n    return {\n      'shell': one(r'<rect x=\"680\" y=\"([^\"]+)\" width=\"760\" height=\"84\" rx=\"42\" class=\"query-shell\"'),\n      'icon': one(r'<g transform=\"translate\\(718 ([^\\)]+)\\)\" aria-hidden=\"true\" fill=\"none\" stroke=\"#93a289\"'),\n      'text': one(r'<text x=\"778\" y=\"([^\"]+)\" class=\"sans query-text r1\"')\n    }\nbefore=read_vals()\nm=json.loads(man.read_text())\nfor r in m['rows']:\n    if r['name']=='response':\n        r['y'] += 20\n        r['text_baseline_offset'] = before['text'] - before['shell']\nman.write_text(json.dumps(m))\nsubprocess.run(['../run.sh','place',str(svg),str(man)], check=True)\nafter=read_vals()\ndeltas={k: round(after[k]-before[k], 1) for k in before}\nif deltas == {'shell': 20.0, 'icon': 20.0, 'text': 20.0}:\n    print('LABEL_UNIT_MOVE_OK', deltas)\nelse:\n    print('LABEL_UNIT_MOVE_FAIL', deltas)\n    raise SystemExit(1)\nPY\nrc=$?; rm -rf \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "LABEL_UNIT_MOVE_OK"
+      }
+    },
+    {
+      "name": "grid-rejects-terminal-label-gap-mismatch",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); cp ../../../docs/assets/project-cards/memory-recall-card.grid.json \"$T\"; python3 - \"$T\" <<'PY'\nimport json,sys\np=sys.argv[1]\nm=json.load(open(p))\nfor r in m['rows']:\n    if r['name']=='response':\n        r['y'] += 20\nopen(p,'w').write(json.dumps(m))\nPY\npython3 ../scripts/check_grid.py \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "terminal_label_gap_match"
+      }
+    },
+    {
+      "name": "grid-rejects-row-equal-but-visual-gap-mismatch",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf '%s' '{\"canvas\":400,\"tolerance\":1,\"rows\":[{\"name\":\"request\",\"y\":40,\"h\":40},{\"name\":\"intent\",\"y\":100,\"h\":40},{\"name\":\"outcomes\",\"y\":160,\"h\":40,\"visual_bottom\":220},{\"name\":\"response\",\"y\":220,\"h\":40}],\"relations\":[{\"type\":\"equal_gap\",\"name\":\"visual_terminal_gap\",\"measure\":\"visual\",\"a\":[\"request\",\"intent\"],\"b\":[\"outcomes\",\"response\"]}]}' > \"$T\"; python3 ../scripts/check_grid.py \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "visual_terminal_gap"
       }
     }
   ]

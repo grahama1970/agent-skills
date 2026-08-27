@@ -92,16 +92,26 @@ Every alignment/spacing fix follows this exact chain:
 
 1. Record the intended relation in the machine-readable grid manifest, using
    absolute fields only: row `y`/`h`, `gap`, `margin`, and optional
-   `label_offset` (baseline from row top). Never store cumulative `dx`, `dy`,
-   or "move another 5px" instructions.
-2. Run `skills/best-practices-svg-design/run.sh place <svg> <grid.json>`.
+   `text_baseline_offset` (text baseline from row top). Never store cumulative
+   `dx`, `dy`, or "move another 5px" instructions.
+2. Interpret **label** as a whole visual unit by default: shell/border, icon,
+   text, glow/halo, and connector anchors move together. Only move text alone
+   when the human explicitly says `text baseline`, `internal padding`, or
+   `text inside the label`. Therefore a request like "move the answer label
+   down" changes the row/node `y`; it does not change `text_baseline_offset`.
+   The unit is named in the manifest as row/node geometry, not as a `<text>`
+   element.
+3. Run `skills/best-practices-svg-design/run.sh place <svg> <grid.json>`.
    `place` must be idempotent: running it twice produces the same coordinates.
-3. Run `grid`, `spacing`, `/create-svg validate`, and rendered `pixels
+4. Run `grid`, `spacing`, `/create-svg validate`, and rendered `pixels
    --manifest`. Any failure means the spec/tool is wrong; do not bypass it.
-4. Copy/install the served asset, rebuild the surface if required, read back
+   If the human marks a whitespace relation near arrows/rails/halos, encode it
+   as a named manifest relation using `measure: "visual"` and explicit
+   `visual_top`/`visual_bottom`; row-box equality alone is not enough.
+5. Copy/install the served asset, rebuild the surface if required, read back
    the served versioned URL/bytes, then use `/surf` on the real page. A source
    SVG or build success is not visual proof.
-5. If the screenshot misses the marked element, say it missed; scroll/select
+6. If the screenshot misses the marked element, say it missed; scroll/select
    the exact `<img>` and retry once. Never present a wrong crop as evidence.
 
 ## Review Checklist (run before showing the human)
@@ -309,7 +319,7 @@ padding, label after them — never centered as a floating cluster.
   (60/108/90/38 in one column) read as drift even when each row is fine.
 - This is not advisory. Every card MAINTAINS a grid manifest next to its
   artwork (`<card>.grid.json`: canvas, origin, rows with y+h, and any
-  `label_offset` baselines) and every layout edit ends with
+  `text_baseline_offset` internals) and every layout edit ends with
   `scripts/check_grid.py <manifest>` printing `GRID_OK` (uniform gaps within
   tolerance, symmetric margins). Prose rules did not stop drift in the session
   that created this skill; dozens of local coordinate nudges did the damage —

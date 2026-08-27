@@ -11,14 +11,17 @@
 - `pixels` check: painted bands must land inside manifest row spans
   (`pixels <png> --manifest <grid.json>`).
 - New `place` command + `scripts/place_grid.py`: rows placed mechanically from
-  the machine-readable manifest; supports per-row absolute `label_offset`
-  baselines. THE lawful way to move anything — hand-nudges (sed on coords) are
+  the machine-readable manifest; supports per-row absolute `text_baseline_offset`
+  internals. THE lawful way to move anything — hand-nudges (sed on coords) are
   forbidden; one was made and reverted this session (c97c4c1284 → 77819f4d2a).
+  `label_offset` is now rejected as ambiguous; a label move means row/node `y`
+  so shell + icon + text + related connector anchors move together. Text-only
+  internals require `text_baseline_offset`.
 - memory-recall-card: 74px uniform gaps, 100px margins, connectors re-anchored
   (10px clearances, flush tips), connector ink unified
   (.base-path rgba cream 0.32, arrowhead 0.62), outcome pill borders raised
   (clarify 0.45, panel-soft 0.30). Response label baseline +5px via manifest
-  `label_offset: 58` (absolute baseline from response row top).
+  `text_baseline_offset: 53` (absolute baseline from response row top).
 - Site rebuilt; served page references `?v=c8b8b04eaa` (inventory versions from
   the asset commit — a rebuild after any card commit is MANDATORY or browsers
   pin stale bytes; this caused a "no changes" false alarm mid-session).
@@ -33,8 +36,10 @@
 
 1. G9 human acceptance (human last saw the final state and responded "great" to
    the ink deploy; the label_dy + final snap were not human-reviewed).
-2. Agentic-eval fixture has new cases (uneven/uniform gaps, manifest pixels);
-   last full run was USABLE_WITH_GAPS before the shifted-row fixture was
-   updated — re-run `skills/agentic-evals/run.sh run
-   skills/best-practices-svg-design/fixtures/agentic_eval.json`.
+2. Agentic eval now includes retained regression guards for this incident:
+   `place-row-move-moves-whole-label-unit`,
+   `place-rejects-ambiguous-label-offset`,
+   `grid-rejects-row-equal-but-visual-gap-mismatch`, and
+   `grid-rejects-terminal-label-gap-mismatch`. Last run was READY:
+   14/14 cases, 42/42 trials.
 3. Full cascade + push + deploy still unrun (unchanged from previous handoff).
