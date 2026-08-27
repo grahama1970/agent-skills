@@ -20,6 +20,7 @@ composes:
 complies:
   - best-practices-skills
   - best-practices-design
+  - best-practices-bespoke-design
 disciplines:
   - ui-design-engineering
   - engineering-standards
@@ -83,6 +84,30 @@ shrunk.
 - [ ] Reduced-motion base state shows the complete composition.
 - [ ] `/create-svg` verify receipt is PASS with zero findings.
 - [ ] Palette/typography match the destination surface's theme tokens.
+
+## Bespoke and Accessibility Rules (externally grounded)
+
+Per `best-practices-bespoke-design`: template-first STRUCTURE is mandatory, but
+template LOOK is not. A shipped card must read as authored for its brand —
+derive palette, typography, and accent meaning from the destination site's
+tokens (or a theme YAML extracted from them), never ship a bundled demo theme
+onto a brand surface without an explicit palette decision. A card that could be
+swapped onto any other project's site unchanged fails the specificity test.
+
+Accessibility floor (sources: a11y-collective.com/blog/svg-accessibility,
+mgifford/ACCESSIBILITY.md SVG best practices, deque.com/blog/creating-accessible-svgs,
+accessibility.perpendicularangel.com):
+
+- `role="img"` plus exactly one `<title>` and one `<desc>` (enforced by
+  `/create-svg validate`).
+- Essential labels stay as real `<text>` with sufficient contrast; never
+  outline essential text to paths or hide it with font-size 0 / transparency.
+- Paint an explicit background behind important content so Windows High
+  Contrast Mode cannot silently change the ground under the labels.
+- The design must remain recognizable across render sizes; whitespace is part
+  of the composition, not leftover space.
+- Animated variants keep the complete composition as the reduced-motion base
+  state and never gate meaning behind motion or interaction.
 
 ## Failure Recovery
 

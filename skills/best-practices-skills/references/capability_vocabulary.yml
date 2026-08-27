@@ -58,6 +58,12 @@ capabilities:
   design-engineering-guidance:
     providers:
       - emil-design-eng
+  svg-design-guardrails:
+    providers:
+      - best-practices-svg-design
+  card-legibility-contract:
+    providers:
+      - best-practices-svg-design
   ui-polish-guidance:
     providers:
       - emil-design-eng
