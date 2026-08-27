@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200" role="img" aria-labelledby="memory-pipeline-title memory-pipeline-desc" tabindex="0">
   <title id="memory-pipeline-title">Graph Memory: memory-first recall pipeline</title>
-  <desc id="memory-pipeline-desc">A question is recalled from memory before any agent call: it passes through intent, then hybrid BM25 and Qdrant recall. BM25 and Qdrant candidate ids seed ArangoDB multi-hop edge expansion that returns graph paths and receipts. An evidence gate chooses answer, clarify, or draft; weak evidence sends the agent to scan the codebase and learn the result back, while unsupported requests can deflect before recall. Every route resolves before the agent sends its response to the human.</desc>
+  <desc id="memory-pipeline-desc">A question is recalled from memory before any agent call: it passes through intent, then hybrid BM25 and Qdrant recall. BM25 and Qdrant candidate ids seed ArangoDB multi-hop edge expansion that returns graph paths and receipts. Four example questions cycle through the pipeline, each lighting its route and its reply. An evidence gate chooses answer, clarify, or draft; weak evidence sends the agent to scan the codebase and learn the result back, while unsupported requests can deflect before recall. Every route resolves before the agent sends its response to the human.</desc>
 
   <defs>
     <radialGradient id="bg-glow" cx="58%" cy="52%" r="66%">
@@ -67,7 +67,7 @@
       }
       #memory-pipeline .stage-name {
         fill: #ece2d3;
-        font-size: 38px;
+        font-size: 32px;
         font-weight: 660;
         letter-spacing: 0.5px;
       }
@@ -257,47 +257,76 @@
           74%, 88% { opacity: 0.8; transform: scale(1); }
           96% { opacity: 0.14; transform: scale(1.06); }
         }
-        @keyframes answer-on {
-          0%, 72%, 100% { opacity: 0.48; }
-          84%, 96% { opacity: 1; }
-        }
         @keyframes query-dot {
           0%, 2% { transform: scale(0.7); opacity: 0.3; }
           10%, 22% { transform: scale(1.25); opacity: 1; }
           32%, 100% { transform: scale(1); opacity: 0.55; }
         }
-        #memory-pipeline .query-flow { animation: draw-query 9s ease-in-out infinite; }
+        #memory-pipeline .query-flow { animation: draw-query 6s ease-in-out infinite; }
         #memory-pipeline .intent-halo {
           transform-origin: 1070px 330px;
-          animation: pulse-intent 9s ease-in-out infinite;
+          animation: pulse-intent 6s ease-in-out infinite;
         }
-        #memory-pipeline .split-flow { animation: draw-split 9s ease-in-out infinite; }
+        #memory-pipeline .split-flow { animation: draw-split 6s ease-in-out infinite; }
         #memory-pipeline .bm25-halo {
           transform-origin: 770px 535px;
-          animation: pulse-recall 9s ease-in-out infinite;
+          animation: pulse-recall 6s ease-in-out infinite;
         }
         #memory-pipeline .graph-halo {
           transform-origin: 1070px 535px;
-          animation: pulse-recall 9s ease-in-out infinite;
+          animation: pulse-recall 6s ease-in-out infinite;
           animation-delay: 0.09s;
         }
         #memory-pipeline .qdrant-halo {
           transform-origin: 1370px 535px;
-          animation: pulse-recall 9s ease-in-out infinite;
+          animation: pulse-recall 6s ease-in-out infinite;
           animation-delay: 0.18s;
         }
-        #memory-pipeline .merge-flow { animation: draw-merge 9s ease-in-out infinite; }
+        #memory-pipeline .merge-flow { animation: draw-merge 6s ease-in-out infinite; }
         #memory-pipeline .record-halo {
           transform-origin: 1070px 729px;
-          animation: pulse-record 9s ease-in-out infinite;
+          animation: pulse-record 6s ease-in-out infinite;
         }
-        #memory-pipeline .gate-flow { animation: draw-gate 9s ease-in-out infinite; }
+        #memory-pipeline .gate-flow { animation: draw-gate 6s ease-in-out infinite; }
         #memory-pipeline .gate-halo {
-          transform-origin: 1070px 876px;
-          animation: pulse-gate 9s ease-in-out infinite;
+          transform-origin: 1070px 846px;
+          animation: pulse-gate 6s ease-in-out infinite;
         }
-        #memory-pipeline .answer-state { animation: answer-on 9s ease-in-out infinite; }
-        #memory-pipeline .query-dot { transform-origin: 806px 172px; animation: query-dot 9s ease-in-out infinite; }
+        #memory-pipeline .query-dot { transform-origin: 806px 172px; animation: query-dot 6s ease-in-out infinite; }
+        @keyframes q-cycle {
+          0%, 1% { opacity: 0; }
+          3%, 20% { opacity: 1; }
+          22.5%, 100% { opacity: 0; }
+        }
+        @keyframes route-run {
+          0%, 18% { stroke-dashoffset: 1; opacity: 0; }
+          19.5% { opacity: 1; }
+          23% { stroke-dashoffset: 0; opacity: 0.9; }
+          25%, 100% { stroke-dashoffset: 0; opacity: 0; }
+        }
+        @keyframes deflect-run {
+          0%, 76% { stroke-dashoffset: 1; opacity: 0; }
+          78% { opacity: 1; }
+          88% { stroke-dashoffset: 0; opacity: 0.9; }
+          98%, 100% { stroke-dashoffset: 0; opacity: 0; }
+        }
+        @keyframes pill-cycle {
+          0%, 2% { opacity: 0.45; }
+          5%, 21% { opacity: 1; }
+          24%, 100% { opacity: 0.45; }
+        }
+        #memory-pipeline .q1, #memory-pipeline .r1 { animation: q-cycle 24s ease-in-out infinite; }
+        #memory-pipeline .q2, #memory-pipeline .r2 { animation: q-cycle 24s ease-in-out infinite; animation-delay: 6s; }
+        #memory-pipeline .q3, #memory-pipeline .r3 { animation: q-cycle 24s ease-in-out infinite; animation-delay: 12s; }
+        #memory-pipeline .q4, #memory-pipeline .r4 { animation: q-cycle 24s ease-in-out infinite; animation-delay: 18s; }
+        #memory-pipeline .route-flow-1 { animation: route-run 24s ease-in-out infinite; }
+        #memory-pipeline .route-flow-2 { animation: route-run 24s ease-in-out infinite; animation-delay: 6s; }
+        #memory-pipeline .route-flow-3 { animation: route-run 24s ease-in-out infinite; animation-delay: 12s; }
+        #memory-pipeline .deflect-flow { animation: deflect-run 24s ease-in-out infinite; }
+        #memory-pipeline .route-pill-1 { animation: pill-cycle 24s ease-in-out infinite; }
+        #memory-pipeline .route-pill-2 { animation: pill-cycle 24s ease-in-out infinite; animation-delay: 6s; }
+        #memory-pipeline .route-pill-3 { animation: pill-cycle 24s ease-in-out infinite; animation-delay: 12s; }
+        #memory-pipeline .route-pill-4 { animation: pill-cycle 24s ease-in-out infinite; animation-delay: 18s; }
       }
     </style>
   </defs>
@@ -322,21 +351,24 @@
       <rect x="760" y="130" width="620" height="84" rx="42" class="query-shell"/>
       <circle cx="806" cy="172" r="7" fill="#e2ac62" class="query-dot"/>
       <text x="830" y="179" class="mono query-label">QUERY</text>
-      <text x="936" y="183" class="sans query-text">Have we fixed this before?</text>
+      <text x="936" y="183" class="sans query-text q1">Have we fixed this before?</text>
+      <text x="936" y="183" class="sans query-text q2" opacity="0">How do I secure it?</text>
+      <text x="936" y="183" class="sans query-text q3" opacity="0">Draft a fix runbook.</text>
+      <text x="936" y="183" class="sans query-text q4" opacity="0">What's the weather?</text>
     </g>
 
     <g aria-label="Intent stage">
       <path d="M1070 214 V264" class="base-path" marker-end="url(#flow-arrow)"/>
       <path d="M1070 214 V268" class="flow-path flow-amber query-flow" pathLength="1"/>
 
-      <rect x="850" y="266" width="440" height="108" rx="26" class="stage-halo halo-amber intent-halo" filter="url(#soft-glow)"/>
-      <rect x="860" y="274" width="420" height="92" rx="22" class="panel"/>
-      <g transform="translate(979 302)" aria-hidden="true">
+      <rect x="910" y="266" width="340" height="108" rx="26" class="stage-halo halo-amber intent-halo" filter="url(#soft-glow)"/>
+      <rect x="920" y="274" width="320" height="92" rx="22" class="panel"/>
+      <g transform="translate(988 302)" aria-hidden="true">
         <circle cx="16" cy="14" r="12" class="intent-mark"/>
         <path d="M16 2 V8 M16 20 V26 M4 14 H10 M22 14 H28" class="intent-mark" opacity="0.68"/>
         <circle cx="16" cy="14" r="3.5" fill="#e2ac62"/>
       </g>
-      <text x="1042" y="334" class="sans stage-name">INTENT</text>
+      <text x="1051" y="332" class="sans stage-name">INTENT</text>
 
     </g>
 
@@ -350,17 +382,17 @@
 
       <rect x="620" y="466" width="300" height="108" rx="26" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)"/>
       <rect x="630" y="474" width="280" height="92" rx="22" class="panel panel-02a"/>
-      <g transform="translate(698 501)" aria-hidden="true">
+      <g transform="translate(705 501)" aria-hidden="true">
         <line x1="0" y1="4" x2="30" y2="4" class="bm25-line" opacity="0.45"/>
         <line x1="0" y1="14" x2="40" y2="14" class="bm25-line"/>
         <line x1="0" y1="24" x2="24" y2="24" class="bm25-line" opacity="0.68"/>
         <line x1="0" y1="34" x2="34" y2="34" class="bm25-line" opacity="0.35"/>
       </g>
-      <text x="762" y="534" class="sans stage-name">BM25</text>
+      <text x="768" y="532" class="sans stage-name">BM25</text>
 
       <rect x="920" y="466" width="300" height="108" rx="26" class="stage-halo halo-mint graph-halo" filter="url(#soft-glow)"/>
       <rect x="930" y="474" width="280" height="92" rx="22" class="panel panel-02g"/>
-      <g transform="translate(988 501)" aria-hidden="true">
+      <g transform="translate(996 501)" aria-hidden="true">
         <line x1="8" y1="8" x2="30" y2="4" class="graph-edge"/>
         <line x1="30" y1="4" x2="40" y2="22" class="graph-edge"/>
         <line x1="8" y1="8" x2="18" y2="32" class="graph-edge"/>
@@ -370,30 +402,30 @@
         <circle cx="40" cy="22" r="4.5" class="graph-node"/>
         <circle cx="18" cy="32" r="4.5" class="graph-node"/>
       </g>
-      <text x="1052" y="534" class="sans stage-name">GRAPH</text>
+      <text x="1059" y="532" class="sans stage-name">GRAPH</text>
 
       <rect x="1220" y="466" width="300" height="108" rx="26" class="stage-halo halo-violet qdrant-halo" filter="url(#soft-glow)"/>
       <rect x="1230" y="474" width="280" height="92" rx="22" class="panel panel-02b"/>
-      <g transform="translate(1278 501)" aria-hidden="true">
+      <g transform="translate(1288 501)" aria-hidden="true">
         <circle cx="6" cy="10" r="4" class="q-node"/>
         <circle cx="24" cy="4" r="4" class="q-node"/>
         <circle cx="38" cy="16" r="4" class="q-node"/>
         <circle cx="14" cy="28" r="4" class="q-node"/>
         <circle cx="32" cy="32" r="4" class="q-node" opacity="0.6"/>
       </g>
-      <text x="1342" y="534" class="sans stage-name">QDRANT</text>
+      <text x="1351" y="532" class="sans stage-name">QDRANT</text>
     </g>
 
     <g aria-label="Canonical record and graph evidence stage">
-      <path d="M770 596 V612 C770 628 786 636 804 636 H942 C954 636 960 642 960 646 V650" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 610 V648" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1370 596 V612 C1370 628 1354 636 1336 636 H1198 C1186 636 1180 642 1180 646 V650" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M770 596 V612 C770 628 786 636 804 636 H942 C954 636 960 642 960 646 V650" class="flow-path flow-amber merge-flow" pathLength="1"/>
-      <path d="M1370 596 V612 C1370 628 1354 636 1336 636 H1198 C1186 636 1180 642 1180 646 V650" class="flow-path flow-violet merge-flow" pathLength="1"/>
+      <path d="M770 566 V600 C770 618 786 626 804 626 H942 C954 626 960 632 960 638 V650" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 566 V648" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1370 566 V600 C1370 618 1354 626 1336 626 H1198 C1186 626 1180 632 1180 638 V650" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M770 566 V600 C770 618 786 626 804 626 H942 C954 626 960 632 960 638 V650" class="flow-path flow-amber merge-flow" pathLength="1"/>
+      <path d="M1370 566 V600 C1370 618 1354 626 1336 626 H1198 C1186 626 1180 632 1180 638 V650" class="flow-path flow-violet merge-flow" pathLength="1"/>
 
       <rect x="808" y="648" width="524" height="108" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)"/>
       <rect x="822" y="656" width="496" height="92" rx="26" class="panel panel-03"/>
-      <g transform="translate(956 686)" aria-hidden="true">
+      <g transform="translate(968 686)" aria-hidden="true">
         <line x1="8" y1="10" x2="32" y2="4" class="graph-edge"/>
         <line x1="32" y1="4" x2="45" y2="24" class="graph-edge"/>
         <line x1="8" y1="10" x2="18" y2="34" class="graph-edge"/>
@@ -403,57 +435,95 @@
         <circle cx="45" cy="24" r="5" class="graph-node"/>
         <circle cx="18" cy="34" r="5" class="graph-node"/>
       </g>
-      <text x="1027" y="716" class="sans stage-name">ARANGODB</text>
+      <text x="1039" y="714" class="sans stage-name">ARANGODB</text>
 
     </g>
 
     <g aria-label="Evidence gate">
-      <path d="M1070 768 V844" class="base-path" marker-end="url(#flow-arrow-brass)"/>
-      <path d="M1070 768 V848" class="flow-path flow-mint gate-flow" pathLength="1"/>
-      <circle cx="1070" cy="876" r="38" class="stage-halo halo-mint gate-halo" filter="url(#soft-glow)"/>
-      <line x1="830" y1="876" x2="1034" y2="876" class="gate-line"/>
-      <line x1="1106" y1="876" x2="1310" y2="876" class="gate-line"/>
-      <circle cx="1070" cy="876" r="24" class="gate-ring"/>
-      <path d="M1060 876 L1068 884 L1082 868" class="gate-check"/>
-      <text x="1070" y="936" text-anchor="middle" class="sans gate-name">EVIDENCE GATE</text>
+      <path d="M1070 768 V814" class="base-path" marker-end="url(#flow-arrow-brass)"/>
+      <path d="M1070 768 V818" class="flow-path flow-mint gate-flow" pathLength="1"/>
+      <circle cx="1070" cy="846" r="38" class="stage-halo halo-mint gate-halo" filter="url(#soft-glow)"/>
+      <line x1="830" y1="846" x2="1034" y2="846" class="gate-line"/>
+      <line x1="1106" y1="846" x2="1310" y2="846" class="gate-line"/>
+      <circle cx="1070" cy="846" r="24" class="gate-ring"/>
+      <path d="M1060 846 L1068 854 L1082 838" class="gate-check"/>
+      <text x="1070" y="906" text-anchor="middle" class="sans gate-name">EVIDENCE GATE</text>
     </g>
 
     <g aria-label="Bounded outcomes">
-      <path d="M1070 900 V976 H659 V994" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 900 V976 H933 V994" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 900 V976 H1207 V994" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 900 V976 H1481 V994" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 900 V976 H659 V998" class="flow-path flow-mint gate-flow" pathLength="1"/>
+      <path d="M1070 870 V946 H659 V964" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 870 V946 H933 V964" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 870 V946 H1207 V964" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 870 V946 H1481 V964" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 870 V946 H659 V968" class="flow-path flow-mint route-flow-1" pathLength="1"/>
+      <path d="M1070 870 V946 H933 V968" class="flow-path flow-mint route-flow-2" pathLength="1"/>
+      <path d="M1070 870 V946 H1207 V968" class="flow-path flow-mint route-flow-3" pathLength="1"/>
+      <path d="M1290 320 H1560 V946 H1481 V964" class="base-path-faint"/>
+      <path d="M1290 320 H1560 V946 H1481 V968" class="flow-path flow-violet deflect-flow" pathLength="1"/>
 
-      <g class="answer-state" aria-label="Answer outcome">
-        <rect x="534" y="998" width="250" height="64" rx="20" class="answer-shell"/>
-        <text x="659" y="1039" text-anchor="middle" class="sans outcome-name">ANSWER</text>
+      <g class="route-pill-1" aria-label="Answer outcome">
+        <rect x="534" y="968" width="250" height="64" rx="20" class="answer-shell"/>
+        <g transform="translate(596 982)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5"/>
+          <line x1="15" y1="10" x2="15" y2="5"/>
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none"/>
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none"/>
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none"/>
+        </g>
+        <text x="638" y="1009" class="sans outcome-name">ANSWER</text>
       </g>
 
-      <g aria-label="Clarify outcome">
-        <rect x="808" y="998" width="250" height="64" rx="20" class="clarify-shell"/>
-        <text x="933" y="1039" text-anchor="middle" class="sans outcome-name">CLARIFY</text>
+      <g class="route-pill-2" aria-label="Clarify outcome">
+        <rect x="808" y="968" width="250" height="64" rx="20" class="clarify-shell"/>
+        <g transform="translate(863 982)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5"/>
+          <line x1="15" y1="10" x2="15" y2="5"/>
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none"/>
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none"/>
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none"/>
+        </g>
+        <text x="905" y="1009" class="sans outcome-name">CLARIFY</text>
       </g>
 
-      <g aria-label="Draft outcome">
-        <rect x="1082" y="998" width="250" height="64" rx="20" class="clarify-shell"/>
-        <text x="1207" y="1039" text-anchor="middle" class="sans outcome-name">DRAFT</text>
+      <g class="route-pill-3" aria-label="Draft outcome">
+        <rect x="1082" y="968" width="250" height="64" rx="20" class="clarify-shell"/>
+        <g transform="translate(1151 982)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5"/>
+          <line x1="15" y1="10" x2="15" y2="5"/>
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none"/>
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none"/>
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none"/>
+        </g>
+        <text x="1193" y="1009" class="sans outcome-name">DRAFT</text>
       </g>
 
-      <g aria-label="Deflect outcome">
-        <rect x="1356" y="998" width="250" height="64" rx="20" class="panel-soft"/>
-        <text x="1481" y="1039" text-anchor="middle" class="sans outcome-name">DEFLECT</text>
+      <g class="route-pill-4" aria-label="Deflect outcome">
+        <rect x="1356" y="968" width="250" height="64" rx="20" class="panel-soft"/>
+        <g transform="translate(1411 982)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5"/>
+          <line x1="15" y1="10" x2="15" y2="5"/>
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none"/>
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none"/>
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none"/>
+        </g>
+        <text x="1453" y="1009" class="sans outcome-name">DEFLECT</text>
       </g>
 
 
-      <g aria-label="Agent response terminal">
-        <path d="M659 1062 V1084" class="base-path" marker-end="url(#flow-arrow)"/>
-        <path d="M933 1062 V1084" class="base-path" marker-end="url(#flow-arrow)"/>
-        <path d="M1207 1062 V1084" class="base-path" marker-end="url(#flow-arrow)"/>
-        <path d="M1481 1062 V1084" class="base-path" marker-end="url(#flow-arrow)"/>
-        <line x1="534" y1="1116" x2="890" y2="1116" class="gate-line"/>
-        <line x1="1250" y1="1116" x2="1606" y2="1116" class="gate-line"/>
-        <text x="1070" y="1125" text-anchor="middle" class="sans terminal-label">AGENT RESPONSE</text>
+      <g aria-label="Agent response to the human">
+        <path d="M659 1032 V1050" class="base-path"/>
+        <path d="M933 1032 V1050" class="base-path"/>
+        <path d="M1207 1032 V1050" class="base-path"/>
+        <path d="M1481 1032 V1050" class="base-path"/>
+        <line x1="659" y1="1052" x2="1481" y2="1052" class="gate-line"/>
+        <path d="M1070 1052 V1064" class="base-path" marker-end="url(#flow-arrow-brass)"/>
+        <rect x="710" y="1070" width="720" height="84" rx="42" class="query-shell"/>
+        <circle cx="756" cy="1112" r="7" fill="#93a289"/>
+        <text x="780" y="1119" class="mono query-label" fill="#93a289">RESPONSE</text>
+        <text x="920" y="1123" class="sans query-text r1">Reuse the fix from last time.</text>
+        <text x="920" y="1123" class="sans query-text r2" opacity="0">Which system do you mean?</text>
+        <text x="920" y="1123" class="sans query-text r3" opacity="0">Draft ready for your signoff.</text>
+        <text x="920" y="1123" class="sans query-text r4" opacity="0">That's outside this project.</text>
       </g>
     </g>
     </g>
