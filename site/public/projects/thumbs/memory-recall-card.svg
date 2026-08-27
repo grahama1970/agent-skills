@@ -32,24 +32,27 @@
       }
       #memory-pipeline .eyebrow {
         fill: #e2ac62;
-        font-size: 27px;
+        font-size: 31px;
         font-weight: 760;
-        letter-spacing: 9px;
+        letter-spacing: 10px;
+      }
+      #memory-pipeline .serif {
+        font-family: Fraunces, Georgia, "Times New Roman", serif;
       }
       #memory-pipeline .headline {
         fill: #ece2d3;
-        font-size: 84px;
-        font-weight: 690;
-        letter-spacing: -3px;
+        font-size: 118px;
+        font-weight: 600;
+        letter-spacing: -2px;
       }
       #memory-pipeline .subhead {
         fill: #a99787;
-        font-size: 29px;
+        font-size: 35px;
         font-weight: 430;
       }
       #memory-pipeline .footer {
         fill: #8f7f72;
-        font-size: 22px;
+        font-size: 25px;
         font-weight: 480;
         font-style: italic;
       }
@@ -332,12 +335,12 @@
     <rect width="1920" height="1200" fill="url(#bg-glow)"/>
 
     <g aria-label="Card heading">
-      <text x="110" y="480" class="sans eyebrow">GRAPH MEMORY</text>
-      <text x="106" y="570" class="sans headline">Ask before</text>
-      <text x="106" y="660" class="sans headline">you scan.</text>
-      <text x="110" y="728" class="sans subhead">Intent routes. Hybrid recall finds.</text>
-      <text x="110" y="766" class="sans subhead">Evidence decides.</text>
-      <text x="110" y="838" class="sans footer">A semantic match is a lead—not proof.</text>
+      <text x="110" y="446" class="sans eyebrow">GRAPH MEMORY</text>
+      <text x="104" y="564" class="serif headline">Ask before</text>
+      <text x="104" y="686" class="serif headline">you scan.</text>
+      <text x="110" y="762" class="sans subhead">Intent routes. Hybrid recall finds.</text>
+      <text x="110" y="808" class="sans subhead">Evidence decides.</text>
+      <text x="110" y="880" class="sans footer">A semantic match is a lead—not proof.</text>
     </g>
 
     <g aria-label="Example question">
