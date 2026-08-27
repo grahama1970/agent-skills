@@ -273,12 +273,19 @@ padding, label after them — never centered as a floating cluster.
   a reviewer critiquing their own mock's numbers can name flaws your card
   does not have. Verify each claimed flaw with the real geometry first.
 
-## Spacing Grid (required)
+## Spacing Grid (required and CHECKED)
 
 - Vertical: lay pipeline rows on a computed grid — sum the row heights,
   subtract from the content span, divide by the gap count, and place every
   row on that uniform gap (memory card: 7 rows, 74px gaps). Ad-hoc gaps
   (60/108/90/38 in one column) read as drift even when each row is fine.
+- This is not advisory. Every card MAINTAINS a grid manifest next to its
+  artwork (`<card>.grid.json`: canvas, origin, rows with y+h) and every
+  layout edit ends with `scripts/check_grid.py <manifest>` printing
+  `GRID_OK` (uniform gaps within tolerance, symmetric margins). Prose
+  rules did not stop drift in the session that created this skill;
+  dozens of local coordinate nudges did the damage — only the computed
+  check catches it. Edit → update manifest → run checker → screenshot.
 - Horizontal: siblings share one width and one gutter; icon and label
   offsets inside a row repeat identically across that row's nodes.
 - Any row edit re-runs the grid — a moved or shrunk row must pull the rows

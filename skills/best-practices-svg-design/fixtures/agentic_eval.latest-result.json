@@ -1,10 +1,10 @@
 {
   "schema": "agentic_evals.report.v2",
   "source": "skills/best-practices-svg-design/fixtures/agentic_eval.json",
-  "run_id": "e40b8ef963d6",
-  "fixture_sha256": "sha256:9fe88fb22b6a95a9deca6edb365ae3465002d541e51f58d819c06325d23bdff3",
+  "run_id": "e3c52b14b40f",
+  "fixture_sha256": "sha256:92f8897d21a9b5a920e61a39c8d8555366ac1f65ce44131a8501dae59e7cb4fa",
   "repo": {
-    "sha": "f6ae0784827652ec0b1adb376be737487ebd626c",
+    "sha": "13aac93e2a780d95bcb4d76d0e4bd4956cc73256",
     "ref": "main"
   },
   "mocked": false,
@@ -22,23 +22,23 @@
   "capability_readiness": null,
   "claims_coverage": "manifest-spanning",
   "focused_cases": [],
-  "generated_at": "2026-08-27T17:38:49.393930+00:00",
-  "case_count": 3,
-  "required_case_count": 3,
+  "generated_at": "2026-08-27T19:24:34.718243+00:00",
+  "case_count": 5,
+  "required_case_count": 5,
   "outcome_counts": {
-    "PASS": 3,
+    "PASS": 5,
     "FAIL": 0,
     "BLOCKED": 0,
     "NOT_TESTED": 0
   },
-  "trial_count": 9,
+  "trial_count": 15,
   "cases": [
     {
       "infra_blocked_trials": 0,
       "flaky": false,
       "name": "skill-contract-validation",
       "type": "positive",
-      "case_id": "e40b8ef963d6-c000",
+      "case_id": "e3c52b14b40f-c000",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -57,16 +57,16 @@
       "passed_trials": 3,
       "total_trials": 3,
       "pass_rate": 1.0,
-      "avg_latency_ms": 122.319,
+      "avg_latency_ms": 109.706,
       "trials": [
         {
           "exit_code": 0,
           "stdout": "[]\n",
           "stderr": "",
-          "duration_ms": 126.615,
+          "duration_ms": 109.535,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c000-t00",
+          "trial_id": "e3c52b14b40f-c000-t00",
           "outcome": "PASS",
           "problems": []
         },
@@ -74,10 +74,10 @@
           "exit_code": 0,
           "stdout": "[]\n",
           "stderr": "",
-          "duration_ms": 124.714,
+          "duration_ms": 110.13,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c000-t01",
+          "trial_id": "e3c52b14b40f-c000-t01",
           "outcome": "PASS",
           "problems": []
         },
@@ -85,10 +85,10 @@
           "exit_code": 0,
           "stdout": "[]\n",
           "stderr": "",
-          "duration_ms": 115.627,
+          "duration_ms": 109.452,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c000-t02",
+          "trial_id": "e3c52b14b40f-c000-t02",
           "outcome": "PASS",
           "problems": []
         }
@@ -99,7 +99,7 @@
       "flaky": false,
       "name": "template-first-scaffold-and-render-live",
       "type": "positive",
-      "case_id": "e40b8ef963d6-c001",
+      "case_id": "e3c52b14b40f-c001",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -119,16 +119,16 @@
       "passed_trials": 3,
       "total_trials": 3,
       "pass_rate": 1.0,
-      "avg_latency_ms": 528.156,
+      "avg_latency_ms": 497.766,
       "trials": [
         {
           "exit_code": 0,
           "stdout": "RENDER_OK\n",
           "stderr": "",
-          "duration_ms": 495.405,
+          "duration_ms": 482.864,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c001-t00",
+          "trial_id": "e3c52b14b40f-c001-t00",
           "outcome": "PASS",
           "problems": []
         },
@@ -136,10 +136,10 @@
           "exit_code": 0,
           "stdout": "RENDER_OK\n",
           "stderr": "",
-          "duration_ms": 553.372,
+          "duration_ms": 476.24,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c001-t01",
+          "trial_id": "e3c52b14b40f-c001-t01",
           "outcome": "PASS",
           "problems": []
         },
@@ -147,10 +147,10 @@
           "exit_code": 0,
           "stdout": "RENDER_OK\n",
           "stderr": "",
-          "duration_ms": 535.69,
+          "duration_ms": 534.195,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c001-t02",
+          "trial_id": "e3c52b14b40f-c001-t02",
           "outcome": "PASS",
           "problems": []
         }
@@ -161,7 +161,7 @@
       "flaky": false,
       "name": "unsafe-freeform-svg-rejected",
       "type": "negative",
-      "case_id": "e40b8ef963d6-c002",
+      "case_id": "e3c52b14b40f-c002",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -181,38 +181,162 @@
       "passed_trials": 3,
       "total_trials": 3,
       "pass_rate": 1.0,
-      "avg_latency_ms": 267.89,
+      "avg_latency_ms": 258.121,
       "trials": [
         {
           "exit_code": 1,
-          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.FjXtVYGJQo/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.NMBZLGyJbZ/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
           "stderr": "",
-          "duration_ms": 258.876,
+          "duration_ms": 268.323,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c002-t00",
+          "trial_id": "e3c52b14b40f-c002-t00",
           "outcome": "PASS",
           "problems": []
         },
         {
           "exit_code": 1,
-          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.2PUztm98W0/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.ZPB2BHNvLq/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
           "stderr": "",
-          "duration_ms": 264.968,
+          "duration_ms": 262.471,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c002-t01",
+          "trial_id": "e3c52b14b40f-c002-t01",
           "outcome": "PASS",
           "problems": []
         },
         {
           "exit_code": 1,
-          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.qjidsQOE5o/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.oZTqiKIjjE/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
           "stderr": "",
-          "duration_ms": 279.825,
+          "duration_ms": 243.568,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "e40b8ef963d6-c002-t02",
+          "trial_id": "e3c52b14b40f-c002-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "grid-checker-live",
+      "type": "positive",
+      "case_id": "e3c52b14b40f-c003",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "python3",
+        "../scripts/check_grid.py",
+        "../../../docs/assets/project-cards/memory-recall-card.grid.json"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 21.713,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "gaps=[75, 75, 75, 75, 75, 75] top=80 bottom=80\nrow=recall widths=[280, 280, 280] gutters=[20, 20]\nrow=route-pills widths=[250, 250, 250, 250] gutters=[24, 24, 24]\nGRID_OK\n",
+          "stderr": "",
+          "duration_ms": 21.223,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "e3c52b14b40f-c003-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "gaps=[75, 75, 75, 75, 75, 75] top=80 bottom=80\nrow=recall widths=[280, 280, 280] gutters=[20, 20]\nrow=route-pills widths=[250, 250, 250, 250] gutters=[24, 24, 24]\nGRID_OK\n",
+          "stderr": "",
+          "duration_ms": 21.845,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "e3c52b14b40f-c003-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "gaps=[75, 75, 75, 75, 75, 75] top=80 bottom=80\nrow=recall widths=[280, 280, 280] gutters=[20, 20]\nrow=route-pills widths=[250, 250, 250, 250] gutters=[24, 24, 24]\nGRID_OK\n",
+          "stderr": "",
+          "duration_ms": 22.071,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "e3c52b14b40f-c003-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "grid-checker-rejects-uneven",
+      "type": "negative",
+      "case_id": "e3c52b14b40f-c004",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf '{\"canvas\":400,\"rows\":[{\"name\":\"a\",\"y\":40,\"h\":50},{\"name\":\"b\",\"y\":120,\"h\":50},{\"name\":\"c\",\"y\":260,\"h\":50}]}' > \"$T\"; python3 ../scripts/check_grid.py \"$T\"; exit $?"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 26.451,
+      "trials": [
+        {
+          "exit_code": 1,
+          "stdout": "gaps=[30, 90] top=40 bottom=90\nGRID_FAIL uneven gaps (spread 60 > 1)\nGRID_FAIL margins differ by 50 > 2\n",
+          "stderr": "",
+          "duration_ms": 26.614,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "e3c52b14b40f-c004-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "gaps=[30, 90] top=40 bottom=90\nGRID_FAIL uneven gaps (spread 60 > 1)\nGRID_FAIL margins differ by 50 > 2\n",
+          "stderr": "",
+          "duration_ms": 26.093,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "e3c52b14b40f-c004-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "gaps=[30, 90] top=40 bottom=90\nGRID_FAIL uneven gaps (spread 60 > 1)\nGRID_FAIL margins differ by 50 > 2\n",
+          "stderr": "",
+          "duration_ms": 26.646,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "e3c52b14b40f-c004-t02",
           "outcome": "PASS",
           "problems": []
         }

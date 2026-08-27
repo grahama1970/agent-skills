@@ -47,6 +47,34 @@
       "expected": {
         "exit_code": 1
       }
+    },
+    {
+      "name": "grid-checker-live",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/check_grid.py",
+        "../../../docs/assets/project-cards/memory-recall-card.grid.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "GRID_OK"
+      }
+    },
+    {
+      "name": "grid-checker-rejects-uneven",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf '{\"canvas\":400,\"rows\":[{\"name\":\"a\",\"y\":40,\"h\":50},{\"name\":\"b\",\"y\":120,\"h\":50},{\"name\":\"c\",\"y\":260,\"h\":50}]}' > \"$T\"; python3 ../scripts/check_grid.py \"$T\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "GRID_FAIL"
+      }
     }
   ]
 }
