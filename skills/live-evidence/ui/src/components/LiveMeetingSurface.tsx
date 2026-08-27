@@ -120,12 +120,12 @@ function LiveCardStream({
                 <div className="card-question-preview">{card.question || card.query}</div>
                 <div className="card-answer-preview">{previewText(card)}</div>
                 {lineageLabel(card) ? (
-                  <div className="mt-2 truncate font-mono text-[10px] text-slate-500" title={lineageLabel(card)}>
+                  <div className="answer-provenance mt-2 truncate font-mono text-[10px] text-slate-500" title={lineageLabel(card)}>
                     {lineageLabel(card)}
                   </div>
                 ) : null}
                 <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-500">
-                  <span className="truncate">{sourceLabel(card)}</span>
+                  <span className="answer-provenance truncate">{sourceLabel(card)}</span>
                   <span>{Math.round(card.confidence * 100)}%</span>
                 </div>
                 {!card.pinned ? <div className="timer-progress-bar" /> : null}
@@ -184,7 +184,7 @@ function ActiveInsightStage({
 
         <div className="question-anchor">"{question}"</div>
         {lineage ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500">
+          <div className="answer-provenance mt-3 flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-500">
             <span>{lineage}</span>
             <span>card:{card.card_id.slice(0, 8)}</span>
           </div>

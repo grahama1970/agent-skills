@@ -154,7 +154,7 @@ export function EvidenceCardView({ card, busy, onPin, onDismiss }: EvidenceCardV
               {card.sources.slice(0, 3).map((source) => (
                 <div
                   key={source.source_id}
-                  className="max-w-[20rem] rounded-lg border border-white/[0.07] bg-white/[0.035] px-2.5 py-1.5 text-[10px] text-[var(--muted-foreground)]"
+                  className="answer-provenance max-w-[20rem] rounded-lg border border-white/[0.07] bg-white/[0.035] px-2.5 py-1.5 text-[10px] text-[var(--muted-foreground)]"
                   title={source.path ?? source.url ?? source.label}
                 >
                   <span className="font-semibold text-[var(--foreground)]/85">{source.repository ?? source.lane}</span>
