@@ -217,50 +217,14 @@
       #memory-pipeline .panel-02g { stroke: rgba(147, 162, 137, 0.38); }
 
       @media (prefers-reduced-motion: no-preference) {
-        @keyframes draw-query {
-          0%, 2% { stroke-dashoffset: 1; opacity: 0; }
-          10% { opacity: 1; }
-          16%, 24% { stroke-dashoffset: 0; opacity: 1; }
-          30%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-        }
-        @keyframes pulse-intent {
-          0%, 10%, 100% { opacity: 0; transform: scale(0.96); }
-          16%, 26% { opacity: 0.75; transform: scale(1); }
-          32% { opacity: 0.12; transform: scale(1.04); }
-        }
-        @keyframes draw-split {
-          0%, 16% { stroke-dashoffset: 1; opacity: 0; }
-          22% { opacity: 1; }
-          30%, 36% { stroke-dashoffset: 0; opacity: 1; }
-          42%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-        }
-        @keyframes pulse-recall {
-          0%, 22%, 100% { opacity: 0; transform: scale(0.97); }
-          30%, 40% { opacity: 0.72; transform: scale(1); }
-          46% { opacity: 0.10; transform: scale(1.03); }
-        }
-        @keyframes draw-merge {
-          0%, 30% { stroke-dashoffset: 1; opacity: 0; }
-          36% { opacity: 1; }
-          44%, 50% { stroke-dashoffset: 0; opacity: 1; }
-          56%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-        }
-        @keyframes pulse-record {
-          0%, 38%, 100% { opacity: 0; transform: scale(0.98); }
-          46%, 56% { opacity: 0.7; transform: scale(1.035); }
-          62% { opacity: 0.10; transform: scale(1.035); }
-        }
-        @keyframes draw-gate {
-          0%, 46% { stroke-dashoffset: 1; opacity: 0; }
-          52% { opacity: 1; }
-          60%, 66% { stroke-dashoffset: 0; opacity: 1; }
-          72%, 100% { stroke-dashoffset: 0; opacity: 0.18; }
-        }
-        @keyframes pulse-gate {
-          0%, 50%, 100% { opacity: 0; transform: scale(0.9); }
-          58%, 70% { opacity: 0.8; transform: scale(1); }
-          78% { opacity: 0.14; transform: scale(1.06); }
-        }
+        @keyframes draw-query { 0%, 2% { stroke-dashoffset: 1; opacity: 0; } 8% { opacity: 1; } 12%, 20% { stroke-dashoffset: 0; opacity: 1; } 26%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-intent { 0%, 8%, 100% { opacity: 0; transform: scale(0.96); } 13%, 21% { opacity: 0.75; transform: scale(1); } 27% { opacity: 0.12; transform: scale(1.04); } }
+        @keyframes draw-split { 0%, 13% { stroke-dashoffset: 1; opacity: 0; } 17% { opacity: 1; } 23%, 28% { stroke-dashoffset: 0; opacity: 1; } 33%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-recall { 0%, 18%, 100% { opacity: 0; transform: scale(0.97); } 24%, 31% { opacity: 0.72; transform: scale(1); } 36% { opacity: 0.10; transform: scale(1.03); } }
+        @keyframes draw-merge { 0%, 24% { stroke-dashoffset: 1; opacity: 0; } 28% { opacity: 1; } 34%, 38% { stroke-dashoffset: 0; opacity: 1; } 43%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-record { 0%, 30%, 100% { opacity: 0; transform: scale(0.98); } 36%, 43% { opacity: 0.7; transform: scale(1.035); } 48% { opacity: 0.10; transform: scale(1.035); } }
+        @keyframes draw-gate { 0%, 36% { stroke-dashoffset: 1; opacity: 0; } 40% { opacity: 1; } 46%, 50% { stroke-dashoffset: 0; opacity: 1; } 55%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-gate { 0%, 40%, 100% { opacity: 0; transform: scale(0.9); } 46%, 56% { opacity: 0.8; transform: scale(1); } 62% { opacity: 0.14; transform: scale(1.06); } }
         @keyframes query-dot {
           0%, 2% { transform: scale(0.7); opacity: 0.3; }
           10%, 22% { transform: scale(1.15); opacity: 1; }
@@ -295,33 +259,24 @@
           animation: pulse-gate 6s ease-in-out infinite;
         }
         #memory-pipeline .query-dot { transform-origin: 817px 153px; animation: query-dot 6s ease-in-out infinite; }
-        @keyframes deflect-run {
-          0%, 79% { stroke-dashoffset: 1; opacity: 0; }
-          80.5% { opacity: 1; }
-          85%, 95% { stroke-dashoffset: 0; opacity: 0.9; }
-          99%, 100% { stroke-dashoffset: 0; opacity: 0; }
-        }
-        @keyframes pill-cycle-deflect {
-          0%, 84% { opacity: 0.45; }
-          86.5%, 98% { opacity: 1; }
-          100% { opacity: 0.45; }
-        }
+        @keyframes deflect-run { 0%, 78% { stroke-dashoffset: 1; opacity: 0; } 80% { opacity: 0.9; } 84%, 96% { stroke-dashoffset: 0; opacity: 0.9; } 99%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes pill-cycle-deflect { 0%, 85% { opacity: 0.45; } 87%, 99% { opacity: 1; } 100% { opacity: 0.45; } }
         @keyframes qph1 { 0% { opacity: 0; } 0.5% { opacity: 0; } 2.0% { opacity: 1; } 25.5% { opacity: 1; } 27.0% { opacity: 0; } 100% { opacity: 0; } }
         @keyframes qph2 { 0% { opacity: 0; } 25.5% { opacity: 0; } 27.0% { opacity: 1; } 50.5% { opacity: 1; } 52.0% { opacity: 0; } 100% { opacity: 0; } }
         @keyframes qph3 { 0% { opacity: 0; } 50.5% { opacity: 0; } 52.0% { opacity: 1; } 75.5% { opacity: 1; } 77.0% { opacity: 0; } 100% { opacity: 0; } }
         @keyframes qph4 { 0% { opacity: 0; } 0.5% { opacity: 1; } 2.0% { opacity: 0; } 75.5% { opacity: 0; } 77.0% { opacity: 1; } 100% { opacity: 0; } }
-        @keyframes rph1 { 0% { opacity: 0; } 18.5% { opacity: 0; } 20.0% { opacity: 1; } 43.0% { opacity: 1; } 44.5% { opacity: 0; } 100% { opacity: 0; } }
-        @keyframes rph2 { 0% { opacity: 0; } 43.5% { opacity: 0; } 45.0% { opacity: 1; } 68.0% { opacity: 1; } 69.5% { opacity: 0; } 100% { opacity: 0; } }
-        @keyframes rph3 { 0% { opacity: 0; } 68.5% { opacity: 0; } 70.0% { opacity: 1; } 93.0% { opacity: 1; } 94.5% { opacity: 0; } 100% { opacity: 0; } }
-        @keyframes rph4 { 0% { opacity: 0; } 18.0% { opacity: 1; } 19.5% { opacity: 0; } 93.5% { opacity: 0; } 95.0% { opacity: 1; } 100% { opacity: 0; } }
-        @keyframes pillph1 { 0% { opacity: 0.45; } 16.0% { opacity: 0.45; } 18.5% { opacity: 1; } 23.0% { opacity: 1; } 25.0% { opacity: 0.45; } 100% { opacity: 0.45; } }
-        @keyframes pillph2 { 0% { opacity: 0.45; } 41.0% { opacity: 0.45; } 43.5% { opacity: 1; } 48.0% { opacity: 1; } 50.0% { opacity: 0.45; } 100% { opacity: 0.45; } }
-        @keyframes pillph3 { 0% { opacity: 0.45; } 66.0% { opacity: 0.45; } 68.5% { opacity: 1; } 73.0% { opacity: 1; } 75.0% { opacity: 0.45; } 100% { opacity: 0.45; } }
-        @keyframes pillph4 { 0% { opacity: 0.45; } 91.0% { opacity: 0.45; } 93.5% { opacity: 1; } 98.0% { opacity: 1; } 100% { opacity: 0.45; } }
-        @keyframes flowph1 { 0% { opacity: 0; } 15.0% { opacity: 0; } 16.0% { opacity: 0.9; } 22.0% { opacity: 0.9; } 24.5% { opacity: 0; } 100% { opacity: 0; } }
-        @keyframes flowph2 { 0% { opacity: 0; } 40.0% { opacity: 0; } 41.0% { opacity: 0.9; } 47.0% { opacity: 0.9; } 49.5% { opacity: 0; } 100% { opacity: 0; } }
-        @keyframes flowph3 { 0% { opacity: 0; } 65.0% { opacity: 0; } 66.0% { opacity: 0.9; } 72.0% { opacity: 0.9; } 74.5% { opacity: 0; } 100% { opacity: 0; } }
-        @keyframes flowph4 { 0% { opacity: 0; } 90.0% { opacity: 0; } 91.0% { opacity: 0.9; } 97.0% { opacity: 0.9; } 99.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph1 { 0% { opacity: 0; } 12.0% { opacity: 0; } 13.5% { opacity: 1; } 25.5% { opacity: 1; } 27.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph2 { 0% { opacity: 0; } 37.0% { opacity: 0; } 38.5% { opacity: 1; } 50.5% { opacity: 1; } 52.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph3 { 0% { opacity: 0; } 62.0% { opacity: 0; } 63.5% { opacity: 1; } 75.5% { opacity: 1; } 77.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph4 { 0% { opacity: 0; } 0.5% { opacity: 1; } 2.0% { opacity: 0; } 87.0% { opacity: 0; } 88.5% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes pillph1 { 0% { opacity: 0.45; } 11.5% { opacity: 0.45; } 13.0% { opacity: 1; } 24.0% { opacity: 1; } 25.5% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph2 { 0% { opacity: 0.45; } 36.5% { opacity: 0.45; } 38.0% { opacity: 1; } 49.0% { opacity: 1; } 50.5% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph3 { 0% { opacity: 0.45; } 61.5% { opacity: 0.45; } 63.0% { opacity: 1; } 74.0% { opacity: 1; } 75.5% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph4 { 0% { opacity: 0.45; } 0.5% { opacity: 0.45; } 86.5% { opacity: 0.45; } 88.0% { opacity: 1; } 99.0% { opacity: 1; } 100% { opacity: 0.45; } }
+        @keyframes flowph1 { 0% { opacity: 0; } 10.5% { opacity: 0; } 11.5% { opacity: 0.9; } 15.0% { opacity: 0.9; } 17.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph2 { 0% { opacity: 0; } 35.5% { opacity: 0; } 36.5% { opacity: 0.9; } 40.0% { opacity: 0.9; } 42.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph3 { 0% { opacity: 0; } 60.5% { opacity: 0; } 61.5% { opacity: 0.9; } 65.0% { opacity: 0.9; } 67.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph4 { 0% { opacity: 0; } 85.5% { opacity: 0; } 86.5% { opacity: 0.9; } 90.0% { opacity: 0.9; } 92.0% { opacity: 0; } 100% { opacity: 0; } }
         #memory-pipeline .q1 { animation: qph1 24s linear infinite; }
         #memory-pipeline .q2 { animation: qph2 24s linear infinite; }
         #memory-pipeline .q3 { animation: qph3 24s linear infinite; }
