@@ -150,6 +150,11 @@ perspective.
   before authoring: mono ≈ 0.62em/char, sans ≈ 0.5em/char, plus
   letter-spacing; if `label_px + gap + note_px > panel_width - 2*padding`,
   restructure — never let it ride.
+- A dot/bullet glyph inside a bordered pill is decoration pretending to be
+  state: the border already delimits the label, so the dot reads as a stray
+  bullet point. Encode state in the shell (fill, border style) and center
+  the label; keep a dot only when it is a live legend key used elsewhere on
+  the same card.
 - Supporting notes are the FIRST cut, not a fixture: any note that renders
   below ~11px at the slot's true display size is unreadable decoration —
   delete it rather than keep it (memory card: 'route before recall',
