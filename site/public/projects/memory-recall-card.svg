@@ -485,8 +485,8 @@
         <path d="M 1207 982 V1007.3" class="base-path" />
         <path d="M 1481 982 V1007.3" class="base-path" />
         <line x1="659" y1="1009" x2="1481" y2="1009" class="gate-line" />
-        <path d="M 1070 1009 V1036" class="base-path" marker-end="url(#flow-arrow-brass)" />
-        <g id="response-label" data-component="label" data-grid-row="response" transform="translate(680 1046)">
+        <path d="M 1070 1009 V1073" class="base-path" marker-end="url(#flow-arrow-brass)" />
+        <g id="response-label" data-component="label" data-grid-row="response" transform="translate(680 1083)">
           <rect x="0" y="0" width="760" height="84" rx="42" class="query-shell" />
           <g class="label-icon" transform="translate(38 24)" aria-hidden="true" fill="none" stroke="#93a289" stroke-width="2.4" stroke-linecap="round">
             <rect x="2" y="12" width="30" height="20" rx="6" />

@@ -33,19 +33,22 @@
     {
       "name": "outcomes",
       "y": 878,
-      "h": 64
+      "h": 64,
+      "visual_bottom": 1009
     },
     {
       "name": "response",
-      "y": 1016,
+      "y": 1053,
       "h": 84,
-      "text_baseline_offset": 53
+      "text_baseline_offset": 53,
+      "visual_top": 1053
     }
   ],
   "relations": [
     {
       "type": "equal_gap",
       "name": "terminal_label_gap_match",
+      "measure": "visual",
       "a": [
         "request",
         "intent"
