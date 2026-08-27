@@ -81,9 +81,9 @@
       "type": "positive",
       "real_world": true,
       "command": [
-        "python3",
-        "../scripts/check_svg_spacing.py",
-        "../../../docs/assets/project-cards/memory-recall-card.svg"
+        "bash",
+        "-c",
+        "cd ../.. && best-practices-svg-design/run.sh spacing ../docs/assets/project-cards/memory-recall-card.svg"
       ],
       "expected": {
         "exit_code": 0,
@@ -97,7 +97,7 @@
       "command": [
         "bash",
         "-c",
-        "T=$(mktemp --suffix=.svg); sed 's/<rect x=\"822\" y=\"603\"/<rect x=\"822\" y=\"585\"/' ../../../docs/assets/project-cards/memory-recall-card.svg > \"$T\"; python3 ../scripts/check_svg_spacing.py \"$T\"; exit $?"
+        "T=$(mktemp --suffix=.svg); sed 's/<rect x=\"822\" y=\"603\"/<rect x=\"822\" y=\"585\"/' ../../../docs/assets/project-cards/memory-recall-card.svg > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
       ],
       "expected": {
         "exit_code": 1,

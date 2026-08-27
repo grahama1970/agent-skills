@@ -1,0 +1,16 @@
+[project]
+name = "svg-design-checks"
+version = "0.1.0"
+description = "Deterministic layout, spacing, and composition checks for shipped SVG cards"
+requires-python = ">=3.11"
+dependencies = ["typer>=0.12", "loguru>=0.7"]
+
+[project.scripts]
+svg-design-check = "svg_design_checks.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/svg_design_checks"]

@@ -28,10 +28,15 @@ def main() -> int:
     tree = ET.parse(path)
     ns = {"s": "http://www.w3.org/2000/svg"}
     boxes = []
+    texts = []
     def walk(e, chain):
         chain = chain + [e]
         tag = e.tag.split("}")[-1]
         cls = e.get("class", "")
+        if tag == "text" and e.get("x") and e.get("y"):
+            tx, ty = translates(chain)
+            texts.append((float(e.get("x"))+tx, float(e.get("y"))+ty,
+                          e.get("text-anchor", "start"), cls, (e.text or "").strip()))
         if "stage-halo" not in cls:
             tx, ty = translates(chain)
             if tag == "rect" and e.get("width") and e.get("height"):
@@ -71,6 +76,34 @@ def main() -> int:
             print(f"row{i} widths={widths} gutters={gutters}")
             if max(widths)-min(widths) > tol or (gutters and max(gutters)-min(gutters) > tol):
                 print(f"SPACING_FAIL uneven columns in row{i}"); ok = False
+    # label audit: every text inside a row box must sit consistently
+    for i, r in enumerate(rows):
+        items = sorted(r["items"], key=lambda b: b[0])
+        rows_texts = []
+        for t in texts:
+            for b in items:
+                if b[0] <= t[0] <= b[0]+b[2] and b[1] <= t[1] <= b[1]+b[3]:
+                    rows_texts.append((b, t))
+                    break
+        if len(rows_texts) < 2:
+            continue
+        base_offsets = sorted(round(t[1]-b[1], 1) for b, t in rows_texts)
+        centered = [(b, t) for b, t in rows_texts if t[2] == "middle"]
+        lefts = [(b, t) for b, t in rows_texts if t[2] != "middle"]
+        if max(base_offsets) - min(base_offsets) > tol:
+            print(f"SPACING_FAIL row{i} label baselines uneven: offsets={base_offsets}"); ok = False
+        else:
+            print(f"row{i} label baseline offsets={base_offsets}")
+        for b, t in centered:
+            c = b[0] + b[2]/2
+            if abs(t[0] - c) > tol:
+                print(f"SPACING_FAIL row{i} centered label '{t[4][:20]}' off-center by {t[0]-c:+.1f}"); ok = False
+        if len(lefts) >= 2:
+            xoffs = sorted(round(t[0]-b[0], 1) for b, t in lefts)
+            if max(xoffs) - min(xoffs) > tol:
+                print(f"SPACING_FAIL row{i} label x-offsets uneven: {xoffs}"); ok = False
+            else:
+                print(f"row{i} label x-offsets={xoffs}")
     print("SPACING_OK" if ok else "SPACING_FAIL")
     return 0 if ok else 1
 
