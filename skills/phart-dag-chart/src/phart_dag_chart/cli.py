@@ -95,3 +95,49 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+@app.command("research-round")
+def cmd_research_round(
+    output: Annotated[Path, typer.Argument(help="Where to write the round DAG JSON")],
+    coarse: Annotated[str, typer.Option(help="Comma-separated coarse fanout leaves")] = "web-sweep,github-org,youtube-talks,docs-fetch",
+    targeted: Annotated[str, typer.Option(help="Comma-separated targeted fanout leaves")] = "people,stack,bridge,primary-sources",
+    chart_after: Annotated[bool, typer.Option("--chart/--no-chart", help="Render the chart to stdout after writing")] = True,
+) -> None:
+    """Generate a self-expanding research-round DAG - no bespoke code needed.
+
+    Emits the canonical shape: concurrent coarse leaves -> synthesize ->
+    refine (role=expansion, authors the targeted queries) -> concurrent
+    targeted leaves -> synthesize -> dry-gate (role=gate: settle or compile
+    the next linked round) -> ingest -> recall-verify (role=terminal).
+    """
+    coarse_ids = [c.strip() for c in coarse.split(",") if c.strip()]
+    targeted_ids = [t.strip() for t in targeted.split(",") if t.strip()]
+    if not coarse_ids or not targeted_ids:
+        _emit_error(DagChartError("research-round needs at least one coarse and one targeted leaf"))
+        raise typer.Exit(1)
+    nodes: list[dict[str, Any]] = []
+    for cid in coarse_ids:
+        leaf_type = "dogpile.search" if cid == "web-sweep" else "skill.run"
+        nodes.append({"id": f"r1-{cid}", "type": leaf_type, "depends_on": []})
+    nodes.append({"id": "r1-synthesize", "type": "ask.oracle",
+                  "depends_on": [f"r1-{c}" for c in coarse_ids]})
+    nodes.append({"id": "r1-refine-questions", "type": "ask.oracle",
+                  "role": "expansion", "depends_on": ["r1-synthesize"]})
+    for tid in targeted_ids:
+        nodes.append({"id": f"r2-{tid}", "type": "dogpile.search",
+                      "depends_on": ["r1-refine-questions"]})
+    nodes.append({"id": "r2-synthesize", "type": "ask.oracle",
+                  "depends_on": [f"r2-{t}" for t in targeted_ids]})
+    nodes.append({"id": "dry-gate", "type": "ask.oracle", "role": "gate",
+                  "depends_on": ["r2-synthesize"]})
+    nodes.append({"id": "chunk-and-ingest", "type": "memory.recall",
+                  "depends_on": ["dry-gate"]})
+    nodes.append({"id": "recall-verify", "type": "memory.recall",
+                  "role": "terminal", "depends_on": ["chunk-and-ingest"]})
+    dag = {"schema": "ask.dag.v1", "nodes": nodes}
+    validate_dag(dag)
+    output.write_text(json.dumps(dag, indent=1) + "\n")
+    typer.echo(f"wrote {output} ({len(nodes)} nodes)")
+    if chart_after:
+        typer.echo(render_chart(dag))
+

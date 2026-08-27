@@ -32,7 +32,7 @@ cmd="${1:-}"
 shift || true
 
 case "$cmd" in
-  chart|validate)
+  chart|validate|research-round)
     exec uv run --project "$SCRIPT_DIR" phart-dag-chart "$cmd" "$@"
     ;;
   ""|help|-h|--help)
