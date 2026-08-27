@@ -106,6 +106,61 @@ def cmd_plan_summary(plan_json: str) -> None:
           "note": "summary of a SAVED plan; this skill never plans live state"})
 
 
+def _get_json(url: str, token: str | None = None) -> tuple[int, dict]:
+    import urllib.error
+    import urllib.request
+    req = urllib.request.Request(url)
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Content-Type", "application/vnd.api+json")
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status, json.loads(r.read())
+    except urllib.error.HTTPError as exc:
+        try:
+            body = json.loads(exc.read())
+        except Exception:
+            body = {}
+        return exc.code, body
+
+
+def cmd_registry(name: str) -> None:
+    """Public Terraform Registry API - no auth required."""
+    url = f"https://registry.terraform.io/v1/modules/search?q={name}&limit=3"
+    status, body = _get_json(url)
+    if status != 200:
+        _out({"schema": "ops_terraform.registry.v1", "status": "FAIL",
+              "failure_code": "registry_unreachable", "http": status}, 1)
+    mods = [{"id": m.get("id"), "downloads": m.get("downloads")}
+            for m in body.get("modules", [])]
+    _out({"schema": "ops_terraform.registry.v1", "status": "PASS",
+          "query": name, "results": mods})
+
+
+def cmd_hcp_status() -> None:
+    """HCP Terraform api/v2 posture. Token from TFE_TOKEN; presence only."""
+    import os
+    token = os.getenv("TFE_TOKEN")
+    if not token:
+        _out({"schema": "ops_terraform.hcp.v1", "status": "NOT_CONFIGURED",
+              "failure_code": "hcp_token_missing",
+              "token_present": False,
+              "next_command": "mint a user token at app.terraform.io User Settings and export TFE_TOKEN"}, 1)
+    status, body = _get_json(
+        "https://app.terraform.io/api/v2/account/details", token)
+    if status == 401:
+        _out({"schema": "ops_terraform.hcp.v1", "status": "FAIL",
+              "failure_code": "hcp_token_unauthorized", "http": 401,
+              "token_present": True}, 1)
+    if status != 200:
+        _out({"schema": "ops_terraform.hcp.v1", "status": "FAIL",
+              "failure_code": "hcp_api_error", "http": status}, 1)
+    attrs = body.get("data", {}).get("attributes", {})
+    _out({"schema": "ops_terraform.hcp.v1", "status": "PASS",
+          "username": attrs.get("username"),
+          "two_factor": bool(attrs.get("two-factor", {}).get("enabled"))})
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         _out({"schema": "ops_terraform.usage.v1", "status": "FAIL",
@@ -118,6 +173,10 @@ def main() -> None:
         cmd_check(sys.argv[2])
     elif cmd == "plan-summary" and len(sys.argv) > 2:
         cmd_plan_summary(sys.argv[2])
+    elif cmd == "registry" and len(sys.argv) > 2:
+        cmd_registry(sys.argv[2])
+    elif cmd == "hcp-status":
+        cmd_hcp_status()
     else:
         _out({"schema": "ops_terraform.usage.v1", "status": "FAIL",
               "failure_code": "unknown_subcommand", "got": sys.argv[1:]}, 2)

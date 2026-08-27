@@ -36,6 +36,8 @@ tool (plan-hash-bound approval), which this skill deliberately does NOT do.
 ./run.sh doctor                       # binary, version, env posture
 ./run.sh check <module-dir>           # fmt -check + validate (backend=false)
 ./run.sh plan-summary <plan.json>     # counts adds/changes/destroys from a saved plan JSON
+./run.sh registry <query>             # public Registry API module search
+./run.sh hcp-status                   # HCP api/v2 account posture (TFE_TOKEN; fail-closed)
 ```
 
 Outcomes are typed JSON with status PASS|FAIL|NOT_CONFIGURED and a
