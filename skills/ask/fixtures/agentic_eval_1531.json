@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "issue #1531: a WebGPT attachment bundle rejected before browser dispatch (surf zip file-count limit) classifies as webgpt_attachment_bundle_rejected with a recovery packet naming the file-count cause, not a generic browser_handler_timeout with a stale open-bind next_command",
+  "claims": {
+    "proves": "Ask's browser failure classifier maps surf's attach_file_preflight_failed to webgpt_attachment_bundle_rejected, cites 'zip contains N files; maximum is M' in the recovery instruction, and emits a resubmit next_command (never open-bind/--create-tab)",
+    "does_not_prove": "a full live WebGPT run with a 9-file zip, or a unified error taxonomy across the whole pipeline (separate follow-up)"
+  },
+  "capability_claims": [
+    {"id": "ask.webgpt_attachment_rejection_classified", "description": "Ask names the attachment-bundle-shape cause instead of a generic timeout/open-bind for provider file-count rejections.", "criticality": "critical", "evidence_required": {"deterministic": true}}
+  ],
+  "cases": [
+    {
+      "name": "webgpt-attachment-bundle-rejection-classified-1531",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["ask.webgpt_attachment_rejection_classified"],
+      "timeout_seconds": 180,
+      "command": ["bash","-c","cd .. && UV_PROJECT_ENVIRONMENT=/tmp/ask-1531-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_attachment_bundle_recovery_1531.py"],
+      "expected": {"exit_code": 0, "stdout_contains": ["2 passed"]}
+    }
+  ]
+}

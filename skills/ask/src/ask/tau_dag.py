@@ -1551,8 +1551,26 @@ def _browser_orphan_artifact_summary(
         and source.get("submitted_to_chatgpt") is False
         for source in (submit_meta, submit_receipt, inflight, heartbeat)
     )
+    # Provider rejected the attachment BUNDLE SHAPE before browser dispatch
+    # (e.g. surf webgpt zip file-count limit: "zip contains N files; maximum is 5").
+    # This is not a tab-binding failure -- open-bind/rebind does not address it
+    # (issue #1531). Detect it from surf's attach_file_preflight receipt.
+    attach_preflight: dict[str, Any] = {}
+    for source in (submit_meta, submit_receipt, inflight):
+        if isinstance(source, dict) and isinstance(source.get("attach_file_preflight"), dict):
+            attach_preflight = source["attach_file_preflight"]
+            break
+    attach_bundle_rejected = (
+        any(
+            isinstance(source, dict) and str(source.get("failure") or "") == "attach_file_preflight_failed"
+            for source in (submit_meta, submit_receipt, inflight)
+        )
+        or (isinstance(attach_preflight, dict) and attach_preflight.get("ok") is False)
+    )
     failure_code = (
-        "browser_provider_rate_limited"
+        "webgpt_attachment_bundle_rejected"
+        if attach_bundle_rejected
+        else "browser_provider_rate_limited"
         if provider_throttle
         else "browser_submit_not_accepted"
         if prepared_prompt_only
@@ -1572,7 +1590,33 @@ def _browser_orphan_artifact_summary(
             continue
         sentinel = sentinel or str(source.get("sentinel") or "").strip()
         requested_tab_id = requested_tab_id or str(source.get("requested_tab_id") or "").strip()
-    if provider_throttle:
+    if attach_bundle_rejected:
+        _err = str(attach_preflight.get("error") or "provider rejected the attachment bundle shape").strip()
+        _fc = attach_preflight.get("file_count")
+        _mx = attach_preflight.get("max_files")
+        blocked_reason = "webgpt_attachment_bundle_shape_rejected_before_dispatch"
+        limit_clause = (
+            f"The attachment bundle has {_fc} files but this provider accepts at most {_mx}."
+            if isinstance(_fc, int) and isinstance(_mx, int)
+            else f"Provider preflight: {_err}."
+        )
+        fallback_instruction = (
+            f"WebGPT rejected the attachment BUNDLE SHAPE before browser dispatch ({_err}). "
+            "This is not a tab-binding or open-bind/rebind problem; re-binding will not help. "
+            f"{limit_clause} Rebuild the SAME review content as ONE provider-compatible attachment: "
+            "concatenate the readable files into a single markdown, or produce a zip with at most "
+            f"{_mx if isinstance(_mx, int) else 5} files, then resubmit with --attach-file pointing at "
+            "the corrected bundle."
+        )
+        submit_binary = surf_run if str(surf_run) else Path("skills/surf/run.sh")
+        transport = str(ROUNDTABLE_HANDLERS.get(handler, {}).get("transport") or f"{handler}.submit")
+        next_command = [
+            str(submit_binary), transport,
+            "--input", str(prompt_path),
+            "--output", str(response_path.with_name("response.retry.md")),
+            "--attach-file", "<PATH_TO_CORRECTED_SINGLE_BUNDLE>",
+        ]
+    elif provider_throttle:
         blocked_reason = "browser_provider_rate_limit_requires_backoff"
         fallback_instruction = (
             "Treat only this browser lane as provider-rate-limited. Do not launch parallel WebGPT "
