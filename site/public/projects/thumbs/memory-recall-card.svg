@@ -533,12 +533,12 @@
 
 
       <g aria-label="Agent response to the human">
-        <path d="M659 1002 V1022" class="base-path"/>
-        <path d="M933 1002 V1022" class="base-path"/>
-        <path d="M1207 1002 V1022" class="base-path"/>
-        <path d="M1481 1002 V1022" class="base-path"/>
-        <line x1="659" y1="1024" x2="1481" y2="1024" class="gate-line"/>
-        <path d="M1070 1024 V1040" class="base-path" marker-end="url(#flow-arrow-brass)"/>
+        <path d="M659 1002 V1019" class="base-path"/>
+        <path d="M933 1002 V1019" class="base-path"/>
+        <path d="M1207 1002 V1019" class="base-path"/>
+        <path d="M1481 1002 V1019" class="base-path"/>
+        <line x1="659" y1="1021" x2="1481" y2="1021" class="gate-line"/>
+        <path d="M1070 1021 V1040" class="base-path" marker-end="url(#flow-arrow-brass)"/>
         <rect x="680" y="1050" width="760" height="84" rx="42" class="query-shell"/>
         <g transform="translate(718 1074)" aria-hidden="true" fill="none" stroke="#93a289" stroke-width="2.4" stroke-linecap="round">
           <rect x="2" y="12" width="30" height="20" rx="6"/>
