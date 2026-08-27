@@ -88,6 +88,51 @@ the HUD's Openings panel WITH the heard terms and the exact trigger events,
 then cools down for two minutes. A recognition assist, never a script.
 `fixtures/briefing_straive.json` is the shipped example pack.
 
+## Client/employer/topic prep packs
+
+For a researched interview, meeting, client, employer, or topic, build one
+self-contained `live_evidence.prep_pack.v1` before the live run. The pack is
+the durable boundary between deep research and the live copilot. It bundles:
+
+- source context from `$brave-search`, `$dogpile`, selected docs, repos, and
+  local briefs;
+- the `live_evidence.briefing_pack.v1` to load into `/api/briefing/load`;
+- expected question oracles with time/category anchors when available;
+- reviewed answers, required skill chains, quality bars, publication gates, and
+  fail-closed conditions;
+- Memory export instructions for `/live-evidence/oracle-pack` and `/recall`;
+- post-run grading instructions for missed questions, weak answers, and wrong
+  skill-chain choices.
+
+The normal front door is `$curate-client`. It owns the client KB curation and
+live-evidence wiring. Its internal prep chain is:
+
+```text
+$curate-client client/employer/topic KB build
+  -> $brave-search for current public discovery
+  -> $dogpile for deeper multi-source research
+  -> $ingest-website for durable selected docs when needed
+  -> $ask for question/answer/skill-chain generation and review
+  -> $memory for live retrieval by known or similar question
+  -> $live-evidence loads the briefing pack and recalls the oracle graph
+```
+
+`fixtures/prep_pack_drivewealth.json` is the shipped DriveWealth example. Validate
+the shape with `./run.sh eval-prep-pack`. A retrieved prep-pack or oracle answer
+is a prior for live ranking and answer shaping, not publication authority; the
+live transcript revision, source provenance, and card publication gates still
+decide visibility.
+
+## Precomputed interview oracles
+
+Before live testing a known interview scenario, every transcript should have a
+finished oracle set: canonical questions, reviewed answers, required skill
+chains, source references, and expected disposition by timecode. For
+DriveWealth-style prep, the target frontier is 100-200 questions across
+5-10 minute mock interviews. Known or similar question retrieval should help the
+live loop choose the right skill chain and answer shape, but it must never make
+the card bypass review.
+
 ## Operating contract
 
 ```text

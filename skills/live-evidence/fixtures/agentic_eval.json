@@ -371,6 +371,193 @@
       }
     },
     {
+      "name": "precomputed-transcript-oracle-route-plan-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-precomputed-oracles-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-precomputed-oracles --output \"$O\""
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.precomputed_oracle_validation.v1\"",
+          "\"status\": \"PASS\"",
+          "\"compiled_oracles\"",
+          "\"timecode\"",
+          "\"skill_chain\"",
+          "\"expected_solution\"",
+          "precomputed oracles: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/compiled_oracles/1/questions/1/skill_chain/0",
+            "equals": "brave-search"
+          },
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/compiled_oracles/1/questions/1/timecode/kind",
+            "equals": "transcript_turn"
+          },
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/compiled_oracles/2/questions/2/route_plan/category",
+            "equals": "repo_code_question"
+          }
+        ]
+      },
+      "notes": "Pre-live guard: every pinned live/replay transcript oracle must compile to a finished expected-question set before audio starts, including a time anchor, required skill chain, expected solution, and route/publication plan."
+    },
+    {
+      "name": "client-employer-topic-prep-pack-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-prep-pack-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-prep-pack --output \"$O\""
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.prep_pack_validation.v1\"",
+          "\"status\": \"PASS\"",
+          "\"question_oracle_count\"",
+          "\"briefing_point_count\"",
+          "prep pack: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-prep-pack-current.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-prep-pack-current.json",
+            "json_pointer": "/required_collections_present",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-prep-pack-current.json",
+            "json_pointer": "/question_oracle_count",
+            "equals": 2
+          }
+        ]
+      },
+      "notes": "Pre-call deep-research prep must be self-contained and Live Evidence-readable: research chain, source context, briefing pack, reviewed answers, skill chains, Memory exports, and post-run grading instructions."
+    },
+    {
+      "name": "drivewealth-mock-interview-memory-graph-oracle",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-oracle-memory-graph-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-drivewealth-oracle-memory-graph --limit 10 --output \"$O\""
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.drivewealth_oracle_memory_graph.v1\"",
+          "\"company\": \"DriveWealth\"",
+          "\"memory_upserts\"",
+          "\"live_evidence_edges\"",
+          "drivewealth oracle memory graph: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/interview_count",
+            "equals": 10
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/question_count",
+            "equals": 90
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/memory_upserts/live_evidence_questions/0/timecode/kind",
+            "equals": "script_turn"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/memory_upserts/live_evidence_edges/2/kind",
+            "equals": "requires_skill_chain"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/memory_upserts/live_evidence_answers/0/review/status",
+            "equals": "reviewed"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/oracle_contract/requires_similarity_edges",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/target_question_count/status",
+            "equals": "needs_more_generation"
+          }
+        ]
+      },
+      "notes": "Compiles all available DriveWealth 5-10 minute mock interviews into Memory-shaped interview/question/reviewed-answer/skill-chain/source nodes plus edge docs for Memory /live-evidence/oracle-pack and known-or-similar-question recall."
+    },
+    {
+      "name": "drivewealth-mock-interview-memory-upsert-recall-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-oracle-memory-recall-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-drivewealth-oracle-memory-graph --limit 10 --write-memory --verify-recall --summary-only --memory-timeout-s 120 --memory-batch-size 500 --output \"$O\""
+      ],
+      "timeout_seconds": 360,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.drivewealth_oracle_memory_graph.v1\"",
+          "\"memory_write\"",
+          "\"ok\": true",
+          "drivewealth oracle memory graph: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/upsert_document_count",
+            "equals": 808
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/recall_probes/0/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/recall_probes/2/ok",
+            "equals": true
+          }
+        ]
+      },
+      "notes": "Durable Memory gate: writes the DriveWealth interview/question/solution/skill-chain/source/edge graph through Memory /live-evidence/oracle-pack, then proves multi-hop retrieval intent through /memory recall read-back probes."
+    },
+    {
       "name": "live-youtube-pipewire-audio-to-card",
       "type": "positive",
       "real_world": true,

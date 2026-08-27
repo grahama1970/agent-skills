@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 import urllib.request
 from datetime import datetime, timezone
@@ -170,6 +171,8 @@ def main() -> int:
     root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else SKILL
     campaign.ROOT = root
     campaign_mod.campaign.ROOT = root
+    if not campaign_mod.require_precomputed_oracles(root):
+        return 1
     key = campaign.scillm_key()
     if not key:
         print("transcript meeting: INFRA_BLOCKED (no scillm key; agentic judge unavailable)")

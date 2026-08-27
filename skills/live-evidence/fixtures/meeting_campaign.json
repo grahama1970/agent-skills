@@ -15,9 +15,45 @@
         {"text": "Great, that is everything, thanks everyone, see you Friday."}
       ],
       "oracle": [
-        {"id": "memory-hard-rules", "question_tokens": ["sparta", "memory", "rules"], "family": "memory"},
-        {"id": "research-sparta-version", "question_tokens": ["mitre", "sparta", "version"], "family": "research"},
-        {"id": "code-qra-generation", "question_tokens": ["qra", "generation", "pipeline"], "family": "code"}
+        {
+          "id": "memory-hard-rules",
+          "question_tokens": ["sparta", "memory", "rules"],
+          "family": "memory",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "project_memory_question",
+            "answerability": "answerable",
+            "required_skill_lanes": ["memory"],
+            "expected_response": "source_bound_evidence_card",
+            "publication_gate": "visible_after_memory_source"
+          }
+        },
+        {
+          "id": "research-sparta-version",
+          "question_tokens": ["mitre", "sparta", "version"],
+          "family": "research",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "current_external_fact_check",
+            "answerability": "requires_manual_external_research",
+            "required_skill_lanes": ["brave-search"],
+            "expected_response": "approval_gated_action_candidate",
+            "publication_gate": "hidden_until_external_research_approved"
+          }
+        },
+        {
+          "id": "code-qra-generation",
+          "question_tokens": ["qra", "generation", "pipeline"],
+          "family": "code",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "repo_code_question",
+            "answerability": "answerable",
+            "required_skill_lanes": ["ripgrep"],
+            "expected_response": "source_bound_evidence_card",
+            "publication_gate": "visible_after_repo_source"
+          }
+        }
       ]
     },
     {
@@ -29,7 +65,19 @@
       "max_seconds": 108,
       "fixture_repo": "parentheses",
       "oracle": [
-        {"id": "code-parentheses", "question_tokens": ["parentheses", "minimum", "remove"], "family": "code"}
+        {
+          "id": "code-parentheses",
+          "question_tokens": ["parentheses", "minimum", "remove"],
+          "family": "code",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "coding_interview_question",
+            "answerability": "answerable",
+            "required_skill_lanes": ["ripgrep"],
+            "expected_response": "source_bound_evidence_card",
+            "publication_gate": "visible_after_repo_source"
+          }
+        }
       ]
     },
     {
@@ -42,7 +90,19 @@
       "max_seconds": 150,
       "fixture_repo": "parentheses",
       "oracle": [
-        {"id": "code-two-sum", "question_tokens": ["sum", "target", "indices"], "family": "code"}
+        {
+          "id": "code-two-sum",
+          "question_tokens": ["sum", "target", "indices"],
+          "family": "code",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "coding_interview_question",
+            "answerability": "answerable",
+            "required_skill_lanes": ["ripgrep"],
+            "expected_response": "source_bound_evidence_card",
+            "publication_gate": "visible_after_repo_source"
+          }
+        }
       ]
     }
   ]

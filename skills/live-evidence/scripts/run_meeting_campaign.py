@@ -48,6 +48,24 @@ CHATTERBOX_LOGS = Path.home() / "workspace" / "experiments" / "chatterbox" / "lo
 OUT_ROOT = Path("/mnt/storage12tb/skills/live-evidence/meeting-campaign")
 
 
+def require_precomputed_oracles(root: Path = SKILL) -> bool:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SKILL / "scripts" / "validate_precomputed_oracles.py"),
+            str(root),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    print(result.stdout, end="")
+    if result.returncode != 0:
+        print(result.stderr, end="", file=sys.stderr)
+        return False
+    return True
+
+
 def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
     """Render each line with the LIVE chatterbox server; concat with sox."""
 
@@ -364,6 +382,8 @@ def main() -> int:
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     campaign.ROOT = SKILL
+    if not require_precomputed_oracles(SKILL):
+        return 1
     spec = json.loads((SKILL / "fixtures" / "meeting_campaign.json").read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_root = Path(args.output_dir).expanduser() if args.output_dir else OUT_ROOT / stamp

@@ -612,6 +612,20 @@ def main() -> int:
     if args.attempts > 1:
         return run_attempt_loop(args)
     root = Path(args.root).expanduser().resolve()
+    preflight = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts" / "validate_precomputed_oracles.py"),
+            str(root),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    print(preflight.stdout, end="")
+    if preflight.returncode != 0:
+        print(preflight.stderr, end="", file=sys.stderr)
+        return 1
     repo_root = root.parents[1]
     skills_root = root.parent
     virtual_sink: str | None = None
