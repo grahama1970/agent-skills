@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/unlazy/acceptance-ref.v1.schema.json",
+  "title": "unlazy.acceptance_ref.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "goal_path", "goal_sha256", "ledger_path", "ledger_sha256"],
+  "properties": {
+    "schema": {"const": "unlazy.acceptance_ref.v1"},
+    "goal_path": {"type": "string", "minLength": 1},
+    "goal_sha256": {"type": "string", "pattern": "^sha256:[0-9a-fA-F]{64}$"},
+    "ledger_path": {"type": "string", "minLength": 1},
+    "ledger_sha256": {"type": "string", "pattern": "^sha256:[0-9a-fA-F]{64}$"},
+    "lock_path": {"type": "string", "minLength": 1},
+    "lock_sha256": {"type": "string", "pattern": "^sha256:[0-9a-fA-F]{64}$"},
+    "required_gate_ids": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+      "uniqueItems": true
+    }
+  }
+}

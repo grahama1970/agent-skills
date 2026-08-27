@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/unlazy/receipt-check.v1.schema.json",
+  "title": "unlazy.receipt_check.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "ok", "project_root", "receipt_path", "receipt_sha256", "errors", "proof_scope"],
+  "properties": {
+    "schema": {"const": "unlazy.receipt_check.v1"},
+    "status": {"enum": ["PASS", "FAIL"]},
+    "ok": {"type": "boolean"},
+    "live": {"type": "boolean"},
+    "mocked": {"type": "boolean"},
+    "project_root": {"type": "string"},
+    "receipt_path": {"type": "string"},
+    "receipt_sha256": {"type": "string", "pattern": "^sha256:[0-9a-fA-F]{64}$"},
+    "receipt_schema": {"type": ["string", "null"]},
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "seam_validation": {
+      "type": "object",
+      "required": ["kind", "status"],
+      "properties": {
+        "kind": {"const": "unlazy.receipt_check.v1"},
+        "status": {"enum": ["PASS", "FAIL"]}
+      }
+    },
+    "proof_scope": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {"type": "array", "items": {"type": "string"}},
+        "does_not_prove": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

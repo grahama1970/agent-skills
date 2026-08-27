@@ -156,3 +156,15 @@ For this repository, a completion ledger must make these boundaries explicit:
 `unlazy` is process discipline. It does not replace project-specific skills,
 `$agentic-evals`, `$ask`, `$project-watchdog`, human approval, or provider
 authorization.
+
+When integrating with Herdr, `$ticket`, `$project-watchdog`, or `$tau`, read
+`references/herdr-watchdog-tau-integration.md`. These systems should carry an
+`unlazy.acceptance_ref.v1` and validate receipt boundaries with:
+
+```bash
+skills/unlazy/run.sh receipt-check --project-root /path/to/repo /path/to/receipt.json
+```
+
+Only `project_watchdog.goal_completion.v1` may support a global
+`ACHIEVED_WITH_RECEIPT:path` claim. Other receipts can prove assigned gate work
+only.
