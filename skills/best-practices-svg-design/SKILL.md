@@ -189,6 +189,21 @@ one opacity step below the title.
 - Never adopt reviewer suggestions that cannot function in an `<img>` context
   (hover states, tooltips, transitions) — note them as skipped instead.
 
+## Connector Craft
+
+- Route connectors orthogonally (vertical/horizontal steps, rounded elbows
+  allowed); never cut diagonally across whitespace between nodes.
+- Marker `refX` must place the arrow TIP at the path end (tip-x == refX, e.g.
+  path tip at 7 → refX 8 with ~1px optical inset), and the path must stop
+  2-8px short of the target's stroke so the tip rests flush, never
+  penetrating the border.
+- Dock every connector on the target's exact geometric center (panel
+  x + width/2), computed, not eyeballed — off-by-a-few-px anchors read as
+  sloppiness at full size.
+- Triage external connector reviews against YOUR coordinates before editing:
+  a reviewer critiquing their own mock's numbers can name flaws your card
+  does not have. Verify each claimed flaw with the real geometry first.
+
 ## Slot Contract (read the CSS before authoring)
 
 Before choosing a viewBox, read the destination slot's CSS: its
