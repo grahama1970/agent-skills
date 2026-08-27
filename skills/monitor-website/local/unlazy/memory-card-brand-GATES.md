@@ -59,6 +59,11 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EXPECT: SERVED_VERSIONED_OK
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=31f50f8107a28dfc2da6246b96169625ad25dc7a160890ec9ef4ef5bb3aca358; output-bytes=187
 
+- [ ] G13: painted pixel rhythm is uniform (closing oracle from rendered screenshot)
+  CHECK: bash -c "T=$(mktemp --suffix=.png) && google-chrome --headless=new --disable-gpu --force-prefers-reduced-motion --window-size=1920,1200 --screenshot=\"$T\" file://$PWD/docs/assets/project-cards/memory-recall-card.svg 2>/dev/null; skills/best-practices-svg-design/run.sh pixels \"$T\""
+  EXPECT: PIXELS_OK
+  EVIDENCE: pending
+
 - [ ] G9: MANUAL - human accepts the brand-palette design (create-svg Stage-2 gate)
   Human review of the rendered card at full and 400px sizes. Until Graham
   approves, final status is Immutable Goal: NOT_MET (design acceptance

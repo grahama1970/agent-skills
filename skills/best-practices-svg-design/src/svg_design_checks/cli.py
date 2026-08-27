@@ -49,6 +49,22 @@ def spacing(
 
 
 @app.command()
+def pixels(
+    png: Path,
+    canvas_h: float = typer.Option(1200.0, help="artwork canvas height for tolerance scaling"),
+    tol: float = typer.Option(4.0, help="max deviation in SVG px"),
+) -> None:
+    """Assert even spacing recomputed from a rendered screenshot's pixels."""
+    from .raster import audit_pixels
+
+    ok, findings = audit_pixels(str(png), canvas_h, tol)
+    for line in findings:
+        print(line)
+    print("PIXELS_OK" if ok else "PIXELS_FAIL")
+    raise typer.Exit(0 if ok else 1)
+
+
+@app.command()
 def composition(svg: Path) -> None:
     """Report rule-of-thirds and golden-ratio deltas (advisory metrics)."""
     for line in audit_composition(load_layout(str(svg))):

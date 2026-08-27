@@ -97,11 +97,25 @@
       "command": [
         "bash",
         "-c",
-        "T=$(mktemp --suffix=.svg); sed 's/<rect x=\"822\" y=\"603\"/<rect x=\"822\" y=\"585\"/' ../../../docs/assets/project-cards/memory-recall-card.svg > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
+        "T=$(mktemp --suffix=.svg); sed 's/y=\"484\" class=\"sans stage-name\"/y=\"470\" class=\"sans stage-name\"/' ../../../docs/assets/project-cards/memory-recall-card.svg > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
       ],
       "expected": {
         "exit_code": 1,
         "stdout_contains": "SPACING_FAIL"
+      }
+    },
+    {
+      "name": "pixel-rhythm-from-rendered-screenshot",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.png); google-chrome --headless=new --disable-gpu --force-prefers-reduced-motion --window-size=1920,1200 --screenshot=\"$T\" \"file://$(cd ../../.. && pwd)/docs/assets/project-cards/memory-recall-card.svg\" 2>/dev/null; cd ../.. && best-practices-svg-design/run.sh pixels \"$T\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "PIXELS_OK"
       }
     }
   ]

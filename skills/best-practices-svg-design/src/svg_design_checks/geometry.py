@@ -92,36 +92,41 @@ def _path_endpoints(d: str) -> tuple[float, float, float, float] | None:
 
 
 def load_layout(path: str) -> Layout:
-    root = ET.parse(path).getroot()
-    width = float(re.sub(r"[^\d.]", "", root.get("width", "0")) or 0)
-    height = float(re.sub(r"[^\d.]", "", root.get("height", "0")) or 0)
+    """Parse via svgelements: exact bboxes under full transform stacks
+    (translate/scale/matrix/rotate), replacing regex translate-tracking."""
+    from svgelements import SVG, Circle, Path, Rect, Text as SEText
+
+    svg = SVG.parse(path, reify=True)
+    width = float(svg.width)
+    height = float(svg.height)
     lay = Layout(width=width, height=height)
-
-    def walk(e, chain):
-        chain = chain + [e]
-        tag = e.tag.split("}")[-1]
-        cls = e.get("class", "")
-        tx, ty = _translates(chain)
+    for e in svg.elements():
+        cls = (e.values.get("attributes", {}) or {}).get("class", e.values.get("class", "")) or ""
         if "stage-halo" in cls:
-            pass
-        elif tag == "rect" and e.get("width") and e.get("height"):
-            w, h = float(e.get("width")), float(e.get("height"))
+            continue
+        if isinstance(e, Rect):
+            bb = e.bbox()
+            if bb is None:
+                continue
+            x, y, x2, y2 = bb
+            w, h = x2 - x, y2 - y
             if 200 <= w <= width * 0.8 and 28 <= h <= 300:
-                lay.boxes.append(Box(float(e.get("x", 0)) + tx, float(e.get("y", 0)) + ty, w, h, cls or "rect"))
-        elif tag == "circle" and e.get("r") and float(e.get("r")) >= 20:
-            r = float(e.get("r"))
-            lay.boxes.append(Box(float(e.get("cx")) + tx - r, float(e.get("cy")) + ty - r, 2 * r, 2 * r, cls or "circle"))
-        elif tag == "text" and e.get("x") and e.get("y"):
-            lay.texts.append(Text(float(e.get("x")) + tx, float(e.get("y")) + ty,
-                                  e.get("text-anchor", "start"), (e.text or "").strip()))
-        elif tag == "path" and e.get("marker-end") and "flow-path" not in cls:
-            pts = _path_endpoints(e.get("d", ""))
-            if pts:
-                lay.conns.append(Conn(pts[2] + tx, pts[3] + ty, pts[0] + tx, pts[1] + ty))
-        for c in e:
-            walk(c, chain)
-
-    walk(root, [])
+                lay.boxes.append(Box(x, y, w, h, cls or "rect"))
+        elif isinstance(e, Circle):
+            bb = e.bbox()
+            if bb and (bb[2] - bb[0]) >= 40:
+                lay.boxes.append(Box(bb[0], bb[1], bb[2] - bb[0], bb[3] - bb[1], cls or "circle"))
+        elif isinstance(e, SEText):
+            pt = e.transform.point_in_matrix_space((float(e.x or 0), float(e.y or 0))) if e.transform else (float(e.x or 0), float(e.y or 0))
+            lay.texts.append(Text(float(pt[0]), float(pt[1]), e.values.get("text-anchor", e.anchor or "start"), (e.text or "").strip()))
+        elif isinstance(e, Path) and e.values.get("marker-end") and "flow-path" not in cls:
+            if len(e) == 0:
+                continue
+            fp = e.first_point
+            ep = e.current_point if e.current_point is not None else e.point(1)
+            if fp is None or ep is None:
+                continue
+            lay.conns.append(Conn(float(ep.x), float(ep.y), float(fp.x), float(fp.y)))
     return lay
 
 
@@ -142,13 +147,21 @@ def audit_spacing(lay: Layout, tol: float = 2.0) -> tuple[bool, list[str]]:
     rows = cluster_rows(lay.boxes)
     if not rows:
         return False, ["SPACING_FAIL no panel-scale boxes found"]
-    gaps = [round(rows[i + 1]["top"] - rows[i]["bottom"], 1) for i in range(len(rows) - 1)]
     for i, r in enumerate(rows):
         names = ",".join(sorted({it.cls.split()[0] for it in r["items"]}))
         out.append(f"row{i}: y={r['top']:.0f}-{r['bottom']:.0f} n={len(r['items'])} [{names}]")
-    out.append(f"row gaps: {gaps}")
-    if gaps and max(gaps) - min(gaps) > tol:
-        out.append(f"SPACING_FAIL uneven row gaps (spread {max(gaps) - min(gaps):.1f} > {tol})")
+    baselines = []
+    for r in rows:
+        x_lo = min(b.x for b in r["items"]) - 160
+        x_hi = max(b.x + b.w for b in r["items"]) + 160
+        bl = [t.y for t in lay.texts
+              if x_lo <= t.x <= x_hi and r["top"] - 30 <= t.y <= r["bottom"] + 30]
+        baselines.append(sum(bl) / len(bl) if bl else (r["top"] + r["bottom"]) / 2)
+    steps = [round(baselines[i + 1] - baselines[i], 1) for i in range(len(baselines) - 1)]
+    out.append(f"baseline rhythm steps: {steps}")
+    rhythm_tol = max(tol, 4.0)
+    if steps and max(steps) - min(steps) > rhythm_tol:
+        out.append(f"SPACING_FAIL uneven baseline rhythm (spread {max(steps) - min(steps):.1f} > {rhythm_tol})")
         ok = False
     for i, r in enumerate(rows):
         items = sorted(r["items"], key=lambda b: b.x)

@@ -11,6 +11,16 @@ import json, sys
 
 def main() -> int:
     m = json.load(open(sys.argv[1]))
+    if "centers" in m:
+        c = m["centers"]
+        tol = m.get("tolerance", 1)
+        steps = [c[i+1] - c[i] for i in range(len(c) - 1)]
+        print(f"center steps: {steps}")
+        if max(steps) - min(steps) <= tol:
+            print("GRID_OK")
+            return 0
+        print(f"GRID_FAIL uneven center steps (spread {max(steps)-min(steps)} > {tol})")
+        return 1
     rows = m["rows"]
     tol = m.get("tolerance", 1)
     gaps = [rows[i+1]["y"] - (rows[i]["y"] + rows[i]["h"]) for i in range(len(rows)-1)]
