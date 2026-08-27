@@ -200,6 +200,10 @@ one opacity step below the title.
 - Dock every connector on the target's exact geometric center (panel
   x + width/2), computed, not eyeballed — off-by-a-few-px anchors read as
   sloppiness at full size.
+- Terminate INTO the target's nearest edge with the final segment
+  perpendicular to it: a path that ends on a horizontal run leaves the
+  arrowhead pointing sideways past the box instead of down into it. Merging
+  branches elbow horizontally, then turn down for the last 10-16px.
 - Triage external connector reviews against YOUR coordinates before editing:
   a reviewer critiquing their own mock's numbers can name flaws your card
   does not have. Verify each claimed flaw with the real geometry first.
