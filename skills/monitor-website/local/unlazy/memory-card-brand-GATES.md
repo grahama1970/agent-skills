@@ -44,10 +44,10 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EXPECT: COMMIT_RETAINED_OK
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=09da1e64d5917172ee85dc4aaab91fbe107f6e65d94c32b0e3bc9df0d4ed66d8; output-bytes=19
 
-- [ ] G10: artwork-level even spacing is deterministic and OK
-  CHECK: bash -c "python3 skills/best-practices-svg-design/scripts/check_svg_spacing.py docs/assets/project-cards/memory-recall-card.svg"
+- [x] G10: artwork-level even spacing is deterministic and OK
+  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && python3 skills/best-practices-svg-design/scripts/check_svg_spacing.py docs/assets/project-cards/memory-recall-card.svg"
   EXPECT: SPACING_OK
-  EVIDENCE: pending
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=6cc982206e766031d0ac42a30552ac42efe9a4662ed530564ddf3b2336576309; output-bytes=431
 
 - [x] G11: grid manifest matches the solved uniform grid
   CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && python3 skills/best-practices-svg-design/scripts/check_grid.py docs/assets/project-cards/memory-recall-card.grid.json"
