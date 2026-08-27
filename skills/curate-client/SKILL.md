@@ -113,7 +113,11 @@ follow-up questions before the round is done, derived by two rules:
 At scale this is 20-30 brave-search queries structured as a DAG, not a flat
 list: within a round, queries run CONCURRENT (they share no dependency);
 across rounds, edges are SEQUENTIAL (round N+1's queries are derived from
-round N's findings). Express substantial sweeps as an ask.dag.v1 so rounds
+round N's findings). Prefer `$dogpile` for a round: it IS the multi-modal sweep in one call
+(brave web + github + arxiv + youtube with an ambiguity check and grounded
+synthesis), so one dogpile invocation per round replaces hand-fanned
+queries; hand-fanned `$brave-search` remains for cheap targeted follow-ups.
+Express substantial multi-ROUND sweeps as an ask.dag.v1 / Tau DAG so rounds
 are receipted and resumable; the recognized `exploration-research` template
 is the intended native home once executable, with concurrent brave/fetcher/
 github/youtube leaves joining into a findings node that fans out the next
