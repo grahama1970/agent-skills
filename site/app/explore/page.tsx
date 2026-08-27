@@ -91,7 +91,7 @@ export default function ExplorePage() {
                     >
                       <img
                         className="shot-img"
-                        src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}`}
+                        src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}?v=${inventory.commit}`}
                         alt=""
                         loading="eager"
                         decoding="async"

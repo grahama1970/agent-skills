@@ -299,13 +299,13 @@
         #memory-pipeline .query-dot { transform-origin: 817px 153px; animation: query-dot 6s ease-in-out infinite; }
         @keyframes q-cycle {
           0%, 0.5% { opacity: 0; }
-          2%, 21% { opacity: 1; }
-          23%, 100% { opacity: 0; }
+          2%, 25.5% { opacity: 1; }
+          27%, 100% { opacity: 0; }
         }
         @keyframes r-cycle {
-          0%, 17.5% { opacity: 0; }
-          19.5%, 23% { opacity: 1; }
-          24.5%, 100% { opacity: 0; }
+          0%, 18.5% { opacity: 0; }
+          20%, 43% { opacity: 1; }
+          44.5%, 100% { opacity: 0; }
         }
         @keyframes route-run {
           0%, 15% { stroke-dashoffset: 1; opacity: 0; }
@@ -367,7 +367,7 @@
     <g transform="translate(200 -30)">
     <g aria-label="Example question">
       <rect x="760" y="110" width="620" height="84" rx="42" class="query-shell"/>
-      <g transform="translate(798 134) scale(1.6)" aria-hidden="true" fill="none" stroke="#e2ac62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="query-dot">
+      <g transform="translate(798 134) scale(1.6)" aria-hidden="true" fill="none" stroke="#e2ac62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
         <circle cx="12" cy="7" r="4"/>
       </g>
@@ -393,12 +393,12 @@
     </g>
 
     <g aria-label="Hybrid recall stage">
-      <path d="M1070 370 V396 C1070 412 1050 420 1028 420 H770 V422" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 370 V422" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 370 V396 C1070 412 1090 420 1112 420 H1370 V422" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1070 370 V396 C1070 412 1050 420 1028 420 H770 V426" class="flow-path flow-amber split-flow" pathLength="1"/>
+      <path d="M1070 370 V392 C1070 404 1052 410 1034 410 H794 C780 410 770 416 770 422 V426" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 370 V430" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 370 V392 C1070 404 1088 410 1106 410 H1346 C1360 410 1370 416 1370 422 V426" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M1070 370 V392 C1070 404 1052 410 1034 410 H794 C780 410 770 416 770 422 V430" class="flow-path flow-amber split-flow" pathLength="1"/>
       <path d="M1070 370 V426" class="flow-path flow-mint split-flow" pathLength="1"/>
-      <path d="M1070 370 V396 C1070 412 1090 420 1112 420 H1370 V426" class="flow-path flow-violet split-flow" pathLength="1"/>
+      <path d="M1070 370 V392 C1070 404 1088 410 1106 410 H1346 C1360 410 1370 416 1370 422 V430" class="flow-path flow-violet split-flow" pathLength="1"/>
 
       <rect x="620" y="426" width="300" height="108" rx="26" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)"/>
       <rect x="630" y="434" width="280" height="92" rx="22" class="panel panel-02a"/>
