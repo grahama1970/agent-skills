@@ -1,31 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="memory-title memory-desc">
-  <title id="memory-title">Memory-first recall trace</title>
-  <desc id="memory-desc">A bespoke memory trace showing a question resolving through semantic echoes, source records, graph context, prior fixes, and a grounded response choice.</desc>
+  <title id="memory-title">Memory-first recall map</title>
+  <desc id="memory-desc">A crop-safe memory recall card: a user asks whether a problem has been solved before, Qdrant finds similar meaning, ArangoDB resolves source records, graph traversal finds evidence paths, and the agent routes a grounded response before scanning code.</desc>
   <defs>
-    <radialGradient id="bg-glow" cx="50%" cy="46%" r="72%">
-      <stop offset="0%" stop-color="#1c1710"/>
-      <stop offset="48%" stop-color="#0d0906"/>
-      <stop offset="100%" stop-color="#070504"/>
+    <radialGradient id="field" cx="50%" cy="48%" r="78%">
+      <stop offset="0%" stop-color="#1b130b"/>
+      <stop offset="58%" stop-color="#090604"/>
+      <stop offset="100%" stop-color="#050403"/>
     </radialGradient>
-    <radialGradient id="gold-halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#f2be67" stop-opacity="0.46"/>
-      <stop offset="42%" stop-color="#e0a84e" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#e0a84e" stop-opacity="0"/>
+    <radialGradient id="warm-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f2bd64" stop-opacity="0.46"/>
+      <stop offset="52%" stop-color="#d99a3e" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#d99a3e" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="green-halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#a7b89d" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#a7b89d" stop-opacity="0"/>
+    <radialGradient id="sage-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a6b79c" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#a6b79c" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="trace-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6d5630" stop-opacity="0.14"/>
-      <stop offset="48%" stop-color="#e0a84e" stop-opacity="0.86"/>
-      <stop offset="100%" stop-color="#93a289" stop-opacity="0.46"/>
+    <linearGradient id="gold-line" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6e552a" stop-opacity="0.2"/>
+      <stop offset="48%" stop-color="#e0a84e"/>
+      <stop offset="100%" stop-color="#9faf93" stop-opacity="0.72"/>
     </linearGradient>
-    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="150%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000000" flood-opacity="0.44"/>
+    <linearGradient id="panel-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#15100b" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#090706" stop-opacity="0.88"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="145%">
+      <feDropShadow dx="0" dy="20" stdDeviation="20" flood-color="#000000" flood-opacity="0.5"/>
     </filter>
-    <filter id="tiny-glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
+    <filter id="pin-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -34,122 +38,123 @@
     <style>
       .serif { font-family: Georgia, "Times New Roman", serif; }
       .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-      .label { fill: #eee6d8; font-size: 31px; letter-spacing: 0.01em; }
-      .micro { fill: #a99b89; font-size: 20px; letter-spacing: 0.09em; }
-      .trace { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .node-ring { fill: #0e0a07; stroke-width: 3.5; filter: url(#soft-shadow); }
-      .pin { filter: url(#tiny-glow); }
+      .small { font-size: 22px; letter-spacing: 0.12em; }
+      .body { font-size: 27px; letter-spacing: 0.01em; }
+      .title { font-size: 44px; letter-spacing: 0.01em; }
+      .caption { font-size: 24px; letter-spacing: 0.06em; }
+      .route { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .panel { fill: url(#panel-fill); stroke: #e0a84e; stroke-opacity: 0.34; stroke-width: 2; filter: url(#soft-shadow); }
+      .lens { fill: #0c0907; stroke-width: 4; filter: url(#soft-shadow); }
+      .muted { fill: #a79a89; }
+      .paper { fill: #eee7da; }
+      .gold { fill: #e0a84e; }
+      .sage { fill: #a6b79c; }
+      .copper { fill: #c9854f; }
       @media (prefers-reduced-motion: no-preference) {
         @keyframes trace-flow {
-          from { stroke-dashoffset: 128; }
+          from { stroke-dashoffset: 132; }
           to { stroke-dashoffset: 0; }
         }
-        @keyframes breathe {
-          0%, 100% { opacity: 0.22; transform: scale(0.96); }
-          50% { opacity: 0.58; transform: scale(1.05); }
+        @keyframes slow-breathe {
+          0%, 100% { opacity: 0.32; transform: scale(0.96); }
+          50% { opacity: 0.62; transform: scale(1.05); }
         }
-        @keyframes enter-soft {
-          0% { opacity: 0; transform: translateY(12px); }
-          16%, 100% { opacity: 1; transform: translateY(0); }
+        @keyframes phase-in {
+          0% { opacity: 0.2; transform: translateY(10px); }
+          14%, 100% { opacity: 1; transform: translateY(0); }
         }
-        @keyframes amber-pulse {
-          0%, 100% { opacity: 0.52; }
-          45% { opacity: 1; }
+        @keyframes ping {
+          0%, 100% { opacity: 0.48; }
+          50% { opacity: 1; }
         }
-        .animated-flow { stroke-dasharray: 12 18; animation: trace-flow 6.4s linear infinite; }
-        .slow-flow { stroke-dasharray: 4 22; animation: trace-flow 9.6s linear infinite reverse; }
-        .halo-breathe { transform-box: fill-box; transform-origin: center; animation: breathe 5.8s ease-in-out infinite; }
-        .phase-a { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease both infinite; }
-        .phase-b { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 0.7s both infinite; }
-        .phase-c { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 1.4s both infinite; }
-        .phase-d { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 2.1s both infinite; }
-        .phase-e { transform-box: fill-box; transform-origin: center; animation: enter-soft 9.6s ease 2.8s both infinite; }
-        .pulse { animation: amber-pulse 3.6s ease-in-out infinite; }
+        .animated { stroke-dasharray: 12 20; animation: trace-flow 6.8s linear infinite; }
+        .animated-soft { stroke-dasharray: 4 24; animation: trace-flow 10s linear infinite reverse; }
+        .breathe { transform-box: fill-box; transform-origin: center; animation: slow-breathe 5.6s ease-in-out infinite; }
+        .p1 { transform-box: fill-box; transform-origin: center; animation: phase-in 9.2s ease both infinite; }
+        .p2 { transform-box: fill-box; transform-origin: center; animation: phase-in 9.2s ease 0.6s both infinite; }
+        .p3 { transform-box: fill-box; transform-origin: center; animation: phase-in 9.2s ease 1.2s both infinite; }
+        .p4 { transform-box: fill-box; transform-origin: center; animation: phase-in 9.2s ease 1.8s both infinite; }
+        .p5 { transform-box: fill-box; transform-origin: center; animation: phase-in 9.2s ease 2.4s both infinite; }
+        .ping { animation: ping 3.2s ease-in-out infinite; }
       }
     </style>
   </defs>
 
-  <rect width="1920" height="1080" rx="28" fill="url(#bg-glow)"/>
-  <path d="M130 190 C360 82 560 152 770 96 C1020 28 1190 155 1420 94 C1575 54 1710 92 1810 168" class="trace slow-flow" stroke="#31271a" stroke-width="2.5" opacity="0.72"/>
-  <path d="M150 835 C380 920 586 808 760 902 C980 1021 1140 812 1335 874 C1510 930 1670 875 1800 812" class="trace slow-flow" stroke="#302d22" stroke-width="2" opacity="0.68"/>
-
-  <g opacity="0.42">
-    <circle cx="250" cy="245" r="2.5" fill="#e0a84e"/>
-    <circle cx="374" cy="170" r="2" fill="#93a289"/>
-    <circle cx="570" cy="250" r="2" fill="#c8844f"/>
-    <circle cx="760" cy="152" r="2.5" fill="#e0a84e"/>
-    <circle cx="1128" cy="162" r="2" fill="#93a289"/>
-    <circle cx="1412" cy="238" r="2" fill="#e0a84e"/>
-    <circle cx="1624" cy="168" r="2.5" fill="#c8844f"/>
-    <circle cx="1718" cy="302" r="2" fill="#93a289"/>
-    <circle cx="310" cy="840" r="2" fill="#93a289"/>
-    <circle cx="612" cy="910" r="2.5" fill="#e0a84e"/>
-    <circle cx="1200" cy="920" r="2" fill="#c8844f"/>
-    <circle cx="1550" cy="820" r="2.5" fill="#93a289"/>
+  <rect width="1920" height="1080" fill="url(#field)"/>
+  <g opacity="0.38">
+    <path d="M210 224 C430 136 650 192 870 128 C1120 54 1275 184 1500 126 C1646 88 1770 130 1848 204" class="route animated-soft" stroke="#302312" stroke-width="2"/>
+    <path d="M146 864 C386 936 586 826 764 910 C1002 1024 1192 814 1394 884 C1572 946 1722 874 1848 806" class="route animated-soft" stroke="#312d21" stroke-width="2"/>
+    <circle cx="282" cy="256" r="3" class="gold"/>
+    <circle cx="480" cy="172" r="2.5" class="sage"/>
+    <circle cx="708" cy="240" r="2.5" class="copper"/>
+    <circle cx="1184" cy="168" r="2.5" class="sage"/>
+    <circle cx="1540" cy="254" r="3" class="gold"/>
+    <circle cx="1666" cy="810" r="2.5" class="sage"/>
+    <circle cx="1222" cy="922" r="2.5" class="copper"/>
+    <circle cx="534" cy="880" r="3" class="gold"/>
   </g>
 
-  <g class="phase-a">
-    <ellipse cx="386" cy="504" rx="172" ry="110" fill="url(#gold-halo)" class="halo-breathe"/>
-    <rect x="205" y="388" width="362" height="142" rx="18" fill="#11100d" fill-opacity="0.78" stroke="#e0a84e" stroke-opacity="0.42" stroke-width="2"/>
-    <text x="240" y="435" class="mono micro" fill="#e0a84e">USER TURN</text>
-    <text x="240" y="480" class="serif label">Have we seen</text>
-    <text x="240" y="520" class="serif label">this before?</text>
-    <path d="M238 556 H505" stroke="#e0a84e" stroke-opacity="0.36" stroke-width="2"/>
-    <text x="240" y="592" class="mono" font-size="19" fill="#a99b89">ask memory before scanning</text>
+  <g transform="translate(690 174)">
+    <text x="0" y="0" class="mono caption" fill="#e0a84e">MEMORY-FIRST GRAPH RECALL</text>
+    <text x="0" y="55" class="serif" font-size="54" fill="#eee7da">search less, reuse proven context</text>
+    <text x="0" y="98" class="mono" font-size="22" fill="#a79a89">Qdrant finds candidates; ArangoDB explains why they belong.</text>
   </g>
 
-  <path d="M568 474 C675 394 788 382 904 420" class="trace" stroke="#4a3a22" stroke-width="12" opacity="0.16"/>
-  <path d="M568 474 C675 394 788 382 904 420" class="trace animated-flow" stroke="url(#trace-gold)" stroke-width="4" opacity="0.9"/>
-  <path d="M556 537 C676 654 820 662 944 608" class="trace" stroke="#4a3a22" stroke-width="10" opacity="0.13"/>
-  <path d="M556 537 C676 654 820 662 944 608" class="trace slow-flow" stroke="#93a289" stroke-width="3" opacity="0.48"/>
-
-  <g class="phase-b">
-    <circle cx="936" cy="426" r="86" fill="url(#green-halo)" class="halo-breathe"/>
-    <circle cx="936" cy="426" r="54" class="node-ring" stroke="#93a289"/>
-    <circle cx="936" cy="426" r="11" fill="#e0a84e" class="pin"/>
-    <text x="936" y="337" class="mono micro" text-anchor="middle">SEMANTIC ECHO</text>
-    <text x="936" y="522" class="serif" font-size="29" fill="#eee6d8" text-anchor="middle">similar meaning</text>
-    <text x="936" y="558" class="mono" font-size="18" fill="#a99b89" text-anchor="middle">Qdrant candidates</text>
+  <g class="p1">
+    <rect x="292" y="382" width="340" height="170" class="panel"/>
+    <text x="330" y="428" class="mono small muted">USER TURN</text>
+    <text x="330" y="474" class="serif body paper">Have we fixed</text>
+    <text x="330" y="516" class="serif body paper">this before?</text>
+    <path d="M330 582 H594" stroke="#e0a84e" stroke-opacity="0.32" stroke-width="2"/>
+    <text x="330" y="622" class="mono" font-size="20" fill="#a79a89">ask memory before scanning</text>
   </g>
 
-  <g class="phase-c">
-    <circle cx="982" cy="628" r="74" fill="url(#gold-halo)" class="halo-breathe"/>
-    <circle cx="982" cy="628" r="46" class="node-ring" stroke="#e0a84e"/>
-    <path d="M962 620 H1002 M962 638 H992 M962 602 H1002" stroke="#eee6d8" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
-    <text x="982" y="725" class="serif" font-size="29" fill="#eee6d8" text-anchor="middle">source record</text>
-    <text x="982" y="760" class="mono" font-size="18" fill="#a99b89" text-anchor="middle">ArangoDB document</text>
+  <path d="M632 468 C744 374 870 350 1002 394" class="route" stroke="#3b2d18" stroke-width="13" opacity="0.16"/>
+  <path d="M632 468 C744 374 870 350 1002 394" class="route animated" stroke="url(#gold-line)" stroke-width="4" opacity="0.92"/>
+  <path d="M632 508 C770 638 914 642 1042 564" class="route" stroke="#2e3328" stroke-width="12" opacity="0.14"/>
+  <path d="M632 508 C770 638 914 642 1042 564" class="route animated-soft" stroke="#a6b79c" stroke-width="3" opacity="0.5"/>
+
+  <g class="p2">
+    <circle cx="1016" cy="402" r="104" fill="url(#sage-glow)" class="breathe"/>
+    <circle cx="1016" cy="402" r="58" class="lens" stroke="#a6b79c"/>
+    <circle cx="1016" cy="402" r="11" class="gold" filter="url(#pin-glow)"/>
+    <text x="1016" y="306" class="mono small muted" text-anchor="middle">QDRANT</text>
+    <text x="1016" y="502" class="serif body paper" text-anchor="middle">similar meaning</text>
+    <text x="1016" y="538" class="mono" font-size="19" fill="#a79a89" text-anchor="middle">candidate generator</text>
   </g>
 
-  <path d="M1014 411 C1164 336 1310 362 1428 460" class="trace" stroke="#4a3a22" stroke-width="12" opacity="0.15"/>
-  <path d="M1014 411 C1164 336 1310 362 1428 460" class="trace animated-flow" stroke="#e0a84e" stroke-width="4" opacity="0.72"/>
-  <path d="M1028 638 C1165 660 1270 590 1428 506" class="trace" stroke="#33352a" stroke-width="9" opacity="0.16"/>
-  <path d="M1028 638 C1165 660 1270 590 1428 506" class="trace slow-flow" stroke="#93a289" stroke-width="3" opacity="0.58"/>
-
-  <g class="phase-d">
-    <ellipse cx="1452" cy="488" rx="162" ry="122" fill="url(#green-halo)" class="halo-breathe"/>
-    <path d="M1362 458 C1402 394 1506 392 1548 456 C1590 520 1530 594 1452 592 C1376 590 1320 520 1362 458 Z" fill="#11100d" fill-opacity="0.72" stroke="#93a289" stroke-width="3"/>
-    <circle cx="1395" cy="463" r="12" fill="#e0a84e" class="pulse"/>
-    <circle cx="1488" cy="430" r="10" fill="#93a289"/>
-    <circle cx="1518" cy="526" r="11" fill="#c8844f"/>
-    <path d="M1395 463 C1430 442 1456 438 1488 430 M1488 430 C1510 468 1516 492 1518 526 M1395 463 C1435 500 1468 516 1518 526" fill="none" stroke="#eee6d8" stroke-opacity="0.38" stroke-width="2.5"/>
-    <text x="1452" y="646" class="serif" font-size="31" fill="#eee6d8" text-anchor="middle">graph path</text>
-    <text x="1452" y="684" class="mono" font-size="18" fill="#a99b89" text-anchor="middle">prior fix + file + skill chain</text>
+  <g class="p3">
+    <circle cx="1052" cy="606" r="92" fill="url(#warm-glow)" class="breathe"/>
+    <circle cx="1052" cy="606" r="52" class="lens" stroke="#e0a84e"/>
+    <path d="M1028 584 H1076 M1028 606 H1076 M1028 628 H1064" stroke="#eee7da" stroke-width="4.5" stroke-linecap="round" opacity="0.82"/>
+    <text x="1052" y="710" class="serif body paper" text-anchor="middle">source record</text>
+    <text x="1052" y="746" class="mono" font-size="19" fill="#a79a89" text-anchor="middle">ArangoDB document</text>
   </g>
 
-  <path d="M1456 610 C1410 778 1226 820 1056 786 C862 748 710 804 590 894" class="trace" stroke="#4a3a22" stroke-width="11" opacity="0.14"/>
-  <path d="M1456 610 C1410 778 1226 820 1056 786 C862 748 710 804 590 894" class="trace animated-flow" stroke="url(#trace-gold)" stroke-width="4" opacity="0.82"/>
+  <path d="M1076 388 C1204 310 1354 326 1474 438" class="route" stroke="#3b2d18" stroke-width="13" opacity="0.16"/>
+  <path d="M1076 388 C1204 310 1354 326 1474 438" class="route animated" stroke="#e0a84e" stroke-width="4" opacity="0.76"/>
+  <path d="M1100 616 C1230 636 1326 572 1474 486" class="route" stroke="#2e3328" stroke-width="11" opacity="0.16"/>
+  <path d="M1100 616 C1230 636 1326 572 1474 486" class="route animated-soft" stroke="#a6b79c" stroke-width="3" opacity="0.58"/>
 
-  <g class="phase-e">
-    <rect x="454" y="832" width="728" height="126" rx="20" fill="#11100d" fill-opacity="0.76" stroke="#eee6d8" stroke-opacity="0.24" stroke-width="2"/>
-    <text x="500" y="880" class="mono micro" fill="#e0a84e">RECALL PACKET</text>
-    <text x="500" y="928" class="serif" font-size="34" fill="#eee6d8">reuse proven context or ask narrowly</text>
-    <circle cx="1130" cy="886" r="8" fill="#e0a84e" class="pulse"/>
-    <circle cx="1160" cy="886" r="8" fill="#93a289" opacity="0.72"/>
+  <g class="p4">
+    <ellipse cx="1496" cy="466" rx="156" ry="124" fill="url(#sage-glow)" class="breathe"/>
+    <path d="M1392 438 C1444 354 1562 370 1608 448 C1652 522 1576 608 1492 592 C1410 576 1352 506 1392 438 Z" fill="#0c0907" stroke="#a6b79c" stroke-width="4"/>
+    <circle cx="1432" cy="452" r="12" class="gold ping"/>
+    <circle cx="1518" cy="410" r="11" class="sage"/>
+    <circle cx="1564" cy="520" r="12" class="copper"/>
+    <path d="M1432 452 C1460 428 1488 418 1518 410 M1518 410 C1538 450 1554 482 1564 520 M1432 452 C1478 494 1518 512 1564 520" fill="none" stroke="#eee7da" stroke-opacity="0.42" stroke-width="2.5"/>
+    <text x="1496" y="660" class="serif body paper" text-anchor="middle">graph path</text>
+    <text x="1496" y="696" class="mono" font-size="19" fill="#a79a89" text-anchor="middle">prior fix + file + skill chain</text>
   </g>
 
-  <g transform="translate(1340 834)" class="phase-e">
-    <text x="0" y="0" class="mono micro">MEMORY FIRST</text>
-    <text x="0" y="48" class="serif" font-size="38" fill="#eee6d8">search less.</text>
-    <text x="0" y="93" class="serif" font-size="38" fill="#eee6d8">reuse proven context.</text>
+  <path d="M1486 598 C1416 760 1228 792 1054 766 C852 736 710 784 594 848" class="route" stroke="#3b2d18" stroke-width="13" opacity="0.16"/>
+  <path d="M1486 598 C1416 760 1228 792 1054 766 C852 736 710 784 594 848" class="route animated" stroke="url(#gold-line)" stroke-width="4" opacity="0.86"/>
+
+  <g class="p5">
+    <rect x="508" y="782" width="838" height="142" class="panel"/>
+    <text x="552" y="830" class="mono small muted">RECALL PACKET</text>
+    <text x="552" y="878" class="serif title paper">reuse answer, open file, or ask narrowly</text>
+    <circle cx="1278" cy="828" r="8" class="gold ping"/>
+    <circle cx="1308" cy="828" r="8" class="sage" opacity="0.72"/>
   </g>
 </svg>

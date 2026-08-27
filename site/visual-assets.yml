@@ -266,14 +266,14 @@ assets:
   kind: image
   source: docs/assets/project-cards/memory-recall-card.svg
   creation_method: bespoke_standalone_svg_validated_with_create_svg
-  sha256: 1e71741360337ce025596149499993763998ebe0e2c80ff0e54117586dbb7527
+  sha256: 3bd8e200dfa0ce6ceb8aadb12f12a9b3d7d4c408af4d3ce7100d0db803f72f92
   project_ids:
   - memory
   public_approval: true
   role: explanation
-  caption: Animated memory-first recall trace showing a question resolving through semantic echoes, source records, graph
-    context, prior fixes, and a grounded response choice.
-  alt_text: Bespoke memory-first recall trace connecting a user question to semantic candidates, source records, graph context,
+  caption: Animated memory-first recall map showing a user question moving through Qdrant candidates, ArangoDB source records,
+    graph paths, and a grounded recall packet before code scanning.
+  alt_text: Memory-first graph recall card connecting a user question to Qdrant candidates, ArangoDB records, graph paths,
     and a recall packet.
   crop: contain
   does_not_establish: Private graph-memory-operator internals, live daemon readiness, recall correctness, corpus coverage,
@@ -287,13 +287,13 @@ assets:
   kind: image
   source: docs/assets/project-cards/memory-recall-card.svg
   creation_method: bespoke_svg_rasterized_with_rsvg-convert
-  sha256: e19a82e8f4d79823697ff9ecd3f2fdc385a13ea53937c12f811a893b6c0b39c2
+  sha256: 27c5d6a025767a6c81619c4b933f0f6bbbc992ebc4e745cbd3af17e46c984e8f
   project_ids:
   - memory
   public_approval: true
   role: explanation
-  caption: Static fallback rendering of the bespoke memory-first recall trace.
-  alt_text: Static memory-first recall trace.
+  caption: Static fallback rendering of the memory-first recall map.
+  alt_text: Static memory-first recall map.
   crop: contain
   does_not_establish: Private graph-memory-operator internals, live daemon readiness, recall correctness, corpus coverage,
     endpoint availability, or retrieval quality.
@@ -432,7 +432,7 @@ assets:
   kind: image
   source: site/public/projects/memory.svg
   creation_method: downsampled_from_registered_project_diagram
-  sha256: e997080a598779ec6e68782c08b4791dc905e047c019806755f5ed3e257fd180
+  sha256: 25002487db96bf88e3c42db5e52dcdfb60add89924e82383bcfea2d108cd4296
   project_ids:
   - memory
   public_approval: true

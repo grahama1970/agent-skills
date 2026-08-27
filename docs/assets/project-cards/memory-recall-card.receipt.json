@@ -1,7 +1,7 @@
 {
   "browser": {
     "animation_observed": true,
-    "changed_pixel_ratio": 0.06530517,
+    "changed_pixel_ratio": 0.08869704,
     "details": "two img-mode Chromium frames sampled 1000ms apart",
     "loaded": true,
     "natural_height": 1080,
@@ -18,7 +18,7 @@
     "status": "PASS"
   },
   "source_path": "/home/graham/workspace/experiments/agent-skills/.worktrees/grahama-project-watch-nav-20260826T232431Z/docs/assets/project-cards/memory-recall-card.svg",
-  "source_sha256": "1e71741360337ce025596149499993763998ebe0e2c80ff0e54117586dbb7527",
+  "source_sha256": "3bd8e200dfa0ce6ceb8aadb12f12a9b3d7d4c408af4d3ce7100d0db803f72f92",
   "status": "PASS",
   "theme": null,
   "tool_version": "0.1.0"
