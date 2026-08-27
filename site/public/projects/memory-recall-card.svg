@@ -279,12 +279,10 @@
         #memory-pipeline .graph-halo {
           transform-origin: 1070px 472px;
           animation: pulse-recall 6s ease-in-out infinite;
-          animation-delay: 0.09s;
         }
         #memory-pipeline .qdrant-halo {
           transform-origin: 1370px 472px;
           animation: pulse-recall 6s ease-in-out infinite;
-          animation-delay: 0.18s;
         }
         #memory-pipeline .merge-flow { animation: draw-merge 6s ease-in-out infinite; }
         #memory-pipeline .record-halo {
@@ -297,54 +295,49 @@
           animation: pulse-gate 6s ease-in-out infinite;
         }
         #memory-pipeline .query-dot { transform-origin: 817px 153px; animation: query-dot 6s ease-in-out infinite; }
-        @keyframes q-cycle {
-          0%, 0.5% { opacity: 0; }
-          2%, 25.5% { opacity: 1; }
-          27%, 100% { opacity: 0; }
-        }
-        @keyframes r-cycle {
-          0%, 18.5% { opacity: 0; }
-          20%, 43% { opacity: 1; }
-          44.5%, 100% { opacity: 0; }
-        }
-        @keyframes route-run {
-          0%, 15% { stroke-dashoffset: 1; opacity: 0; }
-          16% { opacity: 1; }
-          18.5%, 22% { stroke-dashoffset: 0; opacity: 0.9; }
-          24.5%, 100% { stroke-dashoffset: 0; opacity: 0; }
-        }
         @keyframes deflect-run {
           0%, 79% { stroke-dashoffset: 1; opacity: 0; }
           80.5% { opacity: 1; }
           85%, 95% { stroke-dashoffset: 0; opacity: 0.9; }
           99%, 100% { stroke-dashoffset: 0; opacity: 0; }
         }
-        @keyframes pill-cycle {
-          0%, 16% { opacity: 0.45; }
-          18.5%, 23% { opacity: 1; }
-          25%, 100% { opacity: 0.45; }
-        }
         @keyframes pill-cycle-deflect {
           0%, 84% { opacity: 0.45; }
           86.5%, 98% { opacity: 1; }
           100% { opacity: 0.45; }
         }
-        #memory-pipeline .q1 { animation: q-cycle 24s ease-in-out infinite; }
-        #memory-pipeline .q2 { animation: q-cycle 24s ease-in-out infinite; animation-delay: 6s; }
-        #memory-pipeline .q3 { animation: q-cycle 24s ease-in-out infinite; animation-delay: 12s; }
-        #memory-pipeline .q4 { animation: q-cycle 24s ease-in-out infinite; animation-delay: 18s; }
-        #memory-pipeline .r1 { animation: r-cycle 24s ease-in-out infinite; }
-        #memory-pipeline .r2 { animation: r-cycle 24s ease-in-out infinite; animation-delay: 6s; }
-        #memory-pipeline .r3 { animation: r-cycle 24s ease-in-out infinite; animation-delay: 12s; }
-        #memory-pipeline .r4 { animation: r-cycle 24s ease-in-out infinite; animation-delay: 18s; }
-        #memory-pipeline .route-flow-1 { animation: route-run 24s ease-in-out infinite; }
-        #memory-pipeline .route-flow-2 { animation: route-run 24s ease-in-out infinite; animation-delay: 6s; }
-        #memory-pipeline .route-flow-3 { animation: route-run 24s ease-in-out infinite; animation-delay: 12s; }
-        #memory-pipeline .deflect-flow { animation: deflect-run 24s ease-in-out infinite; }
-        #memory-pipeline .route-pill-1 { animation: pill-cycle 24s ease-in-out infinite; }
-        #memory-pipeline .route-pill-2 { animation: pill-cycle 24s ease-in-out infinite; animation-delay: 6s; }
-        #memory-pipeline .route-pill-3 { animation: pill-cycle 24s ease-in-out infinite; animation-delay: 12s; }
-        #memory-pipeline .route-pill-4 { animation: pill-cycle-deflect 24s ease-in-out infinite; }
+        @keyframes qph1 { 0% { opacity: 0; } 0.5% { opacity: 0; } 2.0% { opacity: 1; } 25.5% { opacity: 1; } 27.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes qph2 { 0% { opacity: 0; } 25.5% { opacity: 0; } 27.0% { opacity: 1; } 50.5% { opacity: 1; } 52.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes qph3 { 0% { opacity: 0; } 50.5% { opacity: 0; } 52.0% { opacity: 1; } 75.5% { opacity: 1; } 77.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes qph4 { 0% { opacity: 0; } 0.5% { opacity: 1; } 2.0% { opacity: 0; } 75.5% { opacity: 0; } 77.0% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes rph1 { 0% { opacity: 0; } 18.5% { opacity: 0; } 20.0% { opacity: 1; } 43.0% { opacity: 1; } 44.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph2 { 0% { opacity: 0; } 43.5% { opacity: 0; } 45.0% { opacity: 1; } 68.0% { opacity: 1; } 69.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph3 { 0% { opacity: 0; } 68.5% { opacity: 0; } 70.0% { opacity: 1; } 93.0% { opacity: 1; } 94.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph4 { 0% { opacity: 0; } 18.0% { opacity: 1; } 19.5% { opacity: 0; } 93.5% { opacity: 0; } 95.0% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes pillph1 { 0% { opacity: 0.45; } 16.0% { opacity: 0.45; } 18.5% { opacity: 1; } 23.0% { opacity: 1; } 25.0% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph2 { 0% { opacity: 0.45; } 41.0% { opacity: 0.45; } 43.5% { opacity: 1; } 48.0% { opacity: 1; } 50.0% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph3 { 0% { opacity: 0.45; } 66.0% { opacity: 0.45; } 68.5% { opacity: 1; } 73.0% { opacity: 1; } 75.0% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph4 { 0% { opacity: 0.45; } 91.0% { opacity: 0.45; } 93.5% { opacity: 1; } 98.0% { opacity: 1; } 100% { opacity: 0.45; } }
+        @keyframes flowph1 { 0% { opacity: 0; } 15.0% { opacity: 0; } 16.0% { opacity: 0.9; } 22.0% { opacity: 0.9; } 24.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph2 { 0% { opacity: 0; } 40.0% { opacity: 0; } 41.0% { opacity: 0.9; } 47.0% { opacity: 0.9; } 49.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph3 { 0% { opacity: 0; } 65.0% { opacity: 0; } 66.0% { opacity: 0.9; } 72.0% { opacity: 0.9; } 74.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph4 { 0% { opacity: 0; } 90.0% { opacity: 0; } 91.0% { opacity: 0.9; } 97.0% { opacity: 0.9; } 99.5% { opacity: 0; } 100% { opacity: 0; } }
+        #memory-pipeline .q1 { animation: qph1 24s linear infinite; }
+        #memory-pipeline .q2 { animation: qph2 24s linear infinite; }
+        #memory-pipeline .q3 { animation: qph3 24s linear infinite; }
+        #memory-pipeline .q4 { animation: qph4 24s linear infinite; }
+        #memory-pipeline .r1 { animation: rph1 24s linear infinite; }
+        #memory-pipeline .r2 { animation: rph2 24s linear infinite; }
+        #memory-pipeline .r3 { animation: rph3 24s linear infinite; }
+        #memory-pipeline .r4 { animation: rph4 24s linear infinite; }
+        #memory-pipeline .route-flow-1 { stroke-dashoffset: 0; animation: flowph1 24s linear infinite; }
+        #memory-pipeline .route-flow-2 { stroke-dashoffset: 0; animation: flowph2 24s linear infinite; }
+        #memory-pipeline .route-flow-3 { stroke-dashoffset: 0; animation: flowph3 24s linear infinite; }
+        #memory-pipeline .route-pill-1 { animation: pillph1 24s linear infinite; }
+        #memory-pipeline .route-pill-2 { animation: pillph2 24s linear infinite; }
+        #memory-pipeline .route-pill-3 { animation: pillph3 24s linear infinite; }
+        #memory-pipeline .route-pill-4 { animation: pill-cycle-deflect 24s linear infinite; }
+        #memory-pipeline .deflect-flow { animation: deflect-run 24s linear infinite; }
       }
     </style>
   </defs>
