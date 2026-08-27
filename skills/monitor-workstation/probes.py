@@ -346,6 +346,10 @@ def probe_zombie_processes(autofix: bool = False) -> ProbeResult:
     # (pattern, max_age_hours, label)
     _PATTERNS = [
         ("claude", 24, "claude"), ("chromium", 24, "chromium"), ("chrome", 24, "chrome"),
+        # 2026-08-27 incident: five codex TUIs aged 2-6 days held ~640k
+        # inotify watches and exhausted the kernel budget (ENOSPC for every
+        # new dev server). Codex sessions older than 48h are stale.
+        ("codex", 48, "codex"),
         ("vitest", 1, "build-zombie"), ("jest", 1, "build-zombie"),
         ("webpack", 1, "build-zombie"), ("esbuild", 1, "build-zombie"),
     ]
@@ -501,6 +505,51 @@ def probe_tmp_bloat(autofix: bool = False) -> ProbeResult:
                        value=round(tmp_total_gb, 1))
 
 
+def probe_inotify_watches(autofix: bool = False) -> ProbeResult:
+    """W10: Check inotify watch budget (2026-08-27 incident: exhaustion by
+    stale agent sessions made every new file-watching dev server fail with
+    ENOSPC while the limit itself looked healthy)."""
+    try:
+        limit = int(Path("/proc/sys/fs/inotify/max_user_watches").read_text())
+    except (OSError, ValueError):
+        return ProbeResult("W10", "inotify-watches", ProbeStatus.SKIP,
+                           "cannot read inotify limits")
+
+    usage: dict[str, int] = {}
+    total = 0
+    for proc in Path("/proc").glob("[0-9]*"):
+        count = 0
+        try:
+            for fdinfo in (proc / "fdinfo").iterdir():
+                try:
+                    count += fdinfo.read_text().count("inotify wd:")
+                except OSError:
+                    continue
+        except OSError:
+            continue
+        if count:
+            total += count
+            try:
+                cmd = (proc / "cmdline").read_bytes().replace(b"\0", b" ").decode()[:60]
+            except OSError:
+                cmd = "?"
+            usage[f"{proc.name} {cmd.strip()}"] = count
+
+    pct = (total / limit) * 100 if limit else 0.0
+    top = sorted(usage.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    details = {"total": total, "limit": limit,
+               "top_consumers": [f"{c} watches: {k}" for k, c in top]}
+    msg = f"{total}/{limit} watches in use ({pct:.0f}%)"
+    if pct >= 90:
+        return ProbeResult("W10", "inotify-watches", ProbeStatus.FAIL, msg,
+                           value=round(pct, 1), details=details)
+    if pct >= 70:
+        return ProbeResult("W10", "inotify-watches", ProbeStatus.WARN, msg,
+                           value=round(pct, 1), details=details)
+    return ProbeResult("W10", "inotify-watches", ProbeStatus.PASS, msg,
+                       value=round(pct, 1), details=details)
+
+
 # ---------------------------------------------------------------------------
 # Probe registry
 # ---------------------------------------------------------------------------
@@ -515,4 +564,5 @@ ALL_PROBES = [
     ("W07", "zombie-processes", probe_zombie_processes),
     ("W08", "drive-health", probe_drive_health),
     ("W09", "tmp-bloat", probe_tmp_bloat),
+    ("W10", "inotify-watches", probe_inotify_watches),
 ]

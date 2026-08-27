@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "monitor-workstation",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "live probe execution over the real workstation",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the full probe suite executes live against the real workstation, including the W10 inotify-watch budget probe added after the 2026-08-27 exhaustion incident, and reports per-probe pass/warn/fail states",
+    "does_not_prove": "autofix behavior or nightly scheduler registration"
   },
   "cases": [
     {
@@ -17,6 +17,44 @@
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "live-probe-suite-includes-inotify",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "note": "Runs the real check entrypoint over the live workstation (no fixture stubs). Guards the W10 inotify-watch probe: exhaustion by stale agent sessions (2026-08-27: five codex TUIs held ~640k watches) must be measured on every run, and the codex zombie pattern must be active.",
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")\"/.. && ./run.sh check --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "W10",
+          "inotify-watches",
+          "W07"
+        ]
+      }
+    },
+    {
+      "name": "inotify-probe-adversarial-limit-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "note": "Adversarial: the probe must measure the kernel budget itself, not quote a cached number - the reported limit must equal /proc/sys/fs/inotify/max_user_watches read independently in the same trial.",
+      "command": [
+        "bash",
+        "-c",
+        "cd \"$(dirname \"$0\")\"/.. && limit=$(cat /proc/sys/fs/inotify/max_user_watches) && uv run python -c \"from probes import probe_inotify_watches; r=probe_inotify_watches(); import sys; print(r.probe_id, r.status.value, r.details.get('limit')); sys.exit(0 if r.details.get('limit')==int('$limit') and r.details.get('total',0)>0 else 1)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "W10"
+        ]
       }
     }
   ]
