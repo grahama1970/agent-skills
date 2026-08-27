@@ -121,7 +121,12 @@ Express substantial multi-ROUND sweeps as an ask.dag.v1 / Tau DAG so rounds
 are receipted and resumable; the recognized `exploration-research` template
 is the intended native home once executable, with concurrent brave/fetcher/
 github/youtube leaves joining into a findings node that fans out the next
-round.
+round. Until that template is executable (ask fails it closed by design),
+run the loop as LINKED ROUND-DAGS under one immutable goal hash - each round
+compiled by $ask tau-dag with the prior round's run dir cited as evidence in
+the request, the same pattern ask prescribes for iterative competitions.
+This is the dynamically-expanding-DAG intent expressed in today's supported
+runtime.
 
 Rounds continue until two consecutive rounds surface no new anchor-relevant
 finding (loop-until-dry). The output of each round is: findings as chunks,
