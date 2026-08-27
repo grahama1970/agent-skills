@@ -133,6 +133,10 @@ function LensMark({ x, y, lens, color }: { x: number; y: number; lens?: string; 
 const radiusOf = (t: string) => (t === 'practice' ? 46 : t === 'project' ? 30 : 26);
 // The ring the node settles onto — keeps the physics legible instead of a hairball.
 const orbitOf = (t: string) => (t === 'practice' ? 0 : t === 'area' ? 234 : 392);
+const imageHrefOf = (n: GNode) =>
+  n.slug === 'memory'
+    ? '/projects/thumbs/memory-recall-card.svg'
+    : `/projects/thumbs/${n.img}.webp`;
 // Node and Chromium can differ at the final decimal for trig-derived SVG values.
 // Round rendered coordinates so SSR markup and hydrated client props match.
 const coord = (n: number) => Number(n.toFixed(3));
@@ -165,7 +169,7 @@ export function CapabilityConstellation() {
   const [hover, setHover] = useState<string | null>(null);
   const [inspector, setInspector] = useState<InspectorState | null>(null);
   const [, force] = useState(0); // bump to re-render from mutated sim positions
-  const drag = useRef<{ id: string } | null>(null);
+  const drag = useRef<{ id: string; startX: number; startY: number } | null>(null);
   const moved = useRef(false); // distinguishes a drag from a click on project nodes
 
   // Stable simulation nodes/edges (built once; d3 mutates them across ticks).
@@ -241,13 +245,16 @@ export function CapabilityConstellation() {
     const move = (ev: PointerEvent) => {
       const d = drag.current;
       if (!d) return;
-      ev.preventDefault();
       const node = byId.get(d.id);
       if (!node) return;
+      if (Math.hypot(ev.clientX - d.startX, ev.clientY - d.startY) > 5) {
+        moved.current = true; // a real drag — suppress click-through navigation
+      }
+      if (!moved.current) return;
+      ev.preventDefault();
       const [x, y] = toLocal(ev.clientX, ev.clientY);
       node.fx = x;
       node.fy = y;
-      moved.current = true; // a real drag — suppress the click-through navigation
       force((t) => t + 1);
     };
     const up = () => {
@@ -272,8 +279,7 @@ export function CapabilityConstellation() {
 
   const startDrag = (n: SimNode) => (ev: React.PointerEvent) => {
     if (n.type === 'practice') return; // hub stays put
-    ev.preventDefault();
-    drag.current = { id: n.id };
+    drag.current = { id: n.id, startX: ev.clientX, startY: ev.clientY };
     moved.current = false;
     n.fx = n.x;
     n.fy = n.y;
@@ -424,7 +430,7 @@ export function CapabilityConstellation() {
                 <circle cx={x} cy={y} r={r} className="c-core" />
                 {n.img && (
                   <image
-                    href={`/projects/thumbs/${n.img}.webp`}
+                    href={imageHrefOf(n)}
                     x={x - r}
                     y={y - r}
                     width={r * 2}

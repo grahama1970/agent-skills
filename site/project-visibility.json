@@ -1,6 +1,6 @@
 {
   "schema": "grahama.project_visibility.v1",
-  "sourceCommit": "dc2ed51600",
+  "sourceCommit": "2f2bdf6231",
   "projects": [
     {
       "slug": "persona-dream",
@@ -73,6 +73,15 @@
       "evidence_access": "source",
       "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/debugger/README.md",
       "abstract": null
+    },
+    {
+      "slug": "memory",
+      "name": "memory",
+      "visibility": "public-overview",
+      "evidence_access": "abstract",
+      "href": "https://github.com/grahama1970/memory-public",
+      "abstract": null,
+      "note": "Public product overview; underlying system and evidence are private."
     },
     {
       "slug": "sparta-explorer",

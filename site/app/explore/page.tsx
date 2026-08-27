@@ -5,7 +5,7 @@ import content from '@/content.json';
 import inventory from '@/inventory.json';
 import visibility from '@/project-visibility.json';
 
-const PROJECT_VISUALS: Record<string, { tint: string; img?: string; decode?: string }> = {
+const PROJECT_VISUALS: Record<string, { tint: string; img?: string; asset?: string; decode?: string }> = {
   tau: { tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
   surf: { tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
@@ -16,6 +16,7 @@ const PROJECT_VISUALS: Record<string, { tint: string; img?: string; decode?: str
   scillm: { tint: 'rgba(147,162,137,.42)' },
   debugger: { tint: 'rgba(196,142,86,.42)' },
   'sparta-explorer': { tint: 'rgba(120,140,170,.38)', img: 'sparta-montage', decode: 'space-cyber evidence workbench' },
+  memory: { tint: 'rgba(147,162,137,.45)', asset: 'memory-recall-card.svg', decode: 'memory-first graph recall' },
 };
 
 const skillFlags = new Map(
@@ -89,7 +90,7 @@ export default function ExplorePage() {
                     >
                       <img
                         className="shot-img"
-                        src={`/projects/${meta.img ?? p.slug}.webp`}
+                        src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}`}
                         alt=""
                         loading="eager"
                         decoding="async"

@@ -22,9 +22,9 @@ import visibility from '@/project-visibility.json';
 const REPO = 'https://github.com/grahama1970/agent-skills';
 
 /** Per-card collage placement + tint from the winning comp. */
-const SUPPORTING_SLUGS = ['sparta-explorer', 'persona-dream', 'battle'] as const;
+const SUPPORTING_SLUGS = ['sparta-explorer', 'persona-dream', 'memory', 'battle'] as const;
 
-const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string; decode?: string }> = {
+const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string; asset?: string; decode?: string }> = {
   tau: { cls: 'c1', tint: 'rgba(209,112,60,.55)', decode: 'zero-trust agent harness' },
   battle: { cls: 'c2', tint: 'rgba(178,74,58,.5)', decode: 'exploit-evolution arena' },
   surf: { cls: 'c3', tint: 'rgba(147,162,137,.45)', decode: 'authenticated browser control' },
@@ -35,6 +35,7 @@ const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string;
   scillm: { cls: 'c8', tint: 'rgba(147,162,137,.42)' },
   debugger: { cls: 'c9', tint: 'rgba(196,142,86,.42)' },
   'sparta-explorer': { cls: 'c10', tint: 'rgba(120,140,170,.38)', img: 'sparta-montage', decode: 'space-cyber evidence workbench' },
+  memory: { cls: 'c11', tint: 'rgba(147,162,137,.45)', asset: 'memory-recall-card.svg', decode: 'memory-first graph recall' },
 };
 
 const TRACK = [
@@ -310,7 +311,7 @@ export default function Home() {
                 <p className="kicker">
                   <b>Tau</b> Selected investigations
                 </p>
-                <h2 className="h2">One dominant proof, three supporting systems.</h2>
+                <h2 className="h2">One dominant proof, four supporting systems.</h2>
               </div>
               <p className="count">preview here → full index one step deeper</p>
             </div>
@@ -378,7 +379,7 @@ export default function Home() {
                       >
                         <img
                           className="shot-img"
-                          src={`/projects/${meta.img ?? p.slug}.webp`}
+                          src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}`}
                           alt=""
                           loading="eager"
                           decoding="async"

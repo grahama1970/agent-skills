@@ -28,6 +28,7 @@ OUT = REPO / "site" / "project-visibility.json"
 # are skills inside agent-skills (public). Only distinct work repos need entries.
 PROJECT_REPO = {
     "tau": EXPERIMENTS / "tau",
+    "memory": EXPERIMENTS / "memory",
     "sparta-explorer": EXPERIMENTS / "sparta",
     "extractor": EXPERIMENTS / "extractor",
     "scillm": EXPERIMENTS / "scillm",
@@ -39,6 +40,7 @@ PROJECT_REPO = {
 # to the private work repo. This is automatic: edit the overview repo, the site
 # follows on the next refresh.
 PROJECT_PUBLIC_OVERVIEW = {
+    "memory": "grahama1970/memory-public",
     "sparta-explorer": "grahama1970/sparta-public",
 }
 

@@ -1,9 +1,9 @@
 {
   "schema": "grahama.graph.v1",
-  "sourceCommit": "dc2ed51600",
+  "sourceCommit": "2f2bdf6231",
   "counts": {
-    "nodes": 19,
-    "edges": 18
+    "nodes": 20,
+    "edges": 19
   },
   "nodes": [
     {
@@ -104,6 +104,21 @@
       "visibility": "public",
       "evidenceAccess": "source",
       "img": "persona-dream"
+    },
+    {
+      "id": "project:memory",
+      "type": "project",
+      "label": "memory",
+      "slug": "memory",
+      "lens": "hybrid",
+      "href": "https://github.com/grahama1970/memory-public",
+      "question": "What should an agent remember before it touches the code?",
+      "abstract": "BM25 + Qdrant candidates + ArangoDB graph recall for agents.",
+      "taxonomy": "core",
+      "hasSanityCheck": true,
+      "visibility": "public-overview",
+      "evidenceAccess": "abstract",
+      "img": "memory"
     },
     {
       "id": "area:extraction",
@@ -266,6 +281,11 @@
     {
       "source": "area:memory",
       "target": "project:persona-dream",
+      "rel": "system"
+    },
+    {
+      "source": "area:memory",
+      "target": "project:memory",
       "rel": "system"
     },
     {
