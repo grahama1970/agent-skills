@@ -213,7 +213,10 @@ composition (a 16:9 card in a 16:10 slot loses ~10% of its width), which
 reads as "cramped" even when the artwork itself is fine. grahama.co project
 cards use `.shot { aspect-ratio: 16/10; object-fit: cover }` → author at
 1920x1200. Fill freed space with layout (e.g. headline in a side column),
-never with decoration.
+never with decoration. Balance vertical margins: each column's content block
+centers on the canvas midline, and the tallest column keeps equal top/bottom
+margins — asymmetric padding (110px above, 50px below) reads as drift even
+when every element is individually placed.
 
 ## Screenshot Protocol (hard-won)
 
