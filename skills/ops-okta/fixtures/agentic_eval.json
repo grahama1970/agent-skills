@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "skill": "ops-okta",
+  "trials": 3,
+  "proof_scope": "live OIDC discovery and JWKS against a real public Okta org, and fail-closed env posture without configuration",
+  "claims": {
+    "proves": "the skill reads real OIDC metadata and signing-key ids through its CLI and fails closed with typed failure_codes when unconfigured",
+    "does_not_prove": "authenticated Okta API access, user/group state, token issuance, or org policy"
+  },
+  "cases": [
+    {
+      "name": "live-discovery-and-jwks",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "OKTA_DOMAIN=https://okta.okta.com ../run.sh discovery && OKTA_DOMAIN=https://okta.okta.com ../run.sh jwks"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"issuer\": \"https://okta.okta.com\"", "key_count"]}
+    },
+    {
+      "name": "unconfigured-fails-closed",
+      "type": "negative",
+      "command": ["bash", "-c", "env -u OKTA_DOMAIN ../run.sh doctor; test $? -eq 1"],
+      "expected": {"exit_code": 0, "stdout_contains": ["okta_domain_missing", "presence booleans only"]}
+    },
+    {
+      "name": "bad-domain-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "command": ["bash", "-c", "OKTA_DOMAIN=https://nonexistent-org-xyz123.okta.com ../run.sh discovery; test $? -eq 1"],
+      "expected": {"exit_code": 0, "stdout_contains": ["oidc_discovery_unreachable"]}
+    }
+  ],
+  "eval_kind": "skill_behavior"
+}
