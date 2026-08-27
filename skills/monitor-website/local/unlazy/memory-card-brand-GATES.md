@@ -60,7 +60,7 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=31f50f8107a28dfc2da6246b96169625ad25dc7a160890ec9ef4ef5bb3aca358; output-bytes=187
 
 - [ ] G13: painted pixel rhythm is uniform (closing oracle from rendered screenshot)
-  CHECK: bash -c "T=$(mktemp --suffix=.png) && google-chrome --headless=new --disable-gpu --force-prefers-reduced-motion --window-size=1920,1200 --screenshot=\"$T\" file:///home/graham/workspace/experiments/agent-skills/docs/assets/project-cards/memory-recall-card.svg 2>/dev/null; cd /home/graham/workspace/experiments/agent-skills && skills/best-practices-svg-design/run.sh pixels \"$T\""
+  CHECK: bash -c "google-chrome --headless=new --disable-gpu --force-prefers-reduced-motion --user-data-dir=/tmp/g13-profile --window-size=1920,1200 --screenshot=/tmp/g13-card.png file:///home/graham/workspace/experiments/agent-skills/docs/assets/project-cards/memory-recall-card.svg 2>/dev/null; skills/best-practices-svg-design/run.sh pixels /tmp/g13-card.png"
   EXPECT: PIXELS_OK
   EVIDENCE: pending
 

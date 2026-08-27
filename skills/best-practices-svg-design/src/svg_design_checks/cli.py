@@ -57,7 +57,12 @@ def pixels(
     """Assert even spacing recomputed from a rendered screenshot's pixels."""
     from .raster import audit_pixels
 
-    ok, findings = audit_pixels(str(png), canvas_h, tol)
+    try:
+        ok, findings = audit_pixels(str(png), canvas_h, tol)
+    except Exception as exc:
+        logger.error("unreadable screenshot {}: {}", png, exc)
+        print(f"PIXELS_FAIL unreadable screenshot: {exc}")
+        raise typer.Exit(1)
     for line in findings:
         print(line)
     print("PIXELS_OK" if ok else "PIXELS_FAIL")
