@@ -151,6 +151,16 @@ exclusion is called out explicitly at handoff.
   fits" at authoring time is how "candidates" ended up outside the QDRANT
   panel.
 
+## Type Scale Inside Nodes
+
+A node's three text roles must be separable at a glance by BOTH size and
+weight, not size alone: step/kicker (small, light, muted — e.g. 16px/620),
+title (large, bold, bright — e.g. 31px/760), note (mid, regular, dim).
+A kicker set at the title's weight ("01 · UNDERSTAND" competing with
+"INTENT") flattens the hierarchy and reads as clutter. Uppercase mono at
+equal weight is the usual culprit — drop the kicker two weight steps and
+one opacity step below the title.
+
 ## Slot Contract (read the CSS before authoring)
 
 Before choosing a viewBox, read the destination slot's CSS: its

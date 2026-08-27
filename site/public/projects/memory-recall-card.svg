@@ -58,9 +58,10 @@
       }
       #memory-pipeline .step {
         fill: #8f7f72;
-        font-size: 19px;
-        font-weight: 760;
-        letter-spacing: 3px;
+        font-size: 16px;
+        font-weight: 620;
+        letter-spacing: 2.5px;
+        opacity: 0.85;
       }
       #memory-pipeline .stage-name {
         fill: #ece2d3;
@@ -416,8 +417,8 @@
       <path d="M900 596 V626 C900 644 918 652 938 652 H1010" class="flow-path flow-amber merge-flow" pathLength="1"/>
       <path d="M1240 596 V626 C1240 644 1222 652 1202 652 H1130" class="flow-path flow-violet merge-flow" pathLength="1"/>
 
-      <rect x="820" y="648" width="500" height="130" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)"/>
-      <rect x="834" y="656" width="472" height="114" rx="26" class="panel"/>
+      <rect x="808" y="648" width="524" height="130" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)"/>
+      <rect x="822" y="656" width="496" height="114" rx="26" class="panel"/>
       <g transform="translate(872 684)" aria-hidden="true">
         <line x1="8" y1="10" x2="32" y2="4" class="graph-edge"/>
         <line x1="32" y1="4" x2="45" y2="24" class="graph-edge"/>
@@ -460,7 +461,7 @@
       <line x1="1106" y1="904" x2="1310" y2="904" class="gate-line"/>
       <circle cx="1070" cy="904" r="24" class="gate-ring"/>
       <path d="M1060 904 L1068 912 L1082 896" class="gate-check"/>
-      <text x="1070" y="964" text-anchor="middle" class="mono gate-name">04 · EVIDENCE GATE</text>
+      <text x="1070" y="964" text-anchor="middle" class="mono gate-name"><tspan class="step" fill="#8f7f72">04 · </tspan>EVIDENCE GATE</text>
       <text x="1070" y="990" text-anchor="middle" class="sans gate-note">candidate → supported memory</text>
     </g>
 
