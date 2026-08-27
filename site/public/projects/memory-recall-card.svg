@@ -394,8 +394,8 @@
 
       <path d="M1290 317 H1400" class="base-path-faint"/>
       <g aria-label="Deflect branch">
-        <rect x="1400" y="289" width="190" height="56" rx="28" class="panel-soft"/>
-        <text x="1495" y="324" text-anchor="middle" class="mono aside-name">DEFLECT</text>
+        <rect x="1400" y="285" width="250" height="64" rx="20" class="panel-soft"/>
+        <text x="1525" y="326" text-anchor="middle" class="mono outcome-name">DEFLECT</text>
       </g>
     </g>
 
