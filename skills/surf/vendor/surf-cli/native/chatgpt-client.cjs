@@ -1652,6 +1652,21 @@ async function query(options) {
       log("File uploaded, waiting for ChatGPT attachment processing...");
       await delay(1500, signal);
     }
+    // Pre-submit DOM doctor: verify targets resolve and diagnose drift BEFORE
+    // typing, so a daily DOM change fails fast (actionable) instead of typing
+    // into a vanished element and hanging. Cloudflare -> reload-recover once,
+    // then re-check; unrecoverable states throw a coded error.
+    let doctor = await preflightDoctor(cdp, { log });
+    if (doctor.verdict === "RETRY_AFTER_RELOAD") {
+      await recoverCloudflareChallenge(cdp, inputCdp, log);
+      doctor = await preflightDoctor(cdp, { log });
+    }
+    if (doctor.verdict !== "PROCEED") {
+      const err = new Error(`ChatGPT preflight doctor blocked submit: ${doctor.reason}`);
+      err.code = `preflight_${doctor.reason}`;
+      err.preflightDoctor = doctor;
+      throw err;
+    }
     await typePrompt(cdp, inputCdp, prompt, signal);
     log("Prompt typed");
     const baseline = normalizeResponseSnapshot(await readChatGPTResponseSnapshot(cdp));
@@ -1732,7 +1747,104 @@ async function query(options) {
   }
 }
 
+/**
+ * Pre-submit DOM doctor. Captures the live page ONCE right before typing and
+ * verifies that the exact targets surf will drive still resolve, diagnoses
+ * selector drift (primary data-testid anchor changed but a fallback matched),
+ * and detects blocking states (Cloudflare challenge, logged-out, modal, rate
+ * limit). Returns a structured verdict instead of letting surf type into a
+ * vanished element and hang.
+ *
+ * Boundary: it DETECTS a captcha/challenge and returns RETRY_AFTER_RELOAD or
+ * STOP_HANDOFF. It never solves or clicks through bot-detection.
+ *
+ * verdict: PROCEED | RETRY_AFTER_RELOAD | STOP_HANDOFF
+ */
+async function preflightDoctor(cdp, { log } = {}) {
+  const cloudflare = await isCloudflareBlocked(cdp);
+  const capture = await evaluate(
+    cdp,
+    `(() => {
+      const list = (sel) => sel.split(',').map((x) => x.trim()).filter(Boolean);
+      const firstMatch = (sel) => { for (const s of list(sel)) { try { if (document.querySelector(s)) return s; } catch (e) {} } return null; };
+      const composerSel = ${JSON.stringify(SELECTORS.promptTextarea)};
+      const sendSel = ${JSON.stringify(SELECTORS.sendButton)};
+      const cMatch = firstMatch(composerSel);
+      const sMatch = firstMatch(sendSel);
+      const cEl = cMatch ? document.querySelector(cMatch) : null;
+      const modal = document.querySelector('[role="dialog"], [role="alertdialog"], [aria-modal="true"]');
+      const bodyText = String(document.body?.innerText || '').toLowerCase().replace(/\\s+/g, ' ').slice(0, 4000);
+      return {
+        href: location.href,
+        title: document.title,
+        loggedOut: /\\/auth\\/login|auth0|login\\.(openai|chatgpt)/i.test(location.href),
+        composer: { primary: list(composerSel)[0], matched: cMatch, id: (cEl && cEl.id) || null },
+        send: { primary: list(sendSel)[0], matched: sMatch },
+        modal: { present: !!modal, text: modal ? String(modal.innerText || '').slice(0, 600) : null },
+        bodyText,
+      };
+    })()`
+  );
+
+  const cap = capture || {};
+  const composer = cap.composer || { primary: null, matched: null };
+  const send = cap.send || { primary: null, matched: null };
+  const rateLimited =
+    typeof detectsTooManyRequests === "function"
+      ? Boolean(detectsTooManyRequests(cap.bodyText || ""))
+      : /too many requests|rate limit|temporarily limited access to your conversations/.test(cap.bodyText || "");
+
+  // Drift: the primary (data-testid) anchor changed but a fallback saved us.
+  const drift = [];
+  if (composer.matched && composer.primary && composer.matched !== composer.primary) {
+    drift.push({ target: "composer", expected: composer.primary, matched_fallback: composer.matched });
+  }
+  if (send.matched && send.primary && send.matched !== send.primary) {
+    drift.push({ target: "send", expected: send.primary, matched_fallback: send.matched });
+  }
+
+  let verdict = "PROCEED";
+  let reason = null;
+  if (cap.loggedOut) {
+    verdict = "STOP_HANDOFF";
+    reason = "logged_out";
+  } else if (cloudflare) {
+    verdict = "RETRY_AFTER_RELOAD";
+    reason = "cloudflare_challenge";
+  } else if (!composer.matched) {
+    verdict = "STOP_HANDOFF";
+    reason = "composer_selector_drift_all_missing";
+  } else if (!send.matched) {
+    verdict = "STOP_HANDOFF";
+    reason = "send_selector_drift_all_missing";
+  } else if (rateLimited) {
+    verdict = "STOP_HANDOFF";
+    reason = "rate_limited";
+  }
+
+  const receipt = {
+    schema: "surf.preflight_doctor.v1",
+    verdict,
+    reason,
+    href: cap.href || null,
+    title: cap.title || null,
+    cloudflare,
+    loggedOut: Boolean(cap.loggedOut),
+    rateLimited,
+    modal: cap.modal || { present: false, text: null },
+    composer,
+    send,
+    drift,
+  };
+  if (log) {
+    if (drift.length) log(`preflight-doctor: selector drift ${JSON.stringify(drift)}`);
+    log(`preflight-doctor: verdict=${verdict}${reason ? " reason=" + reason : ""}`);
+  }
+  return receipt;
+}
+
 module.exports = {
+  preflightDoctor,
   buildBackendApiScheduleExpression,
   fetchAssistantTextViaBackendApi,
   upgradeCollapsedDomCapture,
