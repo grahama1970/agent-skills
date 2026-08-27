@@ -150,6 +150,11 @@ perspective.
   before authoring: mono ≈ 0.62em/char, sans ≈ 0.5em/char, plus
   letter-spacing; if `label_px + gap + note_px > panel_width - 2*padding`,
   restructure — never let it ride.
+- Supporting notes are the FIRST cut, not a fixture: any note that renders
+  below ~11px at the slot's true display size is unreadable decoration —
+  delete it rather than keep it (memory card: 'route before recall',
+  'exact terms', pill sub-labels all died here). Kicker + name per node is
+  the default; a note must earn its place at render size.
 - Inline name+note pairs on one baseline are the primary overflow source.
   Default to stacking: step line, name line, note line, each starting at the
   same left edge, panel height grown to fit.
