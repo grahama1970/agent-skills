@@ -129,6 +129,29 @@ ln -s /mnt/storage12tb/skills/<skill-name>/models /path/to/skill/models
 - `/ops-workstation slim` reports storage policy violations
 - `.gitignore` in every skill should exclude heavy artifact patterns
 
+## Error Classification Policy (adopt incrementally)
+
+A skill MUST NOT surface a generic, ambiguous failure (`timeout`,
+`NEEDS_ATTENTION`, a bare non-zero) when the real cause is knowable. Route the
+raw signal through **`/triage-error`** so every layer of the pipeline
+(`/ask → /tau → {/surf | /scillm}`, and any skill) resolves to ONE unambiguous
+`{code, cause, next_command}` from the shared catalog
+(`skills/triage-error/failure_codes.json`).
+
+- **How:** `skills/triage-error/run.sh classify --text "<err>" --layer <l>` (or
+  import `triage_error.classify` in Python). It is language-agnostic — non-Python
+  skills shell out to `run.sh classify`.
+- **Ambiguous signals:** `run.sh triage` mints a deterministic code and can
+  compose `/ticket` (drafts by default; `--file` publishes), `/agentic-evals`
+  (`--scaffold-eval`), and `/memory` (stores the code). Grow the catalog when a
+  minted `*_unclassified_*` code recurs.
+- **Rollout is incremental**, like the runtime-self-improvement tier: pipeline
+  skills first (`ask`, `surf`, `scillm`), then outward. Reference implementation:
+  `skills/triage-error` itself, plus the `webgpt_attachment_bundle_rejected`
+  classification wired into `ask` (issue #1531).
+- A skill that emits a bare generic failure where a catalog code exists is a
+  best-practices violation; add the classification or the catalog entry.
+
 ## Required structure
 
 - A skill is a folder with a required `SKILL.md` at the root.

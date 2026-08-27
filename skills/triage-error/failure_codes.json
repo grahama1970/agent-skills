@@ -1,0 +1,51 @@
+{
+  "schema": "triage_error.catalog.v1",
+  "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
+  "codes": [
+    {
+      "code": "webgpt_attachment_bundle_rejected",
+      "layer": "surf",
+      "match": ["attach_file_preflight_failed", "maximum is", "zip contains"],
+      "cause": "The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).",
+      "next_command": "Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.",
+      "recoverable": true,
+      "not_this": ["tab binding", "open-bind", "rebind"]
+    },
+    {
+      "code": "scillm_api_base_double_version_segment",
+      "layer": "scillm",
+      "match": ["/v4/v1/chat/completions", "paas/v4/v1", "_with_openai_v1_suffix"],
+      "cause": "scillm appended /v1 to an api_base whose path already ends in a /vN version segment (e.g. z.ai /api/paas/v4), producing a 404 path.",
+      "next_command": "Skip the /v1 append when the base path already ends in /vN (scillm/proxy/config.py _with_openai_v1_suffix).",
+      "recoverable": true,
+      "not_this": ["api key", "model name", "endpoint host"]
+    },
+    {
+      "code": "surf_native_host_stale_cjs",
+      "layer": "surf",
+      "match": ["edits.*no effect", "stale.*host", "host.cjs.*cache"],
+      "cause": "The surf native host require-caches chatgpt-client.cjs at process start; a long-running host runs pre-edit code.",
+      "next_command": "Kill the host (pgrep -f surf-cli/native/host.cjs; kill PID) so Chrome respawns it fresh; doctor logs go to /tmp/surf-host.log.",
+      "recoverable": true,
+      "not_this": ["code was wrong", "deployment gap"]
+    },
+    {
+      "code": "webgpt_preflight_composer_missing",
+      "layer": "surf",
+      "match": ["composer_selector_drift_all_missing", "preflight_composer"],
+      "cause": "The ChatGPT composer selector did not resolve on the live page (all layered selectors missing).",
+      "next_command": "Inspect the live DOM; the composer markup changed. Update SELECTORS in preflight_doctor.js / chatgpt-client.cjs, or hand off if logged-out.",
+      "recoverable": false,
+      "not_this": ["send button (advisory pre-typing)"]
+    },
+    {
+      "code": "webgpt_preflight_logged_out",
+      "layer": "surf",
+      "match": ["preflight_logged_out", "auth/login", "logged_out"],
+      "cause": "The controlled ChatGPT tab is logged out; no submit is possible.",
+      "next_command": "Hand off to the human to log the reviewer tab back in; do not retry automatically.",
+      "recoverable": false,
+      "not_this": []
+    }
+  ]
+}
