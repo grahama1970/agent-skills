@@ -1,13 +1,44 @@
 {
+  "canvas": 1200,
+  "origin": 0,
   "tolerance": 1,
-  "centers": [
-    152,
-    312,
-    472,
-    632,
-    792,
-    952,
-    1112
-  ],
-  "note": "baseline-grid content centers, local coords, step 160"
+  "gap": 74,
+  "margin": 100.0,
+  "rows": [
+    {
+      "name": "request",
+      "y": 100,
+      "h": 84
+    },
+    {
+      "name": "intent",
+      "y": 258,
+      "h": 92
+    },
+    {
+      "name": "recall",
+      "y": 424,
+      "h": 92
+    },
+    {
+      "name": "record",
+      "y": 590,
+      "h": 92
+    },
+    {
+      "name": "gate",
+      "y": 756,
+      "h": 48
+    },
+    {
+      "name": "outcomes",
+      "y": 878,
+      "h": 64
+    },
+    {
+      "name": "response",
+      "y": 1016,
+      "h": 84
+    }
+  ]
 }

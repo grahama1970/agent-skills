@@ -150,6 +150,21 @@ def audit_spacing(lay: Layout, tol: float = 2.0) -> tuple[bool, list[str]]:
     for i, r in enumerate(rows):
         names = ",".join(sorted({it.cls.split()[0] for it in r["items"]}))
         out.append(f"row{i}: y={r['top']:.0f}-{r['bottom']:.0f} n={len(r['items'])} [{names}]")
+    # Layout law: uniform inter-row GAPS and symmetric top/bottom margins.
+    # Center-to-center rhythm is informational only — uniform centers do NOT
+    # imply even spacing when row heights differ, which is exactly the drift
+    # this check exists to catch.
+    gaps = [round(rows[i + 1]["top"] - rows[i]["bottom"], 1) for i in range(len(rows) - 1)]
+    out.append(f"row gaps: {gaps}")
+    if gaps and max(gaps) - min(gaps) > tol:
+        out.append(f"SPACING_FAIL uneven row gaps (spread {max(gaps) - min(gaps):.1f} > {tol})")
+        ok = False
+    top_margin = rows[0]["top"]
+    bottom_margin = lay.height - rows[-1]["bottom"]
+    out.append(f"margins: top={top_margin:.1f} bottom={bottom_margin:.1f}")
+    if abs(top_margin - bottom_margin) > 2 * tol:
+        out.append(f"SPACING_FAIL asymmetric vertical margins (top {top_margin:.1f} vs bottom {bottom_margin:.1f}, allowed {2 * tol:.1f})")
+        ok = False
     baselines = []
     for r in rows:
         x_lo = min(b.x for b in r["items"]) - 160
@@ -158,11 +173,7 @@ def audit_spacing(lay: Layout, tol: float = 2.0) -> tuple[bool, list[str]]:
               if x_lo <= t.x <= x_hi and r["top"] - 30 <= t.y <= r["bottom"] + 30]
         baselines.append(sum(bl) / len(bl) if bl else (r["top"] + r["bottom"]) / 2)
     steps = [round(baselines[i + 1] - baselines[i], 1) for i in range(len(baselines) - 1)]
-    out.append(f"baseline rhythm steps: {steps}")
-    rhythm_tol = max(tol, 4.0)
-    if steps and max(steps) - min(steps) > rhythm_tol:
-        out.append(f"SPACING_FAIL uneven baseline rhythm (spread {max(steps) - min(steps):.1f} > {rhythm_tol})")
-        ok = False
+    out.append(f"baseline rhythm steps (informational): {steps}")
     for i, r in enumerate(rows):
         items = sorted(r["items"], key=lambda b: b.x)
         sibs = [b for b in items if abs(b.h - items[0].h) <= tol]

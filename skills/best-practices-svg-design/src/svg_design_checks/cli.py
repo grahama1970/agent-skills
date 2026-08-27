@@ -56,12 +56,13 @@ def pixels(
     png: Path,
     canvas_h: float = typer.Option(1200.0, help="artwork canvas height for tolerance scaling"),
     tol: float = typer.Option(4.0, help="max deviation in SVG px"),
+    manifest: Path = typer.Option(None, help="grid manifest: assert painted bands land on row spans"),
 ) -> None:
-    """Assert even spacing recomputed from a rendered screenshot's pixels."""
+    """Assert a rendered screenshot's ink bands sit on the manifest grid."""
     from .raster import audit_pixels
 
     try:
-        ok, findings = audit_pixels(str(png), canvas_h, tol)
+        ok, findings = audit_pixels(str(png), canvas_h, tol, manifest_path=str(manifest) if manifest else None)
     except Exception as exc:
         logger.error("unreadable screenshot {}: {}", png, exc)
         print(f"PIXELS_FAIL unreadable screenshot: {exc}")
@@ -86,6 +87,15 @@ def grid(manifest: Path) -> None:
     import sys
     script = Path(__file__).resolve().parents[2] / "scripts" / "check_grid.py"
     raise typer.Exit(subprocess.call([sys.executable, str(script), str(manifest)]))
+
+
+@app.command()
+def place(svg: Path, manifest: Path) -> None:
+    """Place an SVG's rows onto a solved grid manifest (machine-readable law)."""
+    import subprocess
+    import sys
+    script = Path(__file__).resolve().parents[2] / "scripts" / "place_grid.py"
+    raise typer.Exit(subprocess.call([sys.executable, str(script), str(svg), str(manifest)]))
 
 
 @app.command()
