@@ -1,0 +1,507 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="memory-pipeline-title memory-pipeline-desc" tabindex="0">
+  <title id="memory-pipeline-title">Graph Memory: memory-first recall pipeline</title>
+  <desc id="memory-pipeline-desc">A question is recalled from memory before any agent call: it passes through intent, then hybrid BM25 and Qdrant recall. BM25 and Qdrant candidate ids seed ArangoDB multi-hop edge expansion that returns graph paths and receipts. Four example questions cycle through the pipeline, each lighting its route and its reply. An evidence gate chooses answer, clarify, or draft; weak evidence sends the agent to scan the codebase and learn the result back, while unsupported requests can deflect before recall. Every route resolves before the agent sends its response to the human.</desc>
+
+  <defs>
+    <radialGradient id="bg-glow" cx="58%" cy="52%" r="66%">
+      <stop offset="0" stop-color="#261f1b" stop-opacity="0.78" />
+      <stop offset="0.46" stop-color="#151210" stop-opacity="0.42" />
+      <stop offset="1" stop-color="#0c0908" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="answer-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#93a289" stop-opacity="0.17" />
+      <stop offset="1" stop-color="#93a289" stop-opacity="0.05" />
+    </linearGradient>
+    <marker id="flow-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="rgba(236,226,211,0.62)" />
+    </marker>
+    <marker id="flow-arrow-ember" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#d1703c" />
+    </marker>
+    <marker id="flow-arrow-brass" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#e2ac62" />
+    </marker>
+    <filter id="soft-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="wide-glow" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="22" />
+    </filter>
+
+    <style>
+      #memory-pipeline .sans {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      #memory-pipeline .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      }
+      #memory-pipeline .eyebrow {
+        fill: #e2ac62;
+        font-size: 31px;
+        font-weight: 760;
+        letter-spacing: 10px;
+      }
+      #memory-pipeline .serif {
+        font-family: Fraunces, Georgia, "Times New Roman", serif;
+      }
+      #memory-pipeline .headline {
+        fill: #f5efe4;
+        font-size: 118px;
+        font-weight: 720;
+        letter-spacing: -2px;
+      }
+      #memory-pipeline .subhead {
+        fill: #c9bba8;
+        font-size: 35px;
+        font-weight: 430;
+      }
+      #memory-pipeline .footer {
+        fill: #8f7f72;
+        font-size: 25px;
+        font-weight: 480;
+        font-style: italic;
+      }
+      #memory-pipeline .stage-name {
+        fill: #ece2d3;
+        font-size: 32px;
+        font-weight: 660;
+        letter-spacing: 0.5px;
+      }
+      #memory-pipeline .query-label {
+        fill: #e2ac62;
+        font-size: 19px;
+        font-weight: 760;
+        letter-spacing: 3px;
+      }
+      #memory-pipeline .query-text {
+        fill: #ece2d3;
+        font-size: 33px;
+        font-weight: 570;
+      }
+      #memory-pipeline .gate-name {
+        fill: #ece2d3;
+        font-size: 26px;
+        font-weight: 760;
+        letter-spacing: 3px;
+      }
+      #memory-pipeline .outcome-name {
+        fill: #ece2d3;
+        font-size: 26px;
+        font-weight: 760;
+        letter-spacing: 2px;
+      }
+      #memory-pipeline .terminal-label {
+        fill: #b5a494;
+        font-size: 26px;
+        font-weight: 720;
+        letter-spacing: 4px;
+      }
+
+      #memory-pipeline .panel {
+        fill: rgba(18, 17, 15, 0.86);
+        stroke: rgba(236, 226, 211, 0.16);
+        stroke-width: 2;
+      }
+      #memory-pipeline .panel-soft {
+        fill: rgba(18, 17, 15, 0.68);
+        stroke: rgba(236, 226, 211, 0.30);
+        stroke-width: 1.5;
+      }
+      #memory-pipeline .query-shell {
+        fill: rgba(236, 226, 211, 0.035);
+        stroke: rgba(236, 226, 211, 0.18);
+        stroke-width: 2;
+      }
+      #memory-pipeline .base-path {
+        fill: none;
+        stroke: rgba(236, 226, 211, 0.32);
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #memory-pipeline .base-path-faint {
+        fill: none;
+        stroke: #39332e;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-dasharray: 6 10;
+        opacity: 0.58;
+      }
+      #memory-pipeline .flow-path {
+        fill: none;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 0;
+        opacity: 0.22;
+      }
+      #memory-pipeline .flow-amber { stroke: #e2ac62; }
+      #memory-pipeline .flow-violet { stroke: #d1703c; }
+      #memory-pipeline .flow-mint { stroke: #93a289; }
+      #memory-pipeline .stage-halo {
+        fill: none;
+        stroke-width: 3;
+        opacity: 0.12;
+      }
+      #memory-pipeline .halo-amber { stroke: #e2ac62; }
+      #memory-pipeline .halo-violet { stroke: #d1703c; }
+      #memory-pipeline .halo-mint { stroke: #93a289; }
+      #memory-pipeline .intent-mark {
+        fill: none;
+        stroke: #e2ac62;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+      }
+      #memory-pipeline .bm25-line {
+        stroke: #e2ac62;
+        stroke-width: 3;
+        stroke-linecap: round;
+      }
+      #memory-pipeline .q-node {
+        fill: #d1703c;
+      }
+      #memory-pipeline .q-edge {
+        stroke: rgba(209, 112, 60, 0.7);
+        stroke-width: 1.5;
+      }
+      #memory-pipeline .graph-edge {
+        stroke: rgba(147, 162, 137, 0.66);
+        stroke-width: 2;
+      }
+      #memory-pipeline .graph-node {
+        fill: #12110f;
+        stroke: #93a289;
+        stroke-width: 2.2;
+      }
+      #memory-pipeline .gate-line {
+        stroke: rgba(147, 162, 137, 0.48);
+        stroke-width: 3;
+        stroke-linecap: round;
+      }
+      #memory-pipeline .gate-ring {
+        fill: #12110f;
+        stroke: #93a289;
+        stroke-width: 2.5;
+      }
+      #memory-pipeline .gate-check {
+        fill: none;
+        stroke: #93a289;
+        stroke-width: 3.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #memory-pipeline .answer-shell {
+        fill: url(#answer-fill);
+        stroke: rgba(147, 162, 137, 0.58);
+        stroke-width: 2;
+      }
+      #memory-pipeline .clarify-shell {
+        fill: rgba(226, 172, 98, 0.045);
+        stroke: rgba(226, 172, 98, 0.45);
+        stroke-width: 1.5;
+      }
+      #memory-pipeline .scan-shell {
+        fill: rgba(209, 112, 60, 0.05);
+        stroke: rgba(209, 112, 60, 0.55);
+        stroke-width: 2;
+        stroke-dasharray: 7 7;
+      }
+      #memory-pipeline .panel-02a { stroke: rgba(226, 172, 98, 0.34); }
+      #memory-pipeline .panel-02b { stroke: rgba(209, 112, 60, 0.38); }
+      #memory-pipeline .panel-03  { stroke: rgba(147, 162, 137, 0.40); }
+      #memory-pipeline .panel-02g { stroke: rgba(147, 162, 137, 0.38); }
+
+      @media (prefers-reduced-motion: no-preference) {
+        @keyframes draw-query { 0%, 2% { stroke-dashoffset: 1; opacity: 0; } 8% { opacity: 1; } 12%, 20% { stroke-dashoffset: 0; opacity: 1; } 26%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-intent { 0%, 8%, 100% { opacity: 0; transform: scale(0.96); } 13%, 21% { opacity: 0.75; transform: scale(1); } 27% { opacity: 0.12; transform: scale(1.04); } }
+        @keyframes draw-split { 0%, 13% { stroke-dashoffset: 1; opacity: 0; } 17% { opacity: 1; } 23%, 28% { stroke-dashoffset: 0; opacity: 1; } 33%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-recall { 0%, 18%, 100% { opacity: 0; transform: scale(0.97); } 24%, 31% { opacity: 0.72; transform: scale(1); } 36% { opacity: 0.10; transform: scale(1.03); } }
+        @keyframes draw-merge { 0%, 24% { stroke-dashoffset: 1; opacity: 0; } 28% { opacity: 1; } 34%, 38% { stroke-dashoffset: 0; opacity: 1; } 43%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-record { 0%, 30%, 100% { opacity: 0; transform: scale(0.98); } 36%, 43% { opacity: 0.7; transform: scale(1.035); } 48% { opacity: 0.10; transform: scale(1.035); } }
+        @keyframes draw-gate { 0%, 36% { stroke-dashoffset: 1; opacity: 0; } 40% { opacity: 1; } 46%, 50% { stroke-dashoffset: 0; opacity: 1; } 55%, 100% { stroke-dashoffset: 0; opacity: 0.18; } }
+        @keyframes pulse-gate { 0%, 40%, 100% { opacity: 0; transform: scale(0.9); } 46%, 56% { opacity: 0.8; transform: scale(1); } 62% { opacity: 0.14; transform: scale(1.06); } }
+        @keyframes query-dot {
+          0%, 2% { transform: scale(0.7); opacity: 0.3; }
+          10%, 22% { transform: scale(1.15); opacity: 1; }
+          32%, 100% { transform: scale(1); opacity: 0.55; }
+        }
+        #memory-pipeline .query-flow { animation: draw-query 6s ease-in-out infinite; }
+        #memory-pipeline .intent-halo {
+          transform-origin: 1070px 334px;
+          animation: pulse-intent 6s ease-in-out infinite;
+        }
+        #memory-pipeline .split-flow { animation: draw-split 6s ease-in-out infinite; }
+        #memory-pipeline .bm25-halo {
+          transform-origin: 770px 500px;
+          animation: pulse-recall 6s ease-in-out infinite;
+        }
+        #memory-pipeline .graph-halo {
+          transform-origin: 1070px 500px;
+          animation: pulse-recall 6s ease-in-out infinite;
+        }
+        #memory-pipeline .qdrant-halo {
+          transform-origin: 1370px 500px;
+          animation: pulse-recall 6s ease-in-out infinite;
+        }
+        #memory-pipeline .merge-flow { animation: draw-merge 6s ease-in-out infinite; }
+        #memory-pipeline .record-halo {
+          transform-origin: 1070px 666px;
+          animation: pulse-record 6s ease-in-out infinite;
+        }
+        #memory-pipeline .gate-flow { animation: draw-gate 6s ease-in-out infinite; }
+        #memory-pipeline .gate-halo {
+          transform-origin: 1070px 810px;
+          animation: pulse-gate 6s ease-in-out infinite;
+        }
+        #memory-pipeline .query-dot { transform-origin: 817px 173px; animation: query-dot 6s ease-in-out infinite; }
+        @keyframes deflect-run { 0%, 78% { stroke-dashoffset: 1; opacity: 0; } 80% { opacity: 0.9; } 84%, 96% { stroke-dashoffset: 0; opacity: 0.9; } 99%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+        @keyframes pill-cycle-deflect { 0%, 85% { opacity: 0.45; } 87%, 99% { opacity: 1; } 100% { opacity: 0.45; } }
+        @keyframes qph1 { 0% { opacity: 0; } 0.5% { opacity: 0; } 2.0% { opacity: 1; } 25.5% { opacity: 1; } 27.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes qph2 { 0% { opacity: 0; } 25.5% { opacity: 0; } 27.0% { opacity: 1; } 50.5% { opacity: 1; } 52.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes qph3 { 0% { opacity: 0; } 50.5% { opacity: 0; } 52.0% { opacity: 1; } 75.5% { opacity: 1; } 77.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes qph4 { 0% { opacity: 0; } 0.5% { opacity: 1; } 2.0% { opacity: 0; } 75.5% { opacity: 0; } 77.0% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes rph1 { 0% { opacity: 0; } 12.0% { opacity: 0; } 13.5% { opacity: 1; } 25.5% { opacity: 1; } 27.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph2 { 0% { opacity: 0; } 37.0% { opacity: 0; } 38.5% { opacity: 1; } 50.5% { opacity: 1; } 52.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph3 { 0% { opacity: 0; } 62.0% { opacity: 0; } 63.5% { opacity: 1; } 75.5% { opacity: 1; } 77.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes rph4 { 0% { opacity: 0; } 0.5% { opacity: 1; } 2.0% { opacity: 0; } 87.0% { opacity: 0; } 88.5% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes pillph1 { 0% { opacity: 0.45; } 11.5% { opacity: 0.45; } 13.0% { opacity: 1; } 24.0% { opacity: 1; } 25.5% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph2 { 0% { opacity: 0.45; } 36.5% { opacity: 0.45; } 38.0% { opacity: 1; } 49.0% { opacity: 1; } 50.5% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph3 { 0% { opacity: 0.45; } 61.5% { opacity: 0.45; } 63.0% { opacity: 1; } 74.0% { opacity: 1; } 75.5% { opacity: 0.45; } 100% { opacity: 0.45; } }
+        @keyframes pillph4 { 0% { opacity: 0.45; } 0.5% { opacity: 0.45; } 86.5% { opacity: 0.45; } 88.0% { opacity: 1; } 99.0% { opacity: 1; } 100% { opacity: 0.45; } }
+        @keyframes flowph1 { 0% { opacity: 0; } 10.5% { opacity: 0; } 11.5% { opacity: 0.9; } 15.0% { opacity: 0.9; } 17.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph2 { 0% { opacity: 0; } 35.5% { opacity: 0; } 36.5% { opacity: 0.9; } 40.0% { opacity: 0.9; } 42.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph3 { 0% { opacity: 0; } 60.5% { opacity: 0; } 61.5% { opacity: 0.9; } 65.0% { opacity: 0.9; } 67.0% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes flowph4 { 0% { opacity: 0; } 85.5% { opacity: 0; } 86.5% { opacity: 0.9; } 90.0% { opacity: 0.9; } 92.0% { opacity: 0; } 100% { opacity: 0; } }
+        #memory-pipeline .q1 { animation: qph1 24s linear infinite; }
+        #memory-pipeline .q2 { animation: qph2 24s linear infinite; }
+        #memory-pipeline .q3 { animation: qph3 24s linear infinite; }
+        #memory-pipeline .q4 { animation: qph4 24s linear infinite; }
+        #memory-pipeline .r1 { animation: rph1 24s linear infinite; }
+        #memory-pipeline .r2 { animation: rph2 24s linear infinite; }
+        #memory-pipeline .r3 { animation: rph3 24s linear infinite; }
+        #memory-pipeline .r4 { animation: rph4 24s linear infinite; }
+        #memory-pipeline .route-flow-1 { stroke-dashoffset: 0; animation: flowph1 24s linear infinite; }
+        #memory-pipeline .route-flow-2 { stroke-dashoffset: 0; animation: flowph2 24s linear infinite; }
+        #memory-pipeline .route-flow-3 { stroke-dashoffset: 0; animation: flowph3 24s linear infinite; }
+        #memory-pipeline .route-pill-1 { animation: pillph1 24s linear infinite; }
+        #memory-pipeline .route-pill-2 { animation: pillph2 24s linear infinite; }
+        #memory-pipeline .route-pill-3 { animation: pillph3 24s linear infinite; }
+        #memory-pipeline .route-pill-4 { animation: pill-cycle-deflect 24s linear infinite; }
+        #memory-pipeline .deflect-flow { animation: deflect-run 24s linear infinite; }
+      }
+    </style>
+  </defs>
+
+  <g id="memory-pipeline">
+    <rect width="1920" height="1200" fill="#0c0908" />
+    <rect width="1920" height="1200" fill="url(#bg-glow)" />
+
+    <g aria-label="Card heading" transform="translate(0 -62)">
+      <text x="110" y="446" class="sans eyebrow">GRAPH MEMORY</text>
+      <text x="104" y="564" class="serif headline">Memory</text>
+      <text x="104" y="686" class="serif headline">first.</text>
+      <text x="110" y="762" class="sans subhead">Recall before the agent runs.</text>
+      <text x="110" y="808" class="sans subhead">Evidence decides what happens next.</text>
+      <text x="110" y="880" class="sans footer">A semantic match is a lead—not proof.</text>
+    </g>
+
+    <line x1="730" y1="300" x2="730" y2="1060" stroke="rgba(236,226,211,0.07)" stroke-dasharray="4 10" stroke-width="1.5" />
+
+    <g transform="translate(200 -48.5)">
+    <g aria-label="Example question">
+      <rect x="760" y="130" width="620" height="84" rx="42" class="query-shell" />
+      <g transform="translate(798 154) scale(1.6)" aria-hidden="true" fill="none" stroke="#e2ac62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </g>
+      <text x="856" y="183" class="sans query-text q1">Explain CWE-23.</text>
+      <text x="856" y="183" class="sans query-text q2" opacity="0">How do I secure it?</text>
+      <text x="856" y="183" class="sans query-text q3" opacity="0">Draft a fix runbook.</text>
+      <text x="856" y="183" class="sans query-text q4" opacity="0">What's the weather?</text>
+    </g>
+
+    <g aria-label="Intent stage">
+      <path d="M 1070 224 V278" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 224 V282" class="flow-path flow-amber query-flow" pathLength="1" />
+
+      <rect x="910" y="280" width="340" height="108" rx="26" class="stage-halo halo-amber intent-halo" filter="url(#soft-glow)" />
+      <rect x="920" y="288" width="320" height="92" rx="22" class="panel" />
+      <g transform="translate(988 316)" aria-hidden="true">
+        <circle cx="16" cy="14" r="12" class="intent-mark" />
+        <path d="M16 2 V8 M16 20 V26 M4 14 H10 M22 14 H28" class="intent-mark" opacity="0.68" />
+        <circle cx="16" cy="14" r="3.5" fill="#e2ac62" />
+      </g>
+      <text x="1051" y="346" class="sans stage-name">INTENT</text>
+
+    </g>
+
+    <g aria-label="Hybrid recall stage">
+      <path d="M 1070 390 V402.9 C 1070 413.7 1054 420.3 1036 420.3 H792 C 780 420.3 770 426.8 770 433.3 V444" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 390 V444" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 390 V402.9 C 1070 413.7 1086 420.3 1104 420.3 H1348 C 1360 420.3 1370 426.8 1370 433.3 V444" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 390 V402.9 C 1070 413.7 1054 420.3 1036 420.3 H792 C 780 420.3 770 426.8 770 433.3 V448" class="flow-path flow-amber split-flow" pathLength="1" />
+      <path d="M 1070 390 V448" class="flow-path flow-mint split-flow" pathLength="1" />
+      <path d="M 1070 390 V402.9 C 1070 413.7 1086 420.3 1104 420.3 H1348 C 1360 420.3 1370 426.8 1370 433.3 V448" class="flow-path flow-violet split-flow" pathLength="1" />
+
+      <rect x="620" y="446" width="300" height="108" rx="26" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)" />
+      <rect x="630" y="454" width="280" height="92" rx="22" class="panel panel-02a" />
+      <g transform="translate(660 481)" aria-hidden="true">
+        <line x1="0" y1="4" x2="30" y2="4" class="bm25-line" opacity="0.45" />
+        <line x1="0" y1="14" x2="40" y2="14" class="bm25-line" />
+        <line x1="0" y1="24" x2="24" y2="24" class="bm25-line" opacity="0.68" />
+        <line x1="0" y1="34" x2="34" y2="34" class="bm25-line" opacity="0.35" />
+      </g>
+      <text x="712" y="512" class="sans stage-name">BM25</text>
+
+      <rect x="920" y="446" width="300" height="108" rx="26" class="stage-halo halo-mint graph-halo" filter="url(#soft-glow)" />
+      <rect x="930" y="454" width="280" height="92" rx="22" class="panel panel-02g" />
+      <g transform="translate(960 481)" aria-hidden="true">
+        <line x1="8" y1="8" x2="30" y2="4" class="graph-edge" />
+        <line x1="30" y1="4" x2="40" y2="22" class="graph-edge" />
+        <line x1="8" y1="8" x2="18" y2="32" class="graph-edge" />
+        <line x1="18" y1="32" x2="40" y2="22" class="graph-edge" />
+        <circle cx="8" cy="8" r="4.5" class="graph-node" />
+        <circle cx="30" cy="4" r="4.5" class="graph-node" />
+        <circle cx="40" cy="22" r="4.5" class="graph-node" />
+        <circle cx="18" cy="32" r="4.5" class="graph-node" />
+      </g>
+      <text x="1012" y="512" class="sans stage-name">GRAPH</text>
+
+      <rect x="1220" y="446" width="300" height="108" rx="26" class="stage-halo halo-violet qdrant-halo" filter="url(#soft-glow)" />
+      <rect x="1230" y="454" width="280" height="92" rx="22" class="panel panel-02b" />
+      <g transform="translate(1260 481)" aria-hidden="true">
+        <circle cx="6" cy="10" r="4" class="q-node" />
+        <circle cx="24" cy="4" r="4" class="q-node" />
+        <circle cx="38" cy="16" r="4" class="q-node" />
+        <circle cx="14" cy="28" r="4" class="q-node" />
+        <circle cx="32" cy="32" r="4" class="q-node" opacity="0.6" />
+      </g>
+      <text x="1312" y="512" class="sans stage-name">QDRANT</text>
+    </g>
+
+    <g aria-label="Canonical record and graph evidence stage">
+      <path d="M 770 556 V572.1 C 770 583 782 589.5 796 589.5 H944 C 956 589.5 960 596.1 960 602.6 V610" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 556 V610" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1370 556 V572.1 C 1370 583 1358 589.5 1344 589.5 H1196 C 1184 589.5 1180 596.1 1180 602.6 V610" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 770 556 V572.1 C 770 583 782 589.5 796 589.5 H944 C 956 589.5 960 596.1 960 602.6 V610" class="flow-path flow-amber merge-flow" pathLength="1" />
+      <path d="M 1370 556 V572.1 C 1370 583 1358 589.5 1344 589.5 H1196 C 1184 589.5 1180 596.1 1180 602.6 V610" class="flow-path flow-violet merge-flow" pathLength="1" />
+
+      <rect x="808" y="612" width="524" height="108" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)" />
+      <rect x="822" y="620" width="496" height="92" rx="26" class="panel panel-03" />
+      <g transform="translate(968 650)" aria-hidden="true">
+        <line x1="8" y1="10" x2="32" y2="4" class="graph-edge" />
+        <line x1="32" y1="4" x2="45" y2="24" class="graph-edge" />
+        <line x1="8" y1="10" x2="18" y2="34" class="graph-edge" />
+        <line x1="18" y1="34" x2="45" y2="24" class="graph-edge" />
+        <circle cx="8" cy="10" r="5" class="graph-node" />
+        <circle cx="32" cy="4" r="5" class="graph-node" />
+        <circle cx="45" cy="24" r="5" class="graph-node" />
+        <circle cx="18" cy="34" r="5" class="graph-node" />
+      </g>
+      <text x="1039" y="677" class="sans stage-name">ARANGODB</text>
+
+    </g>
+
+    <g aria-label="Evidence gate">
+      <path d="M 1070 722 V776" class="base-path" marker-end="url(#flow-arrow-brass)" />
+      <path d="M 1070 722 V780" class="flow-path flow-mint gate-flow" pathLength="1" />
+      <circle cx="1070" cy="810" r="38" class="stage-halo halo-mint gate-halo" filter="url(#soft-glow)" />
+      <line x1="750" y1="810" x2="1034" y2="810" class="gate-line" />
+      <line x1="1106" y1="810" x2="1146" y2="810" class="gate-line" />
+      <circle cx="1070" cy="810" r="24" class="gate-ring" />
+      <path d="M 1060 810 L 1068 818 L 1082 802" class="gate-check" />
+      <text x="1166" y="819" class="sans gate-name">EVIDENCE GATE</text>
+    </g>
+
+    <g aria-label="Bounded outcomes">
+      <path d="M 1070 844 V871 H659 V898" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 844 V871 H933 V898" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 844 V871 H1207 V898" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 844 V871 H1481 V898" class="base-path" marker-end="url(#flow-arrow)" />
+      <path d="M 1070 844 V871 H659 V902" class="flow-path flow-mint route-flow-1" pathLength="1" />
+      <path d="M 1070 844 V871 H933 V902" class="flow-path flow-mint route-flow-2" pathLength="1" />
+      <path d="M 1070 844 V871 H1207 V902" class="flow-path flow-mint route-flow-3" pathLength="1" />
+      <path d="M 1290 334 H1560 V871 H1481 V898" class="base-path-faint" />
+      <path d="M 1290 334 H1560 V871 H1481 V902" class="flow-path flow-violet deflect-flow" pathLength="1" />
+
+
+      <g class="route-pill-1" aria-label="Answer outcome">
+        <rect x="534" y="908" width="250" height="64" rx="20" class="answer-shell" />
+        <g transform="translate(562 922)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5" />
+          <line x1="15" y1="10" x2="15" y2="5" />
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none" />
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none" />
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none" />
+        </g>
+        <text x="606" y="949" class="sans outcome-name">ANSWER</text>
+      </g>
+
+      <g class="route-pill-2" aria-label="Clarify outcome">
+        <rect x="808" y="908" width="250" height="64" rx="20" class="clarify-shell" />
+        <g transform="translate(836 922)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5" />
+          <line x1="15" y1="10" x2="15" y2="5" />
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none" />
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none" />
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none" />
+        </g>
+        <text x="880" y="949" class="sans outcome-name">CLARIFY</text>
+      </g>
+
+      <g class="route-pill-3" aria-label="Draft outcome">
+        <rect x="1082" y="908" width="250" height="64" rx="20" class="clarify-shell" />
+        <g transform="translate(1110 922)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5" />
+          <line x1="15" y1="10" x2="15" y2="5" />
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none" />
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none" />
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none" />
+        </g>
+        <text x="1154" y="949" class="sans outcome-name">DRAFT</text>
+      </g>
+
+      <g class="route-pill-4" aria-label="Deflect outcome">
+        <rect x="1356" y="908" width="250" height="64" rx="20" class="panel-soft" />
+        <g transform="translate(1384 922)" aria-hidden="true" fill="none" stroke="#b5a494" stroke-width="2.2" stroke-linecap="round">
+          <rect x="2" y="10" width="26" height="18" rx="5" />
+          <line x1="15" y1="10" x2="15" y2="5" />
+          <circle cx="15" cy="3.5" r="1.6" fill="#b5a494" stroke="none" />
+          <circle cx="10" cy="19" r="2" fill="#b5a494" stroke="none" />
+          <circle cx="20" cy="19" r="2" fill="#b5a494" stroke="none" />
+        </g>
+        <text x="1428" y="949" class="sans outcome-name">DEFLECT</text>
+      </g>
+
+
+      <g aria-label="Agent response to the human">
+        <path d="M 659 982 V1007.3" class="base-path" />
+        <path d="M 933 982 V1007.3" class="base-path" />
+        <path d="M 1207 982 V1007.3" class="base-path" />
+        <path d="M 1481 982 V1007.3" class="base-path" />
+        <line x1="659" y1="1009" x2="1481" y2="1009" class="gate-line" />
+        <path d="M 1070 1009 V1073" class="base-path" marker-end="url(#flow-arrow-brass)" />
+        <g id="response-label" data-component="label" data-grid-row="response" transform="translate(680 1083)">
+          <rect x="0" y="0" width="760" height="84" rx="42" class="query-shell" />
+          <g class="label-icon" transform="translate(38 24)" aria-hidden="true" fill="none" stroke="#93a289" stroke-width="2.4" stroke-linecap="round">
+            <rect x="2" y="12" width="30" height="20" rx="6" />
+            <line x1="17" y1="12" x2="17" y2="6" />
+            <circle cx="17" cy="4" r="1.8" fill="#93a289" stroke="none" />
+            <circle cx="11" cy="22" r="2.2" fill="#93a289" stroke="none" />
+            <circle cx="23" cy="22" r="2.2" fill="#93a289" stroke="none" />
+          </g>
+          <text x="98" y="53" class="sans query-text r1">CWE-23: relative path traversal…</text>
+          <text x="98" y="53" class="sans query-text r2" opacity="0">Which system do you mean?</text>
+          <text x="98" y="53" class="sans query-text r3" opacity="0">Draft ready for your signoff.</text>
+          <text x="98" y="53" class="sans query-text r4" opacity="0">That's outside this project.</text>
+        </g>
+      </g>
+    </g>
+    </g>
+  </g>
+</svg>
