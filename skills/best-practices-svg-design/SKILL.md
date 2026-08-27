@@ -221,6 +221,18 @@ one opacity step below the title.
 - Never adopt reviewer suggestions that cannot function in an `<img>` context
   (hover states, tooltips, transitions) — note them as skipped instead.
 
+## Story Animation (the strongest card pattern)
+
+The best pipeline card is a demo reel: cycle N real example inputs, each
+lighting its own route to its own real output (memory card: 4 queries x 6s →
+ANSWER/CLARIFY/DRAFT/DEFLECT, ending in a RESPONSE bubble). Mechanics:
+stacked <text> variants with opacity keyframes phase-shifted by
+animation-delay (non-first variants get opacity="0" as base so
+reduced-motion shows one complete static example); per-phase route flows and
+pill glows share one keyframe with delays. Inputs and outputs must be REAL
+examples from the project's own docs/tests, and mirrored input/output
+bubbles (QUERY at top, RESPONSE at bottom) close the loop.
+
 ## Connector Craft
 
 - Route connectors orthogonally (vertical/horizontal steps, rounded elbows
@@ -236,6 +248,9 @@ one opacity step below the title.
   perpendicular to it: a path that ends on a horizontal run leaves the
   arrowhead pointing sideways past the box instead of down into it. Merging
   branches elbow horizontally, then turn down for the last 10-16px.
+- Any edit that moves or resizes a node MUST re-anchor every connector that
+  docks on it in the same edit; a shrunk panel with unmoved merge paths
+  leaves animated segments floating mid-air, which reads as broken motion.
 - Triage external connector reviews against YOUR coordinates before editing:
   a reviewer critiquing their own mock's numbers can name flaws your card
   does not have. Verify each claimed flaw with the real geometry first.
