@@ -110,6 +110,42 @@ node <skill-dir>/scripts/gate-lint.mjs GATES.md
 
 Fix every error it reports. Treat each warning as a prompt to sharpen the gate. Details are in the local `references/gates.md`.
 
+## Live-behavior gates prove the deployed path
+
+These rules come from a real incident (memory pipeline hardening,
+2026-08): every one of them was violated by a green ledger-equivalent while
+the production behavior stayed broken.
+
+- **A live-behavior gate must exercise the runtime users actually hit.** A
+  temp service spawned from the checkout, a unit test, or a fixture harness
+  is a supporting gate, never the closing gate for a claim about live
+  behavior. Name the deployed runtime (container, service port, socket) in
+  the gate title and call it in `CHECK:`.
+- **A gate whose `CHECK:` stubs or monkeypatches the seam under test cannot
+  close a claim about that seam.** A monkeypatched extractor proved a
+  clarify contract for weeks while the real extractor never emitted the
+  evidence. Supporting tests may stub; the closing gate may not.
+- **Verify runtime identity before behavior.** Code proven ≠ code running: a
+  mounted container had loaded modules two days stale, and an untracked
+  `.python-version` pinned an interpreter that could not import the code. A
+  live gate's `CHECK:` must first read back a deploy marker (restart
+  timestamp, version endpoint, source hash, or an in-process marker probe)
+  proving the edited code is the executing code.
+- **Client-side "prepared/submitted" state is not delivery.** A transport's
+  own receipt claimed a prompt was prepared while the target UI showed
+  nothing. A delivery gate's `EXPECT:` must match provider-side acceptance
+  evidence (sentinel in the response, server-side record), never the
+  client's staging artifact.
+- **Two failed attempts on one blocker ends the attempt loop.** The third
+  action on an unchanged blocker must be `ABANDON:` with the exact blocker,
+  or a handoff naming the deciding receipt you could not obtain. If you
+  cannot name the receipt that would decide your next action, you are
+  confused, and that state is reported, not worked through.
+- **Human-facing status surfaces are closure gates.** If the contract names
+  a status surface (dashboard, workbench, status file), updating it is a
+  gate with its own `CHECK:` (typecheck, render probe, or file readback),
+  not an afterthought.
+
 ## Audit the final report
 
 Re-read the current request, reconcile it against the PLAN inventory when present, and re-measure every number and completion claim immediately before reporting. Use qualified ids such as `leaf-1.2.1:G3`. Report the measured met, unmet, and abandoned counts and surface every abandonment. Do not compose a done report while any required gate is unmet, abandoned, deferred, or awaiting an owner decision.
