@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, listener-gate presentation handoff, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, and machine-readable research disposition validation",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, listener-gate presentation handoff, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, the listener gate contract routes 0/20 human-response state to presenting the rater packet instead of status-only/WebGPT substitution, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, and research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, the listener gate contract routes 0/20 human-response state to presenting the rater packet instead of status-only/WebGPT substitution, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
@@ -486,6 +486,30 @@
         "stdout_contains": [
           "FULL_CYCLE_OK stages=7",
           "conversation:3_pairs_all_voiced"
+        ]
+      }
+    },
+    {
+      "name": "status-scope-boundary-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.status_scope_boundary"
+      ],
+      "seams": [
+        "status.scope_boundary"
+      ],
+      "notes": "Feature-regression guard for the exact agent confusion: audible full-cycle evidence must not be reported as provider/Kling completion, human-perception proof, production readiness, or immutable-goal closure. The authoritative status must keep PD-CORRECTED-GOAL-V1 as the next step and leave human listener collection blocked on real human artifacts.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_status_scope_boundary.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed"
         ]
       }
     },
@@ -1154,6 +1178,14 @@
       }
     },
     {
+      "id": "persona_dream.status_scope_boundary",
+      "description": "Persona Dream status surfaces preserve the operational boundary: a live audible full-cycle loop is evidence for the loop, not provider/Kling completion, human-perception proof, production readiness, or immutable-goal closure; PD-CORRECTED-GOAL-V1 remains the next agent-owned proof while #1058 remains blocked on human listener artifacts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "persona_dream.autonomous_cycle_recall_instrumentation",
       "description": "Autonomous dream-cycle recall gates preserve ranked recall rows, probe ranks, and the negative-control dream rank in the receipt so pass/block outcomes are auditable without a second mutable live recall.",
       "criticality": "critical",
@@ -1244,6 +1276,14 @@
       "required_evidence": [
         "deterministic",
         "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "status.scope_boundary",
+      "seam_type": "status_claim_boundary",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
       ]
     },
     {

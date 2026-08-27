@@ -1,0 +1,62 @@
+import json
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _status() -> dict:
+    return json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
+
+
+def test_full_cycle_live_receipt_does_not_close_research_or_perception_scope():
+    status = _status()
+    full_cycle = status["latest_full_cycle_live_eval"]
+
+    assert full_cycle["status"] == "PASS_FULL_CYCLE_LIVE_3_TRIALS"
+    assert full_cycle["mocked"] is False
+    assert full_cycle["live"] is True
+    assert full_cycle["trial_count"] == 3
+    assert full_cycle["passed_trials"] == 3
+
+    boundary = full_cycle["boundary"].lower()
+    assert "does not prove" in boundary
+    assert "human-perceived emotional value" in boundary
+    assert "production readiness" in boundary
+
+
+def test_claim_registry_keeps_media_pipeline_and_human_perception_unclosed():
+    claims = _status()["current_claims"]
+
+    media = claims["full_phase01_16_media_pipeline_reliability"]
+    assert media["status"] == "HISTORICAL_N1_UNPROVEN"
+    assert media["sample_count"] == 1
+    assert "repeatable full-pipeline reliability" in media["does_not_prove"]
+
+    perception = claims["human_perceived_emotion_and_identity"]
+    assert perception["status"] == "AWAITING_HUMAN_LISTENER_COLLECTION"
+    assert perception["valid_human_responses"] == "0/20"
+    assert "20 valid human listener rows in responses_v2.jsonl" in perception["blocked_by"]
+    assert "SIGNED_INTERPRETATION.json" in perception["blocked_by"]
+
+
+def test_next_step_is_corrected_goal_pair_not_provider_or_kling_work():
+    next_step = _status()["next_step"]
+
+    assert next_step["default"].startswith("Run PD-CORRECTED-GOAL-V1")
+    assert "structured-reflection control" in next_step["default"]
+    assert "dream-journal treatment" in next_step["default"]
+    assert "provider" not in next_step["default"].lower()
+    assert "kling" not in next_step["default"].lower()
+    assert "Kling/video/provider work" in next_step["ordered_steps"][-1]
+    assert "remain deferred" in next_step["ordered_steps"][-1]
+
+
+def test_handoff_preserves_plain_language_status_boundary():
+    handoff = (ROOT / "local" / "HANDOFF.md").read_text(encoding="utf-8")
+
+    assert "Research phase" in handoff
+    assert "`P2_CORRECTED_GOAL_PAIR_PROOF`" in handoff
+    assert "The loop is complete and runnable" in handoff
+    assert "Not proven: the research benefit itself" in handoff
+    assert "human-perceived emotional value" in handoff
