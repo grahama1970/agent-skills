@@ -231,7 +231,11 @@ animation-delay (non-first variants get opacity="0" as base so
 reduced-motion shows one complete static example); per-phase route flows and
 pill glows share one keyframe with delays. Inputs and outputs must be REAL
 examples from the project's own docs/tests, and mirrored input/output
-bubbles (QUERY at top, RESPONSE at bottom) close the loop.
+bubbles close the loop — labeled by actor ICON (person asks, robot answers),
+not by role words like QUERY/RESPONSE that spend horizontal space restating
+what the icon shows. A trailing ellipsis on an answer honestly signals
+truncation of a longer real response. In-pill icons sit at a fixed left
+padding, label after them — never centered as a floating cluster.
 
 ## Connector Craft
 
