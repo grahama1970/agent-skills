@@ -58,3 +58,45 @@ def test_churn_oracle_rejects_unaccounted_superseded_answer() -> None:
     ]
 
     assert not churn_superseded_completed_or_fenced(rows)
+
+
+def test_churn_oracle_accepts_old_answer_fail_closed_timeout() -> None:
+    rows = [
+        row("answer_needed_moment", {
+            "query": (
+                "Explain how consistent hashing rebalances keys when a new "
+                "node joins the ring."
+            ),
+            "question_id": "old",
+            "question_revision": 1,
+        }),
+        row("fast_solver_first_content_timeout", {
+            "question_id": "old",
+            "question_revision": 1,
+            "timeout_s": 8.0,
+        }),
+        row("fast_solver_failed", {
+            "question_id": "old",
+            "question_revision": 1,
+            "error": "first_content_timeout_after_8.0s",
+        }),
+        row("fast_solver_fallback_ask_skipped", {
+            "question_id": "old",
+            "question_revision": 1,
+            "error": "first_content_timeout_after_8.0s",
+            "reason": "live_fast_path_must_fail_closed_not_block_on_slow_ask",
+        }),
+        row("evidence_card", {
+            "query": "Which HTTP status code should a rate-limited API return?",
+            "answer": "A rate-limited API should return 429 Too Many Requests.",
+            "question_id": "new",
+            "question_revision": 1,
+        }),
+        row("fast_solver_receipt", {
+            "question_id": "new",
+            "question_revision": 1,
+            "response_sha256": "sha256:new",
+        }),
+    ]
+
+    assert churn_superseded_completed_or_fenced(rows)

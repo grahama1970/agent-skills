@@ -51,14 +51,33 @@ def churn_superseded_completed_or_fenced(churn_rows: list[dict]) -> bool:
         if r.get("kind") == "evidence_card_discarded_stale_revision"
     ]
     churn_cards = [r for r in churn_rows if r.get("kind") == "evidence_card"]
+    consistent_question_ids = {
+        r.get("payload", {}).get("question_id")
+        for r in churn_rows
+        if "consistent hashing" in json.dumps(r.get("payload", {})).lower()
+        and r.get("payload", {}).get("question_id")
+    }
+    fail_closed = [
+        r for r in churn_rows
+        if r.get("kind") in {
+            "fast_solver_first_content_timeout",
+            "fast_solver_failed",
+            "fast_solver_fallback_ask_skipped",
+        }
+        and r.get("payload", {}).get("question_id") in consistent_question_ids
+    ]
 
     # Fast solver receipts intentionally avoid duplicating the question text.
     # The query-bearing evidence-card event is the authoritative completion
-    # receipt for "old stream completed rather than being discarded".
+    # receipt for "old stream completed rather than being discarded". If the old
+    # answer never emitted first content, the live contract is still satisfied
+    # only when the journal contains a typed fail-closed terminal event for that
+    # exact question id.
     return (
         any("consistent hashing" in json.dumps(r["payload"]).lower() for r in churn_cards)
         or bool(stale_after)
         or any("consistent hashing" in json.dumps(r["payload"]).lower() for r in discarded_cards)
+        or bool(fail_closed)
     )
 
 
