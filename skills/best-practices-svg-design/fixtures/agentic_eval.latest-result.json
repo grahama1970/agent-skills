@@ -1,0 +1,222 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/best-practices-svg-design/fixtures/agentic_eval.json",
+  "run_id": "13202045858c",
+  "fixture_sha256": "sha256:9fe88fb22b6a95a9deca6edb365ae3465002d541e51f58d819c06325d23bdff3",
+  "repo": {
+    "sha": "55a3105b48e94e828c18e12c347ca2d74228a6f9",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "static skill contract validation plus live create-svg composition and rejection paths",
+  "claims": {
+    "proves": "the skill contract parses under the best-practices-skills validator, the mandated template-first /create-svg path scaffolds and renders a real SVG end-to-end, and the composed validator actually rejects an unsafe hand-authored SVG",
+    "does_not_prove": "that a given SVG design is aesthetically accepted by a human; acceptance remains a human screenshot-review gate"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-08-27T17:02:45.965630+00:00",
+  "case_count": 3,
+  "required_case_count": 3,
+  "outcome_counts": {
+    "PASS": 3,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 9,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "skill-contract-validation",
+      "type": "positive",
+      "case_id": "13202045858c-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "python3",
+        "../../best-practices-skills/scripts/validate_skill.py",
+        "..",
+        "--json"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 108.403,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "[\n  {\n    \"rule\": \"COMP003\",\n    \"severity\": \"warning\",\n    \"message\": \"provides 'svg-design-guardrails' not in capability vocabulary\",\n    \"skill\": \"best-practices-svg-design\"\n  },\n  {\n    \"rule\": \"COMP003\",\n    \"severity\": \"warning\",\n    \"message\": \"provides 'card-legibility-contract' not in capability vocabulary\",\n    \"skill\": \"best-practices-svg-design\"\n  }\n]\n",
+          "stderr": "",
+          "duration_ms": 107.356,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "[\n  {\n    \"rule\": \"COMP003\",\n    \"severity\": \"warning\",\n    \"message\": \"provides 'svg-design-guardrails' not in capability vocabulary\",\n    \"skill\": \"best-practices-svg-design\"\n  },\n  {\n    \"rule\": \"COMP003\",\n    \"severity\": \"warning\",\n    \"message\": \"provides 'card-legibility-contract' not in capability vocabulary\",\n    \"skill\": \"best-practices-svg-design\"\n  }\n]\n",
+          "stderr": "",
+          "duration_ms": 110.086,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "[\n  {\n    \"rule\": \"COMP003\",\n    \"severity\": \"warning\",\n    \"message\": \"provides 'svg-design-guardrails' not in capability vocabulary\",\n    \"skill\": \"best-practices-svg-design\"\n  },\n  {\n    \"rule\": \"COMP003\",\n    \"severity\": \"warning\",\n    \"message\": \"provides 'card-legibility-contract' not in capability vocabulary\",\n    \"skill\": \"best-practices-svg-design\"\n  }\n]\n",
+          "stderr": "",
+          "duration_ms": 107.768,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "template-first-scaffold-and-render-live",
+      "type": "positive",
+      "case_id": "13202045858c-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "R=\"$PWD/../../create-svg/run.sh\"; T=$(mktemp -d); \"$R\" new fanout-anatomy \"$T/scene.yml\" >/dev/null && \"$R\" render \"$T/scene.yml\" \"$T/out.svg\" >/dev/null && grep -q '<svg' \"$T/out.svg\" && grep -q 'prefers-reduced-motion' \"$T/out.svg\" && echo RENDER_OK && rm -rf \"$T\""
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 475.968,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "RENDER_OK\n",
+          "stderr": "",
+          "duration_ms": 476.557,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c001-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "RENDER_OK\n",
+          "stderr": "",
+          "duration_ms": 470.189,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c001-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "RENDER_OK\n",
+          "stderr": "",
+          "duration_ms": 481.159,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c001-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "unsafe-freeform-svg-rejected",
+      "type": "negative",
+      "case_id": "13202045858c-c002",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "R=\"$PWD/../../create-svg/run.sh\"; T=$(mktemp -d); printf '<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>' > \"$T/bad.svg\"; \"$R\" validate \"$T/bad.svg\"; exit $?"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 233.121,
+      "trials": [
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.YQsxkdje6e/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stderr": "",
+          "duration_ms": 235.003,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c002-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.tLBj8PxrIW/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stderr": "",
+          "duration_ms": 232.619,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c002-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"A11Y_ROLE\",\n      \"message\": \"SVG must declare role=img\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"SVG_VIEWBOX\",\n      \"message\": \"SVG must declare viewBox\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_TITLE\",\n      \"message\": \"SVG must contain exactly one title\",\n      \"severity\": \"error\"\n    },\n    {\n      \"code\": \"A11Y_DESC\",\n      \"message\": \"SVG must contain exactly one desc\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/tmp/tmp.5HOclB4vnl/bad.svg\",\n  \"source_sha256\": \"3f67c8be987aa1db0ef99ce330286efe1929e729f5f9d1695b5fd0b987246244\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stderr": "",
+          "duration_ms": 231.74,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "13202045858c-c002-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

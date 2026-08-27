@@ -1,0 +1,25 @@
+{
+  "browser": {
+    "animation_observed": false,
+    "changed_pixel_ratio": 0.0,
+    "details": "browser verification not requested",
+    "loaded": false,
+    "natural_height": 0,
+    "natural_width": 0,
+    "status": "NOT_RUN"
+  },
+  "deterministic_rebuild": true,
+  "does_not_prove": "pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior",
+  "findings": [],
+  "kind": "readme-svg-validation.v1",
+  "proof_scope": "XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion",
+  "seam_validation": {
+    "kind": "scene-to-svg",
+    "status": "PASS"
+  },
+  "source_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/5e6a6422-febb-4d0d-9b66-2199157e6396/scratchpad/memory-intent-pipeline.svg",
+  "source_sha256": "9382d287bf8f0f04d0819b7c49938148800b22e3a41315d476deeb304bf6a93e",
+  "status": "PASS",
+  "theme": "fixing-opus-neon-v1",
+  "tool_version": "0.1.0"
+}

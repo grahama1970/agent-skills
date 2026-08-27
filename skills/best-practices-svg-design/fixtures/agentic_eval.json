@@ -1,0 +1,52 @@
+{
+  "version": 2,
+  "skill": "best-practices-svg-design",
+  "trials": 3,
+  "proof_scope": "static skill contract validation plus live create-svg composition and rejection paths",
+  "claims": {
+    "proves": "the skill contract parses under the best-practices-skills validator, the mandated template-first /create-svg path scaffolds and renders a real SVG end-to-end, and the composed validator actually rejects an unsafe hand-authored SVG",
+    "does_not_prove": "that a given SVG design is aesthetically accepted by a human; acceptance remains a human screenshot-review gate"
+  },
+  "cases": [
+    {
+      "name": "skill-contract-validation",
+      "type": "positive",
+      "command": [
+        "python3",
+        "../../best-practices-skills/scripts/validate_skill.py",
+        "..",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "template-first-scaffold-and-render-live",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "R=\"$PWD/../../create-svg/run.sh\"; T=$(mktemp -d); \"$R\" new fanout-anatomy \"$T/scene.yml\" >/dev/null && \"$R\" render \"$T/scene.yml\" \"$T/out.svg\" >/dev/null && grep -q '<svg' \"$T/out.svg\" && grep -q 'prefers-reduced-motion' \"$T/out.svg\" && echo RENDER_OK && rm -rf \"$T\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "RENDER_OK"
+      }
+    },
+    {
+      "name": "unsafe-freeform-svg-rejected",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "R=\"$PWD/../../create-svg/run.sh\"; T=$(mktemp -d); printf '<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>' > \"$T/bad.svg\"; \"$R\" validate \"$T/bad.svg\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 1
+      }
+    }
+  ]
+}

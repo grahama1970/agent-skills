@@ -1,145 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="memory-card-title memory-card-desc">
-  <title id="memory-card-title">Memory-first graph recall evidence docket</title>
-  <desc id="memory-card-desc">A user question is checked against semantic candidates, canonical ArangoDB records, graph evidence, and a bounded recall packet before an agent decides to use memory or not guess.</desc>
-  <defs>
-    <style>
-      #memory-card {
-        --bg: #0b0807;
-        --paper: #18120f;
-        --paper-2: #211914;
-        --line: rgba(236, 226, 211, 0.18);
-        --line-2: rgba(236, 226, 211, 0.08);
-        --text: #ece2d3;
-        --muted: #a99787;
-        --faint: #7f7165;
-        --brass: #e2ac62;
-        --ember: #d1703c;
-        --sage: #93a289;
-        --violet: #b89be8;
-      }
-      #memory-card .bg { fill: #0b0807; }
-      #memory-card .gutter { fill: none; stroke: rgba(236, 226, 211, 0.08); stroke-width: 1; }
-      #memory-card .safe { fill: rgba(236, 226, 211, 0.018); stroke: rgba(236, 226, 211, 0.08); stroke-width: 2; }
-      #memory-card .paper { fill: #18120f; stroke: rgba(236, 226, 211, 0.18); stroke-width: 2.5; }
-      #memory-card .paper-soft { fill: #211914; stroke: rgba(236, 226, 211, 0.18); stroke-width: 2; }
-      #memory-card .rule { stroke: rgba(236, 226, 211, 0.18); stroke-width: 2; }
-      #memory-card .stitch { fill: none; stroke: #93a289; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 16 14; opacity: 0.72; }
-      #memory-card .stitch-brass { stroke: #e2ac62; }
-      #memory-card .stitch-ember { stroke: #d1703c; }
-      #memory-card .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-      #memory-card .serif { font-family: Fraunces, Georgia, serif; }
-      #memory-card .sans { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; }
-      #memory-card .eyebrow { fill: #e2ac62; font-size: 34px; letter-spacing: 9px; font-weight: 650; }
-      #memory-card .headline { fill: #ece2d3; font-size: 70px; font-weight: 650; letter-spacing: -1px; }
-      #memory-card .support { fill: #a99787; font-size: 34px; }
-      #memory-card .label { fill: #e2ac62; font-size: 31px; letter-spacing: 5px; font-weight: 700; }
-      #memory-card .small { fill: #a99787; font-size: 31px; }
-      #memory-card .tiny { fill: #7f7165; font-size: 28px; }
-      #memory-card .route { fill: #ece2d3; font-size: 35px; font-weight: 700; letter-spacing: 3px; }
-      #memory-card .route-sub { fill: #a99787; font-size: 24px; }
-      #memory-card .lens-ring { fill: rgba(184, 155, 232, 0.08); stroke: #b89be8; stroke-width: 7; }
-      #memory-card .lens-inner { fill: rgba(184, 155, 232, 0.05); stroke: rgba(184, 155, 232, 0.55); stroke-width: 2; }
-      #memory-card .candidate { fill: rgba(184, 155, 232, 0.16); stroke: rgba(184, 155, 232, 0.48); stroke-width: 2; }
-      #memory-card .selected { fill: rgba(226, 172, 98, 0.15); stroke: #e2ac62; stroke-width: 3; }
-      #memory-card .tab { fill: #110d0b; stroke: rgba(236, 226, 211, 0.18); stroke-width: 2; }
-      #memory-card .tab text { fill: #ece2d3; font-size: 30px; font-weight: 650; letter-spacing: 3px; }
-      #memory-card .pin { fill: #e2ac62; }
-      #memory-card .pin.sage { fill: #93a289; }
-      #memory-card .pin.ember { fill: #d1703c; }
-      #memory-card .packet { fill: rgba(226, 172, 98, 0.07); stroke: rgba(226, 172, 98, 0.46); stroke-width: 3; }
-      #memory-card .decision-use { fill: rgba(147, 162, 137, 0.12); stroke: rgba(147, 162, 137, 0.56); stroke-width: 2; }
-      #memory-card .decision-guard { fill: rgba(209, 112, 60, 0.10); stroke: rgba(209, 112, 60, 0.50); stroke-width: 2; }
-      #memory-card .crop-mark { stroke: rgba(226, 172, 98, 0.22); stroke-width: 2; }
-      @keyframes memoryCandidate {
-        0%, 100% { opacity: 0.38; }
-        28% { opacity: 0.95; }
-      }
-      @keyframes memoryEvidence {
-        0%, 42%, 100% { stroke-opacity: 0.42; }
-        65% { stroke-opacity: 1; }
-      }
-      #memory-card:hover .candidate-pulse,
-      #memory-card:focus .candidate-pulse { animation: memoryCandidate 2.8s ease-out 1; }
-      #memory-card:hover .stitch,
-      #memory-card:focus .stitch { animation: memoryEvidence 3s ease-out 1; }
-      @media (prefers-reduced-motion: reduce) {
-        #memory-card:hover .candidate-pulse,
-        #memory-card:focus .candidate-pulse,
-        #memory-card:hover .stitch,
-        #memory-card:focus .stitch { animation: none; }
-      }
-    </style>
-  </defs>
-
-  <g id="memory-card">
-    <rect class="bg" width="1920" height="1080" />
-    <path class="gutter" d="M110 120H1810M110 960H1810M210 210V890M1710 210V890" />
-    <rect x="420" y="0" width="1080" height="1080" class="safe" />
-    <path class="crop-mark" d="M500 74h78M500 74v78M1420 74h-78M1420 74v78M500 1006h78M500 1006v-78M1420 1006h-78M1420 1006v-78" />
-
-    <text x="540" y="132" class="mono eyebrow">MEMORY BEFORE SCAN</text>
-    <text x="540" y="220" class="serif headline">Ask what is already known.</text>
-    <text x="540" y="260" class="sans support">Qdrant proposes candidates. ArangoDB resolves records and graph paths.</text>
-
-    <g transform="translate(548 350)">
-      <rect x="0" y="0" width="840" height="468" rx="0" class="paper" />
-      <rect x="-36" y="-54" width="360" height="92" rx="0" class="paper-soft" />
-      <text x="-10" y="-17" class="mono label">HAVE WE FIXED THIS BEFORE?</text>
-      <text x="-10" y="18" class="mono tiny">user turn</text>
-
-      <text x="50" y="92" class="mono label">ARANGO RECORD</text>
-      <text x="50" y="142" class="sans small">canonical key + source reference</text>
-      <line x1="50" y1="178" x2="520" y2="178" class="rule" />
-      <text x="50" y="232" class="mono tiny">matched terms</text>
-      <rect x="258" y="198" width="198" height="54" class="selected" />
-      <text x="285" y="235" class="mono small">prior fix</text>
-      <text x="50" y="306" class="mono tiny">source key</text>
-      <text x="258" y="306" class="mono small">doc:control/path</text>
-      <text x="50" y="376" class="mono tiny">channel status</text>
-      <text x="258" y="376" class="mono small">exact + graph + vector</text>
-
-      <g transform="translate(520 54)">
-        <circle cx="130" cy="130" r="124" class="lens-ring" />
-        <circle cx="130" cy="130" r="82" class="lens-inner" />
-        <rect x="35" y="72" width="190" height="44" rx="0" class="candidate" />
-        <rect x="58" y="130" width="144" height="44" rx="0" class="candidate candidate-pulse" />
-        <rect x="46" y="188" width="168" height="44" rx="0" class="candidate" />
-        <text x="130" y="123" text-anchor="middle" class="mono label">QDRANT</text>
-        <text x="130" y="166" text-anchor="middle" class="mono tiny">semantic</text>
-        <text x="130" y="201" text-anchor="middle" class="mono tiny">candidates</text>
-        <text x="130" y="285" text-anchor="middle" class="mono tiny">candidate, not proof</text>
-      </g>
-
-      <path class="stitch stitch-brass" d="M456 224C568 252 624 308 728 330" />
-      <path class="stitch" d="M456 306C565 346 620 400 728 420" />
-      <path class="stitch stitch-ember" d="M456 376C572 430 612 486 720 524" />
-    </g>
-
-    <g transform="translate(1292 616)">
-      <rect x="0" y="0" width="248" height="74" class="tab" />
-      <circle cx="26" cy="37" r="10" class="pin" />
-      <text x="52" y="47" class="mono">SOURCE / PATH</text>
-      <rect x="-24" y="94" width="220" height="74" class="tab" />
-      <circle cx="22" cy="131" r="10" class="pin sage" />
-      <text x="48" y="141" class="mono">RECEIPT</text>
-      <rect x="-54" y="188" width="250" height="74" class="tab" />
-      <circle cx="22" cy="225" r="10" class="pin ember" />
-      <text x="48" y="235" class="mono">SKILL CHAIN</text>
-    </g>
-
-    <g transform="translate(616 826)">
-      <rect x="0" y="0" width="688" height="118" rx="0" class="packet" />
-      <text x="34" y="45" class="mono label">RECALL PACKET</text>
-      <text x="34" y="88" class="mono small">matched terms · source key · graph path · channel status</text>
-    </g>
-
-    <g transform="translate(616 958)">
-      <rect x="0" y="0" width="356" height="72" rx="0" class="decision-use" />
-      <text x="24" y="30" class="mono route">USE MEMORY</text>
-      <text x="24" y="58" class="sans route-sub">reuse answer · path · skill chain</text>
-      <rect x="382" y="0" width="492" height="72" rx="0" class="decision-guard" />
-      <text x="406" y="30" class="mono route">DO NOT GUESS</text>
-      <text x="406" y="58" class="sans route-sub">clarify · deflect · scan fresh → verify → learn back</text>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" role="img" aria-labelledby="rsa-title rsa-desc">
+  <title id="rsa-title">Graph Memory intent pipeline</title>
+  <desc id="rsa-desc">A query enters hybrid recall and intent classification, then exits through exactly one bounded route - answer, clarify, draft, or deflect.
+</desc>
+  <style>.rsa-sans{font-family:Play,'Trebuchet MS','Segoe UI',system-ui,sans-serif}.rsa-mono{font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace}.rsa-shadow{filter:drop-shadow(2px 2px 4px rgba(0,0,0,.8))}.rsa-shadow-strong{filter:drop-shadow(3px 3px 6px rgba(0,0,0,.9))}.rsa-target{transform-box:fill-box;transform-origin:center}@media (prefers-reduced-motion: no-preference){@keyframes rsa_k000{0%{opacity:0;transform:translateY(-24.0px)}1.25%{opacity:0;transform:translateY(-24.0px);animation-timing-function:cubic-bezier(.33,1,.68,1)}7.5%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}.rsa_a000{animation:rsa_k000 12s linear 0s infinite both}@keyframes rsa_k001{0%{opacity:0;stroke-dashoffset:1}7.5%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}11.25%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a001{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k001 12s linear 0s infinite both}@keyframes rsa_k002{0%{opacity:0}11.25%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}15%{opacity:1}100%{opacity:1}}.rsa_a002{animation:rsa_k002 12s linear 0s infinite both}@keyframes rsa_k003{0%{opacity:0;stroke-dashoffset:1}9.167%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}12.917%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a003{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k003 12s linear 0s infinite both}@keyframes rsa_k004{0%{opacity:0}12.917%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}16.667%{opacity:1}100%{opacity:1}}.rsa_a004{animation:rsa_k004 12s linear 0s infinite both}@keyframes rsa_k005{0%{opacity:0;stroke-dashoffset:1}10.833%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}14.583%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a005{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k005 12s linear 0s infinite both}@keyframes rsa_k006{0%{opacity:0}14.583%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}18.333%{opacity:1}100%{opacity:1}}.rsa_a006{animation:rsa_k006 12s linear 0s infinite both}@keyframes rsa_k007{0%{opacity:0;stroke-dashoffset:1}12.5%{opacity:0;stroke-dashoffset:1;animation-timing-function:cubic-bezier(.33,1,.68,1)}16.25%{opacity:1;stroke-dashoffset:0}100%{opacity:1;stroke-dashoffset:0}}.rsa_a007{stroke-dasharray:1;stroke-dashoffset:1;animation:rsa_k007 12s linear 0s infinite both}@keyframes rsa_k008{0%{opacity:0}16.25%{opacity:0;animation-timing-function:cubic-bezier(.33,1,.68,1)}20%{opacity:1}100%{opacity:1}}.rsa_a008{animation:rsa_k008 12s linear 0s infinite both}@keyframes rsa_k009{0%{opacity:0}65%{opacity:0;animation-timing-function:ease-in-out}80.833%{opacity:0.35;animation-timing-function:ease-in-out}96.667%{opacity:0}100%{opacity:0}}.rsa_a009{animation:rsa_k009 12s linear 0s infinite both}}</style>
+  <rect width="1920" height="1080" rx="24.0" fill="#0d1117"/>
+  <rect x="629" y="119" width="662" height="222" rx="26" fill="none" stroke="#00F3FF" opacity="0.35" stroke-width="3.0" data-target="source-glow" class="rsa-target rsa_a009"/>
+  <g data-target="source-node" class="rsa-target rsa_a000">
+    <rect x="640" y="130" width="640" height="200" rx="18.0" fill="rgba(8,18,26,0.78)" stroke="#00F3FF" stroke-width="5.0"/>
+    <text x="960" y="196" class="rsa-mono rsa-shadow" font-size="36" fill="#00F3FF" text-anchor="middle" dominant-baseline="central">QUERY -&gt; INTENT</text>
+    <text x="960" y="272" class="rsa-sans" font-size="26" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">hybrid recall + intent classifier</text>
   </g>
+  <path d="M 960 341 V 440 H 330 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-0" class="rsa-target rsa_a001"/>
+  <path d="M 960 341 V 440 H 750 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-1" class="rsa-target rsa_a003"/>
+  <path d="M 960 341 V 440 H 1170 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-2" class="rsa-target rsa_a005"/>
+  <path d="M 960 341 V 440 H 1590 V 630" fill="none" stroke="#00F3FF" opacity="0.9" pathLength="1" stroke-width="4.0" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="0" data-target="connector-3" class="rsa-target rsa_a007"/>
+  <g data-target="target-card-0" class="rsa-target rsa_a002">
+    <rect x="150.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="210.0" cy="700" r="26" fill="#00FF10"/>
+    <text x="210.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">1</text>
+    <text x="330.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">ANSWER</text>
+    <text x="330.0" y="803.1" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">evidence holds,</text>
+    <text x="330.0" y="836.9" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">respond</text>
+  </g>
+  <g data-target="target-card-1" class="rsa-target rsa_a004">
+    <rect x="570.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="630.0" cy="700" r="26" fill="#00F3FF"/>
+    <text x="630.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">2</text>
+    <text x="750.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">CLARIFY</text>
+    <text x="750.0" y="803.1" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">ambiguity remains,</text>
+    <text x="750.0" y="836.9" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">ask</text>
+  </g>
+  <g data-target="target-card-2" class="rsa-target rsa_a006">
+    <rect x="990.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="1050.0" cy="700" r="26" fill="#FFB020"/>
+    <text x="1050.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">3</text>
+    <text x="1170.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">DRAFT</text>
+    <text x="1170.0" y="803.1" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">generate, human</text>
+    <text x="1170.0" y="836.9" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">signoff</text>
+  </g>
+  <g data-target="target-card-3" class="rsa-target rsa_a008">
+    <rect x="1410.0" y="640" width="360" height="220" rx="16" fill="rgba(8,18,26,0.78)" stroke="rgba(255,255,255,0.2)" stroke-width="3.0"/>
+    <circle cx="1470.0" cy="700" r="26" fill="#EF4444"/>
+    <text x="1470.0" y="700" class="rsa-sans" font-size="34" fill="#0A0E14" text-anchor="middle" dominant-baseline="central" font-weight="700">4</text>
+    <text x="1590.0" y="770" class="rsa-sans rsa-shadow" font-size="38.0" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central" letter-spacing="2.0">DEFLECT</text>
+    <text x="1590.0" y="820.0" class="rsa-mono" font-size="26.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central">off-topic or unsafe</text>
+  </g>
+  <text x="960" y="960" class="rsa-sans" font-size="30.0" fill="rgba(255,255,255,0.55)" text-anchor="middle" dominant-baseline="central" letter-spacing="3.0">EVERY QUERY EXITS THROUGH ONE BOUNDED ROUTE</text>
 </svg>
