@@ -15,8 +15,8 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=5a7f1a7b6eabd1345fd6eaaae3dc4bbcaa42cfe672ddac13a9be95f4e603993b; output-bytes=16
 
 - [x] G3: adopted webgpt-v2 card passes create-svg validate (hand-authored, no scene)
-  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && skills/create-svg/run.sh validate docs/assets/project-cards/memory-recall-card.svg 2>/dev/null | tail -1"
-  EXPECT: PASS
+  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && test \"$(skills/create-svg/run.sh validate docs/assets/project-cards/memory-recall-card.svg 2>/dev/null | tail -1)\" = PASS && echo VALIDATE_PASS_OK"
+  EXPECT: VALIDATE_PASS_OK
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=c26de83abdc9496cd1301470918ec39ecca1cf389ef0ae1c6504da1800d1c431; output-bytes=5
 
 - [x] G4: identical artifact installed on all four card surfaces
@@ -43,6 +43,21 @@ Scope: Re-render the memory intent-pipeline card in grahama.co's own palette via
   CHECK: bash -c "git log -1 --name-only --pretty=format:%s | grep -q 'grahama-ember' && echo COMMIT_RETAINED_OK"
   EXPECT: COMMIT_RETAINED_OK
   EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=09da1e64d5917172ee85dc4aaab91fbe107f6e65d94c32b0e3bc9df0d4ed66d8; output-bytes=19
+
+- [ ] G10: artwork-level even spacing is deterministic and OK
+  CHECK: bash -c "python3 skills/best-practices-svg-design/scripts/check_svg_spacing.py docs/assets/project-cards/memory-recall-card.svg"
+  EXPECT: SPACING_OK
+  EVIDENCE: pending
+
+- [x] G11: grid manifest matches the solved uniform grid
+  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && python3 skills/best-practices-svg-design/scripts/check_grid.py docs/assets/project-cards/memory-recall-card.grid.json"
+  EXPECT: GRID_OK
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=cb4e2b04b7209384c3b282e2456cc495c77c537c0104dddfcab82a81c40ca26e; output-bytes=171
+
+- [x] G12: served page references the current card via versioned URL
+  CHECK: bash -c "cd /home/graham/workspace/experiments/agent-skills && V=$(sha256sum site/out/projects/memory-recall-card.svg | cut -c1-8) && curl -s http://127.0.0.1:3020/explore.html | grep -q \"memory-recall-card.svg?v=\" && curl -s http://127.0.0.1:3020/projects/memory-recall-card.svg | sha256sum | grep -q \"^$(sha256sum docs/assets/project-cards/memory-recall-card.svg | cut -d' ' -f1)\" && echo SERVED_VERSIONED_OK"
+  EXPECT: SERVED_VERSIONED_OK
+  EVIDENCE: exit=0; shell=/bin/sh; cwd=/home/graham/workspace/experiments/agent-skills/skills/monitor-website/local/unlazy; path=7c36c0ef0b5d/27 entries; EXPECT=matched; output-sha256=31f50f8107a28dfc2da6246b96169625ad25dc7a160890ec9ef4ef5bb3aca358; output-bytes=187
 
 - [ ] G9: MANUAL - human accepts the brand-palette design (create-svg Stage-2 gate)
   Human review of the rendered card at full and 400px sizes. Until Graham
