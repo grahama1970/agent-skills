@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "create-svg",
   "trials": 3,
-  "proof_scope": "local deterministic SVG generation, structural validation, browser img-mode motion, and unsafe-input rejection",
+  "proof_scope": "local deterministic SVG generation, structural validation, browser img-mode motion, unsafe-input rejection, component-output contract presence, and exported project-card consumer wiring",
   "claims": {
-    "proves": "the skill can generate and validate its bundled scenes and rejects a script-bearing SVG through its real CLI",
+    "proves": "the skill can generate and validate its bundled scenes, rejects a script-bearing SVG through its real CLI, documents component-group output for labels/nodes/pills/cards, and checks that an exported project-card SVG is wired into consuming site routes instead of being orphaned",
     "does_not_prove": "all arbitrary diagram layouts, every browser, future GitHub proxy behavior, or exact font availability on remote viewers"
   },
   "cases": [
@@ -51,6 +51,75 @@
           "FAIL"
         ]
       }
+    },
+    {
+      "name": "component-output-and-centering-contract-documented",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "grep -q 'data-component' ../SKILL.md && grep -q 'top visual' ../SKILL.md && grep -q 'Component output contract' ../references/schema.md && grep -q 'visual bounds' ../README.md && echo COMPONENT_CENTER_CONTRACT_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "COMPONENT_CENTER_CONTRACT_OK"
+        ]
+      }
+    },
+    {
+      "name": "exported-project-card-consumer-wiring-checked",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../.. && python3 skills/best-practices-svg-design/scripts/check_project_card_feature.py --repo-root . --slug memory --asset memory-recall-card.svg --source docs/assets/project-cards/memory-recall-card.svg --site-asset site/public/projects/memory-recall-card.svg --site-asset site/public/projects/thumbs/memory-recall-card.svg --consumer site/app/page.tsx --consumer site/app/explore/page.tsx --consumer site/components/capability-constellation.tsx --require-transform 'translate(200 -48.5)' --registry site/visual-assets.yml"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "PROJECT_CARD_FEATURE_OK"
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "exported-project-card-check-rejects-orphaned-svg",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.tsx); cp ../../../site/app/page.tsx \"$T\"; python3 - \"$T\" <<'PYCODE'\nimport pathlib,sys\np=pathlib.Path(sys.argv[1])\ns=p.read_text()\ns=s.replace('memory-recall-card.svg', 'memory.svg')\np.write_text(s)\nPYCODE\ncd ../../.. && python3 skills/best-practices-svg-design/scripts/check_project_card_feature.py --repo-root . --slug memory --asset memory-recall-card.svg --skip-assets --consumer \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "PROJECT_CARD_FEATURE_FAIL",
+          "consumer does not reference memory-recall-card.svg"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "exported-project-card-check-rejects-stale-registry",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.yml); cp ../../../site/visual-assets.yml \"$T\"; python3 - \"$T\" <<'PYCODE'\nimport pathlib,sys\np=pathlib.Path(sys.argv[1])\ns=p.read_text().replace('memory-recall-card.svg', 'memory.svg')\np.write_text(s)\nPYCODE\ncd ../../.. && python3 skills/best-practices-svg-design/scripts/check_project_card_feature.py --repo-root . --slug memory --asset memory-recall-card.svg --skip-assets --registry \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "PROJECT_CARD_FEATURE_FAIL",
+          "asset registry"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
     }
   ],
   "eval_kind": "skill_behavior"

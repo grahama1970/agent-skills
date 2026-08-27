@@ -1,0 +1,308 @@
+{
+  "version": 2,
+  "skill": "best-practices-svg-design",
+  "trials": 3,
+  "proof_scope": "static skill contract validation plus live create-svg composition and rejection paths",
+  "claims": {
+    "proves": "the skill contract parses under the best-practices-skills validator, the mandated template-first /create-svg path scaffolds and renders a real SVG end-to-end, and the composed validator actually rejects an unsafe hand-authored SVG",
+    "does_not_prove": "that a given SVG design is aesthetically accepted by a human; acceptance remains a human screenshot-review gate"
+  },
+  "cases": [
+    {
+      "name": "skill-contract-validation",
+      "type": "positive",
+      "command": [
+        "python3",
+        "../../best-practices-skills/scripts/validate_skill.py",
+        "..",
+        "--json"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "template-first-scaffold-and-render-live",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "R=\"$PWD/../../create-svg/run.sh\"; T=$(mktemp -d); \"$R\" new fanout-anatomy \"$T/scene.yml\" >/dev/null && \"$R\" render \"$T/scene.yml\" \"$T/out.svg\" >/dev/null && grep -q '<svg' \"$T/out.svg\" && grep -q 'prefers-reduced-motion' \"$T/out.svg\" && echo RENDER_OK && rm -rf \"$T\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "RENDER_OK"
+      }
+    },
+    {
+      "name": "unsafe-freeform-svg-rejected",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "R=\"$PWD/../../create-svg/run.sh\"; T=$(mktemp -d); printf '<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>' > \"$T/bad.svg\"; \"$R\" validate \"$T/bad.svg\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 1
+      }
+    },
+    {
+      "name": "grid-checker-live",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/check_grid.py",
+        "../../../docs/assets/project-cards/memory-recall-card.grid.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GRID_OK",
+          "center_offset=0.0"
+        ]
+      }
+    },
+    {
+      "name": "grid-checker-rejects-uneven",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf '{\"canvas\":400,\"rows\":[{\"name\":\"a\",\"y\":40,\"h\":50},{\"name\":\"b\",\"y\":120,\"h\":50},{\"name\":\"c\",\"y\":260,\"h\":50}]}' > \"$T\"; python3 ../scripts/check_grid.py \"$T\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "GRID_FAIL"
+      }
+    },
+    {
+      "name": "svg-grid-check-live-artwork-visual-centered",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../.. && best-practices-svg-design/run.sh grid ../docs/assets/project-cards/memory-recall-card.grid.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GRID_OK",
+          "center_offset=0.0"
+        ]
+      }
+    },
+    {
+      "name": "svg-spacing-check-rejects-shifted-row",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.svg); python3 - ../../../docs/assets/project-cards/memory-recall-card.svg \"$T\" <<'PY'\nimport sys\ns=open(sys.argv[1]).read()\ns=s.replace('<rect x=\"920\" y=\"288\" width=\"320\" height=\"92\" rx=\"22\" class=\"panel\" />','<rect x=\"920\" y=\"300\" width=\"320\" height=\"92\" rx=\"22\" class=\"panel\" />')\nopen(sys.argv[2],'w').write(s)\nPY\ncd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "SPACING_FAIL"
+      }
+    },
+    {
+      "name": "svg-spacing-rejects-uneven-gaps",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.svg); printf '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 900\" width=\"900\" height=\"900\"><rect x=\"150\" y=\"150\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"360\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"710\" width=\"600\" height=\"100\"/></svg>' > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "SPACING_FAIL"
+      }
+    },
+    {
+      "name": "svg-spacing-accepts-uniform-gaps",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.svg); printf '<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 900 900\" width=\"900\" height=\"900\"><rect x=\"150\" y=\"150\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"400\" width=\"600\" height=\"100\"/><rect x=\"150\" y=\"650\" width=\"600\" height=\"100\"/></svg>' > \"$T\"; cd ../.. && best-practices-svg-design/run.sh spacing \"$T\"; exit $?"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "SPACING_OK"
+      }
+    },
+    {
+      "name": "pixel-rhythm-from-rendered-screenshot",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.png); google-chrome --headless=new --disable-gpu --force-prefers-reduced-motion --window-size=1920,1200 --screenshot=\"$T\" \"file://$(cd ../../.. && pwd)/docs/assets/project-cards/memory-recall-card.svg\" 2>/dev/null; cd ../.. && best-practices-svg-design/run.sh pixels \"$T\" --manifest ../docs/assets/project-cards/memory-recall-card.grid.json; exit $?"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "PIXELS_OK"
+      }
+    },
+    {
+      "name": "place-rejects-ambiguous-label-offset",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); cp ../../../docs/assets/project-cards/memory-recall-card.svg \"$T/card.svg\"; cp ../../../docs/assets/project-cards/memory-recall-card.grid.json \"$T/grid.json\"; python3 - \"$T/grid.json\" <<'PY'\nimport json,sys\np=sys.argv[1]\nm=json.load(open(p))\nfor r in m['rows']:\n    if r['name']=='response':\n        r['label_offset']=r.pop('text_baseline_offset', 53)\nopen(p,'w').write(json.dumps(m))\nPY\n../run.sh place \"$T/card.svg\" \"$T/grid.json\"; rc=$?; rm -rf \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "label_offset is ambiguous"
+      }
+    },
+    {
+      "name": "place-row-move-moves-whole-label-unit",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); cp ../../../docs/assets/project-cards/memory-recall-card.svg \"$T/card.svg\"; cp ../../../docs/assets/project-cards/memory-recall-card.grid.json \"$T/grid.json\"; python3 - \"$T/card.svg\" \"$T/grid.json\" <<'PYCODE'\nimport json,re,subprocess,sys,pathlib\nsvg=pathlib.Path(sys.argv[1]); man=pathlib.Path(sys.argv[2])\ndef read_vals():\n    s=svg.read_text()\n    m=re.search(r'<g id=\"response-label\"[^>]*transform=\"translate\\(([-\\d.]+) ([-\\d.]+)\\)\"', s)\n    shell=re.search(r'<rect x=\"0\" y=\"([-\\d.]+)\" width=\"760\" height=\"84\"', s)\n    icon=re.search(r'<g class=\"label-icon\" transform=\"translate\\(38 ([-\\d.]+)\\)\"', s)\n    text=re.search(r'<text x=\"98\" y=\"([-\\d.]+)\" class=\"sans query-text r1\"', s)\n    if not (m and shell and icon and text):\n        raise SystemExit('missing component or local child coords')\n    return {'group_y': float(m.group(2)), 'shell_y': float(shell.group(1)), 'icon_y': float(icon.group(1)), 'text_y': float(text.group(1))}\nbefore=read_vals()\nm=json.loads(man.read_text())\nfor r in m['rows']:\n    if r['name']=='response':\n        r['y'] += 20\n        r['visual_top'] += 20\n        r['visual_bottom'] += 20\nman.write_text(json.dumps(m))\nsubprocess.run(['../run.sh','place',str(svg),str(man)], check=True)\nafter=read_vals()\ndeltas={k: round(after[k]-before[k], 1) for k in before}\nif deltas == {'group_y': 20.0, 'shell_y': 0.0, 'icon_y': 0.0, 'text_y': 0.0}:\n    print('LABEL_UNIT_MOVE_OK', deltas)\nelse:\n    print('LABEL_UNIT_MOVE_FAIL', deltas)\n    raise SystemExit(1)\nPYCODE\nrc=$?; rm -rf \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "LABEL_UNIT_MOVE_OK"
+      }
+    },
+    {
+      "name": "grid-rejects-terminal-label-gap-mismatch",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); cp ../../../docs/assets/project-cards/memory-recall-card.grid.json \"$T\"; python3 - \"$T\" <<'PY'\nimport json,sys\np=sys.argv[1]\nm=json.load(open(p))\nfor r in m['rows']:\n    if r['name']=='response':\n        r['y'] += 20\n        r['visual_top'] += 20\n        r['visual_bottom'] += 20\nopen(p,'w').write(json.dumps(m))\nPY\npython3 ../scripts/check_grid.py \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "terminal_label_gap_match"
+      }
+    },
+    {
+      "name": "grid-rejects-row-equal-but-visual-gap-mismatch",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf '%s' '{\"canvas\":400,\"tolerance\":1,\"rows\":[{\"name\":\"request\",\"y\":40,\"h\":40},{\"name\":\"intent\",\"y\":100,\"h\":40},{\"name\":\"outcomes\",\"y\":160,\"h\":40,\"visual_bottom\":220},{\"name\":\"response\",\"y\":220,\"h\":40}],\"relations\":[{\"type\":\"equal_gap\",\"name\":\"visual_terminal_gap\",\"measure\":\"visual\",\"a\":[\"request\",\"intent\"],\"b\":[\"outcomes\",\"response\"]}]}' > \"$T\"; python3 ../scripts/check_grid.py \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "visual_terminal_gap"
+      }
+    },
+    {
+      "name": "grid-rejects-asymmetric-visual-margins",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf %s '{\"canvas\":400,\"tolerance\":1,\"grid_measure\":\"visual\",\"rows\":[{\"name\":\"a\",\"y\":40,\"h\":40},{\"name\":\"b\",\"y\":120,\"h\":40}]}' > \"$T\"; python3 ../scripts/check_grid.py \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "margins differ"
+      }
+    },
+    {
+      "name": "grid-rejects-documented-offcenter-margin",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf %s '{\"canvas\":400,\"tolerance\":1,\"grid_measure\":\"visual\",\"margin_mode\":\"documented\",\"rows\":[{\"name\":\"a\",\"y\":40,\"h\":40},{\"name\":\"b\",\"y\":120,\"h\":40}]}' > \"$T\"; python3 ../scripts/check_grid.py \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": "margin_mode"
+      }
+    },
+    {
+      "name": "served-svg-bytes-match-centered-source",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../.. && curl -fsS http://127.0.0.1:3020/projects/memory-recall-card.svg?v=agentic-centered | sha256sum > /tmp/served-memory-card.sha && sha256sum docs/assets/project-cards/memory-recall-card.svg > /tmp/source-memory-card.sha && test \"$(cut -d\" \" -f1 /tmp/served-memory-card.sha)\" = \"$(cut -d\" \" -f1 /tmp/source-memory-card.sha)\" && curl -fsS http://127.0.0.1:3020/projects/memory-recall-card.svg?v=agentic-centered | grep -q \"translate(200 -48.5)\" && echo SERVED_CENTERED_BYTES_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "SERVED_CENTERED_BYTES_OK"
+      }
+    },
+    {
+      "name": "project-card-feature-source-public-and-built-routes-match",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../.. && npm --prefix site run build >/tmp/svg-design-site-build.log && python3 skills/best-practices-svg-design/scripts/check_project_card_feature.py --repo-root . --slug memory --asset memory-recall-card.svg --source docs/assets/project-cards/memory-recall-card.svg --site-asset site/public/projects/memory-recall-card.svg --site-asset site/public/projects/thumbs/memory-recall-card.svg --built-html site/out/explore.html --built-html site/out/index.html --require-built --require-transform 'translate(200 -48.5)' --registry site/visual-assets.yml"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": "PROJECT_CARD_FEATURE_OK"
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "project-card-feature-rejects-stale-consumer-route",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.tsx); cp ../../../site/app/explore/page.tsx \"$T\"; python3 - \"$T\" <<'PYCODE'\nimport pathlib,sys\np=pathlib.Path(sys.argv[1])\ns=p.read_text()\ns=s.replace('memory-recall-card.svg', 'memory.svg')\np.write_text(s)\nPYCODE\npython3 ../scripts/check_project_card_feature.py --repo-root ../../.. --slug memory --asset memory-recall-card.svg --skip-assets --consumer \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "PROJECT_CARD_FEATURE_FAIL",
+          "legacy asset"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "project-card-feature-rejects-stale-asset-registry",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.yml); cp ../../../site/visual-assets.yml \"$T\"; python3 - \"$T\" <<'PYCODE'\nimport pathlib,sys\np=pathlib.Path(sys.argv[1])\ns=p.read_text().replace('memory-recall-card.svg', 'memory.svg')\np.write_text(s)\nPYCODE\npython3 ../scripts/check_project_card_feature.py --repo-root ../../.. --slug memory --asset memory-recall-card.svg --skip-assets --registry \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "PROJECT_CARD_FEATURE_FAIL",
+          "asset registry"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    }
+  ]
+}
