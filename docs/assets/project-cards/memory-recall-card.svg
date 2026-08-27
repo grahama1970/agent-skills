@@ -449,11 +449,11 @@
     </g>
 
     <g aria-label="Canonical record and graph evidence stage">
-      <path d="M770 596 V624 C770 642 788 650 808 650 H1002" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M770 596 V612 C770 628 786 636 804 636 H942 C954 636 960 642 960 646 V650" class="base-path" marker-end="url(#flow-arrow)"/>
       <path d="M1070 610 V648" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M1370 596 V624 C1370 642 1352 650 1332 650 H1138" class="base-path" marker-end="url(#flow-arrow)"/>
-      <path d="M770 596 V624 C770 642 788 650 808 650 H1006" class="flow-path flow-amber merge-flow" pathLength="1"/>
-      <path d="M1370 596 V624 C1370 642 1352 650 1332 650 H1134" class="flow-path flow-violet merge-flow" pathLength="1"/>
+      <path d="M1370 596 V612 C1370 628 1354 636 1336 636 H1198 C1186 636 1180 642 1180 646 V650" class="base-path" marker-end="url(#flow-arrow)"/>
+      <path d="M770 596 V612 C770 628 786 636 804 636 H942 C954 636 960 642 960 646 V650" class="flow-path flow-amber merge-flow" pathLength="1"/>
+      <path d="M1370 596 V612 C1370 628 1354 636 1336 636 H1198 C1186 636 1180 642 1180 646 V650" class="flow-path flow-violet merge-flow" pathLength="1"/>
 
       <rect x="808" y="648" width="524" height="162" rx="32" class="stage-halo halo-mint record-halo" filter="url(#wide-glow)"/>
       <rect x="822" y="656" width="496" height="146" rx="26" class="panel panel-03"/>
