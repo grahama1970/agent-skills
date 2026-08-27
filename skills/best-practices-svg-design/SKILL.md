@@ -237,6 +237,20 @@ what the icon shows. A trailing ellipsis on an answer honestly signals
 truncation of a longer real response. In-pill icons sit at a fixed left
 padding, label after them — never centered as a floating cluster.
 
+## Animation Verification (headless traps)
+
+- CSS `transform` keyframes REPLACE an element's `transform` attribute:
+  never put an animated class on a group positioned by translate/scale —
+  wrap it (outer transform group, inner animated group) or leave it static.
+- `--virtual-time-budget` does not advance SVG-in-`<img>` clocks and skips
+  positively-delayed CSS animations — mid-cycle screenshots taken that way
+  show a false early state. Verify choreography by inlining the SVG and
+  overriding each phase class with a NEGATIVE animation-delay
+  (t_target shifted), which renders any instant deterministically.
+- Serve card images with a content-versioned URL (`?v=<commit>` from the
+  build's inventory) — browsers keep `<img>` sub-resources through hard
+  reloads, and every "why is it stale" round is this class.
+
 ## Connector Craft
 
 - Route connectors orthogonally (vertical/horizontal steps, rounded elbows
