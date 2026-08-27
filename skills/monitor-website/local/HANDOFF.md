@@ -1,85 +1,111 @@
-# Handoff Report: monitor-website / grahama.co
+# Handoff Report: monitor-website / grahama.co memory card
 
-**Timestamp**: 2026-08-27T12:26:23-04:00
-**Active Agent**: Codex
-**Scope**: current handoff for `$monitor-website` after the grahama.co / resume update thread, including the rejected memory-card SVG state.
+**Timestamp**: 2026-08-27T16:30-04:00
+**Outgoing Agent**: Claude (Fable 5)
+**Scope**: memory project-card SVG redesign thread, plus the tooling and
+process infrastructure it forced into existence. The human's assessment of
+this session: repeated instruction-following failures required constant
+babysitting. Read the Operational Warnings before acting.
 
-## 1. Project Overview
+## Resume Here
 
-- **Ecosystem**: `site/` is a Next.js 15 static export. GitHub Pages deployment is configured in `.github/workflows/site-deploy.yml`.
-- **Core Purpose**: `monitor-website` audits, updates, and regenerates grahama.co plus `/resume` from `README.md` and `RESUME.md`.
-- **Source contracts**:
-  - `README.md` -> public project cards, inventory, generated site surfaces.
-  - `RESUME.md` -> `site/resume.json`, `/resume.md`, `/resume.pdf`, `/resume.docx`, `/llms.txt`, and ops-linkedin JSON handoff.
-  - UI-visible changes to grahama.co or `/resume` must run `test-interactions` discovery and replay before commit/push.
+- **Objective**: grahama.co memory card (card 10) accepted by the human and
+  the site cascade shipped.
+- **State**: card is technically complete and machine-verified; human
+  acceptance (ledger gate G9) is NOT granted. The human ended the session
+  dissatisfied with the process, not with a named remaining defect.
+- **Exact next action**: show the human the current card
+  (`http://127.0.0.1:3020/explore.html#project-memory`, plain reload — URLs
+  are content-versioned) and ask for G9 accept/reject with a named defect.
+  On reject: fix through the solver→checker loop below, never by hand-nudging.
+- **Active files**: `docs/assets/project-cards/memory-recall-card.svg`
+  (source of truth), copies in `site/public/projects/` (+thumbs) and
+  `site/out/projects/` (+thumbs), grid manifest
+  `docs/assets/project-cards/memory-recall-card.grid.json`.
+- **Ledger**: `skills/monitor-website/local/unlazy/memory-card-brand-GATES.md`
+  — 13 gates, 12 met (fresh run receipts in ~/.unlazy evidence), open: G9
+  (manual human acceptance). Run:
+  `node ~/.claude/skills/unlazy/scripts/gate-check.mjs <ledger>`.
+- **Last verified commands** (all green this session, re-run them before
+  claiming anything):
+  - `skills/create-svg/run.sh validate docs/assets/project-cards/memory-recall-card.svg` → `PASS`
+  - `skills/best-practices-svg-design/run.sh spacing docs/assets/project-cards/memory-recall-card.svg` → `SPACING_OK`
+  - `skills/best-practices-svg-design/run.sh grid docs/assets/project-cards/memory-recall-card.grid.json` → `GRID_OK` (centers step 160)
+  - `skills/best-practices-svg-design/run.sh pixels <rendered.png>` → `PIXELS_OK`
+  - `./skills/agentic-evals/run.sh run skills/best-practices-svg-design/fixtures/agentic_eval.json` → READY 8/8
+- **Proof boundary**: mocked: no; live: local server 127.0.0.1:3020 only.
+  NOT live: production deploy, site build via monitor-website cascade,
+  test-interactions replay, push to origin.
 
-## 2. Current State
+## What The Card Now Is
 
-- **Latest local site-related commit**: `f4e9e386f7 site: add SVG memory project card`.
-- **Current local HEAD when this handoff was written**: `4f9cc8f227 ops-terraform: public Registry API + HCP api/v2 posture lanes`.
-- **Remote main readback**: `git ls-remote origin refs/heads/main` returned `44f563f4d720d76e1a1a261d073420fcd7130cb8`.
-- **Branch state**: local `main` is heavily divergent from `origin/main` (`ahead 105, behind 126` at last readback). Do not push local `main` blindly; that would include unrelated history.
-- **Local server**: a Python static server was started for inspection at `http://127.0.0.1:3020/`. Stop it when no longer needed.
+Animated SVG, 1920x1200 (16:10 = the `.shot` slot exactly), grahama.co brand
+tokens (brass/ember/sage on ink), Fraunces serif hero. Story: four real
+example queries cycle (24s, four 6s phases): "Explain CWE-23."→ANSWER,
+"How do I secure it?"→CLARIFY, "Draft a fix runbook."→DRAFT,
+"What's the weather?"→DEFLECT (bypass rail). Pipeline: human bubble → INTENT
+→ BM25/GRAPH/QDRANT (three fused recall channels, verified against
+memory `lessons/recall.py` fusion) → ARANGODB → EVIDENCE GATE → four robot
+route pills → robot response bubble with matching truncated reply.
 
-## 3. What Is Working
+Layout law (enforced, not prose): baseline-grid content centers on exact
+160px steps; sibling widths/gutters uniform; every connector 10px clearance
+both ends; labels at fixed per-row offsets. Animation law: ZERO
+animation-delay (phase windows baked into absolute keyframes — browser
+pause/resume cannot desync); each phase's question/route/answer co-appear
+and co-terminate; reduced-motion base = complete phase-1 composition.
 
-- `skills/monitor-website/run.sh` exists and exposes the expected audit/update/design commands.
-- `skills/handoff/run.sh` exists. The older `.pi/skills/handoff/run.sh` path named in the handoff skill is not present in this repo layout.
-- Local exported `site/out/explore.html` exists and returns `HTTP/1.0 200 OK` when the local static server is running.
-- The local generated explore page contains `#project-memory`, `#project-watch`, `/projects/memory-recall-card.svg`, and the memory GitHub target `https://github.com/grahama1970/memory-public`.
-- The clipboard copy of the current SVG source was byte-verified:
-  - source: `docs/assets/project-cards/memory-recall-card.svg`
-  - bytes: `8683`
-  - SHA256: `34e17566cb701ab76e344d3050f67042a85ddc6e8c84f0249fa04b8f5c49b72d`
+## Tooling Built This Session (use it, don't bypass it)
 
-## 4. What Is Currently Broken Or Not Accepted
+`skills/best-practices-svg-design/` is now a Python package
+(typer/loguru/uv, svgelements) with `run.sh`:
+- `solve <spec>` — emits exact row coordinates from heights (never place rows by hand)
+- `spacing <svg>` — XML-level audit: rhythm, columns, labels, connectors
+- `pixels <png>` — painted-pixel rhythm audit from a rendered screenshot
+- `grid <manifest>` — manifest check
+- `composition <svg>` — thirds/golden metrics
+Waivers: only via `--waiver` file naming approved_by/rules/reason (human-authored).
+SKILL.md carries the full accumulated design law (prune rules, actor icons,
+slot contract, connector craft, story animation, intake of external SVGs).
 
-- **Memory SVG is not accepted by the human.** The current SVG is too dense, text-heavy, visually confusing, and unsuitable as a card thumbnail.
-- **Do not push `f4e9e386f7` as-is.** It contains the rejected SVG card asset even though it also contains useful data plumbing for the memory project.
-- `skills/monitor-website/run.sh audit --no-live --json` exited nonzero with:
-  - generated surface stamp drift across `artifacts.json`, `catalog.json`, `competence.json`, `graph.json`, `inventory.json`, `research-map.json`, and `resume.json`.
-  - `project no longer in README: memory`.
-- `skills/monitor-website/run.sh design-render-check --json` exited nonzero with:
-  - `no_mono_on_human_labels`: FAIL for several CSS selectors including `.nav .nav-calendly-link`, `.cta-calendly-btn`, `.cv-copy-email`, `.cv-facts-grid dt`, `.cv-tech-pill`.
-  - `responsive_choreography`: FAIL because the receipt is missing `source_commit` for active candidate binding.
-  - `craft_integrity_render`: FAIL because the receipt source commit does not match active source commit.
-- Live production deployment is not proven in this handoff.
-- Actual LinkedIn profile mutation is not proven. `monitor-website update` only creates local ops-linkedin handoffs unless a separate LinkedIn automation path is explicitly run and verified.
+## Session Commits (key ones, all on local main; DO NOT push — divergent ahead/behind vs origin)
 
-## 5. Next Steps
+`2eec59c652` first card + skill … `43f738afec` webgpt-v2 adoption …
+`93b4a324d6`/`48848d885c` prune arc … `13aac93e2a` 74px grid …
+`d5bedeb1ac` CLI + clearances … `8741dc177a` baseline-grid law + pixel oracle …
+`312f54d326` zero-delay timeline … `3540985eca` phase-coherent choreography (HEAD-area).
+Also: lucide badge overhaul in site (`52f6ef892f`, `ea5f4b06ce`), asset URLs
+versioned by inventory commit (`e05ec23c51`).
 
-1. Replace or remove the rejected memory-card SVG before any production push.
-2. If `memory` should remain on grahama.co, add it to the README project-card source or update the monitor rule so `audit` does not correctly flag it as site-only drift.
-3. Run the proper cascade after accepted source edits:
-   `skills/monitor-website/run.sh update --linkedin-sync-plan --accept-linkedin-account-risk --build`
-4. Run `test-interactions` discovery and replay against the changed local surface before commit/push.
-5. Regenerate site surfaces so stamps share one source state.
-6. Push only a narrow branch or a clean `origin/main`-based commit. Do not push the current divergent local `main`.
-7. After deployment, require a green `site-deploy` run plus curl readback from `https://grahama.co` before saying the live site changed.
+## What Is NOT Done
 
-## 6. Key Files
+1. G9 human acceptance.
+2. README does not list `memory` — `monitor-website run.sh audit` still flags it.
+3. Full cascade unrun: `skills/monitor-website/run.sh update --linkedin-sync-plan --accept-linkedin-account-risk --build`, then test-interactions discovery/replay.
+4. No push, no deploy, no live readback of grahama.co.
+5. /memory lesson stored (discipline chain) but NOT recall-ranked — corpus noise; a /monitor-memory ranking pass is warranted.
+6. webgpt /ask lane returned schema scaffold without verdict content once — transport worked, extraction suspect; surf lease fix below.
+7. `best-practices-svg-design/.venv` is a real dir (STOR002 warning); repo convention wants a symlink to the 12TB store.
 
-- `skills/monitor-website/SKILL.md`
-- `skills/monitor-website/run.sh`
-- `skills/monitor-website/scripts/monitor_website.py`
-- `skills/monitor-website/tests/test_grahamaco_update.py`
-- `site/app/page.tsx`
-- `site/app/explore/page.tsx`
-- `site/components/capability-constellation.tsx`
-- `site/app/globals.css`
-- `site/content.json`
-- `site/research-map.json`
-- `site/project-visibility.json`
-- `site/graph.json`
-- `docs/assets/project-cards/memory-recall-card.svg`
-- `site/public/projects/memory-recall-card.svg`
-- `site/public/projects/thumbs/memory-recall-card.svg`
-- `local/unlazy/grahama-memory-svg-implementation-GATES.md`
+## Operational Warnings (cost the human dearly; do not repeat)
 
-## 7. Operational Warnings For The Next Agent
-
-- Read named skills before acting. This thread repeatedly failed by relying on memory instead of the live skill contract.
-- Do not design another complex SVG locally. The failure mode was over-designed diagram art in a thumbnail slot.
-- For visual work, screenshot inspection is mandatory. DOM assertions and build passes are not visual proof.
-- Keep WebGPT or other external review advisory. Closure still needs deterministic local artifacts and, for production claims, live deployment readback.
-- Do not use `/tmp` or random worktrees as source for grahama.co changes.
+- **Named skill = binding.** The human names skills in the terminal because
+  agent self-selection failed. Use the named runtime; if it breaks, fix IT.
+  Example: /surf "timed out waiting for browser lease" = a stale
+  `host.cjs` native-host process holding the lease (dead extension pipe).
+  Fix: `pgrep -af host.cjs` → kill it → Chrome respawns → snap works.
+- **Layout is arithmetic.** Never hand-nudge coordinates. heights → solve →
+  place → `spacing` SPACING_OK → screenshot. Every single hand-edit session
+  drifted; every solver pass held.
+- **Choreography spec ≥ choreography math.** Cross-phase persistence windows
+  read as lying even when the keyframes are "correct". Co-appear/co-terminate.
+- **Verification traps**: `--virtual-time-budget` does not advance
+  SVG-in-`<img>` clocks or delayed animations (sample with negative
+  animation-delay overrides instead); headless `--screenshot` always fires
+  ~t=1s; browsers cache `<img>` through hard reloads (URLs must be
+  content-versioned — now automatic via inventory.commit); `uv run` can pin a
+  stale wheel (run.sh now forces source via PYTHONPATH).
+- **Regex surgery on CSS broke the file once** (orphaned keyframe bodies,
+  CSS_PARSE_ERROR). Brace-balance check after any generated-CSS edit.
+- Python string-replace edits: identical old/new = silent no-op — happened
+  three times; always read back a diff.
