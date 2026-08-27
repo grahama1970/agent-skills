@@ -8,3 +8,4 @@ probes:
   - what fields does an order object have
   - deposits endpoints
 memory_daemon: http://127.0.0.1:8601
+live_evidence_prep_pack: /home/graham/workspace/experiments/agent-skills/skills/live-evidence/fixtures/prep_pack_drivewealth.json

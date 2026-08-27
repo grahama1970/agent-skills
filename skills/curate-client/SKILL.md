@@ -56,6 +56,7 @@ brief + docs URLs + github org/repos      (missing inputs -> NEEDS_INTERVIEW)
        curated facts -> hand-written *.md dropped into knowledge/
   -> /memory workspace ingest under scope client:<name>
   -> verify: daemon recall probes must return client chunks
+  -> emit live_evidence.prep_pack.v1 for /live-evidence
   -> wire /live-evidence: repos allowlist line + knowledge dir on disk
 ```
 
@@ -70,7 +71,8 @@ per unit; no padding, no whole-repo context dumps.
 ./run.sh chunks --config client.yaml            # extract Q-A chunks to <kb_root>/knowledge
 ./run.sh ingest --config client.yaml            # memory ingest under scope client:<name>
 ./run.sh verify --config client.yaml            # daemon recall probes; fail-closed
-./run.sh build  --config client.yaml            # chunks + ingest + verify
+./run.sh prep-pack --config client.yaml         # emit the self-contained live-evidence prep pack
+./run.sh build  --config client.yaml            # chunks + ingest + verify + prep-pack
 ```
 
 Config (`client.yaml`):
@@ -86,6 +88,7 @@ probes:                       # verify: each must recall a client chunk
   - what endpoints manage deposits
   - what fields does an order object have
 memory_daemon: http://127.0.0.1:8601
+live_evidence_prep_pack: /home/graham/workspace/experiments/agent-skills/skills/live-evidence/fixtures/prep_pack_drivewealth.json
 ```
 
 Missing `client`, `kb_root`, or an empty source list fails closed with a
@@ -102,6 +105,12 @@ Missing `client`, `kb_root`, or an empty source list fails closed with a
 - Wiring into /live-evidence means: the kb_root is added to
   `LIVE_EVIDENCE_REPOS` (colon-separated) and chunks live on disk for the
   ripgrep lane; the memory lane reaches the same content through the daemon.
+- Client prep for interviews and meetings belongs here. The output handoff to
+  `$live-evidence` is a self-contained `live_evidence.prep_pack.v1` containing
+  research sources, the briefing pack, expected question oracles, reviewed
+  answers, skill chains, Memory export instructions, and post-run grading
+  rules. `$live-evidence` consumes the pack; `$curate-client` owns creating and
+  storing it.
 - Verify is fail-closed: a probe that recalls nothing client-scoped fails the
   run; a green ingest count is not retrieval proof.
 

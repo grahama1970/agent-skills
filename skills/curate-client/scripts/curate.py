@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """curate-client: client KB curation pipeline (stdlib only).
 
-Subcommands: plan | chunks | ingest | verify | build
+Subcommands: plan | chunks | ingest | verify | prep-pack | build
 Fail-closed: missing required config emits curate_client.needs_interview.v1.
 """
 from __future__ import annotations
@@ -58,6 +58,24 @@ def _validate(cfg: dict) -> None:
         missing.append("openapi_specs|terraform_repos")
     if missing:
         _needs_interview(missing)
+
+
+def _prep_pack_path(cfg: dict) -> Path:
+    value = cfg.get("live_evidence_prep_pack")
+    if not value:
+        _needs_interview(["live_evidence_prep_pack"])
+    path = Path(str(value)).expanduser()
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    if not path.is_file():
+        print(json.dumps({
+            "schema": "curate_client.prep_pack_missing.v1",
+            "status": "FAIL",
+            "path": str(path),
+            "next_action": "Create a live_evidence.prep_pack.v1 file or update live_evidence_prep_pack in the client config.",
+        }, indent=1))
+        sys.exit(1)
+    return path
 
 
 def extract_openapi(spec_path: str, outdir: Path, client: str) -> int:
@@ -179,9 +197,98 @@ def cmd_verify(cfg: dict) -> dict:
     return {"status": "PASS" if ok and results else "FAIL", "probes": results}
 
 
+def cmd_prep_pack(cfg: dict) -> dict:
+    path = _prep_pack_path(cfg)
+    payload = json.loads(path.read_text())
+    if payload.get("schema") != "live_evidence.prep_pack.v1":
+        return {
+            "schema": "curate_client.prep_pack_receipt.v1",
+            "status": "FAIL",
+            "path": str(path),
+            "error": "prep pack schema must be live_evidence.prep_pack.v1",
+        }
+    payload.setdefault("producer", {
+        "skill": "curate-client",
+        "client_scope": f"client:{cfg['client']}",
+        "kb_root": cfg["kb_root"],
+        "knowledge_dir": str(Path(cfg["kb_root"]) / "knowledge"),
+        "live_evidence_repos_append": cfg["kb_root"],
+    })
+    return {
+        "schema": "curate_client.prep_pack_receipt.v1",
+        "status": "PASS",
+        "client": cfg["client"],
+        "scope": f"client:{cfg['client']}",
+        "path": str(path),
+        "prep_pack": payload,
+    }
+
+
+
+
+# Systems detectable in a built KB, mapped to the owner-team collaboration
+# point and the coverage question the engagement must answer in advance.
+COLLABORATION_SIGNALS = {
+    "terraform": ("infrastructure/platform team",
+                  "Which Terraform surfaces exist (CLI modules, HCP org, registry) and can a read token be minted in advance?"),
+    "okta": ("identity team",
+             "Which identity provider fronts the client, and is an org domain available for read-only OIDC discovery probes?"),
+    "oidc": ("identity team",
+             "Can token verification be demonstrated against their JWKS without credentials?"),
+    "sqs": ("event-platform team",
+            "Which event topics exist, what are the redelivery/ordering semantics, and is a sandbox queue available?"),
+    "kubernetes": ("platform team",
+                   "Which cluster/deploy flow (EKS, ArgoCD, Spacelift) would an agent workload join, and who approves?"),
+    "eks": ("platform team",
+            "How do workloads get AWS credentials (IRSA?) and who owns the role definitions?"),
+    "kyc": ("compliance team",
+            "Which data boundaries apply to KYC/PII material in prompts, logs, and evaluation fixtures?"),
+    "openapi": ("API platform team",
+                "Which API tiers are public vs authenticated, and what is the token lead time for a sandbox credential?"),
+}
+
+
+def cmd_research_plan(cfg: dict) -> dict:
+    knowledge = Path(cfg["kb_root"]) / "knowledge"
+    corpus = ""
+    for f in list(knowledge.rglob("*.md"))[:2000]:
+        try:
+            corpus += f.read_text(errors="ignore").lower()
+        except OSError:
+            continue
+    hits = {k: v for k, v in COLLABORATION_SIGNALS.items() if k in corpus}
+    questions = [
+        {"id": f"coverage-{key}", "header": key[:12],
+         "text": q, "options": []}
+        for key, (_team, q) in hits.items()
+    ]
+    plan = {
+        "schema": "curate_client.research_plan.v1",
+        "client": cfg["client"],
+        "collaboration_points": [
+            {"system": k, "owner_team": team, "coverage_question": q}
+            for k, (team, q) in hits.items()
+        ],
+        "interview_packet": {"title": f"{cfg['client']} coverage interview",
+                             "questions": questions},
+        "deep_research_directives": [
+            f"dogpile: {cfg['client']} {k} integration architecture"
+            for k in hits
+        ] + [f"webgpt: expected interview/meeting questions about {cfg['client']} {k}"
+             for k in list(hits)[:4]],
+        "note": "Deterministic derivation from the built KB; agentic research is delegated to the named skills. Empty hits mean the KB is too thin to plan from - build first.",
+    }
+    if not hits:
+        plan["status"] = "FAIL"
+        plan["failure_code"] = "kb_too_thin_for_research_plan"
+        return plan
+    plan["status"] = "PASS"
+    return plan
+
+
 def main() -> None:
     if len(sys.argv) < 2:
-        print("usage: curate.py plan|chunks|ingest|verify|build --config <yaml>", file=sys.stderr)
+        print("usage: curate.py plan|chunks|ingest|verify|prep-pack|build --config <yaml>", file=sys.stderr)
         sys.exit(2)
     cmd = sys.argv[1]
     if "--config" not in sys.argv:
@@ -199,8 +306,12 @@ def main() -> None:
         out = cmd_ingest(cfg)
     elif cmd == "verify":
         out = cmd_verify(cfg)
+    elif cmd == "research-plan":
+        out = cmd_research_plan(cfg)
+    elif cmd == "prep-pack":
+        out = cmd_prep_pack(cfg)
     elif cmd == "build":
-        out = {"chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg)}
+        out = {"chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg), "prep_pack": cmd_prep_pack(cfg)}
         out["status"] = out["verify"]["status"]
     else:
         print(f"unknown command {cmd}", file=sys.stderr)
