@@ -15,6 +15,9 @@
     <marker id="flow-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 1 L 8 5 L 0 9 z" fill="rgba(236,226,211,0.38)"/>
     </marker>
+    <marker id="flow-arrow-ember" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#d1703c"/>
+    </marker>
     <marker id="flow-arrow-brass" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 1 L 8 5 L 0 9 z" fill="#e2ac62"/>
     </marker>
@@ -241,9 +244,10 @@
         stroke-width: 1.5;
       }
       #memory-pipeline .scan-shell {
-        fill: rgba(209, 112, 60, 0.035);
-        stroke: rgba(209, 112, 60, 0.22);
-        stroke-width: 1.5;
+        fill: rgba(209, 112, 60, 0.05);
+        stroke: rgba(209, 112, 60, 0.55);
+        stroke-width: 2;
+        stroke-dasharray: 7 7;
       }
       #memory-pipeline .active-dot { fill: #93a289; }
       #memory-pipeline .deflect-dot { fill: #8f7f72; }
@@ -404,21 +408,44 @@
 
       <rect x="620" y="466" width="300" height="138" rx="26" class="stage-halo halo-amber bm25-halo" filter="url(#soft-glow)"/>
       <rect x="630" y="474" width="280" height="122" rx="22" class="panel panel-02a"/>
-      <text x="662" y="514" class="mono step">02A · EXACT</text>
-      <text x="662" y="552" class="mono stage-name">BM25</text>
-      <text x="662" y="582" class="sans stage-note">exact terms</text>
+      <g transform="translate(660 500)" aria-hidden="true">
+        <line x1="0" y1="4" x2="30" y2="4" class="bm25-line" opacity="0.45"/>
+        <line x1="0" y1="14" x2="40" y2="14" class="bm25-line"/>
+        <line x1="0" y1="24" x2="24" y2="24" class="bm25-line" opacity="0.68"/>
+        <line x1="0" y1="34" x2="34" y2="34" class="bm25-line" opacity="0.35"/>
+      </g>
+      <text x="716" y="514" class="mono step">02A · EXACT</text>
+      <text x="716" y="552" class="mono stage-name">BM25</text>
+      <text x="716" y="582" class="sans stage-note">exact terms</text>
 
       <rect x="920" y="466" width="300" height="138" rx="26" class="stage-halo halo-mint graph-halo" filter="url(#soft-glow)"/>
       <rect x="930" y="474" width="280" height="122" rx="22" class="panel panel-02g"/>
-      <text x="962" y="514" class="mono step">02B · TRAVERSE</text>
-      <text x="962" y="552" class="mono stage-name">GRAPH</text>
-      <text x="962" y="582" class="sans stage-note">1..3-hop expansion</text>
+      <g transform="translate(958 500)" aria-hidden="true">
+        <line x1="8" y1="8" x2="30" y2="4" class="graph-edge"/>
+        <line x1="30" y1="4" x2="40" y2="22" class="graph-edge"/>
+        <line x1="8" y1="8" x2="18" y2="32" class="graph-edge"/>
+        <line x1="18" y1="32" x2="40" y2="22" class="graph-edge"/>
+        <circle cx="8" cy="8" r="4.5" class="graph-node"/>
+        <circle cx="30" cy="4" r="4.5" class="graph-node"/>
+        <circle cx="40" cy="22" r="4.5" class="graph-node"/>
+        <circle cx="18" cy="32" r="4.5" class="graph-node"/>
+      </g>
+      <text x="1014" y="514" class="mono step">02B · TRAVERSE</text>
+      <text x="1014" y="552" class="mono stage-name">GRAPH</text>
+      <text x="1014" y="582" class="sans stage-note">1..3-hop expansion</text>
 
       <rect x="1220" y="466" width="300" height="138" rx="26" class="stage-halo halo-violet qdrant-halo" filter="url(#soft-glow)"/>
       <rect x="1230" y="474" width="280" height="122" rx="22" class="panel panel-02b"/>
-      <text x="1262" y="514" class="mono step">02C · SEMANTIC</text>
-      <text x="1262" y="552" class="mono stage-name">QDRANT</text>
-      <text x="1262" y="582" class="sans stage-note">dense vectors</text>
+      <g transform="translate(1258 500)" aria-hidden="true">
+        <circle cx="6" cy="10" r="4" class="q-node"/>
+        <circle cx="24" cy="4" r="4" class="q-node"/>
+        <circle cx="38" cy="16" r="4" class="q-node"/>
+        <circle cx="14" cy="28" r="4" class="q-node"/>
+        <circle cx="32" cy="32" r="4" class="q-node" opacity="0.6"/>
+      </g>
+      <text x="1314" y="514" class="mono step">02C · SEMANTIC</text>
+      <text x="1314" y="552" class="mono stage-name">QDRANT</text>
+      <text x="1314" y="582" class="sans stage-note">dense vectors</text>
     </g>
 
     <g aria-label="Canonical record and graph evidence stage">
@@ -510,6 +537,7 @@
         <circle cx="1392" cy="1092" r="5" fill="#d1703c" opacity="0.5"/>
         <text x="1414" y="1101" class="mono outcome-name">SCAN FRESH</text>
         <text x="1392" y="1130" class="sans outcome-note">verify + learn back</text>
+        <path d="M1606 1106 H1650" class="base-path" stroke="#d1703c" opacity="0.8" marker-end="url(#flow-arrow-ember)"/>
       </g>
     </g>
     </g>
