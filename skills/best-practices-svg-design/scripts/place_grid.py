@@ -194,6 +194,21 @@ def main() -> int:
 
     walk(root)
 
+    # Optional per-row label baseline offsets (manifest "label_dy"), in local px.
+    import json as _json
+    man2 = _json.load(open(manifest_path))
+    for r in man2["rows"]:
+        dy = r.get("label_dy")
+        if not dy:
+            continue
+        top, bottom = float(r["y"]) - ty, float(r["y"]) - ty + float(r["h"])
+        for t in root.iter(f"{NS}text"):
+            if t.get("y") is None or t.get("transform") is not None:
+                continue
+            v = float(t.get("y"))
+            if top <= v <= bottom:
+                t.set("y", fmt(v + float(dy)))
+
     # CSS transform-origin y values follow their row (halo/dot origins are centers)
     style = root.find(f"{NS}defs/{NS}style")
     if style is not None and style.text:
