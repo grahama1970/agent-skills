@@ -95,6 +95,39 @@ Missing `client`, `kb_root`, or an empty source list fails closed with a
 `curate_client.needs_interview.v1` packet naming the missing fields — run
 `$interview` to collect them; do not guess.
 
+## The research loop (questions beget questions)
+
+Deep research is iterative, never one pass. Each round's findings MUST emit
+follow-up questions before the round is done, derived by two rules:
+
+1. **Client-deeper**: what does this finding imply about the client that we
+   cannot yet answer? (A COO quote implies: full context of the quote, who
+   else speaks publicly, does engineering agree, what product decisions
+   followed.)
+2. **Bridge-relevant**: how does this finding intersect the operator's own
+   systems and value? Score every follow-up against the config's
+   `anchor_terms` (e.g. receipts, orchestration, observability, evals,
+   compliance, retrieval); follow-ups touching no anchor are parked, not
+   pursued.
+
+At scale this is 20-30 brave-search queries structured as a DAG, not a flat
+list: within a round, queries run CONCURRENT (they share no dependency);
+across rounds, edges are SEQUENTIAL (round N+1's queries are derived from
+round N's findings). Express substantial sweeps as an ask.dag.v1 so rounds
+are receipted and resumable; the recognized `exploration-research` template
+is the intended native home once executable, with concurrent brave/fetcher/
+github/youtube leaves joining into a findings node that fans out the next
+round.
+
+Rounds continue until two consecutive rounds surface no new anchor-relevant
+finding (loop-until-dry). The output of each round is: findings as chunks,
+new questions into the next round's directives, and bridge rows appended to
+the client bridge doc. Reference run 2026-08-27: brave found a COO quote
+("stablecoin and AI were overhyped") -> client-deeper: full article, other
+executives' positions, engineering-blog stance -> bridge: the operator's
+receipts-first platform is the direct answer to executive AI skepticism -> a
+new briefing point.
+
 ## Boundaries
 
 - All Arango/Qdrant mutation goes through /memory's documented ingest; this
