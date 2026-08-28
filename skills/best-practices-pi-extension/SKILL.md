@@ -1,12 +1,14 @@
 ---
-name: best-practices-pi-extenstion
+name: best-practices-pi-extension
 description: >
-  Compatibility alias and typo-tolerant entrypoint for best-practices-pi-extensions.
-  Use when the human or an agent says best-practices-pi-extenstion, pi extenstion,
+  Singular alias and typo-tolerant entrypoint for best-practices-pi-extensions.
+  Use when the human or an agent says best-practices-pi-extension, pi extension,
   Pi extension standard, lazy-report-shame-shame-shame, final-report guard, or asks
   to build/review Pi extension code under ~/.pi/agent/extensions or .pi/extensions.
 triggers:
+  - best-practices-pi-extension
   - best-practices-pi-extenstion
+  - pi extension
   - pi extenstion
   - pi extension standard
   - lazy-report-shame-shame-shame
@@ -36,10 +38,10 @@ disciplines:
   - engineering-standards
 ---
 
-# best-practices-pi-extenstion
+# best-practices-pi-extension
 
-This is a compatibility alias for the misspelled/singular invocation
-`/best-practices-pi-extenstion`.
+This is a compatibility alias for the singular invocation
+`/best-practices-pi-extension`.
 
 The canonical skill is:
 

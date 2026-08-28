@@ -1,11 +1,11 @@
-# Project Knowledge: best-practices-pi-extenstion
+# Project Knowledge: best-practices-pi-extension
 
 **Last updated:** 2026-08-28 by agent
 **Status:** Compatibility alias
 
 ## Current Understanding
 
-- This skill is intentionally misspelled as `best-practices-pi-extenstion` because the human requested that exact slash-skill name.
+- This skill is named `best-practices-pi-extension` because the human requested the clean singular slash-skill name.
 - It must not become a divergent copy of the canonical Pi extension standard.
 - The canonical implementation guidance lives in `skills/best-practices-pi-extensions/`.
 - The alias exists to reduce human babysitting: a typo or singular/plural mismatch should route to the right standard, not create another failure loop.
@@ -14,7 +14,7 @@
 
 | Date | Decision | Why |
 |---|---|---|
-| 2026-08-28 | Create `best-practices-pi-extenstion` as an alias skill. | The human explicitly asked for this path/name. |
+| 2026-08-28 | Rename the typo alias to `best-practices-pi-extension`. | The human explicitly asked for the clean singular name. |
 | 2026-08-28 | Keep the canonical standard in `best-practices-pi-extensions`. | Avoid two competing Pi extension rulebooks. |
 | 2026-08-28 | Compose the canonical skill from this alias. | Skill selection can recover from the typo while still loading the real instructions. |
 

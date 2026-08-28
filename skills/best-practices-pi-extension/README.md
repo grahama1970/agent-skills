@@ -1,8 +1,8 @@
-# best-practices-pi-extenstion
+# best-practices-pi-extension
 
 Typo-compatible alias for `best-practices-pi-extensions`.
 
-This folder exists because agents should not make humans pay a tax for spelling, singular/plural drift, or slash-command ambiguity. If someone asks for `/best-practices-pi-extenstion`, route to the canonical Pi extension standard instead of pretending the skill is missing.
+This folder exists because agents should not make humans pay a tax for spelling, singular/plural drift, or slash-command ambiguity. If someone asks for `/best-practices-pi-extension`, route to the canonical Pi extension standard instead of pretending the skill is missing.
 
 Canonical skill:
 
