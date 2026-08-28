@@ -197,21 +197,41 @@ def _artifact_ref(path: Path) -> EvidenceRef:
     return EvidenceRef(path=str(path), sha256=_sha_bytes(data), bytes=len(data))
 
 
-def _run(cmd: list[str], *, timeout: int = 120) -> CommandResult:
-    logger.debug("running command: {}", cmd)
+def _clean_child_env() -> dict[str, str]:
     env = os.environ.copy()
     # Do not leak this skill's uv environment into sibling skills. Each skill
     # owns its own project dependencies; sharing UV_PROJECT_ENVIRONMENT causes uv
     # to uninstall/reinstall packages between composed skill calls.
     env.pop("UV_PROJECT_ENVIRONMENT", None)
     env.pop("VIRTUAL_ENV", None)
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False, env=env)
+    return env
+
+
+def _command_result(cmd: list[str], proc: subprocess.CompletedProcess[str]) -> CommandResult:
     return CommandResult(
         command=cmd,
         returncode=proc.returncode,
         stdout_excerpt=proc.stdout[-4000:],
         stderr_excerpt=proc.stderr[-2000:],
     )
+
+
+def _run(cmd: list[str], *, timeout: int = 120) -> CommandResult:
+    logger.debug("running command: {}", cmd)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False, env=_clean_child_env())
+    return _command_result(cmd, proc)
+
+
+def _run_with_stdout(cmd: list[str], *, timeout: int = 120) -> tuple[CommandResult, str]:
+    """Run a command and keep full stdout for machine parsing.
+
+    The ledger stores bounded excerpts, but JSON producers such as `memory` and
+    `gh issue list` may emit bodies larger than the excerpt window. Parsing the
+    excerpt would turn a successful lookup into a false failure.
+    """
+    logger.debug("running command: {}", cmd)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False, env=_clean_child_env())
+    return _command_result(cmd, proc), proc.stdout
 
 
 def _classify(signal: str, layer: str | None) -> TriageResult:
@@ -248,11 +268,11 @@ def _memory_recall(query: str, *, skip: bool) -> dict[str, Any]:
         return {"status": "SKIPPED", "query": query}
     if not MEMORY_RUN.exists():
         return {"status": "FAILED", "query": query, "error": "memory run.sh not found"}
-    result = _run([str(MEMORY_RUN), "recall", "--q", query, "--brief"], timeout=180)
+    result, stdout = _run_with_stdout([str(MEMORY_RUN), "recall", "--q", query, "--brief"], timeout=180)
     payload: dict[str, Any] = {"status": "PASS" if result.returncode == 0 else "FAILED", "query": query, "command": result.model_dump()}
     if result.returncode == 0:
         try:
-            data = json.loads(result.stdout_excerpt)
+            data = json.loads(stdout)
             payload.update({
                 "found": bool(data.get("found")),
                 "confidence": data.get("confidence"),
@@ -285,12 +305,12 @@ def _github_issue_search(repo: str, category_key: str, triage: TriageResult, ste
     seen: set[int] = set()
     for query in queries:
         cmd = ["gh", "issue", "list", "--repo", repo, "--state", "all", "--limit", "20", "--search", query, "--json", "number,title,state,labels,url,body"]
-        result = _run(cmd)
+        result, stdout = _run_with_stdout(cmd)
         commands.append(result.model_dump())
         if result.returncode != 0:
             return {"status": "FAILED", "queries": queries, "matches": matches, "commands": commands}
         try:
-            rows = json.loads(result.stdout_excerpt or "[]")
+            rows = json.loads(stdout or "[]")
         except json.JSONDecodeError:
             return {"status": "FAILED", "queries": queries, "matches": matches, "commands": commands, "error": "gh output was not JSON"}
         for row in rows:
@@ -473,10 +493,10 @@ def _append_event(ledger: Path, event_payload: dict[str, Any]) -> PipelineFailur
 
 
 def _repair_state(triage: TriageResult, ticket: TicketDisposition, dispatch_watchdog: bool, watchdog: dict[str, Any], provider_effect: dict[str, Any]) -> RepairState:
-    if triage.ambiguous:
-        return RepairState.NEEDS_TRIAGE
     if provider_effect.get("spend_state") == SpendState.UNKNOWN.value:
         return RepairState.NEEDS_HUMAN
+    if triage.ambiguous:
+        return RepairState.NEEDS_TRIAGE
     if ticket.action == "blocked_by_upstream":
         return RepairState.BLOCKED_BY_UPSTREAM
     if ticket.action == "needs_reopen":

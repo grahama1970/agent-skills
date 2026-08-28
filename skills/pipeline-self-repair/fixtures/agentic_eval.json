@@ -3,21 +3,33 @@
   "skill": "pipeline-self-repair",
   "trials": 2,
   "live": true,
-  "proof_scope": "record-failure and inspect exercised through the real skill run.sh, with independent readback of the written replay ledger artifact",
+  "proof_scope": "End-to-end pipeline-self-repair behavior through the public run.sh entrypoint: live triage-error composition, live memory recall, read-only live GitHub issue search, safe ticket preview/binding, provider-effect no-blind-retry gates, checkpoint ledger validation, and agentic-evals remediation projection. External mutations are intentionally not executed.",
   "claims": {
-    "proves": "pipeline-self-repair records a required pipeline-step failure as a blocking replay-ledger event with triage, stable category, and ticket disposition; the ledger can be folded for checkpoint gating.",
-    "does_not_prove": "live GitHub mutation, project-watchdog dispatch, memory daemon availability, or paid provider/Kling side effects. Those require explicit --apply-ticket/--dispatch-watchdog/live provider runs."
+    "proves": "pipeline-self-repair can convert a required pipeline-step failure into a replayable repair branch with triage, memory/GitHub search, stable category, ticket disposition, provider-effect safety, eval-required checkpoint gates, and agentic-evals remediation projection.",
+    "does_not_prove": "live GitHub issue creation, live project-watchdog dispatch, paid Kling submission, successful Kling media generation, or mutation of external systems. Those require explicit --apply-ticket, --dispatch-watchdog, and provider authorization outside this fixture."
   },
   "capability_claims": [
     {
-      "id": "psr.ledger.record_failure",
-      "description": "record-failure writes an append-only blocking step.failed ledger event with triage, category_key, failure_category_id, and ticket disposition.",
+      "id": "psr.e2e.full_branch",
+      "description": "record-failure drives the complete safe repair branch: triage-error, memory recall, read-only GitHub search, category binding, and ticket disposition.",
       "criticality": "critical",
       "evidence_required": {"live_e2e": true}
     },
     {
-      "id": "psr.gate.inspect",
-      "description": "inspect folds the ledger into open blocking failure state for checkpoint-resume gating.",
+      "id": "psr.provider_effect.no_blind_retry",
+      "description": "provider/Kling effect capsules prevent blind retries when spend/effect state is unknown or a provider task already exists.",
+      "criticality": "critical",
+      "evidence_required": {"adversarial_live_e2e": true}
+    },
+    {
+      "id": "psr.resume_gate.eval_required",
+      "description": "validate-ledger blocks checkpoint resume without retained agentic-evals proof and accepts a ledger only when ticket disposition plus eval proof are present.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true, "adversarial_live_e2e": true}
+    },
+    {
+      "id": "psr.agentic_eval.remediation_projection",
+      "description": "agentic-eval-remediate projects a complete failing agentic-evals report through the real remediation preview path and records it in the replay ledger.",
       "criticality": "important",
       "evidence_required": {"live_e2e": true}
     },
@@ -30,27 +42,35 @@
   ],
   "seams": [
     {
-      "seam_id": "self_repair.ledger",
-      "claim_id": "psr.ledger.record_failure",
-      "seam_type": "filesystem/process",
+      "seam_id": "self_repair.full_branch",
+      "claim_id": "psr.e2e.full_branch",
+      "seam_type": "skill-composition",
       "criticality": "critical",
-      "failure_modes": ["failed step is not replayable", "ledger writes but cannot be read back"],
+      "failure_modes": ["failed step bypasses triage-error", "memory recall is skipped silently", "GitHub search truncates JSON and misses prior tickets", "ticket category is not bound"],
       "required_evidence": ["live_e2e"]
     },
     {
-      "seam_id": "triage.failure_code_catalog",
-      "claim_id": "psr.ledger.record_failure",
-      "seam_type": "skill-composition",
+      "seam_id": "provider.effect_capsule",
+      "claim_id": "psr.provider_effect.no_blind_retry",
+      "seam_type": "external-effect-safety",
       "criticality": "critical",
-      "failure_modes": ["raw signal bypasses triage-error", "ambiguous classification advances as success"],
-      "required_evidence": ["live_e2e"]
+      "failure_modes": ["unknown paid-provider effect allows resubmission", "existing provider task id allows duplicate submit", "request/response/artifact hashes are missing"],
+      "required_evidence": ["adversarial_live_e2e"]
     },
     {
       "seam_id": "checkpoint.resume_gate",
-      "claim_id": "psr.gate.inspect",
+      "claim_id": "psr.resume_gate.eval_required",
       "seam_type": "state-fold",
+      "criticality": "critical",
+      "failure_modes": ["blocking failure is hidden from resume gate", "resume gate passes without retained eval proof", "valid ticket+eval repair disposition is rejected"],
+      "required_evidence": ["live_e2e", "adversarial_live_e2e"]
+    },
+    {
+      "seam_id": "agentic_eval.remediation_projection",
+      "claim_id": "psr.agentic_eval.remediation_projection",
+      "seam_type": "skill-composition",
       "criticality": "important",
-      "failure_modes": ["blocking failure is hidden from resume gate"],
+      "failure_modes": ["complete failing eval report is not categorized", "remediation preview is not recorded in the repair ledger"],
       "required_evidence": ["live_e2e"]
     },
     {
@@ -64,49 +84,126 @@
   ],
   "cases": [
     {
-      "name": "record_failure_dry_run_writes_replay_ledger",
+      "name": "full_branch_live_memory_github_ticket_binding",
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.ledger.record_failure"],
-      "seams": ["self_repair.ledger", "triage.failure_code_catalog"],
-      "command": [
-        "bash",
-        "-c",
-        "set -euo pipefail; TMP=/tmp/pipeline-self-repair-agentic-eval; rm -rf \"$TMP\"; mkdir -p \"$TMP\"; ../run.sh record-failure --pipeline persona-dream --step-id phase_11_kling_submit --run-id eval-run --raw-signal 'multi_prompt prompt exceeds 512 characters' --layer kling --target skills/persona-dream --run-root \"$TMP\" --ledger \"$TMP/replay_ledger.jsonl\" --skip-memory --skip-github --no-ticket --json > \"$TMP/record.json\"; python3 - <<'PY'\nimport json\nroot='/tmp/pipeline-self-repair-agentic-eval'\nrecord=json.load(open(root+'/record.json'))\nline=json.loads(open(root+'/replay_ledger.jsonl').read().strip())\nassert record['event']['event_hash'] == line['event_hash']\nassert line['blocking'] is True\nassert line['ticket']['action'] == 'ticket_skipped'\nprint('PIPELINE_SELF_REPAIR_LEDGER_OK')\nPY"
-      ],
-      "timeout_seconds": 60,
+      "supports_claims": ["psr.e2e.full_branch"],
+      "seams": ["self_repair.full_branch"],
+      "command": ["python3", "../scripts/e2e_eval_cases.py", "full-branch"],
+      "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_LEDGER_OK"],
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_FULL_BRANCH_E2E_OK"],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-agentic-eval/replay_ledger.jsonl", "min_bytes": 100},
-          {"path": "/tmp/pipeline-self-repair-agentic-eval/record.json", "json_pointer": "/event/event_type", "equals": "step.failed"}
+          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/replay_ledger.jsonl", "min_bytes": 100},
+          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json", "json_pointer": "/event/triage/code", "equals": "monitor_opportunities_nightly_revision_mismatch"},
+          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json", "json_pointer": "/event/memory_recall/status", "equals": "PASS"},
+          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json", "json_pointer": "/event/github_issue_search/status", "equals": "PASS"}
         ]
       }
     },
     {
-      "name": "inspect_reports_open_failure_from_replay_ledger",
+      "name": "adversarial_unknown_provider_effect_blocks_resubmission",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "required": true,
+      "supports_claims": ["psr.provider_effect.no_blind_retry"],
+      "seams": ["provider.effect_capsule"],
+      "command": ["python3", "../scripts/e2e_eval_cases.py", "provider-unknown-blocks-resubmit"],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_PROVIDER_UNKNOWN_E2E_OK"],
+        "artifacts": [
+          {"path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json", "json_pointer": "/event/repair_state", "equals": "NEEDS_HUMAN"},
+          {"path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json", "json_pointer": "/event/provider_effect/resubmission_allowed", "equals": false},
+          {"path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json", "json_pointer": "/event/provider_effect/next_legal_command", "equals": "reconcile_provider_effect_before_resubmit"}
+        ]
+      }
+    },
+    {
+      "name": "adversarial_provider_task_id_blocks_duplicate_submit",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "required": true,
+      "supports_claims": ["psr.provider_effect.no_blind_retry"],
+      "seams": ["provider.effect_capsule"],
+      "command": ["python3", "../scripts/e2e_eval_cases.py", "provider-task-id-blocks-duplicate-submit"],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_PROVIDER_TASK_ID_E2E_OK"],
+        "artifacts": [
+          {"path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json", "json_pointer": "/event/provider_effect/provider_task_id", "equals": "kling-task-123"},
+          {"path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json", "json_pointer": "/event/provider_effect/resubmission_allowed", "equals": false},
+          {"path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json", "json_pointer": "/event/provider_effect/next_legal_command", "equals": "poll_or_reconcile_existing_task"}
+        ]
+      }
+    },
+    {
+      "name": "adversarial_validate_ledger_blocks_without_eval_proof",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "required": true,
+      "supports_claims": ["psr.resume_gate.eval_required"],
+      "seams": ["checkpoint.resume_gate"],
+      "command": ["python3", "../scripts/e2e_eval_cases.py", "validate-blocks-without-eval"],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_VALIDATE_BLOCKS_WITHOUT_EVAL_OK"],
+        "artifacts": [
+          {"path": "/tmp/pipeline-self-repair-e2e/validate_blocks_without_eval/validate.json", "json_pointer": "/status", "equals": "FAIL"},
+          {"path": "/tmp/pipeline-self-repair-e2e/validate_blocks_without_eval/validate.json", "json_pointer": "/failure_count", "equals": 1}
+        ]
+      }
+    },
+    {
+      "name": "validate_ledger_accepts_ticket_disposition_plus_eval_proof",
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.gate.inspect"],
-      "seams": ["self_repair.ledger", "checkpoint.resume_gate"],
-      "command": [
-        "bash",
-        "-c",
-        "set -euo pipefail; TMP=/tmp/pipeline-self-repair-agentic-eval-inspect; rm -rf \"$TMP\"; mkdir -p \"$TMP\"; ../run.sh record-failure --pipeline monitor-opportunities --step-id nightly_publish --run-id eval-inspect --raw-signal 'nightly_revision_mismatch expected abc got def' --layer monitor-opportunities --target skills/monitor-opportunities --run-root \"$TMP\" --ledger \"$TMP/replay_ledger.jsonl\" --skip-memory --skip-github --no-ticket --json >/dev/null; ../run.sh inspect --ledger \"$TMP/replay_ledger.jsonl\" --json > \"$TMP/inspect.json\"; python3 - <<'PY'\nimport json\nroot='/tmp/pipeline-self-repair-agentic-eval-inspect'\nsummary=json.load(open(root+'/inspect.json'))\nassert summary['open_failure_count'] == 1, summary\nprint('PIPELINE_SELF_REPAIR_INSPECT_OK')\nPY"
-      ],
-      "timeout_seconds": 60,
+      "supports_claims": ["psr.resume_gate.eval_required"],
+      "seams": ["checkpoint.resume_gate"],
+      "command": ["python3", "../scripts/e2e_eval_cases.py", "validate-accepts-eval-ticket-disposition"],
+      "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_INSPECT_OK"],
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_VALIDATE_ACCEPTS_EVAL_OK"],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-agentic-eval-inspect/inspect.json", "json_pointer": "/open_failure_count", "equals": 1}
+          {"path": "/tmp/pipeline-self-repair-e2e/validate_accepts_eval/validate.json", "json_pointer": "/status", "equals": "PASS"},
+          {"path": "/tmp/pipeline-self-repair-e2e/validate_accepts_eval/validate.json", "json_pointer": "/failure_count", "equals": 0}
+        ]
+      }
+    },
+    {
+      "name": "agentic_eval_remediate_preview_records_projection",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "required": true,
+      "supports_claims": ["psr.agentic_eval.remediation_projection"],
+      "seams": ["agentic_eval.remediation_projection"],
+      "command": ["python3", "../scripts/e2e_eval_cases.py", "agentic-eval-remediate-preview"],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_AGENTIC_REMEDIATE_E2E_OK"],
+        "artifacts": [
+          {"path": "/tmp/pipeline-self-repair-e2e/agentic_eval_remediate/remediate.json", "json_pointer": "/status", "equals": "PASS"},
+          {"path": "/tmp/pipeline-self-repair-e2e/agentic_eval_remediate/remediate.json", "json_pointer": "/event/event_type", "equals": "agentic_eval.remediation_projected"}
         ]
       }
     },
