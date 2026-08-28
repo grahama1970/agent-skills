@@ -75,9 +75,13 @@ async def forward_to_webhook(
     # Apply rate limiting
     webhook_limiter.acquire()
 
-    # Determine payload based on webhook type
+    # Determine payload based on webhook type. Slack incoming webhooks require
+    # a top-level text field; the generic create-paper/dogpile payload is valid
+    # JSON but Slack rejects it with channel_not_found.
     if "discord.com/api/webhooks" in url:
         payload = {"embeds": [match.to_discord_embed()]}
+    elif "hooks.slack.com" in url:
+        payload = {"text": match.content[:3000]}
     else:
         payload = match.to_webhook_payload()
 
