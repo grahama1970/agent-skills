@@ -1,13 +1,20 @@
 ---
 name: best-practices-pi-extensions
 description: >
-  Best practices for creating, reviewing, and hardening Pi extensions. Use when building or changing ~/.pi/agent/extensions or .pi/extensions code, event handlers, custom tools, input/message hooks, retry guards, final-report guards, or humorous enforcement extensions such as lazy-report-shame-shame-shame.
+  Evidence-backed standards for creating, reviewing, and hardening Pi extensions.
+  Use when building or changing ~/.pi/agent/extensions or .pi/extensions code,
+  package-style Pi extensions, event handlers, custom tools, TypeBox schemas,
+  input/message/tool hooks, retry guards, final-report guards, or humorous but
+  serious enforcement extensions such as lazy-report-shame-shame-shame.
 triggers:
   - pi extension
   - pi extensions
+  - pi package extension
   - message_end extension
   - before_agent_start hook
   - input hook
+  - tool_call hook
+  - tool_result hook
   - custom pi tool
   - final report guard
   - lazy report shame
@@ -16,10 +23,12 @@ provides:
   - pi-extension-patterns
   - extension-validation
   - report-guard-design
+  - package-extension-standard
 composes:
   - unlazy
   - agentic-evals
   - memory
+  - brave-search
 complies:
   - best-practices-skills
   - best-practices-python
@@ -36,45 +45,60 @@ disciplines:
 
 # Pi Extensions Best Practices
 
-Use this before writing or reviewing Pi extensions.
+Use this before writing or reviewing Pi extensions. Do not invent an extension
+shape until you have read the Pi docs and the installed Nico Bailon extensions.
 
-## Required reading
+## Required evidence before implementation
 
-Read Pi docs and examples before implementation:
+Read the official Pi extension API:
 
 - `/home/graham/.local/share/pi-node/node-v22.23.2-linux-x64/lib/node_modules/@earendil-works/pi-coding-agent/docs/extensions.md`
-- Relevant files under `/home/graham/.local/share/pi-node/node-v22.23.2-linux-x64/lib/node_modules/@earendil-works/pi-coding-agent/examples/extensions/`
+- `/home/graham/.local/share/pi-node/node-v22.23.2-linux-x64/lib/node_modules/@earendil-works/pi-coding-agent/examples/extensions/`
 
-Use the installed `github.com/nicobailon` Pi extensions as the implementation standard before inventing a pattern:
+Apply current `$brave-search` results before finalizing public guidance. The
+current search receipts used for this standard are:
 
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/README.md`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/index.ts`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/config.ts`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/tests/`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/README.md`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/index.ts`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/broker/`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/*.test.ts`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/README.md`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/index.ts`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/*guard*.ts`
-- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/*test.ts`
+- `/tmp/bppe-brave-pi.json`: found `https://pi.dev/docs/latest/extensions`, the
+  upstream `earendil-works/pi` `docs/extensions.md`, the raw upstream docs, and
+  a mirror that documents `pi.sendUserMessage`.
+- `/tmp/bppe-brave-nico.json`: found Nico Bailon's `pi-interactive-shell`,
+  `pi-intercom`, and `pi-mcp-adapter` repositories.
 
-For final-report, retry, or anti-laziness work, also read `$unlazy` and its agent-skills workflow reference.
+Use installed Nico repos as concrete implementation examples:
 
-## Do not bespoke the enforcement pattern
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/`
 
-First copy the architectural style of `github.com/nicobailon` extensions:
+## Package and module layout
 
-- small `index.ts` entrypoint;
-- config isolated in `config.ts` when needed;
-- pure helper modules for parse/format/state logic;
-- tests beside the extension (`*.test.ts` or `tests/`);
-- bounded side effects through explicit Pi APIs or subprocess boundaries;
-- user-visible errors that name the failed contract and the next action;
-- no hidden global state unless it is intentionally persisted and tested.
+For distributable extensions, copy Nico's package shape:
 
-Use the smallest Pi event that owns the behavior:
+- `package.json` has `type: "module"`.
+- `package.json` declares `pi.extensions` and, when bundled skills exist,
+  `pi.skills`.
+- Pi host packages and `typebox` are `peerDependencies`, not vendored copies.
+- `scripts.test` exists; TypeScript-heavy extensions also have `typecheck`.
+- `files` explicitly lists shipped modules, skills, examples, and README assets.
+- `index.ts` registers the extension and delegates nontrivial logic to modules.
+
+Keep modules separated by responsibility:
+
+| Concern | Pattern from Nico extensions |
+| --- | --- |
+| User-facing registration | `index.ts` |
+| Config loading/merge | `config.ts` (`pi-interactive-shell`, `pi-intercom`, `pi-mcp-adapter`) |
+| Long-lived sessions | `session-manager.ts`, `runtime-coordinator.ts`, broker client/runtime modules |
+| UI overlays/panels | `overlay-component.ts`, `mcp-setup-panel.ts`, `ui/**` |
+| Output bounding | `mcp-output-guard.ts`, `tool-result-renderer.ts` |
+| Tests | `*.test.ts`, `__tests__/`, `conformance/run.sh` |
+
+Do not hide complex parsing, state transitions, subprocess handling, or output
+truncation inside one giant `index.ts`.
+
+## Pi APIs by use case
+
+Use the smallest Pi event/API that owns the behavior:
 
 | Need | Pi event/API |
 | --- | --- |
@@ -84,18 +108,66 @@ Use the smallest Pi event that owns the behavior:
 | Modify tool evidence | `tool_result` |
 | Reject or replace assistant prose | `message_end` |
 | Force another model attempt | `pi.sendUserMessage(..., { deliverAs: "followUp" })` |
+| Wake the model after an event | `pi.sendMessage(..., { triggerTurn: true })` |
+| Register agent tools | `defineTool` with `Type.Object` schemas |
 | Show operator-visible status | `ctx.ui.notify`, `ctx.ui.setStatus`, `ctx.ui.setWidget` |
+| Open rich UI | `ctx.ui.custom`, gated by `ctx.hasUI` / `ctx.mode` |
+| Clean long-lived resources | `session_shutdown`, `dispose`, abort/teardown handlers |
+
+If a feature can run headless, it must not require `ctx.ui.custom`. Follow
+`pi-mcp-adapter`: notify that the interactive panel is unavailable and give a
+CLI/config fallback when `ctx.hasUI` is false or the mode cannot show UI.
+
+## Tool schemas and result surfaces
+
+Custom tools are user-visible APIs. Use Nico's `defineTool` + `Type.Object`
+style, and keep these rules:
+
+- Every parameter has a bounded schema and description.
+- Tool return content is concise; put bulky machine-readable data in `details` or
+  a saved artifact.
+- Errors are structured and name the next valid action.
+- Do not dump arbitrary MCP/provider output into the model context.
+- Use an output guard pattern like `guardMcpOutput` in `mcp-output-guard.ts`:
+  normalize blocks, bound text, preserve images separately, spill oversized raw
+  results, and expose the spill location in details.
+
+## Lifecycle, concurrency, and cleanup
+
+Nico's extensions are long-running because they own PTYs, broker sockets, MCP
+server runtimes, OAuth callbacks, monitors, and UI panels. Copy the cleanup
+contract even for smaller extensions:
+
+- Register lifecycle handlers such as `session_start` and `session_shutdown`.
+- Track ownership/generation so stale async callbacks cannot mutate a newer
+  session.
+- Provide `dispose` for sessions, overlays, monitors, sockets, and panels.
+- Use explicit abort/timeouts for subprocesses and network calls.
+- When a background process remains alive, expose a session id and status widget
+  rather than hiding it.
+
+## Config and trust boundaries
+
+- Prefer global config under `~/.pi/agent/...` plus project overrides only after
+  project trust is established.
+- Read config through a dedicated loader, validate types, and use safe defaults.
+- Never execute repository text as code merely because a config file names it.
+- Treat extensions as full-permission code. Do not patch Pi internals or
+  `node_modules` for normal behavior.
 
 ## Desperation guards must be deterministic
 
-If the extension exists because agents ignored prose, do not ask the same agent to judge itself.
+If the extension exists because agents ignored prose, do not ask the same agent
+to judge itself.
 
 - Put the decision in a deterministic checker script.
 - The extension calls the checker and uses its exit code.
 - The checker prints exact rejection reasons.
 - The rejected assistant answer must not remain the accepted final answer.
-- Queue a forced retry with the checker diagnostics in the retry prompt.
-- If a retry fails, queue another retry or hand off to the human with a rejection notice; never allow the lazy answer as success.
+- Queue a forced retry with checker diagnostics using
+  `pi.sendUserMessage(..., { deliverAs: "followUp" })`.
+- If a retry fails, queue another retry or hand off to the human with a rejection
+  notice; never allow the lazy answer as success.
 
 ## Final-report guards
 
@@ -103,10 +175,12 @@ Reject reports that launder failure as progress:
 
 - vague unresolved-work language without exact rows;
 - `Committed and pushed`, branch names, SHAs, or hook status used as the result;
-- `mostly done`, `partially complete`, `remaining gates`, `open items`, or `what remains` without exact gate IDs;
-- counts that do not include rows and proof boundaries.
+- `mostly done`, `partially complete`, `remaining gates`, `open items`, or
+  `what remains` without exact gate IDs;
+- counts that do not include rows and proof boundaries;
+- progress reports with no immutable `goal-drift` boundary.
 
-Require:
+Require this shape:
 
 ```text
 Progress:
@@ -114,24 +188,52 @@ Progress:
 MET: <n>
 UNMET: <n>
 ABANDONED: <n>
-- UNMET `Gx`: failed condition: <exact condition>. Next legal command: <command/owner>. Receipt: <path>. Proof boundary: <what was and was not proven>.
+Immutable Goal: <goal-drift status and hash>
+- UNMET `Gx`: failed condition: <exact condition>. Next legal command:
+  <command/owner>. Receipt: <path>. Proof boundary: <what was and was not proven>.
 ```
 
-## Safety and portability
+## Executable evaluation is mandatory
 
-- Global extensions live under `~/.pi/agent/extensions/`; project extensions under `.pi/extensions/` after project trust.
-- Extensions run with full user permissions. Do not execute repository text unless the user approved that boundary.
-- Keep extension-local deterministic scripts dependency-light and executable with `node`.
-- Do not patch Pi internals or `node_modules` for normal extension behavior.
-- Test via `pi -e /path/to/extension -p '<prompt>'` and read stdout/stderr.
-- Use TypeScript through Pi/Jiti; `node --check` does not parse TypeScript annotations.
+This skill is a standard, but it still ships executable gates. Any Pi extension
+skill or package must include `$agentic-evals` posture, not just prose.
 
-## Validation checklist
+Minimum fixture requirements:
 
-Before reporting success:
+- `fixtures/agentic_eval.json` version 2.
+- `trials >= 2`.
+- At least one positive real-world case using a script, skill entrypoint,
+  test runner, or live API path.
+- At least one negative or adversarial case that proves the checker fails when a
+  required rule is removed.
+- `capability_claims` and `seams` for any operational capability.
+- Explicit proof boundary: what the eval proves and what it does not prove.
 
-1. Direct checker positive and negative fixtures pass.
-2. Live Pi print-mode test loads the extension.
-3. Live rejection path replaces bad output.
-4. Live retry path produces a second model turn or a fail-closed handoff.
-5. The report names proof boundaries and does not count Git metadata as the result.
+The canonical validator for this skill is:
+
+```bash
+python3 skills/best-practices-pi-extensions/scripts/check_pi_extension_standard.py \
+  --skill-dir skills/best-practices-pi-extensions \
+  --alias-dir skills/best-practices-pi-extension
+```
+
+Run the agentic eval with:
+
+```bash
+skills/agentic-evals/run.sh run skills/best-practices-pi-extensions/fixtures/agentic_eval.json
+skills/agentic-evals/run.sh run skills/best-practices-pi-extension/fixtures/agentic_eval.json
+```
+
+## Validation checklist before reporting success
+
+1. `best-practices-skills/scripts/validate_skill.py` passes for the canonical
+   skill and the alias.
+2. `scripts/check_pi_extension_standard.py` passes against the canonical skill
+   and alias.
+3. `$agentic-evals` fixture passes and includes negative/adversarial cases.
+4. If code changed, package tests/typecheck run (`npm test`, `vitest`, `tsx
+   --test`, or the extension's actual script).
+5. If a Pi extension changed, run a live Pi print-mode or isolated extension-load
+   test and read back stdout/stderr.
+6. Report the proof boundary; Git metadata and unit tests are supporting
+   evidence only.

@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "skill": "best-practices-pi-extensions",
+  "trials": 2,
+  "live": true,
+  "proof_scope": "real skill/alias files are checked by the Pi-extension standard validator; adversarial temp copies remove required clauses to prove the gate fails closed",
+  "claims": {
+    "proves": "the Pi-extension standard cites official Pi docs, Brave-search evidence, Nico Bailon extension patterns, TypeBox tool schemas, lifecycle cleanup, output guarding, deterministic report guards, and executable eval posture",
+    "does_not_prove": "that any future Pi extension is correct, safe, loaded in a live Pi session, or human-accepted; each extension still needs its own load/effect readback"
+  },
+  "capability_claims": [
+    {
+      "id": "bppe.standard.sources",
+      "description": "the standard is grounded in official Pi docs, Brave-search receipts, and installed Nico extension implementations",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true, "fault_injected_deterministic": true}
+    },
+    {
+      "id": "bppe.standard.evals",
+      "description": "the standard requires executable agentic eval fixtures and fails when eval posture is removed",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true, "fault_injected_deterministic": true}
+    },
+    {
+      "id": "bppe.alias.routing",
+      "description": "the singular/typo alias routes to the canonical plural standard and carries its own eval posture",
+      "criticality": "important",
+      "evidence_required": {"deterministic": true}
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "standard.source-grounding",
+      "claim_id": "bppe.standard.sources",
+      "seam_type": "documentation/runtime-source-readback",
+      "criticality": "critical",
+      "failure_modes": ["standard omits Nico examples", "standard omits Brave-search grounding", "standard omits Pi docs"],
+      "required_evidence": ["deterministic", "fault_injected_deterministic"]
+    },
+    {
+      "seam_id": "standard.eval-posture",
+      "claim_id": "bppe.standard.evals",
+      "seam_type": "fixture-contract",
+      "criticality": "critical",
+      "failure_modes": ["agentic-evals is documented but no fixture exists", "fixture lacks negative cases"],
+      "required_evidence": ["deterministic", "fault_injected_deterministic"]
+    },
+    {
+      "seam_id": "alias.canonical-routing",
+      "claim_id": "bppe.alias.routing",
+      "seam_type": "skill-routing",
+      "criticality": "important",
+      "failure_modes": ["alias becomes a parallel standard", "typo trigger disappears"],
+      "required_evidence": ["deterministic"]
+    }
+  ],
+  "cases": [
+    {
+      "name": "canonical-skill-contract-validates",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": ["bppe.standard.evals"],
+      "seams": ["standard.eval-posture"],
+      "timeout_seconds": 60,
+      "command": ["python3", "../../best-practices-skills/scripts/validate_skill.py", "..", "--json"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "canonical-standard-and-alias-live-file-check",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["bppe.standard.sources", "bppe.standard.evals", "bppe.alias.routing"],
+      "seams": ["standard.source-grounding", "standard.eval-posture", "alias.canonical-routing"],
+      "timeout_seconds": 60,
+      "command": ["python3", "../scripts/check_pi_extension_standard.py", "--skill-dir", "..", "--alias-dir", "../../best-practices-pi-extension"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PI_EXTENSION_STANDARD_OK"]}
+    },
+    {
+      "name": "missing-agentic-evals-is-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["bppe.standard.evals"],
+      "seams": ["standard.eval-posture"],
+      "timeout_seconds": 60,
+      "command": ["bash", "-c", "T=$(mktemp -d); cp -R .. \"$T/skill\"; python3 - \"$T/skill/SKILL.md\" \"$T/skill/README.md\" \"$T/skill/PROJECT_KNOWLEDGE.md\" \"$T/skill/fixtures/agentic_eval.json\" <<'PY'\nimport pathlib, sys\nfor raw in sys.argv[1:]:\n    p = pathlib.Path(raw)\n    text = p.read_text()\n    text = text.replace('agentic-evals', 'agentic evals removed')\n    text = text.replace('agentic_eval.json', 'eval_removed.json')\n    p.write_text(text)\nPY\npython3 \"$T/skill/scripts/check_pi_extension_standard.py\" --skill-dir \"$T/skill\" --skip-nico; rc=$?; rm -rf \"$T\"; exit $rc"],
+      "expected": {"exit_code": 1, "stdout_contains": ["PI_EXTENSION_STANDARD_FAIL", "agentic-evals"]}
+    },
+    {
+      "name": "missing-nico-source-grounding-is-rejected",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["bppe.standard.sources"],
+      "seams": ["standard.source-grounding"],
+      "timeout_seconds": 60,
+      "command": ["bash", "-c", "T=$(mktemp -d); cp -R .. \"$T/skill\"; python3 - \"$T/skill/SKILL.md\" \"$T/skill/README.md\" \"$T/skill/PROJECT_KNOWLEDGE.md\" <<'PY'\nimport pathlib, sys\nfor raw in sys.argv[1:]:\n    p = pathlib.Path(raw)\n    text = p.read_text()\n    text = text.replace('pi-mcp-adapter', 'pi-mcp-example-removed')\n    text = text.replace('github.com/nicobailon', 'github.com/example-removed')\n    p.write_text(text)\nPY\npython3 \"$T/skill/scripts/check_pi_extension_standard.py\" --skill-dir \"$T/skill\" --skip-nico; rc=$?; rm -rf \"$T\"; exit $rc"],
+      "expected": {"exit_code": 1, "stdout_contains": ["PI_EXTENSION_STANDARD_FAIL", "Nico"]}
+    }
+  ]
+}

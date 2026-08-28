@@ -1,35 +1,55 @@
 # best-practices-pi-extensions
 
-Pi extensions are where agent behavior becomes mechanical instead of aspirational.
+Pi extensions turn agent instructions into executable behavior. This skill is
+the standard for building them without guessing.
 
-This skill exists because prose rules were not enough. An agent can read “do not claim progress without proof,” then still write “committed and pushed, done” while the actual artifact is broken, untested, or not even the requested thing. Humans then become the quality gate for basic instruction-following.
+The current standard is grounded in three evidence sources:
 
-`lazy-report-shame-shame-shame` is the memorable example: a serious final-report rejection guard wrapped in a joke. The joke is the shame bell. The point is stopping fake progress reports before they land as the final answer.
+1. Pi's installed extension docs and examples under
+   `/home/graham/.local/share/pi-node/node-v22.23.2-linux-x64/lib/node_modules/@earendil-works/pi-coding-agent/`.
+2. `$brave-search` receipts saved at `/tmp/bppe-brave-pi.json` and
+   `/tmp/bppe-brave-nico.json`, which point back to `pi.dev/docs/latest/extensions`,
+   upstream `earendil-works/pi` docs, and Nico Bailon's public Pi extension repos.
+3. Installed Nico Bailon extension code:
+   - `pi-interactive-shell`
+   - `pi-intercom`
+   - `pi-mcp-adapter`
 
-## Why this skill is necessary
+## What Nico's extensions establish as the baseline
 
-Agentic engineering fails in a repeatable way:
+Use Nico's extensions as concrete examples before inventing new patterns:
 
-1. The human gives a concrete instruction.
-2. The agent substitutes an adjacent task that is easier to satisfy.
-3. The agent reports tool success, Git metadata, or unit tests as if they were user-visible progress.
-4. The human notices the artifact still does not meet the goal.
-5. The agent apologizes, tweaks something else, and repeats the loop.
-
-A Pi extension can break that loop because it runs outside the model’s self-assessment. It can reject the answer after generation, replace it with a visible failure notice, and force another model turn with the exact unmet gates.
+- `package.json` declares `pi.extensions`, `pi.skills`, `peerDependencies`, and
+  real test scripts.
+- `index.ts` registers tools/events and delegates implementation to focused
+  modules.
+- Tool APIs use `defineTool` and `Type.Object` schemas.
+- Interactive flows gate UI with `ctx.hasUI` / `ctx.mode`, then use
+  `ctx.ui.notify`, `ctx.ui.custom`, or `ctx.ui.setWidget`.
+- Long-lived runtimes register `session_start`, `session_shutdown`, and `dispose`
+  cleanup paths.
+- Agent wakeups use explicit message APIs such as
+  `pi.sendMessage(..., { triggerTurn: true })` or
+  `pi.sendUserMessage(..., { deliverAs: "followUp" })`.
+- Bulky provider/MCP output is bounded with an output guard such as
+  `guardMcpOutput` in `mcp-output-guard.ts`, with spill metadata instead of
+  silent context flooding.
 
 ## The Shame-Shame-Shame pattern
+
+`lazy-report-shame-shame-shame` is the memorable example: a serious final-report
+rejection guard wrapped in a joke. The joke is the bell. The point is stopping
+fake progress reports before they land as the final answer.
 
 Use this pattern when a failure mode is too costly to trust to reminders:
 
 - deterministic checker decides pass/fail;
-- `message_end` intercepts the assistant’s final prose;
+- `message_end` intercepts the assistant's final prose;
 - rejected output is replaced, not merely warned about;
 - retry is queued with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
 - every retry must satisfy the same checker;
-- the report must compare against an immutable `$goal-drift` goal.
-
-The extension should be funny enough that engineers remember it and serious enough that agents cannot bypass it.
+- the report must compare against an immutable `$goal-drift` goal and proof
+  boundary.
 
 ## What counts as progress
 
@@ -57,32 +77,23 @@ Immutable Goal: ACHIEVED_WITH_RECEIPT:/path/to/receipt.json
 goal_hash: sha256:<goal-drift-hash>
 ```
 
-## Required proof boundary
+## Executable evals
 
-Every claim must say what command or artifact proved it. If the extension plays audio, the receipt must name:
+This skill ships an executable validator and `$agentic-evals` fixture. The
+eval is intentionally not just a formatting test: it includes negative cases
+that remove required terms and prove the validator fails.
 
-- source audio path;
-- voice source and reference identity;
-- timing contract;
-- output path;
-- hash;
-- playback command result;
-- what remains subjective or unproven.
+Run:
 
-## Relationship to `lazy-report-shame-shame-shame`
+```bash
+python3 skills/best-practices-pi-extensions/scripts/check_pi_extension_standard.py \
+  --skill-dir skills/best-practices-pi-extensions \
+  --alias-dir skills/best-practices-pi-extension
 
-`lazy-report-shame-shame-shame` is local machine state under:
-
-```text
-~/.pi/agent/extensions/lazy-report-shame-shame-shame/
+skills/agentic-evals/run.sh run skills/best-practices-pi-extensions/fixtures/agentic_eval.json
 ```
 
-This skill is the reusable engineering rulebook for future Pi extensions, so the next agent does not reinvent the same guard badly.
-
-## Compliance
-
-This skill follows:
-
-- `$best-practices-skills` for frontmatter, triggers, `provides`, `composes`, and `complies` metadata;
-- `$best-practices-python` by avoiding Python runtime code in the skill itself; any future Python helper must use Typer, pathlib, httpx, validation, and non-mocked sanity checks;
-- `$project-knowledge` by maintaining `PROJECT_KNOWLEDGE.md` beside the skill.
+The proof boundary is limited: these checks prove the standard contains the
+required API, source, and eval contracts. They do not prove that a future Pi
+extension is safe or accepted until that extension has its own live load test,
+negative guard test, and effect readback.

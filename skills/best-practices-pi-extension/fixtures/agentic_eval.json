@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "skill": "best-practices-pi-extension",
+  "trials": 2,
+  "live": true,
+  "proof_scope": "alias routing is checked against real alias/canonical skill files; adversarial temp copy removes canonical composition to prove fail-closed behavior",
+  "claims": {
+    "proves": "the singular alias routes to the canonical plural Pi-extension standard, carries typo triggers, composes agentic-evals, and has an executable eval fixture",
+    "does_not_prove": "that Pi's runtime selector will choose this alias in every prompt wording, or that any future extension implementation is correct"
+  },
+  "capability_claims": [
+    {
+      "id": "bppe.alias.routing",
+      "description": "the alias composes the canonical plural standard and retains typo-compatible triggers",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true, "fault_injected_deterministic": true}
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "alias.canonical-routing",
+      "claim_id": "bppe.alias.routing",
+      "seam_type": "skill-routing",
+      "criticality": "critical",
+      "failure_modes": ["alias loses canonical compose", "alias drops typo trigger", "alias loses eval fixture"],
+      "required_evidence": ["deterministic", "fault_injected_deterministic"]
+    }
+  ],
+  "cases": [
+    {
+      "name": "alias-skill-contract-validates",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": ["bppe.alias.routing"],
+      "seams": ["alias.canonical-routing"],
+      "timeout_seconds": 60,
+      "command": ["python3", "../../best-practices-skills/scripts/validate_skill.py", "..", "--json"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "alias-routes-to-canonical-live-file-check",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["bppe.alias.routing"],
+      "seams": ["alias.canonical-routing"],
+      "timeout_seconds": 60,
+      "command": ["python3", "../../best-practices-pi-extensions/scripts/check_pi_extension_standard.py", "--skill-dir", "../../best-practices-pi-extensions", "--alias-dir", ".."],
+      "expected": {"exit_code": 0, "stdout_contains": ["PI_EXTENSION_STANDARD_OK"]}
+    },
+    {
+      "name": "alias-missing-canonical-compose-is-rejected",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["bppe.alias.routing"],
+      "seams": ["alias.canonical-routing"],
+      "timeout_seconds": 60,
+      "command": ["bash", "-c", "T=$(mktemp -d); cp -R .. \"$T/alias\"; python3 - \"$T/alias/SKILL.md\" \"$T/alias/README.md\" \"$T/alias/PROJECT_KNOWLEDGE.md\" \"$T/alias/fixtures/agentic_eval.json\" <<'PY'\nimport pathlib, sys\nfor raw in sys.argv[1:]:\n    p = pathlib.Path(raw)\n    text = p.read_text()\n    text = text.replace('best-practices-pi-extensions', 'parallel-pi-extension-standard')\n    p.write_text(text)\nPY\npython3 ../../best-practices-pi-extensions/scripts/check_pi_extension_standard.py --skill-dir ../../best-practices-pi-extensions --alias-dir \"$T/alias\"; rc=$?; rm -rf \"$T\"; exit $rc"],
+      "expected": {"exit_code": 1, "stdout_contains": ["PI_EXTENSION_STANDARD_FAIL", "canonical"]}
+    }
+  ]
+}

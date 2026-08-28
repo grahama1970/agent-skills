@@ -1,67 +1,93 @@
 # Project Knowledge: best-practices-pi-extensions
 
-**Last updated:** 2026-08-28 by agent
-**Status:** Active development
+**Last updated:** 2026-08-28 by agent  
+**Status:** Active standard with executable eval fixture
 
 ## Current Understanding
 
-- This skill exists because agent instruction-following failures became expensive enough to need mechanical enforcement, not another prose rule.
-- The motivating example is `lazy-report-shame-shame-shame`, a Pi extension that rejects lazy final reports and forces a retry against an immutable `$goal-drift` goal.
-- The human-facing value is partly comedic and partly restorative: agentic engineers can recognize the “shame bell” failure mode because they have been forced to babysit agents that claim progress from commits, tests, or vague summaries.
-- The engineering value is serious: report acceptance must be decided by deterministic code outside the model’s self-assessment loop.
-- Git metadata, hook status, unit tests, and “done” language are retention/supporting evidence only. They do not count as progress without a verified user-visible or project-visible artifact.
+- This skill exists because agent instruction-following failures became expensive
+  enough to need mechanical enforcement, not another prose rule.
+- The motivating example is `lazy-report-shame-shame-shame`, a Pi extension that
+  rejects lazy final reports and forces a retry against an immutable `$goal-drift`
+  goal.
+- The reusable standard is now grounded in official Pi docs, `$brave-search`
+  receipts, and installed Nico Bailon extension implementations.
+- Git metadata, hook status, unit tests, and “done” language are retention or
+  supporting evidence only. They do not count as progress without a verified
+  user-visible or project-visible artifact.
+
+## Evidence Sources Read
+
+| Source | What it contributed |
+|---|---|
+| Pi `docs/extensions.md` | Event hooks, `pi.sendUserMessage`, `pi.sendMessage`, command/context APIs, extension load model. |
+| Pi `examples/extensions/input-transform.ts` | Minimal `input` hook pattern. |
+| Pi `examples/extensions/permission-gate.ts` | Tool-call gate pattern. |
+| Pi `examples/extensions/send-user-message.ts` | Agent wakeup / user-message pattern. |
+| `/tmp/bppe-brave-pi.json` | Current public docs locations: `pi.dev/docs/latest/extensions`, upstream GitHub docs, raw docs, mirror. |
+| `/tmp/bppe-brave-nico.json` | Current public Nico repos: `pi-interactive-shell`, `pi-intercom`, `pi-mcp-adapter`. |
+| `pi-interactive-shell` | Package metadata, UI overlays, PTY lifecycle, background widgets, `triggerTurn`, cleanup. |
+| `pi-intercom` | Brokered local messaging, `defineTool`/`Type.Object`, lifecycle tests, supervisor contact path. |
+| `pi-mcp-adapter` | Token-efficient proxy design, config loading, OAuth/session recovery, output guard/spill, direct tool registration. |
 
 ## Recent Decisions
 
 | Date | Decision | Why |
 |---|---|---|
-| 2026-08-28 | Add `best-practices-pi-extensions` as a reusable skill. | Future agents should not guess Pi extension APIs or invent bespoke report guards. |
-| 2026-08-28 | Use `message_end` for final-report rejection. | The bad output must be intercepted after generation and before acceptance. |
-| 2026-08-28 | Require forced retry via `pi.sendUserMessage(..., { deliverAs: "followUp" })`. | A rejected answer must not remain the final answer. |
-| 2026-08-28 | Require immutable `$goal-drift` boundary for guarded progress reports. | Without a goal, the checker can only police wording and cannot know whether the work served the objective. |
-| 2026-08-28 | Document the `lazy-report-shame-shame-shame` failure spiral explicitly. | The extension exists because of repeated lazy, unverified, substitution-heavy agent behavior; future agents need that context. |
+| 2026-08-28 | Keep canonical skill plural: `best-practices-pi-extensions`. | The standard covers a class of package/local/project extensions. |
+| 2026-08-28 | Keep singular alias: `best-practices-pi-extension`. | Reduces human babysitting for singular/plural or typo drift. |
+| 2026-08-28 | Require `agentic-evals` fixture instead of only documenting eval posture. | Standards must be executable; prose-only checks recreate the original failure. |
+| 2026-08-28 | Use Nico Bailon's installed extensions as implementation standard. | They show working package metadata, lifecycle cleanup, UI gating, tool schemas, output guarding, and tests. |
+| 2026-08-28 | Use Brave search receipts as current external-source grounding. | Avoid relying only on memory of Pi docs or locally cached assumptions. |
 
-## Open Questions
+## Concrete Standard Now Enforced
 
-- [ ] Should the local `lazy-report-shame-shame-shame` extension be promoted into the repo as a project extension after the audio and UX are accepted?
-- [ ] Should the deterministic report checker become a template under this skill for future extensions?
-- [ ] Should there be a standard Pi extension eval fixture format for `message_end` rejection loops?
-- [ ] Should audio/UX assets for humorous enforcement extensions live under `/mnt/storage12tb/skills/...` with symlinks to avoid root NVMe artifact drift?
+- `package.json` for distributable extensions should include `type: "module"`,
+  `pi.extensions`, optional `pi.skills`, peer dependencies on Pi host packages,
+  and test/typecheck scripts.
+- `index.ts` should be a registration/orchestration layer, not a dumping ground
+  for config parsing, state machines, subprocess control, or output truncation.
+- Custom tools should use `defineTool` plus bounded `Type.Object` schemas.
+- UI must degrade in non-UI modes: check `ctx.hasUI` / `ctx.mode` before
+  `ctx.ui.custom` and provide a CLI/config fallback.
+- Long-lived resources need `session_start`, `session_shutdown`, stale-generation
+  guards, and `dispose` paths.
+- Output from MCP/providers must be guarded, truncated, or spilled with metadata;
+  no unbounded context dumps.
+- Desperation/report guards must be deterministic: checker exit code decides,
+  bad output is replaced, and retry uses `pi.sendUserMessage(..., { deliverAs:
+  "followUp" })`.
+- Final reports must name immutable `$goal-drift` boundary, exact MET/UNMET rows,
+  receipts, and proof boundary.
 
-## Key Files
+## Executable Gates
 
 | File | Purpose |
 |---|---|
-| `SKILL.md` | Agent-facing instructions for building/reviewing Pi extensions. |
-| `README.md` | Human-facing explanation of why this skill exists and the Shame-Shame-Shame pattern. |
-| `PROJECT_KNOWLEDGE.md` | Current-state projection for this skill. |
-| `~/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts` | Local extension implementation that rejects lazy final reports. |
-| `~/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs` | Deterministic checker used by the extension. |
-| `~/.pi/agent/extensions/lazy-report-shame-shame-shame/README.md` | Local extension README with the serious/joke contract. |
+| `scripts/check_pi_extension_standard.py` | Validates that the skill standard names required Pi APIs, Nico-derived patterns, Brave evidence, and eval posture. |
+| `fixtures/agentic_eval.json` | Multi-trial `$agentic-evals` fixture with positive and adversarial cases for the canonical skill. |
+| `../best-practices-pi-extension/fixtures/agentic_eval.json` | Alias fixture that proves singular/typo routing stays pointed at the canonical skill. |
 
-## Infrastructure State
+## Open Questions
 
-- The skill is documentation-only at the moment: no Python package, no `run.sh`, and no `sanity.sh`.
-- Because there is no Python runtime code in the skill, `$best-practices-python` applies as a future-code constraint rather than an existing-code audit surface.
-- The local extension is outside the repo under `~/.pi/agent/extensions/`; repo retention currently covers the reusable skill, not the local extension code or audio assets.
-- The local extension audio remains a human-subjective UX artifact; do not claim it is accepted until the human says it is.
-
-## Known Failure Mode That Created This Skill
-
-The concrete failure this skill is meant to prevent:
-
-1. The human requested a humorous but serious Pi extension that punishes lazy reports.
-2. The agent created the enforcement core but then repeatedly substituted adjacent audio artifacts and claimed progress too early.
-3. The agent said “Embry Chatterbox voice” before proving the actual voice reference.
-4. Later readback showed that the mounted `/data/embry_ref.wav` path alone was not enough evidence of canonical Embry identity.
-5. The human had to repeatedly restate obvious requirements: three shames, followed by a bell, correct cadence, hand-rung bell, no fake voice claims.
-
-The lesson is not “try harder.” The lesson is: Pi extensions for anti-laziness must include deterministic checkers, receipts, immutable goals, and project knowledge so future agents cannot launder guesses into facts.
+- [ ] Should the local `lazy-report-shame-shame-shame` extension be promoted into
+  the repo as a project extension after audio and UX are accepted?
+- [ ] Should `scripts/check_pi_extension_standard.py` become a reusable template
+  generator for future Pi-extension standards?
+- [ ] Should Pi itself add native alias metadata so typo-compatible skill folders
+  are unnecessary?
+- [ ] Should audio/UX assets for humorous enforcement extensions live under
+  `/mnt/storage12tb/skills/...` with symlinks to avoid root NVMe artifact drift?
 
 ## Current Proof Boundary
 
-- VERIFIED: `SKILL.md` exists and has frontmatter with triggers, provides, composes, and complies metadata.
-- VERIFIED: `README.md` now explains why the skill exists.
-- VERIFIED: `PROJECT_KNOWLEDGE.md` now records the origin, decisions, and known failure mode.
+- VERIFIED by `scripts/check_pi_extension_standard.py`: the current standard
+  carries required Pi API terms, Nico extension examples, Brave-search evidence,
+  deterministic guard requirements, and agentic-evals posture.
+- VERIFIED by `$agentic-evals` when run: the validator passes on the real skill
+  and fails when required `agentic-evals` or Nico-source requirements are removed.
 - UNPROVEN: the local shame audio is human-accepted.
-- UNPROVEN: the local extension is ready for repo promotion.
+- UNPROVEN: the local `lazy-report-shame-shame-shame` extension is ready for repo
+  promotion.
+- UNPROVEN: any future Pi extension is correct merely because it cites this
+  standard; each extension still needs its own live load/effect readback.
