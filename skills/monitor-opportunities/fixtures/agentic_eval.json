@@ -201,6 +201,35 @@
       "does_not_prove": "A fresh full nightly passed LinkedIn capture, that Cognition is geographically eligible, or that Graham authorized an application."
     },
     {
+      "name": "linkedin-null-js-failsoft",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "browser_capture.linkedin_top_applicant",
+        "browser_capture.linkedin_premium",
+        "surf.javascript_return_decode"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_linkedin_search.py::test_top_applicant_capture_handles_null_js_result skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_capture_handles_null_js_result_as_empty -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ],
+        "stderr_excludes": [
+          "NoneType",
+          "TypeError"
+        ]
+      },
+      "proves": "LinkedIn Top Applicant and Premium extraction passes where Surf returns JavaScript null are treated as empty page samples instead of crashing the nightly before source accounting can write receipts.",
+      "does_not_prove": "That a fresh LinkedIn authenticated browser session exposes Top Applicant or Easy Apply rows."
+    },
+    {
       "name": "moog-workday-source-discovery",
       "type": "negative",
       "real_world": true,

@@ -148,6 +148,26 @@ console.log(eval({json.dumps(bc._LINKEDIN_EXTRACT_JS)}));
     assert rows[0]["easy_apply"] is True
 
 
+def test_top_applicant_capture_handles_null_js_result(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_surf_js(_surf_run, _tab_id, script, **_kwargs):
+        calls.append(script)
+        if "querySelectorAll" in script:
+            return "null"
+        if "jobs-search-results-list" in script:
+            return "SCROLLED"
+        return "NO_NEXT_PAGE"
+
+    monkeypatch.setattr(bc, "_surf_js", fake_surf_js)
+    monkeypatch.setattr(bc, "_surf_pause", lambda *args, **kwargs: None)
+
+    rows = bc._linkedin_scroll_paginate_capture("/does/not/matter", "123", max_pages=1)
+
+    assert rows == []
+    assert calls.count(bc._LINKEDIN_EXTRACT_JS) == 3
+
+
 def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_counts(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(bc, "ensure_browser", lambda surf_run: None)
     monkeypatch.setattr(bc, "_surf_pause", lambda *args, **kwargs: None)
@@ -185,6 +205,33 @@ def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_count
     assert receipt["top_applicant_count"] == 0
     assert receipt["easy_apply_count"] == 0
     assert receipt["under_10_applicants_count"] == 1
+
+
+def test_premium_capture_handles_null_js_result_as_empty(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(bc, "ensure_browser", lambda surf_run: None)
+    monkeypatch.setattr(bc, "_surf_pause", lambda *args, **kwargs: None)
+    monkeypatch.setattr(bc, "_close_tab", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        bc,
+        "linkedin_search_queries_from_profile",
+        lambda profile: [{"label": "agentic AI engineer | remote+hybrid", "url": "https://www.linkedin.com/jobs/search/?keywords=agentic"}],
+    )
+
+    def fake_surf(_surf_run, command, *args, **kwargs):
+        if command == "tab.new":
+            return "456: created"
+        script = " ".join(str(arg) for arg in args)
+        if "location.href" in script:
+            return "NAV"
+        return "null"
+
+    monkeypatch.setattr(bc, "_surf", fake_surf)
+
+    receipt = capture_linkedin_premium(tmp_path, profile={})
+
+    assert receipt["status"] == "EMPTY"
+    assert receipt["opportunities_captured"] == 0
+    assert receipt["query_failures"] == []
 
 
 def test_premium_js_skips_verification_badge_line() -> None:

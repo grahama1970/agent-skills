@@ -262,6 +262,16 @@ def _surf_js(surf_run: Path, tab_id: str, script: str, *, timeout: int = 90) -> 
     return _surf(surf_run, "js", script, "--tab-id", tab_id, timeout=timeout)
 
 
+def _surf_json_value(raw: str, default: Any) -> Any:
+    try:
+        decoded = json.loads(raw)
+        if isinstance(decoded, str):
+            decoded = json.loads(decoded)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return default
+    return default if decoded is None else decoded
+
+
 def _current_tab_ids(surf_run: Path) -> set[str] | None:
     try:
         raw = _surf(surf_run, "tab.list", "--json", timeout=20)
@@ -809,10 +819,7 @@ def _linkedin_scroll_paginate_capture(surf_run: Path, tab_id: str, max_pages: in
         stable = 0
         for _ in range(12):
             raw = _surf_js(surf_run, tab_id, _LINKEDIN_EXTRACT_JS, timeout=30)
-            try:
-                rows = json.loads(json.loads(raw))
-            except (ValueError, json.JSONDecodeError):
-                rows = []
+            rows = _surf_json_value(raw, [])
             new = 0
             for r in rows:
                 title = (r.get("title") or "").strip()
@@ -2129,7 +2136,7 @@ def capture_linkedin_premium(
                     _surf_js(surf_run, tab_id, _nav_js(url), timeout=20)
                 _surf_pause(surf_run, "8")
                 raw = _surf_js(surf_run, tab_id, _LI_ARIA_EXTRACT_JS, timeout=30)
-                for r in json.loads(json.loads(raw)):
+                for r in _surf_json_value(raw, []):
                     if r.get("title"):
                         r["matched_query"] = query["label"] + " | " + lane_label
                         if lane_warm:
