@@ -22,6 +22,7 @@ composes:
   - memory
 complies:
   - best-practices-skills
+  - best-practices-python
   - best-practices-security
   - typescript-code
 taxonomy:
@@ -44,9 +45,34 @@ Read Pi docs and examples before implementation:
 - `/home/graham/.local/share/pi-node/node-v22.23.2-linux-x64/lib/node_modules/@earendil-works/pi-coding-agent/docs/extensions.md`
 - Relevant files under `/home/graham/.local/share/pi-node/node-v22.23.2-linux-x64/lib/node_modules/@earendil-works/pi-coding-agent/examples/extensions/`
 
+Use the installed `github.com/nicobailon` Pi extensions as the implementation standard before inventing a pattern:
+
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/README.md`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/index.ts`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/config.ts`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-interactive-shell/tests/`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/README.md`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/index.ts`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/broker/`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-intercom/*.test.ts`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/README.md`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/index.ts`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/*guard*.ts`
+- `/home/graham/.pi/agent/git/github.com/nicobailon/pi-mcp-adapter/*test.ts`
+
 For final-report, retry, or anti-laziness work, also read `$unlazy` and its agent-skills workflow reference.
 
 ## Do not bespoke the enforcement pattern
+
+First copy the architectural style of `github.com/nicobailon` extensions:
+
+- small `index.ts` entrypoint;
+- config isolated in `config.ts` when needed;
+- pure helper modules for parse/format/state logic;
+- tests beside the extension (`*.test.ts` or `tests/`);
+- bounded side effects through explicit Pi APIs or subprocess boundaries;
+- user-visible errors that name the failed contract and the next action;
+- no hidden global state unless it is intentionally persisted and tested.
 
 Use the smallest Pi event that owns the behavior:
 
