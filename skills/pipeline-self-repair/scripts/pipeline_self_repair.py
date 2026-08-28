@@ -45,8 +45,10 @@ SUMMARY_SCHEMA = "pipeline_self_repair.summary.v1"
 VALIDATION_SCHEMA = "pipeline_self_repair.validation.v1"
 MONITOR_SCHEMA = "pipeline_self_repair.monitor.v1"
 HARDENING_CYCLE_SCHEMA = "pipeline_self_repair.hardening_cycle.v1"
+HARDENING_CYCLE_EVENT_SCHEMA = "pipeline_self_repair.hardening_cycle_event.v1"
 DEPENDENCY_REF_RE = re.compile(r"(?:blocked-by|depends[-_ ]on):\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#\d+)")
 ISSUE_NUMBER_RE = re.compile(r"(?:issues/|#)(\d+)\b")
+WATCHDOG_PROJECT_BY_REPO = {"grahama1970/graph-memory-operator": "memory", "grahama1970/agent-skills": "agent-skills"}
 
 
 class RepairState(StrEnum):
@@ -427,7 +429,20 @@ def _github_issue_search(repo: str, category_key: str, triage: TriageResult, ste
 def _choose_ticket(matches: list[dict[str, Any]]) -> TicketDisposition | None:
     if not matches:
         return None
-    preferred = sorted(matches, key=lambda row: (not row.get("has_category_marker"), row.get("state") != "OPEN", row.get("number")))[0]
+    category_matches = [
+        row for row in matches if row.get("has_category_marker") or row.get("has_triage_code")
+    ]
+    if not category_matches:
+        return None
+    preferred = sorted(
+        category_matches,
+        key=lambda row: (
+            not row.get("has_category_marker"),
+            not row.get("has_triage_code"),
+            row.get("state") != "OPEN",
+            row.get("number"),
+        ),
+    )[0]
     deps = preferred.get("depends_on") or []
     if deps and preferred.get("state") == "OPEN":
         return TicketDisposition(
@@ -570,6 +585,26 @@ def _previous_hash(ledger: Path) -> str | None:
     return last.get("event_hash") if last else None
 
 
+def _append_replay_ledger_event(ledger: Path, event_payload: dict[str, Any]) -> dict[str, Any]:
+    """Append a flexible hash-chained hardening-cycle event.
+
+    `record-failure` events keep the stricter PipelineFailureEvent schema.
+    Hardening-cycle events are orchestration receipts: they bind WebGPT parsing,
+    ticket creation, watchdog dispatch/readback, and next legal commands without
+    pretending to be one failed pipeline step.
+    """
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    payload = dict(event_payload)
+    payload.setdefault("schema", HARDENING_CYCLE_EVENT_SCHEMA)
+    payload.setdefault("occurred_at", _now())
+    payload.setdefault("event_id", "evt_" + hashlib.sha256(f"hardening-cycle:{_now()}".encode()).hexdigest()[:24])
+    payload["previous_event_hash"] = _previous_hash(ledger)
+    payload["event_hash"] = _sha_json({k: v for k, v in payload.items() if k != "event_hash"})
+    with ledger.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    return payload
+
+
 def _append_event(ledger: Path, event_payload: dict[str, Any]) -> PipelineFailureEvent:
     ledger.parent.mkdir(parents=True, exist_ok=True)
     event_payload["previous_event_hash"] = _previous_hash(ledger)
@@ -578,6 +613,25 @@ def _append_event(ledger: Path, event_payload: dict[str, Any]) -> PipelineFailur
     with ledger.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event.model_dump(by_alias=True), sort_keys=True) + "\n")
     return event
+
+
+def _fold_categories(events: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Fold the append-only ledger by category, keeping latest event state."""
+    categories: dict[str, dict[str, Any]] = {}
+    for event in events:
+        key = event.get("category_key")
+        if not key:
+            continue
+        categories.setdefault(
+            key,
+            {"events": 0, "latest_state": None, "latest_event": None, "ticket": None, "triage_code": None},
+        )
+        categories[key]["events"] += 1
+        categories[key]["latest_state"] = event.get("repair_state")
+        categories[key]["latest_event"] = event
+        categories[key]["ticket"] = (event.get("ticket") or {}).get("issue_ref")
+        categories[key]["triage_code"] = (event.get("triage") or {}).get("code")
+    return categories
 
 
 def _repair_state(triage: TriageResult, ticket: TicketDisposition, dispatch_watchdog: bool, watchdog: dict[str, Any], provider_effect: dict[str, Any]) -> RepairState:
@@ -594,6 +648,57 @@ def _repair_state(triage: TriageResult, ticket: TicketDisposition, dispatch_watc
     if ticket.action in {"bind_existing", "created", "create_draft"}:
         return RepairState.TICKETED
     return RepairState.NEEDS_HUMAN
+
+
+def _watchdog_project_for_repo(repo: str, default_project: str) -> str:
+    return WATCHDOG_PROJECT_BY_REPO.get(repo, default_project)
+
+
+def _dispatch_watchdog_ticket(issue_ref: str, repo: str, default_project: str, *, enabled: bool) -> dict[str, Any]:
+    if not enabled:
+        return {"status": "SKIPPED", "issue_ref": issue_ref, "reason": "watchdog dispatch disabled"}
+    if not WATCHDOG_RUN.exists():
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "project-watchdog run.sh not found"}
+    if "#" not in issue_ref:
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "expected owner/repo#number"}
+    issue_repo, issue_number = issue_ref.rsplit("#", 1)
+    project = _watchdog_project_for_repo(issue_repo or repo, default_project)
+    command = [str(WATCHDOG_RUN), "tick", "--apply", "--project", project, "--issue", issue_number, "--max-tickets", "1"]
+    result, stdout = _run_with_stdout(command, timeout=2400)
+    parsed, _ = _parse_json_prefix(stdout)
+    status = "PASS" if result.returncode == 0 else "FAILED"
+    if parsed and parsed.get("status") in {"COMPLETED", "NEEDS_ATTENTION", "BLOCKED", "NOOP", "SKIPPED"}:
+        status = parsed["status"]
+    return {
+        "status": status,
+        "issue_ref": issue_ref,
+        "project": project,
+        "command": result.model_dump(),
+        "receipt_path": parsed.get("receipt_path") if parsed else None,
+        "receipt": parsed,
+    }
+
+
+def _dispatch_watchdog_for_ticket_projections(
+    projections: list[dict[str, Any]],
+    *,
+    default_project: str,
+    enabled: bool,
+) -> list[dict[str, Any]]:
+    dispatches: list[dict[str, Any]] = []
+    for projection in projections:
+        issue_ref = projection.get("issue_ref")
+        if not issue_ref or projection.get("status") not in {"CREATED", "BOUND"}:
+            continue
+        dispatches.append(
+            _dispatch_watchdog_ticket(
+                str(issue_ref),
+                str(projection.get("repo") or ""),
+                default_project,
+                enabled=enabled,
+            )
+        )
+    return dispatches
 
 
 def _dispatch_watchdog(project: str, *, enabled: bool) -> dict[str, Any]:
@@ -685,6 +790,32 @@ def _ticket_status(issue_ref: str, *, skip: bool) -> dict[str, Any]:
     repo, number = issue_ref.rsplit("#", 1)
     result = _run([str(TICKET_RUN), "lookup", "--issue", number, "--repo", repo], timeout=120)
     return {"status": "PASS" if result.returncode == 0 else "FAILED", "issue_ref": issue_ref, "command": result.model_dump()}
+
+
+def _github_issue_view(issue_ref: str, *, skip: bool = False) -> dict[str, Any]:
+    if skip:
+        return {"status": "SKIPPED", "issue_ref": issue_ref}
+    if "#" not in issue_ref:
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "expected owner/repo#number"}
+    repo, number = issue_ref.rsplit("#", 1)
+    cmd = ["gh", "issue", "view", number, "--repo", repo, "--json", "number,title,state,labels,url"]
+    result, stdout = _run_with_stdout(cmd, timeout=120)
+    if result.returncode != 0:
+        return {"status": "FAILED", "issue_ref": issue_ref, "command": result.model_dump()}
+    try:
+        data = json.loads(stdout or "{}")
+    except json.JSONDecodeError as exc:
+        return {"status": "FAILED", "issue_ref": issue_ref, "command": result.model_dump(), "error": f"gh issue view output was not JSON: {exc}"}
+    labels = [item.get("name") for item in data.get("labels", []) if isinstance(item, dict)]
+    return {
+        "status": "PASS",
+        "issue_ref": issue_ref,
+        "state": data.get("state"),
+        "title": data.get("title"),
+        "url": data.get("url"),
+        "labels": labels,
+        "command": result.model_dump(),
+    }
 
 
 def _run_in_cwd(cmd: list[str], cwd: Path, *, timeout: int = 120) -> tuple[CommandResult, str]:
@@ -1020,6 +1151,177 @@ def _triage_ticket_candidates(candidates: list[dict[str, Any]], *, skip: bool) -
     return results
 
 
+def _canonical_issue_ref(issue_ref: str, repo_hint: str | None) -> str:
+    if "#" not in issue_ref or not repo_hint:
+        return issue_ref
+    _, number = issue_ref.rsplit("#", 1)
+    return f"{repo_hint}#{number}"
+
+
+def _hardening_cycle_issue_refs(receipt: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for item in receipt.get("ticket_projections") or []:
+        ref = item.get("issue_ref") if isinstance(item, dict) else None
+        if ref:
+            ref = _canonical_issue_ref(str(ref), item.get("repo"))
+            if ref not in refs:
+                refs.append(ref)
+    if refs:
+        return refs
+    for item in receipt.get("watchdog_dispatches") or []:
+        ref = item.get("issue_ref") if isinstance(item, dict) else None
+        if ref and ref not in refs:
+            refs.append(str(ref))
+    return refs
+
+
+def _watchdog_receipt_readback(dispatch: dict[str, Any]) -> dict[str, Any]:
+    path_value = dispatch.get("receipt_path") if isinstance(dispatch, dict) else None
+    if path_value:
+        path = Path(str(path_value))
+        if path.is_file():
+            try:
+                return {"status": "PASS", "path": str(path), "receipt": json.loads(path.read_text(encoding="utf-8"))}
+            except json.JSONDecodeError as exc:
+                return {"status": "FAILED", "path": str(path), "error": f"receipt was not JSON: {exc}"}
+        return {"status": "MISSING", "path": str(path)}
+    embedded = dispatch.get("receipt") if isinstance(dispatch, dict) else None
+    if isinstance(embedded, dict):
+        return {"status": "PASS", "receipt": embedded}
+    return {"status": "SKIPPED", "reason": "no watchdog receipt path on dispatch"}
+
+
+def _followup_for_ticket(issue_state: dict[str, Any], watchdog_readback: dict[str, Any], dispatch: dict[str, Any] | None) -> dict[str, Any]:
+    labels = set(issue_state.get("labels") or [])
+    dispatch_status = (dispatch or {}).get("status")
+    receipt_status = ((watchdog_readback.get("receipt") or {}) if isinstance(watchdog_readback, dict) else {}).get("status")
+    status_signal = receipt_status or dispatch_status
+    if issue_state.get("status") == "FAILED":
+        return {"state": "TICKET_READBACK_FAILED", "next_legal_command": "fix ticket readback before making repair claims"}
+    if issue_state.get("state") == "CLOSED":
+        return {
+            "state": "TICKET_CLOSED_VERIFY_SCORECARD",
+            "next_legal_command": "cd ~/workspace/experiments/memory && uv run python scripts/ops/hardening_scorecard.py; append CATEGORY_GREEN only if the family is sealed",
+        }
+    if "agent-blocked" in labels or status_signal in {"NEEDS_ATTENTION", "BLOCKED"}:
+        return {
+            "state": "WATCHDOG_BLOCKED_NEEDS_ATTENTION",
+            "next_legal_command": "read the watchdog/Tau receipt named here, resolve the specific blocker, and do not re-dispatch the same input unchanged",
+        }
+    if "agent-active" in labels:
+        return {"state": "WATCHDOG_ACTIVE", "next_legal_command": "monitor project-watchdog and ticket receipts; do not file a duplicate ticket"}
+    if status_signal in {"COMPLETED", "PASS"}:
+        return {
+            "state": "WATCHDOG_REPAIR_COMMIT_READY",
+            "next_legal_command": "inspect the repair receipt/commit, run the live family proof, then update the ticket and replay ledger",
+        }
+    return {
+        "state": "TICKETED_NEEDS_WATCHDOG_DISPATCH",
+        "next_legal_command": "run project-watchdog tick --apply --project <mapped-project> --issue <n> --max-tickets 1",
+    }
+
+
+def _hardening_cycle_repair_state(payload: dict[str, Any]) -> str:
+    followups = payload.get("followups") or []
+    if followups:
+        states = {(item.get("followup") or {}).get("state") for item in followups if isinstance(item, dict)}
+        if "WATCHDOG_BLOCKED_NEEDS_ATTENTION" in states or "TICKET_READBACK_FAILED" in states:
+            return RepairState.NEEDS_HUMAN.value
+        if "TICKETED_NEEDS_WATCHDOG_DISPATCH" in states:
+            return RepairState.TICKETED.value
+        if "WATCHDOG_ACTIVE" in states or "WATCHDOG_REPAIR_COMMIT_READY" in states:
+            return RepairState.WATCHDOG_DISPATCHED.value
+        if states == {"TICKET_CLOSED_VERIFY_SCORECARD"}:
+            return RepairState.CATEGORY_GREEN.value
+    dispatches = payload.get("watchdog_dispatches") or []
+    tickets = payload.get("ticket_projections") or []
+    if any(item.get("status") in {"NEEDS_ATTENTION", "BLOCKED"} for item in dispatches if isinstance(item, dict)):
+        return RepairState.NEEDS_HUMAN.value
+    if any(item.get("status") in {"COMPLETED", "PASS"} for item in dispatches if isinstance(item, dict)):
+        return RepairState.WATCHDOG_DISPATCHED.value
+    if any(item.get("issue_ref") for item in tickets if isinstance(item, dict)):
+        return RepairState.TICKETED.value
+    parsed = payload.get("webgpt_parse") or {}
+    if parsed.get("ticket_count"):
+        return RepairState.NEEDS_TRIAGE.value
+    return RepairState.CATEGORY_GREEN.value
+
+
+def _hardening_cycle_event_payload(payload: dict[str, Any], *, event_type: str) -> dict[str, Any]:
+    issue_refs = list(payload.get("issue_refs") or _hardening_cycle_issue_refs(payload))
+    return {
+        "schema": HARDENING_CYCLE_EVENT_SCHEMA,
+        "event_type": event_type,
+        "pipeline": "memory-hardening",
+        "run_id": Path(str(payload.get("output_dir") or "hardening-cycle")).name,
+        "step_id": "hardening-cycle",
+        "category_key": "memory-hardening/hardening-cycle/replay-ledger/v1",
+        "failure_category_id": "agent-skills:pipeline-self-repair:hardening-cycle-replay-ledger",
+        "blocking": False,
+        "repair_state": _hardening_cycle_repair_state(payload),
+        "ticket": {"action": "hardening_cycle", "issue_refs": issue_refs},
+        "watchdog": {"dispatches": payload.get("watchdog_dispatches") or []},
+        "receipt_path": payload.get("receipt_path"),
+        "status": payload.get("status"),
+        "next_legal_moves": (payload.get("project_agent_role") or {}).get("next_legal_moves") or [],
+    }
+
+
+def _resume_hardening_cycle_payload(
+    resume_receipt: Path,
+    *,
+    replay_ledger: Path | None,
+    watchdog_project: str,
+    skip_ticket: bool,
+    skip_watchdog: bool,
+) -> dict[str, Any]:
+    prior = json.loads(resume_receipt.read_text(encoding="utf-8"))
+    issue_refs = _hardening_cycle_issue_refs(prior)
+    dispatch_by_issue = {
+        str(item.get("issue_ref")): item
+        for item in prior.get("watchdog_dispatches") or []
+        if isinstance(item, dict) and item.get("issue_ref")
+    }
+    dispatch_by_number = {
+        str(item.get("issue_ref")).rsplit("#", 1)[1]: item
+        for item in prior.get("watchdog_dispatches") or []
+        if isinstance(item, dict) and item.get("issue_ref") and "#" in str(item.get("issue_ref"))
+    }
+    followups: list[dict[str, Any]] = []
+    for issue_ref in issue_refs:
+        ticket_state = _github_issue_view(issue_ref, skip=skip_ticket)
+        dispatch = dispatch_by_issue.get(issue_ref) or dispatch_by_number.get(issue_ref.rsplit("#", 1)[1])
+        watchdog_readback = _watchdog_receipt_readback(dispatch or {}) if not skip_watchdog else {"status": "SKIPPED"}
+        followup = _followup_for_ticket(ticket_state, watchdog_readback, dispatch)
+        followups.append({
+            "issue_ref": issue_ref,
+            "ticket": ticket_state,
+            "watchdog_dispatch": dispatch,
+            "watchdog_receipt_readback": watchdog_readback,
+            "followup": followup,
+        })
+    failed = [item for item in followups if item["ticket"].get("status") == "FAILED" or item["watchdog_receipt_readback"].get("status") == "FAILED"]
+    payload = {
+        "schema": HARDENING_CYCLE_SCHEMA,
+        "generated_at": _now(),
+        "status": "PASS" if not failed else "DEGRADED",
+        "mode": "resume",
+        "resume_receipt": str(resume_receipt),
+        "watchdog": _watchdog_status(watchdog_project, skip=skip_watchdog),
+        "issue_refs": issue_refs,
+        "followups": followups,
+        "failed_readbacks": failed,
+        "project_agent_role": {
+            "owner": "project-agent",
+            "next_legal_moves": [item["followup"]["next_legal_command"] for item in followups],
+        },
+    }
+    if replay_ledger:
+        event = _append_replay_ledger_event(replay_ledger, _hardening_cycle_event_payload(payload, event_type="hardening_cycle.resumed"))
+        payload["replay_ledger"] = str(replay_ledger)
+        payload["replay_ledger_event"] = event
+    return payload
+
 
 @app.command("hardening-cycle")
 def hardening_cycle(
@@ -1031,10 +1333,14 @@ def hardening_cycle(
     ask_run_dir: list[Path] = typer.Option([], "--ask-run-dir"),
     subagent_run_id: list[str] = typer.Option([], "--subagent-run-id"),
     webgpt_response: Path | None = typer.Option(None, "--webgpt-response"),
+    resume_receipt: Path | None = typer.Option(None, "--resume", help="Resume from a prior hardening-cycle receipt and emit ticket/watchdog follow-up state."),
+    replay_ledger: Path | None = typer.Option(None, "--replay-ledger", help="Append a hash-chained hardening-cycle event to this replay ledger."),
     execute_ask: bool = typer.Option(False, "--execute-ask"),
     apply_ticket: bool = typer.Option(False, "--apply-ticket"),
+    dispatch_watchdog: bool = typer.Option(True, "--dispatch-watchdog/--no-dispatch-watchdog"),
     skip_scorecard: bool = typer.Option(False, "--skip-scorecard"),
     skip_triage: bool = typer.Option(False, "--skip-triage"),
+    skip_ticket: bool = typer.Option(False, "--skip-ticket"),
     skip_watchdog: bool = typer.Option(False, "--skip-watchdog"),
     watchdog_project: str = typer.Option("agent-skills", "--watchdog-project"),
     repo: str = typer.Option("grahama1970/agent-skills", "--repo"),
@@ -1047,6 +1353,19 @@ def hardening_cycle(
     emits monitor instructions. External Ask and ticket mutations require
     --execute-ask or --apply-ticket.
     """
+    if resume_receipt:
+        payload = _resume_hardening_cycle_payload(
+            resume_receipt,
+            replay_ledger=replay_ledger,
+            watchdog_project=watchdog_project,
+            skip_ticket=skip_ticket,
+            skip_watchdog=skip_watchdog,
+        )
+        _emit(payload, json_output)
+        if payload["status"] == "DEGRADED":
+            raise typer.Exit(1)
+        return
+
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out_dir = output_dir or Path("/tmp") / f"pipeline-self-repair-hardening-cycle-{timestamp}"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1099,15 +1418,22 @@ def hardening_cycle(
             result = _run(cmd, timeout=180)
             projection.update({"status": "CREATED" if result.returncode == 0 else "FAILED", "result": result.model_dump(), "issue_ref": _extract_issue_ref(result.stdout_excerpt, projection["repo"])})
         ticket_projections.append(projection)
+    watchdog_dispatches = _dispatch_watchdog_for_ticket_projections(
+        ticket_projections,
+        default_project=watchdog_project,
+        enabled=apply_ticket and dispatch_watchdog and not skip_watchdog,
+    )
     monitor_plan = _push_pull_monitoring(subagent_run_id, ask_run_dir, ticket_ref + [p.get("issue_ref") for p in ticket_projections if p.get("issue_ref")])
     watchdog_state = _watchdog_status(watchdog_project, skip=skip_watchdog)
     failed_ticket_projection = any(item.get("status") == "FAILED" for item in ticket_projections)
+    failed_watchdog_dispatch = any(item.get("status") == "FAILED" for item in watchdog_dispatches)
     payload_status = (
         "PASS"
         if scorecard.get("status") != "FAILED"
         and ask_result.get("status") != "FAILED"
         and watchdog_state.get("status") != "FAILED"
         and not failed_ticket_projection
+        and not failed_watchdog_dispatch
         else "DEGRADED"
     )
     payload = {
@@ -1120,7 +1446,7 @@ def hardening_cycle(
                 "run the generated WebGPT prompt through $ask webgpt if no response was supplied",
                 "file or bind one focused ticket per READY candidate",
                 "run triage-error before ticketing candidates marked TRIAGE_REQUIRED",
-                "dispatch project-watchdog only after a focused ticket exists",
+                "automatically dispatch project-watchdog after focused ticket creation unless --no-dispatch-watchdog or --skip-watchdog is set",
                 "monitor Ask, ticket, watchdog, Pi async, and ledger receipts until category closure",
             ],
         },
@@ -1133,12 +1459,17 @@ def hardening_cycle(
         "webgpt_parse": parsed,
         "triage_results": triage_results,
         "ticket_projections": ticket_projections,
+        "watchdog_dispatches": watchdog_dispatches,
         "watchdog": watchdog_state,
         "monitoring": monitor_plan,
     }
     receipt_path = out_dir / "hardening-cycle-receipt.json"
     receipt_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     payload["receipt_path"] = str(receipt_path)
+    if replay_ledger:
+        event = _append_replay_ledger_event(replay_ledger, _hardening_cycle_event_payload(payload, event_type="hardening_cycle.generated"))
+        payload["replay_ledger"] = str(replay_ledger)
+        payload["replay_ledger_event"] = event
     receipt_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     _emit(payload, json_output)
     if payload["status"] == "DEGRADED":
@@ -1309,18 +1640,68 @@ def record_failure(
 def inspect_ledger(ledger: Path = typer.Option(..., "--ledger"), json_output: bool = typer.Option(False, "--json")) -> None:
     """Fold a replay ledger into current category and checkpoint state."""
     events = _load_events(ledger)
-    categories: dict[str, dict[str, Any]] = {}
-    for event in events:
-        key = event.get("category_key")
-        if not key:
-            continue
-        categories.setdefault(key, {"events": 0, "latest_state": None, "ticket": None, "triage_code": None})
-        categories[key]["events"] += 1
-        categories[key]["latest_state"] = event.get("repair_state")
-        categories[key]["ticket"] = (event.get("ticket") or {}).get("issue_ref")
-        categories[key]["triage_code"] = (event.get("triage") or {}).get("code")
-    open_failures = [e for e in events if e.get("blocking") and e.get("repair_state") not in {RepairState.CATEGORY_GREEN.value, RepairState.CLOSED.value}]
-    _emit({"schema": SUMMARY_SCHEMA, "ledger": str(ledger), "event_count": len(events), "open_failure_count": len(open_failures), "categories": categories}, json_output)
+    categories = _fold_categories(events)
+    open_failures = [
+        data["latest_event"]
+        for data in categories.values()
+        if (data.get("latest_event") or {}).get("blocking")
+        and data.get("latest_state") not in {RepairState.CATEGORY_GREEN.value, RepairState.CLOSED.value}
+    ]
+    summary_categories = {key: {k: v for k, v in data.items() if k != "latest_event"} for key, data in categories.items()}
+    _emit({"schema": SUMMARY_SCHEMA, "ledger": str(ledger), "event_count": len(events), "open_failure_count": len(open_failures), "categories": summary_categories}, json_output)
+
+
+@app.command("mark-repaired")
+def mark_repaired(
+    ledger: Path = typer.Option(..., "--ledger"),
+    category_key: str = typer.Option(..., "--category-key"),
+    proof_report: Path = typer.Option(..., "--proof-report"),
+    goal_project: str = typer.Option(..., "--goal-project"),
+    goal_hash: str | None = typer.Option(None, "--goal-hash"),
+    goal_context: list[str] = typer.Option([], "--goal-context"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Append a CATEGORY_GREEN disposition for a repaired failure category."""
+    events = _load_events(ledger)
+    previous = next((event for event in reversed(events) if event.get("category_key") == category_key), None)
+    if not previous:
+        raise typer.BadParameter(f"category not found in ledger: {category_key}")
+    if not proof_report.is_file():
+        raise typer.BadParameter(f"proof report does not exist: {proof_report}")
+    goal_payload, goal_command = _load_immutable_goal(goal_project)
+    observed_goal_hash = _goal_hash(goal_payload)
+    if goal_hash and goal_hash != observed_goal_hash:
+        raise typer.BadParameter(f"goal hash mismatch: expected {goal_hash}, observed {observed_goal_hash}")
+    goal_alignment = _goal_alignment(
+        project=goal_project,
+        goal_payload=goal_payload,
+        goal_command=goal_command,
+        expected_goal_hash=goal_hash,
+        pipeline=str(previous.get("pipeline") or goal_project),
+        step_id=str(previous.get("step_id") or "repaired"),
+        target=str(previous.get("target") or ""),
+        triage=TriageResult.model_validate(previous.get("triage") or {"code": "repaired"}),
+        raw_signal=f"Category repaired with proof report {proof_report}",
+        extra_context=goal_context,
+    )
+    payload = dict(previous)
+    payload.update(
+        {
+            "event_id": "evt_" + hashlib.sha256(f"mark-repaired:{category_key}:{_now()}".encode()).hexdigest()[:24],
+            "event_type": "step.repaired",
+            "occurred_at": _now(),
+            "goal_hash": observed_goal_hash,
+            "raw_signal_sha256": _sha_bytes(f"repaired:{category_key}".encode()),
+            "raw_signal_excerpt": f"Category repaired with proof report {proof_report}",
+            "repair_state": RepairState.CATEGORY_GREEN.value,
+            "agentic_eval": {"report": _artifact_ref(proof_report).model_dump(), "retained_guard_required": True},
+            "goal_alignment": goal_alignment,
+            "outputs": [_artifact_ref(proof_report).model_dump()],
+        }
+    )
+    payload.pop("event_hash", None)
+    event = _append_event(ledger, payload)
+    _emit({"schema": SUMMARY_SCHEMA, "ledger": str(ledger), "status": "CATEGORY_GREEN", "event": event.model_dump(by_alias=True)}, json_output)
 
 
 @app.command("validate-ledger")
@@ -1332,24 +1713,28 @@ def validate_ledger(
     """Fail closed if blocking failures lack repair disposition."""
     events = _load_events(ledger)
     failures: list[str] = []
-    for index, event in enumerate(events):
+    categories = _fold_categories(events)
+    for index, (category_key, folded) in enumerate(categories.items()):
+        event = folded.get("latest_event") or {}
         if not event.get("blocking"):
             continue
         state = event.get("repair_state")
         if state in {RepairState.CATEGORY_GREEN.value, RepairState.CLOSED.value}:
+            if require_agentic_eval and not (event.get("agentic_eval") or {}).get("report"):
+                failures.append(f"category[{index}] {category_key} closed without retained agentic-evals report/proof reference")
             continue
         if not (event.get("triage") or {}).get("code"):
-            failures.append(f"event[{index}] missing triage code")
+            failures.append(f"category[{index}] {category_key} missing triage code")
         if not event.get("category_key") or not event.get("failure_category_id"):
-            failures.append(f"event[{index}] missing category binding")
+            failures.append(f"category[{index}] {category_key} missing category binding")
         goal_alignment = event.get("goal_alignment") or {}
         if not event.get("goal_hash") or goal_alignment.get("status") != "PASS_COMPARED_TO_IMMUTABLE_GOAL":
-            failures.append(f"event[{index}] missing immutable-goal comparison")
+            failures.append(f"category[{index}] {category_key} missing immutable-goal comparison")
         ticket_action = (event.get("ticket") or {}).get("action")
         if ticket_action in {None, "ticket_skipped", "ticket_failed"}:
-            failures.append(f"event[{index}] lacks ticket disposition")
+            failures.append(f"category[{index}] {category_key} lacks ticket disposition")
         if require_agentic_eval and not (event.get("agentic_eval") or {}).get("report"):
-            failures.append(f"event[{index}] lacks retained agentic-evals report/proof reference")
+            failures.append(f"category[{index}] {category_key} lacks retained agentic-evals report/proof reference")
     result = {"schema": VALIDATION_SCHEMA, "ledger": str(ledger), "status": "PASS" if not failures else "FAIL", "failure_count": len(failures), "failures": failures}
     _emit(result, json_output)
     if failures:

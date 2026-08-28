@@ -21,7 +21,11 @@ is the authority; the current-state block below is generated from it.
 
 ## Current state
 
-Phase **P2_LIVE_CONTINUITY_CHAIN**. The digest below is generated from
+Phase **P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN**. A live
+Kling/Fal provider return exists for request
+`sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4`,
+the successor dream passes Phase 16 recall/behavior evaluation, and the request
+must not be resubmitted. The digest below is generated from
 `CURRENT_STATUS.json`, which holds the authoritative blockers, next step, and
 every figure. `./run.sh check-current-state-consistency --strict` fails if this
 file drifts from it.
@@ -50,7 +54,7 @@ Figures, receipt paths, and revision ids are in
 run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
-- **Phase:** `P2_LIVE_CONTINUITY_CHAIN`
+- **Phase:** `P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN`
 - **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
 - **Current blocker:** Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions…
 - **Next step:** Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.

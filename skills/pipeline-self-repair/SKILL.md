@@ -137,7 +137,8 @@ bounded repair work without manual prose translation:
 ```bash
 skills/pipeline-self-repair/run.sh hardening-cycle \
   --memory-repo ${HOME}/workspace/experiments/memory \
-  --ledger <optional-replay-ledger.jsonl> \
+  --ledger <optional-input-ledger-summary.jsonl> \
+  --replay-ledger <cycle-replay-ledger.jsonl> \
   --ticket-ref grahama1970/agent-skills#1533 \
   --output-dir <cycle-output-dir> \
   --json
@@ -149,6 +150,17 @@ WebGPT ticket-only prompt, projects ticket/watchdog/monitor commands, and emits
 `pipeline_self_repair.hardening_cycle.v1` at
 `<output-dir>/hardening-cycle-receipt.json`. It does not call WebGPT or create
 GitHub issues unless explicitly allowed.
+
+When `--replay-ledger` is supplied, every hardening-cycle generation appends a
+hash-chained `pipeline_self_repair.hardening_cycle_event.v1` entry that points
+back to the cycle receipt. This keeps WebGPT parsing, ticket creation, watchdog
+dispatch, and next legal moves replayable instead of living only in chat.
+
+When `--apply-ticket` creates focused tickets, `hardening-cycle` automatically
+runs one bounded `$project-watchdog tick --apply --project <project> --issue <n>`
+per created ticket unless `--no-dispatch-watchdog` or `--skip-watchdog` is set.
+This is the default anti-kludge path: ticket creation is the work-item boundary,
+and watchdog dispatch is the next automatic effect.
 
 After a WebGPT response exists, parse it into focused work items:
 
@@ -162,16 +174,31 @@ skills/pipeline-self-repair/run.sh hardening-cycle \
 Mutation flags are explicit:
 
 ```bash
-  --execute-ask    # run cd skills/ask && ./run.sh webgpt "<ticket-only prompt>"
-  --apply-ticket   # create projected ticket candidates through $ticket
+  --execute-ask             # run cd skills/ask && ./run.sh webgpt "<ticket-only prompt>"
+  --apply-ticket            # create projected ticket candidates through $ticket
+  --no-dispatch-watchdog    # do not auto-dispatch created tickets
 ```
 
 The command is intentionally a cycle boundary, not an auto-repair oracle. It
 stops after producing receipts, parsed ticket candidates, ticket projections,
-watchdog status, and project-agent push/pull monitoring commands. The project
-agent then files/binds the accepted ticket(s), runs `$triage-error` for any
-`TRIAGE_REQUIRED` candidate, and dispatches `$project-watchdog` only after a
-focused ticket exists.
+watchdog dispatch receipts, watchdog status, and project-agent push/pull
+monitoring commands. The project agent then monitors the dispatched ticket(s),
+runs `$triage-error` for any `TRIAGE_REQUIRED` candidate, and keeps the loop on
+receipts until the category is closed or explicitly blocked.
+
+Resume a prior cycle to turn ticket/watchdog readbacks into the next legal move:
+
+```bash
+skills/pipeline-self-repair/run.sh hardening-cycle \
+  --resume <cycle-output-dir>/hardening-cycle-receipt.json \
+  --replay-ledger <cycle-replay-ledger.jsonl> \
+  --json
+```
+
+Resume mode reads the focused ticket states, folds watchdog dispatch receipts
+when present, appends a `hardening_cycle.resumed` ledger event, and emits states
+such as `WATCHDOG_BLOCKED_NEEDS_ATTENTION`, `WATCHDOG_ACTIVE`,
+`WATCHDOG_REPAIR_COMMIT_READY`, or `TICKET_CLOSED_VERIFY_SCORECARD`.
 
 ### Record one failed step and start the repair branch
 

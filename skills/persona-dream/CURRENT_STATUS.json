@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.current_status.v1",
   "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-08-22T22:39:07Z",
+  "updated_at": "2026-08-28T19:47:51Z",
   "controlling_goal": {
     "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
@@ -10,7 +10,7 @@
     "registered_source": "human_prompt",
     "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
   },
-  "current_phase": "P2_CORRECTED_GOAL_PAIR_PROOF",
+  "current_phase": "P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN",
   "corrected_goal_pair_proof": {
     "proof_id": "PD-CORRECTED-GOAL-V1",
     "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF",
@@ -488,13 +488,17 @@
     "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
   ],
   "next_step": {
-    "default": "Run PD-CORRECTED-GOAL-V1: one paired structured-reflection control and dream-journal treatment through the existing dynamic Horus/Embry and Chatterbox paths, then emit a fail-closed corrected_goal_receipt.json.",
-    "receipt_target": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/corrected_goal_receipt.json",
+    "default": "Kling/Phase 11 and Phase 16 recall/behavior are no longer the active blocker. The remaining goal blockers are human listener collection/signature, PCTOM-R held-out benefit/disposition, and larger reliability/recovery gates.",
     "ordered_steps": [
-      "PD-CORRECTED-GOAL-V1: validate the operational goal and sealed manifest fixture.",
-      "PD-CORRECTED-GOAL-V1: run C0_STRUCTURED_REFLECTION and C1_DREAM_JOURNAL against the same source-memory and answer capsule.",
-      "PD-CORRECTED-GOAL-V1: adjudicate answer invariance before emotional lineage or delivery effects.",
-      "#1058 human listener collection, PCTOM expansion, Kling/video/provider work, and human perception claims remain deferred until the paired proof exists and the relevant human/external evidence exists."
+      "collect 20 valid human listener rows for #1058 and write SIGNED_INTERPRETATION.json",
+      "run PCTOM-R held-out benefit/disposition gate for #1008",
+      "run no-restart reliability soak / restart-recovery campaign where not already accepted",
+      "record transfer/adopt/constrain/reject decisions after each completed experiment"
+    ],
+    "blocked_by": [
+      "human_responses_complete:0/20",
+      "signed_human_interpretation_missing",
+      "pctom_heldout_benefit_unrun"
     ]
   },
   "current_claims": {
@@ -683,5 +687,57 @@
       "does_not_prove": "that accumulation improves anything, or that the persona measurably changes over many days; both remain unrun"
     }
   },
-  "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md"
+  "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md",
+  "phase11_kling_return": {
+    "status": "PASS_PHASE11_PROVIDER_RETURN_RECEIVED",
+    "mocked": false,
+    "live": true,
+    "submitted": true,
+    "actual_provider_call_attempts": 1,
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+    "request_id": "019f77f0-a75b-7012-8cc1-fbc24f58f388",
+    "return_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+    "muxed_video_sha256": "sha256:e31788caba34c51aa8ed9b7e16332cce91cfcec35a9d42ed036975164530fa97",
+    "return_duration_s": 10.041667,
+    "provider_return_envelope": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_provider_return_envelope.v1.json",
+    "download_ffprobe_receipt": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_download_ffprobe_receipt.v1.json",
+    "post_return_acceptance_receipt": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/post_return_acceptance_receipt.v2.json",
+    "boundary": "One Kling/Fal standard image-to-video provider return exists and is agent-level accepted. Do not resubmit this request hash; human subjective acceptance remains not claimed."
+  },
+  "phase16_behavior_evaluation": {
+    "status": "PASS",
+    "receipt": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json",
+    "receipt_sha256": "sha256:772869da3c348f4cfe246acbc30f7bec37c863a4ea47bff6891111df9715f0bc",
+    "mocked": false,
+    "live": true,
+    "contract_items_proven": {
+      "10_chatterbox_voice_expression": false,
+      "6_semantic_recall": true,
+      "7_multihop_traversal": true,
+      "8_grounded_use_and_synthetic_distinction": true,
+      "9_identity_consistency": true
+    },
+    "memory_evidence": [
+      {
+        "collection": "persona_dream_pipeline_steps",
+        "exact_reread_match": true,
+        "key": "persona_dream_phase16_behavior_evaluation_step",
+        "reread_sha256": "sha256:3c7abe7f280400777f20744e094bfbdc9c62efb1deb9ef8d82f7ff6baa35eb80",
+        "written_sha256": "sha256:3c7abe7f280400777f20744e094bfbdc9c62efb1deb9ef8d82f7ff6baa35eb80"
+      },
+      {
+        "collection": "persona_dream_governance",
+        "exact_reread_match": true,
+        "key": "persona_dream_phase16_governance_20260718",
+        "reread_sha256": "sha256:4ced56a6891d8f22bd74ae33f85359bf56b6534694c3ce51f7e330931e6d2c74",
+        "written_sha256": "sha256:4ced56a6891d8f22bd74ae33f85359bf56b6534694c3ce51f7e330931e6d2c74"
+      }
+    ],
+    "does_not_prove": [
+      "(f) Chatterbox / voice expression of the resulting persona state - no Chatterbox or voice runtime was exercised in this slice; factually out of scope (contract item 10).",
+      "Human subjective acceptance of the dream video and persona behavior - remains the human's; not machine-decidable here.",
+      "Full 12-frame Watch observation-packet re-embedding via the Tau VLM layer - the observation packet remains DEGRADED (step-36 v2 receipt carries the authoritative verdicts); recall/traversal here use the persisted DEGRADED packet references."
+    ]
+  }
 }

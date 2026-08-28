@@ -42,18 +42,20 @@ NO_TICKET: Existing scorecard status is already a fact, not a repair item.
 EOF
 ./run.sh hardening-cycle \
   --ledger "$TMP/replay_ledger.jsonl" \
+  --replay-ledger "$TMP/hardening-cycle-ledger.jsonl" \
   --webgpt-response "$TMP/webgpt-response.md" \
   --output-dir "$TMP/hardening-cycle" \
   --skip-scorecard \
   --skip-watchdog \
   --skip-triage \
   --json > "$TMP/hardening-cycle.json"
-python - <<'PY' "$TMP/record.json" "$TMP/inspect.json" "$TMP/monitor.json" "$TMP/hardening-cycle.json"
+python - <<'PY' "$TMP/record.json" "$TMP/inspect.json" "$TMP/monitor.json" "$TMP/hardening-cycle.json" "$TMP/hardening-cycle-ledger.jsonl"
 import json, sys
 record=json.load(open(sys.argv[1]))
 inspect=json.load(open(sys.argv[2]))
 monitor=json.load(open(sys.argv[3]))
 cycle=json.load(open(sys.argv[4]))
+cycle_event=json.loads(open(sys.argv[5]).read().splitlines()[-1])
 assert record["status"] in {"RECORDED_REPAIR_REQUIRED", "RECORDED_NEEDS_TRIAGE"}, record
 assert inspect["event_count"] >= 1, inspect
 assert inspect["open_failure_count"] == 1, inspect
@@ -63,5 +65,7 @@ assert monitor["monitoring"]["push"]["pi_wake_subscriptions"], monitor
 assert cycle["schema"] == "pipeline_self_repair.hardening_cycle.v1", cycle
 assert cycle["webgpt_parse"]["ticket_count"] == 1, cycle
 assert cycle["ticket_projections"][0]["status"] == "PROJECTED", cycle
+assert cycle_event["schema"] == "pipeline_self_repair.hardening_cycle_event.v1", cycle_event
+assert cycle_event["event_type"] == "hardening_cycle.generated", cycle_event
 print("PIPELINE_SELF_REPAIR_SANITY_OK")
 PY

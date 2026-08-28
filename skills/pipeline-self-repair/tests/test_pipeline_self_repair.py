@@ -42,6 +42,22 @@ def test_ticket_binding_flags_blocked_upstream() -> None:
     assert disposition.depends_on == ["grahama1970/agent-skills#7"]
 
 
+def test_ticket_binding_ignores_broad_matches_without_category_or_triage_code() -> None:
+    disposition = psr._choose_ticket(
+        [
+            {
+                "issue_ref": "grahama1970/agent-skills#1173",
+                "number": 1173,
+                "state": "OPEN",
+                "has_category_marker": False,
+                "has_triage_code": False,
+                "depends_on": [],
+            }
+        ]
+    )
+    assert disposition is None
+
+
 def test_provider_unknown_spend_blocks_resubmission(tmp_path: Path) -> None:
     request = tmp_path / "request.json"
     request.write_text('{"prompt":"render"}')
@@ -191,6 +207,25 @@ def test_ticket_candidate_repo_comes_from_route_repo_hint() -> None:
     assert cmd[route_index] == "backend_python_or_skill_runtime"
 
 
+def test_watchdog_dispatch_targets_memory_project_for_graph_memory_operator(monkeypatch) -> None:
+    calls = []
+
+    def fake_run(cmd, timeout=120):
+        calls.append(cmd)
+        return psr.CommandResult(command=cmd, returncode=0, stdout_excerpt='{"status":"COMPLETED","receipt_path":"/tmp/receipt.json"}')
+
+    monkeypatch.setattr(psr, "_run_with_stdout", lambda cmd, timeout=120: (fake_run(cmd, timeout), '{"status":"COMPLETED","receipt_path":"/tmp/receipt.json"}'))
+    result = psr._dispatch_watchdog_ticket(
+        "grahama1970/graph-memory-operator#157",
+        "grahama1970/graph-memory-operator",
+        "agent-skills",
+        enabled=True,
+    )
+    assert result["status"] == "COMPLETED"
+    assert "memory" in calls[0]
+    assert "157" in calls[0]
+
+
 def test_ask_response_path_from_stdout_finds_handler_response(tmp_path: Path) -> None:
     run_root = tmp_path / "run"
     response = run_root / "node-artifacts" / "handler-webgpt" / "response.md"
@@ -228,6 +263,66 @@ def test_hardening_cycle_cli_dry_run_emits_prompt_and_receipt(tmp_path: Path) ->
     prompt = Path(data["prompt_path"]).read_text()
     assert "return ONLY zero or more TICKET blocks or NO_TICKET lines" in prompt
     assert data["project_agent_role"]["owner"] == "project-agent"
+
+
+def test_hardening_cycle_cli_appends_replay_ledger_event(tmp_path: Path) -> None:
+    run_sh = Path(__file__).resolve().parents[1] / "run.sh"
+    ledger = tmp_path / "replay_ledger.jsonl"
+    proc = subprocess.run(
+        [
+            str(run_sh),
+            "hardening-cycle",
+            "--output-dir",
+            str(tmp_path / "cycle"),
+            "--replay-ledger",
+            str(ledger),
+            "--skip-scorecard",
+            "--skip-watchdog",
+            "--skip-triage",
+            "--json",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+    data = json.loads(proc.stdout)
+    assert data["replay_ledger"] == str(ledger)
+    line = json.loads(ledger.read_text().strip())
+    assert line["schema"] == "pipeline_self_repair.hardening_cycle_event.v1"
+    assert line["event_type"] == "hardening_cycle.generated"
+    assert line["event_hash"].startswith("sha256:")
+    assert line["receipt_path"] == data["receipt_path"]
+
+
+def test_resume_hardening_cycle_marks_blocked_ticket_and_appends_event(tmp_path: Path, monkeypatch) -> None:
+    prior = tmp_path / "hardening-cycle-receipt.json"
+    prior.write_text(json.dumps({
+        "schema": "pipeline_self_repair.hardening_cycle.v1",
+        "output_dir": str(tmp_path / "cycle"),
+        "ticket_projections": [{"repo": "grahama1970/graph-memory-operator", "issue_ref": "grahama1970/agent-skills#157", "status": "CREATED"}],
+        "watchdog_dispatches": [{"issue_ref": "grahama1970/agent-skills#157", "status": "NEEDS_ATTENTION", "receipt": {"status": "NEEDS_ATTENTION"}}],
+    }))
+    ledger = tmp_path / "replay_ledger.jsonl"
+    monkeypatch.setattr(psr, "_github_issue_view", lambda issue_ref, skip=False: {
+        "status": "PASS",
+        "issue_ref": issue_ref,
+        "state": "OPEN",
+        "labels": ["agent-work", "agent-blocked"],
+    })
+    payload = psr._resume_hardening_cycle_payload(
+        prior,
+        replay_ledger=ledger,
+        watchdog_project="memory",
+        skip_ticket=False,
+        skip_watchdog=True,
+    )
+    assert payload["status"] == "PASS"
+    assert payload["followups"][0]["followup"]["state"] == "WATCHDOG_BLOCKED_NEEDS_ATTENTION"
+    line = json.loads(ledger.read_text().strip())
+    assert line["event_type"] == "hardening_cycle.resumed"
+    assert line["repair_state"] == psr.RepairState.NEEDS_HUMAN.value
+    assert line["ticket"]["issue_refs"] == ["grahama1970/graph-memory-operator#157"]
 
 
 def test_missing_immutable_goal_fails_preflight_before_ledger(tmp_path: Path) -> None:
@@ -305,3 +400,22 @@ def test_record_failure_cli_writes_replay_ledger(tmp_path: Path) -> None:
     assert line["goal_alignment"]["status"] == "PASS_COMPARED_TO_IMMUTABLE_GOAL"
     assert line["goal_hash"].startswith("sha256:")
     assert line["ticket"]["action"] == "ticket_skipped"
+
+
+def test_fold_categories_closes_previous_failed_event() -> None:
+    failed = {
+        "category_key": "persona-dream/phase16/x/target/v1",
+        "blocking": True,
+        "repair_state": psr.RepairState.NEEDS_TRIAGE.value,
+        "ticket": {"issue_ref": None},
+        "triage": {"code": "x"},
+    }
+    repaired = {
+        **failed,
+        "event_type": "step.repaired",
+        "repair_state": psr.RepairState.CATEGORY_GREEN.value,
+        "agentic_eval": {"report": {"path": "proof.json", "sha256": "sha256:0", "bytes": 2}},
+    }
+    folded = psr._fold_categories([failed, repaired])
+    assert folded["persona-dream/phase16/x/target/v1"]["events"] == 2
+    assert folded["persona-dream/phase16/x/target/v1"]["latest_state"] == psr.RepairState.CATEGORY_GREEN.value

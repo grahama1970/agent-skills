@@ -1,5 +1,10 @@
 # Persona Dream
 
+Current phase: `P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN`.
+A live Kling/Fal provider return already exists for the active successor
+revision, and the successor dream passes Phase 16 recall/behavior evaluation;
+do not resubmit the same request hash.
+
 > **Disciplines:** persona-simulation · memory-knowledge
 
 ![Persona Dream — the research loop: the day and prior conversation enter memory, memory yields a tension, the tension yields a dream, and three things return to memory — what she concluded, the imagery and voice the dream produced, and what a human said back, each as a typed record.](assets/readme/research-loop.webp)

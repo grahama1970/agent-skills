@@ -1,8 +1,8 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-08-23 UTC (Persona Dream rater-page path repair; #1344 canonical `run.sh dream` spine reaches spoken journal; #1179/#1497 listener-study technical screen now PASS; #1058 remains the human listener collection gate) by Codex
+**Last updated:** 2026-08-28 UTC (P11 Kling/Fal provider return exists and P16 recall/behavior evaluation now PASS for successor dream; do not resubmit request `sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4`) by Codex
 **Status:** Active development
-**Current phase:** `P2_LIVE_CONTINUITY_CHAIN`
+**Current phase:** `P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN`
 **Active successor issues (own the open claims; see `CURRENT_STATUS.json` `current_claims`):**
 #1126/#1127/#1179 listener-study technical prerequisites CLOSED — the current
 v2 stimuli pass the frozen technical screen and the refreshed rater page validates
