@@ -162,6 +162,35 @@
       "does_not_prove": "A fresh live Moog Workday request is reachable tonight, that every Moog role is semantically relevant after ranking, or that Graham has authorized any application submission."
     },
     {
+      "name": "workday-ats-job-page-metadata-regression",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_ats_form_capture.py::test_provider_parse_workday skills/monitor-opportunities/tests/test_ats_form_capture.py::test_application_workplace_classifier_does_not_make_non_buffalo_onsite_wny skills/monitor-opportunities/tests/test_ats_form_capture.py::test_workday_application_page_metadata_reads_json_ld skills/monitor-opportunities/tests/test_ats_form_capture.py::test_capture_ats_form_workday_uses_job_page_metadata_without_dom -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed"
+        ],
+        "stderr_excludes": [
+          "ATS_DOM_CAPTURE_EMPTY",
+          "DOM capture should not run"
+        ]
+      },
+      "proves": "Moog-style Workday application URLs are parsed, public Workday JobPosting JSON-LD is captured as apply-page location authority, East Aurora is classified as WNY_ONSITE, and a Workday page with no anonymous form fields records an OK read-only metadata capture instead of ATS_DOM_CAPTURE_EMPTY.",
+      "does_not_prove": "A fresh live Workday network request is reachable tonight, that Workday submit is implemented, or that Graham has authorized a Moog application submission.",
+      "seams": [
+        "browser_capture._ats_provider_from_url",
+        "browser_capture._workday_application_metadata_from_html",
+        "browser_capture.capture_ats_form"
+      ]
+    },
+    {
       "name": "decision-ledger-concurrent-authorization-regression",
       "type": "adversarial",
       "evidence_class": "deterministic",

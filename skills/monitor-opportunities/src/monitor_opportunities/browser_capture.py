@@ -1546,6 +1546,7 @@ _ATS_SENSITIVE_NEEDLES = (
     ("salary", ("salary", "compensation")),
     ("clearance", ("clearance",)),
 )
+_APPLICATION_WNY_MARKERS = ("buffalo", "east aurora", "williamsville", "amherst", "cheektowaga")
 
 
 def _classify_application_workplace(location: str, provider_workplace_type: str = "") -> str:
@@ -1557,9 +1558,10 @@ def _classify_application_workplace(location: str, provider_workplace_type: str 
         .replace("_", "")
         .replace(" ", "")
     )
-    if "buffalo" in text and provider == "hybrid":
+    wny = any(marker in text for marker in _APPLICATION_WNY_MARKERS)
+    if wny and provider == "hybrid":
         return "WNY_HYBRID"
-    if "buffalo" in text:
+    if wny:
         return "WNY_ONSITE"
     if provider == "remote" or "remote" in text:
         return "REMOTE"
@@ -1649,6 +1651,62 @@ def _fetch_ashby_application_metadata(apply_url: str) -> dict[str, Any] | None:
     return _ashby_application_metadata_from_html(response.text, apply_url)
 
 
+def _workday_application_metadata_from_html(html_text: str, url: str) -> dict[str, Any] | None:
+    import html as _html
+    import re
+
+    match = re.search(
+        r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+        html_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return None
+    try:
+        data = json.loads(_html.unescape(match.group(1)).strip())
+    except ValueError:
+        return None
+    if not isinstance(data, dict) or data.get("@type") != "JobPosting":
+        return None
+    organization = data.get("hiringOrganization")
+    location = data.get("jobLocation")
+    address = location.get("address") if isinstance(location, dict) else None
+    locality = ""
+    if isinstance(address, dict):
+        locality = str(address.get("addressLocality") or "").strip()
+    identifier = data.get("identifier")
+    provider_workplace = str(data.get("jobLocationType") or "").strip()
+    return {
+        "source": "workday_json_ld_job_posting",
+        "authority": "apply_page",
+        "url": url,
+        "title": data.get("title"),
+        "organization": organization.get("name") if isinstance(organization, dict) else None,
+        "location_display": locality or None,
+        "primary_location": locality or None,
+        "secondary_locations": [],
+        "provider_workplace_type": provider_workplace or None,
+        "workplace_type": _classify_application_workplace(locality, provider_workplace),
+        "job_req_id": identifier.get("value") if isinstance(identifier, dict) else None,
+        "date_posted": data.get("datePosted"),
+        "employment_type": data.get("employmentType"),
+    }
+
+
+def _fetch_workday_application_metadata(apply_url: str) -> dict[str, Any] | None:
+    if "myworkdayjobs.com" not in str(apply_url or "").lower():
+        return None
+    try:
+        import httpx
+
+        response = httpx.get(apply_url, follow_redirects=True, timeout=20)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001 - supplemental evidence, not a submit effect
+        logger.info("workday application metadata fetch failed for {}: {}", apply_url, exc)
+        return None
+    return _workday_application_metadata_from_html(response.text, apply_url)
+
+
 def _ats_provider_from_url(url: str) -> tuple[str, str, str]:
     """Parse (provider, site, posting_id) from a known ATS apply URL.
 
@@ -1668,6 +1726,8 @@ def _ats_provider_from_url(url: str) -> tuple[str, str, str]:
         return "ashby", (parts[0] if parts else ""), (parts[-1] if parts else "")
     if "lever.co" in host:
         return "lever", (parts[0] if parts else ""), (parts[-1] if parts else "")
+    if "myworkdayjobs.com" in host:
+        return "workday", (parts[0] if parts else host.split(".")[0]), (parts[-1] if parts else "")
     return "unknown", host, (parts[-1] if parts else "")
 
 
@@ -1766,7 +1826,11 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
         receipt["status"] = "NO_URL"
         return receipt
     form: dict[str, Any] | None = None
-    application_page = _fetch_ashby_application_metadata(apply_url) if provider == "ashby" else None
+    application_page = None
+    if provider == "ashby":
+        application_page = _fetch_ashby_application_metadata(apply_url)
+    elif provider == "workday":
+        application_page = _fetch_workday_application_metadata(apply_url)
     tab_id = ""
     try:
         if provider == "greenhouse" and site and posting_id:
@@ -1777,6 +1841,26 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
                 receipt["capture_method"] = "greenhouse_api"
             except GreenhouseFormError as exc:
                 logger.info("greenhouse API miss for {} ({}); falling back to DOM", apply_url, exc)
+        if form is None and provider == "workday" and application_page:
+            form = {
+                "provider": provider,
+                "site": site,
+                "posting_id": posting_id,
+                "url": apply_url,
+                "title": application_page.get("title"),
+                "organization": application_page.get("organization"),
+                "location": application_page.get("location_display"),
+                "workplace_type": application_page.get("workplace_type"),
+                "application_page": application_page,
+                "fields": [],
+                "accepted_attachments": [],
+                "policy_observations": [
+                    "Captured read-only from Workday JobPosting JSON-LD on the public job page.",
+                    "No anonymous Workday application form fields were exposed; human/authorized browser session may be required before field capture.",
+                    "No form write, account creation, sign-in, or application submit was performed.",
+                ],
+            }
+            receipt["capture_method"] = "workday_job_page_json_ld"
         if form is None:
             ensure_browser(surf_run)
             created = _surf(surf_run, "tab.new", apply_url, "--json", timeout=30)
