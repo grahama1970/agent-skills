@@ -47,3 +47,42 @@ def test_monitor_opportunities_revision_mismatch_maps_to_scheduler_repair() -> N
     assert "schedule --promoted-stage0" in r["next_command"]
     assert "skills/ticket" in r["next_command"]
     assert "project-watchdog" in r["next_command"]
+
+
+def test_monitor_opportunities_linkedin_source_accounting_beats_revision_noise() -> None:
+    r = t.classify(
+        """
+        {
+          "status": "FAIL",
+          "checks": {
+            "current_revision_matches_expected": true,
+            "linkedin_top_applicant_status_accounted": false,
+            "linkedin_premium_status_accounted": false
+          },
+          "source_accounting": {
+            "linkedin_top_applicant": {"status": "FAILED"},
+            "linkedin_premium": {"status": "FAILED"}
+          },
+          "preflight": {"expected_revision": "abc123"}
+        }
+        """,
+        "monitor-opportunities",
+    )
+    assert r["code"] == "monitor_opportunities_linkedin_source_accounting_failed"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "scheduler-exec-check" in r["next_command"]
+
+
+def test_project_watchdog_nonzero_needs_attention_has_actionable_code() -> None:
+    r = t.classify(
+        "[project_watchdog_closure_audit_nonzero_needs_attention] closure of o/r#9 "
+        "could not be judged; left closed and unverified (wrapper exit 4, "
+        "seats {'handler-webclaude': 'NEEDS_ATTENTION'}); ensure closure-unverified",
+        "project-watchdog",
+    )
+    assert r["code"] == "project_watchdog_closure_audit_nonzero_needs_attention"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "agentic-evals" in r["next_command"]
+    assert "closure-audit-nonzero-needs-attention" in r["next_command"]

@@ -1679,6 +1679,10 @@ CLOSURE_AUDIT_MARKER = "project-watchdog:closure-audit"
 #: `e2e` blocks name the commands that ran and the artifact each wrote.
 CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
 
+CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE = (
+    "project_watchdog_closure_audit_nonzero_needs_attention"
+)
+
 #: Cap per artifact. The auditors read a prompt, not a filesystem; a 50MB log
 #: would crowd out the ticket itself.
 ARTIFACT_EXCERPT_CHARS = 4000
@@ -2005,7 +2009,7 @@ def handle_closure_audit(
         f"### {node}\n{text.strip()}" for node, text in sorted(by_node.items())
     )
 
-    if audit.get("exit_code") != 0 or verdict is None:
+    if (audit.get("exit_code") != 0 and verdict != "NEEDS_ATTENTION") or verdict is None:
         # No verdict is not a pass. Leave the ticket closed and say so, rather
         # than reopening on a failed reviewer or silently accepting.
         result.update(
@@ -2082,6 +2086,22 @@ def handle_closure_audit(
         # "I cannot tell from what is here" is not a finding that the work is
         # wrong. Reopening on it would churn every ticket whose proof lives in
         # an artifact the auditor cannot read. Say so and leave it closed.
+        audit_triage = None
+        if audit.get("exit_code") != 0:
+            audit_triage = {
+                "code": CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE,
+                "layer": "project-watchdog",
+                "cause": (
+                    "Ask/Tau exited nonzero while closure-audit seats declared "
+                    "VERDICT: NEEDS_ATTENTION. The semantic verdict is usable; "
+                    "the watchdog must make it durable with closure-unverified or cooldown."
+                ),
+                "next_command": (
+                    f"Ensure {config.CLOSURE_UNVERIFIED_LABEL!r} exists for {repo}, "
+                    "then re-run the project-watchdog closure-audit regression eval."
+                ),
+            }
+            result["triage"] = audit_triage
         result["commands"].append(
             github.issue_comment(
                 repo,
@@ -2096,7 +2116,11 @@ def handle_closure_audit(
                         "repo": repo,
                         "auditors": auditors,
                         "seat_verdicts": seat_verdicts,
+                        "seat_failures": seat_failures,
                         "verdict": verdict,
+                        "wrapper_exit_code": audit.get("exit_code"),
+                        "wrapper_stderr_excerpt": str(audit.get("stderr", ""))[:1000],
+                        "triage": audit_triage,
                         "outcome": "left_closed_unverified",
                         "reviewer_excerpt": response.strip()[:2000],
                     },
@@ -2113,8 +2137,12 @@ def handle_closure_audit(
                 {
                     "ok": False,
                     "status": "NEEDS_ATTENTION",
+                    "failure_code": (
+                        audit_triage["code"] if audit_triage else "closure_unverified_label_failed"
+                    ),
                     "summary": (
-                        f"closure of {repo}#{issue_number} was left unverified but "
+                        (f"[{audit_triage['code']}] " if audit_triage else "")
+                        + f"closure of {repo}#{issue_number} was left unverified but "
                         f"{config.CLOSURE_UNVERIFIED_LABEL!r} could not be applied: "
                         f"{str(mark.get('stderr'))[:160]}. Without it the same closure is "
                         f"re-audited every tick. Run: skills/ticket/run.sh ensure-labels "
@@ -2128,9 +2156,14 @@ def handle_closure_audit(
             {
                 "ok": True,
                 "status": "NEEDS_ATTENTION",
+                "failure_code": audit_triage["code"] if audit_triage else None,
                 "summary": (
-                    f"closure of {repo}#{issue_number} could not be judged from the ticket "
-                    f"thread; left closed and unverified rather than reopened"
+                    (f"[{audit_triage['code']}] " if audit_triage else "")
+                    + f"closure of {repo}#{issue_number} could not be judged from the ticket "
+                    f"thread; left closed and unverified rather than reopened "
+                    f"(wrapper exit {audit.get('exit_code')}, seats {seat_verdicts}"
+                    + (f", failures {seat_failures}" if seat_failures else "")
+                    + ")"
                 ),
             }
         )

@@ -23,6 +23,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from watchdog import (  # noqa: E402
+    commands,
     config,
     core,
     github,
@@ -1632,6 +1633,69 @@ def test_a_failed_reviewer_run_is_not_treated_as_a_pass(tmp_path) -> None:
     result, calls = _run_audit(tmp_path, "VERDICT: PASS", exit_code=1)
     assert result["status"] == "NEEDS_ATTENTION"
     assert not any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_nonzero_audit_with_needs_attention_verdict_is_made_durable(tmp_path) -> None:
+    result, calls = _run_audit(
+        tmp_path,
+        {"handler-a": "VERDICT: NEEDS_ATTENTION", "handler-b": "VERDICT: NEEDS_ATTENTION"},
+        exit_code=4,
+    )
+    assert result["verdict"] == "NEEDS_ATTENTION"
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert result["failure_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert result["triage"]["code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert calls["reopened"] == []
+    assert any(e.get("add") == [config.CLOSURE_UNVERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_nonzero_needs_attention_audit_cools_down_if_selected_again(tmp_path) -> None:
+    state: dict = {"projects": {"p": {"state": "active"}}, "closure_audit_attempts": {}}
+    receipt: dict = {}
+    issue = _closed(9, labels=["agent-work"], closed_at="2026-07-28T00:00:00Z")
+    project = {"project_id": "p", "repo": TAU_REPO, "worktree": str(tmp_path)}
+    calls: dict = {"run_cmd": 0, "persisted": []}
+
+    def fake_run_cmd(*args, **kwargs):
+        calls["run_cmd"] += 1
+        return {"exit_code": 4, "stderr": "join gate had no usable receipt"}
+
+    with (
+        mock.patch.object(registry, "list_closed_for_audit", return_value=[issue]),
+        mock.patch.object(handlers.github, "issue_comments", return_value=[]),
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github,
+            "issue_edit",
+            return_value={"exit_code": 1, "stderr": "label missing"},
+        ),
+        mock.patch.object(handlers, "run_cmd", side_effect=fake_run_cmd),
+        mock.patch.object(
+            handlers,
+            "_read_ask_responses_by_node",
+            return_value={
+                "handler-a": "VERDICT: NEEDS_ATTENTION",
+                "handler-b": "VERDICT: NEEDS_ATTENTION",
+            },
+        ),
+        mock.patch.object(
+            commands,
+            "_persist_tick_state",
+            side_effect=lambda s: calls["persisted"].append(dict(s)),
+        ),
+    ):
+        first = commands._audit_one_closure(
+            "run", tmp_path, state, receipt, apply=True, candidates=[project]
+        )
+        second = commands._audit_one_closure(
+            "run", tmp_path, state, receipt, apply=True, candidates=[project]
+        )
+
+    assert first is not None and first["verdict"] == "NEEDS_ATTENTION"
+    assert first["failure_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert second is None, "the cooldown must suppress the duplicate audit on the next tick"
+    assert calls["run_cmd"] == 1
+    assert state["closure_audit_attempts"][f"{TAU_REPO}#9"] > 0
 
 
 def test_repeated_audit_failures_stop_reopening_and_ask_for_a_person(tmp_path) -> None:

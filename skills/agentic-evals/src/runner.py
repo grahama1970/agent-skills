@@ -1034,7 +1034,10 @@ def run(
     ),
     only_category: str = typer.Option(
         None, "--only-category",
-        help="Run only the cases a category owns (its close slice). Requires --map.",
+        help=(
+            "Run only the cases a category owns. Uses explicit case category/name without --map; "
+            "pass --map for a mapped close slice."
+        ),
     ),
     category_map: Path = typer.Option(None, "--map", help="category_map.v1 for --only-category."),
 ) -> None:
@@ -1047,19 +1050,29 @@ def run(
     """
     only_cases = list(case or []) or None
     if only_category:
-        if category_map is None:
-            raise typer.BadParameter("--only-category requires --map")
-        import remediation as rem
-
-        cmap = rem.load_category_map(category_map)
         manifest_doc = json.loads(manifest.read_text())
-        slice_names = [
-            c["name"] for c in manifest_doc.get("cases", [])
-            if only_category in rem._match_categories(c, cmap)
-        ]
-        if not slice_names:
-            raise typer.BadParameter(f"no cases match category {only_category!r}")
-        only_cases = slice_names
+        if category_map is None:
+            slice_names = [
+                c["name"] for c in manifest_doc.get("cases", [])
+                if only_category in {c.get("category"), c.get("category_id"), c.get("name")}
+            ]
+            if not slice_names:
+                raise typer.BadParameter(
+                    f"no cases explicitly match category {only_category!r}; "
+                    "pass --map for a mapped close slice"
+                )
+            only_cases = slice_names
+        else:
+            import remediation as rem
+
+            cmap = rem.load_category_map(category_map)
+            slice_names = [
+                c["name"] for c in manifest_doc.get("cases", [])
+                if only_category in rem._match_categories(c, cmap)
+            ]
+            if not slice_names:
+                raise typer.BadParameter(f"no cases match category {only_category!r}")
+            only_cases = slice_names
     report = evaluate_manifest(manifest, timeout_seconds, only_cases=only_cases)
     payload = json.dumps(report, indent=2)
     if output is not None:

@@ -313,8 +313,8 @@ def _audit_one_closure(
     key = f"{chosen['project'].get('repo')}#{issue['number']}"
     audited = handle_closure_audit(run_id, receipt_dir, chosen["project"], issue, apply=apply)
     if apply:
-        if audited.get("verdict"):
-            attempts.pop(key, None)  # answered: no reason to hold it back
+        if audited.get("ok") is True and audited.get("verdict") in {"PASS", "FAIL"}:
+            attempts.pop(key, None)  # durably answered: no reason to hold it back
         else:
             attempts[key] = now
         _persist_tick_state(state)
