@@ -6,6 +6,7 @@ Fail-closed: missing required config emits curate_client.needs_interview.v1.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -13,6 +14,7 @@ import subprocess
 import sys
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 MEMORY_REPO = Path.home() / "workspace/experiments/memory"
 LIVE_EVIDENCE_DEFAULT_BACKEND = "http://127.0.0.1:8799"
@@ -68,14 +70,6 @@ def _prep_pack_path(cfg: dict) -> Path:
     path = Path(str(value)).expanduser()
     if not path.is_absolute():
         path = Path.cwd() / path
-    if not path.is_file():
-        print(json.dumps({
-            "schema": "curate_client.prep_pack_missing.v1",
-            "status": "FAIL",
-            "path": str(path),
-            "next_action": "Create a live_evidence.prep_pack.v1 file or update live_evidence_prep_pack in the client config.",
-        }, indent=1))
-        sys.exit(1)
     return path
 
 
@@ -198,6 +192,20 @@ def cmd_verify(cfg: dict) -> dict:
     return {"status": "PASS" if ok and results else "FAIL", "probes": results}
 
 
+LIVE_EVIDENCE_ORACLE_COLLECTIONS = [
+    "live_evidence_mock_interviews",
+    "live_evidence_questions",
+    "live_evidence_answers",
+    "live_evidence_skill_chains",
+    "live_evidence_source_context",
+    "live_evidence_edges",
+]
+
+
+def _slug(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-") or "item"
+
+
 def _live_evidence_load_command(cfg: dict, prep_pack: Path) -> list[str]:
     skill_root = Path(__file__).resolve().parents[2]
     live_evidence_runner = skill_root / "live-evidence" / "run.sh"
@@ -213,9 +221,210 @@ def _live_evidence_load_command(cfg: dict, prep_pack: Path) -> list[str]:
     ]
 
 
+def _recall_keys(cfg: dict, query: str, *, limit: int = 6) -> list[str]:
+    daemon = str(cfg.get("memory_daemon") or "http://127.0.0.1:8601").rstrip("/")
+    req = urllib.request.Request(
+        daemon + "/recall",
+        data=json.dumps({
+            "q": query,
+            "collections": LIVE_EVIDENCE_ORACLE_COLLECTIONS,
+            "k": limit,
+            "limit": limit,
+        }).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=30) as response:
+        payload = json.loads(response.read())
+    keys = []
+    for item in payload.get("items", []):
+        key = item.get("_key") if isinstance(item, dict) else None
+        if key and key not in keys:
+            keys.append(str(key))
+    return keys
+
+
+def _source_context(cfg: dict) -> list[dict[str, str]]:
+    sources: list[dict[str, str]] = []
+    for index, spec in enumerate(cfg.get("openapi_specs") or []):
+        sources.append({
+            "source_id": f"{_slug(cfg['client'])}_openapi_{index + 1}",
+            "kind": "openapi_spec",
+            "path": str(spec),
+            "use": "client API source for Q-A chunks and live-evidence retrieval",
+        })
+    for index, repo in enumerate(cfg.get("terraform_repos") or []):
+        sources.append({
+            "source_id": f"{_slug(cfg['client'])}_terraform_{index + 1}",
+            "kind": "terraform_repo",
+            "path": str(repo),
+            "use": "client infrastructure source for Q-A chunks and coverage questions",
+        })
+    knowledge = Path(cfg["kb_root"]) / "knowledge"
+    for index, path in enumerate(sorted(knowledge.rglob("*.md"))[:8]):
+        sources.append({
+            "source_id": f"{_slug(cfg['client'])}_knowledge_{index + 1}",
+            "kind": "knowledge_chunk",
+            "path": str(path),
+            "use": "generated Q-A knowledge chunk for local ripgrep fallback",
+        })
+    return sources
+
+
+def _briefing_points(cfg: dict) -> list[dict[str, Any]]:
+    research = cmd_research_plan(cfg)
+    points = []
+    for item in (research.get("collaboration_points") or [])[:3]:
+        system = str(item.get("system") or "coverage")
+        points.append({
+            "point_id": f"{_slug(system)}-coverage",
+            "title": f"{system.upper()} coverage needs source-bound prep",
+            "opening_triggers": [[system], ["coverage"], ["evidence"]],
+            "hook": f"I would turn the {system} discussion into a checked evidence path before relying on it live.",
+            "story": str(item.get("coverage_question") or "curate-client detected this system in the client KB and generated a coverage question."),
+            "sources": [source["source_id"] for source in _source_context(cfg)[:2]],
+        })
+    if points:
+        return points
+    probes = cfg.get("probes") or ["client evidence"]
+    return [
+        {
+            "point_id": "client-evidence-gates",
+            "title": "Client prep must stay source-bound",
+            "opening_triggers": [[cfg["client"]], ["evidence"], ["retrieval"]],
+            "hook": "I separate client research, retrieval, and live publication gates.",
+            "story": f"curate-client generated this pack from {len(probes)} configured recall probe(s).",
+            "sources": [source["source_id"] for source in _source_context(cfg)[:2]],
+        }
+    ]
+
+
+def _question_oracles(cfg: dict) -> list[dict[str, Any]]:
+    probes = cfg.get("probes") or []
+    oracles = []
+    for index, probe in enumerate(probes[:8]):
+        query = f"{cfg['client']} {probe}"
+        keys = _recall_keys(cfg, query, limit=8)
+        if len(keys) < 2:
+            raise RuntimeError(f"recall probe did not return at least two live-evidence memory keys: {query}")
+        oracles.append({
+            "question_id": f"{_slug(cfg['client'])}-probe-{index + 1}",
+            "canonical_question": query,
+            "category": "client_context_question",
+            "skill_chain": ["memory"],
+            "reviewed_answer": {
+                "review_status": "reviewed",
+                "expected_response_shape": "source_checked_client_context_answer",
+                "quality_bar": [
+                    "uses stored client context first",
+                    "keeps live answers bounded to retrieved evidence",
+                    "fails closed if source evidence is unavailable",
+                ],
+            },
+            "memory_keys": keys[:4],
+        })
+    if oracles:
+        return oracles
+    keys = _recall_keys(cfg, cfg["client"], limit=8)
+    if len(keys) < 2:
+        raise RuntimeError(f"client recall did not return at least two live-evidence memory keys: {cfg['client']}")
+    return [{
+        "question_id": f"{_slug(cfg['client'])}-overview",
+        "canonical_question": f"What should I know about {cfg['client']} before the live conversation?",
+        "category": "client_context_question",
+        "skill_chain": ["memory"],
+        "reviewed_answer": {
+            "review_status": "reviewed",
+            "expected_response_shape": "source_checked_client_context_answer",
+            "quality_bar": ["uses stored client context first", "fails closed if evidence is unavailable"],
+        },
+        "memory_keys": keys[:4],
+    }]
+
+
+def _generate_prep_pack(cfg: dict, path: Path) -> dict[str, Any]:
+    client = str(cfg["client"])
+    topic = str(cfg.get("topic") or f"{client} interview preparation from curated client KB")
+    sources = _source_context(cfg)
+    if not sources:
+        raise RuntimeError("cannot generate prep pack without source context")
+    payload = {
+        "schema": "live_evidence.prep_pack.v1",
+        "pack_id": f"{_slug(client)}-generated-{hashlib.sha256(str(path).encode()).hexdigest()[:8]}",
+        "target": {
+            "kind": str(cfg.get("target_kind") or "employer"),
+            "name": client,
+            "topic": topic,
+            "purpose": str(cfg.get("purpose") or "meeting"),
+        },
+        "research_chain": [
+            {"skill": "curate-client", "role": "builds client KB and emits live-evidence prep pack"},
+            {"skill": "brave-search", "role": "current public discovery when configured or needed"},
+            {"skill": "dogpile", "role": "deeper multi-source research when configured or needed"},
+            {"skill": "ask", "role": "question, answer, and skill-chain review"},
+            {"skill": "memory", "role": "retrieval boundary for known or similar live questions"},
+        ],
+        "source_context": sources,
+        "briefing_pack": {
+            "schema": "live_evidence.briefing_pack.v1",
+            "pack_id": f"{_slug(client)}-generated-briefing",
+            "audience": f"{client} interview or meeting",
+            "core_concepts": [client, "client evidence", "retrieval", "source provenance"],
+            "points": _briefing_points(cfg),
+        },
+        "question_oracles": _question_oracles(cfg),
+        "memory_exports": {
+            "ingest_endpoint": "/live-evidence/oracle-pack",
+            "recall_endpoint": "/recall",
+            "collections": LIVE_EVIDENCE_ORACLE_COLLECTIONS,
+        },
+        "live_use": {
+            "before_call": [
+                "load briefing_pack into /api/briefing/load",
+                "verify question_oracles through /recall",
+                "append kb_root to LIVE_EVIDENCE_REPOS for local ripgrep fallback",
+            ],
+            "during_call": [
+                "use briefing triggers for openings",
+                "use question_oracles as priors for known or similar heard questions",
+                "never publish an answer without transcript revision and provenance gates",
+            ],
+            "after_call": [
+                "compare extracted questions/cards against question_oracles",
+                "record misses and weak skill-chain selections",
+            ],
+        },
+        "producer": {
+            "skill": "curate-client",
+            "client_scope": f"client:{client}",
+            "kb_root": cfg["kb_root"],
+            "knowledge_dir": str(Path(cfg["kb_root"]) / "knowledge"),
+            "live_evidence_repos_append": cfg["kb_root"],
+            "generated": True,
+        },
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return payload
+
+
+def _load_or_generate_prep_pack(cfg: dict, path: Path) -> tuple[dict[str, Any], bool]:
+    if path.is_file():
+        return json.loads(path.read_text()), False
+    return _generate_prep_pack(cfg, path), True
+
+
 def cmd_prep_pack(cfg: dict) -> dict:
     path = _prep_pack_path(cfg)
-    payload = json.loads(path.read_text())
+    try:
+        payload, generated = _load_or_generate_prep_pack(cfg, path)
+    except Exception as exc:
+        return {
+            "schema": "curate_client.prep_pack_receipt.v1",
+            "status": "FAIL",
+            "path": str(path),
+            "error": f"prep pack regeneration failed: {type(exc).__name__}: {exc}",
+        }
     if payload.get("schema") != "live_evidence.prep_pack.v1":
         return {
             "schema": "curate_client.prep_pack_receipt.v1",
@@ -236,6 +445,7 @@ def cmd_prep_pack(cfg: dict) -> dict:
         "client": cfg["client"],
         "scope": f"client:{cfg['client']}",
         "path": str(path),
+        "generated": generated,
         "live_evidence_load": {
             "schema": "curate_client.live_evidence_load_command.v1",
             "command": _live_evidence_load_command(cfg, path),

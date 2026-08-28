@@ -2,9 +2,9 @@
  "version": 2,
  "skill": "curate-client",
  "trials": 3,
- "proof_scope": "deterministic chunk extraction from a bundled mini OpenAPI spec, fail-closed interview gating, live-evidence prep-pack emission, and a live memory-daemon ingest+recall round-trip when the daemon is reachable",
+ "proof_scope": "deterministic chunk extraction from a bundled mini OpenAPI spec, fail-closed interview gating, live-evidence prep-pack emission/regeneration, and a live memory-daemon ingest+recall round-trip when the daemon is reachable",
  "claims": {
-  "proves": "the skill extracts Q-A chunks through its real CLI, fails closed with a NEEDS_INTERVIEW packet on missing required config, emits the live_evidence.prep_pack.v1 handoff, and can ingest a fixture KB into /memory and recall it through the live daemon",
+  "proves": "the skill extracts Q-A chunks through its real CLI, fails closed with a NEEDS_INTERVIEW packet on missing required config, emits or regenerates the live_evidence.prep_pack.v1 handoff, and can ingest a fixture KB into /memory and recall it through the live daemon",
   "does_not_prove": "arbitrary client corpora, docs fetching (delegated to fetcher/brave-search), Qdrant semantic ranking quality, or live-evidence UI rendering of the cards"
  },
  "cases": [
@@ -61,6 +61,56 @@
      "\"load-prep-pack\""
     ]
    }
+  },
+  {
+   "name": "drivewealth-prep-pack-regenerates-missing-output",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "live_e2e",
+   "readback": true,
+   "command": [
+    "bash",
+    "-c",
+    "O=\"${TMPDIR:-/tmp}/curate-client-regenerate-current.json\"; rm -f \"$O\"; python3 ../scripts/eval_regenerate_prep_pack.py --output \"$O\" --memory-url http://127.0.0.1:8601"
+   ],
+   "timeout_seconds": 420,
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "missing prep-pack path regenerated: PASS",
+     "generated prep pack validates through live-evidence: PASS",
+     "generated prep pack oracle recall loads: PASS",
+     "curate-client regenerate prep-pack: PASS"
+    ],
+    "artifacts": [
+     {
+      "path": "/tmp/curate-client-regenerate-current.json",
+      "json_pointer": "/status",
+      "equals": "PASS"
+     },
+     {
+      "path": "/tmp/curate-client-regenerate-current.json",
+      "json_pointer": "/checks/missing prep-pack path regenerated",
+      "equals": true
+     },
+     {
+      "path": "/tmp/curate-client-regenerate-current.json",
+      "json_pointer": "/checks/generated prep pack validates through live-evidence",
+      "equals": true
+     },
+     {
+      "path": "/tmp/curate-client-regenerate-current.json",
+      "json_pointer": "/checks/generated prep pack oracle recall loads",
+      "equals": true
+     },
+     {
+      "path": "/tmp/curate-client-regenerate-current.json",
+      "json_pointer": "/pack_summary/producer/generated",
+      "equals": true
+     }
+    ]
+   },
+   "notes": "Regression for curate-client pipeline regeneration: prep-pack must create a missing configured live_evidence_prep_pack from config + KB + live Memory recall, then pass Live Evidence validation and oracle-recall loading. Failures route through triage-error and pipeline-self-repair."
   },
   {
    "name": "live-verify-recall-drivewealth-e2e",
