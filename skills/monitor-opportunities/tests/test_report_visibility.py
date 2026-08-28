@@ -216,7 +216,43 @@ def test_static_report_renders_morning_decision_table() -> None:
     assert "LinkedIn evidence" in html
     assert "NO_APPLICATION_PACKET" in html
     assert "No application packet; inspect deep section." in html
+    assert "No relationship signal captured for this opportunity." in html
     assert "No LinkedIn Top Applicant/Easy Apply evidence on this row." in html
+
+
+def test_static_report_decision_table_explains_unattached_relationship_signals() -> None:
+    data = built_in_fixture()
+    data["relationship_signals"] = [
+        _relationship_signal(
+            signal_id="rel:ge-high-assurance",
+            source_opportunity_id="candidate:c:github:rack",
+            signal_type="adjacent_contact",
+            subject="GE High Assurance Software",
+            organization="GE High Assurance",
+            relationship_path=["Graham Anderson", "DARPA ARCOS network", "GE High Assurance Software"],
+            provenance="Adjacent ARCOS/formal-methods contact path",
+        )
+    ]
+    data["relationship_binding_diagnostics"] = [
+        {
+            "diagnostic_id": "relbind:no-moog",
+            "signal_id": "rel:ge-high-assurance",
+            "opportunity_id": None,
+            "organization_key": "ge high assurance",
+            "reason_code": "NO_ORGANIZATION_MATCH",
+            "detail": "Signal organization did not uniquely match a shortlisted opportunity.",
+            "external_effects": False,
+            "visible_in_report": True,
+        }
+    ]
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    html = render_html(validate_manifest(data))
+
+    org = data["opportunities"][0]["organization"]
+    assert f"No direct contact path for {org} found; see relationship binding diagnostics." in html
+    assert "NO_ORGANIZATION_MATCH" in html
 
 
 def test_reports_render_relationship_binding_diagnostics(tmp_path: Path) -> None:
