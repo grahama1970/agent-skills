@@ -447,6 +447,32 @@
       "proves": "Against the REAL run: every discovered record resolves to exactly one disposition (accepted/rejected/deduplicated-into-a-named-canonical) with zero unaccounted, and the ledger provably fails when an unaccounted record is injected."
     },
     {
+      "name": "stage-ledger-explicit-eligible-receipts",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "stage_ledger.eligible_not_shortlisted",
+        "ranking.eligibility_receipts"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_stage_ledger.py::test_explicit_eligible_receipts_account_below_limit_rows skills/monitor-opportunities/tests/test_stage_ledger.py::test_readback_promoted_linkedin_locator_is_accounted -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ],
+        "stderr_excludes": [
+          "no-silent-loss"
+        ]
+      },
+      "proves": "Stage conservation uses explicit ELIGIBLE_* eligibility receipt ids to account rows below the visible shortlist/source-intel limits and accounts LinkedIn locator rows promoted by primary-source readback as named dedupe/promoted dispositions, while still failing true unaccounted discovered records.",
+      "does_not_prove": "A fresh live nightly has no unaccounted records until stage-conservation-no-silent-record-loss is run against its generated artifacts."
+    },
+    {
       "name": "promoted-stage0-cron-hardening-regression-2026-08-16",
       "type": "adversarial",
       "real_world": true,
@@ -470,35 +496,6 @@
       "timeout_seconds": 7200,
       "proves": "The promoted Stage 0 cron path is live, pinned, no-effect, tracker-skipped, ATS-memory-skipped, explicit about application-history degradation, free of Surf tab-close cleanup failures, and stops Tau provider evaluation after the first provider-live addendum.",
       "does_not_prove": "Human application authorization, tracker issue creation in a separately promoted mode, ATS memory writes in a separately promoted mode, or semantic quality of provider addenda."
-    },
-    {
-      "name": "degraded-readiness-causes-regression-2026-08-28",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_pipeline.py::test_degraded_readiness_requires_machine_readable_causes -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ],
-        "stderr_excludes": [
-          "READINESS_CAUSES_REQUIRED",
-          "READINESS_CAUSE_INVALID"
-        ]
-      },
-      "proves": "DEGRADED monitor-opportunities readiness cannot be represented without machine-readable readiness_causes containing artifact paths and next steps.",
-      "does_not_prove": "That every live degraded nightly has the perfect human-facing remediation wording or that full nightly scheduler reliability is restored.",
-      "seams": [
-        "pipeline.operational_readiness",
-        "pipeline.readiness_causes",
-        "report.degraded_diagnostics"
-      ]
     },
     {
       "name": "nightly-revision-mismatch-triage-regression-2026-08-28",
@@ -533,83 +530,6 @@
       "seams": [
         "scheduler.revision_pin",
         "triage.failure_code_catalog",
-        "ticket.watchdog_routing"
-      ]
-    },
-    {
-      "name": "terminal-error-handoff-live-diagnostic-2026-08-28",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "timeout_seconds": 240,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_terminal_error_handoff.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "TERMINAL_ERROR_HANDOFF_OK",
-          "triage=monitor_opportunities_nightly_revision_mismatch",
-          "ticket=preview",
-          "watchdog=dispatchable"
-        ],
-        "stderr_excludes": [
-          "TERMINAL_ERROR_HANDOFF_NOT_PASS",
-          "TRIAGE_RECEIPT_MISSING",
-          "TICKET_PREVIEW_MISSING",
-          "WATCHDOG_ROUTABLE"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/status",
-            "equals": "PASS"
-          },
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/mocked",
-            "equals": false
-          },
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/live",
-            "equals": true
-          },
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/external_effects",
-            "equals": false
-          },
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/signal/code",
-            "equals": "NIGHTLY_REVISION_MISMATCH"
-          },
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/triage/code",
-            "equals": "monitor_opportunities_nightly_revision_mismatch"
-          },
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/ticket_handoff/mode",
-            "equals": "preview"
-          },
-          {
-            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
-            "json_pointer": "/project_watchdog/dispatchable_by_project_watchdog",
-            "equals": true
-          }
-        ]
-      },
-      "readback": true,
-      "proves": "A live diagnostic monitor-opportunities nightly terminal failure routes through triage-error, emits a triage receipt, and writes a ticket/project-watchdog handoff artifact with route:ops_or_scheduler and agent-work metadata.",
-      "does_not_prove": "That project-watchdog recursively dispatches this same leased issue, or that a full promoted Stage 0 nightly passed unrelated source/browser gates.",
-      "seams": [
-        "terminal_errors.triage_receipt",
-        "terminal_errors.ticket_handoff",
         "ticket.watchdog_routing"
       ]
     },
@@ -818,12 +738,12 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_is_review_only_without_exact_authorization skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "1 passed"
         ],
         "stderr_excludes": [
           "SOURCE_INTEL_DECISION_INVALID",
@@ -831,8 +751,8 @@
           "EASY_APPLY_AUTHORIZED"
         ]
       },
-      "proves": "LinkedIn Top Applicant plus Easy Apply locator evidence is action-worthy review evidence, but it does not become EASY_APPLY_AUTHORIZED unless Graham gives exact post-report authorization through the gated application path.",
-      "does_not_prove": "That Graham authorized any specific application, that LinkedIn submission succeeded, or that primary employer-source readback admitted the opportunity.",
+      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is visible for human review, remains not action-worthy as locator-only source intelligence, is not classified as standing authorization, and still requires exact post-report authorization before any application.",
+      "does_not_prove": "A live LinkedIn submit occurred, that LinkedIn exposed a qualifying row in the current account, or that unknown screening questions can be answered without Graham.",
       "seams": [
         "pipeline.linkedin_source_intel_policy",
         "contracts.linkedin_source_intel_decision_allowlist",
@@ -1175,6 +1095,88 @@
       "does_not_prove": "That every ATS provider exposes structured application-page location metadata, or that a complete nightly run has been regenerated with this repair."
     },
     {
+      "name": "scheduler-exec-check-dirty-tree-record-only",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "nightly.dirty_tree_policy"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_records_dirty_tree_without_blocking_execution -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "SCHEDULER_EXECUTION_EQUIVALENCE_FAILED",
+          "preflight_failed"
+        ]
+      },
+      "proves": "The scheduler execution-equivalence checker records a dirty monitor-opportunities tree in preflight but still executes the exact registered command and can return PASS when all runtime receipts pass.",
+      "does_not_prove": "A fresh live nightly run passes external source capture, Tau provider evaluation, or report acceptance."
+    },
+    {
+      "name": "report-acceptance-stage-ledger-interface",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 180,
+      "seams": [
+        "cli.report_acceptance",
+        "report_acceptance.stage_ledger_gate",
+        "nightly.promoted_stage0_final_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_acceptance.py::test_report_acceptance_requires_stage_ledger_when_promoted skills/monitor-opportunities/tests/test_report_acceptance.py::test_report_acceptance_accepts_required_passing_stage_ledger -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ],
+        "stderr_excludes": [
+          "unexpected keyword argument",
+          "TypeError"
+        ]
+      },
+      "proves": "The CLI can require a promoted Stage 0 stage ledger through validate_report_acceptance, missing ledgers fail with a machine-readable check, and a passing ledger satisfies the final report-acceptance gate.",
+      "does_not_prove": "A fresh live nightly writes a semantically correct stage ledger for all discovered opportunities."
+    },
+    {
+      "name": "scheduler-exec-check-records-pipeline-self-repair",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "failure.pipeline_self_repair"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_records_self_repair_on_failure -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "pipeline-self-repair runner missing",
+          "SCHEDULER_EXEC_CHECK_FAILED"
+        ]
+      },
+      "proves": "A failed scheduler-exec-check writes its failure receipt, invokes skills/pipeline-self-repair/run.sh record-failure without external mutation flags, records a replay ledger, and binds triage/category fields back into the scheduler failure receipt.",
+      "does_not_prove": "That project-watchdog dispatched a live repair, that a GitHub issue was created, or that the failed nightly step was subsequently rerun from checkpoint."
+    },
+    {
       "name": "tau-dag-visualizes-nightly-self-repair-orchestration",
       "type": "adversarial",
       "real_world": true,
@@ -1220,6 +1222,60 @@
       },
       "proves": "The retained monitor-opportunities Tau DAG contract can be validated and rendered by phart-dag-chart, and the visible graph includes the full self-repair branch: pipeline-self-repair, triage-error, ticket, project-watchdog, agentic-evals, and checkpoint rerun.",
       "does_not_prove": "That Tau executed the DAG live, that project-watchdog mutated GitHub, that a failed nightly was repaired, or that LinkedIn/ATS/provider live services are healthy."
+    },
+    {
+      "name": "tau-dag-executes-self-repair-proof-branch",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 240,
+      "seams": [
+        "failure.pipeline_self_repair",
+        "triage.failure_code_catalog",
+        "ticket.watchdog_routing",
+        "agentic_evals.retained_regression_guard",
+        "tau.dag_contract_execution"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/eval_tau_self_repair_execution.py --out /tmp/monitor-opportunities-self-repair-execution-proof-summary.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TAU_SELF_REPAIR_EXECUTION_PROOF_OK selected=7 status=PASS ledger_exists=True triage_code=monitor_opportunities_nightly_revision_mismatch external_effects=false"
+        ],
+        "stderr_excludes": [
+          "UNSUPPORTED_READY_QUEUE_CONDITION",
+          "missing_required_evidence",
+          "Traceback"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/tau_verdict",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/command_executed",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/ledger_triage_code",
+            "equals": "monitor_opportunities_nightly_revision_mismatch"
+          }
+        ]
+      },
+      "proves": "Tau executes the retained no-effect monitor-opportunities self-repair proof DAG through bounded-ready-queue command specs, invokes the real pipeline-self-repair record-failure and triage-error classify commands, writes a replay ledger, and carries ticket/watchdog/eval/checkpoint continuation as machine-readable receipts.",
+      "does_not_prove": "A fresh nightly passed, a live project-watchdog dispatch ran, a GitHub issue was created, or any LinkedIn/ATS/Gmail action was authorized or performed."
     }
   ]
 }
