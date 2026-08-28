@@ -220,6 +220,37 @@ def main() -> int:
         check("zero stale publications in the steady-state run", len(stale) == 0)
         metrics["steady_state_stale_publications"] = len(stale)
 
+        answered_cards = [
+            r for r in rows
+            if r.get("kind") == "evidence_card" and r.get("payload", {}).get("answer")
+        ]
+        typed_deck_cards = [
+            r for r in answered_cards
+            if isinstance(r.get("payload", {}).get("solution_deck"), list)
+            and len(r.get("payload", {}).get("solution_deck") or []) > 0
+            and all(
+                isinstance(point, dict)
+                and str(point.get("title") or "").strip()
+                and str(point.get("trigger") or "").strip()
+                for point in (r.get("payload", {}).get("solution_deck") or [])
+            )
+        ]
+        answer_json_leaks = [
+            r.get("payload", {}).get("question_id")
+            for r in answered_cards
+            if "live_evidence.solution_deck.v1" in str(r.get("payload", {}).get("answer") or "")
+        ]
+        metrics.update({
+            "answered_cards": len(answered_cards),
+            "typed_solution_deck_cards": len(typed_deck_cards),
+            "solution_deck_json_leak_count": len(answer_json_leaks),
+        })
+        check(
+            "live fast solver publishes typed solution_deck, not embedded JSON",
+            len(typed_deck_cards) >= 27 and not answer_json_leaks,
+            f"typed={len(typed_deck_cards)}/{len(answered_cards)} json_leaks={len(answer_json_leaks)}",
+        )
+
         # 3. churn: an UNRELATED question lands while the previous answer may
         # still be streaming. The fence must guarantee: the new question gets
         # its own answered card, and the old stream either completed its

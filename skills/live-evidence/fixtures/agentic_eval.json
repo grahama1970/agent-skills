@@ -1077,6 +1077,7 @@
           "30-question latency: p50 <= 5s and p95 <= 10s to first answer content: PASS",
           "zero duplicate solver executions per revision: PASS",
           "zero stale publications in the steady-state run: PASS",
+          "live fast solver publishes typed solution_deck, not embedded JSON: PASS",
           "churn: new question answers under its own identity; old stream completes or is fenced: PASS",
           "fast solver: PASS"
         ],
@@ -1100,6 +1101,16 @@
             "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
             "json_pointer": "/checks/zero_duplicate_solver_executions_per_revision",
             "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/live_fast_solver_publishes_typed_solution_deck_not_embedded_json",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/metrics/solution_deck_json_leak_count",
+            "equals": 0
           },
           {
             "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
