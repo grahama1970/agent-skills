@@ -401,6 +401,33 @@ function scriptParses(code: string): boolean {
   }
 }
 
+async function executeJavaScriptWithScripting(tabId: number, code: string): Promise<any> {
+  const tab = await chrome.tabs.get(tabId);
+  if (isRestrictedTabUrl(tab?.url)) {
+    throw new Error("Cannot control this page. Chrome restricts automation on chrome://, extensions, and web store pages.");
+  }
+  const body = codeWithExpressionReturn(code);
+  const run = async (source: string) => {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async (userCode: string) => {
+        const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+        return await new AsyncFunction(`'use strict'; ${userCode}`)();
+      },
+      args: [source],
+    });
+    return results[0]?.result;
+  };
+  try {
+    return await run(body);
+  } catch (err) {
+    if (scriptParses(body)) {
+      throw err;
+    }
+    return await run(code);
+  }
+}
+
 async function captureFullPage(tabId: number, maxHeight: number): Promise<{ base64: string; width: number; height: number }> {
   const dimensionsResult = await cdp.evaluateScript(tabId, `(() => ({
     viewportHeight: window.innerHeight,
@@ -2007,12 +2034,12 @@ export async function handleMessage(
     case "EXECUTE_JAVASCRIPT": {
       if (!tabId) throw new Error("No tabId provided");
       if (!message.code) throw new Error("No code provided");
+      const body = codeWithExpressionReturn(message.code);
 
       try {
         const piHelpersCode = `if(!window.piHelpers){const piHelpers={wait(ms){return new Promise(r=>setTimeout(r,ms))},async waitForSelector(sel,opts={}){const{state='visible',timeout=20000}=opts;const isVis=el=>el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&getComputedStyle(el).opacity!=='0'&&el.offsetWidth>0&&el.offsetHeight>0;const chk=()=>{const el=document.querySelector(sel);switch(state){case'attached':return el;case'detached':return el?null:document.body;case'hidden':return(!el||!isVis(el))?(el||document.body):null;default:return isVis(el)?el:null}};return new Promise((res,rej)=>{const r=chk();if(r){res(state==='detached'||state==='hidden'?null:r);return}const obs=new MutationObserver(()=>{const r=chk();if(r){obs.disconnect();clearTimeout(tid);res(state==='detached'||state==='hidden'?null:r)}});const tid=setTimeout(()=>{obs.disconnect();rej(new Error('Timeout'))},timeout);obs.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class','hidden']})})},async waitForText(text,opts={}){const{selector,timeout=20000}=opts;const chk=()=>{const root=selector?document.querySelector(selector):document.body;if(!root)return null;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(w.nextNode())if(w.currentNode.textContent?.includes(text))return w.currentNode.parentElement;return null};return new Promise((res,rej)=>{const r=chk();if(r){res(r);return}const obs=new MutationObserver(()=>{const r=chk();if(r){obs.disconnect();clearTimeout(tid);res(r)}});const tid=setTimeout(()=>{obs.disconnect();rej(new Error('Timeout'))},timeout);obs.observe(document.documentElement,{childList:true,subtree:true,characterData:true})})},async waitForHidden(sel,t=20000){await piHelpers.waitForSelector(sel,{state:'hidden',timeout:t})},getByRole(role,opts={}){const{name}=opts;const roles={button:['button','input[type=button]','input[type=submit]','input[type=reset]'],link:['a[href]'],textbox:['input:not([type])','input[type=text]','input[type=email]','input[type=password]','textarea'],checkbox:['input[type=checkbox]'],radio:['input[type=radio]'],combobox:['select'],heading:['h1','h2','h3','h4','h5','h6']};const cands=[...document.querySelectorAll('[role='+role+']')];if(roles[role])roles[role].forEach(s=>cands.push(...document.querySelectorAll(s+':not([role])')));if(!name)return cands[0]||null;const n=name.toLowerCase().trim();for(const el of cands){const l=el.getAttribute('aria-label')?.toLowerCase().trim();const t=el.textContent?.toLowerCase().trim();if(l===n||t===n||l?.includes(n)||t?.includes(n))return el}return null}};window.__piHelpers=piHelpers;window.piHelpers=piHelpers}`;
         await cdp.evaluateScript(tabId, piHelpersCode);
 
-        const body = codeWithExpressionReturn(message.code);
         const expression = `(async () => { 'use strict'; ${body} })()`;
 
         let result = await cdp.evaluateScript(tabId, expression);
@@ -2033,8 +2060,19 @@ export async function handleMessage(
         return { output: output?.substring(0, 50000) || "undefined" };
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Script execution failed";
-        if (msg.includes("Cannot access") || msg.includes("Cannot attach")) {
-          return { error: "Cannot execute JavaScript on this page (restricted URL)" };
+        if (
+          msg.includes("Cannot access") ||
+          msg.includes("Cannot attach") ||
+          msg.includes("Cannot control this page")
+        ) {
+          try {
+            const value = await executeJavaScriptWithScripting(tabId, message.code);
+            const output = value === undefined ? "undefined" : JSON.stringify(value, null, 2);
+            return { output: output?.substring(0, 50000) || "undefined", transport: "chrome.scripting" };
+          } catch (fallbackErr) {
+            const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : "Script execution failed";
+            return { error: fallbackMsg };
+          }
         }
         return { error: msg };
       }

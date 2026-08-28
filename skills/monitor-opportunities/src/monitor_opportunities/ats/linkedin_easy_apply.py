@@ -1,8 +1,10 @@
-"""LinkedIn Easy Apply auto-submit driver (authorized, gated, safe-by-default).
+"""LinkedIn Easy Apply submit driver (post-report authorized, gated, safe-by-default).
 
-Graham authorized (2026-08-22) automating LinkedIn Easy Apply through his own
-authenticated session, accepting the LinkedIn ToS / account-risk tradeoff. This
-drives the multi-step Easy Apply modal proven live on 2026-08-22:
+LinkedIn Top Applicant and Easy Apply are prioritization signals, not standing
+submission authorization. After Graham reviews the monitor-opportunities report
+and authorizes one exact opportunity/payload, this driver uses Graham's own
+authenticated session to drive the multi-step Easy Apply modal proven live on
+2026-08-22:
 
     detail "Apply" button (.jobs-apply-button)
       -> "Share your profile?" consent  -> "Continue to apply to <role>"
@@ -12,6 +14,8 @@ drives the multi-step Easy Apply modal proven live on 2026-08-22:
 
 SAFETY CONTRACT (never fabricate, never guess):
   * A scoped human promotion ``ats_form_submit:linkedin:linkedin.com`` is required.
+  * An exact post-report human authorization for this candidate, posting,
+    apply URL, and idempotency key is required.
   * The duplicate guard blocks re-applying to a posting already submitted.
   * Only KNOWN-ANSWERABLE required fields are filled (identity + answer-bank
     eligibility, resume already attached to the profile). ANY unrecognized
@@ -64,6 +68,35 @@ def _require_promotion(policy: dict[str, Any] | None) -> None:
         raise LinkedInEasyApplyError("LINKEDIN_SUBMIT_PROMOTION_SCOPE_MISMATCH")
     if policy.get("actor") != "human" or policy.get("decision") != "PROMOTE":
         raise LinkedInEasyApplyError("LINKEDIN_SUBMIT_PROMOTION_NOT_HUMAN_PROMOTE")
+
+
+def _require_application_authorization(
+    authorization: dict[str, Any] | None,
+    *,
+    candidate_id: str,
+    posting_id: str,
+    apply_url: str,
+    idempotency_key: str,
+) -> None:
+    """Require Graham's exact post-report authorization for one Easy Apply payload."""
+
+    if authorization is None:
+        raise LinkedInEasyApplyError("LINKEDIN_APPLICATION_AUTHORIZATION_MISSING")
+    if authorization.get("schema") != "monitor_opportunities.application_authorization.v1":
+        raise LinkedInEasyApplyError("LINKEDIN_APPLICATION_AUTHORIZATION_SCHEMA_MISMATCH")
+    if authorization.get("actor") != "human" or authorization.get("state") != "HUMAN_AUTHORIZED":
+        raise LinkedInEasyApplyError("LINKEDIN_APPLICATION_AUTHORIZATION_NOT_HUMAN")
+    if authorization.get("authorization_digest") is None:
+        raise LinkedInEasyApplyError("LINKEDIN_APPLICATION_AUTHORIZATION_DIGEST_MISSING")
+    expected = {
+        "candidate_id": candidate_id,
+        "posting_id": posting_id,
+        "apply_url": apply_url,
+        "idempotency_key": idempotency_key,
+    }
+    for key, value in expected.items():
+        if authorization.get(key) != value:
+            raise LinkedInEasyApplyError(f"LINKEDIN_APPLICATION_AUTHORIZATION_{key.upper()}_MISMATCH")
 
 
 def classify_screening_field(label: str) -> tuple[str, tuple[str, str] | None]:
@@ -230,12 +263,21 @@ def commit_linkedin_easy_apply(
     posting_id: str,
     apply_url: str,
     promotion: dict[str, Any],
+    authorization: dict[str, Any],
     memory_url: str = "http://127.0.0.1:8601",
     allow_duplicate: bool = False,
     surf_run: Path = SURF_RUN_DEFAULT,
 ) -> dict[str, Any]:
     """Submit one LinkedIn Easy Apply with the full gate + dedup + receipt chain."""
     _require_promotion(promotion)
+    idempotency_key = f"apply:linkedin:{posting_id}"
+    _require_application_authorization(
+        authorization,
+        candidate_id=candidate_id,
+        posting_id=posting_id,
+        apply_url=apply_url,
+        idempotency_key=idempotency_key,
+    )
 
     if not allow_duplicate:
         from .ashby_apply import _already_submitted
@@ -245,7 +287,6 @@ def commit_linkedin_easy_apply(
             raise LinkedInEasyApplyError(f"ALREADY_APPLIED:{prior.get('state')} (pass allow_duplicate=True to override)")
 
     adapter = LinkedInEasyApplyAdapter(tab_id=tab_id, surf_run=surf_run)
-    idempotency_key = f"apply:linkedin:{posting_id}"
     result = adapter.submit({"posting_id": posting_id}, idempotency_key)
 
     receipt = {
@@ -256,6 +297,7 @@ def commit_linkedin_easy_apply(
         "apply_url": apply_url,
         "idempotency_key": idempotency_key,
         "promotion_ref": promotion.get("capability"),
+        "authorization_digest": authorization["authorization_digest"],
         "external_effects": True,
         "committed_at": utc_now(),
         **{k: v for k, v in result.items() if k != "state"},

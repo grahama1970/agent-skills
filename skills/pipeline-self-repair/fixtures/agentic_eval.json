@@ -207,6 +207,32 @@
       }
     },
     {
+      "name": "ticket-binding-ignores-broad-uncategorized-matches",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "required": true,
+      "supports_claims": [
+        "psr.e2e.full_branch"
+      ],
+      "seams": [
+        "self_repair.full_branch"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C ../.. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/pipeline-self-repair pytest skills/pipeline-self-repair/tests/test_pipeline_self_repair.py::test_ticket_binding_ignores_broad_matches_without_category_or_triage_code -q"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      }
+    },
+    {
       "name": "adversarial_missing_immutable_goal_fails_preflight",
       "type": "adversarial",
       "real_world": true,

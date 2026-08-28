@@ -144,6 +144,17 @@ def _load_linkedin_records(path: Path) -> list[dict[str, Any]]:
     return []
 
 
+def _linkedin_record_url(record: dict[str, Any]) -> str | None:
+    url = str(
+        record.get("primary_evidence_url")
+        or record.get("posting_url")
+        or record.get("job_url")
+        or record.get("linkedin_url")
+        or ""
+    ).strip()
+    return url or None
+
+
 # LinkedIn's top-applicant collection renders each row as
 # "<title>\n<title> with verification\n<employer>\n<location>", so a capture that
 # reads positionally lands the accessibility echo of the title in `organization`
@@ -322,6 +333,14 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
 
     receipt["result_status"] = "MATCHES" if records else "NO_MATCHES"
     receipt["parser_result"] = "PARSED"
+    receipt["evidence_refs"] = list(
+        dict.fromkeys(
+            [
+                *receipt["evidence_refs"],
+                *[url for record in records if (url := _linkedin_record_url(record))],
+            ]
+        )
+    )
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for record in records:
@@ -354,13 +373,7 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
             or record.get("raw_text_excerpt")
             or "Human-supplied LinkedIn top-candidate evidence."
         )
-        primary_url = str(
-            record.get("primary_evidence_url")
-            or record.get("posting_url")
-            or record.get("job_url")
-            or record.get("linkedin_url")
-            or ""
-        ).strip() or None
+        primary_url = _linkedin_record_url(record)
         payload = {
             "lane": "A",
             "source_receipt_id": receipt["receipt_id"],
@@ -1041,6 +1054,42 @@ def _add_registry_evidence(receipt: dict[str, Any], target: dict[str, Any], *url
             receipt["evidence_refs"].append(url)
 
 
+def _parse_employer_ats_json_response(
+    response: httpx.Response,
+    receipt: dict[str, Any],
+) -> tuple[Any | None, str | None]:
+    """Parse ATS JSON even when the retained evidence preview is capped.
+
+    The response body is already materialized by httpx. The byte cap controls
+    retained evidence/hash size; it must not by itself convert a valid HTTP 200
+    employer board into INVALID_RESPONSE.
+    """
+
+    oversized = len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES
+    try:
+        data = response.json()
+    except ValueError as exc:
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "JSON_PARSE_ERROR_OVERSIZE" if oversized else "ERROR"
+        if oversized:
+            receipt["limitations"].append(
+                "Employer ATS response exceeded bounded evidence preview and JSON parsing failed; "
+                f"response_bytes={len(response.content)}, "
+                f"retained_bytes={MAX_EMPLOYER_ATS_RESPONSE_BYTES}, error={type(exc).__name__}."
+            )
+        else:
+            receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
+        return None, None
+    if oversized:
+        receipt["limitations"].append(
+            "Employer ATS response exceeded bounded evidence preview but parsed as full JSON; "
+            f"response_bytes={len(response.content)}, "
+            f"retained_bytes={MAX_EMPLOYER_ATS_RESPONSE_BYTES}."
+        )
+        return data, "PARSED_OVERSIZE"
+    return data, "PARSED"
+
+
 FIXTURE_DATE_FIELDS = ("published_at", "updated_at", "observed_at")
 
 
@@ -1118,13 +1167,10 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
             receipt["limitations"].append("Greenhouse board slug did not route.")
             return _finalize_receipt(receipt), []
         response.raise_for_status()
-        if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
-            receipt["result_status"] = "INVALID_RESPONSE"
-            receipt["parser_result"] = "SIZE_LIMIT"
-            receipt["limitations"].append("Response exceeded bounded parser limit.")
+        data, parser_result = _parse_employer_ats_json_response(response, receipt)
+        if data is None:
             return _finalize_receipt(receipt), []
-        data = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
+    except httpx.HTTPError as exc:
         receipt["result_status"] = "FEED_DOWN"
         receipt["parser_result"] = "ERROR"
         receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
@@ -1133,7 +1179,7 @@ def _greenhouse_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
     jobs = jobs if isinstance(jobs, list) else []
     receipt["result_status"] = "MATCHES" if jobs else "NO_MATCHES"
-    receipt["parser_result"] = "PARSED"
+    receipt["parser_result"] = parser_result or "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
     for job in jobs[: _registry_limit(target, 20)]:
@@ -1204,7 +1250,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     receipt["parser_result"] = "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
-    for job in postings[: _registry_limit(target, 20)]:
+    for job in _prioritized_jobs_for_target(target, postings, default_limit=20):
         if not isinstance(job, dict):
             logger.warning("lever board {} returned a non-dict posting; skipping", target.get("name"))
             continue
@@ -1258,13 +1304,10 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
             receipt["limitations"].append("Ashby board slug did not route.")
             return _finalize_receipt(receipt), []
         response.raise_for_status()
-        if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
-            receipt["result_status"] = "INVALID_RESPONSE"
-            receipt["parser_result"] = "SIZE_LIMIT"
-            receipt["limitations"].append("Response exceeded bounded parser limit.")
+        data, parser_result = _parse_employer_ats_json_response(response, receipt)
+        if data is None:
             return _finalize_receipt(receipt), []
-        data = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
+    except httpx.HTTPError as exc:
         receipt["result_status"] = "FEED_DOWN"
         receipt["parser_result"] = "ERROR"
         receipt["limitations"].append(f"Read-only request failed: {type(exc).__name__}")
@@ -1272,10 +1315,10 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
 
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
     receipt["result_status"] = "MATCHES" if jobs else "NO_MATCHES"
-    receipt["parser_result"] = "PARSED"
+    receipt["parser_result"] = parser_result or "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
-    for job in jobs[: _registry_limit(target, 20)]:
+    for job in _prioritized_jobs_for_target(target, jobs, default_limit=20):
         if not isinstance(job, dict):
             logger.warning("ashby board {} returned a non-dict job; skipping", target.get("name"))
             continue
@@ -1324,6 +1367,74 @@ def _workday_job_url(host: str, site: str, external_path: str) -> str:
     return f"https://{host}/{site}{path}"
 
 
+def _keyword_in_text(keyword: str, text: str) -> bool:
+    needle = keyword.strip().lower()
+    if not needle:
+        return False
+    haystack = text.lower()
+    if len(needle) <= 3 and needle.isalnum():
+        return re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack) is not None
+    return needle in haystack
+
+
+def _target_keywords(target: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    for key in ("title_keywords", "need_keywords"):
+        raw = target.get(key)
+        if isinstance(raw, list):
+            values.extend(str(item) for item in raw)
+    return [item for item in values if item.strip()]
+
+
+def _keyword_match_count(target: dict[str, Any], *parts: object) -> int:
+    text = "\n".join(str(part or "") for part in parts)
+    return sum(1 for keyword in _target_keywords(target) if _keyword_in_text(keyword, text))
+
+
+def _keyword_match_score(target: dict[str, Any], *, title: object = "", body: object = "") -> int:
+    title_score = _keyword_match_count(target, title)
+    body_score = _keyword_match_count(target, body)
+    return title_score * 10 + body_score
+
+
+def _prioritized_jobs_for_target(
+    target: dict[str, Any],
+    jobs: list[dict[str, Any]],
+    *,
+    default_limit: int = 20,
+) -> list[dict[str, Any]]:
+    scored: list[tuple[int, int, dict[str, Any]]] = []
+    for index, job in enumerate(jobs):
+        if not isinstance(job, dict):
+            continue
+        score = _keyword_match_score(
+            target,
+            title=job.get("title"),
+            body="\n".join(
+                str(part or "")
+                for part in (
+                    job.get("descriptionHtml"),
+                    job.get("descriptionPlain"),
+                    job.get("content"),
+                    job.get("text"),
+                )
+            ),
+        )
+        scored.append((score, index, job))
+    scored.sort(key=lambda item: (-item[0], item[1]))
+    return [job for _score, _index, job in scored[: _registry_limit(target, default_limit)]]
+
+
+def _workday_title_allowed(job: dict[str, Any], target: dict[str, Any]) -> bool:
+    keywords = target.get("title_keywords")
+    if not isinstance(keywords, list) or not keywords:
+        return True
+    title = str(job.get("title") or "")
+    bullets = " ".join(str(item) for item in (job.get("bulletFields") or []))
+    text = f"{title}\n{bullets}"
+    return any(_keyword_in_text(str(keyword), text) for keyword in keywords)
+
+
 def _workday_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Read-only Workday CXS board reader.
 
@@ -1344,31 +1455,55 @@ def _workday_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[d
     explicit = target.get("workday_dc") and target.get("workday_site")
     datacenters = (str(target["workday_dc"]),) if explicit else _WORKDAY_DATACENTERS
     sites = [str(target["workday_site"])] if explicit else list(dict.fromkeys([tenant, *(_WORKDAY_SITE_HINTS)]))
-    # Search by the locator title so the specific posting is returned rather than
-    # an arbitrary page of a large board (Roswell Park has 130 postings).
-    body = {"appliedFacets": {}, "limit": _registry_limit(target, 20), "offset": 0,
-            "searchText": str(target.get("search_text") or "")}
+    search_texts = target.get("search_texts")
+    if isinstance(search_texts, list):
+        search_terms = [str(term).strip() for term in search_texts if str(term).strip()]
+    else:
+        search_terms = [str(target.get("search_text") or "").strip()]
+    search_terms = list(dict.fromkeys(search_terms or [""]))
     attempts: list[str] = []
     postings: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
     resolved_host = ""
     resolved_site = ""
     for dc in datacenters:
         host = f"{tenant}.{dc}.myworkdayjobs.com"
         for site in sites:
             url = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
-            attempts.append(url)
-            try:
-                response = client.post(url, json=body, headers={"Accept": "application/json"})
-                if response.status_code != 200:
+            host_site_postings: list[dict[str, Any]] = []
+            for search_text in search_terms:
+                attempts.append(f"{url}?searchText={search_text}")
+                body = {
+                    "appliedFacets": {},
+                    "limit": _registry_limit(target, 20),
+                    "offset": 0,
+                    "searchText": search_text,
+                }
+                try:
+                    response = client.post(url, json=body, headers={"Accept": "application/json"})
+                    if response.status_code != 200:
+                        continue
+                    if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
+                        continue
+                    data = response.json()
+                except (httpx.HTTPError, ValueError):
                     continue
-                if len(response.content) > MAX_EMPLOYER_ATS_RESPONSE_BYTES:
+                jobs = data.get("jobPostings", []) if isinstance(data, dict) else []
+                if not isinstance(jobs, list):
                     continue
-                data = response.json()
-            except (httpx.HTTPError, ValueError):
-                continue
-            jobs = data.get("jobPostings", []) if isinstance(data, dict) else []
-            if isinstance(jobs, list) and jobs:
-                postings = jobs
+                for job in jobs:
+                    if not isinstance(job, dict):
+                        continue
+                    if not _workday_title_allowed(job, target):
+                        continue
+                    external_path = str(job.get("externalPath") or "")
+                    dedupe_key = external_path or str(job)
+                    if dedupe_key in seen_paths:
+                        continue
+                    seen_paths.add(dedupe_key)
+                    host_site_postings.append(job)
+            if host_site_postings:
+                postings = host_site_postings
                 resolved_host, resolved_site = host, site
                 break
         if postings:
@@ -1834,6 +1969,8 @@ def _employment_candidates(client: httpx.Client, target: dict[str, Any]) -> tupl
         return _lever_candidates(client, target)
     if provider == "ashby":
         return _ashby_candidates(client, target)
+    if provider == "workday":
+        return _workday_candidates(client, target)
     if provider == "builtin":
         return _builtin_candidates(client, target)
     receipt = _base_receipt("A", str(provider or "unknown"), target.get("name", "Unknown"), "employer_ats")
@@ -2006,13 +2143,52 @@ def sweep(
     write_json(out_dir / "lane-summaries.json", lane_summaries)
     return manifest
 
+def _merge_linkedin_priority_fields(existing: dict[str, Any], row: dict[str, Any]) -> bool:
+    changed = False
+    for field in ("top_candidate", "easy_apply", "easy_apply_signal", "under_10_applicants"):
+        if row.get(field) and not existing.get(field):
+            existing[field] = row[field]
+            changed = True
+    for field in ("top_candidate_text", "evidence_text", "matched_query", "warm_path_via"):
+        if row.get(field) not in (None, "", [], {}) and existing.get(field) in (None, "", [], {}):
+            existing[field] = row[field]
+            changed = True
+
+    def _as_float(value: Any) -> float | None:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    if row.get("competition") is not None:
+        incoming = _as_float(row.get("competition"))
+        current = _as_float(existing.get("competition"))
+        if existing.get("competition") is None or (
+            incoming is not None and (current is None or incoming < current)
+        ):
+            existing["competition"] = row["competition"]
+            changed = True
+    if row.get("warm_path") is not None:
+        incoming = _as_float(row.get("warm_path"))
+        current = _as_float(existing.get("warm_path"))
+        if existing.get("warm_path") is None or (
+            incoming is not None and (current is None or incoming > current)
+        ):
+            existing["warm_path"] = row["warm_path"]
+            changed = True
+            if row.get("warm_path_via") not in (None, "", [], {}):
+                existing["warm_path_via"] = row["warm_path_via"]
+    return changed
+
+
 def _merge_linkedin_top_candidate(base_path: Path, other_path: Path) -> int:
-    """Merge one LinkedIn evidence stream into another, preserving top_candidate.
+    """Merge one LinkedIn evidence stream into another, preserving priority fields.
 
     Picking only the higher-row-count file dropped the top-applicant stream and
     its ``top_candidate`` flags. This merges the other stream's opportunities in:
-    a matching (title, organization) row inherits ``top_candidate`` if EITHER
-    stream flags it; unmatched rows are appended with their flag intact.
+    a matching (title, organization) row inherits Top Applicant, Easy Apply,
+    low-competition, and warm-path fields if either stream carries them;
+    unmatched rows are appended with their signals intact.
     """
     try:
         base = json.loads(base_path.read_text(encoding="utf-8"))
@@ -2030,11 +2206,11 @@ def _merge_linkedin_top_candidate(base_path: Path, other_path: Path) -> int:
         key = (row.get("title"), row.get("organization"))
         existing = index.get(key)
         if existing is not None:
-            if row.get("top_candidate"):
-                existing["top_candidate"] = True
+            if _merge_linkedin_priority_fields(existing, row):
                 merged += 1
         else:
             base_rows.append(row)
+            index[key] = row
             merged += 1
     # A file-level top_candidate:true (whole page is the top-applicant collection)
     # applies to every row it contributed.

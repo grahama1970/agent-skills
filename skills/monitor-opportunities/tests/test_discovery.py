@@ -23,7 +23,9 @@ from monitor_opportunities.discovery import (
     _ashby_candidates,
     _candidate_id,
     _employment_candidates,
+    _greenhouse_candidates,
     _linkedin_evidence_candidates,
+    _merge_linkedin_top_candidate,
     _meetup_evidence_candidates,
     _sam_receipt,
     _source_locator_receipt,
@@ -78,11 +80,152 @@ def test_source_locator_is_hint_only_and_admits_no_candidates() -> None:
     assert any("hint-only" in item for item in receipt["limitations"])
 
 
+def test_workday_employment_target_is_dispatched_and_deduped() -> None:
+    seen_searches: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == "https://moog.wd5.myworkdayjobs.com/wday/cxs/moog/MOOG_External_Career_Site/jobs"
+        payload = json.loads(request.content.decode("utf-8"))
+        seen_searches.append(payload["searchText"])
+        if payload["searchText"] == "AI":
+            rows = [
+                {
+                    "title": "Training Systems Manager",
+                    "locationsText": "Blacksburg, VA",
+                    "externalPath": "/job/Blacksburg-VA/Training-Systems-Manager_R-26-18863-1",
+                    "bulletFields": ["Training delivery."],
+                    "postedOn": "2026-08-21",
+                },
+                {
+                    "title": "AI Program Manager",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/AI-Program-Manager_R-26-19530",
+                    "bulletFields": ["Artificial intelligence program delivery."],
+                    "postedOn": "2026-08-20",
+                },
+                {
+                    "title": "Corporate AI Security Engineer",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/Corporate-AI-Security-Engineer_R-26-19039",
+                    "bulletFields": ["AI security engineering."],
+                    "postedOn": "2026-08-19",
+                },
+            ]
+        else:
+            rows = [
+                {
+                    "title": "Corporate AI Security Engineer",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/Corporate-AI-Security-Engineer_R-26-19039",
+                    "bulletFields": ["Duplicate returned by another Workday query."],
+                    "postedOn": "2026-08-19",
+                },
+                {
+                    "title": "AI Systems Analyst",
+                    "locationsText": "Buffalo, NY",
+                    "externalPath": "/job/Buffalo-NY/AI-Systems-Analyst_R-26-18765",
+                    "bulletFields": ["AI systems analysis."],
+                    "postedOn": "2026-08-18",
+                },
+            ]
+        return httpx.Response(200, json={"jobPostings": rows})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, candidates = _employment_candidates(
+        client,
+        {
+            "name": "Moog",
+            "provider": "workday",
+            "slug": "moog",
+            "workday_tenant": "moog",
+            "workday_dc": "wd5",
+            "workday_site": "MOOG_External_Career_Site",
+            "search_texts": ["AI", "machine learning"],
+            "title_keywords": ["AI", "machine learning"],
+            "primary_source_url": "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site",
+            "limit": 20,
+            "default_fit_score": 0.86,
+        },
+    )
+
+    assert receipt["provider"] == "workday"
+    assert receipt["result_status"] == "MATCHES"
+    assert seen_searches == ["AI", "machine learning"]
+    assert [row["title"] for row in candidates] == [
+        "AI Program Manager",
+        "Corporate AI Security Engineer",
+        "AI Systems Analyst",
+    ]
+    assert {row["workplace_type"] for row in candidates} == {"WNY_ONSITE"}
+    assert candidates[0]["apply_url"] == (
+        "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site"
+        "/job/Buffalo-NY/AI-Program-Manager_R-26-19530"
+    )
+
+
 def test_ashby_provider_workplace_type_disambiguates_non_buffalo_onsite() -> None:
     assert discovery._workplace_type("San Francisco", "", "OnSite") == "ONSITE_ELSEWHERE"
     assert discovery._workplace_type("Buffalo, NY", "", "OnSite") == "WNY_ONSITE"
     assert discovery._workplace_type("Buffalo, NY", "", "Hybrid") == "WNY_HYBRID"
     assert discovery._workplace_type("United States", "", "Remote") == "REMOTE"
+
+
+def test_ashby_keyword_match_survives_employer_cap() -> None:
+    jobs = [
+        {
+            "title": "Commercial Counsel",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/commercial-counsel",
+            "descriptionHtml": "Support engineers building AI products and agentic workflows.",
+            "location": "San Francisco",
+        },
+        {
+            "title": "IT Engineer",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/it-engineer",
+            "descriptionHtml": "General endpoint support.",
+            "location": "San Francisco",
+        },
+    ]
+    jobs.extend(
+        {
+            "title": f"Operations Role {index}",
+            "jobUrl": f"https://jobs.ashbyhq.com/cognition/ops-{index}",
+            "descriptionHtml": "General operations role.",
+            "location": "San Francisco",
+        }
+        for index in range(10)
+    )
+    jobs.append(
+        {
+            "id": "811c3f5a-b26d-4162-b49b-93890a91794d",
+            "title": "Applied AI Engineer",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d",
+            "descriptionHtml": "Build agentic AI systems.",
+            "location": "San Francisco",
+        }
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == "https://api.ashbyhq.com/posting-api/job-board/cognition"
+        return httpx.Response(200, json={"jobs": jobs})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    _receipt, candidates = _ashby_candidates(
+        client,
+        {
+            "name": "Cognition",
+            "provider": "ashby",
+            "slug": "cognition",
+            "limit": 10,
+            "need_keywords": ["agentic", "AI", "engineer"],
+            "default_fit_score": 0.7,
+        },
+    )
+
+    assert any(
+        row["posting_url"] == "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d"
+        for row in candidates
+    )
+    assert candidates[0]["title"] == "Applied AI Engineer"
 
 
 def test_sweep_emits_honest_browser_required_receipts_without_human_evidence(
@@ -307,6 +450,76 @@ def test_ashby_large_valid_board_under_employer_ats_cap_is_parsed() -> None:
     assert len(rows[0]["posting_text"]) == 14000  # cap raised so requirement lists survive
 
 
+def test_ashby_valid_board_over_employer_ats_cap_is_not_silently_dropped() -> None:
+    large_description = "Build applied AI systems. " * 360_000
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/posting-api/job-board/oversized")
+        body = json.dumps(
+            {
+                "jobs": [
+                    {
+                        "title": "Oversized Ashby AI Engineer",
+                        "location": {"name": "Remote"},
+                        "jobUrl": "https://jobs.example/oversized-ashby",
+                        "descriptionPlain": large_description,
+                    }
+                ]
+            }
+        ).encode("utf-8")
+        assert len(body) > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+        return httpx.Response(200, content=body, headers={"content-type": "application/json"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, rows = _ashby_candidates(client, {"name": "Oversized", "slug": "oversized"})
+
+    assert receipt["response_bytes"] > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["parser_result"] == "PARSED_OVERSIZE"
+    assert not any(
+        "Response exceeded bounded parser limit" in item
+        for item in receipt["limitations"]
+    )
+    assert any("bounded evidence preview" in item for item in receipt["limitations"])
+    assert rows[0]["title"] == "Oversized Ashby AI Engineer"
+    assert len(rows[0]["posting_text"]) == 14000
+
+
+def test_greenhouse_valid_board_over_employer_ats_cap_is_not_silently_dropped() -> None:
+    large_content = "Build applied AI systems. " * 360_000
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/v1/boards/oversized/jobs")
+        body = json.dumps(
+            {
+                "jobs": [
+                    {
+                        "title": "Oversized Greenhouse AI Engineer",
+                        "location": {"name": "Remote"},
+                        "absolute_url": "https://jobs.example/oversized-greenhouse",
+                        "content": large_content,
+                    }
+                ]
+            }
+        ).encode("utf-8")
+        assert len(body) > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+        return httpx.Response(200, content=body, headers={"content-type": "application/json"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    receipt, rows = _greenhouse_candidates(client, {"name": "Oversized", "slug": "oversized"})
+
+    assert receipt["response_bytes"] > discovery.MAX_EMPLOYER_ATS_RESPONSE_BYTES
+    assert receipt["result_status"] == "MATCHES"
+    assert receipt["parser_result"] == "PARSED_OVERSIZE"
+    assert not any(
+        "Response exceeded bounded parser limit" in item
+        for item in receipt["limitations"]
+    )
+    assert any("bounded evidence preview" in item for item in receipt["limitations"])
+    assert rows[0]["title"] == "Oversized Greenhouse AI Engineer"
+    assert len(rows[0]["posting_text"]) == 14000
+
+
 def test_sam_zero_records_is_no_matches(monkeypatch) -> None:
     monkeypatch.setenv("SAM_GOV_API_KEY", "example-key-not-secret")
 
@@ -351,6 +564,7 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert receipt["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
     assert receipt["result_status"] == "MATCHES"
     assert len(rows) == 2
+    assert "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753" in receipt["evidence_refs"]
     assert rows[0]["source_provider"] == "ops_linkedin_authorized_read_only"
     assert rows[0]["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
     assert rows[0]["top_candidate_evidence"] is True
@@ -358,6 +572,62 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert rows[0]["primary_evidence_url"] == "https://www.linkedin.com/jobs/search-results/?currentJobId=4419087753"
     assert rows[0]["apply_url"] is None
     assert rows[1]["location_display"] == "New York, NY (On-site)"
+
+
+def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_path: Path) -> None:
+    base = tmp_path / "advanced.json"
+    other = tmp_path / "premium.json"
+    base.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.linkedin_evidence.v1",
+                "opportunities": [
+                    {
+                        "title": "Applied AI Engineer",
+                        "organization": "Example AI",
+                        "primary_evidence_url": "https://www.linkedin.com/jobs/view/123/",
+                        "top_candidate": False,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    other.write_text(
+        json.dumps(
+            {
+                "schema_version": "monitor_opportunities.linkedin_evidence.v1",
+                "top_candidate": True,
+                "opportunities": [
+                    {
+                        "title": "Applied AI Engineer",
+                        "organization": "Example AI",
+                        "primary_evidence_url": "https://www.linkedin.com/jobs/view/123/",
+                        "top_candidate": True,
+                        "easy_apply": True,
+                        "under_10_applicants": True,
+                        "competition": 0.1,
+                        "warm_path": 0.9,
+                        "warm_path_via": "LinkedIn: connection works here",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    merged = _merge_linkedin_top_candidate(base, other)
+
+    payload = json.loads(base.read_text(encoding="utf-8"))
+    assert merged == 1
+    assert len(payload["opportunities"]) == 1
+    row = payload["opportunities"][0]
+    assert row["top_candidate"] is True
+    assert row["easy_apply"] is True
+    assert row["under_10_applicants"] is True
+    assert row["competition"] == 0.1
+    assert row["warm_path"] == 0.9
+    assert row["warm_path_via"] == "LinkedIn: connection works here"
 
 
 def test_meetup_evidence_emits_only_attend_or_watch_source_intel() -> None:

@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+import fcntl
+import os
 from pathlib import Path
+import time
 from typing import Any
 
 from .application_packets import verify_application_packet
@@ -28,6 +32,24 @@ ALLOWED_ACTIONS = {
 
 def _ledger_path(run_dir: Path) -> Path:
     return run_dir / "decision-ledger.jsonl"
+
+
+@contextmanager
+def _ledger_lock(run_dir: Path):
+    lock_path = run_dir / "decision-ledger.lock"
+    with lock_path.open("a+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
+def _decision_append_delay_seconds() -> float:
+    try:
+        return max(0.0, float(os.environ.get("MONITOR_OPPORTUNITIES_DECISION_APPEND_DELAY_SECONDS", "0") or "0"))
+    except ValueError:
+        return 0.0
 
 
 def _manifest(run_dir: Path) -> dict[str, Any] | None:
@@ -173,58 +195,62 @@ def append_decision(
     if action in {"MARK_HUMAN_SENT_GMAIL", "MARK_HUMAN_SENT_LINKEDIN"} and actor != "human":
         raise ValueError(f"{action} requires explicit human actor")
     run_dir.mkdir(parents=True, exist_ok=True)
-    path = _ledger_path(run_dir)
-    rows = read_jsonl(path)
-    for row in rows:
-        if row["idempotency_key"] == idempotency_key:
-            return row
-    manifest = _manifest(run_dir)
-    if action == "AUTHORIZE_APPLICATION_PAYLOAD":
-        packet = next(
-            (row for row in (manifest or {}).get("application_packets", []) if row.get("application_id") == item_id),
-            None,
-        )
-        if packet is None:
-            raise ValueError("APPLICATION_PACKET_MISSING")
-        drift = verify_application_packet(packet)
-        if not drift["ok"]:
-            raise ValueError("APPLICATION_PACKET_DRIFT: " + "; ".join(drift["errors"]))
-    application_payload = _application_payload(manifest, item_id) if action == "AUTHORIZE_APPLICATION_PAYLOAD" else None
-    amendment = _append_claim_amendment(run_dir, manifest, item_id, reason) if action == "PROPOSE_CLAIM_AMENDMENT" else None
-    artifact_hashes = _artifact_hashes(manifest, item_id, action)
-    event = {
-        "schema": "monitor_opportunities.decision_event.v1",
-        "event_id": stable_id("decision", {"run": str(run_dir), "item": item_id, "key": idempotency_key}),
-        "run_id": manifest.get("run_id") if manifest else str(run_dir),
-        "run_dir": str(run_dir),
-        "item_id": item_id,
-        "action": action,
-        "actor": actor,
-        "created_at": utc_now(),
-        "prior_report_digest": sha256_json(manifest) if manifest else None,
-        "artifact_hashes": artifact_hashes,
-        "idempotency_key": idempotency_key,
-        "reason": reason,
-        "notes": reason,
-        "resulting_state": _resulting_state(action),
-        "external_effects": False,
-        "application_payload": application_payload,
-        "claim_amendment": amendment,
-        "payload_digest": sha256_json(
-            {
-                "run_id": manifest.get("run_id") if manifest else str(run_dir),
-                "item_id": item_id,
-                "action": action,
-                "reason": reason,
-                "artifact_hashes": artifact_hashes,
-                "application_payload": application_payload,
-                "claim_amendment": amendment,
-            }
-        ),
-    }
-    rows.append(event)
-    write_jsonl(path, rows)
-    return event
+    with _ledger_lock(run_dir):
+        path = _ledger_path(run_dir)
+        rows = read_jsonl(path)
+        delay = _decision_append_delay_seconds()
+        if delay > 0:
+            time.sleep(delay)
+        for row in rows:
+            if row["idempotency_key"] == idempotency_key:
+                return row
+        manifest = _manifest(run_dir)
+        if action == "AUTHORIZE_APPLICATION_PAYLOAD":
+            packet = next(
+                (row for row in (manifest or {}).get("application_packets", []) if row.get("application_id") == item_id),
+                None,
+            )
+            if packet is None:
+                raise ValueError("APPLICATION_PACKET_MISSING")
+            drift = verify_application_packet(packet)
+            if not drift["ok"]:
+                raise ValueError("APPLICATION_PACKET_DRIFT: " + "; ".join(drift["errors"]))
+        application_payload = _application_payload(manifest, item_id) if action == "AUTHORIZE_APPLICATION_PAYLOAD" else None
+        amendment = _append_claim_amendment(run_dir, manifest, item_id, reason) if action == "PROPOSE_CLAIM_AMENDMENT" else None
+        artifact_hashes = _artifact_hashes(manifest, item_id, action)
+        event = {
+            "schema": "monitor_opportunities.decision_event.v1",
+            "event_id": stable_id("decision", {"run": str(run_dir), "item": item_id, "key": idempotency_key}),
+            "run_id": manifest.get("run_id") if manifest else str(run_dir),
+            "run_dir": str(run_dir),
+            "item_id": item_id,
+            "action": action,
+            "actor": actor,
+            "created_at": utc_now(),
+            "prior_report_digest": sha256_json(manifest) if manifest else None,
+            "artifact_hashes": artifact_hashes,
+            "idempotency_key": idempotency_key,
+            "reason": reason,
+            "notes": reason,
+            "resulting_state": _resulting_state(action),
+            "external_effects": False,
+            "application_payload": application_payload,
+            "claim_amendment": amendment,
+            "payload_digest": sha256_json(
+                {
+                    "run_id": manifest.get("run_id") if manifest else str(run_dir),
+                    "item_id": item_id,
+                    "action": action,
+                    "reason": reason,
+                    "artifact_hashes": artifact_hashes,
+                    "application_payload": application_payload,
+                    "claim_amendment": amendment,
+                }
+            ),
+        }
+        rows.append(event)
+        write_jsonl(path, rows)
+        return event
 
 
 def replay(run_dir: Path) -> dict[str, Any]:

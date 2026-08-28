@@ -20,7 +20,8 @@ rendering. It permits no connected-system write.
 | Gmail mailbox draft creation | blocked pending promotion | draft only |
 | Gmail send/schedule-send/forward | forbidden | never implemented here |
 | LinkedIn human handoff readiness | blocked pending promotion | local packet only |
-| LinkedIn access or automation | forbidden | never implemented here |
+| LinkedIn discovery/contact evidence | read-only only when explicitly authorized and bounded | no connect/message/post/apply |
+| LinkedIn Easy Apply submit | blocked pending post-report exact human authorization | never automatic; no standing class authorization |
 | ATS form inspect | blocked pending site/provider promotion | read-only |
 | ATS form prefill | blocked pending separate promotion | no submit |
 | ATS form submit | blocked pending separate promotion and item authorization | exact payload only |
@@ -51,7 +52,8 @@ agreement, prior successful effects, or exit code zero.
 
 ## Per-application authorization
 
-ATS submission additionally requires a human authorization bound to:
+ATS and LinkedIn Easy Apply submission additionally require a human authorization,
+given after report review/collaboration, bound to:
 
 - posting and employer identity;
 - current form schema/content digest;
@@ -63,7 +65,8 @@ ATS submission additionally requires a human authorization bound to:
 - actor, timestamp, and idempotency key.
 
 Any change invalidates authorization. A global stage change never authorizes future
-unknown applications.
+unknown applications. Top Applicant, Easy Apply, quick-apply, or similar low-friction
+signals improve priority only; they do not authorize submission.
 
 ## Two-phase external effect
 
@@ -95,8 +98,8 @@ The following are always `human_required` and cannot be generated or inferred:
 
 Every proposed Gmail or LinkedIn message is claim-bound and requires a permitting `/ask`
 roundtable receipt. Gmail may create a mailbox draft only after its own promotion; send is
-forbidden. LinkedIn output remains a local handoff packet and performs no platform action.
-The candidate is the transmitter.
+forbidden. LinkedIn outreach output remains a local handoff packet and performs no
+platform action. The candidate is the transmitter.
 
 ## Runtime self-improvement boundary
 

@@ -42,6 +42,14 @@
       "evidence_required": {
         "live_e2e": true
       }
+    },
+    {
+      "id": "surf.javascript_https_scripting_fallback",
+      "description": "Surf falls back to chrome.scripting for normal HTTPS tabs when CDP attach/control fails, while preserving restricted-page failures.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -68,6 +76,12 @@
       "seam_type": "skill_composition",
       "criticality": "critical",
       "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "surf.service_worker.javascript_handler",
+      "seam_type": "browser_transport",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
     }
   ],
   "cases": [
@@ -443,6 +457,38 @@
           "cli-native-socket.test.ts"
         ]
       }
+    },
+    {
+      "name": "https-js-falls-back-to-chrome-scripting",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "surf.javascript_https_scripting_fallback"
+      ],
+      "seams": [
+        "surf.service_worker.javascript_handler"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../vendor/surf-cli && npm test -- --run test/unit/service-worker/javascript-handlers.test.ts"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "falls back to chrome.scripting when CDP attach fails on an https tab",
+          "preserves restricted-page errors",
+          "21 passed"
+        ],
+        "stderr_excludes": [
+          "Cannot control this page. Chrome restricts automation on chrome://, extensions, and web store pages"
+        ]
+      },
+      "proves": "The service-worker JavaScript handler preserves restricted chrome:// page failures but falls back to chrome.scripting when CDP attach fails on a normal HTTPS tab such as LinkedIn Jobs.",
+      "does_not_prove": "A live LinkedIn Jobs page is currently authenticated, visible, or semantically parseable by monitor-opportunities."
     }
   ]
 }

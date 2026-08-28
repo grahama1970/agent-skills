@@ -679,6 +679,45 @@
    "mandate_ref": "mandate:agentic-compliance"
   },
   {
+   "default_fit_score": 0.86,
+   "limit": 20,
+   "name": "Moog",
+   "slug": "moog",
+   "provider": "workday",
+   "workday_tenant": "moog",
+   "workday_dc": "wd5",
+   "workday_site": "MOOG_External_Career_Site",
+   "primary_source_url": "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site",
+   "registry_entry_id": "employment:moog:workday",
+   "search_texts": [
+    "AI",
+    "machine learning",
+    "autonomy"
+   ],
+   "title_keywords": [
+    "AI",
+    "artificial intelligence",
+    "machine learning",
+    "autonomy"
+   ],
+   "need_keywords": [
+    "AI",
+    "artificial intelligence",
+    "machine learning",
+    "security",
+    "architect",
+    "engineer",
+    "systems",
+    "program",
+    "autonomy",
+    "software",
+    "Buffalo",
+    "aerospace",
+    "defense"
+   ],
+   "mandate_ref": "mandate:buffalo-defense-ai"
+  },
+  {
    "name": "Built In (remote AI search)",
    "provider": "builtin",
    "registry_entry_id": "employment:builtin:remote-ai",
@@ -736,6 +775,26 @@
   }
  ],
  "mandates": [
+  {
+   "mandate_id": "mandate:buffalo-defense-ai",
+   "declared_by": "Graham 2026-08-26",
+   "statement": "Buffalo/WNY defense, aerospace, autonomy, AI security, and applied AI roles are first-priority employment targets, especially Moog roles that connect Graham's DARPA, assurance, agentic, and systems experience to local aerospace work.",
+   "need_keywords": [
+    "Buffalo",
+    "Moog",
+    "aerospace",
+    "defense",
+    "AI",
+    "artificial intelligence",
+    "machine learning",
+    "AI security",
+    "autonomy",
+    "systems",
+    "software",
+    "assurance",
+    "DARPA"
+   ]
+  },
   {
    "mandate_id": "mandate:agentic-compliance",
    "declared_by": "Graham 2026-08-05",

@@ -44,8 +44,11 @@ EVENT_SCHEMA = "pipeline_self_repair.event.v1"
 SUMMARY_SCHEMA = "pipeline_self_repair.summary.v1"
 VALIDATION_SCHEMA = "pipeline_self_repair.validation.v1"
 MONITOR_SCHEMA = "pipeline_self_repair.monitor.v1"
+HARDENING_CYCLE_SCHEMA = "pipeline_self_repair.hardening_cycle.v1"
+HARDENING_CYCLE_EVENT_SCHEMA = "pipeline_self_repair.hardening_cycle_event.v1"
 DEPENDENCY_REF_RE = re.compile(r"(?:blocked-by|depends[-_ ]on):\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#\d+)")
 ISSUE_NUMBER_RE = re.compile(r"(?:issues/|#)(\d+)\b")
+WATCHDOG_PROJECT_BY_REPO = {"grahama1970/graph-memory-operator": "memory", "grahama1970/agent-skills": "agent-skills"}
 
 
 class RepairState(StrEnum):
@@ -426,7 +429,20 @@ def _github_issue_search(repo: str, category_key: str, triage: TriageResult, ste
 def _choose_ticket(matches: list[dict[str, Any]]) -> TicketDisposition | None:
     if not matches:
         return None
-    preferred = sorted(matches, key=lambda row: (not row.get("has_category_marker"), row.get("state") != "OPEN", row.get("number")))[0]
+    category_matches = [
+        row for row in matches if row.get("has_category_marker") or row.get("has_triage_code")
+    ]
+    if not category_matches:
+        return None
+    preferred = sorted(
+        category_matches,
+        key=lambda row: (
+            not row.get("has_category_marker"),
+            not row.get("has_triage_code"),
+            row.get("state") != "OPEN",
+            row.get("number"),
+        ),
+    )[0]
     deps = preferred.get("depends_on") or []
     if deps and preferred.get("state") == "OPEN":
         return TicketDisposition(
@@ -569,6 +585,26 @@ def _previous_hash(ledger: Path) -> str | None:
     return last.get("event_hash") if last else None
 
 
+def _append_replay_ledger_event(ledger: Path, event_payload: dict[str, Any]) -> dict[str, Any]:
+    """Append a flexible hash-chained hardening-cycle event.
+
+    `record-failure` events keep the stricter PipelineFailureEvent schema.
+    Hardening-cycle events are orchestration receipts: they bind WebGPT parsing,
+    ticket creation, watchdog dispatch/readback, and next legal commands without
+    pretending to be one failed pipeline step.
+    """
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    payload = dict(event_payload)
+    payload.setdefault("schema", HARDENING_CYCLE_EVENT_SCHEMA)
+    payload.setdefault("occurred_at", _now())
+    payload.setdefault("event_id", "evt_" + hashlib.sha256(f"hardening-cycle:{_now()}".encode()).hexdigest()[:24])
+    payload["previous_event_hash"] = _previous_hash(ledger)
+    payload["event_hash"] = _sha_json({k: v for k, v in payload.items() if k != "event_hash"})
+    with ledger.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    return payload
+
+
 def _append_event(ledger: Path, event_payload: dict[str, Any]) -> PipelineFailureEvent:
     ledger.parent.mkdir(parents=True, exist_ok=True)
     event_payload["previous_event_hash"] = _previous_hash(ledger)
@@ -593,6 +629,57 @@ def _repair_state(triage: TriageResult, ticket: TicketDisposition, dispatch_watc
     if ticket.action in {"bind_existing", "created", "create_draft"}:
         return RepairState.TICKETED
     return RepairState.NEEDS_HUMAN
+
+
+def _watchdog_project_for_repo(repo: str, default_project: str) -> str:
+    return WATCHDOG_PROJECT_BY_REPO.get(repo, default_project)
+
+
+def _dispatch_watchdog_ticket(issue_ref: str, repo: str, default_project: str, *, enabled: bool) -> dict[str, Any]:
+    if not enabled:
+        return {"status": "SKIPPED", "issue_ref": issue_ref, "reason": "watchdog dispatch disabled"}
+    if not WATCHDOG_RUN.exists():
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "project-watchdog run.sh not found"}
+    if "#" not in issue_ref:
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "expected owner/repo#number"}
+    issue_repo, issue_number = issue_ref.rsplit("#", 1)
+    project = _watchdog_project_for_repo(issue_repo or repo, default_project)
+    command = [str(WATCHDOG_RUN), "tick", "--apply", "--project", project, "--issue", issue_number, "--max-tickets", "1"]
+    result, stdout = _run_with_stdout(command, timeout=2400)
+    parsed, _ = _parse_json_prefix(stdout)
+    status = "PASS" if result.returncode == 0 else "FAILED"
+    if parsed and parsed.get("status") in {"COMPLETED", "NEEDS_ATTENTION", "BLOCKED", "NOOP", "SKIPPED"}:
+        status = parsed["status"]
+    return {
+        "status": status,
+        "issue_ref": issue_ref,
+        "project": project,
+        "command": result.model_dump(),
+        "receipt_path": parsed.get("receipt_path") if parsed else None,
+        "receipt": parsed,
+    }
+
+
+def _dispatch_watchdog_for_ticket_projections(
+    projections: list[dict[str, Any]],
+    *,
+    default_project: str,
+    enabled: bool,
+) -> list[dict[str, Any]]:
+    dispatches: list[dict[str, Any]] = []
+    for projection in projections:
+        issue_ref = projection.get("issue_ref")
+        if not issue_ref or projection.get("status") not in {"CREATED", "BOUND"}:
+            continue
+        dispatches.append(
+            _dispatch_watchdog_ticket(
+                str(issue_ref),
+                str(projection.get("repo") or ""),
+                default_project,
+                enabled=enabled,
+            )
+        )
+    return dispatches
 
 
 def _dispatch_watchdog(project: str, *, enabled: bool) -> dict[str, Any]:
@@ -633,7 +720,7 @@ def _watchdog_status(project: str, *, skip: bool) -> dict[str, Any]:
         return {"status": "SKIPPED"}
     if not WATCHDOG_RUN.exists():
         return {"status": "FAILED", "error": "project-watchdog run.sh not found"}
-    result = _run([str(WATCHDOG_RUN), "status", "--json"], timeout=120)
+    result = _run([str(WATCHDOG_RUN), "status"], timeout=120)
     return {"status": "PASS" if result.returncode == 0 else "FAILED", "project": project, "command": result.model_dump()}
 
 
@@ -658,7 +745,7 @@ def _push_pull_monitoring(subagent_run_ids: list[str], ask_run_dirs: list[Path],
                 if "#" in ref
             ],
             "ledger_commands": ["skills/pipeline-self-repair/run.sh inspect --ledger <ledger> --json"],
-            "watchdog_commands": ["skills/project-watchdog/run.sh status --json"],
+            "watchdog_commands": ["skills/project-watchdog/run.sh status"],
             "research_escalation": "Project agent runs $brave-search or $dogpile when receipts name an external fact, upstream behavior, provider change, or unknown root cause that local artifacts do not settle.",
         },
     }
@@ -684,6 +771,691 @@ def _ticket_status(issue_ref: str, *, skip: bool) -> dict[str, Any]:
     repo, number = issue_ref.rsplit("#", 1)
     result = _run([str(TICKET_RUN), "lookup", "--issue", number, "--repo", repo], timeout=120)
     return {"status": "PASS" if result.returncode == 0 else "FAILED", "issue_ref": issue_ref, "command": result.model_dump()}
+
+
+def _github_issue_view(issue_ref: str, *, skip: bool = False) -> dict[str, Any]:
+    if skip:
+        return {"status": "SKIPPED", "issue_ref": issue_ref}
+    if "#" not in issue_ref:
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "expected owner/repo#number"}
+    repo, number = issue_ref.rsplit("#", 1)
+    cmd = ["gh", "issue", "view", number, "--repo", repo, "--json", "number,title,state,labels,url"]
+    result, stdout = _run_with_stdout(cmd, timeout=120)
+    if result.returncode != 0:
+        return {"status": "FAILED", "issue_ref": issue_ref, "command": result.model_dump()}
+    try:
+        data = json.loads(stdout or "{}")
+    except json.JSONDecodeError as exc:
+        return {"status": "FAILED", "issue_ref": issue_ref, "command": result.model_dump(), "error": f"gh issue view output was not JSON: {exc}"}
+    labels = [item.get("name") for item in data.get("labels", []) if isinstance(item, dict)]
+    return {
+        "status": "PASS",
+        "issue_ref": issue_ref,
+        "state": data.get("state"),
+        "title": data.get("title"),
+        "url": data.get("url"),
+        "labels": labels,
+        "command": result.model_dump(),
+    }
+
+
+def _run_in_cwd(cmd: list[str], cwd: Path, *, timeout: int = 120) -> tuple[CommandResult, str]:
+    logger.debug("running command in {}: {}", cwd, cmd)
+    proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout, check=False, env=_clean_child_env())
+    return _command_result(cmd, proc), proc.stdout
+
+
+def _parse_json_prefix(text: str) -> tuple[dict[str, Any] | None, str]:
+    stripped = text.lstrip()
+    if not stripped:
+        return None, ""
+    try:
+        payload, end = json.JSONDecoder().raw_decode(stripped)
+    except json.JSONDecodeError:
+        return None, text
+    if not isinstance(payload, dict):
+        return None, text
+    return payload, stripped[end:].strip()
+
+
+def _scorecard_status(memory_repo: Path, *, skip: bool) -> dict[str, Any]:
+    if skip:
+        return {"status": "SKIPPED"}
+    command = ["uv", "run", "python", "scripts/ops/hardening_scorecard.py"]
+    result, stdout = _run_in_cwd(command, memory_repo, timeout=180)
+    parsed, remainder = _parse_json_prefix(stdout)
+    canonical = ""
+    marker = "--- CANONICAL STATUS ANSWER ---"
+    if marker in stdout:
+        canonical = stdout.split(marker, 1)[1].strip()
+    return {
+        "status": "PASS" if result.returncode == 0 and parsed is not None else "FAILED",
+        "command": result.model_dump(),
+        "scorecard": parsed,
+        "canonical_status_answer": canonical or remainder[:4000],
+    }
+
+
+def _latest_response_surface_receipt(memory_repo: Path) -> dict[str, Any]:
+    root = memory_repo / "artifacts" / "validation" / "response_surface_resweep_20260827"
+    if not root.exists():
+        return {"status": "MISSING", "root": str(root)}
+    candidates = sorted(root.glob("receipt*.jsonl"), key=lambda path: path.stat().st_mtime, reverse=True)
+    if not candidates:
+        return {"status": "MISSING", "root": str(root)}
+    latest = candidates[0]
+    return {"status": "PASS", "path": str(latest), "sha256": _sha_bytes(latest.read_bytes()), "bytes": latest.stat().st_size}
+
+
+def _read_excerpt(path: Path, *, max_chars: int = 12000) -> str:
+    if not path.exists():
+        return f"MISSING: {path}"
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars // 2] + "\n\n...[truncated for WebGPT context bundle]...\n\n" + text[-max_chars // 2 :]
+
+
+def _redact_local_paths(text: str) -> str:
+    """Make browser-submitted prompts safe for Ask/Surf preflight.
+
+    Browser-backed reviewers receive content, not live workstation pointers.
+    Keep basename-level provenance while removing absolute, home-relative, and
+    shell-relative path forms that the browser transport correctly rejects.
+    """
+    def absolute_repl(match: re.Match[str]) -> str:
+        raw = match.group(0).rstrip(".,;:")
+        suffix = match.group(0)[len(raw):]
+        return f"[local-path:{Path(raw).name or 'redacted'}]{suffix}"
+
+    text = re.sub(r"/(?:home/graham|mnt|tmp)/[^\s`\"'<>)}\]]+", absolute_repl, text)
+    text = re.sub(r"~/(?:[^\s`\"'<>)}\]]+)", "[home-relative-path]", text)
+    text = re.sub(r"~(?=\d)", "about ", text)
+    text = text.replace("./run.sh", "run.sh")
+    return text
+
+
+def _browser_safe(value: Any) -> Any:
+    if isinstance(value, str):
+        return _redact_local_paths(value)
+    if isinstance(value, list):
+        return [_browser_safe(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _browser_safe(item) for key, item in value.items()}
+    return value
+
+
+def _hardening_webgpt_prompt(
+    *,
+    memory_repo: Path,
+    scorecard: dict[str, Any],
+    receipt: dict[str, Any],
+    ledgers: list[dict[str, Any]],
+    ticket_refs: list[str],
+    prior_ask_run_dirs: list[Path],
+    focus: str,
+) -> str:
+    handoff = _redact_local_paths(_read_excerpt(memory_repo / "local" / "HANDOFF.md", max_chars=14000))
+    scorecard = _browser_safe(scorecard)
+    receipt = _browser_safe(receipt)
+    ledgers = _browser_safe(ledgers)
+    ticket_refs = _browser_safe(ticket_refs)
+    prior_ask_run_dirs = [_redact_local_paths(str(path)) for path in prior_ask_run_dirs]
+    return f"""You are WebGPT reviewing the $memory hardening process from comprehensive project-agent context.
+
+HARD OUTPUT CONTRACT — return ONLY zero or more TICKET blocks or NO_TICKET lines. Do not write prose, summaries, rankings, or implementation essays.
+
+Allowed output block:
+TICKET
+Type: bug|feature|optimization|maintenance|triage
+Title: <focused issue title>
+Target: <file, skill, service, or workflow>
+Current state: <observed failure, limitation, or missing capability>
+Requested outcome: <one concrete behavior or artifact>
+Route: <canonical ticket route>
+Requested repair agent: <agent id or unknown>
+Scoped files: <paths or explicit unknown>
+Non-goals: <what must stay out of scope>
+Required proof: <live E2E proof plus retained agentic-evals guard>
+Failure code: <triage-error code or TRIAGE_REQUIRED>
+
+Or:
+NO_TICKET: <why this observation is not independently actionable>
+
+Review focus: {focus}
+
+Constraints:
+- $memory hardening is not done until all families are SEALED, response-surface resweep is 100%, and /answer plus /deflect expose zero diagnostic leaks.
+- The project agent owns orchestration and monitoring.
+- WebGPT should inspect the full context, but every actionable output must be a focused ticket candidate.
+- If an observation needs external/upstream confirmation, set Failure code: TRIAGE_REQUIRED and say exactly what must be checked in Current state.
+- Do not propose broad refactors, status dashboards, or unrelated cleanup.
+- Prefer one independently verifiable acceptance criterion per ticket.
+
+Current hardening scorecard:
+```json
+{json.dumps(scorecard, indent=2, sort_keys=True)}
+```
+
+Latest response-surface receipt:
+```json
+{json.dumps(receipt, indent=2, sort_keys=True)}
+```
+
+Replay ledger summaries:
+```json
+{json.dumps(ledgers, indent=2, sort_keys=True)}
+```
+
+Existing ticket refs under consideration:
+```json
+{json.dumps(ticket_refs, indent=2)}
+```
+
+Prior Ask run dirs under consideration:
+```json
+{json.dumps(prior_ask_run_dirs, indent=2)}
+```
+
+Project handoff excerpt:
+```markdown
+{handoff}
+```
+"""
+
+
+def _parse_webgpt_ticket_blocks(text: str) -> dict[str, Any]:
+    tickets: list[dict[str, str]] = []
+    no_tickets: list[str] = []
+    current: dict[str, str] | None = None
+    current_key: str | None = None
+    field_map = {
+        "type": "type",
+        "title": "title",
+        "target": "target",
+        "current state": "current_state",
+        "requested outcome": "requested_outcome",
+        "route": "route",
+        "requested repair agent": "requested_repair_agent",
+        "scoped files": "scoped_files",
+        "non-goals": "non_goals",
+        "required proof": "required_proof",
+        "failure code": "failure_code",
+    }
+    for raw_line in text.splitlines():
+        line = raw_line.rstrip()
+        if not line.strip():
+            current_key = None
+            continue
+        if line.strip() == "TICKET":
+            if current:
+                tickets.append(current)
+            current = {}
+            current_key = None
+            continue
+        if line.startswith("NO_TICKET:"):
+            if current:
+                tickets.append(current)
+                current = None
+            no_tickets.append(line.split(":", 1)[1].strip())
+            current_key = None
+            continue
+        if current is None:
+            continue
+        if ":" in line:
+            raw_key, value = line.split(":", 1)
+            key = field_map.get(raw_key.strip().lower())
+            if key:
+                current[key] = value.strip()
+                current_key = key
+                continue
+        if current_key:
+            current[current_key] = (current.get(current_key, "") + "\n" + line.strip()).strip()
+    if current:
+        tickets.append(current)
+    required = {"type", "title", "target", "current_state", "requested_outcome", "required_proof", "failure_code"}
+    normalized: list[dict[str, Any]] = []
+    for index, ticket in enumerate(tickets):
+        missing = sorted(required - set(ticket))
+        normalized.append({"index": index, "status": "READY" if not missing else "INCOMPLETE", "missing_fields": missing, **ticket})
+    return {"ticket_count": len(normalized), "tickets": normalized, "no_ticket_count": len(no_tickets), "no_tickets": no_tickets}
+
+
+def _candidate_repo(candidate: dict[str, Any], default_repo: str) -> str:
+    route = str(candidate.get("route") or "")
+    match = re.search(r"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)", route)
+    return match.group(1) if match else default_repo
+
+
+def _candidate_route(candidate: dict[str, Any]) -> str:
+    route = str(candidate.get("route") or "backend_python_or_skill_runtime").strip()
+    if re.search(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", route):
+        return "backend_python_or_skill_runtime"
+    return route or "backend_python_or_skill_runtime"
+
+
+def _live_proof_text(candidate: dict[str, Any], proof: str) -> str:
+    target = str(candidate.get("target") or "")
+    if "pipeline-self-repair" in target:
+        command = (
+            "Live command: cd ~/workspace/experiments/memory/.pi/skills/pipeline-self-repair "
+            "&& ./sanity.sh && ./run.sh hardening-cycle --skip-scorecard --skip-watchdog --skip-triage --json; "
+            "read back hardening-cycle-receipt.json."
+        )
+    else:
+        command = (
+            "Live command: cd ~/workspace/experiments/memory "
+            "&& uv run python scripts/ops/hardening_scorecard.py; "
+            "then run the implemented family-specific live proof and read back its receipt."
+        )
+    return f"{command} {proof}"
+
+
+def _ticket_candidate_command(candidate: dict[str, Any], repo: str, *, apply: bool) -> list[str] | None:
+    if candidate.get("status") != "READY":
+        return None
+    repo = _candidate_repo(candidate, repo)
+    kind = str(candidate.get("type") or "triage").strip().lower()
+    if kind not in {"bug", "feature", "optimization", "maintenance", "triage"}:
+        kind = "triage"
+    title = str(candidate.get("title") or "Untitled hardening candidate")
+    target = str(candidate.get("target") or "unknown")
+    route = _candidate_route(candidate)
+    proof = _live_proof_text(candidate, str(candidate.get("required_proof") or "Run the named hardening proof and retained agentic-evals guard."))
+    non_goals = str(candidate.get("non_goals") or "")
+    agent = str(candidate.get("requested_repair_agent") or "agent-skill-maintainer")
+    if kind == "feature":
+        cmd = [str(TICKET_RUN), "feature", title, "--target", target, "--limitation", str(candidate.get("current_state") or "missing capability"), "--capability", str(candidate.get("requested_outcome") or "requested behavior exists"), "--workflow", "Run pipeline-self-repair hardening-cycle, then project-watchdog repair if eligible.", "--acceptance", str(candidate.get("requested_outcome") or "capability exists"), "--proof", proof]
+    elif kind == "optimization":
+        cmd = [str(TICKET_RUN), "optimization", title, "--target", target, "--friction", str(candidate.get("current_state") or "hardening workflow friction"), "--improvement", str(candidate.get("requested_outcome") or "smaller repeatable hardening loop"), "--measurable-target", str(candidate.get("requested_outcome") or "one command emits proof-ready ticket/watchdog artifacts"), "--proof", proof]
+    elif kind == "maintenance":
+        cmd = [str(TICKET_RUN), "maintenance", title, "--target", target, "--invariant", str(candidate.get("requested_outcome") or "hardening workflow remains receipt-backed"), "--cleanup", str(candidate.get("current_state") or "remove stale or manual hardening steps"), "--scoped-files", str(candidate.get("scoped_files") or "unknown"), "--proof", proof]
+    elif kind == "triage":
+        cmd = [str(TICKET_RUN), "triage", title, "--target", target, "--clues", str(candidate.get("current_state") or "hardening signal needs classification"), "--missing-data", str(candidate.get("requested_outcome") or "one canonical triage-error code and next command")]
+    else:
+        observed = f"{candidate.get('current_state') or 'hardening process gap'}\nFailure code: {candidate.get('failure_code')}"
+        cmd = [str(TICKET_RUN), "bug", title, "--target", target, "--observed", observed, "--expected", str(candidate.get("requested_outcome") or "hardening process behaves correctly"), "--repro", "Run pipeline-self-repair hardening-cycle for $memory and inspect the emitted cycle receipt.", "--proof", proof]
+    cmd.extend(["--route", route, "--repo", repo, "--json"])
+    if agent and agent.lower() != "unknown":
+        cmd.extend(["--agent", agent])
+    if kind != "triage":
+        cmd.extend(["--required-skill", "pipeline-self-repair", "--required-skill", "triage-error", "--label", "pipeline-self-repair"])
+        if non_goals:
+            cmd.extend(["--non-goals", non_goals])
+        scoped = str(candidate.get("scoped_files") or "")
+        if "unknown" not in scoped.lower():
+            for item in [part.strip() for part in scoped.replace("\n", ",").split(",") if part.strip()]:
+                cmd.extend(["--context-file", item])
+    if apply:
+        cmd.append("--apply")
+    return cmd
+
+
+def _ask_response_path_from_stdout(stdout: str) -> Path | None:
+    try:
+        payload = json.loads(stdout or "{}")
+    except json.JSONDecodeError:
+        return None
+    candidates: list[Path] = []
+    join_path = payload.get("join_artifact_path")
+    if join_path:
+        path = Path(str(join_path))
+        candidates.append(path.parent.parent / "handler-webgpt" / "response.md")
+    execution = payload.get("execution") if isinstance(payload, dict) else None
+    receipt_path = execution.get("receipt_path") if isinstance(execution, dict) else None
+    if receipt_path:
+        run_root = Path(str(receipt_path)).parent.parent
+        candidates.append(run_root / "node-artifacts" / "handler-webgpt" / "response.md")
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _triage_ticket_candidates(candidates: list[dict[str, Any]], *, skip: bool) -> list[dict[str, Any]]:
+    results: list[dict[str, Any]] = []
+    for candidate in candidates:
+        failure_code = str(candidate.get("failure_code") or "").strip()
+        if failure_code and failure_code != "TRIAGE_REQUIRED":
+            results.append({"index": candidate.get("index"), "status": "SKIPPED", "reason": "candidate supplied failure_code", "failure_code": failure_code})
+            continue
+        if skip or candidate.get("status") != "READY":
+            results.append({"index": candidate.get("index"), "status": "SKIPPED", "reason": "triage skipped or candidate incomplete"})
+            continue
+        signal = "\n".join(str(candidate.get(key) or "") for key in ["title", "target", "current_state", "requested_outcome"])
+        try:
+            triage = _classify(signal, None)
+            candidate["failure_code"] = triage.code
+            results.append({"index": candidate.get("index"), "status": "PASS", "triage": triage.model_dump()})
+        except Exception as exc:  # noqa: BLE001 - command should report degraded candidate, not hide others
+            results.append({"index": candidate.get("index"), "status": "FAILED", "error": str(exc)})
+    return results
+
+
+def _canonical_issue_ref(issue_ref: str, repo_hint: str | None) -> str:
+    if "#" not in issue_ref or not repo_hint:
+        return issue_ref
+    _, number = issue_ref.rsplit("#", 1)
+    return f"{repo_hint}#{number}"
+
+
+def _hardening_cycle_issue_refs(receipt: dict[str, Any]) -> list[str]:
+    refs: list[str] = []
+    for item in receipt.get("ticket_projections") or []:
+        ref = item.get("issue_ref") if isinstance(item, dict) else None
+        if ref:
+            ref = _canonical_issue_ref(str(ref), item.get("repo"))
+            if ref not in refs:
+                refs.append(ref)
+    if refs:
+        return refs
+    for item in receipt.get("watchdog_dispatches") or []:
+        ref = item.get("issue_ref") if isinstance(item, dict) else None
+        if ref and ref not in refs:
+            refs.append(str(ref))
+    return refs
+
+
+def _watchdog_receipt_readback(dispatch: dict[str, Any]) -> dict[str, Any]:
+    path_value = dispatch.get("receipt_path") if isinstance(dispatch, dict) else None
+    if path_value:
+        path = Path(str(path_value))
+        if path.is_file():
+            try:
+                return {"status": "PASS", "path": str(path), "receipt": json.loads(path.read_text(encoding="utf-8"))}
+            except json.JSONDecodeError as exc:
+                return {"status": "FAILED", "path": str(path), "error": f"receipt was not JSON: {exc}"}
+        return {"status": "MISSING", "path": str(path)}
+    embedded = dispatch.get("receipt") if isinstance(dispatch, dict) else None
+    if isinstance(embedded, dict):
+        return {"status": "PASS", "receipt": embedded}
+    return {"status": "SKIPPED", "reason": "no watchdog receipt path on dispatch"}
+
+
+def _followup_for_ticket(issue_state: dict[str, Any], watchdog_readback: dict[str, Any], dispatch: dict[str, Any] | None) -> dict[str, Any]:
+    labels = set(issue_state.get("labels") or [])
+    dispatch_status = (dispatch or {}).get("status")
+    receipt_status = ((watchdog_readback.get("receipt") or {}) if isinstance(watchdog_readback, dict) else {}).get("status")
+    status_signal = receipt_status or dispatch_status
+    if issue_state.get("status") == "FAILED":
+        return {"state": "TICKET_READBACK_FAILED", "next_legal_command": "fix ticket readback before making repair claims"}
+    if issue_state.get("state") == "CLOSED":
+        return {
+            "state": "TICKET_CLOSED_VERIFY_SCORECARD",
+            "next_legal_command": "cd ~/workspace/experiments/memory && uv run python scripts/ops/hardening_scorecard.py; append CATEGORY_GREEN only if the family is sealed",
+        }
+    if "agent-blocked" in labels or status_signal in {"NEEDS_ATTENTION", "BLOCKED"}:
+        return {
+            "state": "WATCHDOG_BLOCKED_NEEDS_ATTENTION",
+            "next_legal_command": "read the watchdog/Tau receipt named here, resolve the specific blocker, and do not re-dispatch the same input unchanged",
+        }
+    if "agent-active" in labels:
+        return {"state": "WATCHDOG_ACTIVE", "next_legal_command": "monitor project-watchdog and ticket receipts; do not file a duplicate ticket"}
+    if status_signal in {"COMPLETED", "PASS"}:
+        return {
+            "state": "WATCHDOG_REPAIR_COMMIT_READY",
+            "next_legal_command": "inspect the repair receipt/commit, run the live family proof, then update the ticket and replay ledger",
+        }
+    return {
+        "state": "TICKETED_NEEDS_WATCHDOG_DISPATCH",
+        "next_legal_command": "run project-watchdog tick --apply --project <mapped-project> --issue <n> --max-tickets 1",
+    }
+
+
+def _hardening_cycle_repair_state(payload: dict[str, Any]) -> str:
+    followups = payload.get("followups") or []
+    if followups:
+        states = {(item.get("followup") or {}).get("state") for item in followups if isinstance(item, dict)}
+        if "WATCHDOG_BLOCKED_NEEDS_ATTENTION" in states or "TICKET_READBACK_FAILED" in states:
+            return RepairState.NEEDS_HUMAN.value
+        if "TICKETED_NEEDS_WATCHDOG_DISPATCH" in states:
+            return RepairState.TICKETED.value
+        if "WATCHDOG_ACTIVE" in states or "WATCHDOG_REPAIR_COMMIT_READY" in states:
+            return RepairState.WATCHDOG_DISPATCHED.value
+        if states == {"TICKET_CLOSED_VERIFY_SCORECARD"}:
+            return RepairState.CATEGORY_GREEN.value
+    dispatches = payload.get("watchdog_dispatches") or []
+    tickets = payload.get("ticket_projections") or []
+    if any(item.get("status") in {"NEEDS_ATTENTION", "BLOCKED"} for item in dispatches if isinstance(item, dict)):
+        return RepairState.NEEDS_HUMAN.value
+    if any(item.get("status") in {"COMPLETED", "PASS"} for item in dispatches if isinstance(item, dict)):
+        return RepairState.WATCHDOG_DISPATCHED.value
+    if any(item.get("issue_ref") for item in tickets if isinstance(item, dict)):
+        return RepairState.TICKETED.value
+    parsed = payload.get("webgpt_parse") or {}
+    if parsed.get("ticket_count"):
+        return RepairState.NEEDS_TRIAGE.value
+    return RepairState.CATEGORY_GREEN.value
+
+
+def _hardening_cycle_event_payload(payload: dict[str, Any], *, event_type: str) -> dict[str, Any]:
+    issue_refs = list(payload.get("issue_refs") or _hardening_cycle_issue_refs(payload))
+    return {
+        "schema": HARDENING_CYCLE_EVENT_SCHEMA,
+        "event_type": event_type,
+        "pipeline": "memory-hardening",
+        "run_id": Path(str(payload.get("output_dir") or "hardening-cycle")).name,
+        "step_id": "hardening-cycle",
+        "category_key": "memory-hardening/hardening-cycle/replay-ledger/v1",
+        "failure_category_id": "agent-skills:pipeline-self-repair:hardening-cycle-replay-ledger",
+        "blocking": False,
+        "repair_state": _hardening_cycle_repair_state(payload),
+        "ticket": {"action": "hardening_cycle", "issue_refs": issue_refs},
+        "watchdog": {"dispatches": payload.get("watchdog_dispatches") or []},
+        "receipt_path": payload.get("receipt_path"),
+        "status": payload.get("status"),
+        "next_legal_moves": (payload.get("project_agent_role") or {}).get("next_legal_moves") or [],
+    }
+
+
+def _resume_hardening_cycle_payload(
+    resume_receipt: Path,
+    *,
+    replay_ledger: Path | None,
+    watchdog_project: str,
+    skip_ticket: bool,
+    skip_watchdog: bool,
+) -> dict[str, Any]:
+    prior = json.loads(resume_receipt.read_text(encoding="utf-8"))
+    issue_refs = _hardening_cycle_issue_refs(prior)
+    dispatch_by_issue = {
+        str(item.get("issue_ref")): item
+        for item in prior.get("watchdog_dispatches") or []
+        if isinstance(item, dict) and item.get("issue_ref")
+    }
+    dispatch_by_number = {
+        str(item.get("issue_ref")).rsplit("#", 1)[1]: item
+        for item in prior.get("watchdog_dispatches") or []
+        if isinstance(item, dict) and item.get("issue_ref") and "#" in str(item.get("issue_ref"))
+    }
+    followups: list[dict[str, Any]] = []
+    for issue_ref in issue_refs:
+        ticket_state = _github_issue_view(issue_ref, skip=skip_ticket)
+        dispatch = dispatch_by_issue.get(issue_ref) or dispatch_by_number.get(issue_ref.rsplit("#", 1)[1])
+        watchdog_readback = _watchdog_receipt_readback(dispatch or {}) if not skip_watchdog else {"status": "SKIPPED"}
+        followup = _followup_for_ticket(ticket_state, watchdog_readback, dispatch)
+        followups.append({
+            "issue_ref": issue_ref,
+            "ticket": ticket_state,
+            "watchdog_dispatch": dispatch,
+            "watchdog_receipt_readback": watchdog_readback,
+            "followup": followup,
+        })
+    failed = [item for item in followups if item["ticket"].get("status") == "FAILED" or item["watchdog_receipt_readback"].get("status") == "FAILED"]
+    payload = {
+        "schema": HARDENING_CYCLE_SCHEMA,
+        "generated_at": _now(),
+        "status": "PASS" if not failed else "DEGRADED",
+        "mode": "resume",
+        "resume_receipt": str(resume_receipt),
+        "watchdog": _watchdog_status(watchdog_project, skip=skip_watchdog),
+        "issue_refs": issue_refs,
+        "followups": followups,
+        "failed_readbacks": failed,
+        "project_agent_role": {
+            "owner": "project-agent",
+            "next_legal_moves": [item["followup"]["next_legal_command"] for item in followups],
+        },
+    }
+    if replay_ledger:
+        event = _append_replay_ledger_event(replay_ledger, _hardening_cycle_event_payload(payload, event_type="hardening_cycle.resumed"))
+        payload["replay_ledger"] = str(replay_ledger)
+        payload["replay_ledger_event"] = event
+    return payload
+
+
+@app.command("hardening-cycle")
+def hardening_cycle(
+    memory_repo: Path = typer.Option(Path.home() / "workspace" / "experiments" / "memory", "--memory-repo"),
+    output_dir: Path | None = typer.Option(None, "--output-dir"),
+    focus: str = typer.Option("make $memory hardening less kludgy by converting comprehensive review into focused ticket/watchdog work items", "--focus"),
+    ledger: list[Path] = typer.Option([], "--ledger"),
+    ticket_ref: list[str] = typer.Option([], "--ticket-ref"),
+    ask_run_dir: list[Path] = typer.Option([], "--ask-run-dir"),
+    subagent_run_id: list[str] = typer.Option([], "--subagent-run-id"),
+    webgpt_response: Path | None = typer.Option(None, "--webgpt-response"),
+    resume_receipt: Path | None = typer.Option(None, "--resume", help="Resume from a prior hardening-cycle receipt and emit ticket/watchdog follow-up state."),
+    replay_ledger: Path | None = typer.Option(None, "--replay-ledger", help="Append a hash-chained hardening-cycle event to this replay ledger."),
+    execute_ask: bool = typer.Option(False, "--execute-ask"),
+    apply_ticket: bool = typer.Option(False, "--apply-ticket"),
+    dispatch_watchdog: bool = typer.Option(True, "--dispatch-watchdog/--no-dispatch-watchdog"),
+    skip_scorecard: bool = typer.Option(False, "--skip-scorecard"),
+    skip_triage: bool = typer.Option(False, "--skip-triage"),
+    skip_ticket: bool = typer.Option(False, "--skip-ticket"),
+    skip_watchdog: bool = typer.Option(False, "--skip-watchdog"),
+    watchdog_project: str = typer.Option("agent-skills", "--watchdog-project"),
+    repo: str = typer.Option("grahama1970/agent-skills", "--repo"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Run one bounded $memory hardening orchestration cycle.
+
+    Default mode is dry-run/safe: it builds the comprehensive WebGPT prompt,
+    parses a supplied WebGPT response if present, projects ticket commands, and
+    emits monitor instructions. External Ask and ticket mutations require
+    --execute-ask or --apply-ticket.
+    """
+    if resume_receipt:
+        payload = _resume_hardening_cycle_payload(
+            resume_receipt,
+            replay_ledger=replay_ledger,
+            watchdog_project=watchdog_project,
+            skip_ticket=skip_ticket,
+            skip_watchdog=skip_watchdog,
+        )
+        _emit(payload, json_output)
+        if payload["status"] == "DEGRADED":
+            raise typer.Exit(1)
+        return
+
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    out_dir = output_dir or Path("/tmp") / f"pipeline-self-repair-hardening-cycle-{timestamp}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    scorecard = _scorecard_status(memory_repo, skip=skip_scorecard)
+    receipt = _latest_response_surface_receipt(memory_repo)
+    ledger_summaries = [_ledger_summary(path) for path in ledger] or [{"status": "SKIPPED", "reason": "no ledger supplied"}]
+    prompt = _hardening_webgpt_prompt(
+        memory_repo=memory_repo,
+        scorecard=scorecard,
+        receipt=receipt,
+        ledgers=ledger_summaries,
+        ticket_refs=ticket_ref,
+        prior_ask_run_dirs=ask_run_dir,
+        focus=focus,
+    )
+    prompt_path = out_dir / "webgpt-ticket-only-prompt.md"
+    prompt_path.write_text(prompt, encoding="utf-8")
+
+    ask_result: dict[str, Any] = {"status": "SKIPPED", "reason": "--execute-ask not set", "prompt_path": str(prompt_path)}
+    response_text = ""
+    if webgpt_response:
+        response_text = _read_excerpt(webgpt_response, max_chars=80000)
+        ask_result = {"status": "READ_SUPPLIED_RESPONSE", "response_path": str(webgpt_response)}
+    if execute_ask:
+        ask_run = SKILLS_ROOT / "ask" / "run.sh"
+        if not ask_run.exists():
+            ask_result = {"status": "FAILED", "error": "ask run.sh not found"}
+        else:
+            result, stdout = _run_in_cwd([str(ask_run), "webgpt", prompt], SKILLS_ROOT / "ask", timeout=1800)
+            (out_dir / "webgpt-stdout.txt").write_text(stdout, encoding="utf-8")
+            (out_dir / "webgpt-stderr.txt").write_text(result.stderr_excerpt, encoding="utf-8")
+            response_path = _ask_response_path_from_stdout(stdout)
+            if response_path:
+                response_text = response_path.read_text(encoding="utf-8", errors="replace")
+            else:
+                response_text = stdout
+            ask_result = {
+                "status": "PASS" if result.returncode == 0 else "FAILED",
+                "command": result.model_dump(),
+                "stdout_path": str(out_dir / "webgpt-stdout.txt"),
+                "response_path": str(response_path) if response_path else None,
+            }
+    parsed = _parse_webgpt_ticket_blocks(response_text) if response_text else {"ticket_count": 0, "tickets": [], "no_ticket_count": 0, "no_tickets": []}
+    triage_results = _triage_ticket_candidates(parsed["tickets"], skip=skip_triage)
+    ticket_projections: list[dict[str, Any]] = []
+    for candidate in parsed["tickets"]:
+        cmd = _ticket_candidate_command(candidate, repo, apply=apply_ticket)
+        projection: dict[str, Any] = {"index": candidate.get("index"), "repo": _candidate_repo(candidate, repo), "status": "SKIPPED_INCOMPLETE" if cmd is None else "PROJECTED", "command": cmd}
+        if cmd and apply_ticket:
+            result = _run(cmd, timeout=180)
+            projection.update({"status": "CREATED" if result.returncode == 0 else "FAILED", "result": result.model_dump(), "issue_ref": _extract_issue_ref(result.stdout_excerpt, projection["repo"])})
+        ticket_projections.append(projection)
+    watchdog_dispatches = _dispatch_watchdog_for_ticket_projections(
+        ticket_projections,
+        default_project=watchdog_project,
+        enabled=apply_ticket and dispatch_watchdog and not skip_watchdog,
+    )
+    monitor_plan = _push_pull_monitoring(subagent_run_id, ask_run_dir, ticket_ref + [p.get("issue_ref") for p in ticket_projections if p.get("issue_ref")])
+    watchdog_state = _watchdog_status(watchdog_project, skip=skip_watchdog)
+    failed_ticket_projection = any(item.get("status") == "FAILED" for item in ticket_projections)
+    failed_watchdog_dispatch = any(item.get("status") == "FAILED" for item in watchdog_dispatches)
+    payload_status = (
+        "PASS"
+        if scorecard.get("status") != "FAILED"
+        and ask_result.get("status") != "FAILED"
+        and watchdog_state.get("status") != "FAILED"
+        and not failed_ticket_projection
+        and not failed_watchdog_dispatch
+        else "DEGRADED"
+    )
+    payload = {
+        "schema": HARDENING_CYCLE_SCHEMA,
+        "generated_at": _now(),
+        "status": payload_status,
+        "project_agent_role": {
+            "owner": "project-agent",
+            "next_legal_moves": [
+                "run the generated WebGPT prompt through $ask webgpt if no response was supplied",
+                "file or bind one focused ticket per READY candidate",
+                "run triage-error before ticketing candidates marked TRIAGE_REQUIRED",
+                "automatically dispatch project-watchdog after focused ticket creation unless --no-dispatch-watchdog or --skip-watchdog is set",
+                "monitor Ask, ticket, watchdog, Pi async, and ledger receipts until category closure",
+            ],
+        },
+        "output_dir": str(out_dir),
+        "prompt_path": str(prompt_path),
+        "scorecard": scorecard,
+        "latest_response_surface_receipt": receipt,
+        "ledgers": ledger_summaries,
+        "ask": ask_result,
+        "webgpt_parse": parsed,
+        "triage_results": triage_results,
+        "ticket_projections": ticket_projections,
+        "watchdog_dispatches": watchdog_dispatches,
+        "watchdog": watchdog_state,
+        "monitoring": monitor_plan,
+    }
+    receipt_path = out_dir / "hardening-cycle-receipt.json"
+    receipt_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    payload["receipt_path"] = str(receipt_path)
+    if replay_ledger:
+        event = _append_replay_ledger_event(replay_ledger, _hardening_cycle_event_payload(payload, event_type="hardening_cycle.generated"))
+        payload["replay_ledger"] = str(replay_ledger)
+        payload["replay_ledger_event"] = event
+    receipt_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    _emit(payload, json_output)
+    if payload["status"] == "DEGRADED":
+        raise typer.Exit(1)
+
 
 
 @app.command("monitor")

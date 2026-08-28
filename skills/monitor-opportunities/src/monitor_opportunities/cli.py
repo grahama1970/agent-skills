@@ -575,6 +575,15 @@ def _truthy_env(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _scheduler_self_repair_notify_enabled() -> bool:
+    explicit = os.environ.get("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY")
+    if explicit is not None:
+        return explicit.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(
+        os.environ.get("SLACK_WEBHOOK_URL") or os.environ.get("DISCORD_WEBHOOK_URL")
+    )
+
+
 def _notify_scheduler_self_repair(
     *,
     workdir: Path,
@@ -588,9 +597,12 @@ def _notify_scheduler_self_repair(
         "status": "DISABLED",
         "external_effects": False,
     }
-    enabled = _truthy_env("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY")
+    enabled = _scheduler_self_repair_notify_enabled()
     if not enabled and not dry_run:
-        notification["reason"] = "set MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY=1 to send"
+        notification["reason"] = (
+            "set MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY=1 or export "
+            "SLACK_WEBHOOK_URL/DISCORD_WEBHOOK_URL to send"
+        )
         return notification
 
     runner = workdir / "skills" / "ops-discord" / "run.sh"
@@ -817,6 +829,74 @@ def _new_nightly_run_dir(skill_dir: Path, *, promote_latest: bool = True) -> Pat
     return run_dir
 
 
+def _count_field_present(step: dict[str, Any], field: str) -> bool:
+    value = step.get(field)
+    return isinstance(value, int) and value >= 0
+
+
+def _linkedin_source_accounting(nightly_receipt: dict[str, Any]) -> dict[str, Any]:
+    """Promoted scheduler proof must not hide failed LinkedIn signal capture.
+
+    Zero Top Applicant/Easy Apply rows can be a real outcome only when the
+    source ran and wrote explicit count fields. A failed or missing lane means
+    the nightly did not account for Graham's requested LinkedIn signals.
+    """
+
+    steps = nightly_receipt.get("steps") if isinstance(nightly_receipt, dict) else {}
+    if not isinstance(steps, dict):
+        steps = {}
+    top = steps.get("browser_capture_linkedin") or {}
+    premium = steps.get("browser_capture_linkedin_premium") or {}
+    if not isinstance(top, dict):
+        top = {}
+    if not isinstance(premium, dict):
+        premium = {}
+    top_status = top.get("status")
+    premium_status = premium.get("status")
+    top_counts_present = all(
+        _count_field_present(top, field)
+        for field in ("top_applicant_count", "easy_apply_count")
+    )
+    premium_counts_present = all(
+        _count_field_present(premium, field)
+        for field in (
+            "top_applicant_count",
+            "easy_apply_count",
+            "under_10_applicants_count",
+            "warm_paths_found",
+        )
+    )
+    checks = {
+        "linkedin_top_applicant_status_accounted": top_status in {"OK", "EMPTY"},
+        "linkedin_top_applicant_counts_accounted": top_counts_present,
+        "linkedin_premium_status_accounted": premium_status in {"OK", "EMPTY"},
+        "linkedin_premium_counts_accounted": premium_counts_present,
+    }
+    return {
+        "checks": checks,
+        "details": {
+            "linkedin_top_applicant": {
+                "status": top_status,
+                "captured": top.get("captured"),
+                "top_applicant_count": top.get("top_applicant_count"),
+                "easy_apply_count": top.get("easy_apply_count"),
+                "accounted": checks["linkedin_top_applicant_status_accounted"]
+                and checks["linkedin_top_applicant_counts_accounted"],
+            },
+            "linkedin_premium": {
+                "status": premium_status,
+                "captured": premium.get("captured"),
+                "top_applicant_count": premium.get("top_applicant_count"),
+                "easy_apply_count": premium.get("easy_apply_count"),
+                "under_10_applicants_count": premium.get("under_10_applicants_count"),
+                "warm_paths_found": premium.get("warm_paths_found"),
+                "accounted": checks["linkedin_premium_status_accounted"]
+                and checks["linkedin_premium_counts_accounted"],
+            },
+        },
+    }
+
+
 def _scheduler_execution_equivalence_receipt(
     *,
     schedule_receipt_path: Path,
@@ -922,53 +1002,57 @@ def _scheduler_execution_equivalence_receipt(
     expected_revision = str(preflight.get("expected_revision") or "")
     revision_full = str((attestation.get("code") or {}).get("git_revision_full") or "")
     report_acceptance_hash = _json_hash_file(artifact_paths["report_acceptance"])
-    post_checks = {
-        "execution_exit_code_zero": execution.get("exit_code") == 0,
-        "nightly_receipt_present": artifact_paths["nightly"].is_file(),
-        "nightly_status_pass": nightly_receipt.get("status") == "PASS",
-        "nightly_mode_matches_schedule": nightly_receipt.get("mode")
-        == schedule_receipt.get("mode"),
-        "nightly_live_true": nightly_receipt.get("live") is True,
-        "nightly_external_effects_false": nightly_receipt.get("external_effects") is False,
-        "run_attestation_present": artifact_paths["run_attestation"].is_file(),
-        "attestation_expected_revision_matches": (
-            (attestation.get("runtime") or {}).get("expected_revision") == expected_revision
-            or (nightly_receipt.get("steps") or {})
-            .get("attestation", {})
-            .get("expected_revision_matches")
-            is True
-        ),
-        "attestation_revision_matches_scheduler": bool(expected_revision)
-        and bool(revision_full)
-        and (
-            revision_full == expected_revision
-            or revision_full.startswith(expected_revision)
-            or expected_revision.startswith(revision_full)
-        ),
-        "receipt_consistency_present": artifact_paths["receipt_consistency"].is_file(),
-        "receipt_consistency_pass": consistency_receipt.get("status") == "PASS",
-        "zero_effect_replay_present": artifact_paths["zero_effect_replay"].is_file(),
-        "zero_effect_replay_pass": replay_receipt.get("status") == "PASS",
-        "zero_effect_replay_external_effects_false": replay_receipt.get("external_effects")
-        is False,
-        "report_acceptance_present": artifact_paths["report_acceptance"].is_file(),
-        "report_acceptance_pass": acceptance_receipt.get("status") == "PASS",
-        "report_acceptance_external_effects_false": acceptance_receipt.get("external_effects")
-        is False,
-        "report_acceptance_hash_bound_in_nightly": bool(report_acceptance_hash)
-        and (nightly_receipt.get("artifact_hashes") or {}).get("report_acceptance")
-        == report_acceptance_hash,
-    }
-    if require_promoted_stage0:
-        tau_step = (nightly_receipt.get("steps") or {}).get("tau_semantic") or {}
-        post_checks.update(
-            {
-                "tau_semantic_prepare_present": artifact_paths["tau_semantic_prepare"].is_file(),
-                "tau_semantic_provider_live": tau_step.get("provider_live") is True,
-                "tau_semantic_addenda_installed": int(tau_step.get("installed_addenda") or 0) > 0,
-                "semantic_addenda_index_present": artifact_paths["semantic_addenda_index"].is_file(),
-            }
-        )
+    linkedin_source_accounting = _linkedin_source_accounting(nightly_receipt)
+    post_checks: dict[str, bool] = {}
+    if execution.get("executed") is True:
+        post_checks = {
+            "execution_exit_code_zero": execution.get("exit_code") == 0,
+            "nightly_receipt_present": artifact_paths["nightly"].is_file(),
+            "nightly_status_pass": nightly_receipt.get("status") == "PASS",
+            "nightly_mode_matches_schedule": nightly_receipt.get("mode")
+            == schedule_receipt.get("mode"),
+            "nightly_live_true": nightly_receipt.get("live") is True,
+            "nightly_external_effects_false": nightly_receipt.get("external_effects") is False,
+            "run_attestation_present": artifact_paths["run_attestation"].is_file(),
+            "attestation_expected_revision_matches": (
+                (attestation.get("runtime") or {}).get("expected_revision") == expected_revision
+                or (nightly_receipt.get("steps") or {})
+                .get("attestation", {})
+                .get("expected_revision_matches")
+                is True
+            ),
+            "attestation_revision_matches_scheduler": bool(expected_revision)
+            and bool(revision_full)
+            and (
+                revision_full == expected_revision
+                or revision_full.startswith(expected_revision)
+                or expected_revision.startswith(revision_full)
+            ),
+            "receipt_consistency_present": artifact_paths["receipt_consistency"].is_file(),
+            "receipt_consistency_pass": consistency_receipt.get("status") == "PASS",
+            "zero_effect_replay_present": artifact_paths["zero_effect_replay"].is_file(),
+            "zero_effect_replay_pass": replay_receipt.get("status") == "PASS",
+            "zero_effect_replay_external_effects_false": replay_receipt.get("external_effects")
+            is False,
+            "report_acceptance_present": artifact_paths["report_acceptance"].is_file(),
+            "report_acceptance_pass": acceptance_receipt.get("status") == "PASS",
+            "report_acceptance_external_effects_false": acceptance_receipt.get("external_effects")
+            is False,
+            "report_acceptance_hash_bound_in_nightly": bool(report_acceptance_hash)
+            and (nightly_receipt.get("artifact_hashes") or {}).get("report_acceptance")
+            == report_acceptance_hash,
+            **linkedin_source_accounting["checks"],
+        }
+        if require_promoted_stage0:
+            tau_step = (nightly_receipt.get("steps") or {}).get("tau_semantic") or {}
+            post_checks.update(
+                {
+                    "tau_semantic_prepare_present": artifact_paths["tau_semantic_prepare"].is_file(),
+                    "tau_semantic_provider_live": tau_step.get("provider_live") is True,
+                    "tau_semantic_addenda_installed": int(tau_step.get("installed_addenda") or 0) > 0,
+                    "semantic_addenda_index_present": artifact_paths["semantic_addenda_index"].is_file(),
+                }
+            )
     checks = {**preflight_checks, **post_checks}
     receipt = {
         "schema": "monitor_opportunities.scheduler_execution_equivalence_receipt.v1",
@@ -982,8 +1066,10 @@ def _scheduler_execution_equivalence_receipt(
         "timeout_seconds": timeout_seconds,
         "preflight": preflight,
         "execution": execution,
+        "post_run_checks_skipped": execution.get("skipped_reason") == "dry_run",
         "nightly_out": str(nightly_out),
         "artifacts": artifacts,
+        "source_accounting": linkedin_source_accounting["details"],
         "checks": checks,
     }
     write_json(out_path, receipt)

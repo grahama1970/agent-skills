@@ -48,13 +48,31 @@
       "not_this": []
     },
     {
+      "code": "monitor_opportunities_linkedin_source_accounting_failed",
+      "layer": "monitor-opportunities",
+      "match": ["linkedin_top_applicant_status_accounted", "linkedin_premium_status_accounted", "browser_capture_linkedin", "source_accounting"],
+      "cause": "A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.",
+      "next_command": "Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.",
+      "recoverable": true,
+      "not_this": ["nightly revision mismatch", "no opportunities found after a successful source count", "human declined LinkedIn authorization"]
+    },
+    {
       "code": "monitor_opportunities_nightly_revision_mismatch",
       "layer": "monitor-opportunities",
-      "match": ["nightly_revision_mismatch", "expected", "got"],
+      "match": ["nightly_revision_mismatch", "NIGHTLY_REVISION_MISMATCH"],
       "cause": "The scheduler invoked monitor-opportunities with a stale --expected-revision pin, so cron refused to publish a nightly report from code that no longer matched the registered revision.",
       "next_command": "Run skills/monitor-opportunities/run.sh schedule --promoted-stage0 from the intended agent-skills worktree, read back ~/.pi/scheduler/jobs.json for monitor-opportunities-nightly, then file a skills/ticket bug with route:ops_or_scheduler if the next scheduler log still emits NIGHTLY_REVISION_MISMATCH so project-watchdog can dispatch the repair.",
       "recoverable": true,
       "not_this": ["no opportunities found", "LinkedIn empty", "source ranking threshold"]
+    },
+    {
+      "code": "project_watchdog_closure_audit_nonzero_needs_attention",
+      "layer": "project-watchdog",
+      "match": ["project_watchdog_closure_audit_nonzero_needs_attention", "wrapper exit", "VERDICT: NEEDS_ATTENTION", "closure-unverified", "Ask/Tau exited nonzero"],
+      "cause": "Ask/Tau exited nonzero while closure-audit seats declared VERDICT: NEEDS_ATTENTION. The semantic verdict is usable; project-watchdog must make it durable with closure-unverified or cooldown instead of reporting no usable panel verdict.",
+      "next_command": "Run skills/ticket/run.sh ensure-labels --repo <owner/repo>, then run cd skills/agentic-evals && ./run.sh run ../project-watchdog/fixtures/agentic_eval.json --only-category closure-audit-nonzero-needs-attention and read back READY before resuming project-watchdog.",
+      "recoverable": true,
+      "not_this": ["provider did not answer", "no seat verdict", "closure PASS", "closure FAIL"]
     }
   ]
 }

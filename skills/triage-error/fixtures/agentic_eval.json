@@ -30,13 +30,14 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/triage-eval-venv uv run --with pytest --project . python -m pytest -q tests/ && ./run.sh classify --text \"zip contains 9 files; maximum is 5\" --layer surf"
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/triage-eval-venv uv run --with pytest --project . python -m pytest -q tests/ && ./run.sh classify --text \"zip contains 9 files; maximum is 5\" --layer surf && ./run.sh classify --text '{\"checks\":{\"linkedin_top_applicant_status_accounted\":false,\"linkedin_premium_status_accounted\":false},\"source_accounting\":{\"linkedin_top_applicant\":{\"status\":\"FAILED\"},\"linkedin_premium\":{\"status\":\"FAILED\"}},\"preflight\":{\"expected_revision\":\"abc123\"}}' --layer monitor-opportunities"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "4 passed",
-          "webgpt_attachment_bundle_rejected"
+          "7 passed",
+          "webgpt_attachment_bundle_rejected",
+          "monitor_opportunities_linkedin_source_accounting_failed"
         ]
       }
     }

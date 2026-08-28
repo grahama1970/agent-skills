@@ -16,6 +16,7 @@ from monitor_opportunities.browser_capture import (
     _LINKEDIN_EXTRACT_JS,
     _LI_ARIA_EXTRACT_JS,
     _LINKEDIN_SENIOR_EXPERIENCE,
+    _surf_js,
     build_linkedin_search_url,
     capture_linkedin_premium,
     capture_linkedin_top_applicant,
@@ -25,6 +26,21 @@ from monitor_opportunities.browser_capture import (
 
 def _params(url: str) -> dict[str, list[str]]:
     return parse_qs(urlparse(url).query)
+
+
+def test_surf_js_places_script_before_tab_id(monkeypatch) -> None:
+    calls = []
+
+    def fake_surf(_surf_run, *args, **kwargs):
+        calls.append((args, kwargs))
+        return "OK"
+
+    monkeypatch.setattr(browser_capture, "_surf", fake_surf)
+
+    assert _surf_js(browser_capture.SURF_RUN_DEFAULT, "837419583", "return document.title", timeout=12) == "OK"
+    assert calls == [
+        (("js", "return document.title", "--tab-id", "837419583"), {"timeout": 12})
+    ]
 
 
 def test_remote_hybrid_maps_to_f_wt_2_3() -> None:
@@ -159,8 +175,18 @@ def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_count
         del kwargs
         if command == "tab.new":
             return "123: created"
-        if command == "js" and args and str(args[-1]).startswith("(function(){var out=[];"):
+        if command == "js" and args and str(args[0]).startswith("(function(){var out=[];"):
+            assert args[1:] == ("--tab-id", "123")
             rows = [
+                {
+                    "title": "Navigation Echo",
+                    "company": "",
+                    "location": "UNKNOWN",
+                    "href": "https://www.linkedin.com/jobs/search/",
+                    "warm": False,
+                    "early": False,
+                    "age": None,
+                },
                 {
                     "title": "Senior AI Engineer",
                     "company": "Acme Systems",
@@ -185,6 +211,7 @@ def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_count
     assert receipt["top_applicant_count"] == 0
     assert receipt["easy_apply_count"] == 0
     assert receipt["under_10_applicants_count"] == 1
+    assert receipt["discarded_unknown_company_count"] == 3
     assert receipt["warm_paths_found"] == 1
     evidence = json.loads((tmp_path / "linkedin-premium-evidence.json").read_text(encoding="utf-8"))
     [row] = evidence["opportunities"]
