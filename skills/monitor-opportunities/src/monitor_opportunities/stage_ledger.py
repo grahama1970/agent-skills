@@ -52,12 +52,14 @@ def build_ledger(
     merged_into: dict[str, str],
     source_receipts: list[dict[str, Any]] | None = None,
     admitted_count: int | None = None,
+    eligible_ids: set[str] | None = None,
 ) -> tuple[bool, dict[str, Any]]:
     """Reconcile the stages. Returns (ok, ledger)."""
     disc_ids = [str(c.get("candidate_id") or "") for c in discovered]
     accepted = {str(r.get("candidate_id") or "") for r in shortlist}
     rejected = {str(r.get("candidate_id") or "") for r in rejections}
     deduped = {str(k) for k in merged_into}
+    eligible_ids = eligible_ids or set()
 
     violations: list[dict[str, Any]] = []
     dispositions: dict[str, str] = {}
@@ -72,6 +74,8 @@ def build_ledger(
         ]
         if len(where) == 1:
             dispositions[cid] = where[0]
+        elif not where and cid in eligible_ids:
+            dispositions[cid] = "eligible_not_shortlisted"
         elif not where:
             dispositions[cid] = "unaccounted"
             pending_unaccounted.append(cid)
@@ -84,19 +88,20 @@ def build_ledger(
             })
 
     if pending_unaccounted:
-        expected_not_shortlisted = 0
-        if admitted_count is not None:
-            expected_not_shortlisted = max(0, admitted_count - len(accepted))
-        if expected_not_shortlisted == len(pending_unaccounted):
-            for cid in pending_unaccounted:
-                dispositions[cid] = "eligible_not_shortlisted"
-        else:
-            for cid in pending_unaccounted:
-                violations.append({
-                    "rule": "no-silent-loss",
-                    "detail": f"discovered record {cid} has no disposition",
-                    "candidate_id": cid,
-                })
+        if not eligible_ids:
+            expected_not_shortlisted = 0
+            if admitted_count is not None:
+                expected_not_shortlisted = max(0, admitted_count - len(accepted))
+            if expected_not_shortlisted == len(pending_unaccounted):
+                for cid in pending_unaccounted:
+                    dispositions[cid] = "eligible_not_shortlisted"
+                pending_unaccounted = []
+        for cid in pending_unaccounted:
+            violations.append({
+                "rule": "no-silent-loss",
+                "detail": f"discovered record {cid} has no disposition",
+                "candidate_id": cid,
+            })
 
     # Deduplicated rows must name a canonical record that actually survived the
     # eligibility pass, even if it fell below the top-N shortlist.
@@ -172,6 +177,8 @@ def build_ledger_for_run(run_dir: Path) -> tuple[bool, dict[str, Any]]:
     source_intel_p = run_dir / "ranking" / "source-intel-shortlist.json"
     rejections_p = run_dir / "ranking" / "rejections.json"
     receipt_p = run_dir / "ranking" / "ranking-receipt.json"
+    eligibility_p = run_dir / "ranking" / "eligibility-receipts.jsonl"
+    readback_p = run_dir / "ranking" / "readback-receipts.jsonl"
     shortlist = json.loads(shortlist_p.read_text(encoding="utf-8")) if shortlist_p.exists() else []
     if source_intel_p.exists():
         shortlist += json.loads(source_intel_p.read_text(encoding="utf-8"))
@@ -189,6 +196,20 @@ def build_ledger_for_run(run_dir: Path) -> tuple[bool, dict[str, Any]]:
             admitted_count = None
     else:
         admitted_count = None
+    discovered_by_url: dict[str, str] = {}
+    for row in discovered:
+        cid = str(row.get("candidate_id") or "")
+        for field in ("primary_evidence_url", "posting_url", "apply_url"):
+            url = str(row.get(field) or "")
+            if cid and url:
+                discovered_by_url[url] = cid
+    for receipt in _read_jsonl(readback_p):
+        if receipt.get("status") != "PRIMARY_CONFIRMED":
+            continue
+        locator_id = discovered_by_url.get(str(receipt.get("locator_url") or ""))
+        primary_id = discovered_by_url.get(str(receipt.get("primary_url") or ""))
+        if locator_id and primary_id and locator_id != primary_id:
+            merged.setdefault(locator_id, primary_id)
     return build_ledger(
         discovered,
         shortlist,
@@ -196,4 +217,9 @@ def build_ledger_for_run(run_dir: Path) -> tuple[bool, dict[str, Any]]:
         merged,
         source_receipts=receipts,
         admitted_count=admitted_count,
+        eligible_ids={
+            str(row.get("candidate_id") or "")
+            for row in _read_jsonl(eligibility_p)
+            if str(row.get("state") or "").startswith("ELIGIBLE_")
+        },
     )

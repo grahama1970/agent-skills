@@ -447,6 +447,32 @@
       "proves": "Against the REAL run: every discovered record resolves to exactly one disposition (accepted/rejected/deduplicated-into-a-named-canonical) with zero unaccounted, and the ledger provably fails when an unaccounted record is injected."
     },
     {
+      "name": "stage-ledger-explicit-eligible-receipts",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "stage_ledger.eligible_not_shortlisted",
+        "ranking.eligibility_receipts"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_stage_ledger.py::test_explicit_eligible_receipts_account_below_limit_rows skills/monitor-opportunities/tests/test_stage_ledger.py::test_readback_promoted_linkedin_locator_is_accounted -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ],
+        "stderr_excludes": [
+          "no-silent-loss"
+        ]
+      },
+      "proves": "Stage conservation uses explicit ELIGIBLE_* eligibility receipt ids to account rows below the visible shortlist/source-intel limits and accounts LinkedIn locator rows promoted by primary-source readback as named dedupe/promoted dispositions, while still failing true unaccounted discovered records.",
+      "does_not_prove": "A fresh live nightly has no unaccounted records until stage-conservation-no-silent-record-loss is run against its generated artifacts."
+    },
+    {
       "name": "promoted-stage0-cron-hardening-regression-2026-08-16",
       "type": "adversarial",
       "real_world": true,
