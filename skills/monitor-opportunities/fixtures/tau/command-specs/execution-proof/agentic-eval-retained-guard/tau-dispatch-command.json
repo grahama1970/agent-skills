@@ -1,0 +1,12 @@
+{
+  "command": [
+    "python3",
+    "skills/monitor-opportunities/scripts/tau_self_repair_execution_worker.py",
+    "--node-id",
+    "agentic-eval-retained-guard"
+  ],
+  "cwd": "/home/graham/workspace/experiments/agent-skills",
+  "timeout_s": 30,
+  "requires_network": false,
+  "mutates": false
+}

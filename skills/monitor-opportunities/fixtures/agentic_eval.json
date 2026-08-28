@@ -1222,6 +1222,60 @@
       },
       "proves": "The retained monitor-opportunities Tau DAG contract can be validated and rendered by phart-dag-chart, and the visible graph includes the full self-repair branch: pipeline-self-repair, triage-error, ticket, project-watchdog, agentic-evals, and checkpoint rerun.",
       "does_not_prove": "That Tau executed the DAG live, that project-watchdog mutated GitHub, that a failed nightly was repaired, or that LinkedIn/ATS/provider live services are healthy."
+    },
+    {
+      "name": "tau-dag-executes-self-repair-proof-branch",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 240,
+      "seams": [
+        "failure.pipeline_self_repair",
+        "triage.failure_code_catalog",
+        "ticket.watchdog_routing",
+        "agentic_evals.retained_regression_guard",
+        "tau.dag_contract_execution"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities python skills/monitor-opportunities/scripts/eval_tau_self_repair_execution.py --out /tmp/monitor-opportunities-self-repair-execution-proof-summary.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TAU_SELF_REPAIR_EXECUTION_PROOF_OK selected=7 status=PASS ledger_exists=True triage_code=monitor_opportunities_nightly_revision_mismatch external_effects=false"
+        ],
+        "stderr_excludes": [
+          "UNSUPPORTED_READY_QUEUE_CONDITION",
+          "missing_required_evidence",
+          "Traceback"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/tau_verdict",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/command_executed",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-self-repair-execution-proof-summary.json",
+            "json_pointer": "/ledger_triage_code",
+            "equals": "monitor_opportunities_nightly_revision_mismatch"
+          }
+        ]
+      },
+      "proves": "Tau executes the retained no-effect monitor-opportunities self-repair proof DAG through bounded-ready-queue command specs, invokes the real pipeline-self-repair record-failure and triage-error classify commands, writes a replay ledger, and carries ticket/watchdog/eval/checkpoint continuation as machine-readable receipts.",
+      "does_not_prove": "A fresh nightly passed, a live project-watchdog dispatch ran, a GitHub issue was created, or any LinkedIn/ATS/Gmail action was authorized or performed."
     }
   ]
 }

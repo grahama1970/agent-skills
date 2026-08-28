@@ -1,0 +1,135 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "monitor-opportunities-self-repair-execution-proof",
+  "goal": {
+    "goal_id": "monitor-opportunities-nightly",
+    "goal_version": 1,
+    "goal_hash": "sha256:96c6a2177ab4b3d588e6662a5e4a4c21a6f8f13ac7b06a899c090074f8630f4c",
+    "immutable_goal": "Nightly monitor-opportunities must produce a human-reviewable Buffalo/WNY-first employment and consulting report, preserve LinkedIn Top Applicant/Easy Apply as human-authorized only, and route every failed checkpoint through triage-error, pipeline-self-repair, ticket, project-watchdog, agentic-evals, and checkpoint rerun before the next trusted nightly."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/monitor-opportunities",
+    "allowed_paths": [
+      "skills/monitor-opportunities/**",
+      "skills/pipeline-self-repair/**",
+      "skills/triage-error/**",
+      "skills/ticket/**",
+      "skills/project-watchdog/**",
+      "skills/agentic-evals/**"
+    ]
+  },
+  "entry_node": "seed-failed-checkpoint",
+  "terminal_nodes": [
+    "human"
+  ],
+  "limits": {
+    "resume": false,
+    "default_timeout_seconds": 120,
+    "max_total_attempts": 7,
+    "max_concurrency": 1
+  },
+  "nodes": [
+    {
+      "id": "seed-failed-checkpoint",
+      "agent": "seed-failed-checkpoint",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/execution-proof/seed-failed-checkpoint",
+      "required_evidence": [
+        "failed_checkpoint_receipt"
+      ]
+    },
+    {
+      "id": "pipeline-self-repair-record-failure",
+      "agent": "pipeline-self-repair-record-failure",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/execution-proof/pipeline-self-repair-record-failure",
+      "required_evidence": [
+        "pipeline_self_repair_ledger"
+      ]
+    },
+    {
+      "id": "triage-error-classify",
+      "agent": "triage-error-classify",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/execution-proof/triage-error-classify",
+      "required_evidence": [
+        "triage_error_classification"
+      ]
+    },
+    {
+      "id": "ticket-bind-or-create",
+      "agent": "ticket-bind-or-create",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/execution-proof/ticket-bind-or-create",
+      "required_evidence": [
+        "ticket_preview"
+      ]
+    },
+    {
+      "id": "project-watchdog-dispatch",
+      "agent": "project-watchdog-dispatch",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/execution-proof/project-watchdog-dispatch",
+      "required_evidence": [
+        "watchdog_dispatch_projection"
+      ]
+    },
+    {
+      "id": "agentic-eval-retained-guard",
+      "agent": "agentic-eval-retained-guard",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/execution-proof/agentic-eval-retained-guard",
+      "required_evidence": [
+        "agentic_eval_retained_guard"
+      ]
+    },
+    {
+      "id": "rerun-failed-checkpoint",
+      "agent": "rerun-failed-checkpoint",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/execution-proof/rerun-failed-checkpoint",
+      "required_evidence": [
+        "checkpoint_rerun_receipt"
+      ]
+    }
+  ],
+  "edges": [
+    {"from": "seed-failed-checkpoint", "to": "pipeline-self-repair-record-failure"},
+    {"from": "pipeline-self-repair-record-failure", "to": "triage-error-classify"},
+    {"from": "triage-error-classify", "to": "ticket-bind-or-create"},
+    {"from": "ticket-bind-or-create", "to": "project-watchdog-dispatch"},
+    {"from": "project-watchdog-dispatch", "to": "agentic-eval-retained-guard"},
+    {"from": "agentic-eval-retained-guard", "to": "rerun-failed-checkpoint"},
+    {"from": "rerun-failed-checkpoint", "to": "human"}
+  ],
+  "required_evidence": [
+    "failed_checkpoint_receipt",
+    "pipeline_self_repair_ledger",
+    "triage_error_classification",
+    "ticket_preview",
+    "watchdog_dispatch_projection",
+    "agentic_eval_retained_guard",
+    "checkpoint_rerun_receipt"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "malformed_handoff"
+  ],
+  "extensions": {
+    "proof_scope": "No-effect execution proof for the failure-to-repair branch. It executes Tau command specs, invokes real pipeline-self-repair record-failure with --skip-memory --skip-github --no-ticket, invokes real triage-error classify, and writes projection receipts for ticket/watchdog/eval/checkpoint continuation.",
+    "does_not_prove": "A fresh nightly passed, a live GitHub issue was created, project-watchdog dispatched, LinkedIn/ATS/Gmail was touched, or an application was authorized/submitted."
+  }
+}
