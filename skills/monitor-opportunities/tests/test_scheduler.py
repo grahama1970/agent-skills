@@ -105,7 +105,7 @@ def _scheduler_test_receipt(repo: Path, command: str | None = None) -> dict[str,
     }
 
 
-def _write_scheduler_execution_artifacts(repo: Path) -> Path:
+def _write_scheduler_execution_artifacts(repo: Path, *, skill_tree_dirty: bool = False) -> Path:
     run_dir = repo / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
     run_dir.mkdir(parents=True)
     report_acceptance = {
@@ -147,7 +147,7 @@ def _write_scheduler_execution_artifacts(repo: Path) -> Path:
         run_dir / "run-attestation.json",
         {
             "schema": "monitor_opportunities.run_attestation.v1",
-            "code": {"git_revision_full": "abc123", "skill_tree_dirty": False},
+            "code": {"git_revision_full": "abc123", "skill_tree_dirty": skill_tree_dirty},
         },
     )
     _write_json(run_dir / "run-receipt.json", {"status": "PASS", "external_effects": False})
@@ -620,6 +620,63 @@ def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
     assert payload["artifacts"]["nightly"]["present"] is True
     assert payload["artifacts"]["report_acceptance"]["json_sha256"]
     assert Path(payload["receipt"]) == out
+
+
+def test_scheduler_exec_check_records_dirty_tree_without_blocking_execution(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=" M skills/monitor-opportunities/src/monitor_opportunities/cli.py\n",
+                stderr="",
+            )
+        assert cmd == command
+        assert kwargs["shell"] is True
+        assert kwargs["cwd"] == repo
+        captured["executed_command"] = cmd
+        run_dir = _write_scheduler_execution_artifacts(repo, skill_tree_dirty=True)
+        return subprocess.CompletedProcess(
+            cmd,
+            0,
+            stdout=json.dumps({"status": "PASS", "out": str(run_dir)}) + "\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert captured["executed_command"] == command
+    assert payload["status"] == "PASS"
+    assert payload["preflight"]["skill_tree_dirty"] is True
+    assert payload["preflight"]["dirty_tree_policy"] == "record_only"
+    assert "skill_tree_clean" not in payload["checks"]
+    assert "attestation_skill_tree_clean" not in payload["checks"]
+    assert payload["execution"]["exit_code"] == 0
 
 
 def test_scheduler_exec_check_rejects_duplicate_and_overridden_mode_flags(

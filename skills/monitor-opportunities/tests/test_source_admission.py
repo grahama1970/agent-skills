@@ -45,7 +45,7 @@ def test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization() -
     assert item["signal_type"] == "LINKEDIN_LOCATOR"
     assert item["decision"] == "PENDING_PRIMARY_VERIFICATION"
     assert item["decision"] != "EASY_APPLY_AUTHORIZED"
-    assert item["action_worthy"] is True
+    assert item["action_worthy"] is False
     assert any("exact post-report authorization" in reason for reason in item["reasons"])
     assert all("standing authorization" not in reason.lower() for reason in item["reasons"])
 

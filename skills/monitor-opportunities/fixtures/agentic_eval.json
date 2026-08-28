@@ -725,7 +725,7 @@
           "EASY_APPLY_AUTHORIZED"
         ]
       },
-      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is visible and action-worthy for human review, but it is not classified as standing authorization and still requires exact post-report authorization before any application.",
+      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is visible for human review, remains not action-worthy as locator-only source intelligence, is not classified as standing authorization, and still requires exact post-report authorization before any application.",
       "does_not_prove": "A live LinkedIn submit occurred, that LinkedIn exposed a qualifying row in the current account, or that unknown screening questions can be answered without Graham.",
       "seams": [
         "pipeline.linkedin_source_intel_policy",
@@ -1067,6 +1067,33 @@
       },
       "proves": "A live employer Ashby application page is read as the location authority; OnSite outside Buffalo is classified ONSITE_ELSEWHERE; LinkedIn WNY/top-applicant locator evidence cannot overwrite that primary/apply-page geography; ranking rejects the promoted onsite-elsewhere role.",
       "does_not_prove": "That every ATS provider exposes structured application-page location metadata, or that a complete nightly run has been regenerated with this repair."
+    },
+    {
+      "name": "scheduler-exec-check-dirty-tree-record-only",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "nightly.dirty_tree_policy"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_records_dirty_tree_without_blocking_execution -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "SCHEDULER_EXECUTION_EQUIVALENCE_FAILED",
+          "preflight_failed"
+        ]
+      },
+      "proves": "The scheduler execution-equivalence checker records a dirty monitor-opportunities tree in preflight but still executes the exact registered command and can return PASS when all runtime receipts pass.",
+      "does_not_prove": "A fresh live nightly run passes external source capture, Tau provider evaluation, or report acceptance."
     }
   ]
 }

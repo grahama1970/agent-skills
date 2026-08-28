@@ -142,6 +142,40 @@ def _fail(exc: ContractError) -> NoReturn:
     raise typer.Exit(code=2)
 
 
+def _resolve_cli_path(path: Path | None) -> Path | None:
+    if path is None:
+        return None
+    return path.expanduser().resolve()
+
+
+def _nightly_subprocess_env(skill_dir: Path, steps: dict[str, object]) -> dict[str, str]:
+    env = os.environ.copy()
+    configured = env.get("MONITOR_CLAIM_SNAPSHOT_PATH")
+    default_claim_snapshot = skill_dir / "local" / "nightly" / "authority" / "claim-snapshot.json"
+    if configured:
+        path = Path(configured).expanduser().resolve()
+        steps["claim_snapshot_authority"] = {
+            "source": "env",
+            "path": str(path),
+            "exists": path.is_file(),
+        }
+    elif default_claim_snapshot.is_file():
+        path = default_claim_snapshot.resolve()
+        env["MONITOR_CLAIM_SNAPSHOT_PATH"] = str(path)
+        steps["claim_snapshot_authority"] = {
+            "source": "default_authority",
+            "path": str(path),
+            "exists": True,
+        }
+    else:
+        steps["claim_snapshot_authority"] = {
+            "source": "missing",
+            "path": str(default_claim_snapshot),
+            "exists": False,
+        }
+    return env
+
+
 def _scheduler_effect_policy(*, diagnostic: bool) -> dict[str, str]:
     return {
         "tracker": "SKIPPED",
@@ -447,7 +481,6 @@ def _scheduler_execution_equivalence_preflight(
             or current_revision.startswith(expected_revision)
             or expected_revision.startswith(current_revision)
         ),
-        "skill_tree_clean": not skill_tree_dirty,
         "requires_clean_flag_present_once": _count_token(command, "--require-clean") == 1,
         "skip_tracker_flag_present_once": _count_token(command, "--skip-tracker") == 1,
         "skip_ats_memory_flag_present_once": _count_token(command, "--skip-ats-memory") == 1,
@@ -502,6 +535,7 @@ def _scheduler_execution_equivalence_preflight(
         "current_revision": current_revision,
         "scheduler_equivalence_status": equivalence.get("status"),
         "skill_tree_dirty": skill_tree_dirty,
+        "dirty_tree_policy": "record_only",
     }
     return checks, preflight
 
@@ -513,21 +547,8 @@ def _default_nightly_out(workdir: Path) -> Path:
 NIGHTLY_RUNS_KEPT = 60
 
 
-def _new_nightly_run_dir(skill_dir: Path) -> Path:
-    """A dated directory per run, with `latest` pointing at the newest.
-
-    Writing every run into a fixed `latest/` destroyed the previous night's
-    receipts, so on 2026-08-18 the only recoverable evidence for a week of
-    nightlies was a single file: there was no way to answer whether a run that
-    exited 0 had actually delivered anything. Each run now gets its own dated
-    directory and `latest` becomes a symlink, so readers keep working and
-    history survives.
-    """
-
-    root = skill_dir / "local" / "nightly"
-    root.mkdir(parents=True, exist_ok=True)
-    run_dir = root / datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ")
-    run_dir.mkdir(parents=True, exist_ok=True)
+def _promote_nightly_latest(run_dir: Path) -> None:
+    root = run_dir.parent
     link = root / "latest"
     try:
         if link.is_symlink() or link.exists():
@@ -536,8 +557,11 @@ def _new_nightly_run_dir(skill_dir: Path) -> Path:
             else:
                 shutil.rmtree(link)
         link.symlink_to(run_dir.name)
-    except OSError as exc:  # a broken link must never stop the run
+    except OSError as exc:  # a broken link must never stop an already written run
         logger.warning("could not update nightly latest symlink: {}", exc)
+
+
+def _prune_nightly_runs(root: Path) -> None:
     runs = sorted(
         (d for d in root.glob("run-*") if d.is_dir()),
         key=lambda d: d.name,
@@ -548,6 +572,27 @@ def _new_nightly_run_dir(skill_dir: Path) -> Path:
             shutil.rmtree(stale)
         except OSError:
             pass
+
+
+def _new_nightly_run_dir(skill_dir: Path, *, promote_latest: bool = True) -> Path:
+    """A dated directory per run, with `latest` pointing at the newest.
+
+    Writing every run into a fixed `latest/` destroyed the previous night's
+    receipts, so on 2026-08-18 the only recoverable evidence for a week of
+    nightlies was a single file: there was no way to answer whether a run that
+    exited 0 had actually delivered anything. Each run now gets its own dated
+    directory and `latest` becomes a symlink, so readers keep working and
+    history survives. Scheduled nightly publication uses ``promote_latest=False``
+    and promotes only after the final report acceptance gate writes a receipt.
+    """
+
+    root = skill_dir / "local" / "nightly"
+    root.mkdir(parents=True, exist_ok=True)
+    run_dir = root / datetime.now(timezone.utc).strftime("run-%Y%m%dT%H%M%SZ")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    if promote_latest:
+        _promote_nightly_latest(run_dir)
+    _prune_nightly_runs(root)
     return run_dir
 
 
@@ -679,8 +724,6 @@ def _scheduler_execution_equivalence_receipt(
             or revision_full.startswith(expected_revision)
             or expected_revision.startswith(revision_full)
         ),
-        "attestation_skill_tree_clean": (attestation.get("code") or {}).get("skill_tree_dirty")
-        is False,
         "receipt_consistency_present": artifact_paths["receipt_consistency"].is_file(),
         "receipt_consistency_pass": consistency_receipt.get("status") == "PASS",
         "zero_effect_replay_present": artifact_paths["zero_effect_replay"].is_file(),
@@ -888,12 +931,18 @@ def report_acceptance(
         "--allow-missing-zero-effect-replay",
         help="Allow run-only receipts that were not produced by nightly.",
     ),
+    require_stage_ledger: bool = typer.Option(
+        False,
+        "--require-stage-ledger",
+        help="Require stage-ledger.json to exist and pass.",
+    ),
 ) -> None:
     """Validate report-visible claims, provenance, degradation, and zero effects."""
     _configure_logging()
     receipt = validate_report_acceptance(
         run,
         require_zero_effect_replay=not allow_missing_zero_effect_replay,
+        require_stage_ledger=require_stage_ledger,
     )
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
     if receipt["status"] != "PASS":
@@ -1268,6 +1317,18 @@ def run_command(
     skill_dir = Path(__file__).resolve().parents[2]
     if out is None:
         out = _new_nightly_run_dir(skill_dir)
+    else:
+        out = out.expanduser().resolve()
+    fixture_dir = _resolve_cli_path(fixture_dir)
+    linkedin_evidence = _resolve_cli_path(linkedin_evidence)
+    roundtable_receipts = _resolve_cli_path(roundtable_receipts)
+    federal_evidence = _resolve_cli_path(federal_evidence)
+    meetup_evidence = _resolve_cli_path(meetup_evidence)
+    github_evidence = _resolve_cli_path(github_evidence)
+    linkedin_contact_evidence = _resolve_cli_path(linkedin_contact_evidence)
+    indeed_evidence = _resolve_cli_path(indeed_evidence)
+    hiddenjobs_evidence = _resolve_cli_path(hiddenjobs_evidence)
+    outreach_effects = _resolve_cli_path(outreach_effects)
     if disable_relationship_signals:
         import os
 
@@ -1675,14 +1736,24 @@ def commit_linkedin_command(
     apply_url: str = typer.Option(..., "--apply-url"),
     promotion: Path = typer.Option(..., "--promotion", exists=True, dir_okay=False, readable=True,
                                    help="Scoped human promotion receipt: ats_form_submit:linkedin:linkedin.com."),
+    authorization: Path = typer.Option(
+        ...,
+        "--authorization",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Exact post-report human authorization receipt for this candidate/posting/apply URL.",
+    ),
     allow_duplicate: bool = typer.Option(False, "--allow-duplicate"),
 ) -> None:
-    """Auto-submit one LinkedIn Easy Apply through the gated receipt chain.
+    """Submit one LinkedIn Easy Apply through the gated receipt chain.
 
-    Fills only known-answerable required fields (identity + answer-bank
-    eligibility); any unrecognized required screening question stops with
-    NEEDS_HUMAN and is surfaced to Graham -- never auto-answered. COMMITTED only
-    after reading LinkedIn's 'application was sent' confirmation back.
+    Requires post-report human authorization for this exact candidate, posting,
+    apply URL, and idempotency key. Fills only known-answerable required fields
+    (identity + answer-bank eligibility); any unrecognized required screening
+    question stops with NEEDS_HUMAN and is surfaced to Graham -- never
+    auto-answered. COMMITTED only after reading LinkedIn's 'application was
+    sent' confirmation back.
     """
     _configure_logging()
     from .ats.linkedin_easy_apply import LinkedInEasyApplyError, commit_linkedin_easy_apply
@@ -1694,6 +1765,7 @@ def commit_linkedin_command(
             posting_id=posting_id,
             apply_url=apply_url,
             promotion=read_json(promotion),
+            authorization=read_json(authorization),
             allow_duplicate=allow_duplicate,
         )
     except LinkedInEasyApplyError as exc:
@@ -1780,10 +1852,14 @@ def nightly(
     import subprocess
 
     skill_dir = Path(__file__).resolve().parents[2]
+    promote_latest_on_success = out is None
     if out is None:
-        out = _new_nightly_run_dir(skill_dir)
+        out = _new_nightly_run_dir(skill_dir, promote_latest=False)
+    else:
+        out = out.expanduser().resolve()
     run_sh = skill_dir / "run.sh"
     steps: dict[str, object] = {}
+    run_env = _nightly_subprocess_env(skill_dir, steps)
 
     if diagnostic and promoted_stage0:
         _fail(ContractError("NIGHTLY_MODE_CONFLICT", "Choose diagnostic or promoted Stage 0, not both"))
@@ -1926,7 +2002,12 @@ def nightly(
     adv_receipt = capture_linkedin_advanced_search(capture_dir)
     steps["browser_capture_linkedin_advanced"] = {"status": adv_receipt.get("status"), "captured": adv_receipt.get("opportunities_captured")}
     li_receipt = capture_linkedin_top_applicant(capture_dir)
-    steps["browser_capture_linkedin"] = {"status": li_receipt.get("status"), "captured": li_receipt.get("opportunities_captured")}
+    steps["browser_capture_linkedin"] = {
+        "status": li_receipt.get("status"),
+        "captured": li_receipt.get("opportunities_captured"),
+        "top_applicant_count": li_receipt.get("top_applicant_count"),
+        "easy_apply_count": li_receipt.get("easy_apply_count"),
+    }
     linkedin_candidates = [r for r in (adv_receipt, li_receipt) if r.get("evidence_path")]
     linkedin_candidates.sort(key=lambda r: int(r.get("opportunities_captured") or 0), reverse=True)
     linkedin_evidence = linkedin_candidates[0].get("evidence_path") if linkedin_candidates else None
@@ -1946,21 +2027,14 @@ def nightly(
     steps["browser_capture_linkedin_premium"] = {
         "status": prem_receipt.get("status"),
         "captured": prem_receipt.get("opportunities_captured"),
+        "top_applicant_count": prem_receipt.get("top_applicant_count"),
+        "easy_apply_count": prem_receipt.get("easy_apply_count"),
+        "under_10_applicants_count": prem_receipt.get("under_10_applicants_count"),
         "warm_paths_found": prem_receipt.get("warm_paths_found"),
     }
     if prem_receipt.get("evidence_path") and linkedin_evidence:
         try:
-            base = json.loads(Path(linkedin_evidence).read_text(encoding="utf-8"))
-            prem = json.loads(Path(prem_receipt["evidence_path"]).read_text(encoding="utf-8"))
-            seen_keys = {
-                (o.get("title"), o.get("organization")) for o in base.get("opportunities", [])
-            }
-            merged = 0
-            for o in prem.get("opportunities", []):
-                if (o.get("title"), o.get("organization")) not in seen_keys:
-                    base["opportunities"].append(o)
-                    merged += 1
-            Path(linkedin_evidence).write_text(json.dumps(base, indent=1), encoding="utf-8")
+            merged = _merge_linkedin_top_candidate(Path(linkedin_evidence), Path(prem_receipt["evidence_path"]))
             steps["browser_capture_linkedin_premium"]["merged_into_evidence"] = merged
         except (OSError, ValueError) as exc:
             logger.warning("premium evidence merge skipped: {}", exc)
@@ -2141,7 +2215,7 @@ def nightly(
         run_cmd += ["--indeed-evidence", str(indeed_evidence)]
     if hiddenjobs_evidence:
         run_cmd += ["--hiddenjobs-evidence", str(hiddenjobs_evidence)]
-    run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600)
+    run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600, env=run_env)
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:
         _fail(ContractError("NIGHTLY_RUN_FAILED", run_proc.stderr[-2000:]))
@@ -2504,6 +2578,7 @@ def nightly(
     report_acceptance_receipt = validate_report_acceptance(
         out,
         require_zero_effect_replay=True,
+        require_stage_ledger=promoted_stage0,
     )
     report_acceptance_sha256 = sha256_json(report_acceptance_receipt)
     steps["report_acceptance"] = {
@@ -2531,6 +2606,11 @@ def nightly(
         "live": True,
         "external_effects": False,
         "out": str(out),
+        "publication": {
+            "latest_promoted": promote_latest_on_success,
+            "latest_path": str(out.parent / "latest") if promote_latest_on_success else None,
+            "published_run": str(out) if promote_latest_on_success else None,
+        },
         "artifacts": {
             "effect_policy": str(effect_policy_path),
             "run": str(run_receipt_path),
@@ -2547,9 +2627,13 @@ def nightly(
             "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
             "zero_effect_replay": str(replay_receipt_path),
             "report_acceptance": str(report_acceptance_path),
+            "stage_ledger": str(out / "stage-ledger.json")
+            if (out / "stage-ledger.json").exists()
+            else None,
         },
         "artifact_hashes": {
             "report_acceptance": report_acceptance_sha256,
+            "stage_ledger": _json_hash_file(out / "stage-ledger.json"),
         },
         "receipt_consistency_status": consistency.get("status") if consistency else "MISSING",
         "report_acceptance_status": report_acceptance_receipt.get("status"),
@@ -2557,6 +2641,8 @@ def nightly(
     }
     nightly_receipt_path = out / "nightly-receipt.json"
     write_json(nightly_receipt_path, nightly_receipt)
+    if promote_latest_on_success:
+        _promote_nightly_latest(out)
     typer.echo(json.dumps({**nightly_receipt, "receipt": str(nightly_receipt_path)}, indent=2, sort_keys=True))
 
 
