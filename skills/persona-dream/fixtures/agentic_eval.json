@@ -989,9 +989,43 @@
           "BLOCKED_COMPETING_ACTIVE_PIPELINE_CONTRACT"
         ]
       }
+    },
+    {
+      "name": "self-repair-runner-records-failure-and-blocks-next-step",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.pipeline_self_repair_runner"
+      ],
+      "seams": [
+        "persona_dream.self_repair_run",
+        "pipeline_self_repair.record_failure"
+      ],
+      "notes": "Runs the retained self-repair controller tests. Proves a failing required step calls pipeline-self-repair, writes a goal-aligned ledger event, and does not advance to the next step.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_self_repair_run.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
     }
   ],
   "capability_claims": [
+  {
+    "id": "persona_dream.pipeline_self_repair_runner",
+    "description": "self-repair-run executes a required step manifest in order, records required-step failures through pipeline-self-repair with immutable goal alignment, and refuses to advance to step N+1 while step N is blocking.",
+    "criticality": "critical",
+    "evidence_required": {
+      "adversarial": true,
+      "deterministic": true
+    }
+  },
   {
     "id": "persona_dream.pipeline_crew_casting_command_wiring",
     "description": "The run.sh pipeline run --step crew_casting command can write a schema-valid, receipt-backed crew_contract.json from a selector payload and reject out-of-pool selections. Fixture-backed evidence proves wiring only; live ask tau-dag selector proof is separate.",

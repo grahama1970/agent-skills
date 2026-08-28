@@ -54,6 +54,7 @@ Commands:
   pipeline-loop-status       Report the active serial while-loop and first blocker
   pipeline-loop-run          Run a fail-closed serial while-loop controller pass
   validate-pipeline-loop-run Validate a serial while-loop controller receipt
+  self-repair-run            Run a step manifest and route failures through pipeline-self-repair
   validate-run-root          Report the first blocker from dream_packet to one-scene Kling packet
   multiscene-live-smoke      Generate real scene-scoped contact sheets and panels without Kling
   validate-multiscene-live-smoke Validate multi-scene live smoke receipts and image hashes
@@ -237,6 +238,7 @@ Examples:
   ./run.sh pipeline-loop-run /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --direction backward --output /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/receipts/pipeline_loop_run.json --json
   ./run.sh pipeline run --scene "Horus and Embry have tea under a patio umbrella on a void world." --step crew_casting
   ./run.sh validate-pipeline-loop-run /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/receipts/pipeline_loop_run.json --json
+  ./run.sh self-repair-run --manifest /mnt/storage12tb/skills/persona-dream/outputs/<run-id>/self_repair_manifest.json --run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --json
   ./run.sh validate-run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --json
   ./run.sh multiscene-live-smoke --run-root /tmp/persona-dream-multiscene-live --scene-count 2 --max-workers 2 --auth codex-oauth --json
   ./run.sh validate-multiscene-live-smoke /tmp/persona-dream-multiscene-live/receipts/multiscene_live_smoke_receipt.json --json
@@ -385,6 +387,9 @@ case "$COMMAND" in
     ;;
   validate-pipeline-loop-run)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_pipeline_loop_run.py" "$@"
+    ;;
+  self-repair-run)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/self_repair_run.py" "$@"
     ;;
   validate-run-root)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_run_root_pipeline.py" "$@"
