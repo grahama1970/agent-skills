@@ -88,6 +88,60 @@ the HUD's Openings panel WITH the heard terms and the exact trigger events,
 then cools down for two minutes. A recognition assist, never a script.
 `fixtures/briefing_straive.json` is the shipped example pack.
 
+## Client/employer/topic prep packs
+
+For a researched interview, meeting, client, employer, or topic, build one
+self-contained `live_evidence.prep_pack.v1` before the live run. The pack is
+the durable boundary between deep research and the live copilot. It bundles:
+
+- source context from `$brave-search`, `$dogpile`, selected docs, repos, and
+  local briefs;
+- the `live_evidence.briefing_pack.v1` to load into `/api/briefing/load`;
+- expected question oracles with time/category anchors when available;
+- reviewed answers, required skill chains, quality bars, publication gates, and
+  fail-closed conditions;
+- Memory export instructions for `/live-evidence/oracle-pack` and `/recall`;
+- post-run grading instructions for missed questions, weak answers, and wrong
+  skill-chain choices.
+
+The normal front door is `$curate-client`. It owns the client KB curation and
+live-evidence wiring. Its internal prep chain is:
+
+```text
+$curate-client client/employer/topic KB build
+  -> $brave-search for current public discovery
+  -> $dogpile for deeper multi-source research
+  -> $ingest-website for durable selected docs when needed
+  -> $ask for question/answer/skill-chain generation and review
+  -> $memory for live retrieval by known or similar question
+  -> $live-evidence loads the briefing pack and recalls the oracle graph
+```
+
+`fixtures/prep_pack_drivewealth.json` is the shipped DriveWealth example. Validate
+the shape with `./run.sh eval-prep-pack`, then load it into a running HUD with:
+
+```bash
+./run.sh load-prep-pack \
+  --pack fixtures/prep_pack_drivewealth.json \
+  --backend-url http://127.0.0.1:8799
+```
+
+`load-prep-pack` loads the embedded briefing pack through `/api/briefing/load`
+and verifies each question oracle's `memory_keys` through `/recall`. A retrieved
+prep-pack or oracle answer is a prior for live ranking and answer shaping, not
+publication authority; the live transcript revision, source provenance, and card
+publication gates still decide visibility.
+
+## Precomputed interview oracles
+
+Before live testing a known interview scenario, every transcript should have a
+finished oracle set: canonical questions, reviewed answers, required skill
+chains, source references, and expected disposition by timecode. For
+DriveWealth-style prep, the target frontier is 100-200 questions across
+5-10 minute mock interviews. Known or similar question retrieval should help the
+live loop choose the right skill chain and answer shape, but it must never make
+the card bypass review.
+
 ## Operating contract
 
 ```text
@@ -113,30 +167,45 @@ never the complete transcript.
 ```bash
 ./run.sh setup
 ./run.sh ui-build
-./run.sh serve --open-browser
+./run.sh serve --port 8799 --open-browser
+# If 8799 is already occupied, fail closed or explicitly scan upward:
+./run.sh serve --port 8799 --auto-port --open-browser
 ```
+
+`serve --auto-port` writes the selected URL to `local/server.json`; copy that
+`backend_url` into `listen`, `replay`, or `status` when the server could not use
+8799.
 
 In another terminal, after obtaining any required recording consent:
 
 ```bash
 # Default microphone
-./run.sh listen --mode microphone --consent-confirmed
+./run.sh listen --mode microphone \
+  --backend-url http://127.0.0.1:8799 \
+  --device cpu \
+  --consent-confirmed
 
 # Meeting/system audio from a PipeWire source
 ./run.sh listen --mode pipewire \
+  --backend-url http://127.0.0.1:8799 \
   --pipewire-source '<source-name>' \
   --speaker interviewer \
+  --device cpu \
   --consent-confirmed
 
 # Browser/video audio from a PipeWire output sink
 ./run.sh listen --mode pipewire \
+  --backend-url http://127.0.0.1:8799 \
   --pipewire-source 'sink:<sink-node-name>' \
   --speaker interviewer \
+  --device cpu \
   --consent-confirmed
 
 # Two channels: default microphone + a PipeWire meeting source
 ./run.sh listen --mode dual \
+  --backend-url http://127.0.0.1:8799 \
   --pipewire-source '<source-name>' \
+  --device cpu \
   --consent-confirmed
 ```
 

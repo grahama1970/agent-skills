@@ -1,0 +1,96 @@
+{
+ "schema": "ask.dag.v1",
+ "nodes": [
+  {
+   "id": "okta-principal",
+   "type": "skill.run",
+   "depends_on": []
+  },
+  {
+   "id": "ask-ingress",
+   "type": "skill.run",
+   "depends_on": [
+    "okta-principal"
+   ]
+  },
+  {
+   "id": "memory-recall",
+   "type": "memory.recall",
+   "depends_on": [
+    "ask-ingress"
+   ]
+  },
+  {
+   "id": "interview-gate",
+   "type": "skill.run",
+   "depends_on": [
+    "ask-ingress"
+   ]
+  },
+  {
+   "id": "dag-compiler",
+   "type": "skill.run",
+   "depends_on": [
+    "memory-recall",
+    "interview-gate"
+   ]
+  },
+  {
+   "id": "tau-admission",
+   "type": "skill.run",
+   "depends_on": [
+    "dag-compiler"
+   ]
+  },
+  {
+   "id": "tau-scheduler",
+   "type": "skill.run",
+   "depends_on": [
+    "tau-admission"
+   ]
+  },
+  {
+   "id": "scillm-transport",
+   "type": "skill.run",
+   "depends_on": [
+    "tau-scheduler"
+   ]
+  },
+  {
+   "id": "terraform-tool",
+   "type": "skill.run",
+   "depends_on": [
+    "tau-scheduler"
+   ]
+  },
+  {
+   "id": "model-providers",
+   "type": "skill.run",
+   "depends_on": [
+    "scillm-transport"
+   ]
+  },
+  {
+   "id": "evidence-settlement",
+   "type": "skill.run",
+   "depends_on": [
+    "model-providers",
+    "terraform-tool"
+   ]
+  },
+  {
+   "id": "typed-receipts",
+   "type": "skill.run",
+   "depends_on": [
+    "evidence-settlement"
+   ]
+  },
+  {
+   "id": "ask-projection",
+   "type": "skill.run",
+   "depends_on": [
+    "typed-receipts"
+   ]
+  }
+ ]
+}

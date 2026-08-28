@@ -23,6 +23,68 @@
         "stdout_contains": [
           "live HTTP/ripgrep canary: PASS",
           "live-evidence sanity: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/http_server",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/real_ripgrep",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/source_bound_card",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sanity-data/sanity-receipt.json",
+            "json_pointer": "/checks/realtimestt_live",
+            "equals": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "pipewire-null-sink-cleanup-destroys-node-id",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_pipewire_sink_cleanup.py"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "notes": "Regression for operator audio safety: lingering PipeWire null sinks must be destroyed by resolved node id from pw-dump, not by a sink name string that can fail silently."
+    },
+    {
+      "name": "repository-local-python-env-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "UV_PROJECT_ENVIRONMENT=\"../.venv\" bash ../run.sh doctor"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": [
+          "Refusing repository-local UV_PROJECT_ENVIRONMENT"
         ]
       }
     },
@@ -52,6 +114,8 @@
       "name": "youtube-derived-coding-interview-ask-cards",
       "type": "positive",
       "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
       "command": [
         "bash",
         "-c",
@@ -63,7 +127,20 @@
         "stdout_contains": [
           "youtube-derived prompt routes to Ask solution: PASS",
           "candidate explanation suppressed: PASS",
-          "youtube-derived follow-up routes to source-backed Ask card: PASS"
+          "youtube-derived follow-up routes to source-backed Ask card: PASS",
+          "youtube-derived cards pass through publication reducer: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-youtube-interview-eval-receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-youtube-interview-eval-receipt.json",
+            "json_pointer": "/checks/publication_decisions_journaled",
+            "equals": true
+          }
         ]
       }
     },
@@ -91,6 +168,30 @@
         "server did not come up",
         "Surf connection closed before response"
       ]
+    },
+    {
+      "name": "ui-card-selection-preserves-backend-order",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "bash ../run.sh ui-build >/dev/null && bash ../run.sh eval-ui-card-selection"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "App delegates visible card ordering to helper: PASS",
+          "App no longer timestamp-sorts cards: PASS",
+          "selection distinguishes auto from manual: PASS",
+          "helper preserves backend order within pinned partitions: PASS",
+          "ui card selection preserves backend reducer order: PASS"
+        ]
+      },
+      "notes": "Focused MVP 3 UI guard: the HUD must not sort by card created_at over the backend reducer order, and auto selection must follow the backend top card unless the user explicitly selected history. This is static/build proof, not visual CDP proof."
     },
     {
       "name": "real-stt-window-question-answer-card",
@@ -270,6 +371,264 @@
       }
     },
     {
+      "name": "precomputed-transcript-oracle-route-plan-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-precomputed-oracles-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-precomputed-oracles --output \"$O\""
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.precomputed_oracle_validation.v1\"",
+          "\"status\": \"PASS\"",
+          "\"compiled_oracles\"",
+          "\"timecode\"",
+          "\"skill_chain\"",
+          "\"expected_solution\"",
+          "precomputed oracles: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/compiled_oracles/1/questions/1/skill_chain/0",
+            "equals": "brave-search"
+          },
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/compiled_oracles/1/questions/1/timecode/kind",
+            "equals": "transcript_turn"
+          },
+          {
+            "path": "/tmp/live-evidence-precomputed-oracles-current.json",
+            "json_pointer": "/compiled_oracles/2/questions/2/route_plan/category",
+            "equals": "repo_code_question"
+          }
+        ]
+      },
+      "notes": "Pre-live guard: every pinned live/replay transcript oracle must compile to a finished expected-question set before audio starts, including a time anchor, required skill chain, expected solution, and route/publication plan."
+    },
+    {
+      "name": "client-employer-topic-prep-pack-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-prep-pack-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-prep-pack --output \"$O\""
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.prep_pack_validation.v1\"",
+          "\"status\": \"PASS\"",
+          "\"question_oracle_count\"",
+          "\"briefing_point_count\"",
+          "prep pack: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-prep-pack-current.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-prep-pack-current.json",
+            "json_pointer": "/required_collections_present",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-prep-pack-current.json",
+            "json_pointer": "/question_oracle_count",
+            "equals": 2
+          }
+        ]
+      },
+      "notes": "Pre-call deep-research prep must be self-contained and Live Evidence-readable: research chain, source context, briefing pack, reviewed answers, skill chains, Memory exports, and post-run grading instructions."
+    },
+    {
+      "name": "drivewealth-mock-interview-memory-graph-oracle",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-oracle-memory-graph-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-drivewealth-oracle-memory-graph --limit 10 --output \"$O\""
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.drivewealth_oracle_memory_graph.v1\"",
+          "\"company\": \"DriveWealth\"",
+          "\"memory_upserts\"",
+          "\"live_evidence_edges\"",
+          "drivewealth oracle memory graph: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/interview_count",
+            "equals": 10
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/question_count",
+            "equals": 90
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/memory_upserts/live_evidence_questions/0/timecode/kind",
+            "equals": "script_turn"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/memory_upserts/live_evidence_edges/2/kind",
+            "equals": "requires_skill_chain"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/memory_upserts/live_evidence_answers/0/review/status",
+            "equals": "reviewed"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/oracle_contract/requires_similarity_edges",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-graph-current.json",
+            "json_pointer": "/target_question_count/status",
+            "equals": "needs_more_generation"
+          }
+        ]
+      },
+      "notes": "Compiles all available DriveWealth 5-10 minute mock interviews into Memory-shaped interview/question/reviewed-answer/skill-chain/source nodes plus edge docs for Memory /live-evidence/oracle-pack and known-or-similar-question recall."
+    },
+    {
+      "name": "drivewealth-mock-interview-memory-upsert-recall-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-oracle-memory-recall-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-drivewealth-oracle-memory-graph --limit 10 --write-memory --verify-recall --summary-only --memory-timeout-s 120 --memory-batch-size 500 --output \"$O\""
+      ],
+      "timeout_seconds": 360,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"live_evidence.drivewealth_oracle_memory_graph.v1\"",
+          "\"memory_write\"",
+          "\"ok\": true",
+          "drivewealth oracle memory graph: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/upsert_document_count",
+            "equals": 808
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/recall_probes/0/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-oracle-memory-recall-current.json",
+            "json_pointer": "/memory_write/recall_probes/2/ok",
+            "equals": true
+          }
+        ]
+      },
+      "notes": "Durable Memory gate: writes the DriveWealth interview/question/solution/skill-chain/source/edge graph through Memory /live-evidence/oracle-pack, then proves multi-hop retrieval intent through /memory recall read-back probes."
+    },
+    {
+      "name": "curate-client-live-evidence-cross-skill-context",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-curate-client-current.json\"; rm -f \"$O\" \"${O%.json}.load-prep-pack.json\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-curate-client-integration --output \"$O\" --memory-url http://127.0.0.1:8601"
+      ],
+      "timeout_seconds": 2400,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "curate-client build exits zero: PASS",
+          "curate-client verify passed: PASS",
+          "prep-pack oracle recall verified: PASS",
+          "briefing loaded in running HUD backend: PASS",
+          "DriveWealth briefing trigger surfaced from transcript: PASS",
+          "DriveWealth transcript produced supported evidence card: PASS",
+          "card cites DriveWealth prep pack and bridge files: PASS",
+          "journal records prep load and briefing surface: PASS",
+          "curate-client/live-evidence: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/curate-client verify passed",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/prep-pack oracle recall verified",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/DriveWealth briefing trigger surfaced from transcript",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/DriveWealth transcript produced supported evidence card",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/card cites DriveWealth prep pack and bridge files",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          }
+        ]
+      },
+      "notes": "Cross-skill gate: curate-client build/verify emits the prep-pack load command; Live Evidence loads it into a real server, verifies oracle recall, surfaces DriveWealth briefing triggers from transcript, publishes a supported evidence card, and journals the publication path. Failures route through triage-error and pipeline-self-repair before patching.",
+      "infra_blocked_when": [
+        "server did not come up",
+        "ASK_LANE_STARVED_UNDER_LOAD",
+        "Memory error",
+        "Connection refused"
+      ]
+    },
+    {
       "name": "live-youtube-pipewire-audio-to-card",
       "type": "positive",
       "real_world": true,
@@ -284,6 +643,53 @@
         "stdout_contains": [
           "\"status\": \"PASS\"",
           "receipt"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/bridge_pipewire_audio_captured",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/bridge_docker_realtimestt_process_ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/source_backed_expected_card",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/publication_decisions_journaled",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/visible_publication_decisions_have_refs",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/held_candidates_auditable",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/hidden_candidates_auditable",
+            "equals": true
+          }
         ]
       },
       "proves": "Real audio reaches a card: the YouTube interview WAV is played into PipeWire, captured by pw-record, transcribed by RealtimeSTT in the GPU container, and projected as a source-backed evidence card. Every other case in this suite posts transcript TEXT to the API and therefore proves nothing about the audio half.",
@@ -306,14 +712,105 @@
       "timeout_seconds": 240,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "realistic-length event produced a card (window not annihilated): PASS",
-          "exactly one active card for the question: PASS",
-          "active card is the corrected revision: PASS",
-          "stale revision-1 result journaled as discarded, not lost: PASS",
+          "stdout_contains": [
+            "realistic-length event produced a card (window not annihilated): PASS",
+            "exactly one active card for the question: PASS",
+            "active card is the corrected revision: PASS",
+          "completed card candidates journaled for post-run audit: PASS",
+          "corrected revision is among journaled card candidates: PASS",
+          "publication reducer decisions journaled for post-run audit: PASS",
           "revision fence: PASS"
         ]
       }
+    },
+    {
+      "name": "card-publication-reducer-decision-journal",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_state_card_fence.py::test_publication_reducer_records_visible_decision ../tests/test_state_card_fence.py::test_malformed_supported_card_is_held_with_reason ../tests/test_state_card_fence.py::test_stale_same_question_revision_is_superseded ../tests/test_state_card_fence.py::test_duplicate_current_question_reconciles_to_one_visible_card -q && echo \"card publication reducer focused tests: PASS\""
+      ],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "card publication reducer focused tests: PASS"
+        ]
+      },
+      "notes": "Focused guard for the central publication reducer: visible cards emit a typed decision with transcript/source refs and rank components; malformed supported cards are held; stale revisions are superseded; duplicate same-question candidates reconcile to one visible card."
+    },
+    {
+      "name": "post-run-miss-audit-journal-reconstruction",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-miss-audit"
+      ],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "post-run miss audit classifies visible/held/superseded/missed: PASS",
+          "post-run miss audit: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/visible",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/held",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/superseded",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-miss-audit-current/report.json",
+            "json_pointer": "/counts/missed",
+            "equals": 1
+          }
+        ]
+      },
+      "notes": "Focused MVP 2 guard: post-run replay reconstructs visible, held, superseded, and deliberately missed answer-needed moments from a JSONL journal, so hidden/rejected/missed work remains auditable instead of disappearing from evaluation."
+    },
+    {
+      "name": "adjacent-question-distinctness-and-worker-isolation",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-adjacent-question-concurrency && echo \"adjacent question concurrency tests: 3 passed\" && echo \"adjacent question concurrency: PASS\""
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "adjacent question concurrency tests: 3 passed",
+          "adjacent question concurrency: PASS"
+        ]
+      },
+      "notes": "Focused MVP 4 guard: explicit adjacent-question markers allocate a new question instead of revising the prior unanswered one; old-question completions stay behind the active card; fast solver journal rows use the session/policy context captured when the worker was spawned."
     },
     {
       "name": "salient-fact-durable-write-proven-by-fresh-process-readback",
@@ -455,7 +952,7 @@
           "secret-shaped local redacted end to end: PASS",
           "tampered proofValid without a real stop rejected by independent validator: PASS",
           "policy-blocked request runs zero subprocesses: PASS",
-          "stale-revision debugger card discarded by the CAS fence: PASS",
+          "source-backed stale debugger proof replaces newer insufficient state card: PASS",
           "debugger lane: PASS"
         ]
       },
@@ -564,13 +1061,85 @@
       ]
     },
     {
+      "name": "fast-solver-churn-oracle-regression",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh test-fast-solver-churn-oracle"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "11 passed"
+        ]
+      },
+      "notes": "Regression for the #1473 churn path: a superseded answer may complete as an evidence_card while fast_solver_receipt payloads intentionally omit query text; future oracle changes must keep recognizing the card as the completion receipt, and state projection must keep that old completed card behind the active card."
+    },
+    {
+      "name": "fast-solver-hidden-draft-reaches-supported-card",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_fast_path_context.py::test_fast_solver_hidden_draft_reaches_supported_final_card -q && echo \"hidden draft fast solver regression: PASS\""
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "hidden draft fast solver regression: PASS"
+        ]
+      },
+      "notes": "Regression for the fast-solver card-surfacing bug: a no-source pre-answer placeholder is held by the publication reducer, but that hidden draft must not abort streaming. The final fast answer must become a supported, sourced card with scillm:// provenance."
+    },
+    {
+      "name": "fast-solver-first-content-timeout-fails-closed",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_fast_path_context.py::test_fast_solver_first_content_timeout_fails_closed -q && echo \"first content timeout fail-closed regression: PASS\""
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "first content timeout fail-closed regression: PASS"
+        ]
+      },
+      "notes": "Regression for the fast-solver latency red receipt: a provider that stalls before first answer content must journal a bounded first-content timeout and fail closed instead of surfacing a very late card or blocking the live loop."
+    },
+    {
+      "name": "question-window-imperative-code-task-regression",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" uv run --project .. --extra dev pytest ../tests/test_question_window.py::test_single_turn_imperative_code_task_is_its_own_candidate"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression for the fast-solver parity flake: a standalone imperative coding prompt such as 'Write a function ...' or 'Implement binary search ...' must emit its own question candidate. If it waits for the next interviewer turn, unrelated questions merge, the fast solver answers a contaminated multi-question card, and live parity becomes unstable."
+    },
+    {
       "name": "fast-solver-live-latency-and-parity",
       "type": "positive",
       "real_world": true,
       "command": [
         "bash",
         "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-fast-solver"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-fast-solver-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-fast-solver --output-dir \"$O\""
       ],
       "timeout_seconds": 1800,
       "expected": {
@@ -579,8 +1148,51 @@
           "30-question latency: p50 <= 5s and p95 <= 10s to first answer content: PASS",
           "zero duplicate solver executions per revision: PASS",
           "zero stale publications in the steady-state run: PASS",
+          "live fast solver publishes typed solution_deck, not embedded JSON: PASS",
           "churn: new question answers under its own identity; old stream completes or is fenced: PASS",
           "fast solver: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/30_question_latency_p50_5s_and_p95_10s_to_first_answer_content",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/zero_duplicate_solver_executions_per_revision",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/live_fast_solver_publishes_typed_solution_deck_not_embedded_json",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/metrics/solution_deck_json_leak_count",
+            "equals": 0
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/churn_new_question_answers_under_its_own_identity_old_stream_completes_or_is_fenced",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-fast-solver-current/fast-solver-report.json",
+            "json_pointer": "/checks/blinded_parity_vs_ask_single_call_fast_path_within_one_grade_losses_2",
+            "equals": true
+          }
         ]
       },
       "notes": "#1473 live stage-2 fast path: LIVE resolver + LIVE streaming solver, 30 heterogeneous questions, revision-churn fence, blinded parity vs the $ask single-call path. The ask fixture runner remains only as a keyless regression floor, never a live-answer claim.",
@@ -735,7 +1347,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-meeting-campaign"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-meeting-campaign-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-meeting-campaign --output-dir \"$O\""
       ],
       "timeout_seconds": 900,
       "infra_blocked_when": [
@@ -750,6 +1362,28 @@
           "== session pinned-coding-interview",
           "== session youtube-two-sum",
           "campaign: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/sessions/0/audio_live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/sessions/1/questions/0/family_correct",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-meeting-campaign-current/campaign-report.json",
+            "json_pointer": "/sessions/2/questions/0/card_matched",
+            "equals": true
+          }
         ]
       },
       "notes": "Goal v2 self-test: a chatterbox-rendered synthetic Sparta meeting plus the pinned interview wav, both through the real PipeWire null-sink -> Docker RealtimeSTT -> resolver -> retrieval path, scored per card family (memory / research / code) against oracles derived before the run, with question-onset-to-card latency recorded. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM."
@@ -776,7 +1410,7 @@
           "transcript meeting: PASS"
         ]
       },
-      "notes": "Scenario-based agentic transcript eval (Graham's design, 2026-08-23): a COMPLETE speaker transcript, questions/expected outcomes extracted in advance, played through chatterbox in real time down the live path; each produced card judged for SEMANTIC SIMILARITY by an agentic SciLLM judge, not token overlap. This CLIENT-MEETING scenario exercises the briefing-pack capability (talking points surface as the client opens doors) and passes reliably. The sibling standup scenario (sparta-standup-invented) is a stricter memory/code/research diagnostic that currently exposes retrieval-ranking and STT-segmentation gaps (see PROJECT_KNOWLEDGE) and is NOT yet a passing gate. Add scenarios (code interview, pitchdeck presentation) as fixture entries in transcript_meetings.json."
+      "notes": "Scenario-based agentic transcript eval (Graham's design, 2026-08-23): a COMPLETE speaker transcript, questions/expected outcomes extracted in advance, played through chatterbox in real time down the live path; each produced card judged for SEMANTIC SIMILARITY by an agentic SciLLM judge, not token overlap. This CLIENT-MEETING scenario exercises the briefing-pack capability (talking points surface as the client opens doors) and passes reliably. Add scenarios (code interview, pitchdeck presentation) as fixture entries in transcript_meetings.json."
     },
     {
       "name": "surface-selection-agentic",
@@ -795,6 +1429,8 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "source-backed declarative code prompt forces surface: PASS",
+          "source-backed partial parentheses walkthrough forces surface: PASS",
           "selector floats the answering memory doc above ripgrep noise: PASS",
           "surfaced card cites the sparta project memory (not cross-project): PASS",
           "surfaced answer is judged similar to the expected read-first rules: PASS",
@@ -810,7 +1446,7 @@
       "command": [
         "bash",
         "-c",
-        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-transcript-meeting live-standup-monitored"
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-live-monitored-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_TRANSCRIPT_MEETING_OUT_DIR=\"$O\" bash ../run.sh eval-transcript-meeting live-standup-monitored"
       ],
       "timeout_seconds": 600,
       "infra_blocked_when": [
@@ -823,9 +1459,195 @@
         "stdout_contains": [
           "live monitored meeting (chatterbox TTS + RealtimeSTT)",
           "transcript meeting: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-live-monitored-current/campaign-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-live-monitored-current/campaign-report.json",
+            "json_pointer": "/meetings/0/audio_live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-monitored-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/0/id",
+            "equals": "memory-hard-rules"
+          },
+          {
+            "path": "/tmp/live-evidence-live-monitored-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/0/card_matched",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-monitored-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/0/answer_similar",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-monitored-current/live-standup-monitored/meeting-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
         ]
       },
-      "notes": "LIVE MONITORED MEETING end-to-end: an invented Sparta standup rendered turn-by-turn by the live chatterbox server, played through a PipeWire null sink, transcribed by Docker RealtimeSTT (GPU), and answered down the full resolver -> retrieval -> gpt-5.5 surface selector -> card path. The memory-recall card is judged SEMANTICALLY SIMILAR to the expected read-first rules by an agentic SciLLM judge -- the real live-audio card-surfacing capability, gated. The meeting also carries a second spoken question so the assistant is monitoring a realistic multi-question call, but the gate is the memory card because live-audio research-proposal detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically by eval_action_lane instead. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM. The denser sparta-standup-invented and meeting-campaign scenarios remain diagnostics that still expose the STT segmentation flake."
+      "notes": "LIVE MONITORED MEETING end-to-end: an invented Sparta standup rendered turn-by-turn by the live chatterbox server, played through a PipeWire null sink, transcribed by Docker RealtimeSTT (GPU), and answered down the full resolver -> retrieval -> gpt-5.5 surface selector -> card path. The memory-recall card is judged SEMANTICALLY SIMILAR to the expected read-first rules by an agentic SciLLM judge -- the real live-audio card-surfacing capability, gated. The meeting also carries a second spoken question so the assistant is monitoring a realistic multi-question call, but the gate is the memory card because live-audio research-proposal detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically by eval_action_lane instead. Needs chatterbox :8018, memory :8601, the GPU STT image, and SciLLM."
+    },
+    {
+      "name": "sparta-standup-memory-code-agentic",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-sparta-standup-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_TRANSCRIPT_MEETING_OUT_DIR=\"$O\" bash ../run.sh eval-transcript-meeting sparta-standup-invented"
+      ],
+      "timeout_seconds": 900,
+      "infra_blocked_when": [
+        "server did not come up",
+        "chatterbox produced no wav",
+        "INFRA_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "team working meeting / standup",
+          "memory-hard-rules (memory): detected=True card=True similar=True",
+          "research-sparta-version (research): detected=True card=True similar=True",
+          "code-qra-generation (code): detected=True card=True similar=True",
+          "transcript meeting: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/audio_live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/0/id",
+            "equals": "memory-hard-rules"
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/0/answer_similar",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/2/id",
+            "equals": "code-qra-generation"
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/campaign-report.json",
+            "json_pointer": "/meetings/0/questions/2/answer_similar",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-sparta-standup-current/sparta-standup-invented/meeting-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      },
+      "notes": "Retained regression for the 2026-08-26 live transcript failure where hard/read-first rules were heard but unrelated workspace memories displaced the SPARTA Project Memory Index. Runs the denser Sparta standup through chatterbox TTS, PipeWire monitor capture, Docker RealtimeSTT, resolver, retrieval, selector, and card publication, and requires both the memory hard-rules card and the QRA code-location card to remain semantically similar."
+    },
+    {
+      "name": "screenshot-dependent-question-requires-correct-frame",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-frame-evidence"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "frame event has stable id and hash: PASS",
+          "visual card accepts exact frame: PASS",
+          "visual card holds without frame: PASS",
+          "nearby irrelevant frame rejected: PASS",
+          "audio-only card does not require screenshot: PASS",
+          "publication receipt carries frame refs: PASS",
+          "frame evidence: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/visual_accept/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/visual_missing/reason_codes/0",
+            "equals": "visual_card_missing_frame_ref"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/visual_wrong_frame/reason_codes/0",
+            "equals": "unresolved_frame_provenance"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/audio_only/reason_codes/0",
+            "equals": "audio_only_no_frame_required"
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/publication_decision/frame_refs/0",
+            "equals": "frame_913eccd6bbc97b634af13093aaeefdeb:sha256:53fc3343770c07cb423dcd410e661e9658aa36ca85ee01d61fd6f56fa7e8957d"
+          }
+        ]
+      },
+      "notes": "MVP 5 focused guard: screenshot/frame evidence is first-class and optional. Visual-dependent cards require an exact frame id plus sha256 reference; missing or nearby-wrong frames fail closed. Audio-only cards do not wait for screenshots. This does not claim live screen capture is enabled."
+    },
+    {
+      "name": "audio-only-question-does-not-require-screenshot",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-frame-evidence"
+      ],
+      "timeout_seconds": 240,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "audio-only card does not require screenshot: PASS",
+          "frame evidence: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/audio_only/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-frame-evidence-current/report.json",
+            "json_pointer": "/audio_only/reason_codes/0",
+            "equals": "audio_only_no_frame_required"
+          }
+        ]
+      },
+      "notes": "MVP 5 companion guard: frame capture remains optional; audio-only cards are not blocked by absent screenshots."
     },
     {
       "name": "relevance-filter-adversarial",

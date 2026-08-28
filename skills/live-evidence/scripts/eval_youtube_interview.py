@@ -121,6 +121,17 @@ def assert_top_card(card: dict[str, Any], *, lane: str, path_fragment: str | Non
         raise RuntimeError(f"card missing source path fragment {path_fragment!r}: {card}")
 
 
+def read_journal_rows(data_dir: Path) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for session_file in data_dir.rglob("session.jsonl"):
+        for line in session_file.read_text(encoding="utf-8").splitlines():
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return rows
+
+
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     with tempfile.TemporaryDirectory(prefix="live-evidence-youtube-eval-") as temp_name:
@@ -222,6 +233,28 @@ def main() -> int:
                 assert_top_card(state["cards"][0], lane="ask", path_fragment="ask-run")
                 print("youtube-derived follow-up routes to source-backed Ask card: PASS")
 
+                rows = read_journal_rows(data_dir)
+                publication_decisions = [
+                    row.get("payload") or {}
+                    for row in rows
+                    if row.get("kind") == "card_publication_decision"
+                ]
+                visible_decisions = [
+                    decision
+                    for decision in publication_decisions
+                    if decision.get("status") == "visible"
+                ]
+                if len(visible_decisions) < 2:
+                    raise RuntimeError(
+                        "expected at least two visible publication decisions, "
+                        f"got {publication_decisions}"
+                    )
+                if not all(decision.get("transcript_refs") for decision in visible_decisions):
+                    raise RuntimeError(f"publication decisions missing transcript refs: {visible_decisions}")
+                if not any(decision.get("source_refs") for decision in visible_decisions):
+                    raise RuntimeError(f"publication decisions missing source refs: {visible_decisions}")
+                print("youtube-derived cards pass through publication reducer: PASS")
+
                 receipt = {
                     "schema": "live_evidence.youtube_interview_eval_receipt.v1",
                     "status": "PASS",
@@ -242,6 +275,8 @@ def main() -> int:
                         "interviewer_prompt_to_ask_card": True,
                         "candidate_turn_suppressed": True,
                         "follow_up_to_source_backed_ask_card": True,
+                        "publication_decisions_journaled": True,
+                        "visible_publication_decision_count": len(visible_decisions),
                     },
                 }
                 receipt_dir = Path(os.getenv("LIVE_EVIDENCE_DATA_DIR", str(data_dir)))

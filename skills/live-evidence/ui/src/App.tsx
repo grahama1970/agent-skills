@@ -7,39 +7,41 @@ import { MemoryVault } from "@/components/MemoryVault";
 import { TranscriptDrawer } from "@/components/TranscriptDrawer";
 import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
 import { useLiveEvidence } from "@/hooks/useLiveEvidence";
+import { activeCardForSelection, visibleCardOrder, type CardSelection } from "@/lib/cardSelection";
 
 export default function App() {
   const { snapshot, connected, error, busy, actions } = useLiveEvidence();
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [vaultOpen, setVaultOpen] = useState(false);
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [selection, setSelection] = useState<CardSelection>({ cardId: null, mode: "auto" });
 
   const visibleCards = useMemo(() => {
-    return snapshot.cards
-      .filter((card) => !card.dismissed)
-      .sort((left, right) => {
-        if (left.pinned !== right.pinned) return left.pinned ? -1 : 1;
-        return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
-      });
+    return visibleCardOrder(snapshot.cards);
   }, [snapshot.cards]);
 
-  const activeCard = visibleCards.find((card) => card.card_id === selectedCardId) ?? visibleCards[0];
+  const activeCard = activeCardForSelection(visibleCards, selection);
 
   useEffect(() => {
     if (!activeCard) {
-      setSelectedCardId(null);
+      if (selection.mode !== "auto" || selection.cardId !== null) {
+        setSelection({ cardId: null, mode: "auto" });
+      }
       return;
     }
-    if (!selectedCardId || !visibleCards.some((card) => card.card_id === selectedCardId)) {
-      setSelectedCardId(activeCard.card_id);
+    if (
+      selection.mode === "manual" &&
+      selection.cardId &&
+      !visibleCards.some((card) => card.card_id === selection.cardId)
+    ) {
+      setSelection({ cardId: null, mode: "auto" });
     }
-  }, [activeCard, selectedCardId, visibleCards]);
+  }, [activeCard, selection, visibleCards]);
 
   const selectRelativeCard = (direction: 1 | -1) => {
     if (visibleCards.length === 0) return;
     const index = Math.max(visibleCards.findIndex((card) => card.card_id === activeCard?.card_id), 0);
     const nextIndex = direction > 0 ? Math.min(index + 1, visibleCards.length - 1) : Math.max(index - 1, 0);
-    setSelectedCardId(visibleCards[nextIndex].card_id);
+    setSelection({ cardId: visibleCards[nextIndex].card_id, mode: "manual" });
   };
 
   useHUDHotkeys([
@@ -75,7 +77,7 @@ export default function App() {
         session={snapshot.session}
         transcriptCount={snapshot.transcript.length}
         vaultOpen={vaultOpen}
-        onSelectCard={setSelectedCardId}
+        onSelectCard={(cardId) => setSelection({ cardId, mode: "manual" })}
         onPin={(cardId) => void actions.pin(cardId)}
         onDismiss={(cardId) => {
           void actions.dismiss(cardId);

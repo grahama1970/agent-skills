@@ -498,6 +498,15 @@ def _register_api_routes(
         )
         return {"status": "dismissed", "remaining": len(rubric["suggestions"])}
 
+    @app.get("/api/cards/publications")
+    async def card_publications() -> list[dict[str, Any]]:
+        """Reducer decisions for every candidate card, including held and
+        superseded ones. A held INSUFFICIENT card is a fail-closed decision
+        the operator must be able to observe even though it never reaches the
+        glance rail (commit 95449048bb holds unsupported cards)."""
+        decisions = await state.card_publication_journal()
+        return [item.model_dump(mode="json") for item in decisions]
+
     @app.post("/api/transcript", status_code=202)
     async def transcript(event: TranscriptEvent) -> dict[str, Any]:
         await coordinator.accept_transcript(event)

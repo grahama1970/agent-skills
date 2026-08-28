@@ -1,85 +1,158 @@
-# Live Evidence — Handoff
+# HANDOFF — live-evidence (2026-08-27, DriveWealth interview prep)
 
-schema: tau.agent_handoff.v1
-from: prior agent session (2026-08-23)
-next_agent: human / fresh session
-handoff_reason: the prior session repeatedly stated unverified results as fact.
-Trust nothing in this repo's recent commit messages or summaries without running
-the reproduce command. Where no command is given, treat the claim as UNVERIFIED.
+## Addendum — 2026-08-27 evening session (GLM, pre-handoff)
 
-## The rule for whoever picks this up
+- **Prep-pack lane LANDED LOCALLY, not on origin.** The previously uncommitted
+  prep-pack work (validate_prep_pack.py, validate_precomputed_oracles.py,
+  compile_drivewealth_oracle_pack.py, prep_pack_drivewealth.json, route_plan
+  fixture blocks, 4 agentic-eval cases, run.sh/SKILL.md wiring) was reviewed,
+  validated, and committed as `cfda4a9bab` on local main. Gates proven:
+  eval-prep-pack PASS, eval-precomputed-oracles PASS, dry compile PASS
+  (10 interviews / 90 questions / 808 docs), memory write HTTP 200 + 3/3
+  recall probes, 12/12 touched tests.
+- **Push is blocked by pre-existing repo divergence, not by this skill.**
+  Local main: ahead 186 / behind 126. `git merge origin/main` refuses on 14
+  dirty files owned by unidentified lanes (incl. substantive monitor-
+  opportunities policy edits — the auto-submit standing-authorization removal).
+  Do NOT stash or reset them; incoming commit a686cb0263 also touches this
+  skill's SKILL.md, so expect a merge conflict there when integration happens.
+- **HUD verified working end-to-end, live.** Serve :8799 serves the current
+  dist (byte-identical, rebuilt 16:11, post-9bd753c0fd). Pumped DW-AI-01's 9
+  turns through POST /api/transcript → 3 cards published, all `supported` →
+  HUD rendered live: SAY ALOUD banner, answer-key card, lane badges. An idle
+  HUD (no listener, stale session) LOOKS broken — that is the "trash fire"
+  report explained. The listener was NOT running; interview day still needs:
+  `./run.sh listen --mode pipewire --backend-url http://127.0.0.1:8799 --device
+  cpu --consent-confirmed`. As of the default-port fix, CLI defaults now point
+  at 8799; older notes about a 8765 default are stale.
+- **DEFECT (unfixed): replay clobbers the active session.** `live_evidence
+  replay` (and any bare `POST /api/session/start {"consent_confirmed": false}`)
+  silently resets a live session: LISTENING·MEETING → ARMED·CONSENT NEEDED,
+  visible cards wiped, no warning. Suggested fix: 409 on active session
+  without explicit reset flag, or replay attaches to the active session.
+- **HUD session state right now is synthetic** (my replay turns + 3 demo
+  cards). Stop → Start clears it before a real session.
+- **ask skill CLI drift:** SKILL.md documents `./run.sh ask --handler <seat>
+  --execute --json`, but the installed CLI has no `--handler` option (error:
+  "No such option: --handler. Did you mean --chain?"). Reconcile docs or CLI
+  before the next consult attempt.
+- **Untouched next increment:** solver JSON deck schema — solver emits
+  {title, trigger} points; replace browser markdown parsing in
+  scannablePoints() (ui/src/components/SolutionStage.tsx:73) and
+  parseSolutionSections(). Scoped, zero code written.
 
-Every line below is either VERIFIED (with the exact command that proves it) or
-UNVERIFIED. Do not accept "PASS", "works", or "done" without running the command
-and reading the raw output. The mechanical gate is `scripts/proof_live_card.py`
-— it starts the real server and dumps the raw card; its output cannot be faked
-by prose.
 
-## VERIFIED (run these; read the bytes)
+For the next agent. Everything below is receipt-backed; commands named were
+run and read back in the sessions of 2026-08-26/27. Do not trust this file
+over live state — verify with the named commands.
 
-- Memory-recall card works end to end.
-  `SCILLM_MASTER_KEY=$(docker inspect docker-scillm-proxy-1 --format '{{range .Config.Env}}{{println .}}{{end}}' | grep '^SCILLM_MASTER_KEY=' | cut -d= -f2) uv run --project . --extra dev python scripts/proof_live_card.py "What are the hard read first rules in the Sparta project memory index?"`
-  Expect: STATUS supported; ANSWER is the actual "NEVER SKIM A SKILL.md" rule;
-  SOURCES include memory key `local_memory__experiments-sparta__memory`.
+## Resume Here
 
-- Code card is DEFECTIVE (this is a confirmed defect, not a to-do guess).
-  Same command with: `"Where is QRA generation implemented in the sparta pipeline?"`
-  Observed: STATUS supported, but ANSWER/SOURCES cite `docs/QRA_APPROACH.md` (a
-  DESIGN DOC), a repair lesson, `pyproject.toml`, and a test fixture — NOT the
-  implementing module. Ground truth of where the code actually is:
-  `grep -rn "def project_qras\|def .*qra" ~/workspace/experiments/sparta/scripts/`
+- **Objective**: live-evidence is the interview copilot for the DriveWealth
+  AI Engineer technical assessment (two 45-min principal sessions). It must
+  listen to call audio, identify questions, and glance-serve answer cards
+  from the curated KB. Interview-day bring-up is ONE command:
+  `scripts/interview_day.sh` (fail-closed probes: scillm, memory daemon, KB
+  recall, doctor, pack load, session, listener, HUD).
+- **Exact next action**: nothing is blocking interview use. Highest-value
+  remaining increments, in order: (1) solver-side JSON deck schema
+  ({title, trigger} points instead of markdown prose parsed in the browser
+  — see ui/src/components/SolutionStage.tsx scannablePoints comment);
+  (2) clean full-suite eval rerun on a quiet box (last full run
+  USABLE_WITH_GAPS 41/47, all 6 failures individually re-proven or
+  root-caused after fixes — receipts below); (3) the 19-item defect ledger
+  at scratchpad tickets_to_file.md (session-local; re-derive from this file
+  if gone).
 
-- create-figure renders a real figure (28KB PDF on disk):
-  `python -c "import sys; sys.path.insert(0,'src'); from pathlib import Path; import tempfile; from live_evidence.actions import render_composition; print(render_composition({'A':1,'B':2}, Path(tempfile.mkdtemp())))"`
+## What works (verified live)
 
-- Skill sanity path produces a source-bound card (mocked:false):
-  `UV_PROJECT_ENVIRONMENT=$HOME/.cache/live-evidence/venv ./sanity.sh` then read
-  `/tmp/live-evidence-sanity-data/sanity-receipt.json`.
+- Physical audio chain: chatterbox voice -> speaker/null-sink -> PipeWire
+  monitor capture -> CPU whisper -> stage-1 -> cards. Attended run 7/9
+  matches with all 9 questions carded; batch-2 campaign 38/45 at realistic
+  pacing. CPU whisper is LOAD-SENSITIVE: identical wav scored 0/9 at load
+  80 and 8/9 at load 30. Keep the box quiet during use; the CUDA/torch
+  driver mismatch (warning in listener log) forces CPU STT.
+- Blind question extraction: all 10 webgpt-authored interviews pass
+  (77/90+), fixture fixtures/mock_interviews_drivewealth.json (status:
+  final, webgpt coverage-approval receipt embedded).
+- KB: 856+ units in /memory scope drivewealth incl. a 90-question answer
+  key (knowledge/answer-key/ in the dw-openapi repo). Recall verified with
+  interviewer-phrased probes via daemon POST :8601/recall. KNOWN: CLI
+  `memory recall --scope` returns found:false while the daemon path works
+  (memory-repo bug); `memory learn` 422s on agent-written lessons
+  ("no extractable taxonomy").
+- HUD (rebuilt 2026-08-27 through four external design-review rounds):
+  teleprompter single column (root cause of earlier crushed layout:
+  .app-layout reserved the rail grid track), 2x2 CardDeckMatrix with 1-4
+  hotkeys and focus dimming, trigger-length bullets, diagnostics hidden via
+  .answer-provenance (data stays in DOM), TTS earcons policy-gated on
+  voice_output (silent in meeting purpose BY DESIGN — do not "fix").
+  Serve on PORT 8799 — 8765 is owned by task-monitor on this machine.
+- Trigger pipeline fixes this week (committed): imperative-clause detection
+  and interviewer-statement fallthrough in question_window.py — principal
+  phrasing ("Design X", "We need Y") now reaches stage-1; candidate-channel
+  suppression regression-proven (eval-interview-loop 6/6 PASS, latest run
+  2026-08-27). Publication: INSUFFICIENT cards are held, observable at
+  GET /api/cards/publications (causal assertions in eval_interview_loop.py).
 
-## UNVERIFIED (claimed earlier as working; NOT proven — verify or discard)
+## Known-broken / unfinished
 
-- Live audio path (chatterbox -> RealtimeSTT -> card): only exercised through
-  harness scripts the prior session authored. No raw card from real audio was
-  ever shown to the human. Re-verify before believing.
-- Surface selector / relevance filter improving results: only self-authored evals.
-- The "STT 1->7 finals" bridge fix: read from a journal inside the prior
-  session's own harness; not independently confirmed.
-- Research-lane routing, and ALL propose-only actions (schedule/calendar,
-  compose, episodic): never executed end to end. Calendar needs OAuth; episodic
-  needs the memory embedding service (currently down: Connection refused);
-  compose renders only the final node on hand-typed numbers.
+- Full 47-case suite: no clean READY receipt exists. Last full run 41/47;
+  the 6 fails were: stray .venv (removed, then RESTORED deliberately — a
+  concurrent skill-maintainer workflow uses it; contract conflict
+  unresolved), chatterbox CUDA-OOM crash + scillm restart (environmental,
+  cases re-proven individually), fast-solver latency (a concurrent
+  workflow was mid-fix; final state unknown), interview-loop (fixed:
+  publication-hold migration). Background eval runs on this box get killed
+  by concurrent workflows (exit 144) — run long suites foreground/chunked.
+- STT jargon mishears: "immutable"->"a mutable" observed, self-corrected by
+  revision fencing. Hotword biasing for RealtimeSTT is the standard fix
+  (unimplemented).
+- Compound questions on the '?' path canonicalize the tail clause only
+  (imperative path keeps full turn). DW-AI-02 T05 forensics.
+- ANOTHER AGENT has uncommitted work in this skill right now (SKILL.md,
+  run.sh, fixtures, scripts/compile_drivewealth_oracle_pack.py,
+  prep_pack_drivewealth.json, validate_prep_pack.py) — the prep-pack lane.
+  Coordinate before committing over it.
 
-## Immutable goal status (IMMUTABLE_GOAL.md)
+## Key artifacts
 
-NOT MET. The goal requires three card families (research, memory, CODE) proven
-in a 20-session field campaign.
-- memory family: works (verified above).
-- research family: proposes external research; the actual search execution is
-  UNVERIFIED.
-- code family: BROKEN (verified above).
-- 20-session field campaign: never run.
+- fixtures/: briefing_drivewealth.json (18 points + diagram sources),
+  mock_interviews_drivewealth.json (10 interviews, final),
+  drivewealth_bridge.md, tuesday_runbook.md, metrics_cold.md,
+  debugger_walkthrough.md (4 breakpoint seams incl. exact file:line),
+  diagrams/ (authority-stack + 3 architecture charts, phart + SVG).
+- Rehearsal audio: /mnt/storage12tb/skills/live-evidence/synthetic-interviews/
+  DW-AI-01..10.wav (~11-13 min each) + timecoded .transcript.txt.
+- Blind grader: run.sh eval-synthetic-interviews [--interview ID] [--gap N]
+  (dual tail|head stems — both canonicalization styles count).
+- .vscode/launch.json (repo root, gitignored): debugger demo configs.
 
-## Known boundary violation to fix
+## Environment gotchas (each cost real time)
 
-`src/live_evidence/surface_selector.py` calls SciLLM directly
-(`http://127.0.0.1:4001/v1/chat/completions`). Per the /tau contract, `/scillm`
-is internal to `/tau`; only the stage-1 resolver has a documented direct-SciLLM
-exception (latency). The selector's direct call was added without that
-authorization/documentation. Either route it through `/tau` or extend the
-documented exception with the latency justification — human's call. Also: the
-proof/eval scripts read the SciLLM key via `docker inspect` on the container,
-which is probing the internal dependency directly; that should go through the
-owning skill.
+- LIVE_EVIDENCE_REPOS is COLON-separated; 5 repos incl.
+  ~/workspace/experiments/dw-openapi.
+- SciLLM key: export LIVE_EVIDENCE_SCILLM_KEY from the container
+  (docker exec docker-scillm-proxy-1 printenv SCILLM_MASTER_KEY); ambient
+  SCILLM_PROXY_KEY is drifted and 401s.
+- Older builds needed --backend-url because the default was 8765 (wrong
+  service, 404 in listener log). Current builds default to 8799, but keep
+  explicit --backend-url in runbooks for copy-paste clarity.
+- GPU: chatterbox TTS + CUDA whisper cannot run concurrently (OOM crash
+  receipt 2026-08-26). Do not run TTS during live capture.
+- pkill patterns containing "live_evidence" match your own shell (exit 144).
 
-## Scaffolding the prior session added that is unproven and may be scope creep
+## Last verified commands (2026-08-27)
 
-Action kinds `schedule` and `compose` (actions.py), `research_lane` selection,
-`src/live_evidence/episodic.py`, `ops-google-calendar` skill, and the
-`POST /api/session/archive` endpoint. The IMMUTABLE_GOAL's actions are only
-fact-check / remember / open-artifact. Decide whether to keep or remove.
+- eval-interview-loop: 6/6 PASS
+- eval-synthetic-interviews per interview: 01..10 all ok:true (dual-stem)
+- HUD screenshot after teleprompter commit 9bd753c0fd: matrix deck renders,
+  hotkeys work, diagnostics hidden (commits 6473c4e358, 4ae2d62d76,
+  9bd753c0fd)
 
-## Recommended next action
+## Proof boundary
 
-Fix the code-card defect against the mechanical gate: "fixed" means the code
-question above dumps a card whose SOURCE is the actual implementing file (from
-the grep ground truth), not a design doc. The command must fail first, then pass.
+mocked: no for everything labeled verified above; live: yes. Unverified:
+full-suite READY, fast-solver final state, Qdrant vectors + graph edges for
+the drivewealth scope (BM25 carries recall today), authenticated HCP token
+lane (ops-terraform hcp-status PASS path needs a real TFE_TOKEN).

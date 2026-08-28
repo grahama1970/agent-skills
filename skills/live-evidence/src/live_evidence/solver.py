@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 import urllib.request
 from dataclasses import dataclass, field
@@ -28,15 +29,22 @@ from .resolver import resolver_key
 DEFAULT_URL = "http://127.0.0.1:4001"
 # sonnet, not opus: the answer path is latency-critical and opus low still
 # spends a variable thinking phase before first content (measured live: p95
-# 16s+ first content; sonnet completes comparable answers in ~3s). Quality is
-# held by the blinded parity gate in eval_fast_solver, not by model prestige.
+# 16s+ first content; sonnet completes comparable answers in ~3s). Low effort
+# is the live-card default; quality is held by the blinded parity gate in
+# eval_fast_solver, not by model prestige.
 DEFAULT_MODEL = "claude-sonnet-5"
-DEFAULT_EFFORT = "high"
+DEFAULT_EFFORT = "low"
 
 CODE_PROMPT = (
     "Answer the interview/meeting question below directly; no roundtable or "
     "report framing.\n"
-    "For coding questions use exactly these Markdown headings:\n"
+    "FIRST, emit exactly one fenced JSON block with this schema and no extra "
+    "keys: {\"schema\":\"live_evidence.solution_deck.v1\","
+    "\"points\":[{\"title\":\"2-4 word glance header\","
+    "\"trigger\":\"<=11 word spoken trigger\"}]}. Use 2-4 points. "
+    "The JSON is for the HUD; do not put Markdown inside it.\n"
+    "THEN write the human answer. For coding questions use exactly these "
+    "Markdown headings:\n"
     "## APPROACH\n## PSEUDOCODE\n## CODE\n## COMPLEXITY\n## OPTIMIZATIONS\n"
     "For factual/research questions: a compact answer, no headings.\n"
     "Evidence rules: general technical knowledge is fair game and needs no "
@@ -45,6 +53,43 @@ CODE_PROMPT = (
     "question, and say plainly when a codebase-specific claim has no excerpt "
     "support. Never refuse a general question for lack of excerpts.\n\n"
 )
+
+_DECK_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", re.IGNORECASE)
+
+
+def extract_solution_deck(text: str) -> tuple[str, list[dict[str, str]]]:
+    """Return display text and solver-authored deck points from a response.
+
+    The LLM emits a typed JSON envelope for the HUD before any prose. Parsing
+    happens backend-side so React can render a contract, not scrape Markdown.
+    """
+
+    if not text.strip():
+        return "", []
+    stripped = text.lstrip()
+    if stripped.startswith("```json") and stripped.count("```") < 2:
+        return "", []
+    match = _DECK_BLOCK_RE.search(text)
+    if not match:
+        return text, []
+    try:
+        payload = json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return text, []
+    if payload.get("schema") != "live_evidence.solution_deck.v1":
+        return text, []
+    points: list[dict[str, str]] = []
+    for raw in payload.get("points") or []:
+        if not isinstance(raw, dict):
+            continue
+        title = " ".join(str(raw.get("title") or "").split())[:80]
+        trigger = " ".join(str(raw.get("trigger") or "").split())[:180]
+        if title and trigger:
+            points.append({"title": title, "trigger": trigger})
+        if len(points) >= 4:
+            break
+    clean = (text[:match.start()] + text[match.end():]).strip()
+    return clean, points
 
 
 @dataclass

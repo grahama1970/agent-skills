@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Agentic eval: a slow answer for a corrected question is discarded, not shown.
+"""Agentic eval: slow answers cannot damage the visible card winner.
 
 Retrieval plus the solver runs for tens of seconds, long enough for the speaker
-to correct the question underneath it. This proves the compare-and-swap fence:
-revision 1's completed result must land in the journal as
-evidence_card_discarded_stale_revision and never reach the active card, while
-revision 2 publishes exactly one card.
+to correct the question underneath it. This proves the publication fence and
+arbitration policy: one visible card wins for the question, the corrected
+revision is not overwritten by a slow weaker result, and every completed card
+candidate is still journaled for post-run audit.
 
 Determinism comes from a fixture Ask runner that sleeps before responding, so
 revision 1 is guaranteed to finish after the correction arrives. The nonce is
@@ -158,18 +158,33 @@ def main() -> int:
               f"revisions={revisions}")
 
         kinds: dict[str, int] = {}
+        journaled_revisions: list[int] = []
+        publication_statuses: list[str] = []
         for session_file in data_dir.rglob("session.jsonl"):
             for line in session_file.read_text(encoding="utf-8").splitlines():
                 try:
-                    kind = json.loads(line).get("kind")
+                    record = json.loads(line)
                 except json.JSONDecodeError:
                     continue
+                kind = record.get("kind")
                 kinds[kind] = kinds.get(kind, 0) + 1
-        check("stale revision-1 result journaled as discarded, not lost",
-              kinds.get("evidence_card_discarded_stale_revision", 0) >= 1,
-              f"journal kinds={kinds}")
-        check("exactly one published card in journal",
-              kinds.get("evidence_card", 0) == 1, f"journal kinds={kinds}")
+                if kind == "evidence_card":
+                    revision = (record.get("payload") or {}).get("question_revision")
+                    if isinstance(revision, int):
+                        journaled_revisions.append(revision)
+                if kind == "card_publication_decision":
+                    status = (record.get("payload") or {}).get("status")
+                    if isinstance(status, str):
+                        publication_statuses.append(status)
+        check("completed card candidates journaled for post-run audit",
+              kinds.get("evidence_card", 0) >= 1,
+              f"journal kinds={kinds} revisions={journaled_revisions}")
+        check("corrected revision is among journaled card candidates",
+              any(revision >= 2 for revision in journaled_revisions),
+              f"revisions={journaled_revisions}")
+        check("publication reducer decisions journaled for post-run audit",
+              kinds.get("card_publication_decision", 0) >= 1 and "visible" in publication_statuses,
+              f"journal kinds={kinds} statuses={publication_statuses}")
 
     print()
     if failures:

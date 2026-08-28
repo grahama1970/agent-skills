@@ -6,6 +6,14 @@
     "title": "Google Coding Interview With a Meta Software Engineer",
     "committed_text_policy": "short expected terms only; no full transcript"
   },
+  "route_plan": {
+    "determined_from": "pre_run_reference_transcript_oracle",
+    "category": "coding_interview_question",
+    "answerability": "answerable",
+    "required_skill_lanes": ["ripgrep"],
+    "expected_response": "source_bound_evidence_card",
+    "publication_gate": "visible_after_repo_source"
+  },
   "transcript_required_term_groups": [
     [
       "opening",

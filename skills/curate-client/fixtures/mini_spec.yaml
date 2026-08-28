@@ -1,0 +1,21 @@
+openapi: 3.0.0
+paths:
+  /widgets:
+    get:
+      summary: List widgets
+      operationId: listWidgets
+    post:
+      summary: Create a widget
+      operationId: createWidget
+components:
+  schemas:
+    widget:
+      type: object
+      properties:
+        widgetID:
+        status:
+      enum-holder:
+      x:
+        enum:
+          - ACTIVE
+          - RETIRED

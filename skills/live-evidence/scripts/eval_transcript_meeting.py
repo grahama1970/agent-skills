@@ -24,6 +24,8 @@ reports INFRA_BLOCKED, never a fake pass.
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
 import urllib.request
 from datetime import datetime, timezone
@@ -169,6 +171,8 @@ def main() -> int:
     root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else SKILL
     campaign.ROOT = root
     campaign_mod.campaign.ROOT = root
+    if not campaign_mod.require_precomputed_oracles(root):
+        return 1
     key = campaign.scillm_key()
     if not key:
         print("transcript meeting: INFRA_BLOCKED (no scillm key; agentic judge unavailable)")
@@ -176,7 +180,11 @@ def main() -> int:
 
     spec = json.loads((root / "fixtures" / "transcript_meetings.json").read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_root = OUT_ROOT / stamp
+    out_root = (
+        Path(os.environ["LIVE_EVIDENCE_TRANSCRIPT_MEETING_OUT_DIR"]).resolve()
+        if os.environ.get("LIVE_EVIDENCE_TRANSCRIPT_MEETING_OUT_DIR")
+        else OUT_ROOT / stamp
+    )
     only = {a for a in sys.argv[2:] if not a.startswith("-")}
     reports = []
     for meeting in spec["meetings"]:

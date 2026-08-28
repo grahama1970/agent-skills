@@ -80,6 +80,11 @@ class TriggerDecision:
     # Transcript events the candidate was assembled from, so downstream
     # requirement-ledger entries stay bound to their exact source (#1454).
     source_event_ids: tuple[str, ...] = ()
+    # QuestionWindowBuilder remembers accepted candidates immediately to
+    # suppress repeated STT restatements. If the downstream surface gate later
+    # rejects a partial candidate as incomplete/not-card-worthy, the coordinator
+    # uses this fingerprint to unblock the richer final transcript form.
+    candidate_fingerprint: str | None = None
 
 
 class TriggerEngine:

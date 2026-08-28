@@ -10,6 +10,8 @@ from datetime import timezone
 from .config import AppSettings, InterviewProfile
 from .models import (
     AppSnapshot,
+    CardPublicationDecision,
+    CardStatus,
     EvidenceCard,
     LaneActivity,
     LaneState,
@@ -28,7 +30,53 @@ from .models import (
     RequirementStatus,
     ledger_digest,
 )
+from .publication import reduce_card_publication
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
+
+
+NEW_QUESTION_MARKERS = (
+    "second question",
+    "third question",
+    "next question",
+    "another question",
+    "separate question",
+    "different question",
+    "last question",
+    "last thing",
+    "next thing",
+)
+
+
+def _explicit_new_question_marker(text: str) -> bool:
+    lower = text.casefold()
+    return any(marker in lower for marker in NEW_QUESTION_MARKERS)
+
+
+def _card_should_replace(displayed: EvidenceCard | None, incoming: EvidenceCard) -> bool:
+    """Keep a source-backed card visible over later weak revisions.
+
+    Live STT often keeps emitting cumulative explanatory fragments after the
+    useful problem statement has already produced a supported card. Those later
+    fragments may resolve to an insufficient card for the same question id; the
+    HUD should not lose the useful card to a weaker same-question revision.
+    """
+
+    if displayed is None:
+        return True
+    if incoming.status is CardStatus.SUPPORTED:
+        return True
+    return displayed.status is CardStatus.INSUFFICIENT
+
+
+def _newer_displayed_blocks(displayed: EvidenceCard | None, incoming: EvidenceCard) -> bool:
+    if displayed is None:
+        return False
+    if (displayed.question_revision or 0) <= (incoming.question_revision or 0):
+        return False
+    return not (
+        displayed.status is CardStatus.INSUFFICIENT
+        and incoming.status is CardStatus.SUPPORTED
+    )
 
 
 def _status_for_session(consent_confirmed: bool, policy: CapabilityPolicy) -> SessionStatus:
@@ -70,6 +118,7 @@ class RuntimeState:
         self._active_question_answered: bool = False
         # Requirement ledger per (question_id, revision), append-only (#1454).
         self._ledger: dict[tuple[str, int], list[Requirement]] = {}
+        self._publication_journal: list[CardPublicationDecision] = []
 
     async def snapshot(self) -> AppSnapshot:
         """Return an immutable validated UI projection."""
@@ -134,6 +183,7 @@ class RuntimeState:
                 self._active_question_id = None
                 self._active_question_revision = 0
                 self._active_question_answered = False
+                self._publication_journal = []
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
@@ -393,9 +443,11 @@ class RuntimeState:
             if self._active_question_id and not self._active_question_answered:
                 prior = _content_words(self._active_question_text)
                 new = _content_words(normalized_question)
+                if _explicit_new_question_marker(normalized_question):
+                    fork = True
                 if prior and new:
                     overlap = len(prior & new) / min(len(prior), len(new))
-                    fork = overlap < 0.3
+                    fork = fork or overlap < 0.3
             if (
                 self._active_question_id is None
                 or self._active_question_answered
@@ -433,85 +485,40 @@ class RuntimeState:
         """
 
         async with self._lock:
-            if card.question_id is None:
+            reduction = reduce_card_publication(
+                displayed_cards=self._cards,
+                incoming=card,
+                active_question_id=self._active_question_id,
+                active_question_revision=self._active_question_revision,
+                question_last_revision=dict(self._question_last_revision),
+                max_cards=self._settings.max_cards,
+            )
+            self._publication_journal.append(reduction.decision)
+            self._publication_journal = self._publication_journal[-500:]
+            if reduction.decision.status.value != "visible":
                 return None
-            if card.question_id != self._active_question_id:
-                # A finished answer for an EARLIER question that was never
-                # superseded within its own revisions still publishes -- as a
-                # background card, without reclaiming the active slot. In a
-                # fast multi-question meeting the next question must not
-                # destroy the previous question's completed answer (observed
-                # live: the Sparta campaign's memory answer was discarded
-                # because the research question had taken the slot).
-                # For a background question the newest COMPLETED answer wins.
-                # Requiring the question's very last authored revision was too
-                # strict: a cumulative-window question keeps revising until the
-                # next question takes the slot, and the only revision whose
-                # solve ever completes may be an earlier one (observed live:
-                # the hard-rules card was authored at rev 1, discarded because
-                # the question had reached rev 4 with no rev-4 solve). The
-                # fence's real job is only that an OLDER completed card never
-                # replaces a NEWER displayed card for the same question.
-                displayed = next(
-                    (item for item in self._cards
-                     if item.question_id == card.question_id), None,
-                )
-                if displayed is None or (
-                    (displayed.question_revision or 0)
-                    <= (card.question_revision or 0)
-                ):
-                    self._cards = [
-                        item for item in self._cards
-                        if item.question_id != card.question_id
-                    ]
-                    self._cards.insert(min(1, len(self._cards)), card)
-                    self._cards = self._cards[: self._settings.max_cards]
-                    snapshot = self._snapshot_unlocked()
-                else:
-                    return None
-                # fall through to broadcast outside the lock
-                background = True
-            elif card.question_revision != self._active_question_revision:
-                # Older-revision completed answer for the ACTIVE question: the
-                # fence's job is that a slower rev-N solve never overwrites a
-                # DISPLAYED rev-N+1 card -- not that a completed answer loses
-                # to an empty slot because a later turn claimed the revision
-                # while this solve was in flight (observed live: rev 3's
-                # hard-rules card discarded because rev 4 had claimed and not
-                # yet solved). Newest completed card wins; a newer revision's
-                # card supersedes it on arrival.
-                displayed = next(
-                    (item for item in self._cards
-                     if item.question_id == card.question_id), None,
-                )
-                if displayed is not None and (
-                    (displayed.question_revision or 0)
-                    > (card.question_revision or 0)
-                ):
-                    return None
-                if (card.question_revision or 0) > self._active_question_revision:
-                    return None
-                background = False
-            else:
-                background = False
-            if not background:
-                # Exactly one active card per question_id: a revision supersedes
-                # the previous answer in place instead of growing the stream.
-                self._cards = [
-                    item for item in self._cards if item.question_id != card.question_id
-                ]
-                self._cards.insert(0, card)
-            if not background:
-                if len(self._cards) > self._settings.max_cards:
-                    pinned = [item for item in self._cards if item.pinned]
-                    unpinned = [item for item in self._cards if not item.pinned]
-                    self._cards = (pinned + unpinned)[: self._settings.max_cards]
+            self._cards = reduction.cards
+            if reduction.mark_active_answered:
                 # Answered: the next candidate opens a new question rather than
                 # revising this one and evicting the card just published.
                 self._active_question_answered = True
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
+
+    async def card_publication_journal(self) -> list[CardPublicationDecision]:
+        """Return reducer decisions, including held and superseded candidates."""
+
+        async with self._lock:
+            return [item.model_copy(deep=True) for item in self._publication_journal]
+
+    async def latest_card_publication_decision(self) -> CardPublicationDecision | None:
+        """Return the newest reducer decision for durable journal adapters."""
+
+        async with self._lock:
+            if not self._publication_journal:
+                return None
+            return self._publication_journal[-1].model_copy(deep=True)
 
     async def add_card(self, card: EvidenceCard) -> AppSnapshot:
         """Add a new card, preserving pinned cards when trimming history."""

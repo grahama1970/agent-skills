@@ -18,6 +18,13 @@ prepare_python_environment() {
     # override.
     export UV_PROJECT_ENVIRONMENT="${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv"
   fi
+  local env_path root_path
+  env_path="$(realpath -m "$UV_PROJECT_ENVIRONMENT")"
+  root_path="$(realpath -m "$SCRIPT_DIR")"
+  if [[ "$env_path" == "$root_path" || "$env_path" == "$root_path"/* ]]; then
+    echo "Refusing repository-local UV_PROJECT_ENVIRONMENT: $UV_PROJECT_ENVIRONMENT" >&2
+    return 2
+  fi
   export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
   mkdir -p "$(dirname "$UV_PROJECT_ENVIRONMENT")"
 }
@@ -112,6 +119,11 @@ PY
     shift || true
     exec "$SCRIPT_DIR/sanity.sh" "$@"
     ;;
+  serve)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python -m live_evidence serve "$@"
+    ;;
   doctor)
     shift || true
     prepare_python_environment
@@ -121,7 +133,7 @@ PY
     shift || true
     consent_seen="false"
     for arg in "$@"; do
-      if [[ "$arg" == "--consent-confirmed" ]]; then
+      if [[ "$arg" == "--consent-confirmed" || "$arg" == "--help" || "$arg" == "-h" ]]; then
         consent_seen="true"
         break
       fi
@@ -138,6 +150,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_adversarial.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-synthetic-interviews)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_synthetic_interviews.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-interview-loop)
     shift || true
     prepare_python_environment
@@ -152,6 +169,11 @@ PY
     shift || true
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/eval_ui_surf_controls.py" "$SCRIPT_DIR" "$@"
+    ;;
+  eval-ui-card-selection)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_ui_card_selection.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-real-stt-window)
     shift || true
@@ -189,77 +211,145 @@ PY
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_session_policy.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-debugger-lane)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_debugger_lane.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-rubric-coverage)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_rubric_coverage.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-rehearsal-loop)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_rehearsal_loop.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-g2i-benchmark-pack)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_g2i_benchmark_pack.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-ui-insights)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_ui_insights_surf.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-fast-solver)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_fast_solver.py" "$SCRIPT_DIR" "$@"
     ;;
+  test-fast-solver-churn-oracle)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev pytest \
+      "$SCRIPT_DIR/tests/test_fast_solver_churn_oracle.py" \
+      "$SCRIPT_DIR/tests/test_state_card_fence.py" "$@"
+    ;;
   eval-provenance)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_provenance.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-precomputed-oracles)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/validate_precomputed_oracles.py" "$SCRIPT_DIR" "$@"
+    ;;
+  eval-drivewealth-oracle-memory-graph)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/compile_drivewealth_oracle_pack.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-action-lane)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_action_lane.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-rubric-author)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_rubric_author.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-speaker-turns)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_speaker_turns.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-briefing-pack)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_briefing_pack.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-prep-pack)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/validate_prep_pack.py" "$SCRIPT_DIR" "$@"
+    ;;
+  load-prep-pack)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/load_prep_pack.py" "$SCRIPT_DIR" "$@"
+    ;;
+  eval-curate-client-integration)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_curate_client_live_evidence.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-meeting-campaign)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/run_meeting_campaign.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-transcript-meeting)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_transcript_meeting.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-surface-selection)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_surface_selection.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-relevance-filter)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_relevance_filter.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-compose-render)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_compose_render.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-review-dossier)
-    shift
+    shift || true
+    prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_review_dossier.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-revision-fence)
     shift || true
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_revision_fence.py" "$SCRIPT_DIR" "$@"
+    ;;
+  eval-adjacent-question-concurrency)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev pytest \
+      "$SCRIPT_DIR/tests/test_state_card_fence.py::test_explicit_adjacent_question_marker_allocates_new_question" \
+      "$SCRIPT_DIR/tests/test_state_card_fence.py::test_superseded_question_completion_stays_behind_active_card" \
+      "$SCRIPT_DIR/tests/test_fast_path_context.py::test_fast_solver_journals_captured_session_context" \
+      -q
+    ;;
+  eval-miss-audit)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_miss_audit.py" "$SCRIPT_DIR" "$@"
+    ;;
+  eval-frame-evidence)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_frame_evidence.py" "$SCRIPT_DIR" "$@"
     ;;
   eval-salient-fact-memory)
     shift || true

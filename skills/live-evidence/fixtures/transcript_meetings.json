@@ -16,11 +16,76 @@
         {"speaker": "Client", "text": "That covers our side. Do you have any questions for us?"}
       ],
       "oracle": [
-        {"id": "brief-operationalize", "family": "briefing", "point_id": "operationalization", "match_tokens": ["operationalize", "pilots", "production"]},
-        {"id": "brief-agentic", "family": "briefing", "point_id": "agentic-verification", "match_tokens": ["agentic", "multi-agent", "orchestration"]},
-        {"id": "brief-evals", "family": "briefing", "point_id": "verification-differentiator", "match_tokens": ["evaluation", "testing", "hallucinations"]},
-        {"id": "brief-compliance", "family": "briefing", "point_id": "governance-compliance", "match_tokens": ["regulated", "compliance", "audit"]},
-        {"id": "brief-why-me", "family": "briefing", "point_id": "why-me-question", "match_tokens": ["questions", "for", "us"]}
+        {
+          "id": "brief-operationalize",
+          "family": "briefing",
+          "point_id": "operationalization",
+          "match_tokens": ["operationalize", "pilots", "production"],
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "briefing_opportunity",
+            "answerability": "surface_prepared_point",
+            "required_skill_lanes": ["briefing"],
+            "expected_response": "briefing_point",
+            "publication_gate": "visible_when_trigger_terms_match"
+          }
+        },
+        {
+          "id": "brief-agentic",
+          "family": "briefing",
+          "point_id": "agentic-verification",
+          "match_tokens": ["agentic", "multi-agent", "orchestration"],
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "briefing_opportunity",
+            "answerability": "surface_prepared_point",
+            "required_skill_lanes": ["briefing"],
+            "expected_response": "briefing_point",
+            "publication_gate": "visible_when_trigger_terms_match"
+          }
+        },
+        {
+          "id": "brief-evals",
+          "family": "briefing",
+          "point_id": "verification-differentiator",
+          "match_tokens": ["evaluation", "testing", "hallucinations"],
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "briefing_opportunity",
+            "answerability": "surface_prepared_point",
+            "required_skill_lanes": ["briefing"],
+            "expected_response": "briefing_point",
+            "publication_gate": "visible_when_trigger_terms_match"
+          }
+        },
+        {
+          "id": "brief-compliance",
+          "family": "briefing",
+          "point_id": "governance-compliance",
+          "match_tokens": ["regulated", "compliance", "audit"],
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "briefing_opportunity",
+            "answerability": "surface_prepared_point",
+            "required_skill_lanes": ["briefing"],
+            "expected_response": "briefing_point",
+            "publication_gate": "visible_when_trigger_terms_match"
+          }
+        },
+        {
+          "id": "brief-why-me",
+          "family": "briefing",
+          "point_id": "why-me-question",
+          "match_tokens": ["questions", "for", "us"],
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "briefing_opportunity",
+            "answerability": "surface_prepared_point",
+            "required_skill_lanes": ["briefing"],
+            "expected_response": "briefing_point",
+            "publication_gate": "visible_when_trigger_terms_match"
+          }
+        }
       ]
     },
     {
@@ -37,9 +102,38 @@
         {"speaker": "Lead", "text": "Perfect. That is all I had for the standup today, thanks everyone."}
       ],
       "oracle": [
-        {"id": "memory-hard-rules", "family": "memory", "question": "What are the hard read-first rules in the Sparta project memory index?", "match_tokens": ["hard", "rules", "sparta"], "expected_answer": "The read-first hard rules from the SPARTA Project Memory Index: never skim a SKILL.md — read the entire SKILL.md cover to cover before running any command, treated as non-negotiable constraints learned the hard way."}
+        {
+          "id": "memory-hard-rules",
+          "family": "memory",
+          "question": "What are the hard read-first rules in the Sparta project memory index?",
+          "match_tokens": ["hard", "rules", "sparta"],
+          "expected_answer": "The read-first hard rules from the SPARTA Project Memory Index: never skim a SKILL.md — read the entire SKILL.md cover to cover before running any command, treated as non-negotiable constraints learned the hard way.",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "project_memory_question",
+            "answerability": "answerable",
+            "required_skill_lanes": ["memory"],
+            "expected_response": "source_bound_evidence_card",
+            "publication_gate": "visible_after_memory_source"
+          }
+        },
+        {
+          "id": "research-sparta-version",
+          "family": "research",
+          "question": "What is the latest released version of the MITRE SPARTA space attack matrix?",
+          "match_tokens": ["latest", "version", "sparta"],
+          "expected_answer": "A bounded external-research action should be proposed for approval, because the current released version of MITRE SPARTA is time-sensitive external information the local memory and code lanes cannot authoritatively answer.",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "current_external_fact_check",
+            "answerability": "requires_manual_external_research",
+            "required_skill_lanes": ["brave-search"],
+            "expected_response": "approval_gated_action_candidate",
+            "publication_gate": "hidden_until_external_research_approved"
+          }
+        }
       ],
-      "oracle_note": "Gates on the memory-recall card surfaced through the full live audio path (the reliably-green core capability). The second spoken question (MITRE version) is kept in the transcript so the assistant is monitoring a realistic multi-question meeting, but the research-proposal family is NOT gated here because its live-audio detection is subject to the STT single-final segmentation flake; research auto-proposal is gated deterministically (STT-free) by eval_action_lane."
+      "oracle_note": "Both answer-needed turns are now explicit in the pre-run oracle. The MITRE version question is approval-gated external research: the live card path should not invent a current version from local memory."
     },
     {
       "meeting_id": "sparta-standup-invented",
@@ -61,21 +155,45 @@
           "family": "memory",
           "question": "What are the hard read-first rules in the Sparta project memory index?",
           "match_tokens": ["hard", "rules", "sparta"],
-          "expected_answer": "The read-first hard rules from the SPARTA Project Memory Index: never skim a SKILL.md — read the entire SKILL.md cover to cover before running any command, because skimming caused a long failure spiral; treat these as non-negotiable constraints learned the hard way."
+          "expected_answer": "The read-first hard rules from the SPARTA Project Memory Index: never skim a SKILL.md — read the entire SKILL.md cover to cover before running any command, because skimming caused a long failure spiral; treat these as non-negotiable constraints learned the hard way.",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "project_memory_question",
+            "answerability": "answerable",
+            "required_skill_lanes": ["memory"],
+            "expected_response": "source_bound_evidence_card",
+            "publication_gate": "visible_after_memory_source"
+          }
         },
         {
           "id": "research-sparta-version",
           "family": "research",
           "question": "What is the latest released version of the MITRE SPARTA space attack matrix?",
           "match_tokens": ["latest", "version", "sparta"],
-          "expected_answer": "A bounded external-research action should be proposed for approval, because the current released version of MITRE SPARTA is time-sensitive external information the local memory and code lanes cannot authoritatively answer."
+          "expected_answer": "A bounded external-research action should be proposed for approval, because the current released version of MITRE SPARTA is time-sensitive external information the local memory and code lanes cannot authoritatively answer.",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "current_external_fact_check",
+            "answerability": "requires_manual_external_research",
+            "required_skill_lanes": ["brave-search"],
+            "expected_response": "approval_gated_action_candidate",
+            "publication_gate": "hidden_until_external_research_approved"
+          }
         },
         {
           "id": "code-qra-generation",
           "family": "code",
           "question": "Where in the Sparta pipeline source code is QRA generation implemented?",
           "match_tokens": ["qra", "generation", "pipeline"],
-          "expected_answer": "A card citing the specific module/file in the sparta repository that builds the question-reasoning-answer (QRA) pairs, with a concrete source path from the current checkout."
+          "expected_answer": "A card citing the specific module/file in the sparta repository that builds the question-reasoning-answer (QRA) pairs, with a concrete source path from the current checkout.",
+          "route_plan": {
+            "determined_from": "pre_run_transcript_oracle",
+            "category": "repo_code_question",
+            "answerability": "answerable",
+            "required_skill_lanes": ["ripgrep"],
+            "expected_response": "source_bound_evidence_card",
+            "publication_gate": "visible_after_repo_source"
+          }
         }
       ]
     }

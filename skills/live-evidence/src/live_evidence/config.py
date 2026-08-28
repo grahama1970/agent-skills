@@ -15,6 +15,10 @@ import yaml
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8799
+DEFAULT_BACKEND_URL = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}"
+
 load_dotenv(override=False)
 
 
@@ -98,8 +102,8 @@ class AppSettings(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     skill_root: Path
-    host: str = "127.0.0.1"
-    port: int = Field(default=8765, ge=1, le=65_535)
+    host: str = DEFAULT_HOST
+    port: int = Field(default=DEFAULT_PORT, ge=1, le=65_535)
     data_dir: Path
     profile_path: Path
     repo_roots: list[Path] = Field(default_factory=list)
@@ -159,8 +163,8 @@ class AppSettings(BaseModel):
 
         return cls(
             skill_root=root,
-            host=host or os.getenv("LIVE_EVIDENCE_HOST", "127.0.0.1"),
-            port=port or int(os.getenv("LIVE_EVIDENCE_PORT", "8765")),
+            host=host or os.getenv("LIVE_EVIDENCE_HOST", DEFAULT_HOST),
+            port=port or int(os.getenv("LIVE_EVIDENCE_PORT", str(DEFAULT_PORT))),
             data_dir=data_dir,
             profile_path=profile_path,
             repo_roots=repo_roots,

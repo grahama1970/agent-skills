@@ -48,6 +48,24 @@ CHATTERBOX_LOGS = Path.home() / "workspace" / "experiments" / "chatterbox" / "lo
 OUT_ROOT = Path("/mnt/storage12tb/skills/live-evidence/meeting-campaign")
 
 
+def require_precomputed_oracles(root: Path = SKILL) -> bool:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SKILL / "scripts" / "validate_precomputed_oracles.py"),
+            str(root),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    print(result.stdout, end="")
+    if result.returncode != 0:
+        print(result.stderr, end="", file=sys.stderr)
+        return False
+    return True
+
+
 def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
     """Render each line with the LIVE chatterbox server; concat with sox."""
 
@@ -191,6 +209,59 @@ def run_session(session: dict[str, Any], out_dir: Path) -> dict[str, Any]:
     return score_session(session, rows, invocation, out_dir)
 
 
+def _card_visible_blob(card_payload: dict[str, Any]) -> str:
+    """Text a reviewer can inspect on an emitted card."""
+
+    parts = [
+        card_payload.get("query"),
+        card_payload.get("question"),
+        card_payload.get("answer"),
+        card_payload.get("evidence"),
+        card_payload.get("proof"),
+        card_payload.get("talking_point"),
+    ]
+    for source in card_payload.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        parts.extend([
+            source.get("label"),
+            source.get("path"),
+            source.get("excerpt"),
+        ])
+    return " ".join(str(part) for part in parts if part).lower()
+
+
+def _card_lanes(card_payload: dict[str, Any]) -> set[str]:
+    lanes = {str(source.get("lane")) for source in card_payload.get("sources") or []}
+    lanes.update(str(lane) for lane in card_payload.get("lanes") or [])
+    return lanes
+
+
+def _card_matches_family(card_payload: dict[str, Any], family: str) -> bool:
+    lanes = _card_lanes(card_payload)
+    if family == "memory":
+        return "memory" in lanes
+    if family == "code":
+        return bool(lanes & {"ripgrep", "code"}) and any(
+            source.get("path") for source in card_payload.get("sources") or []
+        )
+    return True
+
+
+def _row_created_at(row: dict[str, Any]) -> float | None:
+    raw = None
+    payload = row.get("payload")
+    if isinstance(payload, dict):
+        raw = payload.get("created_at")
+    raw = raw or row.get("ts")
+    if not raw:
+        return None
+    try:
+        return datetime.fromisoformat(str(raw).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
 def score_session(session: dict[str, Any], rows: list[dict[str, Any]],
                   invocation: dict[str, Any], out_dir: Path) -> dict[str, Any]:
     transcript = [r["payload"] for r in rows if r.get("kind") == "transcript"]
@@ -217,13 +288,23 @@ def score_session(session: dict[str, Any], rows: list[dict[str, Any]],
                 if onset is None:
                     onset = r
                 question_events.append(r)
+        token_matched_card = None
         matched_card = None
+        onset_at = _row_created_at(onset) if onset is not None else None
         for r in cards:
-            blob = (str(r["payload"].get("query") or "") + " "
-                    + str(r["payload"].get("question") or "")).lower()
+            card_at = _row_created_at(r)
+            if onset_at is not None and card_at is not None and card_at < onset_at:
+                continue
+            payload = r["payload"]
+            blob = _card_visible_blob(payload)
             if sum(1 for t in tokens if t in blob) >= 2:
-                matched_card = r
-                break
+                if token_matched_card is None:
+                    token_matched_card = r
+                if _card_matches_family(payload, expected["family"]):
+                    matched_card = r
+                    break
+        if matched_card is None:
+            matched_card = token_matched_card
         family = expected["family"]
         family_ok = False
         detail = ""
@@ -244,12 +325,8 @@ def score_session(session: dict[str, Any], rows: list[dict[str, Any]],
             )
             detail = "research proposal present" if family_ok else "no research proposal"
         elif matched_card is not None:
-            lanes = {str(s.get("lane")) for s in matched_card["payload"].get("sources") or []}
-            if family == "memory":
-                family_ok = "memory" in lanes
-            elif family == "code":
-                family_ok = bool(lanes & {"ripgrep", "code"}) and any(
-                    s.get("path") for s in matched_card["payload"].get("sources") or [])
+            lanes = _card_lanes(matched_card["payload"])
+            family_ok = _card_matches_family(matched_card["payload"], family)
             detail = f"lanes={sorted(lanes)}"
         latency = None
         latency_from_speech_end = None
@@ -302,11 +379,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("skill_root", nargs="?")
     parser.add_argument("--session", action="append", default=None)
+    parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     campaign.ROOT = SKILL
+    if not require_precomputed_oracles(SKILL):
+        return 1
     spec = json.loads((SKILL / "fixtures" / "meeting_campaign.json").read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_root = OUT_ROOT / stamp
+    out_root = Path(args.output_dir).expanduser() if args.output_dir else OUT_ROOT / stamp
     reports = []
     for session in spec["sessions"]:
         if args.session and session["session_id"] not in args.session:

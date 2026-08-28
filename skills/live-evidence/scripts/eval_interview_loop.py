@@ -252,14 +252,60 @@ def main() -> int:
                 )
                 print("new code evidence card: PASS")
 
+                # Unsupported cards are HELD, never displayed (95449048bb).
+                # Fail-closed proof is the reducer decision, correlated to THIS
+                # question: a pre-existing held decision must not satisfy the
+                # assertion (reviewer finding: false-pass on stale decisions).
+                baseline_decisions = {
+                    d["decision_id"] for d in client.get("/api/cards/publications").json()
+                }
+                baseline_card_ids = {
+                    c["card_id"] for c in client.get("/api/state").json()["cards"]
+                }
                 post_turn(
                     client,
                     speaker="interviewer",
                     sequence=4,
                     text="How should quasar checksum banana-scheduler prove an unrelated algorithm?",
                 )
-                state = wait_for_cards(client, 3)
-                assert_card(state["cards"][0], status="insufficient")
+                deadline = time.monotonic() + 8.0
+                held = None
+                decisions: list[dict[str, Any]] = []
+                while time.monotonic() < deadline:
+                    decisions = client.get("/api/cards/publications").json()
+                    held = next(
+                        (
+                            d
+                            for d in decisions
+                            if d.get("status") == "held"
+                            and d.get("decision_id") not in baseline_decisions
+                            and "insufficient_card_not_publishable"
+                            in (d.get("reason_codes") or [])
+                        ),
+                        None,
+                    )
+                    if held is not None:
+                        break
+                    time.sleep(0.25)
+                if held is None:
+                    raise RuntimeError(
+                        f"no NEW held insufficient publication decision; decisions={decisions}"
+                    )
+                state = client.get("/api/state").json()
+                # Causal rail assertions (not count-based): the held candidate
+                # itself must be absent, and the prior cards must survive.
+                rail_card_ids = {c["card_id"] for c in state["cards"]}
+                rail_question_ids = {c.get("question_id") for c in state["cards"]}
+                if held["card_id"] in rail_card_ids:
+                    raise RuntimeError("held insufficient card leaked to the rail")
+                if held.get("question_id") and held["question_id"] in rail_question_ids:
+                    raise RuntimeError(
+                        "unsupported question published under another card"
+                    )
+                if not baseline_card_ids.issubset(rail_card_ids):
+                    raise RuntimeError(
+                        f"prior supported cards vanished: {baseline_card_ids - rail_card_ids}"
+                    )
                 print("unsupported question fail-closed: PASS")
 
                 bounded_topics = [
@@ -305,7 +351,9 @@ def main() -> int:
                         sequence=10 + index,
                         text=question,
                     )
-                    wait_for_cards(client, min(5, 4 + index))
+                    # Held insufficient card never reached the rail (95449048bb),
+                    # so the pre-loop baseline is 2 visible cards, not 3.
+                    wait_for_cards(client, min(5, 3 + index))
                 final_state = client.get("/api/state").json()
                 cards = final_state.get("cards") or []
                 if len(cards) > 5:

@@ -80,14 +80,19 @@ readiness from live-audio readiness.
 ## Run the bounded demo
 
 ```bash
-./run.sh serve --open-browser
-./run.sh replay fixtures/interview.jsonl
+./run.sh serve --port 8799 --open-browser
+# If 8799 is occupied, explicitly scan upward and read local/server.json.
+./run.sh serve --port 8799 --auto-port --open-browser
+./run.sh replay fixtures/interview.jsonl --backend-url http://127.0.0.1:8799
 ```
 
 ## Run live
 
 ```bash
-./run.sh listen --mode microphone --consent-confirmed
+./run.sh listen --mode microphone \
+  --backend-url http://127.0.0.1:8799 \
+  --device cpu \
+  --consent-confirmed
 ```
 
 For a Google Meet/Zoom/Teams interview on Linux, route meeting audio to a

@@ -11,7 +11,7 @@ the deterministic part is the fixture program, not the machinery.
 3.  tampered proofValid               -> independent validator rejects
 4.  stopped-frame/request mismatch    -> verified_stop_matches returns nothing
 5.  repository digest mismatch        -> rejected before any capture
-6.  stale question revision           -> CAS fence discards, journaled
+6.  stale question revision           -> supported proof can replace insufficient state
 7.  policy-blocked request            -> zero subprocess calls
 8.  secret-shaped local               -> redacted end to end
 9.  duplicate request digest          -> no repeated effect
@@ -196,9 +196,10 @@ def main() -> int:
         gui["result"] == "blocked_missing_capability" and gui["subprocess_calls"] == 0,
     )
 
-    # 6. stale question revision: the shared CAS publication fence discards a
-    # debugger card for revision N once N+1 is active, and journals it.
-    async def stale_fence() -> tuple[object, bool]:
+    # 6. stale question revision: a source-backed debugger proof for revision N
+    # may replace a newer insufficient state card for the same semantic item,
+    # but must still leave only one visible winner.
+    async def stale_fence() -> tuple[object, bool, int | None, str | None]:
         from live_evidence.config import AppSettings, InterviewProfile
         from live_evidence.models import CardStatus, EvidenceCard, EvidenceSource, RetrievalLane
         from live_evidence.state import RuntimeState
@@ -206,7 +207,20 @@ def main() -> int:
         state = RuntimeState(AppSettings.from_env(), InterviewProfile(name="debugger-eval"))
         await state.start_session(consent_confirmed=True)
         question_id, stale_revision = await state.revise_question("why is the total wrong?")
-        await state.revise_question("why is the total wrong at 50% discount?")
+        _, current_revision = await state.revise_question("why is the total wrong at 50% discount?")
+        insufficient = EvidenceCard(
+            query="why is the total wrong at 50% discount?",
+            thread="Debugger",
+            talking_point="No source-bound support surfaced yet.",
+            proof="No source-bound support surfaced yet.",
+            qualifier="needs evidence",
+            confidence=0.0,
+            status=CardStatus.INSUFFICIENT,
+            sources=[],
+            question_id=question_id,
+            question_revision=current_revision,
+        )
+        await state.publish_card_fenced(insufficient)
         card = EvidenceCard(
             query="why is the total wrong?",
             thread="Debugger",
@@ -227,16 +241,20 @@ def main() -> int:
         published = await state.publish_card_fenced(card)
         snapshot = await state.snapshot()
         active_cards = [c for c in snapshot.cards if c.question_id == question_id]
-        return published, bool(active_cards)
+        winner = active_cards[0] if active_cards else None
+        return published, len(active_cards) == 1, (
+            winner.question_revision if winner else None
+        ), (winner.status.value if winner else None)
 
     try:
-        published, active = asyncio.run(stale_fence())
+        published, one_visible, revision, status = asyncio.run(stale_fence())
         check(
-            "stale-revision debugger card discarded by the CAS fence",
-            published is None and active is False,
+            "source-backed stale debugger proof replaces newer insufficient state card",
+            published is not None and one_visible and revision == 1 and status == "supported",
+            f"published={published is not None} one_visible={one_visible} revision={revision} status={status}",
         )
     except Exception as exc:  # pragma: no cover
-        check("stale-revision debugger card discarded by the CAS fence", False, f"{type(exc).__name__}: {exc}")
+        check("source-backed stale debugger proof replaces newer insufficient state card", False, f"{type(exc).__name__}: {exc}")
 
     print()
     if FAILURES:

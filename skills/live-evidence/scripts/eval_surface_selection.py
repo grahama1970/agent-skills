@@ -34,6 +34,8 @@ import run_g2i_campaign as campaign
 import eval_transcript_meeting as judge_mod
 from live_evidence.config import AppSettings, InterviewProfile
 from live_evidence.models import EvidenceSource, Freshness, RetrievalLane
+from live_evidence.query_bounds import bounded_query
+from live_evidence.surface_policy import should_force_surface_source_backed_code
 from live_evidence.surface_selector import SurfaceSelector
 
 FAILURES: list[str] = []
@@ -80,6 +82,40 @@ def rung_selector_discrimination(key: str) -> None:
     check("selector floats the answering memory doc above ripgrep noise",
           bool(applied and top_is_memory),
           f"applied={applied} top={ordered[0].lane.value if ordered else None}")
+
+
+def rung_source_backed_code_override() -> None:
+    """A declarative coding-problem fragment must still surface source-backed evidence."""
+
+    raw = (
+        "Correct. So to make it clear, let me paste in the sample in terms of "
+        "looking for the minimum number of parentheses. We remove the last "
+        "closing parenthesis because there is no corresponding opening. "
+        "An opening parenthesis always has to come before a closing one, right?"
+    )
+    query = bounded_query(raw, None)
+    sources = [
+        _src(
+            RetrievalLane.RIPGREP,
+            "live-evidence-proof/remove_invalid_parentheses.py",
+            "Remove the minimum number of parentheses so the string is valid.",
+            path="/tmp/live-evidence-proof/remove_invalid_parentheses.py",
+        )
+    ]
+    check(
+        "source-backed declarative code prompt forces surface",
+        should_force_surface_source_backed_code(query, sources),
+        f"query={query}",
+    )
+    partial_query = (
+        "if we see an opening parentheses we know we have seen one and then "
+        "we see another closing parentheses"
+    )
+    check(
+        "source-backed partial parentheses walkthrough forces surface",
+        should_force_surface_source_backed_code(partial_query, sources),
+        f"query={partial_query}",
+    )
 
 
 def rung_live_surfacing(key: str) -> None:
@@ -140,6 +176,7 @@ def main() -> int:
     if not Path(SPARTA).is_dir():
         print("surface selection: INFRA_BLOCKED (sparta repo not present)")
         return 0
+    rung_source_backed_code_override()
     rung_selector_discrimination(key)
     rung_live_surfacing(key)
     print()

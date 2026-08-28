@@ -185,6 +185,67 @@ class CardStatus(StrEnum):
     INSUFFICIENT = "insufficient"
 
 
+class PublicationStatus(StrEnum):
+    """Reducer outcome for a candidate card."""
+
+    VISIBLE = "visible"
+    HELD = "held"
+    SUPERSEDED = "superseded"
+
+
+class FrameChangeReason(StrEnum):
+    """Why a screen frame was admitted as evidence."""
+
+    INITIAL = "initial"
+    VISUAL_CHANGE = "visual_change"
+    MANUAL_MARKER = "manual_marker"
+
+
+class FrameRetention(StrEnum):
+    """How long a captured screen frame may be retained."""
+
+    SESSION_ONLY = "session_only"
+    REDACTED = "redacted"
+    EXPLICIT_RETAIN = "explicit_retain"
+
+
+class CardPublicationDecision(BaseModel):
+    """Auditable output of the card-publication reducer.
+
+    This is the state-machine receipt that logical agents coordinate through:
+    answerers produce candidates, reviewers/policy decide, and only a VISIBLE
+    decision mutates the user-facing card list.
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    schema_id: Literal["live_evidence.card_publication_decision.v1"] = Field(
+        default="live_evidence.card_publication_decision.v1",
+        validation_alias="schema",
+        serialization_alias="schema",
+    )
+    decision_id: str = Field(default_factory=lambda: uuid4().hex, min_length=8)
+    decided_at: datetime = Field(default_factory=utc_now)
+    status: PublicationStatus
+    reason_codes: list[str] = Field(min_length=1, max_length=12)
+    card_id: str = Field(min_length=8)
+    question_id: str | None = Field(default=None, min_length=8, max_length=64)
+    question_revision: int = Field(ge=0)
+    answer_revision: int = Field(ge=0)
+    transcript_refs: list[str] = Field(default_factory=list, max_length=16)
+    source_refs: list[str] = Field(default_factory=list, max_length=16)
+    frame_refs: list[str] = Field(default_factory=list, max_length=16)
+    rank_components: dict[str, int | float | str | bool] = Field(default_factory=dict)
+    visible_card_ids: list[str] = Field(default_factory=list, max_length=100)
+
+    @field_validator("decided_at")
+    @classmethod
+    def validate_decision_time(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("decided_at must be timezone-aware")
+        return value.astimezone(timezone.utc)
+
+
 class TranscriptEvent(BaseModel):
     """Validated transcript update from one speaker channel."""
 
@@ -238,6 +299,59 @@ class TranscriptEvent(BaseModel):
         if self.start_ms is not None and self.end_ms is not None and self.end_ms < self.start_ms:
             raise ValueError("end_ms must be greater than or equal to start_ms")
         return self
+
+
+class FrameRegion(BaseModel):
+    """One bounded region inside a captured screen frame."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    x: int = Field(ge=0)
+    y: int = Field(ge=0)
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+
+
+class FrameEvidence(BaseModel):
+    """First-class timecoded screen evidence.
+
+    Frame events are optional: audio-only cards should not depend on them. When
+    a card does depend on a frame, it must reference the exact frame id and
+    content hash rather than a nearby timestamp.
+    """
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
+
+    schema_id: Literal["live_evidence.frame_evidence.v1"] = Field(
+        default="live_evidence.frame_evidence.v1",
+        validation_alias="schema",
+        serialization_alias="schema",
+    )
+    frame_id: str = Field(min_length=8, max_length=96)
+    captured_at: datetime = Field(default_factory=utc_now)
+    source: str = Field(min_length=1, max_length=160)
+    content_sha256: str = Field(min_length=64, max_length=64)
+    change_reason: FrameChangeReason
+    retention: FrameRetention = FrameRetention.SESSION_ONLY
+    path: str | None = Field(default=None, max_length=2_000)
+    transcript_event_ids: list[str] = Field(default_factory=list, max_length=16)
+    region: FrameRegion | None = None
+    observations: list[str] = Field(default_factory=list, max_length=8)
+
+    @field_validator("captured_at")
+    @classmethod
+    def validate_frame_time(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("captured_at must be timezone-aware")
+        return value.astimezone(timezone.utc)
+
+    @field_validator("content_sha256")
+    @classmethod
+    def validate_sha256(cls, value: str) -> str:
+        normalized = value.lower()
+        if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
+            raise ValueError("content_sha256 must be a lowercase sha256 hex digest")
+        return normalized
 
 
 class EventSpan(BaseModel):
@@ -429,6 +543,19 @@ class ClarificationItem(BaseModel):
     answer_source_event_ids: list[str] = Field(default_factory=list, max_length=8)
 
 
+class SolutionDeckPoint(BaseModel):
+    """One solver-authored glance card point.
+
+    The browser may render these directly. It must not reverse-engineer deck
+    structure from Markdown prose when this typed field is present.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=80)
+    trigger: str = Field(min_length=1, max_length=180)
+
+
 class EvidenceCard(BaseModel):
     """Compact human-facing evidence prompt derived only from selected sources."""
 
@@ -452,6 +579,8 @@ class EvidenceCard(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     status: CardStatus
     sources: list[EvidenceSource] = Field(default_factory=list, max_length=8)
+    solution_deck: list[SolutionDeckPoint] = Field(default_factory=list, max_length=4)
+    frame_refs: list[str] = Field(default_factory=list, max_length=8)
     lanes: list[RetrievalLane] = Field(default_factory=list)
     clarifications: list[ClarificationItem] = Field(default_factory=list, max_length=6)
     # Question identity, so an answer can be fenced against the question that

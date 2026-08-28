@@ -90,6 +90,34 @@ def test_stabilized_and_final_duplicate_is_suppressed() -> None:
     assert second.duplicate is True
 
 
+def test_suppressed_stabilized_candidate_can_be_forgotten_for_final() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+
+    stabilized = TranscriptEvent(
+        event_id="event-stable",
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.STABILIZED,
+        text="How would you remove the minimum invalid parentheses?",
+        sequence=1,
+    )
+    final = TranscriptEvent(
+        event_id="event-final",
+        speaker=Speaker.INTERVIEWER,
+        kind=TranscriptKind.FINAL,
+        text="How would you remove the minimum invalid parentheses?",
+        sequence=2,
+    )
+
+    first = builder.ingest(stabilized)
+    assert first.candidate is not None
+    builder.forget(first.candidate.fingerprint)
+
+    second = builder.ingest(final)
+
+    assert second.candidate is not None
+    assert second.duplicate is False
+
+
 def test_progressive_stt_restatement_extends_instead_of_repeating() -> None:
     builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
 
@@ -113,6 +141,31 @@ def test_sequence_gap_prevents_unrelated_join() -> None:
     assert (
         builder.ingest(turn(10, "you remove the minimum invalid parentheses?")).candidate
         is None
+    )
+
+
+def test_single_turn_imperative_code_task_is_its_own_candidate() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+
+    first = builder.ingest(
+        turn(1, "Write a function that returns the two numbers in a list summing to a target.")
+    )
+    second = builder.ingest(
+        turn(2, "Why is string concatenation in a loop quadratic, and what is the fix?")
+    )
+    third = builder.ingest(turn(3, "Implement binary search and name its failure modes on rotated arrays."))
+
+    assert first.candidate is not None
+    assert first.candidate.normalized_question == (
+        "Write a function that returns the two numbers in a list summing to a target."
+    )
+    assert second.candidate is not None
+    assert second.candidate.normalized_question == (
+        "Why is string concatenation in a loop quadratic, and what is the fix?"
+    )
+    assert third.candidate is not None
+    assert third.candidate.normalized_question == (
+        "Implement binary search and name its failure modes on rotated arrays."
     )
 
 

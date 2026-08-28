@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import shutil
+import socket
 import threading
 import time
 import webbrowser
@@ -17,13 +18,14 @@ import uvicorn
 from loguru import logger
 
 from .api import create_app
-from .config import AppSettings
+from .config import DEFAULT_BACKEND_URL, DEFAULT_HOST, DEFAULT_PORT, AppSettings
 from .listener import ListenMode, ListenerOptions, LiveListener
 from .models import (
     DoctorCheck,
     DoctorReport,
     ManualSearchRequest,
     RetrievalLane,
+    SessionStatus,
     Speaker,
     TranscriptEvent,
 )
@@ -38,31 +40,88 @@ app = typer.Typer(
 
 @app.command()
 def serve(
-    host: Annotated[str, typer.Option(help="Bind host.")] = "127.0.0.1",
-    port: Annotated[int, typer.Option(min=1, max=65_535, help="Bind port.")] = 8765,
+    host: Annotated[str, typer.Option(help="Bind host.")] = DEFAULT_HOST,
+    port: Annotated[int, typer.Option(min=1, max=65_535, help="Bind port.")] = DEFAULT_PORT,
     open_browser: Annotated[bool, typer.Option("--open-browser/--no-browser")] = False,
+    auto_port: Annotated[
+        bool,
+        typer.Option("--auto-port", help="If the requested port is occupied, scan upward for a free one."),
+    ] = False,
 ) -> None:
     """Run the FastAPI service and built React UI."""
 
-    settings = AppSettings.from_env(host=host, port=port)
+    selected_port = _select_serve_port(host, port, auto_port=auto_port)
+    settings = AppSettings.from_env(host=host, port=selected_port)
     if host not in {"127.0.0.1", "localhost", "::1"} and not settings.allow_remote_bind:
         raise typer.BadParameter(
             "non-loopback binds require LIVE_EVIDENCE_ALLOW_REMOTE_BIND=true"
         )
+    _write_server_receipt(settings, host, selected_port)
     application = create_app(settings)
+    url = f"http://{host}:{selected_port}"
+    typer.echo(f"Live Evidence serving on {url}")
+    if selected_port != port:
+        typer.echo(f"requested port {port} was occupied; selected {selected_port}")
     if open_browser:
         threading.Thread(
             target=_open_browser_after_delay,
-            args=(f"http://{host}:{port}",),
+            args=(url,),
             daemon=True,
         ).start()
-    uvicorn.run(application, host=host, port=port, log_level="info")
+    uvicorn.run(application, host=host, port=selected_port, log_level="info")
+
+
+def _host_for_socket(host: str) -> str:
+    return "127.0.0.1" if host == "localhost" else host
+
+
+def _port_is_free(host: str, port: int) -> bool:
+    family = socket.AF_INET6 if ":" in host else socket.AF_INET
+    with socket.socket(family, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((_host_for_socket(host), port))
+        except OSError:
+            return False
+    return True
+
+
+def _select_serve_port(host: str, port: int, *, auto_port: bool, scan_limit: int = 100) -> int:
+    if _port_is_free(host, port):
+        return port
+    if not auto_port:
+        raise typer.BadParameter(
+            f"port {port} is occupied; stop that service, pass --port <free-port>, or pass --auto-port"
+        )
+    for candidate in range(port + 1, min(65_535, port + scan_limit) + 1):
+        if _port_is_free(host, candidate):
+            return candidate
+    raise typer.BadParameter(f"no free port found from {port} through {min(65_535, port + scan_limit)}")
+
+
+def _write_server_receipt(settings: AppSettings, host: str, port: int) -> None:
+    local_dir = settings.skill_root / "local"
+    local_dir.mkdir(exist_ok=True)
+    (local_dir / "server.json").write_text(
+        json.dumps(
+            {
+                "schema": "live_evidence.server_receipt.v1",
+                "host": host,
+                "port": port,
+                "backend_url": f"http://{host}:{port}",
+                "written_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 @app.command()
 def listen(
     mode: Annotated[ListenMode, typer.Option(help="Audio ingress mode.")] = ListenMode.MICROPHONE,
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
     consent_confirmed: Annotated[
         bool,
         typer.Option("--consent-confirmed", help="Acknowledge required recording consent/policy."),
@@ -103,15 +162,22 @@ def listen(
 @app.command()
 def replay(
     transcript_file: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)],
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
     delay_s: Annotated[float, typer.Option(min=0.0, max=30.0)] = 1.2,
+    reset_session: Annotated[
+        bool,
+        typer.Option("--reset-session", help="Explicitly clear the current session before replay."),
+    ] = False,
 ) -> None:
-    """Replay validated JSONL transcript events into the API."""
+    """Replay validated JSONL transcript events into the API.
+
+    Default behavior attaches to an active session. A replay fixture must not
+    erase a live HUD unless the caller explicitly requests `--reset-session`.
+    """
 
     timeout = httpx.Timeout(connect=2.0, read=10.0, write=5.0, pool=2.0)
     with httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout) as client:
-        start = client.post("/api/session/start", json={"consent_confirmed": False})
-        start.raise_for_status()
+        _prepare_replay_session(client, reset_session=reset_session)
         for line_number, raw in enumerate(transcript_file.read_text(encoding="utf-8").splitlines(), start=1):
             if not raw.strip():
                 continue
@@ -126,11 +192,30 @@ def replay(
                 time.sleep(delay_s)
 
 
+def _prepare_replay_session(client: httpx.Client, *, reset_session: bool) -> None:
+    state = client.get("/api/state")
+    state.raise_for_status()
+    snapshot = state.json()
+    session = snapshot.get("session") or {}
+    active = session.get("status") in {
+        SessionStatus.ARMED.value,
+        SessionStatus.LISTENING.value,
+        SessionStatus.PAUSED.value,
+    }
+    has_activity = bool(snapshot.get("transcript") or snapshot.get("cards"))
+    if active and has_activity and not reset_session:
+        typer.echo(f"replay: attached to active session {session.get('session_id')}")
+        return
+    start = client.post("/api/session/start", json={"consent_confirmed": True})
+    start.raise_for_status()
+    typer.echo("replay: started new session")
+
+
 @app.command()
 def search(
     query: Annotated[str, typer.Argument(min=2, max=1_000)],
     lane: Annotated[RetrievalLane, typer.Option(help="Explicit retrieval lane.")] = RetrievalLane.MEMORY,
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
 ) -> None:
     """Run one manual source-bound search."""
 
@@ -220,7 +305,7 @@ def doctor() -> None:
 
 @app.command()
 def status(
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
 ) -> None:
     """Read service health and current session state."""
 

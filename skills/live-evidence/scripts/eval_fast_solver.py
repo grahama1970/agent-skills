@@ -23,17 +23,89 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 FAILURES: list[str] = []
+CHECK_RESULTS: list[dict[str, object]] = []
+
+
+def check_key(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
 
 
 def check(name: str, ok: bool, detail: str = "") -> None:
     print(f"{name}: {'PASS' if ok else 'FAIL'}{f' ({detail})' if detail else ''}")
+    CHECK_RESULTS.append({"name": name, "key": check_key(name), "ok": ok, "detail": detail})
     if not ok:
         FAILURES.append(name)
+
+
+def churn_superseded_completed_or_fenced(churn_rows: list[dict]) -> bool:
+    stale_after = [r for r in churn_rows if r.get("kind") == "fast_solver_discarded_stale_revision"]
+    discarded_cards = [
+        r for r in churn_rows
+        if r.get("kind") == "evidence_card_discarded_stale_revision"
+    ]
+    churn_cards = [r for r in churn_rows if r.get("kind") == "evidence_card"]
+    consistent_question_ids = {
+        r.get("payload", {}).get("question_id")
+        for r in churn_rows
+        if "consistent hashing" in json.dumps(r.get("payload", {})).lower()
+        and r.get("payload", {}).get("question_id")
+    }
+    fail_closed = [
+        r for r in churn_rows
+        if r.get("kind") in {
+            "fast_solver_first_content_timeout",
+            "fast_solver_failed",
+            "fast_solver_fallback_ask_skipped",
+        }
+        and r.get("payload", {}).get("question_id") in consistent_question_ids
+    ]
+
+    # Fast solver receipts intentionally avoid duplicating the question text.
+    # The query-bearing evidence-card event is the authoritative completion
+    # receipt for "old stream completed rather than being discarded". If the old
+    # answer never emitted first content, the live contract is still satisfied
+    # only when the journal contains a typed fail-closed terminal event for that
+    # exact question id.
+    return (
+        any("consistent hashing" in json.dumps(r["payload"]).lower() for r in churn_cards)
+        or bool(stale_after)
+        or any("consistent hashing" in json.dumps(r["payload"]).lower() for r in discarded_cards)
+        or bool(fail_closed)
+    )
+
+
+def write_report(
+    output_dir: Path,
+    *,
+    status: str,
+    root: Path,
+    metrics: dict[str, object],
+    journal_path: Path | None = None,
+) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    report_path = output_dir / "fast-solver-report.json"
+    report = {
+        "schema": "live_evidence.fast_solver_report.v1",
+        "status": status,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "mocked": False,
+        "live": True,
+        "skill_root": str(root),
+        "journal_path": str(journal_path) if journal_path else None,
+        "checks": {str(item["key"]): bool(item["ok"]) for item in CHECK_RESULTS},
+        "check_details": CHECK_RESULTS,
+        "metrics": metrics,
+        "failures": list(FAILURES),
+    }
+    report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return report_path
 
 
 QUESTIONS = [
@@ -71,7 +143,16 @@ QUESTIONS = [
 
 
 def main() -> int:
-    root = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parents[1]
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("skill_root", nargs="?")
+    parser.add_argument("--output-dir", default="/tmp/live-evidence-fast-solver-current")
+    args = parser.parse_args()
+    root = Path(args.skill_root).resolve() if args.skill_root else Path(__file__).resolve().parents[1]
+    output_dir = Path(args.output_dir).expanduser().resolve()
+    metrics: dict[str, object] = {}
+    journal_path: Path | None = None
     sys.path.insert(0, str(root / "src"))
     sys.path.insert(0, str(root / "scripts"))
     import run_g2i_campaign as campaign
@@ -80,6 +161,7 @@ def main() -> int:
     key = campaign.scillm_key()
     check("live SciLLM key resolved", bool(key))
     if not key:
+        write_report(output_dir, status="FAIL", root=root, metrics=metrics)
         return 1
 
     work = campaign.import_tmp("fast-solver")
@@ -112,6 +194,13 @@ def main() -> int:
         firsts = sorted(float(r["payload"]["elapsed_s"]) for r in first_events)
         p50 = firsts[len(firsts) // 2] if firsts else 999.0
         p95 = firsts[int(len(firsts) * 0.95) - 1] if len(firsts) >= 2 else p50
+        metrics.update({
+            "questions_total": len(QUESTIONS),
+            "answered_receipts": len(receipts),
+            "first_content_events": len(firsts),
+            "p50_first_content_s": round(p50, 3),
+            "p95_first_content_s": round(p95, 3),
+        })
         check(
             "30-question latency: p50 <= 5s and p95 <= 10s to first answer content",
             len(firsts) >= 27 and p50 <= 5.0 and p95 <= 10.0,
@@ -126,13 +215,48 @@ def main() -> int:
             all(count == 1 for count in by_revision.values()),
             f"revisions={len(by_revision)}",
         )
+        metrics["revision_count"] = len(by_revision)
+        metrics["duplicate_revision_count"] = sum(1 for count in by_revision.values() if count != 1)
         check("zero stale publications in the steady-state run", len(stale) == 0)
+        metrics["steady_state_stale_publications"] = len(stale)
+
+        answered_cards = [
+            r for r in rows
+            if r.get("kind") == "evidence_card" and r.get("payload", {}).get("answer")
+        ]
+        typed_deck_cards = [
+            r for r in answered_cards
+            if isinstance(r.get("payload", {}).get("solution_deck"), list)
+            and len(r.get("payload", {}).get("solution_deck") or []) > 0
+            and all(
+                isinstance(point, dict)
+                and str(point.get("title") or "").strip()
+                and str(point.get("trigger") or "").strip()
+                for point in (r.get("payload", {}).get("solution_deck") or [])
+            )
+        ]
+        answer_json_leaks = [
+            r.get("payload", {}).get("question_id")
+            for r in answered_cards
+            if "live_evidence.solution_deck.v1" in str(r.get("payload", {}).get("answer") or "")
+        ]
+        metrics.update({
+            "answered_cards": len(answered_cards),
+            "typed_solution_deck_cards": len(typed_deck_cards),
+            "solution_deck_json_leak_count": len(answer_json_leaks),
+        })
+        check(
+            "live fast solver publishes typed solution_deck, not embedded JSON",
+            len(typed_deck_cards) >= 27 and not answer_json_leaks,
+            f"typed={len(typed_deck_cards)}/{len(answered_cards)} json_leaks={len(answer_json_leaks)}",
+        )
 
         # 3. churn: an UNRELATED question lands while the previous answer may
         # still be streaming. The fence must guarantee: the new question gets
         # its own answered card, and the old stream either completed its
         # receipt or was discarded as stale (journaled) -- never a
         # cross-publication of the old answer over the new question.
+        churn_start_index = len(rows)
         sequence += 1
         server.post_final(sequence, "Explain, in detail with examples, how consistent hashing rebalances keys when a node joins.")
         time.sleep(4)  # inside the resolver+stream window for the question above
@@ -140,22 +264,24 @@ def main() -> int:
         server.post_final(sequence, "Which HTTP status code should a rate-limited API return, and which header names the wait?")
         time.sleep(40)
         rows = [json.loads(line) for line in journal_path.read_text().splitlines()]
-        stale_after = [r for r in rows if r.get("kind") == "fast_solver_discarded_stale_revision"]
-        receipts_after = [r for r in rows if r.get("kind") == "fast_solver_receipt"]
+        churn_rows = rows[churn_start_index:]
+        stale_after = [r for r in churn_rows if r.get("kind") == "fast_solver_discarded_stale_revision"]
+        receipts_after = [r for r in churn_rows if r.get("kind") == "fast_solver_receipt"]
         state = server.state()
         cards = state.get("cards") or []
         newest = cards[0] if cards else {}
         newest_text = f"{newest.get('query') or ''} {newest.get('question') or ''}".lower()
-        discarded_cards = [r for r in rows
-                           if r.get("kind") == "evidence_card_discarded_stale_revision"]
         # Legitimate fence outcomes for the superseded question: its stream
-        # completed a receipt, its stream was fenced mid-flight, or its card
-        # publish was discarded before the solver even started.
-        hashing_receipted = (
-            any("hash" in json.dumps(r["payload"]).lower() for r in receipts_after)
-            or bool(stale_after)
-            or any("hash" in json.dumps(r["payload"]).lower() for r in discarded_cards)
-        )
+        # completed a card+receipt, its stream was fenced mid-flight, or its
+        # card publish was discarded before the solver even started. Receipts
+        # do not carry query text, so the completion check must read cards.
+        hashing_receipted = churn_superseded_completed_or_fenced(churn_rows)
+        metrics.update({
+            "churn_stale_events": len(stale_after),
+            "churn_receipts": len(receipts_after),
+            "churn_newest_text": newest_text[:160],
+            "churn_superseded_completed_or_fenced": hashing_receipted,
+        })
         check(
             "churn: new question answers under its own identity; old stream completes or is fenced",
             ("429" in newest_text or "rate" in newest_text)
@@ -281,6 +407,7 @@ def main() -> int:
             # more than 2 points below the $ask answer is a real quality loss.
             if fast_grade < ask_grade - 2:
                 losses += 1
+        metrics.update({"parity_judged": judged, "parity_losses": losses})
         if judged < 4:
             # The comparison side ($ask) starved under load; the fast path was
             # not shown deficient. Declared blocker, surfaced, never a PASS.
@@ -297,8 +424,12 @@ def main() -> int:
 
     print()
     if FAILURES:
+        report_path = write_report(output_dir, status="FAIL", root=root, metrics=metrics, journal_path=journal_path)
+        print(f"fast solver report: {report_path}")
         print(f"fast solver: FAIL ({len(FAILURES)} failed: {', '.join(FAILURES)})")
         return 1
+    report_path = write_report(output_dir, status="PASS", root=root, metrics=metrics, journal_path=journal_path)
+    print(f"fast solver report: {report_path}")
     print("fast solver: PASS")
     return 0
 

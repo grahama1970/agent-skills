@@ -8,6 +8,7 @@ question candidate while treating candidate speech as a hard boundary.
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass
 from time import monotonic
 
@@ -40,6 +41,36 @@ PROBLEM_STATEMENT_MARKERS = (
     "implement a",
     "write a function",
 )
+
+# Single-turn coding prompts often arrive as imperatives rather than questions:
+# "Write a function ...", "Implement binary search ...". Requiring two markers
+# made the next unrelated interviewer turn join the same candidate.
+IMPERATIVE_PROBLEM_PREFIXES = (
+    "write a function",
+    "implement ",
+)
+
+# Senior interviewers assign work imperatively, often after a declarative
+# setup: "The sandbox is a production replica ... Design promotion proof,
+# shadow traffic, and kill switches." No question mark, no lead word at the
+# text start — but a clause opening with one of these verbs is a work
+# request. The stage-1 resolver remains the authority on answerability;
+# this only widens what it gets to judge (proven gap: DW-AI-04 T07/T08,
+# 2026-08-26 forensics).
+IMPERATIVE_CLAUSE_LEADS = frozenset({
+    "design", "define", "sketch", "describe", "explain", "walk", "show",
+    "give", "tell", "map", "translate", "defend", "argue", "package",
+    "reconstruct", "trace", "build", "implement", "write", "set",
+    "pressure-test", "compare", "justify", "outline", "propose",
+})
+
+
+def _has_imperative_clause(lower_text: str) -> bool:
+    for clause in re.split(r"[.;!?]\s+", lower_text):
+        first_word = clause.strip().split(" ", 1)[0].strip()
+        if first_word in IMPERATIVE_CLAUSE_LEADS:
+            return True
+    return False
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +154,20 @@ class QuestionWindowBuilder:
 
         self._buffer = []
 
+    def forget(self, fingerprint: str) -> None:
+        """Allow a previously accepted candidate to be reconsidered.
+
+        Accepted stabilized STT fragments are remembered before retrieval so
+        exact repeats do not fan out into duplicate work. The downstream
+        surface gate can later determine that the fragment was only a
+        half-formed lead-in; in that case the richer final transcript should
+        still be allowed to produce the real question.
+        """
+
+        self._recent = [
+            item for item in self._recent if item[0] != fingerprint
+        ]
+
     def _append_or_replace(self, event: TranscriptEvent) -> None:
         self._buffer = [item for item in self._buffer if item.event_id != event.event_id]
         if self._buffer and is_progressive_restatement(self._buffer[-1], event):
@@ -177,6 +222,10 @@ class QuestionWindowBuilder:
             return f"watch-term:{matched_term}"
         if is_question:
             return "question"
+        if any(lower_text.startswith(prefix) for prefix in IMPERATIVE_PROBLEM_PREFIXES):
+            return "problem_statement"
+        if _has_imperative_clause(lower_text):
+            return "problem_statement"
         # Declarative problem statements: a code walkthrough or task briefing
         # states its question without interrogative form ("we're given an
         # input array ... we want to find the two values ... return the
@@ -186,6 +235,14 @@ class QuestionWindowBuilder:
         markers = sum(1 for marker in PROBLEM_STATEMENT_MARKERS if marker in lower_text)
         if markers >= 2:
             return "problem_statement"
+        # Interviewer-channel fallthrough (2026-08-26, batch-2 forensics):
+        # every event here already passed the speaker boundary, and verb
+        # allowlists keep missing legitimate work requests ("We need...",
+        # "Extend that design...", "Now bound execution."). A substantive
+        # interviewer turn goes to stage-1, which is the answerability
+        # authority and returns not_a_question when it is one.
+        if len(tokens) >= 8:
+            return "interviewer_statement"
         return None
 
     def _spans(self, joined_text: str) -> list[EventSpan]:

@@ -1,0 +1,198 @@
+{
+  "schema": "live_evidence.prep_pack.v1",
+  "pack_id": "drivewealth-ai-ml-2026-08",
+  "target": {
+    "kind": "employer",
+    "name": "DriveWealth",
+    "topic": "AI/ML engineering interview preparation for embedded investing, KYC, compliance, and brokerage operations",
+    "purpose": "meeting"
+  },
+  "research_chain": [
+    {
+      "skill": "curate-client",
+      "role": "front door for building the client knowledge base and wiring it into live-evidence"
+    },
+    {
+      "skill": "brave-search",
+      "role": "current public source discovery",
+      "queries": [
+        "DriveWealth developer API KYC SQS events",
+        "DriveWealth embedded investing API brokerage account opening",
+        "DriveWealth API documentation orders funding tax forms"
+      ]
+    },
+    {
+      "skill": "dogpile",
+      "role": "deep research synthesis over public docs, GitHub/API examples when available, and selected source extraction"
+    },
+    {
+      "skill": "ingest-website",
+      "role": "promote selected durable docs into Memory when the source is stable and relevant"
+    },
+    {
+      "skill": "ask",
+      "role": "generate and review candidate interview questions, reviewed answers, and skill chains from the same evidence bundle"
+    },
+    {
+      "skill": "memory",
+      "role": "store prep oracles and retrieve known or similar questions during the live run"
+    }
+  ],
+  "source_context": [
+    {
+      "source_id": "drivewealth_public_api_platform",
+      "kind": "public_web",
+      "url": "https://drivewealth.com/api-platforms/",
+      "use": "public company/API platform context"
+    },
+    {
+      "source_id": "drivewealth_developer_opening_accounts",
+      "kind": "public_docs",
+      "url": "https://developer.drivewealth.com/apis/docs/opening-accounts",
+      "use": "account opening and KYC context"
+    },
+    {
+      "source_id": "drivewealth_bridge_fixture",
+      "kind": "local_fixture",
+      "path": "skills/live-evidence/fixtures/drivewealth_bridge.md",
+      "use": "bounded local bridge for source-grounded mock interview answers"
+    }
+  ],
+  "briefing_pack": {
+    "schema": "live_evidence.briefing_pack.v1",
+    "pack_id": "drivewealth-ai-ml-2026-08-briefing",
+    "audience": "DriveWealth AI/ML engineering interview",
+    "core_concepts": [
+      "embedded investing",
+      "brokerage operations",
+      "KYC and compliance state",
+      "agentic evidence gates",
+      "retrieval and source provenance"
+    ],
+    "points": [
+      {
+        "point_id": "kyc-state-machine",
+        "title": "KYC and account state require temporal source-bound reasoning",
+        "opening_triggers": [
+          [
+            "kyc"
+          ],
+          [
+            "account",
+            "blocked"
+          ],
+          [
+            "sqs",
+            "event"
+          ]
+        ],
+        "hook": "I treat account state as temporal evidence, not a static label.",
+        "story": "The live-evidence oracle graph includes out-of-order KYC/SQS scenarios with explicit fail-closed gates.",
+        "sources": [
+          "drivewealth_developer_opening_accounts",
+          "drivewealth_bridge_fixture"
+        ]
+      },
+      {
+        "point_id": "agentic-publication-gates",
+        "title": "AI answers need publication gates, not just generation",
+        "opening_triggers": [
+          [
+            "agent"
+          ],
+          [
+            "hallucination"
+          ],
+          [
+            "evidence",
+            "gate"
+          ]
+        ],
+        "hook": "My agent systems keep answer generation separate from publication authority.",
+        "story": "Question, answer, review, source, and card state are separately journaled and revision fenced.",
+        "sources": [
+          "drivewealth_bridge_fixture"
+        ]
+      }
+    ]
+  },
+  "question_oracles": [
+    {
+      "question_id": "DW-AI-01-T07",
+      "canonical_question": "Which DriveWealth interview question asks about SQS events arriving out of order with an older KYC-approved event after a newer restricted event?",
+      "category": "api_docs_or_external_context_question",
+      "skill_chain": [
+        "memory",
+        "brave-search"
+      ],
+      "reviewed_answer": {
+        "review_status": "reviewed",
+        "expected_response_shape": "source_checked_api_or_policy_answer",
+        "quality_bar": [
+          "uses stored DriveWealth/API context first",
+          "routes externally only for current or missing facts",
+          "does not invent brokerage state semantics",
+          "fails closed if source evidence is unavailable"
+        ]
+      },
+      "memory_keys": [
+        "dw_ai_01_t07",
+        "dw_ai_01_t07_solution",
+        "dw_ai_01_t07_supported_by_bridge"
+      ]
+    },
+    {
+      "question_id": "DW-AI-04-T03",
+      "canonical_question": "Show the expected skill chain and solution for DW-AI-04-T03.",
+      "category": "coding_interview_question",
+      "skill_chain": [
+        "memory",
+        "ask",
+        "ripgrep"
+      ],
+      "reviewed_answer": {
+        "review_status": "reviewed",
+        "expected_response_shape": "compact_code_or_implementation_plan",
+        "quality_bar": [
+          "retrieves the exact current local source before answering",
+          "uses Ask for the code-question lane only after bounded local evidence",
+          "keeps the answer compact enough for a live card",
+          "holds publication when repository evidence is missing"
+        ]
+      },
+      "memory_keys": [
+        "dw_ai_04_t03",
+        "dw_ai_04_t03_solution",
+        "dw_ai_04_t03_answered_by"
+      ]
+    }
+  ],
+  "memory_exports": {
+    "ingest_endpoint": "/live-evidence/oracle-pack",
+    "recall_endpoint": "/recall",
+    "collections": [
+      "live_evidence_mock_interviews",
+      "live_evidence_questions",
+      "live_evidence_answers",
+      "live_evidence_skill_chains",
+      "live_evidence_source_context",
+      "live_evidence_edges"
+    ]
+  },
+  "live_use": {
+    "before_call": [
+      "load briefing_pack into /api/briefing/load",
+      "ensure question_oracles are stored in Memory",
+      "verify recall probes for expected memory_keys"
+    ],
+    "during_call": [
+      "use briefing triggers for openings",
+      "use question_oracles as priors for known or similar heard questions",
+      "never publish an answer without transcript revision and provenance gates"
+    ],
+    "after_call": [
+      "compare extracted questions/cards against question_oracles",
+      "record misses and weak skill-chain selections"
+    ]
+  }
+}

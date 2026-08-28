@@ -64,6 +64,7 @@ def rank_sources(
             + repo_score
             + locator_score
             + _project_affinity(source, scope)
+            + _hard_rules_affinity(query, source)
             + (_code_location_affinity(source) if code_location else 0.0)
         )
         return total, source.label.casefold()
@@ -122,6 +123,9 @@ def _project_affinity(source: EvidenceSource, scope: set[str]) -> float:
     identity = " ".join(
         str(meta.get(field) or "") for field in ("_key", "source", "profile")
     ).casefold() + " " + (source.repository or "").casefold()
+    tags = meta.get("tags")
+    if isinstance(tags, list):
+        identity += " " + " ".join(str(tag).casefold() for tag in tags)
     if any(name in identity for name in scope):
         return 0.15
     # A local Claude Code memory doc that belongs to some OTHER project. The
@@ -132,6 +136,51 @@ def _project_affinity(source: EvidenceSource, scope: set[str]) -> float:
     if "local_memory__" in identity or "experiments-" in identity:
         return -0.30
     return 0.0
+
+
+def _hard_rules_affinity(query: str, source: EvidenceSource) -> float:
+    """For read-first memory questions, require read-first evidence anchors."""
+
+    if source.lane is not RetrievalLane.MEMORY:
+        return 0.0
+    lower_query = query.casefold()
+    asks_hard_rules = any(
+        term in lower_query
+        for term in (
+            "hard rule",
+            "hard rules",
+            "read first",
+            "read-first",
+            "skill.md",
+            "learned the hard way",
+        )
+    )
+    if not asks_hard_rules:
+        return 0.0
+    meta = source.metadata or {}
+    text = " ".join(
+        str(part or "")
+        for part in (
+            source.label,
+            source.excerpt,
+            source.path,
+            source.repository,
+            meta.get("_key"),
+            meta.get("source"),
+            meta.get("topic_id"),
+        )
+    ).casefold()
+    read_first_hits = sum(
+        1
+        for term in ("skill.md", "read first", "read-first", "never skim", "skim a skill")
+        if term in text
+    )
+    score = min(0.30, read_first_hits * 0.12)
+    if "project memory index" in text:
+        score += 0.04
+    if read_first_hits == 0:
+        score -= 0.22
+    return score
 
 
 def _tokens(text: str) -> set[str]:

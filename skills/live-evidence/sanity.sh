@@ -9,6 +9,12 @@ export LIVE_EVIDENCE_DATA_DIR="${LIVE_EVIDENCE_DATA_DIR:-${TMPDIR:-/tmp}/live-ev
 # exporting UV_PROJECT_ENVIRONMENT explicitly.
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv}"
 export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+env_path="$(realpath -m "$UV_PROJECT_ENVIRONMENT")"
+root_path="$(realpath -m "$SCRIPT_DIR")"
+if [[ "$env_path" == "$root_path" || "$env_path" == "$root_path"/* ]]; then
+  echo "Refusing repository-local UV_PROJECT_ENVIRONMENT: $UV_PROJECT_ENVIRONMENT" >&2
+  exit 2
+fi
 mkdir -p "$LIVE_EVIDENCE_DATA_DIR"
 
 uv run --project "$SCRIPT_DIR" --extra dev --extra stt python "$SCRIPT_DIR/scripts/verify_skill.py" "$SCRIPT_DIR"
