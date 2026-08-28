@@ -922,53 +922,55 @@ def _scheduler_execution_equivalence_receipt(
     expected_revision = str(preflight.get("expected_revision") or "")
     revision_full = str((attestation.get("code") or {}).get("git_revision_full") or "")
     report_acceptance_hash = _json_hash_file(artifact_paths["report_acceptance"])
-    post_checks = {
-        "execution_exit_code_zero": execution.get("exit_code") == 0,
-        "nightly_receipt_present": artifact_paths["nightly"].is_file(),
-        "nightly_status_pass": nightly_receipt.get("status") == "PASS",
-        "nightly_mode_matches_schedule": nightly_receipt.get("mode")
-        == schedule_receipt.get("mode"),
-        "nightly_live_true": nightly_receipt.get("live") is True,
-        "nightly_external_effects_false": nightly_receipt.get("external_effects") is False,
-        "run_attestation_present": artifact_paths["run_attestation"].is_file(),
-        "attestation_expected_revision_matches": (
-            (attestation.get("runtime") or {}).get("expected_revision") == expected_revision
-            or (nightly_receipt.get("steps") or {})
-            .get("attestation", {})
-            .get("expected_revision_matches")
-            is True
-        ),
-        "attestation_revision_matches_scheduler": bool(expected_revision)
-        and bool(revision_full)
-        and (
-            revision_full == expected_revision
-            or revision_full.startswith(expected_revision)
-            or expected_revision.startswith(revision_full)
-        ),
-        "receipt_consistency_present": artifact_paths["receipt_consistency"].is_file(),
-        "receipt_consistency_pass": consistency_receipt.get("status") == "PASS",
-        "zero_effect_replay_present": artifact_paths["zero_effect_replay"].is_file(),
-        "zero_effect_replay_pass": replay_receipt.get("status") == "PASS",
-        "zero_effect_replay_external_effects_false": replay_receipt.get("external_effects")
-        is False,
-        "report_acceptance_present": artifact_paths["report_acceptance"].is_file(),
-        "report_acceptance_pass": acceptance_receipt.get("status") == "PASS",
-        "report_acceptance_external_effects_false": acceptance_receipt.get("external_effects")
-        is False,
-        "report_acceptance_hash_bound_in_nightly": bool(report_acceptance_hash)
-        and (nightly_receipt.get("artifact_hashes") or {}).get("report_acceptance")
-        == report_acceptance_hash,
-    }
-    if require_promoted_stage0:
-        tau_step = (nightly_receipt.get("steps") or {}).get("tau_semantic") or {}
-        post_checks.update(
-            {
-                "tau_semantic_prepare_present": artifact_paths["tau_semantic_prepare"].is_file(),
-                "tau_semantic_provider_live": tau_step.get("provider_live") is True,
-                "tau_semantic_addenda_installed": int(tau_step.get("installed_addenda") or 0) > 0,
-                "semantic_addenda_index_present": artifact_paths["semantic_addenda_index"].is_file(),
-            }
-        )
+    post_checks: dict[str, bool] = {}
+    if execution.get("executed") is True:
+        post_checks = {
+            "execution_exit_code_zero": execution.get("exit_code") == 0,
+            "nightly_receipt_present": artifact_paths["nightly"].is_file(),
+            "nightly_status_pass": nightly_receipt.get("status") == "PASS",
+            "nightly_mode_matches_schedule": nightly_receipt.get("mode")
+            == schedule_receipt.get("mode"),
+            "nightly_live_true": nightly_receipt.get("live") is True,
+            "nightly_external_effects_false": nightly_receipt.get("external_effects") is False,
+            "run_attestation_present": artifact_paths["run_attestation"].is_file(),
+            "attestation_expected_revision_matches": (
+                (attestation.get("runtime") or {}).get("expected_revision") == expected_revision
+                or (nightly_receipt.get("steps") or {})
+                .get("attestation", {})
+                .get("expected_revision_matches")
+                is True
+            ),
+            "attestation_revision_matches_scheduler": bool(expected_revision)
+            and bool(revision_full)
+            and (
+                revision_full == expected_revision
+                or revision_full.startswith(expected_revision)
+                or expected_revision.startswith(revision_full)
+            ),
+            "receipt_consistency_present": artifact_paths["receipt_consistency"].is_file(),
+            "receipt_consistency_pass": consistency_receipt.get("status") == "PASS",
+            "zero_effect_replay_present": artifact_paths["zero_effect_replay"].is_file(),
+            "zero_effect_replay_pass": replay_receipt.get("status") == "PASS",
+            "zero_effect_replay_external_effects_false": replay_receipt.get("external_effects")
+            is False,
+            "report_acceptance_present": artifact_paths["report_acceptance"].is_file(),
+            "report_acceptance_pass": acceptance_receipt.get("status") == "PASS",
+            "report_acceptance_external_effects_false": acceptance_receipt.get("external_effects")
+            is False,
+            "report_acceptance_hash_bound_in_nightly": bool(report_acceptance_hash)
+            and (nightly_receipt.get("artifact_hashes") or {}).get("report_acceptance")
+            == report_acceptance_hash,
+        }
+        if require_promoted_stage0:
+            tau_step = (nightly_receipt.get("steps") or {}).get("tau_semantic") or {}
+            post_checks.update(
+                {
+                    "tau_semantic_prepare_present": artifact_paths["tau_semantic_prepare"].is_file(),
+                    "tau_semantic_provider_live": tau_step.get("provider_live") is True,
+                    "tau_semantic_addenda_installed": int(tau_step.get("installed_addenda") or 0) > 0,
+                    "semantic_addenda_index_present": artifact_paths["semantic_addenda_index"].is_file(),
+                }
+            )
     checks = {**preflight_checks, **post_checks}
     receipt = {
         "schema": "monitor_opportunities.scheduler_execution_equivalence_receipt.v1",
@@ -982,6 +984,7 @@ def _scheduler_execution_equivalence_receipt(
         "timeout_seconds": timeout_seconds,
         "preflight": preflight,
         "execution": execution,
+        "post_run_checks_skipped": execution.get("skipped_reason") == "dry_run",
         "nightly_out": str(nightly_out),
         "artifacts": artifacts,
         "checks": checks,

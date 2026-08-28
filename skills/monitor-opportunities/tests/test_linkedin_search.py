@@ -205,14 +205,54 @@ const button = {{
     return null;
   }}
 }};
-global.document = {{ querySelectorAll: function() {{ return [button]; }} }};
+const bareDismiss = {{
+  parentElement: card,
+  getAttribute: function(name) {{
+    if (name === 'aria-label') return 'Dismiss';
+    return null;
+  }}
+}};
+global.document = {{ querySelectorAll: function() {{ return [bareDismiss, button]; }} }};
 console.log(eval({json.dumps(bc._LI_ARIA_EXTRACT_JS)}));
 """
     rows = json.loads(subprocess.check_output(["node", "-e", script], text=True))
 
+    assert len(rows) == 1
     assert rows[0]["title"] == "Senior AI Engineer"
     assert rows[0]["company"] == "Moog"
     assert rows[0]["location"] == "Buffalo, NY"
     assert rows[0]["early"] is True
     assert rows[0]["warm"] is True
     assert rows[0]["href"] == "https://www.linkedin.com/jobs/view/789/"
+
+
+def test_premium_capture_reports_failed_when_all_browser_queries_fail(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(bc, "ensure_browser", lambda surf_run: None)
+    monkeypatch.setattr(bc, "_surf_pause", lambda *args, **kwargs: None)
+    monkeypatch.setattr(bc, "_close_tab", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        bc,
+        "linkedin_search_queries_from_profile",
+        lambda profile: [
+            {
+                "label": "agentic AI engineer | remote+hybrid",
+                "url": "https://www.linkedin.com/jobs/search/?keywords=agentic",
+            }
+        ],
+    )
+
+    def fake_surf(_surf_run, command, *args, **kwargs):
+        del args, kwargs
+        if command == "tab.new":
+            return "456: created"
+        raise bc.BrowserCaptureError("surf js failed: target closed")
+
+    monkeypatch.setattr(bc, "_surf", fake_surf)
+
+    receipt = capture_linkedin_premium(tmp_path, profile={})
+
+    assert receipt["status"] == "FAILED"
+    assert receipt["error"] == "all LinkedIn Premium browser queries failed"
+    assert receipt["opportunities_captured"] == 0
+    assert len(receipt["query_failures"]) == 3
+    assert all("surf js failed" in row["error"] for row in receipt["query_failures"])

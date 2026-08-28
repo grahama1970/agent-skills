@@ -721,12 +721,12 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates skills/monitor-opportunities/tests/test_discovery.py::test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows skills/monitor-opportunities/tests/test_linkedin_search.py::test_top_applicant_capture_receipts_easy_apply_count skills/monitor-opportunities/tests/test_linkedin_search.py::test_top_applicant_js_skips_verification_badge_line skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_counts skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_js_skips_verification_badge_line skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py::test_promoted_stage0_nightly_writes_publication_receipts skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_readback_promotion_is_receipted_for_stage_accounting skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_survive_duplicate_merge skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_are_reserved_in_source_intel_report -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates skills/monitor-opportunities/tests/test_discovery.py::test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows skills/monitor-opportunities/tests/test_linkedin_search.py::test_top_applicant_capture_receipts_easy_apply_count skills/monitor-opportunities/tests/test_linkedin_search.py::test_top_applicant_js_skips_verification_badge_line skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_counts skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_js_skips_verification_badge_line skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_capture_reports_failed_when_all_browser_queries_fail skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py::test_promoted_stage0_nightly_writes_publication_receipts skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_readback_promotion_is_receipted_for_stage_accounting skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_survive_duplicate_merge skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_are_reserved_in_source_intel_report -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "10 passed"
+          "11 passed"
         ]
       },
       "proves": "LinkedIn Premium Top Applicant, Easy Apply, low-competition, and warm-path fields survive browser evidence merge and duplicate posting collapse, row-level LinkedIn URLs are receipt-backed for relationship validation, then priority rows are reserved into source-intel before ordinary LinkedIn locator rows.",
@@ -1231,6 +1231,34 @@
         ]
       },
       "proves": "The scheduler execution-equivalence checker records a dirty monitor-opportunities tree in preflight but still executes the exact registered command and can return PASS when all runtime receipts pass.",
+      "does_not_prove": "A fresh live nightly run passes external source capture, Tau provider evaluation, or report acceptance."
+    },
+    {
+      "name": "scheduler-exec-check-dry-run-preflight-only",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "scheduler.dry_run_preflight"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_dry_run_checks_preflight_only -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "SCHEDULER_EXECUTION_EQUIVALENCE_FAILED",
+          "execution_exit_code_zero",
+          "nightly_receipt_present"
+        ]
+      },
+      "proves": "The scheduler execution-equivalence dry-run mode checks only scheduler preflight invariants, records that execution was intentionally skipped, and does not falsely require live nightly receipts.",
       "does_not_prove": "A fresh live nightly run passes external source capture, Tau provider evaluation, or report acceptance."
     },
     {

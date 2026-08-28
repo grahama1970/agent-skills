@@ -2032,7 +2032,8 @@ _LI_ARIA_EXTRACT_JS = (
     "var btns=[].slice.call(document.querySelectorAll('button[aria-label^=\"Dismiss\"]'));"
     "for(var i=0;i<btns.length;i++){"
     "var al=btns[i].getAttribute('aria-label')||'';"
-    "var title=al.replace(/^Dismiss /,'').replace(/ job$/,'');"
+    "var title=al.replace(/^Dismiss\\s*/,'').replace(/\\s*job$/,'').trim();"
+    "if(!title||title.toLowerCase()==='dismiss'||title===al)continue;"
     "var card=btns[i].parentElement;var best=null;"
     "for(var d=0;d<12&&card;d++){var t=card.innerText||'';"
     "if(/ago/.test(t)&&t.length<1200){best=card;}"
@@ -2100,6 +2101,7 @@ def capture_linkedin_premium(
     tab_id = ""
     rows: list[dict[str, Any]] = []
     queries_run: list[str] = []
+    query_failures: list[dict[str, str]] = []
     # Two Premium filter lanes per query (LinkedIn URL params, brave-search
     # verified 2026-08-12): f_EA=true = Under 10 applicants (low competition);
     # f_JIYN=true = jobs at companies where Graham has connections (every result
@@ -2136,6 +2138,12 @@ def capture_linkedin_premium(
             except (BrowserCaptureError, ValueError, json.JSONDecodeError,
                     subprocess.TimeoutExpired) as exc:
                 logger.warning("premium query {!r} skipped: {}", query["label"], exc)
+                query_failures.append(
+                    {
+                        "query": query["label"] + " | " + lane_label,
+                        "error": str(exc)[:300],
+                    }
+                )
         seen: dict[str, dict[str, Any]] = {}
         for r in rows:
             key = r["title"] + "|" + (r.get("company") or "")
@@ -2172,7 +2180,13 @@ def capture_linkedin_premium(
         }
         evidence_path = out_dir / "linkedin-premium-evidence.json"
         evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
-        receipt["status"] = "OK" if opps else "EMPTY"
+        if opps:
+            receipt["status"] = "OK"
+        elif query_failures and len(query_failures) == len(plan):
+            receipt["status"] = "FAILED"
+            receipt["error"] = "all LinkedIn Premium browser queries failed"
+        else:
+            receipt["status"] = "EMPTY"
         receipt["evidence_path"] = str(evidence_path)
         receipt["opportunities_captured"] = len(opps)
         receipt["top_applicant_count"] = sum(1 for o in opps if o.get("top_candidate") is True)
@@ -2180,6 +2194,7 @@ def capture_linkedin_premium(
         receipt["under_10_applicants_count"] = sum(1 for o in opps if o.get("under_10_applicants") is True)
         receipt["warm_paths_found"] = sum(1 for o in opps if o["warm_path"])
         receipt["queries_run"] = queries_run
+        receipt["query_failures"] = query_failures
     except (BrowserCaptureError, ValueError, json.JSONDecodeError,
             subprocess.TimeoutExpired) as exc:
         logger.error("LinkedIn premium capture failed: {}", exc)
