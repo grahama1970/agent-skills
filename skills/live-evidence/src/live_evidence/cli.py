@@ -24,6 +24,7 @@ from .models import (
     DoctorReport,
     ManualSearchRequest,
     RetrievalLane,
+    SessionStatus,
     Speaker,
     TranscriptEvent,
 )
@@ -105,13 +106,20 @@ def replay(
     transcript_file: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)],
     backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
     delay_s: Annotated[float, typer.Option(min=0.0, max=30.0)] = 1.2,
+    reset_session: Annotated[
+        bool,
+        typer.Option("--reset-session", help="Explicitly clear the current session before replay."),
+    ] = False,
 ) -> None:
-    """Replay validated JSONL transcript events into the API."""
+    """Replay validated JSONL transcript events into the API.
+
+    Default behavior attaches to an active session. A replay fixture must not
+    erase a live HUD unless the caller explicitly requests `--reset-session`.
+    """
 
     timeout = httpx.Timeout(connect=2.0, read=10.0, write=5.0, pool=2.0)
     with httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout) as client:
-        start = client.post("/api/session/start", json={"consent_confirmed": False})
-        start.raise_for_status()
+        _prepare_replay_session(client, reset_session=reset_session)
         for line_number, raw in enumerate(transcript_file.read_text(encoding="utf-8").splitlines(), start=1):
             if not raw.strip():
                 continue
@@ -124,6 +132,25 @@ def replay(
             typer.echo(f"{event.speaker.value}: {event.text}")
             if delay_s:
                 time.sleep(delay_s)
+
+
+def _prepare_replay_session(client: httpx.Client, *, reset_session: bool) -> None:
+    state = client.get("/api/state")
+    state.raise_for_status()
+    snapshot = state.json()
+    session = snapshot.get("session") or {}
+    active = session.get("status") in {
+        SessionStatus.ARMED.value,
+        SessionStatus.LISTENING.value,
+        SessionStatus.PAUSED.value,
+    }
+    has_activity = bool(snapshot.get("transcript") or snapshot.get("cards"))
+    if active and has_activity and not reset_session:
+        typer.echo(f"replay: attached to active session {session.get('session_id')}")
+        return
+    start = client.post("/api/session/start", json={"consent_confirmed": True})
+    start.raise_for_status()
+    typer.echo("replay: started new session")
 
 
 @app.command()

@@ -1,0 +1,64 @@
+"""Replay session lifecycle regressions."""
+
+from live_evidence.cli import _prepare_replay_session
+
+
+class Response:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return self._payload
+
+
+class Client:
+    def __init__(self, snapshot):
+        self.snapshot = snapshot
+        self.posts = []
+
+    def get(self, path):
+        assert path == "/api/state"
+        return Response(self.snapshot)
+
+    def post(self, path, *, json):
+        self.posts.append((path, json))
+        return Response({"ok": True})
+
+
+def test_replay_attaches_to_active_session_with_activity() -> None:
+    client = Client({
+        "session": {"status": "listening", "session_id": "active-session"},
+        "transcript": [{"text": "already live"}],
+        "cards": [],
+    })
+
+    _prepare_replay_session(client, reset_session=False)
+
+    assert client.posts == []
+
+
+def test_replay_starts_processing_capable_session_when_inactive() -> None:
+    client = Client({
+        "session": {"status": "idle", "session_id": "idle-session"},
+        "transcript": [],
+        "cards": [],
+    })
+
+    _prepare_replay_session(client, reset_session=False)
+
+    assert client.posts == [("/api/session/start", {"consent_confirmed": True})]
+
+
+def test_replay_reset_session_is_explicit() -> None:
+    client = Client({
+        "session": {"status": "listening", "session_id": "active-session"},
+        "transcript": [{"text": "already live"}],
+        "cards": [{"card_id": "card"}],
+    })
+
+    _prepare_replay_session(client, reset_session=True)
+
+    assert client.posts == [("/api/session/start", {"consent_confirmed": True})]
