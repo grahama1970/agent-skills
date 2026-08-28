@@ -29,12 +29,16 @@ from discord_ops.config import (
     SKILL_DIR,
 )
 from discord_ops.keyword_matcher import KeywordMatch
+from discord_ops.notifications import notify_webhook
 from discord_ops.utils import (
+    describe_webhook_url,
     get_bot_token,
     load_config,
     load_keywords,
+    load_webhooks,
     save_config,
     save_keywords,
+    webhook_sources,
 )
 from discord_ops.graph_persistence import (
     check_memory_status,
@@ -103,10 +107,16 @@ def setup():
     # Show config
     config = load_config()
     keywords = load_keywords()
+    webhooks = load_webhooks()
+    sources = webhook_sources()
+    env_webhook_count = sum(1 for source in sources.values() if source.startswith("env:"))
 
     console.print("\n[bold]4. Configuration[/bold]")
     console.print(f"  Monitored guilds: {len(config.get('monitored_guilds', {}))}")
-    console.print(f"  Webhooks configured: {len(config.get('webhooks', {}))}")
+    console.print(
+        f"  Webhooks configured: {len(webhooks)} "
+        f"({len(webhooks) - env_webhook_count} config, {env_webhook_count} env)"
+    )
     console.print(f"  Keyword patterns: {len(keywords)}")
 
     # Next steps
@@ -229,38 +239,50 @@ def webhook(
 ):
     """Manage output webhooks for forwarding matches."""
     config = load_config()
-    webhooks = config.get("webhooks", {})
+    config_webhooks = config.get("webhooks", {})
+    webhooks = load_webhooks()
+    sources = webhook_sources()
     features = get_feature_status()
 
     if action == "list":
         if not webhooks:
             console.print("[yellow]No webhooks configured.[/yellow]")
-            console.print("Add with: ops-discord webhook add <name> <url>")
+            console.print(
+                "Add with: ops-discord webhook add <name> <url> "
+                "or set OPS_DISCORD_WEBHOOK_<NAME>_URL"
+            )
             return
 
         table = Table(title="Configured Webhooks")
         table.add_column("Name", style="cyan")
-        table.add_column("URL (truncated)")
+        table.add_column("Source")
+        table.add_column("URL")
 
         for n, u in webhooks.items():
-            table.add_row(n, u[:50] + "...")
+            table.add_row(n, sources.get(n, "unknown"), describe_webhook_url(u))
 
         console.print(table)
         return
 
     if action == "add" and name and url:
-        webhooks[name] = url
-        config["webhooks"] = webhooks
+        config_webhooks[name] = url
+        config["webhooks"] = config_webhooks
         save_config(config)
         console.print(f"[green]Added webhook:[/green] {name}")
         return
 
     if action == "remove" and name:
-        if name in webhooks:
-            del webhooks[name]
-            config["webhooks"] = webhooks
+        if name in config_webhooks:
+            del config_webhooks[name]
+            config["webhooks"] = config_webhooks
             save_config(config)
             console.print(f"[green]Removed:[/green] {name}")
+        elif name in webhooks:
+            console.print(
+                f"[yellow]Webhook is environment-provided:[/yellow] {name}. "
+                "Unset the environment variable to remove it."
+            )
+            raise typer.Exit(1)
         else:
             console.print(f"[yellow]Not found:[/yellow] {name}")
         return
@@ -328,10 +350,10 @@ def monitor(
             console.print("[red]No bot token configured[/red]")
             raise typer.Exit(1)
 
-        config = load_config()
+        webhooks = load_webhooks()
         webhook_url = None
         if webhook_name:
-            webhook_url = config.get("webhooks", {}).get(webhook_name)
+            webhook_url = webhooks.get(webhook_name)
             if not webhook_url:
                 console.print(f"[red]Webhook not found:[/red] {webhook_name}")
                 raise typer.Exit(1)
@@ -400,6 +422,37 @@ def matches(
         console.print(f"[dim]{ts}[/dim] [cyan]#{ch}[/cyan] [{kw}]")
         console.print(f"  {content}...")
         console.print()
+
+
+@app.command()
+def notify(
+    webhook_name: str = typer.Option(..., "--webhook", "-w", help="Configured webhook name"),
+    title: str = typer.Option("ops-discord notification", "--title", help="Notification title"),
+    content: str = typer.Option(..., "--content", help="Notification body"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Resolve webhook but do not send"),
+    output_json: bool = typer.Option(False, "--json", help="Emit machine-readable receipt"),
+):
+    """Send a single operational notification through a configured webhook."""
+    receipt = notify_webhook(
+        webhook_name=webhook_name,
+        title=title,
+        content=content,
+        dry_run=dry_run,
+    )
+    if output_json:
+        print(json.dumps(receipt, indent=2, sort_keys=True))
+    elif receipt["status"] == "DRY_RUN":
+        console.print(f"[yellow]Dry run:[/yellow] {webhook_name} {title}")
+    elif receipt["status"] == "SENT":
+        console.print("[green]Notification sent[/green]")
+    elif receipt["status"] == "NO_WEBHOOK":
+        console.print(f"[red]Webhook not found:[/red] {webhook_name}")
+    elif receipt["status"] == "HTTPX_UNAVAILABLE":
+        console.print("[red]httpx not installed[/red]")
+    else:
+        console.print("[red]Notification send failed[/red]")
+    if receipt["status"] not in {"DRY_RUN", "SENT"}:
+        raise typer.Exit(1)
 
 
 @app.command()

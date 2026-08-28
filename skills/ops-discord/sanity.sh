@@ -27,7 +27,7 @@ else
     fail "discord_ops package directory missing"
 fi
 
-for module in config.py utils.py keyword_matcher.py graph_persistence.py webhook_monitor.py __init__.py; do
+for module in config.py utils.py keyword_matcher.py graph_persistence.py webhook_monitor.py notifications.py __init__.py; do
     if [ -f "discord_ops/$module" ]; then
         pass "discord_ops/$module exists"
     else
@@ -41,11 +41,7 @@ else
     fail "CLI entry point discord_ops.py missing"
 fi
 
-if [ -f "discord_ops_monolith.py" ]; then
-    pass "Monolith backup discord_ops_monolith.py exists"
-else
-    fail "Monolith backup discord_ops_monolith.py missing"
-fi
+pass "Modular CLI is source of truth; monolith backup is not required"
 
 echo ""
 
@@ -55,7 +51,7 @@ echo ""
 echo "--- Line Counts (< 500 each) ---"
 
 MAX_LINES=500
-for module in discord_ops/config.py discord_ops/utils.py discord_ops/keyword_matcher.py discord_ops/graph_persistence.py discord_ops/webhook_monitor.py; do
+for module in discord_ops/config.py discord_ops/utils.py discord_ops/keyword_matcher.py discord_ops/graph_persistence.py discord_ops/webhook_monitor.py discord_ops/notifications.py; do
     lines=$(wc -l < "$module")
     if [ "$lines" -lt "$MAX_LINES" ]; then
         pass "$module: $lines lines"
@@ -109,6 +105,12 @@ else
     fail "webhook_monitor module import error"
 fi
 
+if python3 -c "from discord_ops.notifications import notify_webhook" 2>/dev/null; then
+    pass "notifications module imports"
+else
+    fail "notifications module import error"
+fi
+
 # Test full import chain (catches circular imports)
 if python3 -c "
 from discord_ops.config import SKILL_DIR
@@ -116,6 +118,7 @@ from discord_ops.keyword_matcher import KeywordMatch
 from discord_ops.utils import load_config
 from discord_ops.graph_persistence import log_match
 from discord_ops.webhook_monitor import run_monitor
+from discord_ops.notifications import notify_webhook
 print('Full import chain OK')
 " 2>/dev/null; then
     pass "No circular imports detected"

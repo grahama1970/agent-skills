@@ -498,6 +498,21 @@ skills/scheduler/run.sh list
 Registration success is not proof until name, command, working directory, cron, and
 enabled state are read back exactly.
 
+Scheduler failure self-repair may emit an operational notification through
+`ops-discord`, but only when explicitly enabled:
+
+```bash
+export MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY=1
+export MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK=slack
+```
+
+`MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN=1` resolves the webhook and
+writes the notification receipt without posting. Notification is not an outreach,
+LinkedIn, ATS, Gmail, Meetup, or application effect; it only tells Graham that a
+required nightly step entered the repair branch. The scheduler receipt must still
+record whether notification was `DISABLED`, `DRY_RUN`, `SENT`, `FAILED`, or
+`SKIPPED`.
+
 ## Runtime self-improvement boundary
 
 The substantial runtime may record feed failures, parser regressions, false positives,

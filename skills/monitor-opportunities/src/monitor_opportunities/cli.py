@@ -571,6 +571,99 @@ def _scheduler_self_repair_run_root(out_path: Path) -> Path:
     return out_path.parent / "monitor-opportunities-scheduler-self-repair"
 
 
+def _truthy_env(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _notify_scheduler_self_repair(
+    *,
+    workdir: Path,
+    receipt_path: Path,
+    result: dict[str, Any],
+    step_id: str,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    notification: dict[str, Any] = {
+        "schema": "monitor_opportunities.scheduler_self_repair_notification.v1",
+        "status": "DISABLED",
+        "external_effects": False,
+    }
+    enabled = _truthy_env("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY")
+    if not enabled and not dry_run:
+        notification["reason"] = "set MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY=1 to send"
+        return notification
+
+    runner = workdir / "skills" / "ops-discord" / "run.sh"
+    if not runner.is_file():
+        notification.update({"status": "SKIPPED", "reason": "ops-discord runner missing"})
+        return notification
+
+    webhook_name = os.environ.get("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK", "slack")
+    notify_dry_run = dry_run or _truthy_env("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN")
+    content = (
+        f"monitor-opportunities required step failed and entered self-repair.\n"
+        f"step_id={step_id}\n"
+        f"receipt={receipt_path}\n"
+        f"self_repair_status={result.get('status')}\n"
+        f"triage_code={result.get('triage_code') or 'unknown'}"
+    )
+    cmd = [
+        str(runner),
+        "notify",
+        "--webhook",
+        webhook_name,
+        "--title",
+        "monitor-opportunities self-repair",
+        "--content",
+        content,
+        "--json",
+    ]
+    if notify_dry_run:
+        cmd.append("--dry-run")
+
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=workdir,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        notification.update(
+            {
+                "status": "FAILED",
+                "error": str(exc),
+                "command": cmd,
+                "webhook": webhook_name,
+                "external_effects": not notify_dry_run,
+            }
+        )
+        return notification
+
+    notification.update(
+        {
+            "status": "SENT" if proc.returncode == 0 and not notify_dry_run else "DRY_RUN",
+            "command": cmd,
+            "webhook": webhook_name,
+            "exit_code": proc.returncode,
+            "stdout_tail": proc.stdout[-4000:],
+            "stderr_tail": proc.stderr[-4000:],
+            "external_effects": not notify_dry_run,
+        }
+    )
+    try:
+        payload = json.loads(proc.stdout)
+        notification["ops_discord_status"] = payload.get("status")
+        notification["ops_discord_source"] = payload.get("source")
+        notification["ops_discord_webhook"] = payload.get("webhook")
+    except (json.JSONDecodeError, AttributeError):
+        notification["parse_error"] = "ops-discord notify stdout was not JSON"
+    if proc.returncode != 0:
+        notification["status"] = "FAILED"
+    return notification
+
+
 def _record_scheduler_self_repair_failure(
     *,
     workdir: Path,
@@ -663,6 +756,12 @@ def _record_scheduler_self_repair_failure(
             result["triage_code"] = ((payload.get("event") or {}).get("triage") or {}).get("code")
         except (json.JSONDecodeError, AttributeError):
             result["parse_error"] = "record-failure stdout was not JSON"
+    result["notification"] = _notify_scheduler_self_repair(
+        workdir=workdir,
+        receipt_path=receipt_path,
+        result=result,
+        step_id=step_id,
+    )
     return result
 
 
