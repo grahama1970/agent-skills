@@ -152,9 +152,9 @@
       "regression_id": "linkedin-easy-apply-safety-2026-08-22",
       "incident": {
         "date": "2026-08-22",
-        "summary": "New capability: authorized LinkedIn Easy Apply auto-submit. Guards that it never fabricates a screening answer or submits a blank required field, and enforces the scoped promotion gate.",
+        "summary": "New capability: post-report human-authorized LinkedIn Easy Apply submit. Guards that it never fabricates a screening answer or submits a blank required field, and enforces the scoped promotion plus exact authorization gates.",
         "root_cause": "n/a (new-capability guard).",
-        "correct_behavior": "work-auth/sponsorship answerable from answer bank; salary/clearance/experience/free-text human_required; any required field empty after filling -> NEEDS_HUMAN, never submit; scoped promotion required."
+        "correct_behavior": "work-auth/sponsorship answerable from answer bank; salary/clearance/experience/free-text human_required; any required field empty after filling -> NEEDS_HUMAN, never submit; scoped promotion and exact post-report human authorization required."
       },
       "threatens": {
         "capability": "ats_submit",
@@ -309,6 +309,47 @@
       "status": "ACTIVE",
       "last_proven": "2026-08-26T15:47:39.865726+00:00",
       "notes": "Guard reads the live Cognition Ashby application page and asserts application_page.workplace_type=ONSITE_ELSEWHERE, readback location_authority=primary_source, location_conflict=true, promoted_workplace_type=ONSITE_ELSEWHERE, and eligibility_state=REJECT_RELOCATION_REQUIRED."
+    },
+    {
+      "regression_id": "nightly-revision-mismatch-triage-2026-08-28",
+      "claim_ids": [
+        "nightly_scheduler_reliability"
+      ],
+      "seam_ids": [
+        "scheduler.revision_pin",
+        "triage.failure_code_catalog",
+        "ticket.watchdog_routing"
+      ],
+      "evidence_class": "deterministic",
+      "incident": {
+        "date": "2026-08-28",
+        "summary": "The Aug 27 and Aug 28 2 AM monitor-opportunities cron runs failed with NIGHTLY_REVISION_MISMATCH because the scheduler command still pinned expected revision 06f73f000188c5f448f7184335058506b86c5211 while the worktree revision was 1368ee62e3a8fe5fd4d991ff897019267df2d34b.",
+        "discovered_during": "Readback of /home/graham/.pi/scheduler/logs/monitor-opportunities-nightly.log and monitor-opportunities status.",
+        "root_cause": "The scheduler registration was not updated after the monitor-opportunities worktree revision changed; triage-error also had no catalog entry, so the incident surfaced as an unclassified ad hoc failure instead of a routable repair.",
+        "correct_behavior": "NIGHTLY_REVISION_MISMATCH is classified as monitor_opportunities_nightly_revision_mismatch with a scheduler repair next command and a routable ops_or_scheduler ticket path for project-watchdog if it recurs."
+      },
+      "threatens": {
+        "capability": "nightly_scheduler_reliability",
+        "seams": [
+          "scheduler.revision_pin",
+          "triage.failure_code_catalog",
+          "ticket.watchdog_routing"
+        ]
+      },
+      "retained_case": "nightly-revision-mismatch-triage-regression-2026-08-28",
+      "retained_fixture": "agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "python3",
+          "scripts/eval_nightly_revision_mismatch_triage.py"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "REVISION_MISMATCH_UNCLASSIFIED",
+        "observed_pre_fix": "skills/triage-error/run.sh classify returned monitor-opportunities_unclassified_993a1f78 with ambiguous=true for the exact NIGHTLY_REVISION_MISMATCH receipt."
+      },
+      "status": "ACTIVE",
+      "notes": "Guard exercises the real triage-error CLI and ticket preview path. It prevents the cron revision mismatch from being treated as a vague failure report without classification or watchdog-routing evidence."
     }
   ]
 }

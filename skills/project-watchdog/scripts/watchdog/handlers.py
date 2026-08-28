@@ -1188,24 +1188,31 @@ def handle_ticket_repair(
         return result
 
     # Fail closed on an unusable checkout BEFORE leasing the issue or calling
-    # Tau. A repair authored on a feature branch never reaches main, and one
-    # authored on top of another lane's uncommitted edits is unattributable.
+    # Tau. A repair is authored in a separate worktree from origin/main, so
+    # dirty target files in the registered checkout are operational context, not
+    # an authoring blocker. Branch/missing/non-git failures still block because
+    # they make origin/main discovery and repair-worktree preparation unsafe.
     targets = registry.issue_targets(issue)
     result["targets"] = sorted(targets)
 
-    # Check the registered checkout only for whether this ticket's targets are
-    # settled. A target another lane is mid-edit on is not safe to repair, even
-    # though the repair itself is authored elsewhere.
     readiness = worktree_readiness(worktree, targets)
     result["worktree_readiness"] = readiness
-    if not readiness.get("ready"):
+    blocking_reasons = [
+        reason
+        for reason in readiness.get("reasons", [])
+        if not str(reason).startswith("tracked_files_dirty:")
+    ]
+    result["registered_checkout_dirty_tracked"] = readiness.get("dirty_tracked", 0)
+    result["registered_checkout_untracked"] = readiness.get("untracked", 0)
+    result["worktree_dispatch_blocking_reasons"] = blocking_reasons
+    if blocking_reasons:
         result.update(
             {
                 "ok": False,
                 "status": "BLOCKED",
                 "summary": (
                     f"worktree {worktree} is not safe to author a repair in: "
-                    f"{', '.join(readiness.get('reasons') or ['unknown'])}. "
+                    f"{', '.join(blocking_reasons or ['unknown'])}. "
                     f"branch={readiness.get('branch')} "
                     f"dirty_tracked={readiness.get('dirty_tracked')} "
                     f"untracked={readiness.get('untracked')}."

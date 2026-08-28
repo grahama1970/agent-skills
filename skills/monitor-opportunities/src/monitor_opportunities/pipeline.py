@@ -398,7 +398,7 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
                 "LinkedIn row is profile/recommendation source intelligence only.",
                 "Primary employer/client source readback is required before opportunity admission."
                 if not pending else
-                "WNY priority: no primary ATS source corroborated this run — verify the employer posting, then apply.",
+                "WNY priority: no primary ATS source corroborated this run; verify the employer posting and require Graham's exact post-report authorization before any application.",
             ],
             "action_worthy": pending,
             "visible_in_report": True,

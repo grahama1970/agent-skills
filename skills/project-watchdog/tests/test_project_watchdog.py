@@ -943,12 +943,14 @@ def test_ask_tau_dag_runner_polls_stream_until_process_exit(tmp_path) -> None:
     assert monitor["poll_count"] >= 1
 
 
-def test_a_dirty_target_blocks_before_any_github_write(tmp_path) -> None:
-    """Readiness is judged per target, and refusal happens before leasing.
+def test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring(tmp_path) -> None:
+    """Repairs are authored in isolated worktrees, not the registered checkout.
 
     agent-skills has 111 dirty skills out of 364. Requiring the whole
-    repository to be clean withheld the 253 that are not; requiring nothing
-    would author a repair on top of another lane's uncommitted edits.
+    repository to be clean withheld the 253 that are not; requiring the target
+    path to be clean still blocked normal monitor-opportunities operation where
+    tracked files are always dirty. The dirty registered checkout is reported,
+    while repair authoring proceeds from a fresh origin/main worktree.
     """
     worktree = _clean_worktree(tmp_path)
     (worktree / "skills" / "x" / "SKILL.md").write_text("locally edited\n", encoding="utf-8")
@@ -960,11 +962,11 @@ def test_a_dirty_target_blocks_before_any_github_write(tmp_path) -> None:
     }
     issue = _issue(11, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
     issue["watchdog_action"] = "ticket_repair"
-    with mock.patch.object(handlers.github, "issue_comment") as comment:
-        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
-    assert result["status"] == "BLOCKED"
+    result = handlers.handle_issue("run", tmp_path, project, issue, apply=False)
+    assert result["status"] == "DRY_RUN", result.get("summary")
     assert "tracked_files_dirty" in " ".join(result["worktree_readiness"]["reasons"])
-    assert not comment.called, "must refuse before leasing"
+    assert result["registered_checkout_dirty_tracked"] == 1
+    assert result["worktree_dispatch_blocking_reasons"] == []
 
 
 def test_a_clean_target_dispatches_despite_an_unrelated_dirty_skill(tmp_path) -> None:

@@ -2,12 +2,37 @@
   "version": 2,
   "skill": "monitor-opportunities",
   "trials": 2,
-  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, and the enforcement gates + fabrication guard hold",
+  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold",
   "claims": {
-    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, refuses to silently skip a dead-API source, enforces the 2-week recency window, and carries no fabricated 'God of War' claim",
+    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim",
     "does_not_prove": "real successful application submissions (deliberately human-gated), long-run scheduler reliability, or semantic quality of tailored resumes"
   },
   "cases": [
+    {
+      "name": "grahamaco-public-surface-test-interactions-gate",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && out=/tmp/monitor-opportunities-website-gate-$$ && skills/monitor-opportunities/run.sh website-gate --output-dir \"$out\" --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"monitor-website.test_interactions.v1\"",
+          "\"status\": \"PASS\"",
+          "\"surface\": \"home\"",
+          "\"surface\": \"resume\"",
+          "\"discovery_findings\": 0"
+        ]
+      },
+      "readback": true,
+      "proves": "The opportunity monitor's public grahama.co prerequisite invokes the real monitor-website/test-interactions gate against live home and resume surfaces.",
+      "does_not_prove": "That LinkedIn, ATS, email, or Calendly external effects are authorized or executed."
+    },
     {
       "name": "live-e2e-nightly-real-world",
       "type": "positive",
@@ -64,6 +89,101 @@
         ]
       },
       "proves": "The required-source contract accepts a valid current-run receipt even with supplemental locator noise, accepts sam.gov API receipts under browser_or_api, and emits honest auth-required browser receipts for Indeed/HiddenJobs instead of fabricated source coverage."
+    },
+    {
+      "name": "employer-ats-parser-limit-accounting",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . --extra test pytest tests/test_discovery.py::test_ashby_valid_board_over_employer_ats_cap_is_not_silently_dropped tests/test_discovery.py::test_greenhouse_valid_board_over_employer_ats_cap_is_not_silently_dropped -q && uv run --project . python scripts/eval_employer_ats_parser_limit.py --output /tmp/monitor-opportunities-employer-ats-parser-limit-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed",
+          "EMPLOYER_ATS_PARSER_LIMIT_OK",
+          "named=5",
+          "size_only_failures=0"
+        ],
+        "stderr_excludes": [
+          "Response exceeded bounded parser limit"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/invariant_pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/named_target_count",
+            "equals": 5
+          },
+          {
+            "path": "/tmp/monitor-opportunities-employer-ats-parser-limit-eval.json",
+            "json_pointer": "/size_only_failures",
+            "equals": []
+          }
+        ]
+      },
+      "proves": "Oversized valid Ashby and Greenhouse board JSON is parsed instead of rejected solely because of the evidence-preview cap, and the completed live nightly receipts for Sierra, Harvey, ElevenLabs, Decagon, and OneTrust are no longer size-only INVALID_RESPONSE records.",
+      "does_not_prove": "A fresh full nightly can pass unrelated browser/auth gates or that non-Ashby/non-Greenhouse providers parse oversized responses."
+    },
+    {
+      "name": "moog-workday-source-discovery",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_workday_employment_target_is_dispatched_and_deduped -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "A Moog-style Workday employment target is routed through the Workday adapter, multiple Workday search terms are attempted, duplicate postings are collapsed, and Buffalo AI postings produce official Workday apply URLs.",
+      "does_not_prove": "A fresh live Moog Workday request is reachable tonight, that every Moog role is semantically relevant after ranking, or that Graham has authorized any application submission."
+    },
+    {
+      "name": "decision-ledger-concurrent-authorization-regression",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_decisions.py::test_concurrent_decision_writes_keep_every_idempotency_key -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "Concurrent local decision writes preserve every idempotency key instead of losing one authorization during bulk Moog-style application decisions.",
+      "does_not_prove": "External ATS submission, Workday submit support, or semantic quality of the application answers.",
+      "seams": [
+        "decisions.append_decision",
+        "applications.authorization_ledger"
+      ]
     },
     {
       "name": "no-fabricated-god-of-war-claim",
@@ -195,6 +315,50 @@
       "proves": "Pacing sleeps no longer call surf wait, so a busy/unavailable surf lease cannot abort a capture that already has rows (the 2026-08-13 top-applicant failure)."
     },
     {
+      "name": "ats-form-capture-failure-family-regressions",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_ats_form_capture.py::test_provider_parse_ashby_and_lever skills/monitor-opportunities/tests/test_ats_form_capture.py::test_close_tab_circuit_defers_after_three_pending_failures -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ],
+        "stderr_excludes": [
+          "TimeoutExpired"
+        ]
+      },
+      "timeout_seconds": 60,
+      "proves": "Ashby /application URLs are keyed by the real posting id instead of the literal application suffix, and after three pending Surf tab-close timeouts monitor-opportunities stops spending per-tab timeout budget on new close attempts.",
+      "does_not_prove": "The underlying Surf tab.close command is repaired, that every browser tab will close promptly in a live nightly, or that every live ATS page will return field rows before its timeout.",
+      "seams": [
+        "browser_capture.ats_form_artifact_key",
+        "browser_capture.tab_close_cleanup"
+      ]
+    },
+    {
+      "name": "nightly-claim-authority-and-relative-evidence-regression-2026-08-24",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_claim_snapshot_binding.py::test_nightly_uses_default_authority_claim_snapshot_when_env_is_absent skills/monitor-opportunities/tests/test_pipeline.py::test_run_command_resolves_relative_evidence_paths_before_pipeline -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "timeout_seconds": 120,
+      "proves": "Direct nightly seeds the documented local authority claim snapshot into its run subprocess when MONITOR_CLAIM_SNAPSHOT_PATH is absent, and the run CLI resolves relative evidence paths before downstream code calls Path.as_uri().",
+      "does_not_prove": "Fresh browser-capture completion, Surf tab cleanup reliability, LinkedIn readback promotion quality, or full nightly scheduler reliability."
+    },
+    {
       "name": "tau-opportunity-evaluator-reviewer-smoke",
       "type": "positive",
       "real_world": true,
@@ -306,6 +470,42 @@
       "timeout_seconds": 7200,
       "proves": "The promoted Stage 0 cron path is live, pinned, no-effect, tracker-skipped, ATS-memory-skipped, explicit about application-history degradation, free of Surf tab-close cleanup failures, and stops Tau provider evaluation after the first provider-live addendum.",
       "does_not_prove": "Human application authorization, tracker issue creation in a separately promoted mode, ATS memory writes in a separately promoted mode, or semantic quality of provider addenda."
+    },
+    {
+      "name": "nightly-revision-mismatch-triage-regression-2026-08-28",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_nightly_revision_mismatch_triage.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NIGHTLY_REVISION_MISMATCH_TRIAGE_OK",
+          "code=monitor_opportunities_nightly_revision_mismatch",
+          "ambiguous=False",
+          "TICKET_PREVIEW_ROUTABLE_OK",
+          "route=ops_or_scheduler",
+          "label=agent-work"
+        ],
+        "stderr_excludes": [
+          "REVISION_MISMATCH_UNCLASSIFIED",
+          "REVISION_MISMATCH_STILL_AMBIGUOUS",
+          "TRIAGE_NEXT_COMMAND_MISSING",
+          "TICKET_PREVIEW_FAILED"
+        ]
+      },
+      "proves": "The exact Aug 27/28 cron NIGHTLY_REVISION_MISMATCH signal is classified by triage-error as a recoverable monitor-opportunities scheduler issue and can produce a routable ticket preview for project-watchdog.",
+      "does_not_prove": "That tomorrow's 2 AM cron run will fire, that project-watchdog dispatched a live GitHub issue, or that a full nightly report passed unrelated source/browser gates.",
+      "seams": [
+        "scheduler.revision_pin",
+        "triage.failure_code_catalog",
+        "ticket.watchdog_routing"
+      ]
     },
     {
       "name": "regression-2026-08-18-failure-signatures",
@@ -429,6 +629,29 @@
       ]
     },
     {
+      "name": "linkedin-premium-signals-survive-ranking-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates skills/monitor-opportunities/tests/test_discovery.py::test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows skills/monitor-opportunities/tests/test_linkedin_search.py::test_top_applicant_capture_receipts_easy_apply_count skills/monitor-opportunities/tests/test_linkedin_search.py::test_top_applicant_js_skips_verification_badge_line skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_counts skills/monitor-opportunities/tests/test_linkedin_search.py::test_premium_js_skips_verification_badge_line skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py::test_promoted_stage0_nightly_writes_publication_receipts skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_readback_promotion_is_receipted_for_stage_accounting skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_survive_duplicate_merge skills/monitor-opportunities/tests/test_ranking.py::test_linkedin_premium_signals_are_reserved_in_source_intel_report -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "10 passed"
+        ]
+      },
+      "proves": "LinkedIn Premium Top Applicant, Easy Apply, low-competition, and warm-path fields survive browser evidence merge and duplicate posting collapse, row-level LinkedIn URLs are receipt-backed for relationship validation, then priority rows are reserved into source-intel before ordinary LinkedIn locator rows.",
+      "does_not_prove": "A live LinkedIn account will always expose Easy Apply or Top Applicant rows; the live capture still controls whether those signals are present on a given night.",
+      "seams": [
+        "ranking.linkedin_premium_signal_merge",
+        "ranking.source_intel_selection"
+      ]
+    },
+    {
       "name": "response-hardening-regression",
       "type": "adversarial",
       "real_world": true,
@@ -457,7 +680,7 @@
     {
       "name": "linkedin-easy-apply-safety",
       "type": "adversarial",
-      "real_world": true,
+      "evidence_class": "deterministic",
       "timeout_seconds": 60,
       "command": [
         "bash",
@@ -471,12 +694,43 @@
         ],
         "stderr_excludes": [
           "GATE_ACCEPTED_BAD_PROMOTION",
+          "AUTHORIZATION_ACCEPTED_BAD_PAYLOAD",
+          "AUTHORIZATION_REJECTED_GOOD_PAYLOAD",
           "BLANK_REQUIRED_NOT_BLOCKED",
           "SHOULD_BE_HUMAN_REQUIRED"
         ]
       },
       "seams": [
         "ats.linkedin_easy_apply"
+      ]
+    },
+    {
+      "name": "linkedin-top-applicant-easy-apply-exact-authorization",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "SOURCE_INTEL_DECISION_INVALID",
+          "LINKEDIN_PRIORITY_NOT_ACTIONABLE",
+          "EASY_APPLY_AUTHORIZED"
+        ]
+      },
+      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is visible and action-worthy for human review, but it is not classified as standing authorization and still requires exact post-report authorization before any application.",
+      "does_not_prove": "A live LinkedIn submit occurred, that LinkedIn exposed a qualifying row in the current account, or that unknown screening questions can be answered without Graham.",
+      "seams": [
+        "pipeline.linkedin_source_intel_policy",
+        "contracts.linkedin_source_intel_decision_allowlist",
+        "report.linkedin_apply_queue_signal"
       ]
     },
     {
@@ -598,6 +852,115 @@
           "LINKEDIN_SILENT_DROP"
         ]
       }
+    },
+    {
+      "name": "morning-digest-employment-accounting",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_morning_digest_employment_accounting.py --output /tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MORNING_DIGEST_EMPLOYMENT_ACCOUNTING_OK",
+          "employment_input=",
+          "employment_included=",
+          "employment_excluded=",
+          "unaccounted=0"
+        ],
+        "stderr_excludes": [
+          "MORNING_DIGEST_EMPLOYMENT_ACCOUNTING_FAILED"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/invariant_pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/rebuilt_digest/selection_accounting/unaccounted",
+            "equals": 0
+          },
+          {
+            "path": "/tmp/monitor-opportunities-morning-digest-employment-accounting-eval.json",
+            "json_pointer": "/missing_employment_reason_count",
+            "equals": 0
+          }
+        ]
+      },
+      "proves": "A production morning digest projection over a completed live nightly report manifest records per-candidate selection accounting for admitted employment rows, with included + excluded equal to input and zero unaccounted candidates.",
+      "does_not_prove": "A fresh nightly can pass unrelated live source admission gates or that employment opportunities were submitted externally."
+    },
+    {
+      "name": "relationship-prospect-queue-accounting",
+      "type": "negative",
+      "real_world": true,
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_relationship_prospect_queue.py --output /tmp/monitor-opportunities-relationship-prospect-queue-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RELATIONSHIP_PROSPECT_QUEUE_OK",
+          "input=",
+          "included=",
+          "excluded=",
+          "relationship="
+        ],
+        "stderr_excludes": [
+          "RELATIONSHIP_PROSPECT_QUEUE_NO_LIVE_RUN",
+          "RELATIONSHIP_PROSPECT_QUEUE_NO_INPUT",
+          "RELATIONSHIP_PROSPECT_QUEUE_UNACCOUNTED",
+          "RELATIONSHIP_PROSPECT_QUEUE_COUNT_MISMATCH"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/invariant_pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/unaccounted",
+            "equals": 0
+          },
+          {
+            "path": "/tmp/monitor-opportunities-relationship-prospect-queue-eval.json",
+            "json_pointer": "/relationship_count_matches_included",
+            "equals": true
+          }
+        ]
+      },
+      "proves": "A production digest projection over a completed live nightly run writes prospect-queue relationship accounting where included + excluded equals input, unaccounted is zero, and the relationship prospect count matches included relationship signals.",
+      "does_not_prove": "A fresh nightly can pass unrelated live source admission gates or that outbound reconnect effects are authorized."
     },
     {
       "name": "status-exposes-scheduler-worktree-latest",

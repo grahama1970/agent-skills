@@ -129,6 +129,30 @@
       }
     },
     {
+      "name": "dirty-registered-target-does-not-block-isolated-authoring",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "A dirty target path in the registered checkout is reported but does not block project-watchdog from preparing an isolated repair worktree from origin/main.",
+      "does_not_prove": "A live Ask/Tau repair for the ticket succeeds."
+    },
+    {
       "name": "skill-scoped-projects-only-route-owned-targets",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

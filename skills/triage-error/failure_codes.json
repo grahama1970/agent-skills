@@ -46,6 +46,15 @@
       "next_command": "Hand off to the human to log the reviewer tab back in; do not retry automatically.",
       "recoverable": false,
       "not_this": []
+    },
+    {
+      "code": "monitor_opportunities_nightly_revision_mismatch",
+      "layer": "monitor-opportunities",
+      "match": ["nightly_revision_mismatch", "expected", "got"],
+      "cause": "The scheduler invoked monitor-opportunities with a stale --expected-revision pin, so cron refused to publish a nightly report from code that no longer matched the registered revision.",
+      "next_command": "Run skills/monitor-opportunities/run.sh schedule --promoted-stage0 from the intended agent-skills worktree, read back ~/.pi/scheduler/jobs.json for monitor-opportunities-nightly, then file a skills/ticket bug with route:ops_or_scheduler if the next scheduler log still emits NIGHTLY_REVISION_MISMATCH so project-watchdog can dispatch the repair.",
+      "recoverable": true,
+      "not_this": ["no opportunities found", "LinkedIn empty", "source ranking threshold"]
     }
   ]
 }
