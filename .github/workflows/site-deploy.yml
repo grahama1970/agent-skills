@@ -79,13 +79,10 @@ jobs:
           # audit over every generated surface.
           python3 scripts/gen_resume.py
           python3 scripts/gen_artifacts.py
-      - name: Refresh Calendly public metadata
-        run: python3 scripts/gen_calendly.py
-        env:
-          CALENDLY_PAT: ${{ secrets.CALENDLY_PAT }}
       - run: python3 scripts/gen_build_manifest.py
       - run: python3 scripts/verify-data-qid.py
       - run: python3 scripts/copy_audit.py
+      - run: python3 scripts/verify_constellation_legend.py
       - run: npm ci
       - run: node scripts/search_fixture.mjs
       - run: npm run build

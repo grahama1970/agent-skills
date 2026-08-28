@@ -3618,15 +3618,6 @@ a:hover .c-plabel { fill: var(--brass); }
   text-transform: uppercase;
   color: var(--faint);
 }
-.cl::before {
-  content: '';
-  display: inline-block;
-  width: 8px; height: 8px; border-radius: 50%;
-  margin-right: 0.4em; vertical-align: middle;
-}
-.cl--technical::before { background: var(--brass); }
-.cl--hybrid::before { background: var(--sage); }
-.cl--creative::before { background: var(--ember); }
 .cl-note { text-transform: none; letter-spacing: 0; }
 /* Mobile is list-first: the graph is hard to operate on a phone, so hide it —
    the search results and the research-area list below carry the structure. */
