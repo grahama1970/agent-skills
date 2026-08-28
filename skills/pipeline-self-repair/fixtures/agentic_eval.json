@@ -1,0 +1,146 @@
+{
+  "version": 2,
+  "skill": "pipeline-self-repair",
+  "trials": 2,
+  "live": true,
+  "proof_scope": "record-failure and inspect exercised through the real skill run.sh, with independent readback of the written replay ledger artifact",
+  "claims": {
+    "proves": "pipeline-self-repair records a required pipeline-step failure as a blocking replay-ledger event with triage, stable category, and ticket disposition; the ledger can be folded for checkpoint gating.",
+    "does_not_prove": "live GitHub mutation, project-watchdog dispatch, memory daemon availability, or paid provider/Kling side effects. Those require explicit --apply-ticket/--dispatch-watchdog/live provider runs."
+  },
+  "capability_claims": [
+    {
+      "id": "psr.ledger.record_failure",
+      "description": "record-failure writes an append-only blocking step.failed ledger event with triage, category_key, failure_category_id, and ticket disposition.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "psr.gate.inspect",
+      "description": "inspect folds the ledger into open blocking failure state for checkpoint-resume gating.",
+      "criticality": "important",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "psr.fail_closed.raw_signal",
+      "description": "record-failure fails closed instead of inventing a failure when no raw signal or receipt is supplied.",
+      "criticality": "critical",
+      "evidence_required": {"fault_injected_deterministic": true}
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "self_repair.ledger",
+      "claim_id": "psr.ledger.record_failure",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "failure_modes": ["failed step is not replayable", "ledger writes but cannot be read back"],
+      "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "triage.failure_code_catalog",
+      "claim_id": "psr.ledger.record_failure",
+      "seam_type": "skill-composition",
+      "criticality": "critical",
+      "failure_modes": ["raw signal bypasses triage-error", "ambiguous classification advances as success"],
+      "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "checkpoint.resume_gate",
+      "claim_id": "psr.gate.inspect",
+      "seam_type": "state-fold",
+      "criticality": "important",
+      "failure_modes": ["blocking failure is hidden from resume gate"],
+      "required_evidence": ["live_e2e"]
+    },
+    {
+      "seam_id": "input.validation",
+      "claim_id": "psr.fail_closed.raw_signal",
+      "seam_type": "cli-contract",
+      "criticality": "critical",
+      "failure_modes": ["missing failure evidence produces a fake category"],
+      "required_evidence": ["fault_injected_deterministic"]
+    }
+  ],
+  "cases": [
+    {
+      "name": "record_failure_dry_run_writes_replay_ledger",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "required": true,
+      "supports_claims": ["psr.ledger.record_failure"],
+      "seams": ["self_repair.ledger", "triage.failure_code_catalog"],
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; TMP=/tmp/pipeline-self-repair-agentic-eval; rm -rf \"$TMP\"; mkdir -p \"$TMP\"; ../run.sh record-failure --pipeline persona-dream --step-id phase_11_kling_submit --run-id eval-run --raw-signal 'multi_prompt prompt exceeds 512 characters' --layer kling --target skills/persona-dream --run-root \"$TMP\" --ledger \"$TMP/replay_ledger.jsonl\" --skip-memory --skip-github --no-ticket --json > \"$TMP/record.json\"; python3 - <<'PY'\nimport json\nroot='/tmp/pipeline-self-repair-agentic-eval'\nrecord=json.load(open(root+'/record.json'))\nline=json.loads(open(root+'/replay_ledger.jsonl').read().strip())\nassert record['event']['event_hash'] == line['event_hash']\nassert line['blocking'] is True\nassert line['ticket']['action'] == 'ticket_skipped'\nprint('PIPELINE_SELF_REPAIR_LEDGER_OK')\nPY"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_LEDGER_OK"],
+        "artifacts": [
+          {"path": "/tmp/pipeline-self-repair-agentic-eval/replay_ledger.jsonl", "min_bytes": 100},
+          {"path": "/tmp/pipeline-self-repair-agentic-eval/record.json", "json_pointer": "/event/event_type", "equals": "step.failed"}
+        ]
+      }
+    },
+    {
+      "name": "inspect_reports_open_failure_from_replay_ledger",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "required": true,
+      "supports_claims": ["psr.gate.inspect"],
+      "seams": ["self_repair.ledger", "checkpoint.resume_gate"],
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; TMP=/tmp/pipeline-self-repair-agentic-eval-inspect; rm -rf \"$TMP\"; mkdir -p \"$TMP\"; ../run.sh record-failure --pipeline monitor-opportunities --step-id nightly_publish --run-id eval-inspect --raw-signal 'nightly_revision_mismatch expected abc got def' --layer monitor-opportunities --target skills/monitor-opportunities --run-root \"$TMP\" --ledger \"$TMP/replay_ledger.jsonl\" --skip-memory --skip-github --no-ticket --json >/dev/null; ../run.sh inspect --ledger \"$TMP/replay_ledger.jsonl\" --json > \"$TMP/inspect.json\"; python3 - <<'PY'\nimport json\nroot='/tmp/pipeline-self-repair-agentic-eval-inspect'\nsummary=json.load(open(root+'/inspect.json'))\nassert summary['open_failure_count'] == 1, summary\nprint('PIPELINE_SELF_REPAIR_INSPECT_OK')\nPY"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PIPELINE_SELF_REPAIR_INSPECT_OK"],
+        "artifacts": [
+          {"path": "/tmp/pipeline-self-repair-agentic-eval-inspect/inspect.json", "json_pointer": "/open_failure_count", "equals": 1}
+        ]
+      }
+    },
+    {
+      "name": "missing_raw_signal_fails_closed",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "required": true,
+      "supports_claims": ["psr.fail_closed.raw_signal"],
+      "seams": ["input.validation"],
+      "command": [
+        "../run.sh",
+        "record-failure",
+        "--pipeline",
+        "persona-dream",
+        "--step-id",
+        "missing_signal",
+        "--run-id",
+        "eval-missing",
+        "--target",
+        "skills/persona-dream",
+        "--run-root",
+        "/tmp/pipeline-self-repair-missing",
+        "--ledger",
+        "/tmp/pipeline-self-repair-missing/replay_ledger.jsonl",
+        "--skip-memory",
+        "--skip-github",
+        "--no-ticket"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": ["provide --raw-signal or --receipt"]
+      }
+    }
+  ]
+}

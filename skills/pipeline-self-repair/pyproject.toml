@@ -1,0 +1,14 @@
+[project]
+name = "pipeline-self-repair"
+version = "0.1.0"
+description = "Replayable self-repair ledger for complex sequential skill pipelines"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "loguru>=0.7.0,<0.7.3",
+    "pydantic>=2.0,<3.0",
+    "pytest>=8.0.0,<9.0.0",
+    "typer>=0.9.0",
+]
+
+[tool.uv]
+package = false
