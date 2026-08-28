@@ -1094,6 +1094,34 @@
       },
       "proves": "The scheduler execution-equivalence checker records a dirty monitor-opportunities tree in preflight but still executes the exact registered command and can return PASS when all runtime receipts pass.",
       "does_not_prove": "A fresh live nightly run passes external source capture, Tau provider evaluation, or report acceptance."
+    },
+    {
+      "name": "report-acceptance-stage-ledger-interface",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 180,
+      "seams": [
+        "cli.report_acceptance",
+        "report_acceptance.stage_ledger_gate",
+        "nightly.promoted_stage0_final_gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_acceptance.py::test_report_acceptance_requires_stage_ledger_when_promoted skills/monitor-opportunities/tests/test_report_acceptance.py::test_report_acceptance_accepts_required_passing_stage_ledger -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ],
+        "stderr_excludes": [
+          "unexpected keyword argument",
+          "TypeError"
+        ]
+      },
+      "proves": "The CLI can require a promoted Stage 0 stage ledger through validate_report_acceptance, missing ledgers fail with a machine-readable check, and a passing ledger satisfies the final report-acceptance gate.",
+      "does_not_prove": "A fresh live nightly writes a semantically correct stage ledger for all discovered opportunities."
     }
   ]
 }

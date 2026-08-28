@@ -161,7 +161,10 @@ def _validate_zero_effect_replay_binding(
 
 
 def validate_report_acceptance(
-    run_dir: Path, *, require_zero_effect_replay: bool = True
+    run_dir: Path,
+    *,
+    require_zero_effect_replay: bool = True,
+    require_stage_ledger: bool = False,
 ) -> dict[str, Any]:
     """Validate report-visible claims, provenance, degradation, and zero effects."""
 
@@ -170,6 +173,7 @@ def validate_report_acceptance(
     report_json_path = run_dir / "report" / "report.json"
     report_html_path = run_dir / "report" / "index.html"
     zero_effect_path = run_dir / "zero-effect-replay-receipt.json"
+    stage_ledger_path = run_dir / "stage-ledger.json"
     failures: list[dict[str, Any]] = []
 
     def fail(check: str, detail: str) -> None:
@@ -216,6 +220,12 @@ def validate_report_acceptance(
             manifest=manifest_raw,
             fail=fail,
         )
+
+    stage_ledger = read_json(stage_ledger_path) if stage_ledger_path.exists() else None
+    if require_stage_ledger and stage_ledger is None:
+        fail("stage_ledger_present", "stage-ledger.json is missing")
+    if stage_ledger is not None and stage_ledger.get("ok") is not True:
+        fail("stage_ledger_ok", "stage-ledger.json does not report ok=true")
 
     if run_receipt and run_receipt.get("external_effects") is not False:
         fail("run_external_effects", "run receipt external_effects is not false")
@@ -277,6 +287,11 @@ def validate_report_acceptance(
                 zero_effect.get("status") == "PASS" if zero_effect is not None else False
             ),
             **replay_binding_checks,
+            "stage_ledger_required": require_stage_ledger,
+            "stage_ledger_present": stage_ledger is not None,
+            "stage_ledger_ok": (
+                stage_ledger.get("ok") is True if stage_ledger is not None else False
+            ),
             "run_external_effects_false": run_receipt.get("external_effects") is False,
             "shortlist_bound": opportunity_count <= 8,
             "application_packets_human_authorized_only": not authorized_packets,
@@ -290,6 +305,7 @@ def validate_report_acceptance(
             "degraded_source_receipts": len(degraded_receipts),
             "application_packets": len(application_packets),
         },
+        "stage_ledger": stage_ledger,
         "receipt_consistency": consistency,
         "failures": failures,
         "external_effects": False,
