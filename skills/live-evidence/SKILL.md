@@ -159,7 +159,13 @@ never the complete transcript.
 ./run.sh setup
 ./run.sh ui-build
 ./run.sh serve --port 8799 --open-browser
+# If 8799 is already occupied, fail closed or explicitly scan upward:
+./run.sh serve --port 8799 --auto-port --open-browser
 ```
+
+`serve --auto-port` writes the selected URL to `local/server.json`; copy that
+`backend_url` into `listen`, `replay`, or `status` when the server could not use
+8799.
 
 In another terminal, after obtaining any required recording consent:
 

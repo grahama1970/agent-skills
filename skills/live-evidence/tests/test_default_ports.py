@@ -1,6 +1,10 @@
 """Default port/backend URL regressions."""
 
 import inspect
+import socket
+
+import pytest
+import typer
 
 from live_evidence import cli
 from live_evidence.config import DEFAULT_BACKEND_URL, DEFAULT_PORT, AppSettings
@@ -19,3 +23,23 @@ def test_cli_backend_defaults_avoid_task_monitor_port() -> None:
     for command in (cli.listen, cli.replay, cli.search, cli.status):
         assert inspect.signature(command).parameters["backend_url"].default == DEFAULT_BACKEND_URL
         assert "8765" not in inspect.signature(command).parameters["backend_url"].default
+
+
+def test_serve_port_scan_fails_closed_without_auto_port() -> None:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        occupied = sock.getsockname()[1]
+
+        with pytest.raises(typer.BadParameter, match="port .* is occupied"):
+            cli._select_serve_port("127.0.0.1", occupied, auto_port=False)
+
+
+def test_serve_auto_port_scans_upward_from_occupied_port() -> None:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        occupied = sock.getsockname()[1]
+
+        selected = cli._select_serve_port("127.0.0.1", occupied, auto_port=True, scan_limit=20)
+
+    assert selected != occupied
+    assert occupied < selected <= occupied + 20

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import shutil
+import socket
 import threading
 import time
 import webbrowser
@@ -42,22 +43,79 @@ def serve(
     host: Annotated[str, typer.Option(help="Bind host.")] = DEFAULT_HOST,
     port: Annotated[int, typer.Option(min=1, max=65_535, help="Bind port.")] = DEFAULT_PORT,
     open_browser: Annotated[bool, typer.Option("--open-browser/--no-browser")] = False,
+    auto_port: Annotated[
+        bool,
+        typer.Option("--auto-port", help="If the requested port is occupied, scan upward for a free one."),
+    ] = False,
 ) -> None:
     """Run the FastAPI service and built React UI."""
 
-    settings = AppSettings.from_env(host=host, port=port)
+    selected_port = _select_serve_port(host, port, auto_port=auto_port)
+    settings = AppSettings.from_env(host=host, port=selected_port)
     if host not in {"127.0.0.1", "localhost", "::1"} and not settings.allow_remote_bind:
         raise typer.BadParameter(
             "non-loopback binds require LIVE_EVIDENCE_ALLOW_REMOTE_BIND=true"
         )
+    _write_server_receipt(settings, host, selected_port)
     application = create_app(settings)
+    url = f"http://{host}:{selected_port}"
+    typer.echo(f"Live Evidence serving on {url}")
+    if selected_port != port:
+        typer.echo(f"requested port {port} was occupied; selected {selected_port}")
     if open_browser:
         threading.Thread(
             target=_open_browser_after_delay,
-            args=(f"http://{host}:{port}",),
+            args=(url,),
             daemon=True,
         ).start()
-    uvicorn.run(application, host=host, port=port, log_level="info")
+    uvicorn.run(application, host=host, port=selected_port, log_level="info")
+
+
+def _host_for_socket(host: str) -> str:
+    return "127.0.0.1" if host == "localhost" else host
+
+
+def _port_is_free(host: str, port: int) -> bool:
+    family = socket.AF_INET6 if ":" in host else socket.AF_INET
+    with socket.socket(family, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((_host_for_socket(host), port))
+        except OSError:
+            return False
+    return True
+
+
+def _select_serve_port(host: str, port: int, *, auto_port: bool, scan_limit: int = 100) -> int:
+    if _port_is_free(host, port):
+        return port
+    if not auto_port:
+        raise typer.BadParameter(
+            f"port {port} is occupied; stop that service, pass --port <free-port>, or pass --auto-port"
+        )
+    for candidate in range(port + 1, min(65_535, port + scan_limit) + 1):
+        if _port_is_free(host, candidate):
+            return candidate
+    raise typer.BadParameter(f"no free port found from {port} through {min(65_535, port + scan_limit)}")
+
+
+def _write_server_receipt(settings: AppSettings, host: str, port: int) -> None:
+    local_dir = settings.skill_root / "local"
+    local_dir.mkdir(exist_ok=True)
+    (local_dir / "server.json").write_text(
+        json.dumps(
+            {
+                "schema": "live_evidence.server_receipt.v1",
+                "host": host,
+                "port": port,
+                "backend_url": f"http://{host}:{port}",
+                "written_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 @app.command()
