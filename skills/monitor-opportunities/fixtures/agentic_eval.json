@@ -1175,6 +1175,53 @@
       },
       "proves": "A failed scheduler-exec-check writes its failure receipt, invokes skills/pipeline-self-repair/run.sh record-failure without external mutation flags, records a replay ledger, and binds triage/category fields back into the scheduler failure receipt.",
       "does_not_prove": "That project-watchdog dispatched a live repair, that a GitHub issue was created, or that the failed nightly step was subsequently rerun from checkpoint."
+    },
+    {
+      "name": "tau-dag-visualizes-nightly-self-repair-orchestration",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 180,
+      "seams": [
+        "failure.pipeline_self_repair",
+        "triage.failure_code_catalog",
+        "ticket.watchdog_routing",
+        "agentic_evals.retained_regression_guard",
+        "tau.dag_contract_visualization"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && dag=skills/monitor-opportunities/fixtures/tau/monitor-opportunities-nightly-self-repair.dag.json && chart=/tmp/monitor-opportunities-nightly-self-repair.phart.txt && ./skills/phart-dag-chart/run.sh validate \"$dag\" --json && (cd /home/graham/workspace/experiments/tau && uv run python - <<'PY'\nfrom pathlib import Path\nfrom tau_coding.project_dag import load_dag_contract_payload, validate_dag_contract\npath = Path('/home/graham/workspace/experiments/agent-skills/skills/monitor-opportunities/fixtures/tau/monitor-opportunities-nightly-self-repair.dag.json')\ncontract = validate_dag_contract(load_dag_contract_payload(path))\nprint(f'TAU_STRICT_VALIDATE_OK dag_id={contract.dag_id} nodes={len(contract.nodes)} edges={len(contract.edges)}')\nPY\n) && ./skills/phart-dag-chart/run.sh chart \"$dag\" --plain | tee \"$chart\" && grep -q 'pipeline-self-repair-record-failure' \"$chart\" && grep -q 'triage-error-classify' \"$chart\" && grep -q 'ticket-bind-or-create' \"$chart\" && grep -q 'project-watchdog-dispatch' \"$chart\" && grep -q 'agentic-eval-retained-guard' \"$chart\" && grep -q 'rerun-failed-checkpoint' \"$chart\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"source_graph_version\": \"tau.dag_contract.v1\"",
+          "\"graph_id\": \"monitor-opportunities-nightly-self-repair\"",
+          "\"node_count\": 13",
+          "TAU_STRICT_VALIDATE_OK dag_id=monitor-opportunities-nightly-self-repair nodes=13 edges=20",
+          "pipeline-self-repair-record-failure",
+          "triage-error-classify",
+          "ticket-bind-or-create",
+          "project-watchdog-dispatch",
+          "agentic-eval-retained-guard",
+          "rerun-failed-checkpoint",
+          "human-review"
+        ],
+        "stderr_excludes": [
+          "error [",
+          "Traceback"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-nightly-self-repair.phart.txt",
+            "min_bytes": 500
+          }
+        ]
+      },
+      "proves": "The retained monitor-opportunities Tau DAG contract can be validated and rendered by phart-dag-chart, and the visible graph includes the full self-repair branch: pipeline-self-repair, triage-error, ticket, project-watchdog, agentic-evals, and checkpoint rerun.",
+      "does_not_prove": "That Tau executed the DAG live, that project-watchdog mutated GitHub, that a failed nightly was repaired, or that LinkedIn/ATS/provider live services are healthy."
     }
   ]
 }
