@@ -350,6 +350,46 @@
       },
       "status": "ACTIVE",
       "notes": "Guard exercises the real triage-error CLI and ticket preview path. It prevents the cron revision mismatch from being treated as a vague failure report without classification or watchdog-routing evidence."
+    },
+    {
+      "regression_id": "degraded-readiness-causes-2026-08-28",
+      "claim_ids": [
+        "nightly_scheduler_reliability",
+        "operator_actionability"
+      ],
+      "seam_ids": [
+        "pipeline.operational_readiness",
+        "pipeline.readiness_causes",
+        "report.degraded_diagnostics"
+      ],
+      "evidence_class": "deterministic",
+      "incident": {
+        "date": "2026-08-28",
+        "summary": "Project-watchdog issue #1414 preserved an unmerged fix because DEGRADED monitor-opportunities reports could lack machine-readable readiness_causes, forcing operators to infer next actions from scattered artifacts.",
+        "root_cause": "The report/run receipt exposed operational_readiness=DEGRADED and degraded_contracts without enforcing artifact-bound cause records and next steps.",
+        "correct_behavior": "Every DEGRADED readiness state has non-empty readiness_causes with stable codes, source_artifact_paths, and next_step strings."
+      },
+      "threatens": {
+        "capability": "operator_actionability",
+        "seams": [
+          "pipeline.operational_readiness",
+          "pipeline.readiness_causes",
+          "report.degraded_diagnostics"
+        ]
+      },
+      "retained_case": "degraded-readiness-causes-regression-2026-08-28",
+      "retained_fixture": "fixtures/agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "pytest",
+          "tests/test_pipeline.py::test_degraded_readiness_requires_machine_readable_causes"
+        ],
+        "cwd": ".",
+        "expected_fail": true,
+        "expected_marker": "READINESS_CAUSES_REQUIRED",
+        "observed_pre_fix": "DEGRADED readiness could be emitted without any artifact-bound readiness_causes."
+      },
+      "status": "ACTIVE"
     }
   ]
 }

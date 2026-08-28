@@ -105,6 +105,41 @@ def test_diagnostic_run_degrades_required_source_gate_without_changing_strict_mo
     assert (tmp_path / "diagnostic" / "report" / "index.html").exists()
 
 
+def test_degraded_readiness_requires_machine_readable_causes(tmp_path: Path) -> None:
+    source_receipts = [
+        {
+            "receipt_id": "src:linkedin",
+            "result_status": "AUTH_REQUIRED",
+            "evidence_refs": ["fixture://linkedin-auth"],
+        }
+    ]
+
+    causes = pipeline._readiness_causes(
+        discovery_dir=tmp_path / "discovery",
+        tailoring_dir=tmp_path / "tailoring",
+        source_receipts=source_receipts,
+        opportunities=[],
+        resume_variants=[],
+        degraded_contracts=[],
+    )
+
+    assert causes == [
+        {
+            "code": "SOURCE_AUTH_REQUIRED",
+            "source_artifact_paths": [
+                str(tmp_path / "discovery" / "source-receipts.jsonl"),
+                "fixture://linkedin-auth",
+            ],
+            "next_step": "Provide an authorized read-only browser capture for this source, then rerun the nightly diagnostic.",
+            "source_receipt_id": "src:linkedin",
+        }
+    ]
+    pipeline._validate_readiness_causes("DEGRADED", causes)
+    with pytest.raises(ContractError) as exc:
+        pipeline._validate_readiness_causes("DEGRADED", [])
+    assert exc.value.code == "READINESS_CAUSES_REQUIRED"
+
+
 def test_run_creates_one_report_and_receipt(tmp_path: Path) -> None:
     fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
     out = tmp_path / "nightly"

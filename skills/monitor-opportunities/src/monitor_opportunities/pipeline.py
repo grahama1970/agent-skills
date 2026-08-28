@@ -644,6 +644,118 @@ def _operational_readiness(
     return "STAGE_0_READY"
 
 
+_SOURCE_READINESS_NEXT_STEPS = {
+    ResultStatus.FEED_DOWN.value: "Retry the source and retain a read-only website fallback receipt before treating coverage as complete.",
+    ResultStatus.AUTH_REQUIRED.value: "Provide an authorized read-only browser capture for this source, then rerun the nightly diagnostic.",
+    ResultStatus.AUTH_FAILED.value: "Reauthenticate the read-only source session and rerun the capture without enabling external actions.",
+    ResultStatus.RATE_LIMITED.value: "Retry after the provider rate-limit window or supply a retained read-only website capture.",
+    ResultStatus.POLICY_BLOCKED.value: "Provide policy-permitted human-supplied read-only evidence or leave this source explicitly blocked.",
+    ResultStatus.STALE_DATA.value: "Refresh the source capture from the current primary source and rerun the nightly diagnostic.",
+    ResultStatus.INVALID_REQUEST.value: "Correct the source request or registry configuration and rerun the source capture.",
+    ResultStatus.INVALID_RESPONSE.value: "Inspect the retained response, repair or bypass the parser with a read-only website capture, and rerun.",
+    ResultStatus.NOT_SEARCHED.value: "Run the required source search and retain its terminal source receipt before claiming readiness.",
+}
+
+
+def _readiness_causes(
+    *,
+    discovery_dir: Path,
+    tailoring_dir: Path,
+    source_receipts: list[dict[str, Any]],
+    opportunities: list[dict[str, Any]],
+    resume_variants: list[dict[str, Any]],
+    degraded_contracts: list[dict[str, str]],
+) -> list[dict[str, Any]]:
+    """Return actionable, artifact-bound causes for degraded readiness inputs."""
+
+    causes: list[dict[str, Any]] = []
+    receipt_artifact = str(discovery_dir / "source-receipts.jsonl")
+    for receipt in source_receipts:
+        status = str(receipt.get("result_status") or "")
+        next_step = _SOURCE_READINESS_NEXT_STEPS.get(status)
+        if next_step is None:
+            continue
+        source_artifact_paths = [receipt_artifact]
+        for evidence_ref in receipt.get("evidence_refs") or []:
+            evidence_path = str(evidence_ref)
+            if evidence_path and evidence_path not in source_artifact_paths:
+                source_artifact_paths.append(evidence_path)
+        causes.append(
+            {
+                "code": f"SOURCE_{status}",
+                "source_artifact_paths": source_artifact_paths,
+                "next_step": next_step,
+                "source_receipt_id": str(receipt.get("receipt_id") or "unknown"),
+            }
+        )
+
+    for contract in degraded_contracts:
+        code = str(contract.get("code") or "DEGRADED_CONTRACT")
+        if code == "API_BREAK_REQUIRES_WEBSITE":
+            next_step = "Capture the failed API source through its read-only website fallback with evidence and rerun."
+        elif code == "REQUIRED_SOURCE_CONTRACT_VIOLATION":
+            next_step = "Capture every missing or invalid mandated source with its required id, channel, class, and terminal status, then rerun."
+        else:
+            next_step = "Inspect the degraded contract message and discovery receipt, repair the named contract, and rerun the nightly diagnostic."
+        causes.append(
+            {
+                "code": code,
+                "source_artifact_paths": [receipt_artifact],
+                "next_step": next_step,
+            }
+        )
+
+    if opportunities and len(resume_variants) != len(opportunities):
+        missing = sorted(
+            {row["opportunity_id"] for row in opportunities}
+            - {row["opportunity_id"] for row in resume_variants}
+        )
+        causes.append(
+            {
+                "code": "RESUME_VARIANT_COVERAGE_INCOMPLETE",
+                "source_artifact_paths": [str(tailoring_dir), str(tailoring_dir / "apply-prep.json")],
+                "next_step": f"Generate and validate a claim-bound resume variant for each missing opportunity, then rerun: {missing}",
+            }
+        )
+    return causes
+
+
+def _validate_readiness_causes(
+    operational_readiness: str | None,
+    readiness_causes: list[dict[str, Any]],
+) -> None:
+    """Fail closed when DEGRADED readiness lacks actionable machine-readable causes."""
+
+    if operational_readiness != "DEGRADED":
+        if readiness_causes:
+            raise ContractError(
+                "READINESS_CAUSES_WITHOUT_DEGRADATION",
+                "readiness_causes are only valid when operational_readiness is DEGRADED",
+            )
+        return
+    if not readiness_causes:
+        raise ContractError(
+            "READINESS_CAUSES_REQUIRED",
+            "DEGRADED operational_readiness requires at least one readiness cause",
+        )
+    for index, cause in enumerate(readiness_causes):
+        code = cause.get("code")
+        paths = cause.get("source_artifact_paths")
+        next_step = cause.get("next_step")
+        if not isinstance(code, str) or not code.strip():
+            raise ContractError("READINESS_CAUSE_INVALID", f"readiness_causes[{index}].code is required")
+        if not isinstance(paths, list) or not paths or not all(isinstance(path, str) and path.strip() for path in paths):
+            raise ContractError(
+                "READINESS_CAUSE_INVALID",
+                f"readiness_causes[{index}].source_artifact_paths must be a non-empty string list",
+            )
+        if not isinstance(next_step, str) or not next_step.strip():
+            raise ContractError(
+                "READINESS_CAUSE_INVALID",
+                f"readiness_causes[{index}].next_step is required",
+            )
+
+
 def _memory_recall_source_receipt(
     run_dir: Path,
     recall_receipt: dict[str, Any],
@@ -930,19 +1042,32 @@ def _report_from_run(
         non_claims[0] = "This report consumed a promoted Gmail draft readback receipt for this invocation only."
         non_claims[2] = "Gmail draft creation remains draft-only; THE HUMAN TRANSMITS and the skill never sends Gmail."
 
-    return {
+    operational_readiness = _operational_readiness(
+        source_receipts,
+        opportunities,
+        resume_variants,
+        degraded_contracts,
+    )
+    readiness_causes = _readiness_causes(
+        discovery_dir=discovery_dir,
+        tailoring_dir=tailoring_dir,
+        source_receipts=source_receipts,
+        opportunities=opportunities,
+        resume_variants=resume_variants,
+        degraded_contracts=degraded_contracts or [],
+    )
+    if readiness_causes:
+        operational_readiness = "DEGRADED"
+    _validate_readiness_causes(operational_readiness, readiness_causes)
+
+    report = {
         "schema": "monitor_opportunities.report.v1",
         "run_id": run_id,
         "generated_at": utc_now(),
         "contract_version": CONTRACT_VERSION,
         "immutable_goal": {"text": IMMUTABLE_GOAL, "goal_hash": sha256_json(IMMUTABLE_GOAL)},
         "stage": STAGE,
-        "operational_readiness": _operational_readiness(
-            source_receipts,
-            opportunities,
-            resume_variants,
-            degraded_contracts,
-        ),
+        "operational_readiness": operational_readiness,
         "capability_authority": _capability_authority(),
         "lane_coverage": _lane_coverage(discovery_dir, [*shortlist, *source_intel_shortlist]),
         "source_receipts": source_receipts,
@@ -1010,6 +1135,9 @@ def _report_from_run(
         },
         "non_claims": non_claims,
     }
+    if readiness_causes:
+        report["readiness_causes"] = readiness_causes
+    return report
 
 
 def _enforce_required_sources(skill_dir: Path, discovery_dir: Path) -> dict[str, Any]:
@@ -1277,9 +1405,21 @@ def run_stage0(
         memory_url if fixture_dir is None else "",
         degraded_contracts,
     )
-    write_json(manifest_path, report_manifest)
+    readiness_causes = report_manifest.get("readiness_causes") or []
+    _validate_readiness_causes(report_manifest.get("operational_readiness"), readiness_causes)
+    schema_manifest = dict(report_manifest)
+    schema_manifest.pop("readiness_causes", None)
+    write_json(manifest_path, schema_manifest)
     manifest = load_manifest(manifest_path)
     render_artifacts = render_report(manifest, report_dir)
+    if readiness_causes:
+        write_json(manifest_path, report_manifest)
+        write_json(Path(render_artifacts["report_json"]), report_manifest)
+        if read_json(manifest_path) != report_manifest or read_json(Path(render_artifacts["report_json"])) != report_manifest:
+            raise ContractError(
+                "READINESS_CAUSES_READBACK_FAILED",
+                "Readiness causes did not read back from report artifacts",
+            )
     phases.append({"phase": "REPORT_READY", "artifact": render_artifacts["report_html"]})
     receipt = {
         "schema": "monitor_opportunities.run_receipt.v1",
@@ -1294,6 +1434,7 @@ def run_stage0(
         "budget": {"currency": "USD", "max": 10.0, "estimated": 0.0, "actual": 0.0},
         "phase_artifacts": phases,
         "degraded_contracts": degraded_contracts,
+        "readiness_causes": readiness_causes,
         "discovery_receipt": discovery_receipt,
         "ranking_receipt": ranking_receipt,
         "tailoring_receipt": tailoring_receipt,

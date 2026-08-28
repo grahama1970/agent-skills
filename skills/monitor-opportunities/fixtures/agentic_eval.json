@@ -472,6 +472,35 @@
       "does_not_prove": "Human application authorization, tracker issue creation in a separately promoted mode, ATS memory writes in a separately promoted mode, or semantic quality of provider addenda."
     },
     {
+      "name": "degraded-readiness-causes-regression-2026-08-28",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_pipeline.py::test_degraded_readiness_requires_machine_readable_causes -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "READINESS_CAUSES_REQUIRED",
+          "READINESS_CAUSE_INVALID"
+        ]
+      },
+      "proves": "DEGRADED monitor-opportunities readiness cannot be represented without machine-readable readiness_causes containing artifact paths and next steps.",
+      "does_not_prove": "That every live degraded nightly has the perfect human-facing remediation wording or that full nightly scheduler reliability is restored.",
+      "seams": [
+        "pipeline.operational_readiness",
+        "pipeline.readiness_causes",
+        "report.degraded_diagnostics"
+      ]
+    },
+    {
       "name": "nightly-revision-mismatch-triage-regression-2026-08-28",
       "type": "adversarial",
       "real_world": true,
