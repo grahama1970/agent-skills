@@ -25,6 +25,25 @@ from .seam_models import enforce as _enforce_seam
 load_dotenv_once()
 
 ASK_SKILL_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _triage_classify(text: str, layer: str | None) -> dict | None:
+    """Delegate to /triage-error's shared classifier to canonicalize a raw
+    failure signal. Fail-open: import/lookup problems return None so failure
+    handling is never blocked. This is why ask composes triage-error."""
+    try:
+        import sys as _sys
+
+        te_dir = ASK_SKILL_ROOT.parent / "triage-error"
+        if str(te_dir) not in _sys.path:
+            _sys.path.insert(0, str(te_dir))
+        import classifier as _classifier  # type: ignore
+
+        return _classifier.classify(text, layer)
+    except Exception:  # noqa: BLE001 -- best-effort enrichment, never fatal
+        return None
+
+
 TAU_DAG_SCHEMA = "tau.dag_contract.v1"
 # Tau's "standard" execution profile rejects contracts requesting more; a
 # larger panel still runs, with lanes beyond the cap queued by Tau's scheduler.
@@ -1458,6 +1477,23 @@ def _synthesize_missing_browser_handler_receipts(
                 "and exact command stderr."
             ),
         }
+        # Compose /triage-error: canonicalize the failure via the shared catalog
+        # so every provider signal (browser AND api) resolves to one unambiguous
+        # {code, cause, next_command} at this aggregation boundary. Fail-open --
+        # never blocks writing the recovery packet.
+        # layer=None: at the aggregation boundary, match on the signal tokens
+        # across all layers (a handler name is not a catalog layer).
+        _triage = _triage_classify(
+            f"{failure_code}\n{orphan_summary.get('blocked_reason') or ''}\n"
+            f"{(submit_meta.get('command_stderr_tail') if isinstance(submit_meta, dict) else '') or ''}",
+            None,
+        )
+        if _triage and not _triage.get("ambiguous") and _triage.get("code") != failure_code:
+            recovery_packet["triage"] = {
+                "code": _triage["code"],
+                "cause": _triage.get("cause"),
+                "next_command": _triage.get("next_command"),
+            }
         _write_json(recovery_path, recovery_packet)
         receipt = {
             "schema": "ask.tau_dag_handler_receipt.v1",

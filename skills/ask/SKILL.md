@@ -34,6 +34,7 @@ provides:
     Evidence artifacts for each run: request, status, events, and mode-specific
     review outputs.
 composes:
+  - triage-error
   - memory
   - scillm
   - surf
@@ -506,7 +507,14 @@ Both outcomes pass. Three things fail, whatever the provider was doing:
 | --- | --- |
 | `PASS` with zero response bytes | a green run that produced nothing |
 | a non-PASS status with no `failure_code` | a dead end nobody can act on |
+| a **generic** `failure_code` where a specific cause is knowable | `browser_handler_timeout` hiding an attachment-shape rejection (#1531) |
 | a different model answered, unrecorded | a reply that looks fine and silently came from elsewhere |
+
+Ask composes `/triage-error`: `browser-recovery-packet.json` carries a canonical
+`triage: {code, cause, next_command}` from the shared catalog, and a failed
+webgpt lane writes `node-artifacts/handler-*/preflight-doctor.json` — so a
+browser-lane bug is diagnosed from the run dir, unambiguously, not from
+`/tmp/surf-host.log`.
 
 The third caught a real bug minutes after the rate-limit fallback was added:
 the receipt read `claude-fable-low PASS` while `claude-opus-4-8` had written the

@@ -32,6 +32,19 @@
   baseline `agentic_eval.json` (sanity stress); review independence /
   freeze hash / strength selection / silent substitution → adversarial +
   regressions; empty_terminal_output capability gate → regressions.
+- Unambiguous browser-lane diagnosis (2026-08-27): a failed webgpt lane writes
+  `node-artifacts/handler-*/preflight-doctor.json` (`surf.preflight_doctor.lane.v1`)
+  into the run dir — the pre-submit DOM doctor's verdict lives beside
+  `response.md`, not only in `/tmp/surf-host.log`. Provider attachment-shape
+  rejections classify as `webgpt_attachment_bundle_rejected` (not a generic
+  `browser_handler_timeout` + open-bind), naming the file-count cause (#1531,
+  `test_attachment_bundle_recovery_1531.py`).
+- ask composes `/triage-error` (2026-08-28): `_browser_orphan_artifact_summary`
+  enriches `browser-recovery-packet.json` with a canonical
+  `triage: {code, cause, next_command}` from the shared catalog
+  (`skills/triage-error/classifier.py`) — token-matched across layers, so both
+  browser (surf) and api (scillm, e.g. `/v4/v1` route) signals resolve to one
+  unambiguous code. Fail-open. Tests: `test_ask_triage_delegation.py`.
   Still-open classes deliberately uncovered: #1222 desktop placement,
   scillm#32 key churn. New resolved tickets must add a case here.
 - Agentic evals live in `fixtures/agentic_eval*.json` and run via
