@@ -558,6 +558,77 @@
       "notes": "Durable Memory gate: writes the DriveWealth interview/question/solution/skill-chain/source/edge graph through Memory /live-evidence/oracle-pack, then proves multi-hop retrieval intent through /memory recall read-back probes."
     },
     {
+      "name": "curate-client-live-evidence-cross-skill-context",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-curate-client-current.json\"; rm -f \"$O\" \"${O%.json}.load-prep-pack.json\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-curate-client-integration --output \"$O\" --memory-url http://127.0.0.1:8601"
+      ],
+      "timeout_seconds": 2400,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "curate-client build exits zero: PASS",
+          "curate-client verify passed: PASS",
+          "prep-pack oracle recall verified: PASS",
+          "briefing loaded in running HUD backend: PASS",
+          "DriveWealth briefing trigger surfaced from transcript: PASS",
+          "DriveWealth transcript produced supported evidence card: PASS",
+          "card cites DriveWealth prep pack and bridge files: PASS",
+          "journal records prep load and briefing surface: PASS",
+          "curate-client/live-evidence: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/curate-client verify passed",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/prep-pack oracle recall verified",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/DriveWealth briefing trigger surfaced from transcript",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/DriveWealth transcript produced supported evidence card",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/checks/card cites DriveWealth prep pack and bridge files",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-curate-client-current.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          }
+        ]
+      },
+      "notes": "Cross-skill gate: curate-client build/verify emits the prep-pack load command; Live Evidence loads it into a real server, verifies oracle recall, surfaces DriveWealth briefing triggers from transcript, publishes a supported evidence card, and journals the publication path. Failures route through triage-error and pipeline-self-repair before patching.",
+      "infra_blocked_when": [
+        "server did not come up",
+        "ASK_LANE_STARVED_UNDER_LOAD",
+        "Memory error",
+        "Connection refused"
+      ]
+    },
+    {
       "name": "live-youtube-pipewire-audio-to-card",
       "type": "positive",
       "real_world": true,
