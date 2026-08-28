@@ -1148,6 +1148,33 @@
       },
       "proves": "The CLI can require a promoted Stage 0 stage ledger through validate_report_acceptance, missing ledgers fail with a machine-readable check, and a passing ledger satisfies the final report-acceptance gate.",
       "does_not_prove": "A fresh live nightly writes a semantically correct stage ledger for all discovered opportunities."
+    },
+    {
+      "name": "scheduler-exec-check-records-pipeline-self-repair",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "failure.pipeline_self_repair"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_records_self_repair_on_failure -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "pipeline-self-repair runner missing",
+          "SCHEDULER_EXEC_CHECK_FAILED"
+        ]
+      },
+      "proves": "A failed scheduler-exec-check writes its failure receipt, invokes skills/pipeline-self-repair/run.sh record-failure without external mutation flags, records a replay ledger, and binds triage/category fields back into the scheduler failure receipt.",
+      "does_not_prove": "That project-watchdog dispatched a live repair, that a GitHub issue was created, or that the failed nightly step was subsequently rerun from checkpoint."
     }
   ]
 }

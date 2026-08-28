@@ -845,6 +845,77 @@ def test_scheduler_exec_check_fails_on_nonzero_execution(
     assert payload["checks"]["nightly_receipt_present"] is False
 
 
+def test_scheduler_exec_check_records_self_repair_on_failure(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    pipeline_runner = repo / "skills" / "pipeline-self-repair" / "run.sh"
+    pipeline_runner.parent.mkdir(parents=True)
+    pipeline_runner.write_text("#!/bin/sh\n", encoding="utf-8")
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd == command:
+            return subprocess.CompletedProcess(cmd, 9, stdout="", stderr="boom")
+        assert cmd[0] == str(pipeline_runner)
+        assert cmd[1] == "record-failure"
+        assert kwargs["cwd"] == repo
+        assert cmd[cmd.index("--pipeline") + 1] == "monitor-opportunities"
+        assert cmd[cmd.index("--step-id") + 1] == "scheduler-exec-check"
+        assert cmd[cmd.index("--receipt") + 1] == str(out)
+        assert Path(cmd[cmd.index("--receipt") + 1]).is_file()
+        assert "--apply-ticket" not in cmd
+        assert "--dispatch-watchdog" not in cmd
+        ledger = Path(cmd[cmd.index("--ledger") + 1])
+        ledger.parent.mkdir(parents=True, exist_ok=True)
+        ledger.write_text('{"schema":"pipeline_self_repair.event.v1"}\n', encoding="utf-8")
+        captured["pipeline_self_repair_cmd"] = cmd
+        stdout = {
+            "status": "RECORDED_REPAIR_REQUIRED",
+            "ledger": str(ledger),
+            "event": {
+                "event_id": "evt_test",
+                "category_key": "monitor-opportunities/scheduler-exec-check/test/v1",
+                "failure_category_id": "agentic-evals:agent-skills:monitor-opportunities-test",
+                "triage": {"code": "monitor_opportunities_scheduler_exec_failed"},
+            },
+        }
+        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(stdout), stderr="")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert captured["pipeline_self_repair_cmd"]
+    assert payload["status"] == "FAIL"
+    assert payload["self_repair"]["status"] == "RECORDED"
+    assert payload["self_repair"]["record_failure_status"] == "RECORDED_REPAIR_REQUIRED"
+    assert payload["self_repair"]["ledger_present"] is True
+    assert payload["self_repair"]["event_id"] == "evt_test"
+    assert payload["self_repair"]["triage_code"] == "monitor_opportunities_scheduler_exec_failed"
+    assert payload["self_repair"]["external_effects"] is False
+
+
 def test_scheduler_exec_check_fails_on_mismatched_final_acceptance_hash(
     tmp_path: Path, monkeypatch
 ) -> None:

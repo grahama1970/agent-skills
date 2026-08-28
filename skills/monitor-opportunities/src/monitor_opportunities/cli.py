@@ -544,6 +544,105 @@ def _default_nightly_out(workdir: Path) -> Path:
     return workdir / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
 
 
+def _scheduler_self_repair_run_root(out_path: Path) -> Path:
+    return out_path.parent / "monitor-opportunities-scheduler-self-repair"
+
+
+def _record_scheduler_self_repair_failure(
+    *,
+    workdir: Path,
+    receipt_path: Path,
+    receipt: dict[str, Any],
+    step_id: str = "scheduler-exec-check",
+) -> dict[str, Any]:
+    """Record a failed scheduler proof through pipeline-self-repair.
+
+    The repair branch is deliberately side-effect safe: it records a ledger and
+    ticket disposition, but it does not publish tickets or dispatch watchdog
+    unless pipeline-self-repair is called with explicit mutation flags.
+    """
+
+    run_root = _scheduler_self_repair_run_root(receipt_path)
+    ledger = run_root / "replay_ledger.jsonl"
+    pipeline_runner = workdir / "skills" / "pipeline-self-repair" / "run.sh"
+    result: dict[str, Any] = {
+        "schema": "monitor_opportunities.scheduler_self_repair.v1",
+        "status": "SKIPPED",
+        "runner": str(pipeline_runner),
+        "ledger": str(ledger),
+        "run_root": str(run_root),
+        "external_effects": False,
+    }
+    if not pipeline_runner.is_file():
+        result.update({"status": "SKIPPED", "reason": "pipeline-self-repair runner missing"})
+        return result
+    run_root.mkdir(parents=True, exist_ok=True)
+    run_id = str(
+        (receipt.get("nightly_receipt") or {}).get("run_id")
+        or receipt.get("run_id")
+        or "scheduler-exec-check"
+    )
+    cmd = [
+        str(pipeline_runner),
+        "record-failure",
+        "--pipeline",
+        "monitor-opportunities",
+        "--step-id",
+        step_id,
+        "--run-id",
+        run_id,
+        "--receipt",
+        str(receipt_path),
+        "--layer",
+        "monitor-opportunities",
+        "--target",
+        "skills/monitor-opportunities",
+        "--run-root",
+        str(run_root),
+        "--ledger",
+        str(ledger),
+        "--goal-project",
+        "monitor-opportunities",
+        "--repo",
+        "grahama1970/agent-skills",
+        "--json",
+    ]
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=workdir,
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        result.update({"status": "FAILED", "error": str(exc), "command": cmd})
+        return result
+    result.update(
+        {
+            "status": "RECORDED" if proc.returncode == 0 else "FAILED",
+            "command": cmd,
+            "exit_code": proc.returncode,
+            "stdout_tail": proc.stdout[-4000:],
+            "stderr_tail": proc.stderr[-4000:],
+            "ledger_present": ledger.is_file(),
+        }
+    )
+    if proc.returncode == 0:
+        try:
+            payload = json.loads(proc.stdout)
+            result["record_failure_status"] = payload.get("status")
+            result["event_id"] = ((payload.get("event") or {}).get("event_id"))
+            result["category_key"] = ((payload.get("event") or {}).get("category_key"))
+            result["failure_category_id"] = (
+                (payload.get("event") or {}).get("failure_category_id")
+            )
+            result["triage_code"] = ((payload.get("event") or {}).get("triage") or {}).get("code")
+        except (json.JSONDecodeError, AttributeError):
+            result["parse_error"] = "record-failure stdout was not JSON"
+    return result
+
+
 NIGHTLY_RUNS_KEPT = 60
 
 
@@ -2915,6 +3014,13 @@ def scheduler_exec_check(
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         _fail(ContractError("SCHEDULER_EXEC_CHECK_FAILED", str(exc)))
     if receipt["status"] != "PASS":
+        workdir = Path(str((receipt.get("preflight") or {}).get("workdir") or _canonical_repo_root()))
+        receipt["self_repair"] = _record_scheduler_self_repair_failure(
+            workdir=workdir,
+            receipt_path=out,
+            receipt=receipt,
+        )
+        write_json(out, receipt)
         _fail(
             ContractError(
                 "SCHEDULER_EXECUTION_EQUIVALENCE_FAILED",
