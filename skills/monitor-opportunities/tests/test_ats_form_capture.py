@@ -23,6 +23,8 @@ from monitor_opportunities.browser_capture import (
     _ats_provider_from_url,
     _classify_application_workplace,
     _generic_form_from_dom,
+    _workday_application_metadata_from_html,
+    capture_ats_form,
     capture_meetup_buffalo,
     capture_meetup_buffalo_isolated,
 )
@@ -41,6 +43,15 @@ def test_provider_parse_ashby_and_lever() -> None:
         "abc-uuid",
     )
     assert _ats_provider_from_url("https://jobs.lever.co/fleet/def-uuid")[0] == "lever"
+
+
+def test_provider_parse_workday() -> None:
+    parsed = _ats_provider_from_url(
+        "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site/job/"
+        "Buffalo-NY/AI-Program-Manager_R-26-19530"
+    )
+
+    assert parsed == ("workday", "MOOG_External_Career_Site", "AI-Program-Manager_R-26-19530")
 
 
 def test_provider_parse_unknown() -> None:
@@ -104,9 +115,85 @@ def test_ashby_application_page_metadata_sets_actual_location() -> None:
 
 def test_application_workplace_classifier_does_not_make_non_buffalo_onsite_wny() -> None:
     assert _classify_application_workplace("Buffalo, NY", "OnSite") == "WNY_ONSITE"
+    assert _classify_application_workplace("East Aurora 26", "") == "WNY_ONSITE"
     assert _classify_application_workplace("Buffalo, NY", "Hybrid") == "WNY_HYBRID"
     assert _classify_application_workplace("Remote, US", "Remote") == "REMOTE"
     assert _classify_application_workplace("San Francisco", "OnSite") == "ONSITE_ELSEWHERE"
+
+
+def test_workday_application_page_metadata_reads_json_ld() -> None:
+    html = """
+    <html><head><script type="application/ld+json">
+    {
+      "@type": "JobPosting",
+      "title": "AI Program Manager",
+      "hiringOrganization": {"@type": "Organization", "name": "Moog Inc"},
+      "jobLocation": {
+        "@type": "Place",
+        "address": {"@type": "PostalAddress", "addressLocality": "East Aurora 26"}
+      },
+      "datePosted": "2026-08-26",
+      "employmentType": "FULL_TIME",
+      "identifier": {"@type": "PropertyValue", "value": "R-26-19530"}
+    }
+    </script></head></html>
+    """
+
+    metadata = _workday_application_metadata_from_html(
+        html,
+        "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site/job/"
+        "Buffalo-NY/AI-Program-Manager_R-26-19530",
+    )
+
+    assert metadata is not None
+    assert metadata["source"] == "workday_json_ld_job_posting"
+    assert metadata["authority"] == "apply_page"
+    assert metadata["title"] == "AI Program Manager"
+    assert metadata["organization"] == "Moog Inc"
+    assert metadata["location_display"] == "East Aurora 26"
+    assert metadata["workplace_type"] == "WNY_ONSITE"
+    assert metadata["job_req_id"] == "R-26-19530"
+
+
+def test_capture_ats_form_workday_uses_job_page_metadata_without_dom(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    url = (
+        "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site/job/"
+        "Buffalo-NY/AI-Program-Manager_R-26-19530"
+    )
+    metadata = {
+        "source": "workday_json_ld_job_posting",
+        "authority": "apply_page",
+        "url": url,
+        "title": "AI Program Manager",
+        "organization": "Moog Inc",
+        "location_display": "East Aurora 26",
+        "primary_location": "East Aurora 26",
+        "secondary_locations": [],
+        "provider_workplace_type": None,
+        "workplace_type": "WNY_ONSITE",
+        "job_req_id": "R-26-19530",
+    }
+    monkeypatch.setattr(browser_capture, "_fetch_workday_application_metadata", lambda _url: metadata)
+    monkeypatch.setattr(
+        browser_capture,
+        "ensure_browser",
+        lambda _surf_run: (_ for _ in ()).throw(AssertionError("DOM capture should not run")),
+    )
+
+    receipt = capture_ats_form(url, tmp_path)
+
+    assert receipt["status"] == "OK"
+    assert receipt["provider"] == "workday"
+    assert receipt["capture_method"] == "workday_job_page_json_ld"
+    assert receipt["field_count"] == 0
+    assert receipt["application_page_location"] == "East Aurora 26"
+    assert receipt["application_page_workplace_type"] == "WNY_ONSITE"
+    form = json.loads(Path(receipt["form_path"]).read_text(encoding="utf-8"))
+    assert form["fields"] == []
+    assert "No anonymous Workday application form fields were exposed" in form["policy_observations"][1]
 
 
 def test_generic_form_from_dom_empty_raises() -> None:
