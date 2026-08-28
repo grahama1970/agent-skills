@@ -26,10 +26,9 @@ except ImportError:
 from discord_ops.config import (
     DEFAULT_KEYWORDS,
     MATCHES_LOG,
-    SKILL_DIR,
 )
 from discord_ops.keyword_matcher import KeywordMatch
-from discord_ops.notifications import notify_webhook
+from discord_ops.notifications import notify_discord_channel, notify_webhook
 from discord_ops.utils import (
     describe_webhook_url,
     get_bot_token,
@@ -426,23 +425,38 @@ def matches(
 
 @app.command()
 def notify(
-    webhook_name: str = typer.Option(..., "--webhook", "-w", help="Configured webhook name"),
+    webhook_name: str | None = typer.Option(None, "--webhook", "-w", help="Configured webhook name"),
     title: str = typer.Option("ops-discord notification", "--title", help="Notification title"),
     content: str = typer.Option(..., "--content", help="Notification body"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Resolve webhook but do not send"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Resolve target but do not send"),
     output_json: bool = typer.Option(False, "--json", help="Emit machine-readable receipt"),
+    discord_bot: bool = typer.Option(False, "--discord-bot", help="Send through Discord bot API"),
+    channel_id: str | None = typer.Option(None, "--channel-id", help="Discord channel id"),
+    channel_name: str | None = typer.Option(None, "--channel-name", help="Discord channel name"),
 ):
-    """Send a single operational notification through a configured webhook."""
-    receipt = notify_webhook(
-        webhook_name=webhook_name,
-        title=title,
-        content=content,
-        dry_run=dry_run,
-    )
+    """Send a single operational notification through a webhook or Discord bot."""
+    if discord_bot:
+        receipt = notify_discord_channel(
+            channel_id=channel_id,
+            channel_name=channel_name,
+            title=title,
+            content=content,
+            dry_run=dry_run,
+        )
+    else:
+        if webhook_name is None:
+            raise typer.BadParameter("--webhook is required unless --discord-bot is set")
+        receipt = notify_webhook(
+            webhook_name=webhook_name,
+            title=title,
+            content=content,
+            dry_run=dry_run,
+        )
     if output_json:
         print(json.dumps(receipt, indent=2, sort_keys=True))
     elif receipt["status"] == "DRY_RUN":
-        console.print(f"[yellow]Dry run:[/yellow] {webhook_name} {title}")
+        target = webhook_name or channel_name or channel_id
+        console.print(f"[yellow]Dry run:[/yellow] {target} {title}")
     elif receipt["status"] == "SENT":
         console.print("[green]Notification sent[/green]")
     elif receipt["status"] == "NO_WEBHOOK":
