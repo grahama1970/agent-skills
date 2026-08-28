@@ -933,6 +933,33 @@
       "does_not_prove": "A fresh nightly can pass unrelated live source admission gates or that employment opportunities were submitted externally."
     },
     {
+      "name": "morning-report-decision-table-regression",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "report.static_html",
+        "report.human_decision_table"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_visibility.py::test_static_report_renders_morning_decision_table -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "authorization",
+          "LinkedIn evidence"
+        ]
+      },
+      "proves": "The static morning report renders a scannable decision table with employment/source-intel classification, authorization state, contact-path column, LinkedIn evidence column, and exact human authorization wording before deeper sections.",
+      "does_not_prove": "A fresh live nightly has new Buffalo opportunities, real LinkedIn Top Applicant/Easy Apply evidence, or authorized external submissions."
+    },
+    {
       "name": "relationship-prospect-queue-accounting",
       "type": "negative",
       "real_world": true,
@@ -1035,6 +1062,32 @@
       },
       "proves": "The normal status command reads the scheduler receipt, follows the registered scheduler worktree, and exposes that worktree's latest nightly receipt/report path so the morning discussion starts from the cron publication instead of a stale main-checkout symlink.",
       "does_not_prove": "That cron will run tomorrow, or that the scheduler's latest report contains high-quality opportunities."
+    },
+    {
+      "name": "status-operational-readiness-follows-latest-report",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "cli.status_payload",
+        "scheduler.latest_publication_readback"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_cli.py::test_status_readiness_follows_latest_report_manifest -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "\"operational_readiness\": \"NOT_ESTABLISHED\""
+        ]
+      },
+      "proves": "The top-level status command reads the latest scheduler publication and reports the latest report manifest readiness instead of leaving the human-facing readiness field hard-coded to NOT_ESTABLISHED.",
+      "does_not_prove": "A fresh live nightly will produce high-quality opportunities, or that external applications/outreach are authorized."
     },
     {
       "name": "application-page-location-authority",

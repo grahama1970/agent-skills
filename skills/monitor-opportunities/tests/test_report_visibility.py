@@ -126,6 +126,22 @@ def test_static_report_renders_relationship_signal_attachments() -> None:
     assert "Relationship signals</h2>" in html
 
 
+def test_static_report_renders_morning_decision_table() -> None:
+    data = built_in_fixture()
+    manifest = validate_manifest(data)
+
+    html = render_html(manifest)
+
+    assert "Morning decision table" in html
+    assert "Employment" in html
+    assert "Authorization" in html
+    assert "Contact path" in html
+    assert "LinkedIn evidence" in html
+    assert "NO_APPLICATION_PACKET" in html
+    assert "No application packet; inspect deep section." in html
+    assert "No LinkedIn Top Applicant/Easy Apply evidence on this row." in html
+
+
 def test_reports_render_relationship_binding_diagnostics(tmp_path: Path) -> None:
     data = built_in_fixture()
     data["relationship_signals"] = [

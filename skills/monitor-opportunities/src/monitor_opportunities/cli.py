@@ -398,6 +398,8 @@ def _scheduler_latest_publication_status() -> dict[str, Any]:
         return payload
 
     run_receipt = read_json(run_receipt_path) if run_receipt_path.is_file() else {}
+    report_manifest_path = latest / "report-manifest.json"
+    report_manifest = read_json(report_manifest_path) if report_manifest_path.is_file() else {}
     payload.update(
         {
             "status": nightly_receipt.get("status") or "UNKNOWN",
@@ -410,9 +412,29 @@ def _scheduler_latest_publication_status() -> dict[str, Any]:
             "external_effects": nightly_receipt.get("external_effects"),
             "report_acceptance_status": nightly_receipt.get("report_acceptance_status"),
             "receipt_consistency_status": nightly_receipt.get("receipt_consistency_status"),
+            "report_manifest": str(report_manifest_path) if report_manifest_path.is_file() else None,
+            "report_operational_readiness": report_manifest.get("operational_readiness"),
         }
     )
     return payload
+
+
+def _status_operational_readiness(scheduler_latest: dict[str, Any]) -> str:
+    report_readiness = scheduler_latest.get("report_operational_readiness")
+    if isinstance(report_readiness, str) and report_readiness:
+        return report_readiness
+    if (
+        scheduler_latest.get("status") == "PASS"
+        and scheduler_latest.get("mode") == "PROMOTED_STAGE_0"
+        and scheduler_latest.get("terminal_state") == "AWAITING_HUMAN"
+        and scheduler_latest.get("mocked") is False
+        and scheduler_latest.get("live") is True
+        and scheduler_latest.get("external_effects") is False
+        and scheduler_latest.get("report_acceptance_status") == "PASS"
+        and scheduler_latest.get("receipt_consistency_status") == "PASS"
+    ):
+        return "STAGE_0_READY"
+    return "NOT_ESTABLISHED"
 
 
 def _scheduler_execution_equivalence_preflight(
@@ -870,18 +892,19 @@ def _scheduler_execution_equivalence_receipt(
 
 
 def status_payload() -> dict[str, object]:
+    scheduler_latest = _scheduler_latest_publication_status()
     return {
         "schema": "monitor_opportunities.status.v1",
         "runtime_version": __version__,
         "contract_version": CONTRACT_VERSION,
         "immutable_goal": IMMUTABLE_GOAL,
         "stage": STAGE,
-        "operational_readiness": "NOT_ESTABLISHED",
+        "operational_readiness": _status_operational_readiness(scheduler_latest),
         "network_access": True,
         "external_effects": False,
         "implemented_commands": IMPLEMENTED,
         "not_implemented_commands": NOT_IMPLEMENTED,
-        "scheduler_latest": _scheduler_latest_publication_status(),
+        "scheduler_latest": scheduler_latest,
         "capabilities": {
             "local_report": "IMPLEMENTED",
             "verification_receipt": "IMPLEMENTED",
