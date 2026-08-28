@@ -17,7 +17,7 @@ import uvicorn
 from loguru import logger
 
 from .api import create_app
-from .config import AppSettings
+from .config import DEFAULT_BACKEND_URL, DEFAULT_HOST, DEFAULT_PORT, AppSettings
 from .listener import ListenMode, ListenerOptions, LiveListener
 from .models import (
     DoctorCheck,
@@ -39,8 +39,8 @@ app = typer.Typer(
 
 @app.command()
 def serve(
-    host: Annotated[str, typer.Option(help="Bind host.")] = "127.0.0.1",
-    port: Annotated[int, typer.Option(min=1, max=65_535, help="Bind port.")] = 8765,
+    host: Annotated[str, typer.Option(help="Bind host.")] = DEFAULT_HOST,
+    port: Annotated[int, typer.Option(min=1, max=65_535, help="Bind port.")] = DEFAULT_PORT,
     open_browser: Annotated[bool, typer.Option("--open-browser/--no-browser")] = False,
 ) -> None:
     """Run the FastAPI service and built React UI."""
@@ -63,7 +63,7 @@ def serve(
 @app.command()
 def listen(
     mode: Annotated[ListenMode, typer.Option(help="Audio ingress mode.")] = ListenMode.MICROPHONE,
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
     consent_confirmed: Annotated[
         bool,
         typer.Option("--consent-confirmed", help="Acknowledge required recording consent/policy."),
@@ -104,7 +104,7 @@ def listen(
 @app.command()
 def replay(
     transcript_file: Annotated[Path, typer.Argument(exists=True, dir_okay=False, readable=True)],
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
     delay_s: Annotated[float, typer.Option(min=0.0, max=30.0)] = 1.2,
     reset_session: Annotated[
         bool,
@@ -157,7 +157,7 @@ def _prepare_replay_session(client: httpx.Client, *, reset_session: bool) -> Non
 def search(
     query: Annotated[str, typer.Argument(min=2, max=1_000)],
     lane: Annotated[RetrievalLane, typer.Option(help="Explicit retrieval lane.")] = RetrievalLane.MEMORY,
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
 ) -> None:
     """Run one manual source-bound search."""
 
@@ -247,7 +247,7 @@ def doctor() -> None:
 
 @app.command()
 def status(
-    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = "http://127.0.0.1:8765",
+    backend_url: Annotated[str, typer.Option(help="Running Live Evidence API.")] = DEFAULT_BACKEND_URL,
 ) -> None:
     """Read service health and current session state."""
 

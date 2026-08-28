@@ -23,7 +23,8 @@
   HUD (no listener, stale session) LOOKS broken — that is the "trash fire"
   report explained. The listener was NOT running; interview day still needs:
   `./run.sh listen --mode pipewire --backend-url http://127.0.0.1:8799 --device
-  cpu --consent-confirmed` (default backend-url 8765 = wrong service).
+  cpu --consent-confirmed`. As of the default-port fix, CLI defaults now point
+  at 8799; older notes about a 8765 default are stale.
 - **DEFECT (unfixed): replay clobbers the active session.** `live_evidence
   replay` (and any bare `POST /api/session/start {"consent_confirmed": false}`)
   silently resets a live session: LISTENING·MEETING → ARMED·CONSENT NEEDED,
@@ -134,8 +135,9 @@ over live state — verify with the named commands.
 - SciLLM key: export LIVE_EVIDENCE_SCILLM_KEY from the container
   (docker exec docker-scillm-proxy-1 printenv SCILLM_MASTER_KEY); ambient
   SCILLM_PROXY_KEY is drifted and 401s.
-- Listener needs --backend-url (default 8765 = wrong service, dies with a
-  404 buried in its log).
+- Older builds needed --backend-url because the default was 8765 (wrong
+  service, 404 in listener log). Current builds default to 8799, but keep
+  explicit --backend-url in runbooks for copy-paste clarity.
 - GPU: chatterbox TTS + CUDA whisper cannot run concurrently (OOM crash
   receipt 2026-08-26). Do not run TTS during live capture.
 - pkill patterns containing "live_evidence" match your own shell (exit 144).
