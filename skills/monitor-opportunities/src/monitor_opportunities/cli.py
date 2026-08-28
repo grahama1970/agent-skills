@@ -137,8 +137,205 @@ def _parse_owner_names(values: tuple[str, ...]) -> tuple[tuple[str, str], ...]:
     return tuple(pairs)
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[4]
+
+
+def _terminal_error_dir() -> Path:
+    configured = os.environ.get("MONITOR_OPPORTUNITIES_TERMINAL_ERROR_DIR")
+    if configured:
+        return Path(configured).expanduser().resolve()
+    return Path(__file__).resolve().parents[2] / "local" / "terminal-errors" / "latest"
+
+
+def _completed_process_receipt(proc: subprocess.CompletedProcess[str], command: list[str]) -> dict[str, object]:
+    return {
+        "command": command,
+        "exit_code": proc.returncode,
+        "stdout_tail": proc.stdout[-16000:],
+        "stderr_tail": proc.stderr[-8000:],
+    }
+
+
+def _terminal_error_proof_command(case_name: str) -> str:
+    return (
+        "skills/agentic-evals/run.sh run "
+        "skills/monitor-opportunities/fixtures/agentic_eval.json "
+        f"--case {case_name} "
+        "--output /tmp/monitor-opportunities-terminal-error-handoff-agentic-eval.json"
+    )
+
+
+def _preview_terminal_error_ticket(
+    *,
+    repo: Path,
+    signal: dict[str, object],
+    triage_report: dict[str, object],
+) -> tuple[dict[str, object], dict[str, object]]:
+    code = str(triage_report.get("code") or signal.get("code") or "monitor_opportunities_terminal_error")
+    title = f"Repair monitor-opportunities terminal failure {code}"
+    proof = _terminal_error_proof_command("terminal-error-handoff-live-diagnostic-2026-08-28")
+    ticket_cmd = [
+        str(repo / "skills" / "ticket" / "run.sh"),
+        "bug",
+        title,
+        "--target",
+        "skills/monitor-opportunities",
+        "--observed",
+        (
+            f"[{code}] monitor-opportunities terminated with "
+            f"{signal.get('code')}: {signal.get('message')}"
+        ),
+        "--expected",
+        (
+            "Every monitor-opportunities terminal failure is classified through "
+            "skills/triage-error first and carries a routable project-watchdog repair handoff."
+        ),
+        "--repro",
+        (
+            "Read the emitted terminal-error-handoff.json, then run "
+            "skills/triage-error/run.sh classify --text '<terminal error signal>' "
+            "--layer monitor-opportunities."
+        ),
+        "--proof",
+        proof,
+        "--route",
+        "ops_or_scheduler",
+        "--lane",
+        "ops",
+        "--agent",
+        "agent-skill-maintainer",
+        "--non-goals",
+        "No unrelated monitor-opportunities refactors or external-effect capability expansion.",
+        "--label",
+        "agent-work",
+        "--label",
+        "route:ops_or_scheduler",
+        "--context-file",
+        "skills/monitor-opportunities/SKILL.md",
+        "--context-file",
+        "skills/triage-error/SKILL.md",
+        "--context-file",
+        "skills/agentic-evals/SKILL.md",
+        "--required-skill",
+        "monitor-opportunities",
+        "--required-skill",
+        "triage-error",
+        "--required-skill",
+        "agentic-evals",
+        "--required-skill",
+        "ticket",
+        "--required-skill",
+        "project-watchdog",
+        "--json",
+    ]
+    proc = subprocess.run(ticket_cmd, cwd=repo, capture_output=True, text=True, check=False, timeout=120)
+    watchdog = {
+        "route": "ops_or_scheduler",
+        "lane": "ops",
+        "labels": ["agent-work", "route:ops_or_scheduler", "type:bug"],
+        "required_proof": proof,
+        "dispatchable_by_project_watchdog": proc.returncode == 0
+        and "agent-work" in proc.stdout
+        and "route:ops_or_scheduler" in proc.stdout,
+    }
+    ticket_receipt = {"mode": "preview", **_completed_process_receipt(proc, ticket_cmd)}
+    if proc.returncode == 0:
+        preview = json.loads(proc.stdout)
+        ticket_receipt["preview_title"] = preview.get("title")
+        ticket_receipt["preview_labels"] = preview.get("labels") or []
+        ticket_receipt["preview_body_sha256"] = sha256_bytes(str(preview.get("body") or "").encode("utf-8"))
+    return ticket_receipt, watchdog
+
+
+def _emit_terminal_error_handoff(exc: ContractError) -> dict[str, object]:
+    repo = _repo_root()
+    out = _terminal_error_dir()
+    out.mkdir(parents=True, exist_ok=True)
+    signal = {
+        "schema": "monitor_opportunities.terminal_error_signal.v1",
+        "status": "ERROR",
+        "layer": "monitor-opportunities",
+        "code": exc.code,
+        "message": exc.message,
+        "argv": sys.argv,
+        "cwd": os.getcwd(),
+        "emitted_at": utc_now(),
+    }
+    signal_path = out / "terminal-error-signal.json"
+    write_json(signal_path, signal)
+
+    triage_cmd = [
+        str(repo / "skills" / "triage-error" / "run.sh"),
+        "classify",
+        "--text",
+        json.dumps(signal, separators=(",", ":"), sort_keys=True),
+        "--layer",
+        "monitor-opportunities",
+    ]
+    triage_proc = subprocess.run(triage_cmd, cwd=repo, capture_output=True, text=True, check=False, timeout=120)
+    triage_report: dict[str, object] = {}
+    if triage_proc.returncode == 0:
+        triage_report = json.loads(triage_proc.stdout)
+    triage_receipt = {
+        "schema": "monitor_opportunities.terminal_error_triage_receipt.v1",
+        "signal": str(signal_path),
+        **_completed_process_receipt(triage_proc, triage_cmd),
+        "classification": triage_report,
+    }
+    triage_receipt_path = out / "triage-receipt.json"
+    write_json(triage_receipt_path, triage_receipt)
+
+    ticket_receipt: dict[str, object] | None = None
+    watchdog: dict[str, object] | None = None
+    if triage_report:
+        ticket_receipt, watchdog = _preview_terminal_error_ticket(
+            repo=repo,
+            signal=signal,
+            triage_report=triage_report,
+        )
+        write_json(out / "ticket-preview-receipt.json", ticket_receipt)
+
+    handoff = {
+        "schema": "monitor_opportunities.terminal_error_handoff.v1",
+        "status": "PASS"
+        if triage_proc.returncode == 0
+        and ticket_receipt is not None
+        and ticket_receipt.get("exit_code") == 0
+        and watchdog is not None
+        and watchdog.get("dispatchable_by_project_watchdog") is True
+        else "DEGRADED",
+        "mocked": False,
+        "live": True,
+        "external_effects": False,
+        "signal": signal,
+        "signal_artifact": str(signal_path),
+        "triage_receipt": str(triage_receipt_path),
+        "triage": triage_report,
+        "ticket_handoff": ticket_receipt,
+        "project_watchdog": watchdog,
+    }
+    handoff_path = out / "terminal-error-handoff.json"
+    write_json(handoff_path, handoff)
+    handoff["artifact"] = str(handoff_path)
+    return handoff
+
+
 def _fail(exc: ContractError) -> NoReturn:
-    typer.echo(json.dumps({"status": "ERROR", **exc.as_dict()}, sort_keys=True), err=True)
+    payload: dict[str, object] = {"status": "ERROR", **exc.as_dict()}
+    try:
+        handoff = _emit_terminal_error_handoff(exc)
+    except Exception as handoff_exc:  # pragma: no cover - terminal path must preserve the original error.
+        payload["terminal_error_handoff_status"] = "FAILED"
+        payload["terminal_error_handoff_error"] = f"{type(handoff_exc).__name__}: {handoff_exc}"
+    else:
+        payload["terminal_error_handoff_status"] = handoff.get("status")
+        payload["terminal_error_handoff"] = handoff.get("artifact")
+        triage = handoff.get("triage") if isinstance(handoff.get("triage"), dict) else {}
+        payload["triage_code"] = triage.get("code")
+        payload["triage_ambiguous"] = triage.get("ambiguous")
+        payload["triage_next_command"] = triage.get("next_command")
+    typer.echo(json.dumps(payload, sort_keys=True), err=True)
     raise typer.Exit(code=2)
 
 
@@ -1859,6 +2056,7 @@ def nightly(
         out = _new_nightly_run_dir(skill_dir, promote_latest=False)
     else:
         out = out.expanduser().resolve()
+    os.environ["MONITOR_OPPORTUNITIES_TERMINAL_ERROR_DIR"] = str(out)
     run_sh = skill_dir / "run.sh"
     steps: dict[str, object] = {}
     run_env = _nightly_subprocess_env(skill_dir, steps)

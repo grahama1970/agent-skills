@@ -537,6 +537,83 @@
       ]
     },
     {
+      "name": "terminal-error-handoff-live-diagnostic-2026-08-28",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_terminal_error_handoff.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TERMINAL_ERROR_HANDOFF_OK",
+          "triage=monitor_opportunities_nightly_revision_mismatch",
+          "ticket=preview",
+          "watchdog=dispatchable"
+        ],
+        "stderr_excludes": [
+          "TERMINAL_ERROR_HANDOFF_NOT_PASS",
+          "TRIAGE_RECEIPT_MISSING",
+          "TICKET_PREVIEW_MISSING",
+          "WATCHDOG_ROUTABLE"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/external_effects",
+            "equals": false
+          },
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/signal/code",
+            "equals": "NIGHTLY_REVISION_MISMATCH"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/triage/code",
+            "equals": "monitor_opportunities_nightly_revision_mismatch"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/ticket_handoff/mode",
+            "equals": "preview"
+          },
+          {
+            "path": "/tmp/monitor-opportunities-terminal-error-handoff-proof/terminal-error-handoff.json",
+            "json_pointer": "/project_watchdog/dispatchable_by_project_watchdog",
+            "equals": true
+          }
+        ]
+      },
+      "readback": true,
+      "proves": "A live diagnostic monitor-opportunities nightly terminal failure routes through triage-error, emits a triage receipt, and writes a ticket/project-watchdog handoff artifact with route:ops_or_scheduler and agent-work metadata.",
+      "does_not_prove": "That project-watchdog recursively dispatches this same leased issue, or that a full promoted Stage 0 nightly passed unrelated source/browser gates.",
+      "seams": [
+        "terminal_errors.triage_receipt",
+        "terminal_errors.ticket_handoff",
+        "ticket.watchdog_routing"
+      ]
+    },
+    {
       "name": "regression-2026-08-18-failure-signatures",
       "type": "negative",
       "real_world": true,
