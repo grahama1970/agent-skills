@@ -87,7 +87,7 @@ def _linkedin_evidence_label(source_receipt_ids: list[str], receipts_by_id: dict
     return "No LinkedIn Top Applicant/Easy Apply evidence on this row."
 
 
-def _contact_label(item: Any, signals_by_id: dict[str, Any]) -> str:
+def _contact_label(item: Any, signals_by_id: dict[str, Any], *, has_binding_diagnostics: bool = False) -> str:
     ids = list(getattr(item, "relationship_signal_ids", []) or [])
     labels: list[str] = []
     for signal_id in ids:
@@ -95,7 +95,13 @@ def _contact_label(item: Any, signals_by_id: dict[str, Any]) -> str:
         if signal is None:
             continue
         labels.append(f"{signal.subject} ({signal.degree_label})")
-    return "; ".join(labels) if labels else "No attached contact path."
+    if labels:
+        return "; ".join(labels)
+    organization = str(getattr(item, "organization", "") or "").strip()
+    if has_binding_diagnostics:
+        org_label = f" for {organization}" if organization else ""
+        return f"No direct contact path{org_label} found; see relationship binding diagnostics."
+    return "No relationship signal captured for this opportunity."
 
 
 def _application_packet_by_opportunity(manifest: ReportManifest) -> dict[str, Any]:
@@ -130,7 +136,7 @@ def _decision_table(manifest: ReportManifest, signals_by_id: dict[str, Any]) -> 
             f"<td>{html.escape(item.location.display)}</td>"
             f"<td>{item.fit_score:.2f}</td>"
             f"<td>{html.escape(packet_label)}</td>"
-            f"<td>{html.escape(_contact_label(item, signals_by_id))}</td>"
+            f"<td>{html.escape(_contact_label(item, signals_by_id, has_binding_diagnostics=bool(manifest.relationship_binding_diagnostics)))}</td>"
             f"<td>{html.escape(_linkedin_evidence_label(item.source_receipt_ids, receipts_by_id))}</td>"
             f"<td>{html.escape(next_action)}</td>"
             "</tr>"

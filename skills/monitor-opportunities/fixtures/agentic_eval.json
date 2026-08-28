@@ -973,12 +973,12 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_visibility.py::test_static_report_renders_morning_decision_table -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_visibility.py::test_static_report_renders_morning_decision_table skills/monitor-opportunities/tests/test_report_visibility.py::test_static_report_decision_table_explains_unattached_relationship_signals -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ],
         "stderr_excludes": [
           "authorization",
