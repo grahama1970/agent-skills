@@ -24,10 +24,10 @@ Scope: Make env-backed webhook configuration visible and usable by ops-discord, 
   EXPECT: MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFICATION_TESTS_OK
   EVIDENCE: `1 passed, 15 deselected in 0.24s`; sentinel `MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFICATION_TESTS_OK`. Full `./sanity.sh`: `446 passed in 65.60s`.
 
-- [ ] G5: relevant files are retained on main
+- [x] G5: relevant files are retained on main
   CHECK: git diff --cached --name-status && git ls-remote origin refs/heads/main
   EXPECT: refs/heads/main
-  EVIDENCE: local commit created; `git push origin HEAD:main` rejected non-fast-forward because local `main` is behind `origin/main`. Remote retention exists on `repair/ops-discord-env-webhook-monitor-alerts`; main integration is still pending.
+  EVIDENCE: main integration used `/home/graham/workspace/experiments/agent-skills/.worktrees/ops-discord-env-webhook-main-20260828`; focused checks passed, `skills/monitor-opportunities/sanity.sh` reported `464 passed in 68.34s`; `git push origin HEAD:main` succeeded; `git ls-remote origin refs/heads/main` returned `94f7b94c9b85ef043be7480f06cb3b8e7b0afd9e`.
 
 - [x] G6: final status preserves immutable-goal boundary
   CHECK: printf 'IMMUTABLE_GOAL_BOUNDARY_OK Immutable Goal: NOT_MET\n'
