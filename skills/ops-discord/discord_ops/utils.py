@@ -44,6 +44,7 @@ __all__ = [
     "load_keywords",
     "save_keywords",
     "get_bot_token",
+    "get_env_value",
 ]
 
 
@@ -269,6 +270,13 @@ def save_keywords(patterns: list[str]) -> None:
     KEYWORDS_FILE.write_text(json.dumps({"patterns": patterns}, indent=2))
 
 
+def get_env_value(name: str) -> str | None:
+    """Read one environment value from process env or the configured zshrc export file."""
+    if value := os.environ.get(name):
+        return value
+    return _local_shell_exports().get(name)
+
+
 def get_bot_token() -> str | None:
     """Get Discord bot token from config or env.
 
@@ -277,10 +285,8 @@ def get_bot_token() -> str | None:
     2. bot_token in config.json
     3. DISCORD_BOT_TOKEN from clawdbot .env
     """
-    import os
-
-    # Try env first
-    if token := os.environ.get("DISCORD_BOT_TOKEN"):
+    # Try env/zshrc first
+    if token := get_env_value("DISCORD_BOT_TOKEN"):
         return token
 
     # Try config

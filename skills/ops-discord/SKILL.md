@@ -158,6 +158,9 @@ Shows status of:
 
 # Send one operational notification; dry-run resolves the webhook without posting
 ./run.sh notify --webhook alerts --content "self-repair entered" --dry-run --json
+
+# Send through the Discord bot into an owned server channel; returns message_id/url
+./run.sh notify --discord-bot --channel-name horus --content "self-repair entered" --json
 ```
 
 ### `monitor` - Run the Monitor
