@@ -139,7 +139,7 @@ def _decision_table(manifest: ReportManifest, signals_by_id: dict[str, Any]) -> 
             else "No application packet; inspect deep section."
         )
         rows.append(
-            f"<tr id=\"{_anchor('source-intel', item.signal_id)}\">"
+            "<tr>"
             f"<td>{idx}</td>"
             "<td>Employment</td>"
             f"<td><a href=\"#{_anchor('opportunity', item.opportunity_id)}\">"

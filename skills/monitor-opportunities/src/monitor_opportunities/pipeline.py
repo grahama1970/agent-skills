@@ -24,7 +24,7 @@ from .discovery import sweep
 from .memory_sync import attach_memory_recall_provenance, governed_memory_recall
 from .outreach import build_outreach_packets
 from .ranking import rank
-from .report import load_manifest, render_report
+from .report import canonical_json_bytes, load_manifest, render_report
 from .tailoring import tailor_candidate
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json
 
@@ -1407,19 +1407,14 @@ def run_stage0(
     )
     readiness_causes = report_manifest.get("readiness_causes") or []
     _validate_readiness_causes(report_manifest.get("operational_readiness"), readiness_causes)
-    schema_manifest = dict(report_manifest)
-    schema_manifest.pop("readiness_causes", None)
-    write_json(manifest_path, schema_manifest)
+    write_json(manifest_path, report_manifest)
     manifest = load_manifest(manifest_path)
     render_artifacts = render_report(manifest, report_dir)
-    if readiness_causes:
-        write_json(manifest_path, report_manifest)
-        write_json(Path(render_artifacts["report_json"]), report_manifest)
-        if read_json(manifest_path) != report_manifest or read_json(Path(render_artifacts["report_json"])) != report_manifest:
-            raise ContractError(
-                "READINESS_CAUSES_READBACK_FAILED",
-                "Readiness causes did not read back from report artifacts",
-            )
+    if hasattr(manifest, "model_dump") and Path(render_artifacts["report_json"]).read_bytes() != canonical_json_bytes(manifest):
+        raise ContractError(
+            "REPORT_MANIFEST_READBACK_FAILED",
+            "Rendered report JSON diverged from the normalized manifest readback",
+        )
     phases.append({"phase": "REPORT_READY", "artifact": render_artifacts["report_html"]})
     receipt = {
         "schema": "monitor_opportunities.run_receipt.v1",

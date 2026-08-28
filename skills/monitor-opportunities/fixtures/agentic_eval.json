@@ -91,6 +91,36 @@
       "proves": "The required-source contract accepts a valid current-run receipt even with supplemental locator noise, accepts sam.gov API receipts under browser_or_api, and emits honest auth-required browser receipts for Indeed/HiddenJobs instead of fabricated source coverage."
     },
     {
+      "name": "readiness-causes-schema-roundtrip-regression",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_pipeline.py::test_degraded_readiness_requires_machine_readable_causes skills/monitor-opportunities/tests/test_report_schema_runtime.py::test_runtime_manifest_validates_against_committed_schema skills/monitor-opportunities/tests/test_report_schema_runtime.py::test_meetup_runtime_manifest_validates_schema_without_opportunity_leak -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ],
+        "stderr_excludes": [
+          "READINESS_CAUSES_REQUIRED",
+          "readiness_causes",
+          "REPORT_MANIFEST_READBACK_FAILED"
+        ]
+      },
+      "proves": "A DEGRADED fixture run keeps machine-readable readiness_causes through ReportManifest validation, committed JSON Schema validation, and report JSON rendering.",
+      "does_not_prove": "That a fresh live nightly source is reachable or that the listed next_step has repaired the upstream provider.",
+      "seams": [
+        "pipeline.readiness_causes",
+        "contracts.ReportManifest",
+        "schemas.report"
+      ]
+    },
+    {
       "name": "employer-ats-parser-limit-accounting",
       "type": "negative",
       "real_world": true,

@@ -421,6 +421,13 @@ class DecisionAction(StrictModel):
     effects_external: bool
 
 
+class ReadinessCause(StrictModel):
+    code: str = Field(min_length=1)
+    source_artifact_paths: list[str] = Field(min_length=1)
+    next_step: str = Field(min_length=1)
+    source_receipt_id: str | None = None
+
+
 class ArtifactAccounting(StrictModel):
     action_worthy_total: int = Field(ge=0)
     visible_total: int = Field(ge=0)
@@ -436,6 +443,7 @@ class ReportManifest(StrictModel):
     immutable_goal: ImmutableGoal
     stage: str
     operational_readiness: str
+    readiness_causes: list[ReadinessCause] = []
     capability_authority: CapabilityAuthority
     lane_coverage: list[LaneCoverage]
     source_receipts: list[SourceReceipt]
@@ -835,6 +843,16 @@ def _validate_model_semantics(manifest: ReportManifest) -> None:
         )
     if manifest.immutable_goal.text != IMMUTABLE_GOAL:
         raise ContractError("IMMUTABLE_GOAL_MISMATCH", "Report is not bound to the immutable goal")
+    if manifest.operational_readiness == "DEGRADED" and not manifest.readiness_causes:
+        raise ContractError(
+            "READINESS_CAUSES_REQUIRED",
+            "DEGRADED operational_readiness requires at least one readiness cause",
+        )
+    if manifest.operational_readiness != "DEGRADED" and manifest.readiness_causes:
+        raise ContractError(
+            "READINESS_CAUSES_WITHOUT_DEGRADATION",
+            "readiness_causes are only valid when operational_readiness is DEGRADED",
+        )
 
     lanes = [lane.lane for lane in manifest.lane_coverage]
     if sorted(lanes) != ["A", "B", "C"]:
