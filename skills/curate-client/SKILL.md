@@ -71,9 +71,13 @@ per unit; no padding, no whole-repo context dumps.
 ./run.sh chunks --config client.yaml            # extract Q-A chunks to <kb_root>/knowledge
 ./run.sh ingest --config client.yaml            # memory ingest under scope client:<name>
 ./run.sh verify --config client.yaml            # daemon recall probes; fail-closed
-./run.sh prep-pack --config client.yaml         # emit the self-contained live-evidence prep pack
+./run.sh prep-pack --config client.yaml         # emit the self-contained live-evidence prep pack + load command
 ./run.sh build  --config client.yaml            # chunks + ingest + verify + prep-pack
 ```
+
+The `prep-pack` receipt includes `live_evidence_load.command`. Run that command
+to make `$live-evidence` load the embedded briefing pack and verify oracle
+recall before the call.
 
 Config (`client.yaml`):
 

@@ -1,0 +1,115 @@
+"""Prep-pack loader regressions."""
+
+import importlib.util
+import json
+from pathlib import Path
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "load_prep_pack.py"
+spec = importlib.util.spec_from_file_location("load_prep_pack", SCRIPT)
+assert spec and spec.loader
+load_prep_pack = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(load_prep_pack)
+
+
+def _pack(tmp_path: Path) -> Path:
+    payload = {
+        "schema": "live_evidence.prep_pack.v1",
+        "pack_id": "client-demo",
+        "target": {"kind": "employer", "name": "ClientCo", "topic": "technical interview"},
+        "research_chain": [
+            {"skill": "curate-client"},
+            {"skill": "brave-search"},
+            {"skill": "dogpile"},
+            {"skill": "ask"},
+            {"skill": "memory"},
+        ],
+        "source_context": [{"source_id": "docs", "path": "knowledge/docs.md"}],
+        "briefing_pack": {
+            "schema": "live_evidence.briefing_pack.v1",
+            "pack_id": "client-briefing",
+            "audience": "ClientCo interview",
+            "points": [{
+                "point_id": "evidence-gates",
+                "opening_triggers": [["evidence"]],
+                "hook": "Separate answer generation from publication.",
+                "story": "Cards publish only after source gates pass.",
+            }],
+        },
+        "question_oracles": [{
+            "question_id": "Q1",
+            "canonical_question": "How do evidence gates protect live answers?",
+            "skill_chain": ["memory"],
+            "reviewed_answer": {"review_status": "reviewed", "quality_bar": ["source-bound"]},
+            "memory_keys": ["q1", "q1_answer"],
+        }],
+        "memory_exports": {
+            "collections": [
+                "live_evidence_mock_interviews",
+                "live_evidence_questions",
+                "live_evidence_answers",
+                "live_evidence_skill_chains",
+                "live_evidence_source_context",
+                "live_evidence_edges",
+            ]
+        },
+        "live_use": {
+            "before_call": ["load briefing"],
+            "during_call": ["retrieve oracle"],
+            "after_call": ["grade misses"],
+        },
+    }
+    path = tmp_path / "pack.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def test_loader_rejects_non_http_memory_env_default() -> None:
+    assert load_prep_pack._http_url_or_default("unix:///tmp/memory.sock", "http://127.0.0.1:8601") == "http://127.0.0.1:8601"
+    assert load_prep_pack._http_url_or_default("http://127.0.0.1:8601", "fallback") == "http://127.0.0.1:8601"
+
+
+def test_load_prep_pack_loads_briefing_and_verifies_recall(monkeypatch, tmp_path) -> None:
+    pack_path = _pack(tmp_path)
+    calls = []
+
+    def fake_post_briefing(backend_url, briefing_pack, *, timeout_s):
+        calls.append(("briefing", backend_url, briefing_pack["pack_id"]))
+        return {"ok": True, "status_code": 202}
+
+    def fake_verify(pack, *, memory_url, timeout_s):
+        calls.append(("recall", memory_url, pack["pack_id"]))
+        return {"ok": True, "probe_count": 1, "probes": []}
+
+    monkeypatch.setattr(load_prep_pack, "_post_briefing", fake_post_briefing)
+    monkeypatch.setattr(load_prep_pack, "verify_oracle_recall", fake_verify)
+
+    receipt = load_prep_pack.load_prep_pack(
+        pack_path,
+        backend_url="http://127.0.0.1:8799",
+        memory_url="http://127.0.0.1:8601",
+        timeout_s=1,
+    )
+
+    assert receipt["status"] == "PASS"
+    assert receipt["validation"]["status"] == "PASS"
+    assert calls == [
+        ("briefing", "http://127.0.0.1:8799", "client-briefing"),
+        ("recall", "http://127.0.0.1:8601", "client-demo"),
+    ]
+
+
+def test_load_prep_pack_fails_closed_on_missing_recall(monkeypatch, tmp_path) -> None:
+    pack_path = _pack(tmp_path)
+    monkeypatch.setattr(load_prep_pack, "_post_briefing", lambda *a, **k: {"ok": True})
+    monkeypatch.setattr(load_prep_pack, "verify_oracle_recall", lambda *a, **k: {"ok": False, "probes": []})
+
+    receipt = load_prep_pack.load_prep_pack(
+        pack_path,
+        backend_url="http://127.0.0.1:8799",
+        memory_url="http://127.0.0.1:8601",
+        timeout_s=1,
+    )
+
+    assert receipt["status"] == "FAIL"
+    assert receipt["errors"] == ["oracle_recall_failed"]

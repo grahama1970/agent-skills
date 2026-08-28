@@ -118,10 +118,19 @@ $curate-client client/employer/topic KB build
 ```
 
 `fixtures/prep_pack_drivewealth.json` is the shipped DriveWealth example. Validate
-the shape with `./run.sh eval-prep-pack`. A retrieved prep-pack or oracle answer
-is a prior for live ranking and answer shaping, not publication authority; the
-live transcript revision, source provenance, and card publication gates still
-decide visibility.
+the shape with `./run.sh eval-prep-pack`, then load it into a running HUD with:
+
+```bash
+./run.sh load-prep-pack \
+  --pack fixtures/prep_pack_drivewealth.json \
+  --backend-url http://127.0.0.1:8799
+```
+
+`load-prep-pack` loads the embedded briefing pack through `/api/briefing/load`
+and verifies each question oracle's `memory_keys` through `/recall`. A retrieved
+prep-pack or oracle answer is a prior for live ranking and answer shaping, not
+publication authority; the live transcript revision, source provenance, and card
+publication gates still decide visibility.
 
 ## Precomputed interview oracles
 

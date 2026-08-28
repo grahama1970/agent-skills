@@ -56,7 +56,9 @@
      "\"status\": \"PASS\"",
      "\"schema\": \"live_evidence.prep_pack.v1\"",
      "\"question_oracles\"",
-     "\"briefing_pack\""
+     "\"briefing_pack\"",
+     "\"live_evidence_load\"",
+     "\"load-prep-pack\""
     ]
    }
   },

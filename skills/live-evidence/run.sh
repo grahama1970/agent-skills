@@ -287,6 +287,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/validate_prep_pack.py" "$SCRIPT_DIR" "$@"
     ;;
+  load-prep-pack)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/load_prep_pack.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-meeting-campaign)
     shift || true
     prepare_python_environment

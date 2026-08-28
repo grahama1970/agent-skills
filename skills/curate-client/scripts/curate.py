@@ -15,6 +15,7 @@ import urllib.request
 from pathlib import Path
 
 MEMORY_REPO = Path.home() / "workspace/experiments/memory"
+LIVE_EVIDENCE_DEFAULT_BACKEND = "http://127.0.0.1:8799"
 
 
 def _load_config(path: str) -> dict:
@@ -197,6 +198,21 @@ def cmd_verify(cfg: dict) -> dict:
     return {"status": "PASS" if ok and results else "FAIL", "probes": results}
 
 
+def _live_evidence_load_command(cfg: dict, prep_pack: Path) -> list[str]:
+    skill_root = Path(__file__).resolve().parents[2]
+    live_evidence_runner = skill_root / "live-evidence" / "run.sh"
+    return [
+        str(live_evidence_runner),
+        "load-prep-pack",
+        "--pack",
+        str(prep_pack),
+        "--backend-url",
+        str(cfg.get("live_evidence_backend") or LIVE_EVIDENCE_DEFAULT_BACKEND),
+        "--memory-url",
+        str(cfg.get("memory_daemon") or "http://127.0.0.1:8601"),
+    ]
+
+
 def cmd_prep_pack(cfg: dict) -> dict:
     path = _prep_pack_path(cfg)
     payload = json.loads(path.read_text())
@@ -220,6 +236,11 @@ def cmd_prep_pack(cfg: dict) -> dict:
         "client": cfg["client"],
         "scope": f"client:{cfg['client']}",
         "path": str(path),
+        "live_evidence_load": {
+            "schema": "curate_client.live_evidence_load_command.v1",
+            "command": _live_evidence_load_command(cfg, path),
+            "purpose": "load briefing pack and verify prep-pack oracle recall before the call",
+        },
         "prep_pack": payload,
     }
 
