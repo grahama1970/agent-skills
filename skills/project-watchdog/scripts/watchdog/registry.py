@@ -308,15 +308,15 @@ def list_routable_issues(
         if action == "ticket_repair" and has_lane:
             readiness = worktree_readiness(project_worktree(project), targets)
             reasons = [str(reason) for reason in readiness.get("reasons", [])]
-            if reasons and all(reason.startswith("tracked_files_dirty:") for reason in reasons):
-                # A dirty target in the registered checkout is a per-target
-                # collision, not a failed repair attempt. Exclude it during
-                # selection so it cannot consume the whole fleet tick before an
-                # isolated repair worktree is even created. The handler keeps
-                # the same readiness check for races between scan and dispatch.
+            blocking_reasons = [
+                reason for reason in reasons if not reason.startswith("tracked_files_dirty:")
+            ]
+            if blocking_reasons:
                 issue["watchdog_worktree_readiness"] = readiness
                 excluded.setdefault("target_busy", []).append(issue_number)
                 continue
+            if reasons:
+                issue["watchdog_worktree_readiness"] = readiness
         issue["watchdog_action"] = action
         issue["watchdog_targets"] = sorted(targets)
         # Claim them for the rest of this scan: with max_tickets > 1 two tickets

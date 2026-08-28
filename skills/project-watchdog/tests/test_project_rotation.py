@@ -481,7 +481,7 @@ def test_targeted_issue_does_not_let_earlier_issue_claim_its_target(monkeypatch)
     assert "target_busy" not in registry.LAST_SCAN["excluded"]
 
 
-def test_dirty_target_is_excluded_before_dispatch_and_next_issue_can_route(monkeypatch):
+def test_dirty_target_is_reported_without_blocking_isolated_dispatch(monkeypatch):
     dirty = _issue(1469, "skills/agentic-evals")
     clean = _issue(1472, "skills/ticket")
 
@@ -506,9 +506,11 @@ def test_dirty_target_is_excluded_before_dispatch_and_next_issue_can_route(monke
         {"repo": "o/agent-skills", "worktree": "/tmp/worktree"},
     )
 
-    assert [i["number"] for i in routable] == [1472]
-    assert registry.LAST_SCAN["excluded"]["target_busy"] == 1
-    assert registry.LAST_SCAN["excluded_issues"]["target_busy"] == [1469]
+    assert [i["number"] for i in routable] == [1469, 1472]
+    assert routable[0]["watchdog_worktree_readiness"]["dirty_paths"] == [
+        "skills/agentic-evals/tests/test_remediation.py"
+    ]
+    assert "target_busy" not in registry.LAST_SCAN["excluded"]
 
 
 def test_stale_lease_skip_reason_is_machine_readable(monkeypatch):

@@ -135,21 +135,17 @@
       "mocked": true,
       "timeout_seconds": 120,
       "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring",
-        "-q"
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest skills/project-watchdog/tests/test_project_watchdog.py::test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring skills/project-watchdog/tests/test_project_rotation.py::test_dirty_target_is_reported_without_blocking_isolated_dispatch -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ]
       },
-      "proves": "A dirty target path in the registered checkout is reported but does not block project-watchdog from preparing an isolated repair worktree from origin/main.",
+      "proves": "Dirty tracked files in the registered checkout are reported but do not block issue selection or isolated repair authoring.",
       "does_not_prove": "A live Ask/Tau repair for the ticket succeeds."
     },
     {
