@@ -69,6 +69,108 @@ def _yes_no(value: bool) -> str:
     return "yes" if value else "no"
 
 
+def _anchor(prefix: str, identifier: str) -> str:
+    digest = hashlib.sha256(identifier.encode("utf-8")).hexdigest()[:12]
+    return f"{prefix}-{digest}"
+
+
+def _source_receipt_lookup(manifest: ReportManifest) -> dict[str, Any]:
+    return {receipt.receipt_id: receipt for receipt in manifest.source_receipts}
+
+
+def _linkedin_evidence_label(source_receipt_ids: list[str], receipts_by_id: dict[str, Any]) -> str:
+    for receipt_id in source_receipt_ids:
+        receipt = receipts_by_id.get(receipt_id)
+        if receipt is None:
+            continue
+        haystack = " ".join(
+            str(value or "")
+            for value in (
+                receipt.provider,
+                receipt.source_class,
+                receipt.channel,
+                receipt.request_summary,
+                *receipt.evidence_refs,
+            )
+        ).lower()
+        if "linkedin" in haystack:
+            return "LinkedIn evidence present; Top Applicant/Easy Apply only if stated in source receipt."
+    return "No LinkedIn Top Applicant/Easy Apply evidence on this row."
+
+
+def _contact_label(item: Any, signals_by_id: dict[str, Any]) -> str:
+    ids = list(getattr(item, "relationship_signal_ids", []) or [])
+    labels: list[str] = []
+    for signal_id in ids:
+        signal = signals_by_id.get(signal_id)
+        if signal is None:
+            continue
+        labels.append(f"{signal.subject} ({signal.degree_label})")
+    return "; ".join(labels) if labels else "No attached contact path."
+
+
+def _application_packet_by_opportunity(manifest: ReportManifest) -> dict[str, Any]:
+    packets: dict[str, Any] = {}
+    for packet in manifest.application_packets:
+        packets.setdefault(packet.opportunity_id, packet)
+    return packets
+
+
+def _decision_table(manifest: ReportManifest, signals_by_id: dict[str, Any]) -> str:
+    receipts_by_id = _source_receipt_lookup(manifest)
+    packets_by_opp = _application_packet_by_opportunity(manifest)
+    rows: list[str] = []
+    for idx, item in enumerate(manifest.opportunities, start=1):
+        packet = packets_by_opp.get(item.opportunity_id)
+        packet_label = (
+            f"{packet.approval_status}; packet {packet.packet_id}"
+            if packet is not None
+            else "NO_APPLICATION_PACKET"
+        )
+        next_action = (
+            "Review packet; exact human authorization is required before submit."
+            if packet is not None
+            else "No application packet; inspect deep section."
+        )
+        rows.append(
+            f"<tr id=\"{_anchor('source-intel', item.signal_id)}\">"
+            f"<td>{idx}</td>"
+            "<td>Employment</td>"
+            f"<td><a href=\"#{_anchor('opportunity', item.opportunity_id)}\">"
+            f"{html.escape(item.title)} — {html.escape(item.organization)}</a></td>"
+            f"<td>{html.escape(item.location.display)}</td>"
+            f"<td>{item.fit_score:.2f}</td>"
+            f"<td>{html.escape(packet_label)}</td>"
+            f"<td>{html.escape(_contact_label(item, signals_by_id))}</td>"
+            f"<td>{html.escape(_linkedin_evidence_label(item.source_receipt_ids, receipts_by_id))}</td>"
+            f"<td>{html.escape(next_action)}</td>"
+            "</tr>"
+        )
+    for idx, item in enumerate(manifest.source_intel, start=1):
+        rows.append(
+            "<tr>"
+            f"<td>S{idx}</td>"
+            "<td>Consulting / source intel</td>"
+            f"<td><a href=\"#{_anchor('source-intel', item.signal_id)}\">"
+            f"{html.escape(item.title)} — {html.escape(item.organization)}</a></td>"
+            f"<td>{html.escape(item.signal_type)}</td>"
+            "<td></td>"
+            f"<td>{html.escape(item.decision)}</td>"
+            "<td>See source-intel detail.</td>"
+            f"<td>{html.escape(_linkedin_evidence_label(item.source_receipt_ids, receipts_by_id))}</td>"
+            "<td>Research/contact action only; not an ATS application packet.</td>"
+            "</tr>"
+        )
+    body = "".join(rows) or '<tr><td colspan="9">No report-visible opportunities or source-intel rows.</td></tr>'
+    return (
+        "<table class=\"decision-table\"><thead><tr>"
+        "<th>Rank</th><th>Kind</th><th>Opportunity</th><th>Location / signal</th>"
+        "<th>Fit</th><th>Authorization</th><th>Contact path</th>"
+        "<th>LinkedIn evidence</th><th>Next action</th>"
+        f"</tr></thead><tbody>{body}</tbody></table>"
+    )
+
+
 def _source_intel_table(items: Iterable[Any]) -> str:
     rows = []
     for item in items:
@@ -217,8 +319,10 @@ def render_html(manifest: ReportManifest) -> str:
         for lane in manifest.lane_coverage
     )
 
+    decision_table = _decision_table(manifest, signals_by_id)
+
     opportunities = "".join(
-        f"<article><h3>{html.escape(item.title)} — {html.escape(item.organization)}</h3>"
+        f"<article id=\"{_anchor('opportunity', item.opportunity_id)}\"><h3>{html.escape(item.title)} — {html.escape(item.organization)}</h3>"
         f"<p>{_badge(item.eligibility_state)} score {item.fit_score:.2f}</p>"
         f"<p><strong>Location:</strong> {html.escape(item.location.display)}</p>"
         f"{_link('Primary evidence', item.primary_evidence_url)}"
@@ -356,6 +460,7 @@ body {{ max-width: 1100px; margin: 0 auto; padding: 2rem; line-height: 1.45; }}
 section {{ margin: 2rem 0; }} article {{ border: 1px solid #7776; padding: 1rem; margin: 1rem 0; border-radius: .5rem; }}
 table {{ border-collapse: collapse; width: 100%; }} th, td {{ border: 1px solid #7776; padding: .5rem; vertical-align: top; }}
 th {{ text-align: left; }}
+.decision-table {{ font-size: .94rem; }}
 .source-intel-table td:nth-child(1), .source-intel-table td:nth-child(2) {{ white-space: nowrap; }}
 .source-intel-table th:nth-child(1) {{ width: 22%; }}
 .source-intel-table th:nth-child(2) {{ width: 16%; }}
@@ -371,6 +476,7 @@ pre {{ white-space: pre-wrap; border: 1px solid #7776; padding: .75rem; }} .empt
 <p><strong>Run:</strong> {html.escape(manifest.run_id)} · <strong>Stage:</strong> {_badge(manifest.stage)} · <strong>Readiness:</strong> {_badge(manifest.operational_readiness)}</p>
 <p>{html.escape(manifest.immutable_goal.text)}</p></header>
 <section><h2>Coverage and feed health</h2><table><thead><tr><th>Lane</th><th>Status</th><th>Observed</th><th>Admitted</th><th>Limitations</th></tr></thead><tbody>{lanes}</tbody></table></section>
+<section><h2>Morning decision table</h2>{decision_table}</section>
 <section><h2>Opportunities</h2>{opportunities}<h3>Source intelligence</h3>{source_intel}<h3>Hard rejections</h3><ul>{rejections}</ul></section>
 <section><h2>Tailored resume variants</h2>{variants}</section>
 <section><h2>Human-transmitted outreach</h2><p><strong>The human transmits. Stage 0 packets are not sendable.</strong></p>{outreach}</section>
