@@ -472,6 +472,42 @@
       "does_not_prove": "Human application authorization, tracker issue creation in a separately promoted mode, ATS memory writes in a separately promoted mode, or semantic quality of provider addenda."
     },
     {
+      "name": "nightly-revision-mismatch-triage-regression-2026-08-28",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_nightly_revision_mismatch_triage.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NIGHTLY_REVISION_MISMATCH_TRIAGE_OK",
+          "code=monitor_opportunities_nightly_revision_mismatch",
+          "ambiguous=False",
+          "TICKET_PREVIEW_ROUTABLE_OK",
+          "route=ops_or_scheduler",
+          "label=agent-work"
+        ],
+        "stderr_excludes": [
+          "REVISION_MISMATCH_UNCLASSIFIED",
+          "REVISION_MISMATCH_STILL_AMBIGUOUS",
+          "TRIAGE_NEXT_COMMAND_MISSING",
+          "TICKET_PREVIEW_FAILED"
+        ]
+      },
+      "proves": "The exact Aug 27/28 cron NIGHTLY_REVISION_MISMATCH signal is classified by triage-error as a recoverable monitor-opportunities scheduler issue and can produce a routable ticket preview for project-watchdog.",
+      "does_not_prove": "That tomorrow's 2 AM cron run will fire, that project-watchdog dispatched a live GitHub issue, or that a full nightly report passed unrelated source/browser gates.",
+      "seams": [
+        "scheduler.revision_pin",
+        "triage.failure_code_catalog",
+        "ticket.watchdog_routing"
+      ]
+    },
+    {
       "name": "regression-2026-08-18-failure-signatures",
       "type": "negative",
       "real_world": true,
@@ -669,14 +705,14 @@
       ]
     },
     {
-      "name": "linkedin-top-applicant-easy-apply-standing-authorization",
+      "name": "linkedin-top-applicant-easy-apply-exact-authorization",
       "type": "adversarial",
       "real_world": true,
       "timeout_seconds": 60,
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_is_standing_authorized_source_intel -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization -q"
       ],
       "expected": {
         "exit_code": 0,
@@ -685,10 +721,11 @@
         ],
         "stderr_excludes": [
           "SOURCE_INTEL_DECISION_INVALID",
-          "LINKEDIN_PRIORITY_NOT_ACTIONABLE"
+          "LINKEDIN_PRIORITY_NOT_ACTIONABLE",
+          "EASY_APPLY_AUTHORIZED"
         ]
       },
-      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is not left as generic review-only source intelligence; it is classified as EASY_APPLY_AUTHORIZED, visible in the report, action-worthy, and routed toward the gated commit-linkedin path.",
+      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is visible and action-worthy for human review, but it is not classified as standing authorization and still requires exact post-report authorization before any application.",
       "does_not_prove": "A live LinkedIn submit occurred, that LinkedIn exposed a qualifying row in the current account, or that unknown screening questions can be answered without Graham.",
       "seams": [
         "pipeline.linkedin_source_intel_policy",

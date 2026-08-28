@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "skill": "triage-error",
+  "trials": 2,
+  "proof_scope": "classifier maps known pipeline signals to canonical codes, mints deterministic codes for ambiguous signals, and refuses cross-layer false matches; run via the real skill entrypoint and test runner",
+  "claims": {
+    "proves": "triage-error classify maps 'zip contains N; maximum is M' -> webgpt_attachment_bundle_rejected and '/v4/v1/chat/completions' -> scillm_api_base_double_version_segment, mints a stable *_unclassified_* code for novel signals, and does not false-match a surf signal asked as scillm",
+    "does_not_prove": "repo-wide adoption by all skills (incremental rollout), or live ticket/agentic-eval/debugger composition"
+  },
+  "capability_claims": [
+    {
+      "id": "triage_error.classifier",
+      "description": "Maps any layer's raw signal to one unambiguous code (or a deterministic minted code).",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "classifier-canonical-and-ambiguous-and-no-cross-layer",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "triage_error.classifier"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/triage-eval-venv uv run --with pytest --project . python -m pytest -q tests/ && ./run.sh classify --text \"zip contains 9 files; maximum is 5\" --layer surf"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed",
+          "webgpt_attachment_bundle_rejected"
+        ]
+      }
+    }
+  ]
+}

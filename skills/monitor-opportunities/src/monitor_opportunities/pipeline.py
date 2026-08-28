@@ -431,7 +431,7 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             )
         if pending:
             reasons.append(
-                "WNY priority: no primary ATS source corroborated this run — verify the employer posting, then apply."
+                "WNY priority: no primary ATS source corroborated this run; verify the employer posting and require Graham's exact post-report authorization before any application."
             )
         if decision == "LOCATOR_ONLY":
             reasons.append("Primary employer/client source readback is required before opportunity admission.")

@@ -19,6 +19,9 @@
         "ranking.eligibility_escalation",
         "ranking.response_score",
         "ranking.shortlist_selection",
+        "scheduler.revision_pin",
+        "ticket.watchdog_routing",
+        "triage.failure_code_catalog",
         "tailoring.resume_render",
         "self_heal.remediation_wiring"
       ],
