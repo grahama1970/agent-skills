@@ -158,30 +158,39 @@ never the complete transcript.
 ```bash
 ./run.sh setup
 ./run.sh ui-build
-./run.sh serve --open-browser
+./run.sh serve --port 8799 --open-browser
 ```
 
 In another terminal, after obtaining any required recording consent:
 
 ```bash
 # Default microphone
-./run.sh listen --mode microphone --consent-confirmed
+./run.sh listen --mode microphone \
+  --backend-url http://127.0.0.1:8799 \
+  --device cpu \
+  --consent-confirmed
 
 # Meeting/system audio from a PipeWire source
 ./run.sh listen --mode pipewire \
+  --backend-url http://127.0.0.1:8799 \
   --pipewire-source '<source-name>' \
   --speaker interviewer \
+  --device cpu \
   --consent-confirmed
 
 # Browser/video audio from a PipeWire output sink
 ./run.sh listen --mode pipewire \
+  --backend-url http://127.0.0.1:8799 \
   --pipewire-source 'sink:<sink-node-name>' \
   --speaker interviewer \
+  --device cpu \
   --consent-confirmed
 
 # Two channels: default microphone + a PipeWire meeting source
 ./run.sh listen --mode dual \
+  --backend-url http://127.0.0.1:8799 \
   --pipewire-source '<source-name>' \
+  --device cpu \
   --consent-confirmed
 ```
 

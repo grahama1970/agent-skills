@@ -119,6 +119,11 @@ PY
     shift || true
     exec "$SCRIPT_DIR/sanity.sh" "$@"
     ;;
+  serve)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python -m live_evidence serve "$@"
+    ;;
   doctor)
     shift || true
     prepare_python_environment
@@ -128,7 +133,7 @@ PY
     shift || true
     consent_seen="false"
     for arg in "$@"; do
-      if [[ "$arg" == "--consent-confirmed" ]]; then
+      if [[ "$arg" == "--consent-confirmed" || "$arg" == "--help" || "$arg" == "-h" ]]; then
         consent_seen="true"
         break
       fi
