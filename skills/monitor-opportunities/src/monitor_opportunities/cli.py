@@ -56,6 +56,7 @@ from .report import load_manifest, render_report
 from .report_acceptance import validate_report_acceptance
 from .semantic_addenda import install_semantic_addendum
 from .service import serve as serve_report
+from .stage_ledger import build_ledger_for_run
 from .tailoring import tailor as tailor_resume
 from .tailoring import tailor_candidate
 from .tau_semantic_prepare import prepare_tau_semantic_inputs
@@ -2511,6 +2512,24 @@ def nightly(
     lane_health_phase(out, steps)
     if promoted_stage0 and not (out / "morning-digest.json").exists():
         _fail(ContractError("PROMOTED_STAGE0_DIGEST_MISSING", "Validated morning digest was not written"))
+
+    stage_ledger_path = out / "stage-ledger.json"
+    if promoted_stage0 and not stage_ledger_path.exists():
+        try:
+            ledger_ok, ledger = build_ledger_for_run(out)
+            write_json(stage_ledger_path, ledger)
+            steps["stage_ledger"] = {
+                "ok": ledger_ok,
+                "counts": ledger.get("counts"),
+                "violations": len(ledger.get("violations", [])),
+                "source": "nightly_promoted_stage0_fallback",
+            }
+        except Exception as exc:  # noqa: BLE001 - promoted acceptance reports the concrete gap
+            steps["stage_ledger"] = {
+                "ok": False,
+                "error": str(exc),
+                "source": "nightly_promoted_stage0_fallback",
+            }
 
     # Self-heal memory: if the service is down, restart its container and wait
     # for health rather than failing the nightly (no reason to fail on a

@@ -1122,6 +1122,34 @@
       "does_not_prove": "A fresh live nightly run passes external source capture, Tau provider evaluation, or report acceptance."
     },
     {
+      "name": "promoted-stage0-nightly-builds-stage-ledger-before-acceptance",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "nightly.promoted_stage0_final_gate",
+        "report_acceptance.stage_ledger_gate",
+        "stage_ledger.stage_conservation"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_nightly_promoted_stage0.py::test_promoted_stage0_nightly_writes_publication_receipts -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "PROMOTED_STAGE0_REPORT_ACCEPTANCE_FAILED",
+          "stage-ledger.json is missing"
+        ]
+      },
+      "proves": "Promoted Stage 0 nightly writes or backfills stage-ledger.json before report acceptance requires it, so the final publication gate cannot fail solely because digest-stage ledger generation was bypassed.",
+      "does_not_prove": "A fresh live nightly has semantically correct opportunities, that source/browser capture passed, or that any external application action is authorized."
+    },
+    {
       "name": "report-acceptance-stage-ledger-interface",
       "type": "adversarial",
       "real_world": false,
