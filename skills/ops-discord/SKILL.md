@@ -155,6 +155,9 @@ Shows status of:
 
 # Test a webhook
 ./run.sh webhook test alerts
+
+# Send one operational notification; dry-run resolves the webhook without posting
+./run.sh notify --webhook alerts --content "self-repair entered" --dry-run --json
 ```
 
 ### `monitor` - Run the Monitor
@@ -305,6 +308,16 @@ Telegram Public Channels → social-bridge → Your Discord → ops-discord → 
 |----------|-------------|----------|
 | `DISCORD_BOT_TOKEN` | Bot token | Yes (or in clawdbot .env) |
 | `CLAWDBOT_DIR` | Path to clawdbot | No (default: ~/workspace/experiments/clawdbot) |
+| `OPS_DISCORD_WEBHOOK_URL` | Default output webhook URL loaded without writing `config.json` | No |
+| `OPS_DISCORD_WEBHOOK_<NAME>_URL` | Named output webhook URL; `<NAME>` becomes the webhook name | No |
+| `DISCORD_WEBHOOK_URL` | Discord-specific default webhook alias | No |
+| `SLACK_WEBHOOK_URL` | Slack-compatible webhook alias named `slack` | No |
+| `OPS_DISCORD_ZSHRC` | Alternate zshrc file to parse for known webhook exports | No |
+
+`webhook list` redacts token-bearing URL paths. Supported webhook env vars are
+also read from `~/.zshrc` without executing shell code, which lets cron-like
+callers discover the same configured names even when they are not interactive
+shells.
 
 ## Files
 

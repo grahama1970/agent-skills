@@ -78,23 +78,25 @@ disciplines:
 > discovers, ranks, and surfaces the most-targeted opportunities — Buffalo/WNY
 > first, then credible remote — and surfaces where Graham is a LinkedIn top
 > applicant or a role offers quick (Easy) apply. On Graham's authorization
-> (per-opportunity, or standing for a class such as "top-candidate" or
-> "quick-apply" roles), the agent performs the entire application end-to-end:
-> tailoring a truthful custom resume to the employer's likely screening
-> algorithm, answering only from Graham's attested facts, and submitting on
-> employer ATS and LinkedIn Easy Apply — with duplicate protection and an
-> openable receipt for every action. Graham authorizes; the agent executes.
-> Nothing is fabricated, and no required answer without a truthful basis is ever
-> submitted — any genuine screening question is surfaced to Graham, never
-> guessed.**
+> for one exact opportunity after reviewing the morning report), the agent may
+> perform the application end-to-end: tailoring a truthful custom resume to the
+> employer's likely screening algorithm, answering only from Graham's attested
+> facts, and submitting on employer ATS or LinkedIn Easy Apply with duplicate
+> protection and an openable receipt for every action. Graham authorizes a
+> specific payload after collaboration; the agent executes that authorized
+> payload. Nothing is fabricated, and no required answer without a truthful
+> basis is ever submitted — any genuine screening question is surfaced to
+> Graham, never guessed.**
 
-> **Standing authorization (Graham, 2026-08-22):** the agent MAY auto-submit
-> applications — on employer ATS and via LinkedIn Easy Apply — where Graham is a
-> top candidate or a role is quick-apply, under his authorization. This
-> supersedes the earlier `linkedin_automation = PERMANENTLY_FORBIDDEN` stance for
-> Easy Apply, driven through Graham's own authenticated session; Graham has
-> accepted the LinkedIn ToS / account risk. LinkedIn remains read-only for
-> discovery everywhere else (no scraping, connecting, or messaging).
+> **Easy Apply authorization correction (Graham, 2026-08-26):** LinkedIn Top
+> Applicant and Easy Apply are discovery and prioritization signals. They are
+> not standing authorization and must never trigger automatic application
+> submission. The nightly report must surface these opportunities, prepare the
+> truthful resume/payload material, and wait for Graham's explicit
+> post-collaboration authorization for that exact opportunity and payload before
+> any LinkedIn Easy Apply or employer ATS submit command is run. LinkedIn remains
+> read-only for discovery and contact evidence everywhere else (no scraping,
+> connecting, messaging, posting, or broad platform automation).
 
 Operationally, “algorithm likely employed” means an evidence-backed
 `screening_interface_profile`: observed ATS/provider host, observed form fields and file
@@ -282,8 +284,9 @@ ineligible opportunities are rejected before scoring. Ambiguous location, cleara
 citizenship/work-authorization, salary, and other human-attested facts remain `UNKNOWN`
 or `human_required`; a model cannot infer an attestation.
 
-An empty shortlist is a valid successful result. Never relax threshold, geography, or
-eligibility policy to manufacture volume.
+A promoted morning report with zero shortlisted opportunities is a failed monitor result.
+Never relax threshold, geography, or eligibility policy to manufacture volume; fix source
+coverage, evidence capture, or ranking so the report surfaces real opportunities.
 
 ## Claim-bound resume tailoring
 
@@ -467,6 +470,21 @@ skills/scheduler/run.sh list
 
 Registration success is not proof until name, command, working directory, cron, and
 enabled state are read back exactly.
+
+Scheduler failure self-repair may emit an operational notification through
+`ops-discord`, but only when explicitly enabled:
+
+```bash
+export MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY=1
+export MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK=slack
+```
+
+`MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN=1` resolves the webhook and
+writes the notification receipt without posting. Notification is not an outreach,
+LinkedIn, ATS, Gmail, Meetup, or application effect; it only tells Graham that a
+required nightly step entered the repair branch. The scheduler receipt must still
+record whether notification was `DISABLED`, `DRY_RUN`, `SENT`, `FAILED`, or
+`SKIPPED`.
 
 ## Runtime self-improvement boundary
 

@@ -7,8 +7,13 @@ Common utilities: retry logic, rate limiting, redaction, config I/O.
 
 import functools
 import json
+import os
+import re
+import shlex
 import threading
 import time
+from pathlib import Path
+from urllib.parse import urlparse
 from typing import Any, Callable, Optional, TypeVar
 
 from discord_ops.config import (
@@ -33,6 +38,9 @@ __all__ = [
     "webhook_limiter",
     "load_config",
     "save_config",
+    "load_webhooks",
+    "webhook_sources",
+    "describe_webhook_url",
     "load_keywords",
     "save_keywords",
     "get_bot_token",
@@ -136,6 +144,105 @@ def load_config() -> dict[str, Any]:
         "webhooks": {},          # name -> url
         "bot_token": None,       # Discord bot token (or use env)
     }
+
+
+_EXACT_WEBHOOK_ENV_NAMES = {
+    "OPS_DISCORD_WEBHOOK_URL": "default",
+    "DISCORD_WEBHOOK_URL": "discord",
+    "SLACK_WEBHOOK_URL": "slack",
+}
+
+_PREFIX_WEBHOOK_ENV_NAMES = (
+    "OPS_DISCORD_WEBHOOK_",
+    "DISCORD_WEBHOOK_",
+)
+
+
+def _webhook_name_from_env(env_name: str, fallback: str) -> str:
+    suffix = fallback
+    for prefix in _PREFIX_WEBHOOK_ENV_NAMES:
+        if env_name.startswith(prefix):
+            suffix = env_name.removeprefix(prefix)
+            break
+    suffix = suffix.removesuffix("_URL")
+    normalized = re.sub(r"[^a-z0-9]+", "-", suffix.lower()).strip("-")
+    return normalized or fallback
+
+
+def _local_shell_exports() -> dict[str, str]:
+    zshrc = Path(os.environ.get("OPS_DISCORD_ZSHRC", str(Path.home() / ".zshrc")))
+    if not zshrc.is_file():
+        return {}
+    exports: dict[str, str] = {}
+    for line in zshrc.read_text(encoding="utf-8", errors="ignore").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("export ") or "=" not in stripped:
+            continue
+        name, raw_value = stripped.removeprefix("export ").split("=", 1)
+        name = name.strip()
+        if not name:
+            continue
+        try:
+            parts = shlex.split(raw_value, comments=False, posix=True)
+            value = parts[0] if parts else ""
+        except ValueError:
+            value = raw_value.strip().strip("\"'")
+        exports[name] = value.rstrip(";")
+    return exports
+
+
+def _webhook_env_candidates() -> dict[str, tuple[str, str]]:
+    candidates: dict[str, tuple[str, str]] = {}
+    for env_name, value in _local_shell_exports().items():
+        candidates[env_name] = (value, f"zshrc:{env_name}")
+    for env_name, value in os.environ.items():
+        candidates[env_name] = (value, f"env:{env_name}")
+    return candidates
+
+
+def _env_webhooks() -> dict[str, tuple[str, str]]:
+    webhooks: dict[str, tuple[str, str]] = {}
+    for env_name, (value, source) in _webhook_env_candidates().items():
+        if not value:
+            continue
+        if env_name in _EXACT_WEBHOOK_ENV_NAMES:
+            name = _EXACT_WEBHOOK_ENV_NAMES[env_name]
+        elif env_name.startswith(_PREFIX_WEBHOOK_ENV_NAMES) and env_name.endswith("_URL"):
+            name = _webhook_name_from_env(env_name, "env")
+        else:
+            continue
+        webhooks.setdefault(name, (value, source))
+    return webhooks
+
+
+def load_webhooks() -> dict[str, str]:
+    """Load configured webhooks from config plus supported environment variables."""
+    config = load_config()
+    loaded: dict[str, str] = dict(config.get("webhooks", {}) or {})
+    for name, (url, _source) in _env_webhooks().items():
+        loaded.setdefault(name, url)
+    return loaded
+
+
+def webhook_sources() -> dict[str, str]:
+    """Return source labels for each loaded webhook name."""
+    config = load_config()
+    sources = {name: "config" for name in (config.get("webhooks", {}) or {})}
+    for name, (_url, source) in _env_webhooks().items():
+        sources.setdefault(name, source)
+    return sources
+
+
+def describe_webhook_url(url: str) -> str:
+    """Return a non-secret description of a webhook URL."""
+    parsed = urlparse(url)
+    if not parsed.netloc:
+        return "<redacted>"
+    if parsed.netloc == "discord.com" and parsed.path.startswith("/api/webhooks/"):
+        return "https://discord.com/api/webhooks/<redacted>"
+    if parsed.netloc == "hooks.slack.com":
+        return "https://hooks.slack.com/<redacted>"
+    return f"{parsed.scheme}://{parsed.netloc}/<redacted>"
 
 
 def save_config(config: dict[str, Any]) -> None:

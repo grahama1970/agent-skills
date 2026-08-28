@@ -1287,6 +1287,34 @@
       "does_not_prove": "That project-watchdog dispatched a live repair, that a GitHub issue was created, or that the failed nightly step was subsequently rerun from checkpoint."
     },
     {
+      "name": "scheduler-self-repair-notifies-ops-discord-when-enabled",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "failure.pipeline_self_repair",
+        "ops_discord.failure_notification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_when_enabled -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "Webhook not found",
+          "SCHEDULER_EXEC_CHECK_FAILED"
+        ]
+      },
+      "proves": "When monitor-opportunities self-repair notification is explicitly enabled, the scheduler failure receipt invokes skills/ops-discord/run.sh notify, binds the ops-discord source/status back into the receipt, and can run dry-run with external_effects=false.",
+      "does_not_prove": "A live Discord/Slack webhook accepted a real network post, or that project-watchdog repaired and reran the failed checkpoint."
+    },
+    {
       "name": "tau-dag-visualizes-nightly-self-repair-orchestration",
       "type": "adversarial",
       "real_world": true,

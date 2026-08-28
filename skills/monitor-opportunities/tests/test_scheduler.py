@@ -914,6 +914,89 @@ def test_scheduler_exec_check_records_self_repair_on_failure(
     assert payload["self_repair"]["event_id"] == "evt_test"
     assert payload["self_repair"]["triage_code"] == "monitor_opportunities_scheduler_exec_failed"
     assert payload["self_repair"]["external_effects"] is False
+    assert payload["self_repair"]["notification"]["status"] == "DISABLED"
+    assert payload["self_repair"]["notification"]["external_effects"] is False
+
+
+def test_scheduler_exec_check_notifies_ops_discord_when_enabled(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    pipeline_runner = repo / "skills" / "pipeline-self-repair" / "run.sh"
+    pipeline_runner.parent.mkdir(parents=True)
+    pipeline_runner.write_text("#!/bin/sh\n", encoding="utf-8")
+    ops_discord_runner = repo / "skills" / "ops-discord" / "run.sh"
+    ops_discord_runner.parent.mkdir(parents=True)
+    ops_discord_runner.write_text("#!/bin/sh\n", encoding="utf-8")
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+    captured: dict[str, object] = {}
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY", "1")
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN", "1")
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK", "slack")
+
+    def fake_run(cmd, **kwargs):
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd == command:
+            return subprocess.CompletedProcess(cmd, 9, stdout="", stderr="boom")
+        if cmd[0] == str(pipeline_runner):
+            ledger = Path(cmd[cmd.index("--ledger") + 1])
+            ledger.parent.mkdir(parents=True, exist_ok=True)
+            ledger.write_text('{"schema":"pipeline_self_repair.event.v1"}\n', encoding="utf-8")
+            stdout = {
+                "status": "RECORDED_REPAIR_REQUIRED",
+                "ledger": str(ledger),
+                "event": {
+                    "event_id": "evt_test",
+                    "category_key": "monitor-opportunities/scheduler-exec-check/test/v1",
+                    "failure_category_id": "agentic-evals:agent-skills:monitor-opportunities-test",
+                    "triage": {"code": "monitor_opportunities_scheduler_exec_failed"},
+                },
+            }
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(stdout), stderr="")
+        assert cmd[0] == str(ops_discord_runner)
+        assert cmd[1] == "notify"
+        assert cmd[cmd.index("--webhook") + 1] == "slack"
+        assert "--dry-run" in cmd
+        assert kwargs["cwd"] == repo
+        captured["ops_discord_notify_cmd"] = cmd
+        stdout = {
+            "schema": "ops_discord.notification_receipt.v1",
+            "status": "DRY_RUN",
+            "webhook": "slack",
+            "source": "env:SLACK_WEBHOOK_URL",
+            "dry_run": True,
+            "external_effects": False,
+        }
+        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(stdout), stderr="")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert captured["ops_discord_notify_cmd"]
+    notification = payload["self_repair"]["notification"]
+    assert notification["status"] == "DRY_RUN"
+    assert notification["ops_discord_status"] == "DRY_RUN"
+    assert notification["ops_discord_source"] == "env:SLACK_WEBHOOK_URL"
+    assert notification["external_effects"] is False
 
 
 def test_scheduler_exec_check_fails_on_mismatched_final_acceptance_hash(
