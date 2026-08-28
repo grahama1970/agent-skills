@@ -1,0 +1,280 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "monitor-opportunities-nightly-self-repair",
+  "goal": {
+    "goal_id": "monitor-opportunities-nightly",
+    "goal_version": 1,
+    "goal_hash": "sha256:96c6a2177ab4b3d588e6662a5e4a4c21a6f8f13ac7b06a899c090074f8630f4c",
+    "immutable_goal": "Nightly monitor-opportunities must produce a human-reviewable Buffalo/WNY-first employment and consulting report, preserve LinkedIn Top Applicant/Easy Apply as human-authorized only, and route every failed checkpoint through triage-error, pipeline-self-repair, ticket, project-watchdog, agentic-evals, and checkpoint rerun before the next trusted nightly."
+  },
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/monitor-opportunities",
+    "allowed_paths": [
+      "skills/monitor-opportunities/**",
+      "skills/pipeline-self-repair/**",
+      "skills/triage-error/**",
+      "skills/ticket/**",
+      "skills/project-watchdog/**",
+      "skills/agentic-evals/**"
+    ]
+  },
+  "entry_node": "scheduler-exec-check",
+  "terminal_nodes": [
+    "human-review"
+  ],
+  "limits": {
+    "resume": true,
+    "default_timeout_seconds": 7200,
+    "max_total_attempts": 8,
+    "max_concurrency": 2
+  },
+  "nodes": [
+    {
+      "id": "scheduler-exec-check",
+      "agent": "monitor-opportunities",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/scheduler-exec-check.json",
+      "required_evidence": [
+        "scheduler_execution_equivalence_receipt",
+        "registered_cron_command",
+        "canonical_workdir"
+      ]
+    },
+    {
+      "id": "nightly-run",
+      "agent": "monitor-opportunities",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/nightly-run.json",
+      "required_evidence": [
+        "nightly-receipt.json",
+        "run_attestation.json",
+        "external_effects:false"
+      ]
+    },
+    {
+      "id": "source-coverage",
+      "agent": "monitor-opportunities",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/source-coverage.json",
+      "required_evidence": [
+        "source-receipt-index.json",
+        "linkedin_top_applicant_accounting",
+        "linkedin_easy_apply_accounting",
+        "moog_workday_source_receipts",
+        "consulting_research_receipts"
+      ]
+    },
+    {
+      "id": "rank-and-stage-ledger",
+      "agent": "monitor-opportunities",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/rank-and-stage-ledger.json",
+      "required_evidence": [
+        "ranking-receipt.json",
+        "stage-ledger.json",
+        "unaccounted:0",
+        "location_authority_readback"
+      ]
+    },
+    {
+      "id": "tailor-and-prepare",
+      "agent": "monitor-opportunities",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/tailor-and-prepare.json",
+      "required_evidence": [
+        "tailoring-receipt.json",
+        "application_packets",
+        "resume_variants",
+        "outreach_packets",
+        "submission_authority:none_without_exact_human_decision"
+      ]
+    },
+    {
+      "id": "report-acceptance",
+      "agent": "monitor-opportunities",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/report-acceptance.json",
+      "required_evidence": [
+        "report/index.html",
+        "report/report.json",
+        "report-manifest.json",
+        "report_acceptance_receipt",
+        "stage_ledger_required"
+      ]
+    },
+    {
+      "id": "human-review",
+      "agent": "human",
+      "executor": "human",
+      "max_attempts": 1,
+      "required_evidence": [
+        "human_authorizes_specific_application_or_outreach",
+        "human_blocks_or_defers_specific_row",
+        "no_blanket_submit_authority"
+      ]
+    },
+    {
+      "id": "pipeline-self-repair-record-failure",
+      "agent": "pipeline-self-repair",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/pipeline-self-repair-record-failure.json",
+      "required_evidence": [
+        "replay_ledger.jsonl",
+        "failure_receipt_path",
+        "failed_checkpoint_id",
+        "replayable_next_command"
+      ]
+    },
+    {
+      "id": "triage-error-classify",
+      "agent": "triage-error",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/triage-error-classify.json",
+      "required_evidence": [
+        "failure_code",
+        "cause",
+        "next_command",
+        "ambiguous:false_or_minted_code"
+      ]
+    },
+    {
+      "id": "ticket-bind-or-create",
+      "agent": "ticket",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/ticket-bind-or-create.json",
+      "required_evidence": [
+        "ticket_preview_or_issue_url",
+        "target_path",
+        "acceptance_criterion",
+        "required_proof_command",
+        "agent-work_route"
+      ]
+    },
+    {
+      "id": "project-watchdog-dispatch",
+      "agent": "project-watchdog",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/project-watchdog-dispatch.json",
+      "required_evidence": [
+        "watchdog_receipt.json",
+        "tau-stream-monitor.json",
+        "leased_ticket",
+        "terminal_tau_verdict"
+      ]
+    },
+    {
+      "id": "agentic-eval-retained-guard",
+      "agent": "agentic-evals",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/agentic-eval-retained-guard.json",
+      "required_evidence": [
+        "fixture_case_or_regression_mapping",
+        "agentic_eval_report.json",
+        "category_absent_or_guard_present",
+        "mocked_boundary_declared"
+      ]
+    },
+    {
+      "id": "rerun-failed-checkpoint",
+      "agent": "monitor-opportunities",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/rerun-failed-checkpoint.json",
+      "extensions": {
+        "checkpoint_targets": [
+          "scheduler-exec-check",
+          "nightly-run",
+          "source-coverage",
+          "rank-and-stage-ledger",
+          "tailor-and-prepare",
+          "report-acceptance"
+        ],
+        "resume_model": "Tau DAG remains acyclic; the rerun receipt names the failed checkpoint or declared successor instead of adding graph edges back to earlier nodes."
+      },
+      "required_evidence": [
+        "same_checkpoint_rerun_receipt",
+        "resumes_at_failed_checkpoint_or_declared_successor",
+        "failure_category_no_longer_present",
+        "updated_nightly_or_scheduler_receipt"
+      ]
+    }
+  ],
+  "edges": [
+    {"from": "scheduler-exec-check", "to": "nightly-run", "condition": "pass"},
+    {"from": "nightly-run", "to": "source-coverage", "condition": "pass"},
+    {"from": "source-coverage", "to": "rank-and-stage-ledger", "condition": "pass"},
+    {"from": "rank-and-stage-ledger", "to": "tailor-and-prepare", "condition": "pass"},
+    {"from": "tailor-and-prepare", "to": "report-acceptance", "condition": "pass"},
+    {"from": "report-acceptance", "to": "human-review", "condition": "await_exact_human_authorization"},
+    {"from": "scheduler-exec-check", "to": "pipeline-self-repair-record-failure", "condition": "fail_or_timeout_or_invalid_receipt"},
+    {"from": "nightly-run", "to": "pipeline-self-repair-record-failure", "condition": "fail_or_timeout_or_invalid_receipt"},
+    {"from": "source-coverage", "to": "pipeline-self-repair-record-failure", "condition": "fail_or_timeout_or_invalid_receipt"},
+    {"from": "rank-and-stage-ledger", "to": "pipeline-self-repair-record-failure", "condition": "fail_or_timeout_or_invalid_receipt"},
+    {"from": "tailor-and-prepare", "to": "pipeline-self-repair-record-failure", "condition": "fail_or_timeout_or_invalid_receipt"},
+    {"from": "report-acceptance", "to": "pipeline-self-repair-record-failure", "condition": "fail_or_timeout_or_invalid_receipt"},
+    {"from": "pipeline-self-repair-record-failure", "to": "triage-error-classify", "condition": "failure_recorded"},
+    {"from": "triage-error-classify", "to": "ticket-bind-or-create", "condition": "category_assigned_and_recoverable"},
+    {"from": "ticket-bind-or-create", "to": "project-watchdog-dispatch", "condition": "routable_ticket"},
+    {"from": "project-watchdog-dispatch", "to": "agentic-eval-retained-guard", "condition": "repair_candidate_returned"},
+    {"from": "agentic-eval-retained-guard", "to": "rerun-failed-checkpoint", "condition": "guard_present"},
+    {"from": "rerun-failed-checkpoint", "to": "human-review", "condition": "same_checkpoint_passed_or_resume_receipt_names_next_step"},
+    {"from": "triage-error-classify", "to": "human-review", "condition": "human_decision_or_external_authority_required"},
+    {"from": "ticket-bind-or-create", "to": "human-review", "condition": "ticket_requires_human_apply_or_unblock"}
+  ],
+  "required_evidence": [
+    "scheduler_execution_equivalence_receipt",
+    "nightly-receipt.json",
+    "source-receipt-index.json",
+    "stage-ledger.json",
+    "application_packets",
+    "report/index.html",
+    "pipeline_self_repair_replay_ledger_on_failure",
+    "triage_error_code_on_failure",
+    "ticket_or_preview_on_recoverable_failure",
+    "tau-stream-monitor.json_for_watchdog_dispatch",
+    "agentic_eval_report_for_retained_guard",
+    "checkpoint_rerun_receipt_before_trust"
+  ],
+  "extensions": {
+    "domain_fail_closed_on": [
+      "missing_stage_ledger",
+      "unaccounted_records_nonzero",
+      "missing_linkedin_top_applicant_accounting",
+      "missing_linkedin_easy_apply_accounting",
+      "external_effect_without_exact_human_authorization",
+      "failure_without_pipeline_self_repair_ledger",
+      "failure_without_triage_error_code",
+      "recoverable_failure_without_ticket",
+      "watchdog_dispatch_without_tau_stream_monitor",
+      "repair_without_agentic_eval_guard",
+      "checkpoint_rerun_missing"
+    ],
+    "tau_execution_note": "Tau fail_closed_on accepts only registry-backed invariant codes. Monitor-specific invariants stay in extensions until Tau or monitor-opportunities registers typed domain validators for live execution."
+  },
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "unresolved_block_alert",
+    "unsupported_ready_queue_condition",
+    "route_mode_without_conditional_edges",
+    "mixed_conditional_unconditional_routes",
+    "conditional_route_source_requires_response",
+    "conditional_target_multiple_predecessors",
+    "max_attempts_exceeded"
+  ]
+}
