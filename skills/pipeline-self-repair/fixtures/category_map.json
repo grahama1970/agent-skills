@@ -1,0 +1,19 @@
+{
+  "schema": "agentic_evals.category_map.v1",
+  "repo": "grahama1970/agent-skills",
+  "map_version": "1",
+  "categories": {
+    "pipeline-self-repair-ledger-recording": {
+      "category_id": "agentic-evals:agent-skills:pipeline-self-repair-ledger-recording",
+      "label": "eval-cat-pipeline-self-repair-ledger-recording",
+      "defect": "A failed required pipeline step does not become a replayable ledger event with triage/category/ticket/eval repair state.",
+      "expected": "record-failure writes an append-only event and inspect exposes the open blocking failure until retained repair proof exists.",
+      "seams": [
+        "self_repair.ledger",
+        "triage.failure_code_catalog",
+        "ticket.watchdog_routing"
+      ],
+      "depends_on": []
+    }
+  }
+}
