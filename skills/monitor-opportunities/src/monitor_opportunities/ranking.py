@@ -261,6 +261,26 @@ def _diverse_source_intel_shortlist(candidates: list[dict[str, Any]], limit: int
 
     if limit <= 0:
         return []
+
+    def _source_intel_priority(candidate: dict[str, Any]) -> tuple[float, float, float, float, float]:
+        top_candidate = 1.0 if candidate.get("top_candidate_evidence") or candidate.get("top_candidate") else 0.0
+        easy_apply = 1.0 if candidate.get("easy_apply") or candidate.get("easy_apply_signal") else 0.0
+        warm_path = float(candidate.get("warm_path") or 0.0)
+        low_competition = 1.0 if candidate.get("under_10_applicants") else 0.0
+        try:
+            competition = candidate.get("competition")
+            if competition is not None:
+                low_competition = max(low_competition, 1.0 - float(competition))
+        except (TypeError, ValueError):
+            pass
+        return (
+            top_candidate,
+            easy_apply,
+            warm_path,
+            low_competition,
+            float(candidate.get("fit_score") or 0.0),
+        )
+
     groups: dict[str, list[dict[str, Any]]] = {}
     provider_order: list[str] = []
     for candidate in candidates:
@@ -269,6 +289,8 @@ def _diverse_source_intel_shortlist(candidates: list[dict[str, Any]], limit: int
             groups[provider] = []
             provider_order.append(provider)
         groups[provider].append(candidate)
+    for rows in groups.values():
+        rows.sort(key=_source_intel_priority, reverse=True)
 
     selected: list[dict[str, Any]] = []
     while len(selected) < limit and any(groups.values()):

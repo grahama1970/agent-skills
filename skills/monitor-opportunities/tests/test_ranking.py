@@ -13,6 +13,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from monitor_opportunities.cli import app
+from monitor_opportunities.discovery import _merge_linkedin_top_candidate
 
 runner = CliRunner()
 SKILL_DIR = Path(__file__).resolve().parents[1]
@@ -107,6 +108,179 @@ def test_source_intel_cannot_starve_reportable_opportunity_shortlist(tmp_path: P
     assert receipt["admitted_source_intel"] == 8
     assert receipt["shortlisted"] == 1
     assert receipt["source_intel_shortlisted"] == 8
+
+
+def test_linkedin_readback_promotion_is_receipted_for_stage_accounting(tmp_path: Path) -> None:
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "candidate_id": "linkedin:moog-ai-systems",
+                        "lane": "A",
+                        "organization": "Moog",
+                        "title": "AI Systems Analyst",
+                        "workplace_type": "WNY_ONSITE",
+                        "location_display": "Buffalo, NY",
+                        "fit_score": 0.86,
+                        "relocation_required": False,
+                        "clearance_required": False,
+                        "source_provider": "ops_linkedin_authorized_read_only",
+                        "source_receipt_id": "receipt:linkedin",
+                        "primary_evidence_url": "https://www.linkedin.com/jobs/view/123/",
+                        "top_candidate_evidence": True,
+                    },
+                    {
+                        "candidate_id": "workday:moog-ai-systems",
+                        "lane": "A",
+                        "organization": "Moog",
+                        "title": "AI Systems Analyst",
+                        "workplace_type": "WNY_ONSITE",
+                        "location_display": "Buffalo, NY",
+                        "fit_score": 0.86,
+                        "relocation_required": False,
+                        "clearance_required": False,
+                        "source_provider": "workday",
+                        "source_receipt_id": "receipt:workday",
+                        "primary_evidence_url": "https://moog.wd5.myworkdayjobs.com/MOOG_External_Career_Site/job/Buffalo-NY/AI-Systems-Analyst_R-26-18765",
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    receipt = json.loads((out / "ranking-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["linkedin_readback_attempts"] == 1
+    assert receipt["linkedin_readback_promoted"] == 1
+    readbacks = [
+        json.loads(line)
+        for line in (out / "readback-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert readbacks[0]["status"] == "PRIMARY_CONFIRMED"
+    shortlist = json.loads((out / "shortlist.json").read_text(encoding="utf-8"))
+    assert shortlist[0]["source_provider"] == "workday"
+    assert shortlist[0]["located_via"] == "linkedin"
+    assert shortlist[0]["locator_candidate_id"] == "linkedin:moog-ai-systems"
+
+
+def test_linkedin_premium_signals_survive_duplicate_merge(tmp_path: Path) -> None:
+    base = tmp_path / "advanced.json"
+    premium = tmp_path / "premium.json"
+    base.write_text(
+        json.dumps(
+            {
+                "schema_version": "ops-linkedin.opportunity_capture.v1",
+                "opportunities": [
+                    {
+                        "source": "human_authorized_linkedin_advanced_search",
+                        "title": "Senior AI Engineer",
+                        "organization": "Acme Systems",
+                        "primary_evidence_url": "https://www.linkedin.com/jobs/view/789/",
+                        "top_candidate": False,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    premium.write_text(
+        json.dumps(
+            {
+                "schema_version": "ops-linkedin.opportunity_capture.v1",
+                "opportunities": [
+                    {
+                        "source": "human_authorized_linkedin_advanced_search",
+                        "title": "Senior AI Engineer",
+                        "organization": "Acme Systems",
+                        "primary_evidence_url": "https://www.linkedin.com/jobs/view/789/",
+                        "top_candidate": True,
+                        "easy_apply": True,
+                        "under_10_applicants": True,
+                        "competition": 0.1,
+                        "warm_path": 0.9,
+                        "warm_path_via": "LinkedIn: connection works here",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    merged = _merge_linkedin_top_candidate(base, premium)
+
+    assert merged == 1
+    [row] = json.loads(base.read_text(encoding="utf-8"))["opportunities"]
+    assert row["top_candidate"] is True
+    assert row["easy_apply"] is True
+    assert row["under_10_applicants"] is True
+    assert row["competition"] == 0.1
+    assert row["warm_path"] == 0.9
+    assert row["warm_path_via"] == "LinkedIn: connection works here"
+
+
+def test_linkedin_premium_signals_are_reserved_in_source_intel_report(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("MONITOR_SOURCE_INTEL_LIMIT", "1")
+    fixture = tmp_path / "candidates.json"
+    fixture.write_text(
+        json.dumps(
+            {
+                "candidates": [
+                    {
+                        "candidate_id": "linkedin:generic-high-fit",
+                        "lane": "A",
+                        "organization": "Generic AI",
+                        "title": "Principal AI Engineer",
+                        "workplace_type": "REMOTE",
+                        "location_display": "Remote",
+                        "fit_score": 0.95,
+                        "relocation_required": False,
+                        "clearance_required": False,
+                        "source_provider": "ops_linkedin_authorized_read_only",
+                        "source_receipt_id": "receipt:linkedin:generic",
+                    },
+                    {
+                        "candidate_id": "linkedin:premium-fast-lane",
+                        "lane": "A",
+                        "organization": "Acme Systems",
+                        "title": "Senior AI Engineer",
+                        "workplace_type": "REMOTE",
+                        "location_display": "Remote",
+                        "fit_score": 0.70,
+                        "relocation_required": False,
+                        "clearance_required": False,
+                        "source_provider": "ops_linkedin_authorized_read_only",
+                        "source_receipt_id": "receipt:linkedin:premium",
+                        "easy_apply": True,
+                        "under_10_applicants": True,
+                        "competition": 0.1,
+                        "warm_path": 0.9,
+                        "warm_path_via": "LinkedIn: connection works here",
+                    },
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "ranking"
+
+    result = runner.invoke(app, ["rank", "--input", str(fixture), "--limit", "8", "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    source_intel = json.loads((out / "source-intel-shortlist.json").read_text(encoding="utf-8"))
+    assert [row["candidate_id"] for row in source_intel] == ["linkedin:premium-fast-lane"]
+    assert source_intel[0]["easy_apply"] is True
+    assert source_intel[0]["under_10_applicants"] is True
+    assert source_intel[0]["warm_path"] == 0.9
 
 
 def test_source_intel_shortlist_preserves_provider_diversity(tmp_path: Path) -> None:

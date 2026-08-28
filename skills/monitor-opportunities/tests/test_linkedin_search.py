@@ -8,11 +8,17 @@ capture is ready and verified the moment surf is stable.
 
 from __future__ import annotations
 
+import json
 from urllib.parse import parse_qs, urlparse
 
+import monitor_opportunities.browser_capture as browser_capture
 from monitor_opportunities.browser_capture import (
+    _LINKEDIN_EXTRACT_JS,
+    _LI_ARIA_EXTRACT_JS,
     _LINKEDIN_SENIOR_EXPERIENCE,
     build_linkedin_search_url,
+    capture_linkedin_premium,
+    capture_linkedin_top_applicant,
     linkedin_search_queries_from_profile,
 )
 
@@ -77,3 +83,148 @@ def test_easy_apply_filter() -> None:
     assert p["f_AL"] == ["true"]
     p2 = _params(build_linkedin_search_url("AI architect", ["remote"]))
     assert "f_AL" not in p2
+
+
+def test_top_applicant_js_skips_verification_badge_line() -> None:
+    assert "with verification" in _LINKEDIN_EXTRACT_JS
+    assert "stripped.toLowerCase()===prior.toLowerCase()" in _LINKEDIN_EXTRACT_JS
+
+
+def test_top_applicant_capture_receipts_easy_apply_count(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: None)
+    monkeypatch.setattr(
+        browser_capture,
+        "_surf",
+        lambda _surf_run, command, *args, **kwargs: "123: created"
+        if command == "tab.new"
+        else "OK",
+    )
+    monkeypatch.setattr(browser_capture, "_surf_pause", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(browser_capture, "_close_tab", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        browser_capture,
+        "_linkedin_scroll_paginate_capture",
+        lambda *_args, **_kwargs: [
+            {
+                "title": "Lead Agent Architect",
+                "company": "EY",
+                "location": "Buffalo, NY",
+                "href": "https://www.linkedin.com/jobs/view/123/",
+                "easy_apply": True,
+            },
+            {
+                "title": "AI Systems Engineer",
+                "company": "Moog",
+                "location": "Buffalo, NY",
+                "href": "https://www.linkedin.com/jobs/view/456/",
+                "easy_apply": False,
+            },
+        ],
+    )
+
+    receipt = capture_linkedin_top_applicant(tmp_path)
+
+    assert receipt["status"] == "OK"
+    assert receipt["opportunities_captured"] == 2
+    assert receipt["top_applicant_count"] == 2
+    assert receipt["easy_apply_count"] == 1
+    evidence = (tmp_path / "linkedin-top-applicant-evidence.json").read_text(encoding="utf-8")
+    assert '"organization": "EY"' in evidence
+    assert '"easy_apply": true' in evidence
+
+
+def test_premium_js_skips_verification_badge_line() -> None:
+    assert "with verification" in _LI_ARIA_EXTRACT_JS
+    assert "stripped.toLowerCase()===prior.toLowerCase()" in _LI_ARIA_EXTRACT_JS
+    assert "title.toLowerCase()==='dismiss'" in _LI_ARIA_EXTRACT_JS
+
+
+def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_counts(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: None)
+    monkeypatch.setattr(
+        browser_capture,
+        "linkedin_search_queries_from_profile",
+        lambda _profile: [
+            {
+                "label": "Buffalo AI",
+                "url": "https://www.linkedin.com/jobs/search/?keywords=AI&location=Buffalo%2C%20NY",
+            }
+        ],
+    )
+
+    def fake_surf(_surf_run, command, *args, **kwargs):
+        del kwargs
+        if command == "tab.new":
+            return "123: created"
+        if command == "js" and args and str(args[-1]).startswith("(function(){var out=[];"):
+            rows = [
+                {
+                    "title": "Senior AI Engineer",
+                    "company": "Acme Systems",
+                    "location": "Buffalo, NY",
+                    "href": "https://www.linkedin.com/jobs/view/789/",
+                    "warm": False,
+                    "early": True,
+                    "age": "1 day ago",
+                }
+            ]
+            return json.dumps(json.dumps(rows))
+        return "OK"
+
+    monkeypatch.setattr(browser_capture, "_surf", fake_surf)
+    monkeypatch.setattr(browser_capture, "_surf_pause", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(browser_capture, "_close_tab", lambda *_args, **_kwargs: None)
+
+    receipt = capture_linkedin_premium(tmp_path, profile={}, max_queries=1)
+
+    assert receipt["status"] == "OK"
+    assert receipt["opportunities_captured"] == 1
+    assert receipt["top_applicant_count"] == 0
+    assert receipt["easy_apply_count"] == 0
+    assert receipt["under_10_applicants_count"] == 1
+    assert receipt["warm_paths_found"] == 1
+    evidence = json.loads((tmp_path / "linkedin-premium-evidence.json").read_text(encoding="utf-8"))
+    [row] = evidence["opportunities"]
+    assert row["top_candidate"] is False
+    assert "easy_apply" not in row
+    assert row["under_10_applicants"] is True
+    assert row["warm_path"] == 0.9
+
+
+def test_premium_capture_reports_failed_when_all_browser_queries_fail(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: None)
+    monkeypatch.setattr(
+        browser_capture,
+        "linkedin_search_queries_from_profile",
+        lambda _profile: [
+            {
+                "label": "Buffalo AI",
+                "url": "https://www.linkedin.com/jobs/search/?keywords=AI&location=Buffalo%2C%20NY",
+            }
+        ],
+    )
+
+    def fake_surf(_surf_run, command, *args, **kwargs):
+        del args, kwargs
+        if command == "tab.new":
+            return "123: created"
+        raise browser_capture.BrowserCaptureError("surf js failed: target closed")
+
+    monkeypatch.setattr(browser_capture, "_surf", fake_surf)
+    monkeypatch.setattr(browser_capture, "_surf_pause", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(browser_capture, "_close_tab", lambda *_args, **_kwargs: None)
+
+    receipt = capture_linkedin_premium(tmp_path, profile={}, max_queries=1)
+
+    assert receipt["status"] == "FAILED"
+    assert receipt["error"] == "all LinkedIn Premium browser queries failed"
+    assert receipt["opportunities_captured"] == 0
+    assert receipt["query_failures"]
+    assert len(receipt["query_failures"]) == 3
+    assert all("surf js failed" in row["error"] for row in receipt["query_failures"])

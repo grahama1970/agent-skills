@@ -679,6 +679,49 @@ def test_scheduler_exec_check_records_dirty_tree_without_blocking_execution(
     assert payload["execution"]["exit_code"] == 0
 
 
+def test_scheduler_exec_check_dry_run_checks_preflight_only(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+
+    def fake_run(cmd, **kwargs):
+        del kwargs
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        raise AssertionError("dry-run must not execute the registered scheduler command")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+            "--dry-run",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "PASS"
+    assert payload["live"] is False
+    assert payload["execution"] == {"executed": False, "skipped_reason": "dry_run"}
+    assert payload["post_run_checks_skipped"] is True
+    assert payload["checks"]["current_revision_matches_expected"] is True
+    assert "execution_exit_code_zero" not in payload["checks"]
+    assert "nightly_receipt_present" not in payload["checks"]
+
+
 def test_scheduler_exec_check_rejects_duplicate_and_overridden_mode_flags(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -625,7 +625,13 @@ _LINKEDIN_EXTRACT_JS = (
     "'li.scaffold-layout__list-item, li[data-occludable-job-id], div.job-card-container'));"
     "for (var i=0;i<cards.length;i++){"
     "var lines=cards[i].innerText.split('\\n').map(function(s){return s.trim();}).filter(Boolean);"
-    "var uniq=[]; for(var j=0;j<lines.length;j++){ if(lines[j]!==lines[j-1]) uniq.push(lines[j]); }"
+    "var uniq=[]; for(var j=0;j<lines.length;j++){"
+    "var line=lines[j]; var prior=uniq.length?uniq[uniq.length-1]:'';"
+    "var stripped=line.replace(/\\s+with verification$/i,'').trim();"
+    "if(line===lines[j-1]) continue;"
+    "if(stripped&&prior&&stripped.toLowerCase()===prior.toLowerCase()) continue;"
+    "uniq.push(line);"
+    "}"
     "var title=uniq[0]||''; if(!title||seen[title]) continue; seen[title]=1;"
     "var a=cards[i].querySelector(\"a[href*='/jobs/view/'], a[href*='currentJobId']\");"
     # Easy Apply badge: LinkedIn's one-click lane, shown as a card label or a
@@ -867,6 +873,7 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
                 "linkedin_url": _LINKEDIN_TOP_APPLICANT_URL,
                 "primary_evidence_url": r.get("href") or _LINKEDIN_TOP_APPLICANT_URL,
                 "top_candidate": True,
+                "easy_apply": bool(r.get("easy_apply")),
             }
             for r in rows
         ]
@@ -887,6 +894,8 @@ def capture_linkedin_top_applicant(out_dir: Path, surf_run: Path = SURF_RUN_DEFA
         receipt["status"] = "OK" if opps else "EMPTY"
         receipt["evidence_path"] = str(evidence_path)
         receipt["opportunities_captured"] = len(opps)
+        receipt["top_applicant_count"] = len(opps)
+        receipt["easy_apply_count"] = sum(1 for opp in opps if opp.get("easy_apply"))
     except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
         logger.error("LinkedIn top-applicant capture failed: {}", exc)
         receipt["status"] = "FAILED"
@@ -2015,7 +2024,8 @@ _LI_ARIA_EXTRACT_JS = (
     "var btns=[].slice.call(document.querySelectorAll('button[aria-label^=\"Dismiss\"]'));"
     "for(var i=0;i<btns.length;i++){"
     "var al=btns[i].getAttribute('aria-label')||'';"
-    "var title=al.replace(/^Dismiss /,'').replace(/ job$/,'');"
+    "var title=al.replace(/^Dismiss\\s*/,'').replace(/\\s*job$/,'').trim();"
+    "if(!title||title.toLowerCase()==='dismiss'||title===al)continue;"
     "var card=btns[i].parentElement;var best=null;"
     "for(var d=0;d<12&&card;d++){var t=card.innerText||'';"
     "if(/ago/.test(t)&&t.length<1200){best=card;}"
@@ -2023,9 +2033,15 @@ _LI_ARIA_EXTRACT_JS = (
     "var txt=best?best.innerText:'';"
     "var lines=txt.split(String.fromCharCode(10))"
     ".map(function(s){return s.trim()}).filter(Boolean);"
-    "var ti=lines.indexOf(title);"
-    "var company=ti>=0&&lines[ti+1]?lines[ti+1]:'';"
-    "var loc=ti>=0&&lines[ti+2]?lines[ti+2]:'';"
+    "var uniq=[];for(var j=0;j<lines.length;j++){"
+    "var line=lines[j];var prior=uniq.length?uniq[uniq.length-1]:'';"
+    "var stripped=line.replace(/\\s+with verification$/i,'').trim();"
+    "if(line===lines[j-1])continue;"
+    "if(stripped&&prior&&stripped.toLowerCase()===prior.toLowerCase())continue;"
+    "uniq.push(line);}"
+    "var ti=uniq.indexOf(title);"
+    "var company=ti>=0&&uniq[ti+1]?uniq[ti+1]:'';"
+    "var loc=ti>=0&&uniq[ti+2]?uniq[ti+2]:'';"
     "var warm=/connection works here|connections work here|school alumni/.test(txt);"
     "var early=/Be an early applicant/.test(txt);"
     "var age=(txt.match(/(\\d+ (?:minute|hour|day|week|month)s? ago)/)||[])[1]||null;"
@@ -2082,6 +2098,7 @@ def capture_linkedin_premium(
     tab_id = ""
     rows: list[dict[str, Any]] = []
     queries_run: list[str] = []
+    query_failures: list[dict[str, str]] = []
     # Two Premium filter lanes per query (LinkedIn URL params, brave-search
     # verified 2026-08-12): f_EA=true = Under 10 applicants (low competition);
     # f_JIYN=true = jobs at companies where Graham has connections (every result
@@ -2118,6 +2135,12 @@ def capture_linkedin_premium(
             except (BrowserCaptureError, ValueError, json.JSONDecodeError,
                     subprocess.TimeoutExpired) as exc:
                 logger.warning("premium query {!r} skipped: {}", query["label"], exc)
+                query_failures.append(
+                    {
+                        "query": query["label"] + " | " + lane_label,
+                        "error": str(exc)[:300],
+                    }
+                )
         seen: dict[str, dict[str, Any]] = {}
         for r in rows:
             key = r["title"] + "|" + (r.get("company") or "")
@@ -2154,11 +2177,21 @@ def capture_linkedin_premium(
         }
         evidence_path = out_dir / "linkedin-premium-evidence.json"
         evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
-        receipt["status"] = "OK" if opps else "EMPTY"
+        if opps:
+            receipt["status"] = "OK"
+        elif query_failures and len(query_failures) == len(plan):
+            receipt["status"] = "FAILED"
+            receipt["error"] = "all LinkedIn Premium browser queries failed"
+        else:
+            receipt["status"] = "EMPTY"
         receipt["evidence_path"] = str(evidence_path)
         receipt["opportunities_captured"] = len(opps)
         receipt["warm_paths_found"] = sum(1 for o in opps if o["warm_path"])
+        receipt["top_applicant_count"] = sum(1 for o in opps if o.get("top_candidate"))
+        receipt["easy_apply_count"] = sum(1 for o in opps if o.get("easy_apply"))
+        receipt["under_10_applicants_count"] = sum(1 for o in opps if o.get("under_10_applicants"))
         receipt["queries_run"] = queries_run
+        receipt["query_failures"] = query_failures
     except (BrowserCaptureError, ValueError, json.JSONDecodeError,
             subprocess.TimeoutExpired) as exc:
         logger.error("LinkedIn premium capture failed: {}", exc)
