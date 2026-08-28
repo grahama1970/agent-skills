@@ -19,12 +19,21 @@ TMP="$(mktemp -d /tmp/pipeline-self-repair-sanity.XXXXXX)"
   --no-ticket \
   --json > "$TMP/record.json"
 ./run.sh inspect --ledger "$TMP/replay_ledger.jsonl" --json > "$TMP/inspect.json"
-python - <<'PY' "$TMP/record.json" "$TMP/inspect.json"
+./run.sh monitor \
+  --ledger "$TMP/replay_ledger.jsonl" \
+  --subagent-run-id sanity-subagent-run \
+  --skip-watchdog \
+  --json > "$TMP/monitor.json"
+python - <<'PY' "$TMP/record.json" "$TMP/inspect.json" "$TMP/monitor.json"
 import json, sys
 record=json.load(open(sys.argv[1]))
 inspect=json.load(open(sys.argv[2]))
+monitor=json.load(open(sys.argv[3]))
 assert record["status"] in {"RECORDED_REPAIR_REQUIRED", "RECORDED_NEEDS_TRIAGE"}, record
 assert inspect["event_count"] >= 1, inspect
 assert inspect["open_failure_count"] == 1, inspect
+assert monitor["schema"] == "pipeline_self_repair.monitor.v1", monitor
+assert monitor["project_agent_role"]["owner"] == "project-agent", monitor
+assert monitor["monitoring"]["push"]["pi_wake_subscriptions"], monitor
 print("PIPELINE_SELF_REPAIR_SANITY_OK")
 PY

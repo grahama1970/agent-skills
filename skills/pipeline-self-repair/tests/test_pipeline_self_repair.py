@@ -76,6 +76,8 @@ def test_append_event_hash_chain(tmp_path: Path) -> None:
         "failure_category_id": "agentic-evals:agent-skills:persona-dream-step-1-pipeline-unclassified-test",
         "fingerprint": psr._sha_json({"x": 1}),
         "repair_state": psr.RepairState.NEEDS_TRIAGE.value,
+        "goal_hash": "sha256:" + "0" * 64,
+        "goal_alignment": {"status": "PASS_COMPARED_TO_IMMUTABLE_GOAL", "project": "persona-dream"},
         "ticket": {"action": "ticket_skipped"},
     }
     first = psr._append_event(ledger, payload.copy())
@@ -85,6 +87,79 @@ def test_append_event_hash_chain(tmp_path: Path) -> None:
     assert first.previous_event_hash is None
     assert second.previous_event_hash == first.event_hash
     assert len(ledger.read_text().splitlines()) == 2
+
+
+def test_push_pull_monitoring_names_project_agent_and_research_boundary() -> None:
+    plan = psr._push_pull_monitoring(
+        ["run-123"],
+        [Path("/tmp/ask-run")],
+        ["grahama1970/agent-skills#1533"],
+    )
+    assert plan["owner"] == "project-agent"
+    assert 'subagent_wait({"id":"run-123","nonBlocking":true})' in plan["push"]["pi_wake_subscriptions"]
+    assert "skills/ask/run.sh status --run /tmp/ask-run --projection --json" in plan["pull"]["ask_status_commands"]
+    assert "skills/ticket/run.sh lookup --issue 1533 --repo grahama1970/agent-skills" in plan["pull"]["ticket_status_commands"]
+    assert "brave-search or $dogpile" in plan["pull"]["research_escalation"]
+
+
+def test_monitor_cli_emits_push_pull_plan(tmp_path: Path) -> None:
+    run_sh = Path(__file__).resolve().parents[1] / "run.sh"
+    ledger = tmp_path / "replay_ledger.jsonl"
+    proc = subprocess.run(
+        [
+            str(run_sh),
+            "monitor",
+            "--ledger",
+            str(ledger),
+            "--subagent-run-id",
+            "run-123",
+            "--skip-watchdog",
+            "--json",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr + proc.stdout
+    data = json.loads(proc.stdout)
+    assert data["schema"] == "pipeline_self_repair.monitor.v1"
+    assert data["project_agent_role"]["owner"] == "project-agent"
+    assert data["ledger"]["open_failure_count"] == 0
+    assert data["monitoring"]["push"]["pi_wake_subscriptions"]
+
+
+def test_missing_immutable_goal_fails_preflight_before_ledger(tmp_path: Path) -> None:
+    run_sh = Path(__file__).resolve().parents[1] / "run.sh"
+    ledger = tmp_path / "replay_ledger.jsonl"
+    proc = subprocess.run(
+        [
+            str(run_sh),
+            "record-failure",
+            "--pipeline",
+            "no-such-immutable-goal-project",
+            "--step-id",
+            "phase_01",
+            "--run-id",
+            "test-run",
+            "--raw-signal",
+            "expected complex pipeline failure",
+            "--target",
+            "skills/no-such-immutable-goal-project",
+            "--run-root",
+            str(tmp_path),
+            "--ledger",
+            str(ledger),
+            "--skip-memory",
+            "--skip-github",
+            "--no-ticket",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert proc.returncode == 2
+    assert "immutable goal preflight failed" in proc.stderr
+    assert not ledger.exists()
 
 
 def test_record_failure_cli_writes_replay_ledger(tmp_path: Path) -> None:
@@ -125,4 +200,6 @@ def test_record_failure_cli_writes_replay_ledger(tmp_path: Path) -> None:
     line = json.loads(ledger.read_text().strip())
     assert line["event_type"] == "step.failed"
     assert line["triage"]["code"].startswith("kling_unclassified_")
+    assert line["goal_alignment"]["status"] == "PASS_COMPARED_TO_IMMUTABLE_GOAL"
+    assert line["goal_hash"].startswith("sha256:")
     assert line["ticket"]["action"] == "ticket_skipped"

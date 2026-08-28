@@ -22,6 +22,7 @@ provides:
   - failure-category-routing
   - checkpoint-resume-gate
 composes:
+  - goal-drift
   - memory
   - triage-error
   - ticket
@@ -44,9 +45,15 @@ taxonomy:
 This is an executable skill, not a prose checklist. It turns a required pipeline
 step failure into a replayable repair branch.
 
+Failure is the normal path for complex agentic pipelines, not an exceptional
+edge case. A multi-step pipeline with agents, providers, browsers, memory,
+schedulers, and generated artifacts should be assumed to fail during execution;
+self-repair is the mechanism that lets the pipeline continue correctly after the
+failure is fixed.
+
 Use it from complex sequential skills such as `persona-dream` and
 `monitor-opportunities`, where failures are expected and must not become status
-reports, blind retries, or duplicate GitHub issues.
+reports, blind retries, skipped steps, or duplicate GitHub issues.
 
 ## Rule
 
@@ -55,16 +62,60 @@ branch:
 
 ```text
 STEP_FAILED
--> append replay ledger event
+-> read immutable goal with goal-drift; fail preflight if no human-registered goal exists
 -> classify raw signal with triage-error
+-> compare the failure/repair category to the immutable goal and record goal_hash
 -> compute stable category_key / failure_category_id
+-> append replay ledger event
 -> recall memory for prior fixes and graph-neighbor clues
 -> search GitHub issues, including open, closed, blocked, and depends-on tickets
+-> ask WebGPT for comprehensive analysis from the full project-agent context when an outside review is needed
+-> convert WebGPT findings into focused ticket candidates only, never free-form work guidance
 -> bind/update/reopen/create one category ticket
 -> route eligible repair through project-watchdog
+-> project agent monitors push/pull receipts across Ask, tickets, watchdog, Pi async runs, and the ledger
 -> require retained agentic-evals coverage for the repair
--> resume only after category-green and required full-suite/checkpoint proof
+-> rerun the SAME failed step from its checkpoint/input receipt
+-> advance to the next pipeline step only after that step passes and the ledger validates
 ```
+
+## Sequential pipeline execution contract
+
+This skill is not only a failure logger. It is the required control loop for a
+sequential pipeline. The pipeline does not succeed by avoiding failures; it
+succeeds by detecting each required-step failure, repairing it with evidence,
+rerunning the failed step, and then continuing.
+
+For every required pipeline step:
+
+```text
+1. Run the next required step in order.
+2. Read back the step receipt and produced artifacts.
+3. If the step passed, append/retain the pass receipt and move to the next step.
+4. If the step failed, blocked, timed out, or produced an invalid receipt:
+   a. stop the pipeline immediately;
+   b. call `record-failure` with the step receipt, run id, checkpoint, immutable
+      goal project, and any provider-effect evidence;
+   c. fail preflight if `$goal-drift goal --project <goal-project>` has no
+      human-registered immutable goal;
+   d. compare the repair category to the immutable goal and record the goal_hash;
+   e. repair the category through the triage/ticket/watchdog/eval branch;
+   f. rerun the same failed step from the same checkpoint or a declared
+      superseding checkpoint;
+   g. repeat repair/rerun until the step passes, attempts are exhausted, or a
+      real human/provider blocker is recorded.
+5. Never skip a required step because it is expected to fail.
+6. Never repair work that does not compare against the immutable goal; that is
+   goal drift, not self-repair.
+7. Never continue to step N+1 while step N has an open blocking repair category.
+8. Never mark the pipeline complete until `validate-ledger --require-agentic-eval`
+   passes and the pipeline-specific final proof receipt passes.
+```
+
+Expected failures are not exceptions to this rule. They are exactly why the
+self-repair branch exists: expected failure still creates a blocking category,
+gets repaired or explicitly blocked, then the failed step is rerun before the
+pipeline advances.
 
 ## Why this exists
 
@@ -90,13 +141,15 @@ skills/pipeline-self-repair/run.sh record-failure \
   --target skills/persona-dream \
   --run-root <run-root> \
   --ledger <run-root>/replay_ledger.jsonl \
+  --goal-project persona-dream \
   --repo grahama1970/agent-skills \
   --json
 ```
 
-Default behavior is safe: it writes the ledger and drafts ticket commands, but
-it does not publish a GitHub issue or run watchdog. Add explicit flags when the
-pipeline is allowed to mutate external systems:
+Default behavior is safe: it first reads the immutable goal via `$goal-drift`,
+fails preflight if no human-registered goal exists, writes the ledger, and drafts
+ticket commands. It does not publish a GitHub issue or run watchdog. Add explicit
+flags when the pipeline is allowed to mutate external systems:
 
 ```bash
   --apply-ticket          # create a category ticket when no prior issue exists
@@ -117,6 +170,34 @@ For paid providers such as Kling, pass effect evidence whenever it exists:
 `spend-state=unknown` blocks resubmission. The next legal action is reconcile or
 poll, not another paid submit.
 
+### Monitor the repair branch
+
+The project agent owns orchestration and monitoring. Use this command to emit the
+push/pull monitoring plan and read back the artifacts the CLI can inspect:
+
+```bash
+skills/pipeline-self-repair/run.sh monitor \
+  --ledger <run-root>/replay_ledger.jsonl \
+  --ask-run-dir <ask-run-dir> \
+  --ticket-ref grahama1970/agent-skills#1234 \
+  --subagent-run-id <pi-async-run-id> \
+  --watchdog-project agent-skills \
+  --json
+```
+
+`monitor` reports:
+
+- **push monitoring** the Pi parent must arm, such as
+  `subagent_wait({"id":"...","nonBlocking":true})` for owned async runs;
+- **pull monitoring** commands for Pi fleet/status, Ask projections, ticket
+  lookup, project-watchdog status, and ledger inspection;
+- ledger open-failure counts and category state;
+- ticket/watchdog/Ask readback status when those artifact refs are supplied.
+
+The shell CLI cannot arm Pi wake subscriptions itself. The project agent must do
+that from the parent Pi session, then keep pulling receipts until the category is
+`CATEGORY_GREEN`, `CLOSED`, or explicitly blocked for a human/provider decision.
+
 ### Inspect a ledger
 
 ```bash
@@ -134,8 +215,8 @@ skills/pipeline-self-repair/run.sh validate-ledger \
   --json
 ```
 
-This fails if any blocking failure lacks triage, category, ticket disposition, or
-retained eval proof.
+This fails if any blocking failure lacks immutable-goal comparison, triage,
+category, ticket disposition, or retained eval proof.
 
 ### Run the agentic-evals remediation projection for a complete eval report
 
@@ -145,6 +226,7 @@ skills/pipeline-self-repair/run.sh agentic-eval-remediate \
   --category-map <skill>/fixtures/category_map.json \
   --fixture <skill>/fixtures/agentic_eval.json \
   --ledger <run-root>/replay_ledger.jsonl \
+  --goal-project persona-dream \
   --repo grahama1970/agent-skills \
   --json
 ```
@@ -166,6 +248,8 @@ Important fields:
   "run_id": "...",
   "step_id": "phase_11_kling_submit",
   "triage": {"code": "...", "cause": "...", "next_command": "..."},
+  "goal_hash": "sha256:...",
+  "goal_alignment": {"status": "PASS_COMPARED_TO_IMMUTABLE_GOAL", "project": "persona-dream"},
   "category_key": "persona-dream/phase-11-kling-submit/<triage-code>/skills-persona-dream/v1",
   "failure_category_id": "agentic-evals:agent-skills:persona-dream-phase-11-kling-submit-...",
   "memory_recall": {"status": "PASS|SKIPPED|FAILED", "found": true},
@@ -175,6 +259,42 @@ Important fields:
   "blocking": true
 }
 ```
+
+## WebGPT analysis to focused ticket boundary
+
+WebGPT is useful here because it can inspect a comprehensive context packet and
+return high-quality outside analysis. The output boundary is still `$ticket`, not
+prose. When the project agent invokes `$ask webgpt` for hardening or process
+repair, the prompt must require one of these forms for every finding:
+
+```text
+TICKET
+Type: bug|feature|optimization|maintenance|triage
+Title: <focused issue title>
+Target: <file, skill, service, or workflow>
+Current state: <observed failure, limitation, or missing capability>
+Requested outcome: <one concrete behavior or artifact>
+Route: <canonical ticket route>
+Requested repair agent: <agent id or unknown>
+Scoped files: <paths or explicit unknown>
+Non-goals: <what must stay out of scope>
+Required proof: <live E2E proof plus retained agentic-evals guard>
+Failure code: <triage-error code or TRIAGE_REQUIRED>
+```
+
+or:
+
+```text
+NO_TICKET: <why this observation is not independently actionable>
+```
+
+The project agent then files or binds one focused `$ticket` per accepted ticket
+candidate. `$triage-error` owns ambiguous or generic failures before they become
+tickets. `$project-watchdog` owns eligible repair dispatch. The project agent
+monitors the whole loop and runs `$brave-search` or `$dogpile` only when local
+receipts leave an external fact, upstream behavior, provider change, or root
+cause unresolved. Do not branch into unrelated cleanup while a blocking category
+is open.
 
 ## Ticket rules
 
@@ -196,6 +316,7 @@ watchdog PASS, or GitHub close is not enough.
 Required repair evidence:
 
 ```text
+immutable goal readback and goal_hash
 triage_code
 category_key
 GitHub ticket ref or explicit human/provider blocker
@@ -229,11 +350,14 @@ explicit new authorization event exists.
 Shared by this skill:
 
 - event envelope and hash chain
+- immutable-goal preflight through goal-drift
 - triage interface
 - category key convention
 - memory and GitHub search events
+- WebGPT-to-focused-ticket boundary
 - ticket upsert/disposition rules
 - watchdog handoff rules
+- project-agent push/pull monitoring plan
 - agentic-evals remediation projection
 - ledger validation before closure
 

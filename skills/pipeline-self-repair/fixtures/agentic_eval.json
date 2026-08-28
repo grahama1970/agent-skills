@@ -10,76 +10,140 @@
   },
   "capability_claims": [
     {
+      "id": "psr.goal.preflight",
+      "description": "record-failure refuses to run without a human-registered immutable goal and records goal_hash/alignment when a goal exists.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "psr.e2e.full_branch",
       "description": "record-failure drives the complete safe repair branch: triage-error, memory recall, read-only GitHub search, category binding, and ticket disposition.",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      }
     },
     {
       "id": "psr.provider_effect.no_blind_retry",
       "description": "provider/Kling effect capsules prevent blind retries when spend/effect state is unknown or a provider task already exists.",
       "criticality": "critical",
-      "evidence_required": {"adversarial_live_e2e": true}
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
     },
     {
       "id": "psr.resume_gate.eval_required",
       "description": "validate-ledger blocks checkpoint resume without retained agentic-evals proof and accepts a ledger only when ticket disposition plus eval proof are present.",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true, "adversarial_live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
     },
     {
       "id": "psr.agentic_eval.remediation_projection",
       "description": "agentic-eval-remediate projects a complete failing agentic-evals report through the real remediation preview path and records it in the replay ledger.",
       "criticality": "important",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      }
     },
     {
       "id": "psr.fail_closed.raw_signal",
       "description": "record-failure fails closed instead of inventing a failure when no raw signal or receipt is supplied.",
       "criticality": "critical",
-      "evidence_required": {"fault_injected_deterministic": true}
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      }
     }
   ],
   "seams": [
+    {
+      "seam_id": "goal_drift.immutable_goal",
+      "claim_id": "psr.goal.preflight",
+      "seam_type": "goal-alignment",
+      "criticality": "critical",
+      "failure_modes": [
+        "self-repair runs without an immutable goal",
+        "repair event omits goal_hash",
+        "repair work drifts from the human-registered goal"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
+    },
     {
       "seam_id": "self_repair.full_branch",
       "claim_id": "psr.e2e.full_branch",
       "seam_type": "skill-composition",
       "criticality": "critical",
-      "failure_modes": ["failed step bypasses triage-error", "memory recall is skipped silently", "GitHub search truncates JSON and misses prior tickets", "ticket category is not bound"],
-      "required_evidence": ["live_e2e"]
+      "failure_modes": [
+        "failed step bypasses triage-error",
+        "memory recall is skipped silently",
+        "GitHub search truncates JSON and misses prior tickets",
+        "ticket category is not bound"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
     },
     {
       "seam_id": "provider.effect_capsule",
       "claim_id": "psr.provider_effect.no_blind_retry",
       "seam_type": "external-effect-safety",
       "criticality": "critical",
-      "failure_modes": ["unknown paid-provider effect allows resubmission", "existing provider task id allows duplicate submit", "request/response/artifact hashes are missing"],
-      "required_evidence": ["adversarial_live_e2e"]
+      "failure_modes": [
+        "unknown paid-provider effect allows resubmission",
+        "existing provider task id allows duplicate submit",
+        "request/response/artifact hashes are missing"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
     },
     {
       "seam_id": "checkpoint.resume_gate",
       "claim_id": "psr.resume_gate.eval_required",
       "seam_type": "state-fold",
       "criticality": "critical",
-      "failure_modes": ["blocking failure is hidden from resume gate", "resume gate passes without retained eval proof", "valid ticket+eval repair disposition is rejected"],
-      "required_evidence": ["live_e2e", "adversarial_live_e2e"]
+      "failure_modes": [
+        "blocking failure is hidden from resume gate",
+        "resume gate passes without retained eval proof",
+        "valid ticket+eval repair disposition is rejected"
+      ],
+      "required_evidence": [
+        "live_e2e",
+        "adversarial_live_e2e"
+      ]
     },
     {
       "seam_id": "agentic_eval.remediation_projection",
       "claim_id": "psr.agentic_eval.remediation_projection",
       "seam_type": "skill-composition",
       "criticality": "important",
-      "failure_modes": ["complete failing eval report is not categorized", "remediation preview is not recorded in the repair ledger"],
-      "required_evidence": ["live_e2e"]
+      "failure_modes": [
+        "complete failing eval report is not categorized",
+        "remediation preview is not recorded in the repair ledger"
+      ],
+      "required_evidence": [
+        "live_e2e"
+      ]
     },
     {
       "seam_id": "input.validation",
       "claim_id": "psr.fail_closed.raw_signal",
       "seam_type": "cli-contract",
       "criticality": "critical",
-      "failure_modes": ["missing failure evidence produces a fake category"],
-      "required_evidence": ["fault_injected_deterministic"]
+      "failure_modes": [
+        "missing failure evidence produces a fake category"
+      ],
+      "required_evidence": [
+        "fault_injected_deterministic"
+      ]
     }
   ],
   "cases": [
@@ -90,18 +154,93 @@
       "evidence_class": "live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.e2e.full_branch"],
-      "seams": ["self_repair.full_branch"],
-      "command": ["python3", "../scripts/e2e_eval_cases.py", "full-branch"],
+      "supports_claims": [
+        "psr.e2e.full_branch",
+        "psr.goal.preflight"
+      ],
+      "seams": [
+        "self_repair.full_branch",
+        "goal_drift.immutable_goal"
+      ],
+      "command": [
+        "python3",
+        "../scripts/e2e_eval_cases.py",
+        "full-branch"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_FULL_BRANCH_E2E_OK"],
+        "stdout_contains": [
+          "PIPELINE_SELF_REPAIR_FULL_BRANCH_E2E_OK"
+        ],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/replay_ledger.jsonl", "min_bytes": 100},
-          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json", "json_pointer": "/event/triage/code", "equals": "monitor_opportunities_nightly_revision_mismatch"},
-          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json", "json_pointer": "/event/memory_recall/status", "equals": "PASS"},
-          {"path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json", "json_pointer": "/event/github_issue_search/status", "equals": "PASS"}
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/full_branch/replay_ledger.jsonl",
+            "min_bytes": 100
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json",
+            "json_pointer": "/event/triage/code",
+            "equals": "monitor_opportunities_nightly_revision_mismatch"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json",
+            "json_pointer": "/event/memory_recall/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json",
+            "json_pointer": "/event/github_issue_search/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json",
+            "json_pointer": "/event/goal_alignment/status",
+            "equals": "PASS_COMPARED_TO_IMMUTABLE_GOAL"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/full_branch/record.json",
+            "json_pointer": "/event/goal_alignment/project",
+            "equals": "monitor-opportunities"
+          }
+        ]
+      }
+    },
+    {
+      "name": "adversarial_missing_immutable_goal_fails_preflight",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "required": true,
+      "supports_claims": [
+        "psr.goal.preflight"
+      ],
+      "seams": [
+        "goal_drift.immutable_goal"
+      ],
+      "command": [
+        "python3",
+        "../scripts/e2e_eval_cases.py",
+        "missing-immutable-goal-fails-preflight"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PIPELINE_SELF_REPAIR_MISSING_GOAL_PREFLIGHT_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/missing_immutable_goal/preflight.json",
+            "json_pointer": "/status",
+            "equals": "PASS_MISSING_IMMUTABLE_GOAL_REFUSED"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/missing_immutable_goal/preflight.json",
+            "json_pointer": "/ledger_exists",
+            "equals": false
+          }
         ]
       }
     },
@@ -112,17 +251,39 @@
       "evidence_class": "adversarial_live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.provider_effect.no_blind_retry"],
-      "seams": ["provider.effect_capsule"],
-      "command": ["python3", "../scripts/e2e_eval_cases.py", "provider-unknown-blocks-resubmit"],
+      "supports_claims": [
+        "psr.provider_effect.no_blind_retry"
+      ],
+      "seams": [
+        "provider.effect_capsule"
+      ],
+      "command": [
+        "python3",
+        "../scripts/e2e_eval_cases.py",
+        "provider-unknown-blocks-resubmit"
+      ],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_PROVIDER_UNKNOWN_E2E_OK"],
+        "stdout_contains": [
+          "PIPELINE_SELF_REPAIR_PROVIDER_UNKNOWN_E2E_OK"
+        ],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json", "json_pointer": "/event/repair_state", "equals": "NEEDS_HUMAN"},
-          {"path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json", "json_pointer": "/event/provider_effect/resubmission_allowed", "equals": false},
-          {"path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json", "json_pointer": "/event/provider_effect/next_legal_command", "equals": "reconcile_provider_effect_before_resubmit"}
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json",
+            "json_pointer": "/event/repair_state",
+            "equals": "NEEDS_HUMAN"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json",
+            "json_pointer": "/event/provider_effect/resubmission_allowed",
+            "equals": false
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/provider_unknown/record.json",
+            "json_pointer": "/event/provider_effect/next_legal_command",
+            "equals": "reconcile_provider_effect_before_resubmit"
+          }
         ]
       }
     },
@@ -133,17 +294,39 @@
       "evidence_class": "adversarial_live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.provider_effect.no_blind_retry"],
-      "seams": ["provider.effect_capsule"],
-      "command": ["python3", "../scripts/e2e_eval_cases.py", "provider-task-id-blocks-duplicate-submit"],
+      "supports_claims": [
+        "psr.provider_effect.no_blind_retry"
+      ],
+      "seams": [
+        "provider.effect_capsule"
+      ],
+      "command": [
+        "python3",
+        "../scripts/e2e_eval_cases.py",
+        "provider-task-id-blocks-duplicate-submit"
+      ],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_PROVIDER_TASK_ID_E2E_OK"],
+        "stdout_contains": [
+          "PIPELINE_SELF_REPAIR_PROVIDER_TASK_ID_E2E_OK"
+        ],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json", "json_pointer": "/event/provider_effect/provider_task_id", "equals": "kling-task-123"},
-          {"path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json", "json_pointer": "/event/provider_effect/resubmission_allowed", "equals": false},
-          {"path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json", "json_pointer": "/event/provider_effect/next_legal_command", "equals": "poll_or_reconcile_existing_task"}
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json",
+            "json_pointer": "/event/provider_effect/provider_task_id",
+            "equals": "kling-task-123"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json",
+            "json_pointer": "/event/provider_effect/resubmission_allowed",
+            "equals": false
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/provider_task_id/record.json",
+            "json_pointer": "/event/provider_effect/next_legal_command",
+            "equals": "poll_or_reconcile_existing_task"
+          }
         ]
       }
     },
@@ -154,16 +337,34 @@
       "evidence_class": "adversarial_live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.resume_gate.eval_required"],
-      "seams": ["checkpoint.resume_gate"],
-      "command": ["python3", "../scripts/e2e_eval_cases.py", "validate-blocks-without-eval"],
+      "supports_claims": [
+        "psr.resume_gate.eval_required"
+      ],
+      "seams": [
+        "checkpoint.resume_gate"
+      ],
+      "command": [
+        "python3",
+        "../scripts/e2e_eval_cases.py",
+        "validate-blocks-without-eval"
+      ],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_VALIDATE_BLOCKS_WITHOUT_EVAL_OK"],
+        "stdout_contains": [
+          "PIPELINE_SELF_REPAIR_VALIDATE_BLOCKS_WITHOUT_EVAL_OK"
+        ],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-e2e/validate_blocks_without_eval/validate.json", "json_pointer": "/status", "equals": "FAIL"},
-          {"path": "/tmp/pipeline-self-repair-e2e/validate_blocks_without_eval/validate.json", "json_pointer": "/failure_count", "equals": 1}
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/validate_blocks_without_eval/validate.json",
+            "json_pointer": "/status",
+            "equals": "FAIL"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/validate_blocks_without_eval/validate.json",
+            "json_pointer": "/failure_count",
+            "equals": 1
+          }
         ]
       }
     },
@@ -174,16 +375,34 @@
       "evidence_class": "live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.resume_gate.eval_required"],
-      "seams": ["checkpoint.resume_gate"],
-      "command": ["python3", "../scripts/e2e_eval_cases.py", "validate-accepts-eval-ticket-disposition"],
+      "supports_claims": [
+        "psr.resume_gate.eval_required"
+      ],
+      "seams": [
+        "checkpoint.resume_gate"
+      ],
+      "command": [
+        "python3",
+        "../scripts/e2e_eval_cases.py",
+        "validate-accepts-eval-ticket-disposition"
+      ],
       "timeout_seconds": 90,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_VALIDATE_ACCEPTS_EVAL_OK"],
+        "stdout_contains": [
+          "PIPELINE_SELF_REPAIR_VALIDATE_ACCEPTS_EVAL_OK"
+        ],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-e2e/validate_accepts_eval/validate.json", "json_pointer": "/status", "equals": "PASS"},
-          {"path": "/tmp/pipeline-self-repair-e2e/validate_accepts_eval/validate.json", "json_pointer": "/failure_count", "equals": 0}
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/validate_accepts_eval/validate.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/validate_accepts_eval/validate.json",
+            "json_pointer": "/failure_count",
+            "equals": 0
+          }
         ]
       }
     },
@@ -194,16 +413,34 @@
       "evidence_class": "live_e2e",
       "readback": true,
       "required": true,
-      "supports_claims": ["psr.agentic_eval.remediation_projection"],
-      "seams": ["agentic_eval.remediation_projection"],
-      "command": ["python3", "../scripts/e2e_eval_cases.py", "agentic-eval-remediate-preview"],
+      "supports_claims": [
+        "psr.agentic_eval.remediation_projection"
+      ],
+      "seams": [
+        "agentic_eval.remediation_projection"
+      ],
+      "command": [
+        "python3",
+        "../scripts/e2e_eval_cases.py",
+        "agentic-eval-remediate-preview"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["PIPELINE_SELF_REPAIR_AGENTIC_REMEDIATE_E2E_OK"],
+        "stdout_contains": [
+          "PIPELINE_SELF_REPAIR_AGENTIC_REMEDIATE_E2E_OK"
+        ],
         "artifacts": [
-          {"path": "/tmp/pipeline-self-repair-e2e/agentic_eval_remediate/remediate.json", "json_pointer": "/status", "equals": "PASS"},
-          {"path": "/tmp/pipeline-self-repair-e2e/agentic_eval_remediate/remediate.json", "json_pointer": "/event/event_type", "equals": "agentic_eval.remediation_projected"}
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/agentic_eval_remediate/remediate.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/pipeline-self-repair-e2e/agentic_eval_remediate/remediate.json",
+            "json_pointer": "/event/event_type",
+            "equals": "agentic_eval.remediation_projected"
+          }
         ]
       }
     },
@@ -212,8 +449,12 @@
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
       "required": true,
-      "supports_claims": ["psr.fail_closed.raw_signal"],
-      "seams": ["input.validation"],
+      "supports_claims": [
+        "psr.fail_closed.raw_signal"
+      ],
+      "seams": [
+        "input.validation"
+      ],
       "command": [
         "../run.sh",
         "record-failure",
@@ -236,7 +477,9 @@
       "timeout_seconds": 30,
       "expected": {
         "exit_code": 2,
-        "stderr_contains": ["provide --raw-signal or --receipt"]
+        "stderr_contains": [
+          "provide --raw-signal or --receipt"
+        ]
       }
     }
   ]

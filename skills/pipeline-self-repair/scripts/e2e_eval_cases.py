@@ -96,6 +96,8 @@ def full_branch() -> None:
     assert data["status"] == "RECORDED_REPAIR_REQUIRED", data
     assert event["triage"]["code"] == "monitor_opportunities_nightly_revision_mismatch", event["triage"]
     assert event["triage"]["ambiguous"] is False, event["triage"]
+    assert event["goal_alignment"]["status"] == "PASS_COMPARED_TO_IMMUTABLE_GOAL", event["goal_alignment"]
+    assert event["goal_alignment"]["goal_hash"].startswith("sha256:"), event["goal_alignment"]
     assert event["memory_recall"]["status"] == "PASS", event["memory_recall"]
     assert event["memory_recall"].get("found") is True, event["memory_recall"]
     assert event["github_issue_search"]["status"] == "PASS", event["github_issue_search"]
@@ -169,6 +171,50 @@ def provider_task_id_blocks_duplicate_submit() -> None:
     assert effect["resubmission_allowed"] is False, effect
     assert effect["next_legal_command"] == "poll_or_reconcile_existing_task", effect
     print("PIPELINE_SELF_REPAIR_PROVIDER_TASK_ID_E2E_OK")
+
+
+def missing_immutable_goal_fails_preflight() -> None:
+    """A pipeline without a registered human immutable goal cannot enter self-repair."""
+    root = _reset_case("missing_immutable_goal")
+    ledger = root / "replay_ledger.jsonl"
+    out = root / "record.stdout"
+    err = root / "record.stderr"
+    proc = subprocess.run(
+        [
+            str(RUN_SH),
+            "record-failure",
+            "--pipeline",
+            "no-such-immutable-goal-project",
+            "--step-id",
+            "phase_01",
+            "--run-id",
+            "e2e-missing-goal",
+            "--raw-signal",
+            "expected complex pipeline failure",
+            "--target",
+            "skills/no-such-immutable-goal-project",
+            "--run-root",
+            str(root),
+            "--ledger",
+            str(ledger),
+            "--skip-memory",
+            "--skip-github",
+            "--no-ticket",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    out.write_text(proc.stdout, encoding="utf-8")
+    err.write_text(proc.stderr, encoding="utf-8")
+    assert proc.returncode == 2, proc.stderr + proc.stdout
+    assert "immutable goal preflight failed" in proc.stderr, proc.stderr
+    assert not ledger.exists(), "preflight failure must not append a repair ledger event"
+    (root / "preflight.json").write_text(
+        json.dumps({"status": "PASS_MISSING_IMMUTABLE_GOAL_REFUSED", "returncode": proc.returncode, "ledger_exists": ledger.exists()}),
+        encoding="utf-8",
+    )
+    print("PIPELINE_SELF_REPAIR_MISSING_GOAL_PREFLIGHT_OK")
 
 
 def validate_blocks_without_eval() -> None:
@@ -265,6 +311,10 @@ def agentic_eval_remediate_preview() -> None:
             str(SKILL_DIR / "fixtures" / "agentic_eval.json"),
             "--ledger",
             str(ledger),
+            "--goal-project",
+            "persona-dream",
+            "--goal-context",
+            "operational_value_disposition fail-closed repair loop for persona-dream-style pipelines",
             "--json",
         ],
         stdout_path=out,
@@ -275,6 +325,7 @@ def agentic_eval_remediate_preview() -> None:
     assert event["event_type"] == "agentic_eval.remediation_projected", event
     assert event["ticket"]["action"] == "agentic_evals_remediate_preview", event["ticket"]
     assert event["ticket"]["result"]["returncode"] == 0, event["ticket"]
+    assert event["goal_alignment"]["status"] == "PASS_COMPARED_TO_IMMUTABLE_GOAL", event["goal_alignment"]
     print("PIPELINE_SELF_REPAIR_AGENTIC_REMEDIATE_E2E_OK")
 
 
@@ -282,6 +333,7 @@ CASES = {
     "full-branch": full_branch,
     "provider-unknown-blocks-resubmit": provider_unknown_blocks_resubmit,
     "provider-task-id-blocks-duplicate-submit": provider_task_id_blocks_duplicate_submit,
+    "missing-immutable-goal-fails-preflight": missing_immutable_goal_fails_preflight,
     "validate-blocks-without-eval": validate_blocks_without_eval,
     "validate-accepts-eval-ticket-disposition": validate_accepts_eval_ticket_disposition,
     "agentic-eval-remediate-preview": agentic_eval_remediate_preview,

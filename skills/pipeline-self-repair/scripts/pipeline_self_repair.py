@@ -38,10 +38,12 @@ MEMORY_RUN = SKILLS_ROOT / "memory" / "run.sh"
 TICKET_RUN = SKILLS_ROOT / "ticket" / "run.sh"
 WATCHDOG_RUN = SKILLS_ROOT / "project-watchdog" / "run.sh"
 AGENTIC_EVALS_RUN = SKILLS_ROOT / "agentic-evals" / "run.sh"
+GOAL_DRIFT_RUN = SKILLS_ROOT / "goal-drift" / "run.sh"
 
 EVENT_SCHEMA = "pipeline_self_repair.event.v1"
 SUMMARY_SCHEMA = "pipeline_self_repair.summary.v1"
 VALIDATION_SCHEMA = "pipeline_self_repair.validation.v1"
+MONITOR_SCHEMA = "pipeline_self_repair.monitor.v1"
 DEPENDENCY_REF_RE = re.compile(r"(?:blocked-by|depends[-_ ]on):\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+#\d+)")
 ISSUE_NUMBER_RE = re.compile(r"(?:issues/|#)(\d+)\b")
 
@@ -138,6 +140,7 @@ class PipelineFailureEvent(BaseModel):
     watchdog: dict[str, Any] = Field(default_factory=dict)
     agentic_eval: dict[str, Any] = Field(default_factory=dict)
     provider_effect: dict[str, Any] = Field(default_factory=dict)
+    goal_alignment: dict[str, Any] = Field(default_factory=dict)
     inputs: list[EvidenceRef] = Field(default_factory=list)
     outputs: list[EvidenceRef] = Field(default_factory=list)
     previous_event_hash: str | None = None
@@ -177,7 +180,17 @@ def _sha_bytes(data: bytes) -> str:
 
 
 def _sha_json(payload: Any) -> str:
-    return _sha_bytes(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+    return _sha_bytes(json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+
+def _goal_hash(goal_payload: dict[str, Any]) -> str:
+    """Match goal-drift's content hash convention without importing its package."""
+    stripped = {
+        key: value
+        for key, value in goal_payload.items()
+        if key not in {"registered_at", "goal_hash", "seam_validation", "parent_goal_hash"}
+    }
+    return _sha_json(stripped)
 
 
 def _read_text(path: Path) -> str:
@@ -261,6 +274,80 @@ def _memory_query(pipeline: str, step_id: str, triage: TriageResult, category_ke
         f"pipeline self repair prior resolution {pipeline} {step_id} "
         f"{triage.code} {category_key} {triage.cause or ''}"
     )
+
+
+def _load_immutable_goal(project: str) -> tuple[dict[str, Any], CommandResult]:
+    """Read the immutable goal or fail before a repair branch starts."""
+    if not GOAL_DRIFT_RUN.exists():
+        raise typer.BadParameter(f"immutable goal preflight failed: missing goal-drift runner {GOAL_DRIFT_RUN}")
+    result, stdout = _run_with_stdout([str(GOAL_DRIFT_RUN), "goal", "--project", project], timeout=120)
+    try:
+        payload = json.loads(stdout or result.stdout_excerpt or "{}")
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter(f"immutable goal preflight failed: goal-drift output was not JSON: {exc}") from exc
+    if result.returncode != 0 or payload.get("status") == "NOT_ESTABLISHED":
+        raise typer.BadParameter(
+            f"immutable goal preflight failed for project {project!r}: {payload.get('reason') or 'no immutable goal registered'}"
+        )
+    if payload.get("schema") != "goal_drift.goal.v1":
+        raise typer.BadParameter(f"immutable goal preflight failed for project {project!r}: unexpected schema {payload.get('schema')!r}")
+    if payload.get("source") != "human_prompt":
+        raise typer.BadParameter(f"immutable goal preflight failed for project {project!r}: source is not human_prompt")
+    if not payload.get("goal_text"):
+        raise typer.BadParameter(f"immutable goal preflight failed for project {project!r}: empty goal_text")
+    return payload, result
+
+
+def _goal_alignment(
+    *,
+    project: str,
+    goal_payload: dict[str, Any],
+    goal_command: CommandResult,
+    expected_goal_hash: str | None,
+    pipeline: str,
+    step_id: str,
+    target: str,
+    triage: TriageResult | None,
+    raw_signal: str,
+    extra_context: list[str],
+) -> dict[str, Any]:
+    computed_hash = _goal_hash(goal_payload)
+    if expected_goal_hash and expected_goal_hash != computed_hash:
+        raise typer.BadParameter(
+            f"immutable goal preflight failed for project {project!r}: supplied goal hash {expected_goal_hash} != current {computed_hash}"
+        )
+    context = "\n".join(
+        part for part in [
+            project,
+            pipeline,
+            step_id,
+            target,
+            raw_signal,
+            triage.code if triage else "",
+            triage.cause if triage and triage.cause else "",
+            *(extra_context or []),
+        ] if part
+    ).lower()
+    matches: list[dict[str, Any]] = []
+    for criterion in goal_payload.get("criteria") or []:
+        keywords = [str(item) for item in criterion.get("keywords") or []]
+        matched = [kw for kw in keywords if kw.lower() in context]
+        if matched:
+            matches.append({"key": criterion.get("key"), "matched_keywords": matched})
+    target_project_match = f"skills/{project}" in target or pipeline == project
+    drift_risk = "LOW" if target_project_match or matches else "REVIEW_REQUIRED_NO_CRITERION_MATCH"
+    return {
+        "status": "PASS_COMPARED_TO_IMMUTABLE_GOAL",
+        "project": project,
+        "goal_hash": computed_hash,
+        "goal_source": goal_payload.get("source"),
+        "goal_text_sha256": _sha_bytes(str(goal_payload.get("goal_text", "")).encode("utf-8")),
+        "criteria_count": len(goal_payload.get("criteria") or []),
+        "matching_criteria": matches,
+        "target_project_match": target_project_match,
+        "drift_risk": drift_risk,
+        "command": goal_command.model_dump(),
+    }
 
 
 def _memory_recall(query: str, *, skip: bool) -> dict[str, Any]:
@@ -517,6 +604,134 @@ def _dispatch_watchdog(project: str, *, enabled: bool) -> dict[str, Any]:
     return {"status": "PASS" if result.returncode == 0 else "FAILED", "command": result.model_dump()}
 
 
+def _ledger_summary(ledger: Path | None) -> dict[str, Any]:
+    if ledger is None:
+        return {"status": "SKIPPED", "reason": "no ledger supplied"}
+    events = _load_events(ledger)
+    categories: dict[str, dict[str, Any]] = {}
+    for event in events:
+        key = event.get("category_key")
+        if not key:
+            continue
+        categories.setdefault(key, {"events": 0, "latest_state": None, "ticket": None, "triage_code": None})
+        categories[key]["events"] += 1
+        categories[key]["latest_state"] = event.get("repair_state")
+        categories[key]["ticket"] = (event.get("ticket") or {}).get("issue_ref")
+        categories[key]["triage_code"] = (event.get("triage") or {}).get("code")
+    open_failures = [e for e in events if e.get("blocking") and e.get("repair_state") not in {RepairState.CATEGORY_GREEN.value, RepairState.CLOSED.value}]
+    return {
+        "status": "PASS",
+        "ledger": str(ledger),
+        "event_count": len(events),
+        "open_failure_count": len(open_failures),
+        "categories": categories,
+    }
+
+
+def _watchdog_status(project: str, *, skip: bool) -> dict[str, Any]:
+    if skip:
+        return {"status": "SKIPPED"}
+    if not WATCHDOG_RUN.exists():
+        return {"status": "FAILED", "error": "project-watchdog run.sh not found"}
+    result = _run([str(WATCHDOG_RUN), "status", "--json"], timeout=120)
+    return {"status": "PASS" if result.returncode == 0 else "FAILED", "project": project, "command": result.model_dump()}
+
+
+def _push_pull_monitoring(subagent_run_ids: list[str], ask_run_dirs: list[Path], ticket_refs: list[str]) -> dict[str, Any]:
+    return {
+        "owner": "project-agent",
+        "push": {
+            "pi_wake_subscriptions": [
+                f'subagent_wait({{"id":"{run_id}","nonBlocking":true}})' for run_id in subagent_run_ids
+            ],
+            "note": "The shell CLI cannot arm Pi wake subscriptions itself; the Pi parent project agent must call subagent_wait with nonBlocking=true for each owned async run.",
+        },
+        "pull": {
+            "pi_status_commands": ["subagent({ action: \"status\", view: \"fleet\" })"]
+            + [f'subagent({{"action":"status","id":"{run_id}"}})' for run_id in subagent_run_ids],
+            "ask_status_commands": [
+                f"skills/ask/run.sh status --run {run_dir} --projection --json" for run_dir in ask_run_dirs
+            ],
+            "ticket_status_commands": [
+                f"skills/ticket/run.sh lookup --issue {ref.split('#')[-1]} --repo {ref.split('#')[0]}"
+                for ref in ticket_refs
+                if "#" in ref
+            ],
+            "ledger_commands": ["skills/pipeline-self-repair/run.sh inspect --ledger <ledger> --json"],
+            "watchdog_commands": ["skills/project-watchdog/run.sh status --json"],
+            "research_escalation": "Project agent runs $brave-search or $dogpile when receipts name an external fact, upstream behavior, provider change, or unknown root cause that local artifacts do not settle.",
+        },
+    }
+
+
+def _ask_status(run_dir: Path, *, skip: bool) -> dict[str, Any]:
+    if skip:
+        return {"status": "SKIPPED", "run_dir": str(run_dir)}
+    ask_run = SKILLS_ROOT / "ask" / "run.sh"
+    if not ask_run.exists():
+        return {"status": "FAILED", "run_dir": str(run_dir), "error": "ask run.sh not found"}
+    result = _run([str(ask_run), "status", "--run", str(run_dir), "--projection", "--json"], timeout=180)
+    return {"status": "PASS" if result.returncode == 0 else "FAILED", "run_dir": str(run_dir), "command": result.model_dump()}
+
+
+def _ticket_status(issue_ref: str, *, skip: bool) -> dict[str, Any]:
+    if skip:
+        return {"status": "SKIPPED", "issue_ref": issue_ref}
+    if not TICKET_RUN.exists():
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "ticket run.sh not found"}
+    if "#" not in issue_ref:
+        return {"status": "FAILED", "issue_ref": issue_ref, "error": "expected owner/repo#number"}
+    repo, number = issue_ref.rsplit("#", 1)
+    result = _run([str(TICKET_RUN), "lookup", "--issue", number, "--repo", repo], timeout=120)
+    return {"status": "PASS" if result.returncode == 0 else "FAILED", "issue_ref": issue_ref, "command": result.model_dump()}
+
+
+@app.command("monitor")
+def monitor(
+    ledger: Path | None = typer.Option(None, "--ledger"),
+    ask_run_dir: list[Path] = typer.Option([], "--ask-run-dir"),
+    ticket_ref: list[str] = typer.Option([], "--ticket-ref"),
+    subagent_run_id: list[str] = typer.Option([], "--subagent-run-id"),
+    watchdog_project: str = typer.Option("agent-skills", "--watchdog-project"),
+    skip_ask: bool = typer.Option(False, "--skip-ask"),
+    skip_ticket: bool = typer.Option(False, "--skip-ticket"),
+    skip_watchdog: bool = typer.Option(False, "--skip-watchdog"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Emit project-agent push/pull monitoring commands and optional readbacks."""
+    ledger_state = _ledger_summary(ledger)
+    ask_states = [_ask_status(path, skip=skip_ask) for path in ask_run_dir]
+    ticket_states = [_ticket_status(ref, skip=skip_ticket) for ref in ticket_ref]
+    watchdog_state = _watchdog_status(watchdog_project, skip=skip_watchdog)
+    failed = [item for item in [ledger_state, watchdog_state, *ask_states, *ticket_states] if item.get("status") == "FAILED"]
+    payload = {
+        "schema": MONITOR_SCHEMA,
+        "generated_at": _now(),
+        "status": "PASS" if not failed else "DEGRADED",
+        "project_agent_role": {
+            "owner": "project-agent",
+            "responsibilities": [
+                "orchestrate the failure-to-repair loop",
+                "give WebGPT comprehensive context but require focused ticket candidates or NO_TICKET",
+                "file or bind focused ticket categories for project-watchdog dispatch",
+                "route ambiguous raw signals through triage-error before repair",
+                "monitor Ask, ticket, watchdog, ledger, and Pi async receipts until proof closes the category",
+                "run brave-search or dogpile only when local receipts leave an external fact or upstream behavior unresolved",
+                "avoid unrelated side quests while a blocking category remains open",
+            ],
+        },
+        "monitoring": _push_pull_monitoring(subagent_run_id, ask_run_dir, ticket_ref),
+        "ledger": ledger_state,
+        "ask_runs": ask_states,
+        "tickets": ticket_states,
+        "watchdog": watchdog_state,
+        "failed_readbacks": failed,
+    }
+    _emit(payload, json_output)
+    if failed:
+        raise typer.Exit(1)
+
+
 @app.command("record-failure")
 def record_failure(
     pipeline: str = typer.Option(..., "--pipeline"),
@@ -531,7 +746,9 @@ def record_failure(
     repo: str = typer.Option("grahama1970/agent-skills", "--repo"),
     attempt: int = typer.Option(1, "--attempt", min=1),
     checkpoint_id: str | None = typer.Option(None, "--checkpoint-id"),
-    goal_hash: str | None = typer.Option(None, "--goal-hash"),
+    goal_project: str | None = typer.Option(None, "--goal-project", help="Registered immutable goal project. Defaults to --pipeline."),
+    goal_hash: str | None = typer.Option(None, "--goal-hash", help="Optional expected immutable goal hash; mismatches fail preflight."),
+    goal_context: list[str] = typer.Option([], "--goal-context", help="Extra context used when comparing this repair to the immutable goal."),
     request_body: Path | None = typer.Option(None, "--request-body"),
     provider_task_id: str = typer.Option("", "--provider-task-id"),
     provider_response: Path | None = typer.Option(None, "--provider-response"),
@@ -548,9 +765,23 @@ def record_failure(
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Record a step failure and start the triage/ticket/watchdog repair branch."""
-    run_root.mkdir(parents=True, exist_ok=True)
     signal = _read_raw_signal(raw_signal, receipt)
+    effective_goal_project = goal_project or pipeline
+    goal_payload, goal_command = _load_immutable_goal(effective_goal_project)
+    run_root.mkdir(parents=True, exist_ok=True)
     triage = _classify(signal, layer)
+    goal_alignment = _goal_alignment(
+        project=effective_goal_project,
+        goal_payload=goal_payload,
+        goal_command=goal_command,
+        expected_goal_hash=goal_hash,
+        pipeline=pipeline,
+        step_id=step_id,
+        target=target,
+        triage=triage,
+        raw_signal=signal,
+        extra_context=goal_context,
+    )
     category_key, category_id = _category(pipeline, step_id, triage, target, repo)
     memory = _memory_recall(_memory_query(pipeline, step_id, triage, category_key), skip=skip_memory)
     github = _github_issue_search(repo, category_key, triage, step_id, target, skip=skip_github)
@@ -587,7 +818,7 @@ def record_failure(
         "step_id": step_id,
         "attempt": attempt,
         "checkpoint_id": checkpoint_id,
-        "goal_hash": goal_hash,
+        "goal_hash": goal_alignment["goal_hash"],
         "repo": repo,
         "target": target,
         "layer": layer,
@@ -605,6 +836,7 @@ def record_failure(
         "watchdog": watchdog,
         "agentic_eval": {"report": str(agentic_eval_report) if agentic_eval_report else None, "retained_guard_required": True},
         "provider_effect": effect,
+        "goal_alignment": goal_alignment,
         "inputs": [ref.model_dump() for ref in inputs],
         "outputs": [ref.model_dump() for ref in outputs],
     }
@@ -650,6 +882,9 @@ def validate_ledger(
             failures.append(f"event[{index}] missing triage code")
         if not event.get("category_key") or not event.get("failure_category_id"):
             failures.append(f"event[{index}] missing category binding")
+        goal_alignment = event.get("goal_alignment") or {}
+        if not event.get("goal_hash") or goal_alignment.get("status") != "PASS_COMPARED_TO_IMMUTABLE_GOAL":
+            failures.append(f"event[{index}] missing immutable-goal comparison")
         ticket_action = (event.get("ticket") or {}).get("action")
         if ticket_action in {None, "ticket_skipped", "ticket_failed"}:
             failures.append(f"event[{index}] lacks ticket disposition")
@@ -667,12 +902,29 @@ def agentic_eval_remediate(
     category_map: Path = typer.Option(..., "--category-map"),
     fixture: str = typer.Option(..., "--fixture"),
     ledger: Path = typer.Option(..., "--ledger"),
+    goal_project: str = typer.Option(..., "--goal-project", help="Registered immutable goal project that this remediation serves."),
+    goal_hash: str | None = typer.Option(None, "--goal-hash", help="Optional expected immutable goal hash; mismatches fail preflight."),
+    goal_context: list[str] = typer.Option([], "--goal-context", help="Extra context used when comparing this remediation to the immutable goal."),
     repo: str = typer.Option("grahama1970/agent-skills", "--repo"),
     route: str = typer.Option("backend_python_or_skill_runtime", "--route"),
     execute: bool = typer.Option(False, "--execute"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     """Project a complete agentic-evals report into category tickets via agentic-evals remediate."""
+    goal_payload, goal_command = _load_immutable_goal(goal_project)
+    triage = TriageResult(code="agentic_eval_failure_categories", ambiguous=False)
+    goal_alignment = _goal_alignment(
+        project=goal_project,
+        goal_payload=goal_payload,
+        goal_command=goal_command,
+        expected_goal_hash=goal_hash,
+        pipeline="agentic-evals",
+        step_id="agentic_eval_remediate",
+        target=str(report),
+        triage=triage,
+        raw_signal=report.read_text(encoding="utf-8", errors="replace") if report.exists() else str(report),
+        extra_context=goal_context,
+    )
     cmd = [str(AGENTIC_EVALS_RUN), "remediate", str(report), "--map", str(category_map), "--fixture", fixture, "--route", route]
     if execute:
         cmd.append("--execute")
@@ -687,9 +939,11 @@ def agentic_eval_remediate(
         "step_id": "agentic_eval_remediate",
         "target": str(report),
         "repo": repo,
+        "goal_hash": goal_alignment["goal_hash"],
+        "goal_alignment": goal_alignment,
         "raw_signal_sha256": _sha_bytes(report.read_bytes()),
         "raw_signal_excerpt": str(report),
-        "triage": {"code": "agentic_eval_failure_categories", "ambiguous": False, "matched_tokens": []},
+        "triage": triage.model_dump(),
         "category_key": f"agentic-evals/{_slug(report.stem)}/remediation/v1",
         "failure_category_id": f"agentic-evals:{_repo_slug(repo)}:{_slug(report.stem)}-remediation",
         "fingerprint": _sha_json({"report": str(report), "category_map": str(category_map), "fixture": fixture}),
