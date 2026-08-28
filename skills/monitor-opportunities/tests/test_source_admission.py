@@ -90,7 +90,7 @@ def test_linkedin_top_applicant_and_easy_apply_are_action_worthy_source_intel() 
     assert "Easy Apply" in easy_apply["summary"]
 
 
-def test_linkedin_top_applicant_plus_easy_apply_is_standing_authorized_source_intel() -> None:
+def test_linkedin_top_applicant_plus_easy_apply_is_review_only_without_exact_authorization() -> None:
     intel = _source_intel(
         {
             "candidate_id": "candidate:a:linkedin-top-applicant-easy-apply",
@@ -106,11 +106,13 @@ def test_linkedin_top_applicant_plus_easy_apply_is_standing_authorized_source_in
     )
 
     assert intel is not None
-    assert intel["decision"] == "EASY_APPLY_AUTHORIZED"
+    assert intel["decision"] == "EASY_APPLY_REVIEW"
+    assert intel["decision"] != "EASY_APPLY_AUTHORIZED"
     assert intel["visible_in_report"] is True
     assert intel["action_worthy"] is True
     assert "Top Applicant plus Easy Apply" in intel["summary"]
-    assert any("Standing authorization applies" in reason for reason in intel["reasons"])
+    assert any("exact post-report authorization" in reason for reason in intel["reasons"])
+    assert all("standing authorization" not in reason.lower() for reason in intel["reasons"])
     assert any("commit-linkedin" in reason for reason in intel["reasons"])
 
     data = copy.deepcopy(built_in_fixture())
@@ -123,7 +125,7 @@ def test_linkedin_top_applicant_plus_easy_apply_is_standing_authorized_source_in
     data["artifact_accounting"]["visible_total"] += 1
 
     manifest = validate_manifest(data)
-    assert manifest.source_intel[-1].decision == "EASY_APPLY_AUTHORIZED"
+    assert manifest.source_intel[-1].decision == "EASY_APPLY_REVIEW"
 
 
 def test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization() -> None:

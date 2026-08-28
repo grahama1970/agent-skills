@@ -394,20 +394,18 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
     if _is_linkedin_locator(candidate):
         # A WNY-priority locator that primary-source readback could not confirm
         # this run remains visible. Top Applicant and Easy Apply rows are also
-        # action-worthy items. Combined Top Applicant + Easy Apply rows carry
-        # standing authorization for the gated LinkedIn Easy Apply commit path;
-        # standalone LinkedIn locator evidence remains inert.
+        # action-worthy items, but they are not submission authority. The gated
+        # LinkedIn Easy Apply commit path requires Graham's exact post-report
+        # authorization for one candidate/payload.
         pending = bool(candidate.get("pending_primary_verification"))
         top_applicant = bool(candidate.get("top_candidate_evidence"))
         easy_apply = bool(candidate.get("easy_apply"))
-        if easy_apply and top_applicant:
-            decision = "EASY_APPLY_AUTHORIZED"
+        if pending:
+            decision = "PENDING_PRIMARY_VERIFICATION"
         elif easy_apply:
             decision = "EASY_APPLY_REVIEW"
         elif top_applicant:
             decision = "TOP_APPLICANT_REVIEW"
-        elif pending:
-            decision = "PENDING_PRIMARY_VERIFICATION"
         else:
             decision = "LOCATOR_ONLY"
         reasons = [
@@ -416,10 +414,10 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
         if easy_apply:
             if top_applicant:
                 reasons.append(
-                    "Standing authorization applies: Graham is Top Applicant and the posting exposes LinkedIn Easy Apply."
+                    "Top Applicant plus Easy Apply is high-priority review evidence, not standing submission authorization."
                 )
                 reasons.append(
-                    "Use the gated commit-linkedin path; stop if duplicate protection, missing known answers, or confirmation readback fails."
+                    "Require Graham's exact post-report authorization before commit-linkedin or any LinkedIn platform action."
                 )
             else:
                 reasons.append(

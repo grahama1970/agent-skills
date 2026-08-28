@@ -712,12 +712,12 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_is_review_only_without_exact_authorization skills/monitor-opportunities/tests/test_source_admission.py::test_linkedin_top_applicant_plus_easy_apply_requires_exact_authorization -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ],
         "stderr_excludes": [
           "SOURCE_INTEL_DECISION_INVALID",
@@ -725,8 +725,8 @@
           "EASY_APPLY_AUTHORIZED"
         ]
       },
-      "proves": "A LinkedIn row that has both Top Applicant evidence and Easy Apply is visible and action-worthy for human review, but it is not classified as standing authorization and still requires exact post-report authorization before any application.",
-      "does_not_prove": "A live LinkedIn submit occurred, that LinkedIn exposed a qualifying row in the current account, or that unknown screening questions can be answered without Graham.",
+      "proves": "LinkedIn Top Applicant plus Easy Apply locator evidence is action-worthy review evidence, but it does not become EASY_APPLY_AUTHORIZED unless Graham gives exact post-report authorization through the gated application path.",
+      "does_not_prove": "That Graham authorized any specific application, that LinkedIn submission succeeded, or that primary employer-source readback admitted the opportunity.",
       "seams": [
         "pipeline.linkedin_source_intel_policy",
         "contracts.linkedin_source_intel_decision_allowlist",
