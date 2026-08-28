@@ -471,7 +471,7 @@ def test_meetup_group_capture_circuit_breaks_repeated_timeouts(
             output.write_bytes(b"png")
             return str(output)
         if args[0] == "js":
-            script = args[-1]
+            script = args[1]
             if "find/?source=GROUPS" not in script:
                 raise subprocess.TimeoutExpired(args, 20)
             return "NAV"
@@ -529,7 +529,7 @@ def test_meetup_capture_uses_bounded_waits_and_eight_group_budget(
         if args[0] == "tab.close":
             return ""
         if args[0] == "js":
-            script = args[-1]
+            script = args[1]
             if "categoryId=405" in script:
                 current_page = "405"
             elif "categoryId=546" in script:

@@ -362,6 +362,64 @@ def test_ashby_candidate_maps_primary_fields() -> None:
     assert rows[0]["workplace_type"] == "REMOTE"
 
 
+def test_ashby_keyword_match_survives_employer_cap() -> None:
+    jobs = [
+        {
+            "title": "Commercial Counsel",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/commercial-counsel",
+            "descriptionHtml": "Support engineers building AI products and agentic workflows.",
+            "location": "San Francisco",
+        },
+        {
+            "title": "IT Engineer",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/it-engineer",
+            "descriptionHtml": "General endpoint support.",
+            "location": "San Francisco",
+        },
+    ]
+    jobs.extend(
+        {
+            "title": f"Operations Role {index}",
+            "jobUrl": f"https://jobs.ashbyhq.com/cognition/ops-{index}",
+            "descriptionHtml": "General operations role.",
+            "location": "San Francisco",
+        }
+        for index in range(10)
+    )
+    jobs.append(
+        {
+            "id": "811c3f5a-b26d-4162-b49b-93890a91794d",
+            "title": "Applied AI Engineer",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d",
+            "descriptionHtml": "Build agentic AI systems.",
+            "location": "San Francisco",
+        }
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == "https://api.ashbyhq.com/posting-api/job-board/cognition"
+        return httpx.Response(200, json={"jobs": jobs})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    _receipt, candidates = _ashby_candidates(
+        client,
+        {
+            "name": "Cognition",
+            "provider": "ashby",
+            "slug": "cognition",
+            "limit": 10,
+            "need_keywords": ["agentic", "AI", "engineer"],
+            "default_fit_score": 0.7,
+        },
+    )
+
+    assert any(
+        row["posting_url"] == "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d"
+        for row in candidates
+    )
+    assert candidates[0]["title"] == "Applied AI Engineer"
+
+
 def test_ashby_large_valid_board_under_employer_ats_cap_is_parsed() -> None:
     large_description = "Build applied AI systems. " * 70_000
 

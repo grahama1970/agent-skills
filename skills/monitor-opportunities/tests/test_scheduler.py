@@ -834,6 +834,9 @@ def test_scheduler_exec_check_fails_on_nonzero_execution(
 def test_scheduler_exec_check_records_self_repair_on_failure(
     tmp_path: Path, monkeypatch
 ) -> None:
+    monkeypatch.delenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY", raising=False)
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
     repo = tmp_path / "repo"
     (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
     pipeline_runner = repo / "skills" / "pipeline-self-repair" / "run.sh"

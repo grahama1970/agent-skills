@@ -229,6 +229,7 @@ describe("JavaScript command handlers", () => {
     const handleMessage = await loadHandleMessage();
     const chrome = (globalThis as any).chrome;
     chrome.debugger.attach.mockRejectedValue(new Error("Cannot access a chrome:// URL"));
+    chrome.tabs.get.mockResolvedValue({ id: 1, url: "chrome://settings/" });
 
     const result = await handleMessage({ type: "EXECUTE_JAVASCRIPT", tabId: 1, code: "1 + 2" }, {});
 
@@ -236,6 +237,24 @@ describe("JavaScript command handlers", () => {
       error:
         "Cannot control this page. Chrome restricts automation on chrome://, extensions, and web store pages.",
     });
+  });
+
+  it("falls back to chrome.scripting when CDP attach fails on an https tab", async () => {
+    const handleMessage = await loadHandleMessage();
+    const chrome = (globalThis as any).chrome;
+    chrome.debugger.attach.mockRejectedValue(new Error("Cannot attach to this target"));
+    chrome.tabs.get.mockResolvedValue({ id: 1, url: "https://www.linkedin.com/jobs/search/" });
+    chrome.scripting.executeScript.mockResolvedValue([{ result: "LinkedIn Jobs" }]);
+
+    const result = await handleMessage(
+      { type: "EXECUTE_JAVASCRIPT", tabId: 1, code: "return document.title" },
+      {},
+    );
+
+    expect(result).toEqual({ output: '"LinkedIn Jobs"', transport: "chrome.scripting" });
+    expect(chrome.scripting.executeScript).toHaveBeenCalled();
+    const scriptCall = chrome.scripting.executeScript.mock.calls[0][0];
+    expect(scriptCall.target).toEqual({ tabId: 1 });
   });
 });
 

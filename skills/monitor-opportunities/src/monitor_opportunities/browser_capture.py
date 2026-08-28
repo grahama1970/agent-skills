@@ -258,6 +258,10 @@ def _surf(surf_run: Path, *args: str, timeout: int = 90) -> str:
     return proc.stdout.strip()
 
 
+def _surf_js(surf_run: Path, tab_id: str, script: str, *, timeout: int = 90) -> str:
+    return _surf(surf_run, "js", script, "--tab-id", tab_id, timeout=timeout)
+
+
 def _current_tab_ids(surf_run: Path) -> set[str] | None:
     try:
         raw = _surf(surf_run, "tab.list", "--json", timeout=20)
@@ -452,7 +456,7 @@ def _write_surf_diagnostic_bundle(
             "}, null, 2)"
         )
         try:
-            page_state = _surf(surf_run, "js", "--tab-id", tab_id, page_state_js, timeout=30)
+            page_state = _surf_js(surf_run, tab_id, page_state_js, timeout=30)
             page_state_path = bundle_dir / "page-state.json"
             page_state_path.write_text(page_state + "\n", encoding="utf-8")
             manifest["artifacts"]["page_state"] = str(page_state_path)
@@ -557,7 +561,7 @@ def _capture_required_job_source(
         if not tab_id:
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
         _surf_pause(surf_run, wait_seconds)
-        raw = _surf(surf_run, "js", "--tab-id", tab_id, extract_js, timeout=45)
+        raw = _surf_js(surf_run, tab_id, extract_js, timeout=45)
         snapshot = json.loads(json.loads(raw))
         records = [row for row in snapshot.get("records") or [] if isinstance(row, dict)]
         evidence = {
@@ -804,7 +808,7 @@ def _linkedin_scroll_paginate_capture(surf_run: Path, tab_id: str, max_pages: in
     for page in range(1, max_pages + 1):
         stable = 0
         for _ in range(12):
-            raw = _surf(surf_run, "js", "--tab-id", tab_id, _LINKEDIN_EXTRACT_JS, timeout=30)
+            raw = _surf_js(surf_run, tab_id, _LINKEDIN_EXTRACT_JS, timeout=30)
             try:
                 rows = json.loads(json.loads(raw))
             except (ValueError, json.JSONDecodeError):
@@ -821,10 +825,10 @@ def _linkedin_scroll_paginate_capture(surf_run: Path, tab_id: str, max_pages: in
             stable = stable + 1 if new == 0 else 0
             if stable >= 3:
                 break
-            _surf(surf_run, "js", "--tab-id", tab_id, _LINKEDIN_SCROLL_JS, timeout=20)
+            _surf_js(surf_run, tab_id, _LINKEDIN_SCROLL_JS, timeout=20)
             _surf_pause(surf_run, "1", timeout=15)
         if page < max_pages:
-            clicked = _surf(surf_run, "js", "--tab-id", tab_id, _linkedin_next_page_js(page + 1), timeout=20)
+            clicked = _surf_js(surf_run, tab_id, _linkedin_next_page_js(page + 1), timeout=20)
             if "CLICKED" not in clicked:
                 break
             _surf_pause(surf_run, "4", timeout=20)
@@ -1025,7 +1029,7 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
         ready = 0
         for _ in range(10):
             try:
-                probe = _surf(surf_run, "js", "--tab-id", tab_id, _SAM_READY_JS) or "0"
+                probe = _surf_js(surf_run, tab_id, _SAM_READY_JS) or "0"
                 ready = int(probe.strip())
             except (BrowserCaptureError, ValueError):
                 ready = 0
@@ -1033,7 +1037,7 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
                 break
             _surf_pause(surf_run, "3")
         receipt["poll_ready_links"] = ready
-        raw = _surf(surf_run, "js", "--tab-id", tab_id, _SAM_EXTRACT_JS)
+        raw = _surf_js(surf_run, tab_id, _SAM_EXTRACT_JS)
         parsed = json.loads(json.loads(raw))
         rows = parsed.get("rows", []) if isinstance(parsed, dict) else []
         opps = [
@@ -1071,7 +1075,7 @@ def capture_sam(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, A
 
 
 def _meetup_page_snapshot(surf_run: Path, tab_id: str) -> dict[str, Any]:
-    raw = _surf(surf_run, "js", "--tab-id", tab_id, _MEETUP_PAGE_EXTRACT_JS, timeout=30)
+    raw = _surf_js(surf_run, tab_id, _MEETUP_PAGE_EXTRACT_JS, timeout=30)
     parsed = json.loads(json.loads(raw))
     return parsed if isinstance(parsed, dict) else {}
 
@@ -1079,7 +1083,7 @@ def _meetup_page_snapshot(surf_run: Path, tab_id: str) -> dict[str, Any]:
 def _meetup_event_snapshot(surf_run: Path, tab_id: str) -> dict[str, Any]:
     """Attendees visible on one event page. {} when the page shows none."""
 
-    raw = _surf(surf_run, "js", "--tab-id", tab_id, _MEETUP_ATTENDEE_EXTRACT_JS, timeout=30)
+    raw = _surf_js(surf_run, tab_id, _MEETUP_ATTENDEE_EXTRACT_JS, timeout=30)
     parsed = json.loads(json.loads(raw))
     return parsed if isinstance(parsed, dict) else {}
 
@@ -1261,7 +1265,7 @@ def capture_meetup_buffalo(
             group_sources: dict[str, dict[str, str]] = {}
             for idx, (category_id, category_name, url) in enumerate(_MEETUP_CATEGORY_URLS):
                 if idx > 0:
-                    _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(url), timeout=20)
+                    _surf_js(surf_run, tab_id, _nav_js(url), timeout=20)
                 _surf_pause(surf_run, category_wait_seconds)
                 snapshot = _meetup_page_snapshot(surf_run, tab_id)
                 category_pages.append(
@@ -1283,7 +1287,7 @@ def capture_meetup_buffalo(
                     skipped_group_urls.append(group_url)
                     continue
                 try:
-                    _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(group_url), timeout=20)
+                    _surf_js(surf_run, tab_id, _nav_js(group_url), timeout=20)
                     _surf_pause(surf_run, group_wait_seconds)
                     snapshot = _meetup_page_snapshot(surf_run, tab_id)
                 except (BrowserCaptureError, subprocess.TimeoutExpired, TimeoutError, ValueError, json.JSONDecodeError) as exc:
@@ -1310,7 +1314,7 @@ def capture_meetup_buffalo(
                     [str(link) for link in (snapshot.get("links") or [])], max_events_per_group
                 ):
                     try:
-                        _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(event_url), timeout=20)
+                        _surf_js(surf_run, tab_id, _nav_js(event_url), timeout=20)
                         _surf_pause(surf_run, group_wait_seconds)
                         event_snapshot = _meetup_event_snapshot(surf_run, tab_id)
                     except (
@@ -1885,7 +1889,7 @@ def capture_ats_form(apply_url: str, out_dir: Path, surf_run: Path = SURF_RUN_DE
             if not tab_id:
                 raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
             _surf_pause(surf_run, "7")
-            raw = _surf(surf_run, "js", "--tab-id", tab_id, _ATS_FORM_EXTRACT_JS, timeout=25)
+            raw = _surf_js(surf_run, tab_id, _ATS_FORM_EXTRACT_JS, timeout=25)
             rows = json.loads(json.loads(raw))
             form = _generic_form_from_dom(provider, site, posting_id, apply_url, rows, application_page)
             receipt["capture_method"] = "surf_read_only_dom"
@@ -2122,11 +2126,9 @@ def capture_linkedin_premium(
             try:
                 if pi > 0:
                     url = query["url"] + "&" + lane_param
-                    _surf(surf_run, "js", "--tab-id", tab_id,
-                          _nav_js(url),
-                          timeout=20)
+                    _surf_js(surf_run, tab_id, _nav_js(url), timeout=20)
                 _surf_pause(surf_run, "8")
-                raw = _surf(surf_run, "js", "--tab-id", tab_id, _LI_ARIA_EXTRACT_JS, timeout=30)
+                raw = _surf_js(surf_run, tab_id, _LI_ARIA_EXTRACT_JS, timeout=30)
                 for r in json.loads(json.loads(raw)):
                     if r.get("title"):
                         r["matched_query"] = query["label"] + " | " + lane_label
@@ -2212,8 +2214,9 @@ def capture_linkedin_premium(
 
 def _page_text(surf_run: Path, tab_id: str, limit: int = 20000) -> str:
     """Read-only innerText snapshot of the current page (bounded)."""
-    raw = _surf(
-        surf_run, "js", "--tab-id", tab_id,
+    raw = _surf_js(
+        surf_run,
+        tab_id,
         f"(function(){{return JSON.stringify(document.body.innerText.slice(0,{limit}));}})()",
         timeout=30,
     )
@@ -2248,9 +2251,7 @@ def capture_linkedin_job_insights(
         for ui, url in enumerate(li_urls):
             try:
                 if ui > 0:
-                    _surf(surf_run, "js", "--tab-id", tab_id,
-                          _nav_js(url),
-                          timeout=20)
+                    _surf_js(surf_run, tab_id, _nav_js(url), timeout=20)
                 _surf_pause(surf_run, "7")
                 text = _page_text(surf_run, tab_id)
             except (BrowserCaptureError, ValueError, subprocess.TimeoutExpired) as exc:
@@ -2387,7 +2388,7 @@ def capture_linkedin_who_viewed(
             # links + card climb), which survives most layout reshuffles.
             try:
                 alt = json.loads(json.loads(
-                    _surf(surf_run, "js", "--tab-id", tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
+                    _surf_js(surf_run, tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
                 ))
                 for c in alt:
                     viewers.append({"name": c.get("name"), "degree": c.get("degree"), "headline": c.get("current") or "",
@@ -2493,7 +2494,7 @@ def capture_linkedin_actively_hiring(
             raise BrowserCaptureError(f"could not parse tab id from: {created[:120]}")
         _surf_pause(surf_run, "8")
         contacts = json.loads(json.loads(
-            _surf(surf_run, "js", "--tab-id", tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
+            _surf_js(surf_run, tab_id, _PEOPLE_EXTRACT_JS, timeout=30)
         ))
         receipt["status"] = "OK" if contacts else "EMPTY"
         receipt["contacts_captured"] = len(contacts)
@@ -2573,7 +2574,7 @@ def capture_linkedin_advanced_search(
             # pages are heavy) must skip that query, not tank the whole batch.
             try:
                 if qi > 0:
-                    _surf(surf_run, "js", "--tab-id", tab_id, _nav_js(query["url"]), timeout=20)
+                    _surf_js(surf_run, tab_id, _nav_js(query["url"]), timeout=20)
                 _surf_pause(surf_run, "6")
                 wall = _surf(
                     surf_run,
@@ -2709,7 +2710,7 @@ def capture_sales_navigator_saved(out_dir: Path, surf_run: Path = SURF_RUN_DEFAU
             receipt["error"] = "Sales Navigator sign-in or entitlement wall in the reachable browser"
             receipt["evidence_path"] = None
             return receipt
-        raw = _surf(surf_run, "js", "--tab-id", tab_id, _SALES_NAV_EXTRACT_JS)
+        raw = _surf_js(surf_run, tab_id, _SALES_NAV_EXTRACT_JS)
         rows = json.loads(json.loads(raw))
         leads = [
             {

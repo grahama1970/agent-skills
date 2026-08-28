@@ -1250,7 +1250,7 @@ def _lever_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     receipt["parser_result"] = "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
-    for job in postings[: _registry_limit(target, 20)]:
+    for job in _prioritized_jobs_for_target(target, postings, default_limit=20):
         if not isinstance(job, dict):
             logger.warning("lever board {} returned a non-dict posting; skipping", target.get("name"))
             continue
@@ -1318,7 +1318,7 @@ def _ashby_candidates(client: httpx.Client, target: dict[str, Any]) -> tuple[dic
     receipt["parser_result"] = parser_result or "PARSED"
     receipt = _finalize_receipt(receipt)
     candidates: list[dict[str, Any]] = []
-    for job in jobs[: _registry_limit(target, 20)]:
+    for job in _prioritized_jobs_for_target(target, jobs, default_limit=20):
         if not isinstance(job, dict):
             logger.warning("ashby board {} returned a non-dict job; skipping", target.get("name"))
             continue
@@ -1375,6 +1375,54 @@ def _keyword_in_text(keyword: str, text: str) -> bool:
     if len(needle) <= 3 and needle.isalnum():
         return re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack) is not None
     return needle in haystack
+
+
+def _target_keywords(target: dict[str, Any]) -> list[str]:
+    values: list[str] = []
+    for key in ("title_keywords", "need_keywords"):
+        raw = target.get(key)
+        if isinstance(raw, list):
+            values.extend(str(item) for item in raw)
+    return [item for item in values if item.strip()]
+
+
+def _keyword_match_count(target: dict[str, Any], *parts: object) -> int:
+    text = "\n".join(str(part or "") for part in parts)
+    return sum(1 for keyword in _target_keywords(target) if _keyword_in_text(keyword, text))
+
+
+def _keyword_match_score(target: dict[str, Any], *, title: object = "", body: object = "") -> int:
+    title_score = _keyword_match_count(target, title)
+    body_score = _keyword_match_count(target, body)
+    return title_score * 10 + body_score
+
+
+def _prioritized_jobs_for_target(
+    target: dict[str, Any],
+    jobs: list[dict[str, Any]],
+    *,
+    default_limit: int = 20,
+) -> list[dict[str, Any]]:
+    scored: list[tuple[int, int, dict[str, Any]]] = []
+    for index, job in enumerate(jobs):
+        if not isinstance(job, dict):
+            continue
+        score = _keyword_match_score(
+            target,
+            title=job.get("title"),
+            body="\n".join(
+                str(part or "")
+                for part in (
+                    job.get("descriptionHtml"),
+                    job.get("descriptionPlain"),
+                    job.get("content"),
+                    job.get("text"),
+                )
+            ),
+        )
+        scored.append((score, index, job))
+    scored.sort(key=lambda item: (-item[0], item[1]))
+    return [job for _score, _index, job in scored[: _registry_limit(target, default_limit)]]
 
 
 def _workday_title_allowed(job: dict[str, Any], target: dict[str, Any]) -> bool:

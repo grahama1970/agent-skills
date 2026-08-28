@@ -173,6 +173,34 @@
       "does_not_prove": "A fresh full nightly can pass unrelated browser/auth gates or that non-Ashby/non-Greenhouse providers parse oversized responses."
     },
     {
+      "name": "ashby-keyword-relevant-job-survives-employer-cap",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "discovery.employer_ats_parser",
+        "ranking.source_relevance"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_ashby_keyword_match_survives_employer_cap -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "Applied AI Engineer",
+          "AssertionError"
+        ]
+      },
+      "proves": "A relevant Ashby job such as Cognition Applied AI Engineer survives an employer registry cap even when it appears after the first capped page items, and title keyword matches outrank description-only incidental keyword matches.",
+      "does_not_prove": "A fresh full nightly passed LinkedIn capture, that Cognition is geographically eligible, or that Graham authorized an application."
+    },
+    {
       "name": "moog-workday-source-discovery",
       "type": "negative",
       "real_world": true,
