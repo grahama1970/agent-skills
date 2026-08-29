@@ -4,8 +4,8 @@
   "trials": 3,
   "proof_scope": "live Herdr topology and grid contract plus fail-closed guards",
   "claims": {
-    "proves": "against the Herdr running on this machine: workspace/tab creation return root topology ids, splits return new pane ids, a planned 2x2 and 3x3 grid materialize as real rectangles with non-zero cells, the layout reads back the panes we created, a cross-workspace pane move preserves the terminal and reports an old-to-new id map, and the invalid-grid / unknown-kind / empty-prompt / unsupported-protocol paths all fail closed; pi-herdr-bridge framing/roster/lane units pass, a live pi-intercom broker round trip delivers and reads back a message, and an unknown send target fails closed",
-    "does_not_prove": "provider agent behaviour after attach, multi-pane whole-tab movement, monitor-herdr state reconciliation, or that a grid is ergonomic at a given terminal size"
+    "proves": "against the Herdr running on this machine: workspace/tab creation return root topology ids, splits return new pane ids, a planned 2x2 and 3x3 grid materialize as real rectangles with non-zero cells, the layout reads back the panes we created, a cross-workspace pane move preserves the terminal and reports an old-to-new id map, and the invalid-grid / unknown-kind / empty-prompt / unsupported-protocol paths all fail closed; pi-herdr-bridge framing/roster/lane units pass, a live pi-intercom broker round trip delivers and reads back a message, and an unknown send target fails closed; the v1 envelope round-trips end-to-end through bridge-cli, the live broker, per-message ack/archive, dead-letter, and the real stop hook",
+    "does_not_prove": "provider agent behaviour after attach, multi-pane whole-tab movement, monitor-herdr state reconciliation, or that a grid is ergonomic at a given terminal size; live memory-daemon mirroring (daemon unhealthy on this host \u2014 mirror fail-soft path is what the e2e records)"
   },
   "cases": [
     {
@@ -233,6 +233,28 @@
         ]
       },
       "timeout_seconds": 60
+    },
+    {
+      "name": "bridge-live-envelope-e2e",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../pi-herdr-bridge && node evals/live_envelope_e2e.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "\"delivered_live\": true",
+          "\"hook_blocked_then_silent\": true",
+          "\"per_message_ack_and_archive\": true",
+          "\"listener_received\": true",
+          "memory_mirror_recorded"
+        ]
+      },
+      "timeout_seconds": 120
     }
   ]
 }
