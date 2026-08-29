@@ -407,6 +407,12 @@ def test_sweep_parses_read_only_social_and_mail_evidence(
             {
                 "emails": [
                     {
+                        "subject": "Agentic coding model newsletter",
+                        "sender": "newsletter@example.com",
+                        "snippet": "Long-horizon agentic workloads and model evaluation notes.",
+                        "thread_url": "https://mail.google.com/mail/u/0/#inbox/noise",
+                    },
+                    {
                         "subject": "Remote AI engineer opportunity",
                         "sender": "recruiter@example.com",
                         "snippet": "Remote AI engineer role with document automation and machine learning.",
@@ -451,6 +457,10 @@ def test_sweep_parses_read_only_social_and_mail_evidence(
     assert required["slack_channels"]["source_class"] == "slack_channel_capture"
     assert required["discord_channels"]["source_class"] == "discord_channel_capture"
     assert required["gmail_mailbox"]["source_class"] == "mailbox_mined_gmail"
+    assert any(
+        "1 opportunity candidates emitted; 1 skipped." in limitation
+        for limitation in required["gmail_mailbox"]["limitations"]
+    )
     candidates = [
         json.loads(line)
         for line in (out / "candidates.jsonl").read_text(encoding="utf-8").splitlines()
@@ -459,6 +469,7 @@ def test_sweep_parses_read_only_social_and_mail_evidence(
     assert {row["source_provider"] for row in candidates} >= {"slack", "discord", "gmail"}
     assert all(row["lane"] == "C" for row in candidates)
     assert all(row["external_effects"] is False for row in receipts if row.get("required_source_id") in required)
+    assert all("newsletter" not in row["title"].lower() for row in candidates)
 
 
 def test_sweep_uses_browser_required_source_evidence_for_source_health_only(

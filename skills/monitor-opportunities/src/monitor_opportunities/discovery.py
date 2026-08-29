@@ -471,7 +471,7 @@ def _required_browser_evidence_receipt(
     return _finalize_receipt(receipt), []
 
 
-SOCIAL_OPPORTUNITY_TERMS = (
+SOCIAL_SKILL_TERMS = (
     "agentic",
     "ai engineer",
     "artificial intelligence",
@@ -489,6 +489,40 @@ SOCIAL_OPPORTUNITY_TERMS = (
     "python",
     "react",
     "node",
+)
+SOCIAL_OPPORTUNITY_INTENT_TERMS = (
+    "apply",
+    "contract",
+    "consulting",
+    "fractional",
+    "freelance",
+    "hiring",
+    "job alert",
+    "job opening",
+    "job opportunity",
+    "job post",
+    "job posting",
+    "jobs",
+    "opening",
+    "opportunity",
+    "part-time",
+    "position",
+    "proposal",
+    "recruiter",
+    "rfp",
+    "role",
+    "seeking",
+)
+SOCIAL_OPPORTUNITY_INTENT_PATTERNS = (
+    re.compile(
+        r"(?<![a-z0-9])(?:team|company|client|customer|organization|agency|firm|office|group|shop)"
+        r"\s+need(?:s|ed|ing)?(?![a-z0-9])"
+    ),
+    re.compile(
+        r"(?<![a-z0-9])need(?:s|ed|ing)?\s+"
+        r"(?:ai|automation|document extraction|data extraction|workflow|python|react|node|engineer|consultant|developer)"
+    ),
+    re.compile(r"(?<![a-z0-9])look(?:ing)? for(?![a-z0-9])"),
 )
 SOCIAL_POLICY = "read_only_message_evidence_no_send_no_reply_no_apply"
 
@@ -541,7 +575,7 @@ def _message_url(record: dict[str, Any]) -> str | None:
 def _message_hits(record: dict[str, Any]) -> list[str]:
     low = f" {_message_text(record).lower()} "
     hits = []
-    for term in SOCIAL_OPPORTUNITY_TERMS:
+    for term in SOCIAL_SKILL_TERMS:
         if term in {"llm"}:
             matched = re.search(r"(?<![a-z0-9])llms?(?![a-z0-9])", low) is not None
         elif term == "python":
@@ -554,6 +588,13 @@ def _message_hits(record: dict[str, Any]) -> list[str]:
             matched = term in low
         if matched:
             hits.append(term)
+    return hits
+
+
+def _message_opportunity_intent_hits(record: dict[str, Any]) -> list[str]:
+    low = f" {_message_text(record).lower()} "
+    hits = [term for term in SOCIAL_OPPORTUNITY_INTENT_TERMS if term in low]
+    hits.extend(pattern.pattern for pattern in SOCIAL_OPPORTUNITY_INTENT_PATTERNS if pattern.search(low))
     return hits
 
 
@@ -600,7 +641,8 @@ def _message_evidence_candidates(
     skipped = 0
     for index, record in enumerate(records, start=1):
         hits = _message_hits(record)
-        if not hits:
+        intent_hits = _message_opportunity_intent_hits(record)
+        if not hits or not intent_hits:
             skipped += 1
             continue
         text = _message_text(record)
@@ -646,6 +688,8 @@ def _message_evidence_candidates(
                 "Message evidence is a lead; primary-source opportunity details must be checked before any application or outreach.",
                 "No Slack, Discord, Gmail, LinkedIn, ATS, or Meetup external action is authorized by this evidence.",
             ],
+            "matched_skill_terms": hits,
+            "matched_opportunity_terms": intent_hits,
         }
         payload["candidate_id"] = _candidate_id(f"candidate:c:{provider}", payload)
         candidates.append(payload)
