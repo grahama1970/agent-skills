@@ -619,12 +619,13 @@ def _message_evidence_candidates(
     target: str,
     source_class: str,
     channel: str,
+    automation_policy: str = SOCIAL_POLICY,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     raw = path.read_bytes()
     receipt = _base_receipt("C", provider, target, source_class)
     receipt["required_source_id"] = required_source_id
     receipt["channel"] = channel
-    receipt["automation_policy"] = SOCIAL_POLICY
+    receipt["automation_policy"] = automation_policy
     receipt["external_effects"] = False
     receipt["request_summary"] = (
         f"Read local {provider} opportunity evidence artifact {path.name}; "
@@ -639,7 +640,7 @@ def _message_evidence_candidates(
         [
             f"{provider} evidence is a read-only opportunity signal.",
             "Rows are admitted only when the captured message text contains explicit opportunity terms.",
-            f"Automation policy: {SOCIAL_POLICY}.",
+            f"Automation policy: {automation_policy}.",
         ]
     )
     try:
@@ -679,7 +680,7 @@ def _message_evidence_candidates(
             "source_provider": provider,
             "source_class": source_class,
             "source_identity": str(record.get("id") or record.get("message_id") or evidence_url),
-            "automation_policy": SOCIAL_POLICY,
+            "automation_policy": automation_policy,
             "organization": organization,
             "title": title,
             "location_display": location,
@@ -2374,6 +2375,7 @@ def sweep(
                     target="Discord opportunity channels",
                     source_class="discord_channel_capture",
                     channel="discord",
+                    automation_policy="read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply",
                 )
                 receipts.append(receipt)
                 candidates.extend(rows)

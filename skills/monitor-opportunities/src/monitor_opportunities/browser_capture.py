@@ -803,6 +803,173 @@ def capture_g2i_slack_jobs(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> 
     return receipt
 
 
+_DISCORD_OPPORTUNITY_CHANNEL_URL = "https://discord.com/channels/1344341191893979290/1344341192518799442"
+_DISCORD_OPPORTUNITY_GUILD_ID = "1344341191893979290"
+_DISCORD_OPPORTUNITY_CHANNEL_ID = "1344341192518799442"
+_DISCORD_EXTRACT_JS = (
+    "(function(){return JSON.stringify({url:location.href,title:document.title,"
+    "text:(document.body.innerText||'').slice(0,24000)});})()"
+)
+
+
+def _discord_records_from_text(text: str, *, channel_url: str) -> list[dict[str, Any]]:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    role_or_skill = re.compile(
+        r"\b(?:ai engineer|llm engineer|agentic|backend|full[- ]?stack|software engineer|"
+        r"developer|architect|consultant|contract|freelance|python|react|node(?:\\.js)?)\b",
+        re.I,
+    )
+    title_signal = re.compile(
+        r"\b(?:ai engineer|llm engineer|backend|full[- ]?stack|software engineer|"
+        r"developer|architect|consultant|contract role|freelance role)\b",
+        re.I,
+    )
+    opportunity_context = re.compile(
+        r"\b(?:hiring|looking for|seeking|apply|application|job|role|position|"
+        r"contract|client needs|team needs|paid|available opportunities)\b",
+        re.I,
+    )
+    records: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, line in enumerate(lines):
+        if not title_signal.search(line):
+            continue
+        body = [line, *lines[index + 1 : index + 8]]
+        content = "\n".join(body)
+        if not role_or_skill.search(content) or not opportunity_context.search(content):
+            continue
+        if re.search(r"\b(?:not hiring|no jobs?|not a job|training opportunities\\?)\b", content, re.I):
+            continue
+        title = line
+        if len(title) > 120:
+            title = "Discord opportunity signal"
+        key = f"{title.lower()}|{content[:240].lower()}"
+        if key in seen:
+            continue
+        seen.add(key)
+        records.append(
+            {
+                "title": title,
+                "company": "Discord opportunity channel",
+                "channel": "discord:#general",
+                "content": content,
+                "url": channel_url,
+                "permalink": channel_url,
+            }
+        )
+    return records
+
+
+def _find_existing_discord_tab(surf_run: Path) -> str | None:
+    raw = _surf(surf_run, "tab.list", "--json", timeout=25)
+    try:
+        tabs = json.loads(raw)
+    except ValueError:
+        return None
+    if not isinstance(tabs, list):
+        return None
+    for tab in tabs:
+        if not isinstance(tab, dict):
+            continue
+        url = str(tab.get("url") or "")
+        title = str(tab.get("title") or "")
+        if (
+            _DISCORD_OPPORTUNITY_CHANNEL_URL in url
+            or f"discord.com/channels/{_DISCORD_OPPORTUNITY_GUILD_ID}/{_DISCORD_OPPORTUNITY_CHANNEL_ID}" in url
+            or "Codename: Practical AI" in title
+        ):
+            tab_id = tab.get("id")
+            return str(tab_id) if tab_id is not None else None
+    return None
+
+
+def capture_discord_opportunity_channel(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    """Read Graham's configured Discord opportunity channel from an authenticated browser tab."""
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "discord_opportunity_channel",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply",
+        "guild_id": _DISCORD_OPPORTUNITY_GUILD_ID,
+        "channel_id": _DISCORD_OPPORTUNITY_CHANNEL_ID,
+        "channel": "discord:#general",
+        "url": _DISCORD_OPPORTUNITY_CHANNEL_URL,
+    }
+    tab_id = ""
+    created_tab = False
+    try:
+        ensure_browser(surf_run)
+        tab_id = _find_existing_discord_tab(surf_run) or ""
+        if not tab_id:
+            created = _surf(surf_run, "tab.new", _DISCORD_OPPORTUNITY_CHANNEL_URL, "--json", timeout=30)
+            tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+            created_tab = True
+        if not tab_id:
+            raise BrowserCaptureError("could not find or create an authenticated Discord tab")
+        _surf_js(surf_run, tab_id, _nav_js(_DISCORD_OPPORTUNITY_CHANNEL_URL), timeout=20)
+        _surf_pause(surf_run, "4")
+        raw = _surf_js(surf_run, tab_id, _DISCORD_EXTRACT_JS, timeout=45)
+        snapshot = _surf_json_value(raw, {})
+        if not isinstance(snapshot, dict):
+            snapshot = {}
+        text = str(snapshot.get("text") or "")
+        channel_url = str(snapshot.get("url") or _DISCORD_OPPORTUNITY_CHANNEL_URL)
+        records = _discord_records_from_text(text, channel_url=channel_url)
+        evidence = {
+            "schema_version": "monitor_opportunities.discord_channel_capture.v1",
+            "source": "discord_opportunity_channel",
+            "capture_method": "surf_read_only_authenticated_discord_tab",
+            "automation_policy": receipt["automation_policy"],
+            "external_effects": False,
+            "observed_at": utc_now(),
+            "guild_id": _DISCORD_OPPORTUNITY_GUILD_ID,
+            "channel_id": _DISCORD_OPPORTUNITY_CHANNEL_ID,
+            "channel": "discord:#general",
+            "url": channel_url,
+            "title": snapshot.get("title"),
+            "text": text,
+            "messages": records,
+            "non_claims": [
+                "This is read-only Discord browser evidence from Graham's authenticated session.",
+                "No Discord message, reply, reaction, DM, join, or application action was taken.",
+                "Discord posts are leads only; primary-source details must be checked before outreach or application.",
+            ],
+        }
+        evidence_path = out_dir / "discord-opportunity-channel-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["status"] = "OK" if records else "EMPTY"
+        receipt["records_captured"] = len(records)
+        receipt["evidence_path"] = str(evidence_path)
+        receipt["tab_id"] = tab_id
+        receipt["created_tab"] = created_tab
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+        logger.warning("Discord opportunity channel capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+        receipt["records_captured"] = 0
+        receipt["evidence_path"] = None
+        receipt["diagnostic_bundle"] = _write_surf_diagnostic_bundle(
+            out_dir,
+            source="discord_opportunity_channel",
+            surf_run=surf_run,
+            tab_id=tab_id or None,
+            reason="discord_opportunity_channel_capture_failed",
+            url=_DISCORD_OPPORTUNITY_CHANNEL_URL,
+            error=exc,
+        )
+    finally:
+        if tab_id and created_tab:
+            _close_tab(surf_run, tab_id, "Discord opportunity channel")
+    (out_dir / "discord-opportunity-channel-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return receipt
+
+
 _LINKEDIN_TOP_APPLICANT_URL = "https://www.linkedin.com/jobs/collections/top-applicant/"
 
 _LINKEDIN_EXTRACT_JS = (

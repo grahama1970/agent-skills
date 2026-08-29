@@ -94,6 +94,10 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
         lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
     )
     monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_discord_opportunity_channel",
+        lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 0},
+    )
+    monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_sales_navigator_saved",
         lambda capture_dir: {"status": "NO_MATCHES", "prospects_captured": 0},
     )
@@ -391,6 +395,10 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
         lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
     )
     monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_discord_opportunity_channel",
+        lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 0},
+    )
+    monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_sales_navigator_saved",
         lambda capture_dir: {"status": "NO_MATCHES", "prospects_captured": 0},
     )
@@ -617,6 +625,10 @@ def test_promoted_stage0_fails_on_report_acceptance_failure(
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_g2i_slack_jobs",
         lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 1},
+    )
+    monkeypatch.setattr(
+        "monitor_opportunities.browser_capture.capture_discord_opportunity_channel",
+        lambda capture_dir: {**capture_ok(capture_dir), "records_captured": 0},
     )
     monkeypatch.setattr(
         "monitor_opportunities.browser_capture.capture_sales_navigator_saved",

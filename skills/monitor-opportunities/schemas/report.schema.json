@@ -531,6 +531,7 @@
             "READ_ONLY_RECALL_NO_OUTREACH",
             "read_only_browser_capture_no_apply_no_message",
             "read_only_message_evidence_no_send_no_reply_no_apply",
+            "read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply",
             "read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply"
           ]
         },

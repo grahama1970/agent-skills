@@ -22,6 +22,7 @@ from monitor_opportunities.browser_capture import (
     _ats_field_type,
     _ats_provider_from_url,
     _classify_application_workplace,
+    _discord_records_from_text,
     _g2i_slack_records_from_text,
     _generic_form_from_dom,
     _workday_application_metadata_from_html,
@@ -100,6 +101,36 @@ Banesco USA is looking for an AI Engineer with experience integrating LLM APIs.
     assert [row["company"] for row in records] == ["High Ticket", "Banesco USA"]
     assert all(row["channel"] == "05_g2i-job-alerts" for row in records)
     assert all("Rickin Shah" not in row["content"] for row in records)
+
+
+def test_discord_records_from_text_keeps_hiring_posts_and_skips_chatter() -> None:
+    text = """
+    Codename: Practical AI
+    general chat
+    August 29, 2026
+    Dr. Fumes
+     —
+    3:21 PM
+    Anyone know good AI training opportunities?
+    Saturday, August 29, 2026 at 3:40 PM
+    Gaby
+     —
+    4:12 PM
+    AI Engineer contract role
+    Client needs Python and LLM workflow automation for document extraction.
+    Apply by DMing me with availability.
+    """
+
+    records = _discord_records_from_text(
+        text,
+        channel_url="https://discord.com/channels/1344341191893979290/1344341192518799442",
+    )
+
+    assert len(records) == 1
+    assert records[0]["title"] == "AI Engineer contract role"
+    assert records[0]["channel"] == "discord:#general"
+    assert "AI training opportunities" not in records[0]["content"]
+    assert records[0]["permalink"] == "https://discord.com/channels/1344341191893979290/1344341192518799442"
 
 
 def test_field_type_sensitive_and_kinds() -> None:

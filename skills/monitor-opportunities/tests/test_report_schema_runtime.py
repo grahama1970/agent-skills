@@ -50,7 +50,7 @@ def test_report_schema_allows_mandatory_social_and_mail_source_receipts(tmp_path
     template = dict(manifest["source_receipts"][0])
     policy_by_source_class = {
         "slack_channel_capture": "read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply",
-        "discord_channel_capture": "read_only_message_evidence_no_send_no_reply_no_apply",
+        "discord_channel_capture": "read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply",
         "mailbox_mined_gmail": "read_only_message_evidence_no_send_no_reply_no_apply",
     }
     for source_class, automation_policy in policy_by_source_class.items():

@@ -2816,6 +2816,7 @@ def nightly(
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
     from .browser_capture import (
         browser_control_summary,
+        capture_discord_opportunity_channel,
         capture_hiddenjobs,
         capture_g2i_slack_jobs,
         capture_indeed_jobs,
@@ -2959,11 +2960,25 @@ def nightly(
         slack_evidence = Path(str(g2i_slack_receipt["evidence_path"]))
         steps.setdefault("social_mail_evidence", {})["MONITOR_SLACK_EVIDENCE"]["selected_path"] = str(slack_evidence)
         steps["social_mail_evidence"]["MONITOR_SLACK_EVIDENCE"]["source"] = "g2i_slack_browser_capture"
+    discord_capture_receipt = capture_discord_opportunity_channel(capture_dir)
+    steps["browser_capture_discord_opportunity_channel"] = {
+        "status": discord_capture_receipt.get("status"),
+        "captured": discord_capture_receipt.get("records_captured"),
+        "evidence_path": discord_capture_receipt.get("evidence_path"),
+    }
     discord_evidence = _resolve_evidence_path(
         discord_evidence,
         env_var="MONITOR_DISCORD_EVIDENCE",
         steps=steps,
     )
+    if discord_evidence is None and discord_capture_receipt.get("evidence_path"):
+        discord_evidence = Path(str(discord_capture_receipt["evidence_path"]))
+        steps.setdefault("social_mail_evidence", {})["MONITOR_DISCORD_EVIDENCE"][
+            "selected_path"
+        ] = str(discord_evidence)
+        steps["social_mail_evidence"]["MONITOR_DISCORD_EVIDENCE"][
+            "source"
+        ] = "discord_browser_capture"
     gmail_evidence = _resolve_evidence_path(
         gmail_evidence,
         env_var="MONITOR_GMAIL_EVIDENCE",
