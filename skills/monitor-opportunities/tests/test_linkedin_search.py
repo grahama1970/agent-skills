@@ -149,6 +149,26 @@ def test_top_applicant_capture_receipts_easy_apply_count(monkeypatch, tmp_path) 
     assert '"easy_apply": true' in evidence
 
 
+def test_top_applicant_capture_handles_null_js_result(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_surf_js(_surf_run, _tab_id, script, **_kwargs):
+        calls.append(script)
+        if "querySelectorAll" in script:
+            return "null"
+        if "jobs-search-results-list" in script:
+            return "SCROLLED"
+        return "NO_NEXT_PAGE"
+
+    monkeypatch.setattr(browser_capture, "_surf_js", fake_surf_js)
+    monkeypatch.setattr(browser_capture, "_surf_pause", lambda *_args, **_kwargs: None)
+
+    rows = browser_capture._linkedin_scroll_paginate_capture("/does/not/matter", "123", max_pages=1)
+
+    assert rows == []
+    assert calls.count(_LINKEDIN_EXTRACT_JS) == 3
+
+
 def test_premium_js_skips_verification_badge_line() -> None:
     assert "with verification" in _LI_ARIA_EXTRACT_JS
     assert "stripped.toLowerCase()===prior.toLowerCase()" in _LI_ARIA_EXTRACT_JS
@@ -219,6 +239,39 @@ def test_premium_capture_receipt_exposes_zero_top_applicant_and_easy_apply_count
     assert "easy_apply" not in row
     assert row["under_10_applicants"] is True
     assert row["warm_path"] == 0.9
+
+
+def test_premium_capture_handles_null_js_result_as_empty(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: None)
+    monkeypatch.setattr(
+        browser_capture,
+        "linkedin_search_queries_from_profile",
+        lambda _profile: [
+            {
+                "label": "Buffalo AI",
+                "url": "https://www.linkedin.com/jobs/search/?keywords=AI&location=Buffalo%2C%20NY",
+            }
+        ],
+    )
+
+    def fake_surf(_surf_run, command, *args, **kwargs):
+        del kwargs
+        if command == "tab.new":
+            return "123: created"
+        script = " ".join(str(arg) for arg in args)
+        if "location.href" in script:
+            return "NAV"
+        return "null"
+
+    monkeypatch.setattr(browser_capture, "_surf", fake_surf)
+    monkeypatch.setattr(browser_capture, "_surf_pause", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(browser_capture, "_close_tab", lambda *_args, **_kwargs: None)
+
+    receipt = capture_linkedin_premium(tmp_path, profile={}, max_queries=1)
+
+    assert receipt["status"] == "EMPTY"
+    assert receipt["opportunities_captured"] == 0
+    assert receipt["query_failures"] == []
 
 
 def test_premium_capture_reports_failed_when_all_browser_queries_fail(
