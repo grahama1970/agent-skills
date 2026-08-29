@@ -1,0 +1,29 @@
+{
+  "name": "pi-herdr-bridge",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Companion extension to pi-intercom: cross-provider session roster and messaging over Herdr (pi/codex/claude).",
+  "license": "MIT",
+  "files": [
+    "index.ts",
+    "broker.mjs",
+    "roster.mjs",
+    "route.mjs",
+    "bridge-cli.mjs",
+    "README.md"
+  ],
+  "pi": {
+    "extensions": ["index.ts"]
+  },
+  "bin": {
+    "herdr-bridge": "./bridge-cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/bridge.test.mjs"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-ai": "*",
+    "typebox": "*"
+  }
+}
