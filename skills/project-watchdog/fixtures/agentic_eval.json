@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "project-watchdog",
   "trials": 3,
-  "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root",
+  "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root, including landed repair-worktree cleanup through ops-worktrees",
   "claims": {
-    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, and that activate reports schedule and state together",
+    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, that activate reports schedule and state together, and that auto-landed repairs invoke ops-worktrees cleanup before issue closure",
     "does_not_prove": "that a live repair, closure audit, or completion attestation succeeds. Those dispatch models through $ask/Tau and are proven only by a live receipt read back from the produced artifact, not by this fixture."
   },
   "cases": [
@@ -107,6 +107,32 @@
       }
     },
     {
+      "name": "closure-audit-nonzero-needs-attention",
+      "category": "closure-audit-nonzero-needs-attention",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_nonzero_audit_with_needs_attention_verdict_is_made_durable",
+        "../tests/test_project_watchdog.py::test_nonzero_needs_attention_audit_cools_down_if_selected_again",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "proves": "A closure audit whose Ask/Tau wrapper exits nonzero but whose seats declare VERDICT: NEEDS_ATTENTION is not sent down the no-verdict path; it attempts durable closure-unverified handling and records cooldown state so the next tick does not re-launch the duplicate audit.",
+      "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog's own handler and cooldown path."
+    },
+    {
       "name": "targeted-issue-does-not-lose-target-to-earlier-issue",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
@@ -176,6 +202,32 @@
         ]
       },
       "notes": "Regression for Battle scope drift: a battle-scoped project sees only skills/battle issues, and the broad agent-skills project can exclude skills/battle so fleet rotation does not steal Battle tickets."
+    },
+    {
+      "name": "auto-landed-repair-worktree-cleanup",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_landed_repair_cleanup_invokes_ops_worktrees_archive",
+        "../tests/test_project_watchdog.py::test_auto_landed_repair_archives_worktree_before_closing",
+        "../tests/test_project_watchdog.py::test_auto_landed_repair_cleanup_failure_keeps_ticket_open",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ]
+      },
+      "proves": "After a reviewer-passed repair lands on main, project-watchdog invokes ops-worktrees archive --apply for the repair worktree before closing; if cleanup fails, the ticket stays open and is marked needs-attention.",
+      "does_not_prove": "A live GitHub repair branch was landed or a real filesystem worktree was archived; these tests mock the GitHub and subprocess effects and prove watchdog control flow only."
     },
     {
       "name": "repair-dispatch-passes-explicit-ask-execution-timeout",
@@ -924,8 +976,8 @@
           "LANDED_WITHOUT_PROOF",
           "MARKED_DONE_WITHOUT_PROOF",
           "NOT_NEEDS_ATTENTION",
-        "GATE_IS_A_WALL"
-      ]
+          "GATE_IS_A_WALL"
+        ]
       }
     },
     {

@@ -14,6 +14,7 @@ import sys
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -22,6 +23,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from watchdog import (  # noqa: E402
+    commands,
     config,
     core,
     github,
@@ -1253,6 +1255,119 @@ def test_an_untouched_main_completes_normally(tmp_path) -> None:
     assert result["status"] == "COMPLETED", result.get("summary")
 
 
+def test_landed_repair_cleanup_invokes_ops_worktrees_archive(tmp_path, monkeypatch) -> None:
+    project_worktree = tmp_path / "project"
+    repair_worktree = tmp_path / "repair"
+    project_worktree.mkdir()
+    repair_worktree.mkdir()
+    calls: list[dict] = []
+
+    def fake_run(command, **kwargs):  # noqa: ANN001, ANN003
+        calls.append({"command": command, **kwargs})
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"outcome": "archived", "archive_dir": "/mnt/storage12tb/worktrees/deprecated/x"}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(handlers.subprocess, "run", fake_run)
+
+    result = handlers._cleanup_landed_repair_worktree(project_worktree, repair_worktree, "run", 42)
+
+    assert result["exit_code"] == 0
+    assert result["receipt"]["outcome"] == "archived"
+    assert calls[0]["command"][-3:] == [str(repair_worktree), "--apply", "--json"]
+    assert calls[0]["command"][0].endswith("skills/ops-worktrees/run.sh")
+    assert calls[0]["env"]["OPS_WORKTREES_REPO"] == str(project_worktree)
+
+
+def test_auto_landed_repair_archives_worktree_before_closing(tmp_path) -> None:
+    _seed_passing_repair_evidence(tmp_path)
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "auto_land_main": True,
+    }
+    issue = _issue(52, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    comments: list[str] = []
+    cleanup = {
+        "cmd": ["skills/ops-worktrees/run.sh", "archive", str(tmp_path / "wt"), "--apply", "--json"],
+        "exit_code": 0,
+        "stdout": json.dumps({"outcome": "archived"}),
+        "stderr": "",
+        "receipt": {"outcome": "archived", "archive_dir": "/mnt/storage12tb/worktrees/deprecated/p-52"},
+    }
+    with (
+        mock.patch.object(
+            handlers.github,
+            "issue_comment",
+            side_effect=lambda *_a: comments.append(str(_a[-1])) or {"exit_code": 0},
+        ),
+        mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch.object(handlers.github, "issue_close", return_value={"exit_code": 0}) as close,
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-52",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
+        mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
+        mock.patch.object(handlers, "_land_repair_to_main", return_value=(True, [])),
+        mock.patch.object(handlers, "_cleanup_landed_repair_worktree", return_value=cleanup) as cleanup_call,
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "LANDED"
+    assert result["repair_worktree_cleanup"]["receipt"]["outcome"] == "archived"
+    assert cleanup_call.called
+    assert close.called
+    assert any("Repair worktree archived" in comment for comment in comments)
+
+
+def test_auto_landed_repair_cleanup_failure_keeps_ticket_open(tmp_path) -> None:
+    _seed_passing_repair_evidence(tmp_path)
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "auto_land_main": True,
+    }
+    issue = _issue(53, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    cleanup = {
+        "cmd": ["skills/ops-worktrees/run.sh", "archive", str(tmp_path / "wt"), "--apply", "--json"],
+        "exit_code": 1,
+        "stdout": json.dumps({"outcome": "archived_not_unregistered"}),
+        "stderr": "could not unregister worktree",
+        "receipt": {"outcome": "archived_not_unregistered"},
+    }
+    edits: list[dict] = []
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(handlers.github, "issue_close") as close,
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-53",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
+        mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
+        mock.patch.object(handlers, "_land_repair_to_main", return_value=(True, [])),
+        mock.patch.object(handlers, "_cleanup_landed_repair_worktree", return_value=cleanup),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert result["ok"] is False
+    assert not close.called
+    assert "could not archive/remove the repair worktree" in result["summary"]
+    assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
+
+
 def test_the_creator_is_told_not_to_push() -> None:
     goal = handlers.repair_immutable_goal("o/r", 7)
     assert "do not push" in goal and "do not merge" in goal
@@ -1382,6 +1497,69 @@ def test_a_failed_reviewer_run_is_not_treated_as_a_pass(tmp_path) -> None:
     result, calls = _run_audit(tmp_path, "VERDICT: PASS", exit_code=1)
     assert result["status"] == "NEEDS_ATTENTION"
     assert not any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_nonzero_audit_with_needs_attention_verdict_is_made_durable(tmp_path) -> None:
+    result, calls = _run_audit(
+        tmp_path,
+        {"handler-a": "VERDICT: NEEDS_ATTENTION", "handler-b": "VERDICT: NEEDS_ATTENTION"},
+        exit_code=4,
+    )
+    assert result["verdict"] == "NEEDS_ATTENTION"
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert result["failure_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert result["triage"]["code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert calls["reopened"] == []
+    assert any(e.get("add") == [config.CLOSURE_UNVERIFIED_LABEL] for e in calls["edits"])
+
+
+def test_nonzero_needs_attention_audit_cools_down_if_selected_again(tmp_path) -> None:
+    state: dict = {"projects": {"p": {"state": "active"}}, "closure_audit_attempts": {}}
+    receipt: dict = {}
+    issue = _closed(9, labels=["agent-work"], closed_at="2026-07-28T00:00:00Z")
+    project = {"project_id": "p", "repo": TAU_REPO, "worktree": str(tmp_path)}
+    calls: dict = {"run_cmd": 0, "persisted": []}
+
+    def fake_run_cmd(*args, **kwargs):
+        calls["run_cmd"] += 1
+        return {"exit_code": 4, "stderr": "join gate had no usable receipt"}
+
+    with (
+        mock.patch.object(registry, "list_closed_for_audit", return_value=[issue]),
+        mock.patch.object(handlers.github, "issue_comments", return_value=[]),
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github,
+            "issue_edit",
+            return_value={"exit_code": 1, "stderr": "label missing"},
+        ),
+        mock.patch.object(handlers, "run_cmd", side_effect=fake_run_cmd),
+        mock.patch.object(
+            handlers,
+            "_read_ask_responses_by_node",
+            return_value={
+                "handler-a": "VERDICT: NEEDS_ATTENTION",
+                "handler-b": "VERDICT: NEEDS_ATTENTION",
+            },
+        ),
+        mock.patch.object(
+            commands,
+            "_persist_tick_state",
+            side_effect=lambda s: calls["persisted"].append(dict(s)),
+        ),
+    ):
+        first = commands._audit_one_closure(
+            "run", tmp_path, state, receipt, apply=True, candidates=[project]
+        )
+        second = commands._audit_one_closure(
+            "run", tmp_path, state, receipt, apply=True, candidates=[project]
+        )
+
+    assert first is not None and first["verdict"] == "NEEDS_ATTENTION"
+    assert first["failure_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert second is None, "the cooldown must suppress the duplicate audit on the next tick"
+    assert calls["run_cmd"] == 1
+    assert state["closure_audit_attempts"][f"{TAU_REPO}#9"] > 0
 
 
 def test_repeated_audit_failures_stop_reopening_and_ask_for_a_person(tmp_path) -> None:

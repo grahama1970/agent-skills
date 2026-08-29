@@ -844,6 +844,86 @@ def _land_repair_to_main(worktree: Path, run_id: str, issue_number: int) -> tupl
     return landed, cmds
 
 
+def _cleanup_landed_repair_worktree(
+    project_worktree: Path,
+    repair_worktree: Path,
+    run_id: str,
+    issue_number: int,
+) -> dict[str, Any]:
+    """Archive and unregister a repair worktree after its branch lands on main."""
+    repo_root = Path(__file__).resolve().parents[4]
+    ops_worktrees = repo_root / "skills" / "ops-worktrees" / "run.sh"
+    command = [str(ops_worktrees), "archive", str(repair_worktree), "--apply", "--json"]
+    start = time.monotonic()
+    if not ops_worktrees.exists():
+        return {
+            "cmd": command,
+            "exit_code": 127,
+            "stdout": "",
+            "stderr": f"missing ops-worktrees runtime at {ops_worktrees}",
+            "duration_seconds": 0,
+            "receipt": None,
+        }
+    env = os.environ.copy()
+    env["OPS_WORKTREES_REPO"] = str(project_worktree)
+    try:
+        proc = subprocess.run(command, cwd=repo_root, env=env, text=True, capture_output=True, timeout=120)
+    except subprocess.TimeoutExpired as exc:
+        duration = round(time.monotonic() - start, 3)
+        log_event(
+            run_id,
+            "landed_repair_worktree_cleanup_timeout",
+            issue=issue_number,
+            worktree=str(repair_worktree),
+        )
+        return {
+            "cmd": command,
+            "cwd": str(repo_root),
+            "exit_code": 124,
+            "stdout": exc.stdout or "",
+            "stderr": exc.stderr or "ops-worktrees archive timed out after 120s",
+            "duration_seconds": duration,
+            "receipt": None,
+            "timed_out": True,
+        }
+    duration = round(time.monotonic() - start, 3)
+    receipt: dict[str, Any] | None = None
+    if proc.stdout.strip():
+        try:
+            parsed = json.loads(proc.stdout)
+            if isinstance(parsed, dict):
+                receipt = parsed
+        except json.JSONDecodeError:
+            receipt = None
+    outcome = receipt.get("outcome") if receipt else None
+    log_event(
+        run_id,
+        "landed_repair_worktree_cleanup",
+        issue=issue_number,
+        exit_code=proc.returncode,
+        outcome=outcome,
+        worktree=str(repair_worktree),
+    )
+    return {
+        "cmd": command,
+        "cwd": str(repo_root),
+        "exit_code": proc.returncode,
+        "stdout": proc.stdout,
+        "stderr": proc.stderr,
+        "duration_seconds": duration,
+        "receipt": receipt,
+    }
+
+
+def _landed_repair_cleanup_ok(command_result: dict[str, Any]) -> bool:
+    if command_result.get("exit_code") != 0:
+        return False
+    receipt = command_result.get("receipt")
+    if not isinstance(receipt, dict):
+        return False
+    return receipt.get("outcome") in {"archived", "removed", "skipped"}
+
+
 # --------------------------------------------------------------------------- #
 # Repair proof gate — a DAG that exited 0 is not a repaired ticket
 # --------------------------------------------------------------------------- #
@@ -1453,6 +1533,39 @@ def handle_ticket_repair(
         landed, land_cmds = _land_repair_to_main(repair_worktree, run_id, issue_number)
         result["commands"].extend(land_cmds)
         if landed:
+            cleanup = _cleanup_landed_repair_worktree(worktree, repair_worktree, run_id, issue_number)
+            result["repair_worktree_cleanup"] = cleanup
+            result["commands"].append(cleanup)
+            if not _landed_repair_cleanup_ok(cleanup):
+                result.update(
+                    {
+                        "ok": False,
+                        "status": "NEEDS_ATTENTION",
+                        "summary": (
+                            f"$ask tau-dag repair for {repo}#{issue_number} landed on main, "
+                            "but project-watchdog could not archive/remove the repair worktree."
+                        ),
+                    }
+                )
+                result["commands"].append(
+                    github.issue_comment(
+                        repo,
+                        issue_number,
+                        github.watchdog_comment("Landed repair worktree cleanup failed", cleanup),
+                    )
+                )
+                result["commands"].append(
+                    github.issue_edit(
+                        repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
+                    )
+                )
+                log_event(
+                    run_id,
+                    "handle_ticket_repair_landed_cleanup_failed",
+                    issue=issue_number,
+                    cleanup_exit_code=cleanup.get("exit_code"),
+                )
+                return result
             result["commands"].append(
                 github.issue_edit(repo, issue_number, add=[config.DONE_LABEL], remove=[config.LEASE_LABEL])
             )
@@ -1460,7 +1573,7 @@ def handle_ticket_repair(
                 github.issue_comment(
                     repo, issue_number,
                     "Project Watchdog: reviewer passed; repair landed directly on main "
-                    "(alpha project, main is the single branch). Closing.",
+                    "(alpha project, main is the single branch). Repair worktree archived. Closing.",
                 )
             )
             result["commands"].append(github.issue_close(repo, issue_number, reason="completed"))
@@ -1504,6 +1617,10 @@ CLOSURE_AUDIT_MARKER = "project-watchdog:closure-audit"
 #: Closure-evidence schema `/ticket close --results` submits. Its `unit` and
 #: `e2e` blocks name the commands that ran and the artifact each wrote.
 CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
+
+CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE = (
+    "project_watchdog_closure_audit_nonzero_needs_attention"
+)
 
 #: Cap per artifact. The auditors read a prompt, not a filesystem; a 50MB log
 #: would crowd out the ticket itself.
@@ -1831,7 +1948,7 @@ def handle_closure_audit(
         f"### {node}\n{text.strip()}" for node, text in sorted(by_node.items())
     )
 
-    if audit.get("exit_code") != 0 or verdict is None:
+    if (audit.get("exit_code") != 0 and verdict != "NEEDS_ATTENTION") or verdict is None:
         # No verdict is not a pass. Leave the ticket closed and say so, rather
         # than reopening on a failed reviewer or silently accepting.
         result.update(
@@ -1908,6 +2025,22 @@ def handle_closure_audit(
         # "I cannot tell from what is here" is not a finding that the work is
         # wrong. Reopening on it would churn every ticket whose proof lives in
         # an artifact the auditor cannot read. Say so and leave it closed.
+        audit_triage = None
+        if audit.get("exit_code") != 0:
+            audit_triage = {
+                "code": CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE,
+                "layer": "project-watchdog",
+                "cause": (
+                    "Ask/Tau exited nonzero while closure-audit seats declared "
+                    "VERDICT: NEEDS_ATTENTION. The semantic verdict is usable; "
+                    "the watchdog must make it durable with closure-unverified or cooldown."
+                ),
+                "next_command": (
+                    f"Ensure {config.CLOSURE_UNVERIFIED_LABEL!r} exists for {repo}, "
+                    "then re-run the project-watchdog closure-audit regression eval."
+                ),
+            }
+            result["triage"] = audit_triage
         result["commands"].append(
             github.issue_comment(
                 repo,
@@ -1922,7 +2055,11 @@ def handle_closure_audit(
                         "repo": repo,
                         "auditors": auditors,
                         "seat_verdicts": seat_verdicts,
+                        "seat_failures": seat_failures,
                         "verdict": verdict,
+                        "wrapper_exit_code": audit.get("exit_code"),
+                        "wrapper_stderr_excerpt": str(audit.get("stderr", ""))[:1000],
+                        "triage": audit_triage,
                         "outcome": "left_closed_unverified",
                         "reviewer_excerpt": response.strip()[:2000],
                     },
@@ -1939,8 +2076,12 @@ def handle_closure_audit(
                 {
                     "ok": False,
                     "status": "NEEDS_ATTENTION",
+                    "failure_code": (
+                        audit_triage["code"] if audit_triage else "closure_unverified_label_failed"
+                    ),
                     "summary": (
-                        f"closure of {repo}#{issue_number} was left unverified but "
+                        (f"[{audit_triage['code']}] " if audit_triage else "")
+                        + f"closure of {repo}#{issue_number} was left unverified but "
                         f"{config.CLOSURE_UNVERIFIED_LABEL!r} could not be applied: "
                         f"{str(mark.get('stderr'))[:160]}. Without it the same closure is "
                         f"re-audited every tick. Run: skills/ticket/run.sh ensure-labels "
@@ -1954,9 +2095,14 @@ def handle_closure_audit(
             {
                 "ok": True,
                 "status": "NEEDS_ATTENTION",
+                "failure_code": audit_triage["code"] if audit_triage else None,
                 "summary": (
-                    f"closure of {repo}#{issue_number} could not be judged from the ticket "
-                    f"thread; left closed and unverified rather than reopened"
+                    (f"[{audit_triage['code']}] " if audit_triage else "")
+                    + f"closure of {repo}#{issue_number} could not be judged from the ticket "
+                    f"thread; left closed and unverified rather than reopened "
+                    f"(wrapper exit {audit.get('exit_code')}, seats {seat_verdicts}"
+                    + (f", failures {seat_failures}" if seat_failures else "")
+                    + ")"
                 ),
             }
         )

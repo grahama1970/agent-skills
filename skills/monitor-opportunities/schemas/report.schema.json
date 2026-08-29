@@ -423,7 +423,10 @@
             "github_repo_intelligence",
             "governed_memory_recall",
             "human_supplied_indeed",
-            "human_supplied_hiddenjobs"
+            "human_supplied_hiddenjobs",
+            "slack_channel_capture",
+            "discord_channel_capture",
+            "mailbox_mined_gmail"
           ]
         },
         "result_status": {

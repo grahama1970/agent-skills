@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "monitor-opportunities",
   "trials": 2,
-  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold",
+  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, prints a terminal opportunity table for human review, emits honest Slack/Discord/Gmail source coverage receipts, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold",
   "claims": {
-    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim",
+    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, prints the opportunity table in terminal output, emits visible Slack/Discord/Gmail source receipts instead of omitting those lanes, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim",
     "does_not_prove": "real successful application submissions (deliberately human-gated), long-run scheduler reliability, or semantic quality of tailored resumes"
   },
   "cases": [
@@ -89,6 +89,65 @@
         ]
       },
       "proves": "The required-source contract accepts a valid current-run receipt even with supplemental locator noise, accepts sam.gov API receipts under browser_or_api, and emits honest auth-required browser receipts for Indeed/HiddenJobs instead of fabricated source coverage."
+    },
+    {
+      "name": "social-and-mail-source-coverage-regression",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "discovery.required_source_receipts",
+        "discovery.slack_channel_coverage",
+        "discovery.discord_channel_coverage",
+        "discovery.gmail_mailbox_coverage"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "KeyError",
+          "AssertionError"
+        ]
+      },
+      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when live adapters are not wired, so the nightly report cannot omit those lanes silently.",
+      "does_not_prove": "That Slack, Discord, or Gmail messages were live-searched, or that any opportunity from those channels was semantically relevant."
+    },
+    {
+      "name": "social-and-mail-report-schema-regression",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "schemas.report.source_receipts.source_class",
+        "discovery.required_source_receipts",
+        "report_manifest.validation"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_schema_runtime.py::test_report_schema_allows_mandatory_social_and_mail_source_receipts -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "REPORT_SCHEMA_INVALID",
+          "is not one of"
+        ]
+      },
+      "proves": "The committed report schema accepts the mandatory Slack, Discord, and Gmail source receipt classes emitted by discovery, preventing the 2026-08-29 REPORT_SCHEMA_INVALID nightly stop.",
+      "does_not_prove": "That Slack, Discord, or Gmail live adapters found messages or that a full live nightly passed unrelated browser gates."
     },
     {
       "name": "employer-ats-parser-limit-accounting",
@@ -256,6 +315,35 @@
       },
       "proves": "The morning handoff message is built from real run/digest receipt shapes, states the Easy Apply authorization boundary, invokes ops-discord notify in dry-run without external effects, and registers a scheduler job at 8am.",
       "does_not_prove": "That a live Discord bot/webhook post succeeded or that Graham authorized any application submission."
+    },
+    {
+      "name": "terminal-opportunity-table-regression",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "cli.run_stdout_json_contract",
+        "cli.terminal_opportunity_table",
+        "report.human_review_surface"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_cli.py::test_run_prints_terminal_opportunity_table_without_breaking_json_stdout -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "json.decoder.JSONDecodeError",
+          "AssertionError"
+        ]
+      },
+      "proves": "The run command emits a human-readable opportunity table for terminal logs while preserving machine-readable JSON on stdout.",
+      "does_not_prove": "A fresh live nightly passed browser capture, that every opportunity is worth applying to, or that Graham authorized any application submission."
     },
     {
       "name": "moog-workday-source-discovery",

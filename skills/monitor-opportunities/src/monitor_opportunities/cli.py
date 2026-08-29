@@ -332,6 +332,235 @@ def _json_hash_file(path: Path) -> str | None:
     return sha256_json(read_json(path))
 
 
+def _cell(value: object, width: int) -> str:
+    text = " ".join(str(value or "-").split())
+    if len(text) > width:
+        text = text[: max(0, width - 3)].rstrip() + "..."
+    return text.ljust(width)
+
+
+def _score(value: object) -> str:
+    if value in (None, ""):
+        return "-"
+    try:
+        return f"{float(value):.2f}"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def _signal_flags(row: dict[str, Any]) -> str:
+    drivers = row.get("drivers") if isinstance(row.get("drivers"), dict) else {}
+    flags: list[str] = []
+    if float(drivers.get("top_candidate") or 0) > 0:
+        flags.append("top")
+    if float(drivers.get("easy_apply") or 0) > 0:
+        flags.append("easy")
+    if float(drivers.get("warm_path") or 0) > 0:
+        flags.append("warm")
+    if float(drivers.get("low_competition") or 0) > 0:
+        flags.append("low")
+    trigger = row.get("trigger_evidence")
+    if trigger:
+        flags.append(str(trigger))
+    relationship_count = row.get("relationship_signal_count")
+    if relationship_count:
+        flags.append(f"rel:{relationship_count}")
+    return ", ".join(flags) or "-"
+
+
+def _action_label(row: dict[str, Any]) -> str:
+    action = row.get("action") if isinstance(row.get("action"), dict) else {}
+    if action.get("apply_on_site") or row.get("apply_url"):
+        return "apply-site"
+    if row.get("posting_url"):
+        return "source"
+    if action.get("inmail") or row.get("inmail_target"):
+        return "inmail"
+    return "review"
+
+
+def _load_terminal_rows(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    digest_path = run_dir / "morning-digest.json"
+    if digest_path.exists():
+        digest = read_json(digest_path)
+        rows = digest.get("top", []) if isinstance(digest, dict) else []
+        return digest if isinstance(digest, dict) else {}, [r for r in rows if isinstance(r, dict)]
+
+    manifest_path = run_dir / "report-manifest.json"
+    if not manifest_path.exists():
+        return {"counts": {"total": 0}}, []
+    manifest = read_json(manifest_path)
+    if isinstance(manifest, list):
+        rows = [r for r in manifest if isinstance(r, dict)]
+    elif isinstance(manifest, dict):
+        rows = [r for r in manifest.get("opportunities", []) if isinstance(r, dict)]
+    else:
+        rows = []
+    return {"counts": {"total": len(rows), "employment": len(rows), "consulting": 0}}, rows
+
+
+def _source_coverage_summary(run_dir: Path) -> str:
+    source_path = run_dir / "discovery" / "source-receipts.jsonl"
+    labels = {
+        "linkedin": "linkedin",
+        "linkedin_top_applicant": "linkedin",
+        "indeed": "indeed",
+        "hiddenjobs": "hiddenjobs",
+        "ashby": "ashby",
+        "slack": "slack",
+        "slack_channels": "slack",
+        "discord": "discord",
+        "discord_channels": "discord",
+        "gmail": "gmail",
+        "gmail_mailbox": "gmail",
+        "mailbox": "gmail",
+        "mailbox-mining": "gmail",
+        "client_research": "brave",
+    }
+    order = [
+        "linkedin",
+        "indeed",
+        "ashby",
+        "hiddenjobs",
+        "slack",
+        "discord",
+        "gmail",
+        "brave",
+    ]
+    observed: dict[str, dict[str, object]] = {
+        name: {"status": "NOT_SEARCHED", "count": 0} for name in order
+    }
+    if source_path.is_file():
+        for line in source_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                receipt = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            keys = {
+                str(receipt.get("required_source_id") or "").lower(),
+                str(receipt.get("provider") or "").lower(),
+                str(receipt.get("channel") or "").lower(),
+                str(receipt.get("source_class") or "").lower(),
+            }
+            if "brave_search" in keys:
+                keys.add("client_research")
+            for key in keys:
+                label = labels.get(key)
+                if not label:
+                    continue
+                status = str(receipt.get("result_status") or receipt.get("status") or "UNKNOWN")
+                current = observed[label]
+                current["count"] = int(current["count"]) + 1
+                if current["status"] in {"NOT_SEARCHED", "NO_MATCHES"} or status == "MATCHES":
+                    current["status"] = status
+    parts = []
+    for name in order:
+        item = observed[name]
+        suffix = f"({item['count']})" if item["count"] else ""
+        parts.append(f"{name}={item['status']}{suffix}")
+    return "Sources: " + " ".join(parts)
+
+
+def _terminal_report_table(run_dir: Path, receipt: dict[str, Any] | None = None) -> str | None:
+    digest, rows = _load_terminal_rows(run_dir)
+    if not rows and not digest:
+        return None
+    counts = digest.get("counts", {}) if isinstance(digest.get("counts"), dict) else {}
+    steps = receipt.get("steps", {}) if isinstance(receipt, dict) and isinstance(receipt.get("steps"), dict) else {}
+    linkedin = (
+        steps.get("browser_capture_linkedin", {})
+        if isinstance(steps.get("browser_capture_linkedin"), dict)
+        else {}
+    )
+    premium = (
+        steps.get("browser_capture_linkedin_premium", {})
+        if isinstance(steps.get("browser_capture_linkedin_premium"), dict)
+        else {}
+    )
+    ledger = steps.get("stage_ledger", {}) if isinstance(steps.get("stage_ledger"), dict) else {}
+    ledger_counts = ledger.get("counts", {}) if isinstance(ledger.get("counts"), dict) else {}
+
+    widths = {
+        "#": 3,
+        "Type": 11,
+        "Score": 5,
+        "Org": 18,
+        "Title": 40,
+        "Signals": 22,
+        "Contact": 28,
+        "Action": 12,
+    }
+    columns = list(widths)
+    sep = "+-" + "-+-".join("-" * widths[col] for col in columns) + "-+"
+    header = "| " + " | ".join(_cell(col, widths[col]) for col in columns) + " |"
+    lines = [
+        "",
+        "MONITOR-OPPORTUNITIES TERMINAL REPORT",
+        f"Run: {run_dir}",
+        (
+            "Counts: "
+            f"total={counts.get('total', len(rows))} "
+            f"employment={counts.get('employment', '-')} "
+            f"consulting={counts.get('consulting', '-')}"
+        ),
+    ]
+    if linkedin or premium:
+        lines.append(
+            "LinkedIn: "
+            f"top_applicant={linkedin.get('top_applicant_count', '-')} "
+            f"easy_apply={linkedin.get('easy_apply_count', '-')} "
+            f"premium_under_10={premium.get('under_10_applicants_count', '-')} "
+            f"warm_paths={premium.get('warm_paths_found', '-')}"
+        )
+    if ledger_counts:
+        lines.append(
+            "Ledger: "
+            f"discovered={ledger_counts.get('discovered', '-')} "
+            f"accepted={ledger_counts.get('accepted', '-')} "
+            f"rejected={ledger_counts.get('rejected', '-')} "
+            f"unaccounted={ledger_counts.get('unaccounted', '-')}"
+        )
+    lines.append(_source_coverage_summary(run_dir))
+    lines.extend([sep, header, sep])
+    for index, row in enumerate(rows[:8], start=1):
+        contact = row.get("inmail_target", {})
+        if isinstance(contact, dict):
+            contact_text = contact.get("name") or contact.get("role") or "-"
+        else:
+            contact_text = contact or row.get("contact") or "-"
+        values = {
+            "#": str(index),
+            "Type": row.get("opportunity_type") or row.get("lane") or row.get("kind") or "-",
+            "Score": _score(row.get("response_score", row.get("fit_score"))),
+            "Org": row.get("organization") or "-",
+            "Title": row.get("title") or "-",
+            "Signals": _signal_flags(row),
+            "Contact": contact_text,
+            "Action": _action_label(row),
+        }
+        lines.append("| " + " | ".join(_cell(values[col], widths[col]) for col in columns) + " |")
+    lines.append(sep)
+
+    urls: list[str] = []
+    for index, row in enumerate(rows[:8], start=1):
+        action = row.get("action") if isinstance(row.get("action"), dict) else {}
+        url = action.get("apply_on_site") or row.get("apply_url") or row.get("posting_url")
+        if url:
+            urls.append(f"[{index}] {url}")
+    if urls:
+        lines.append("Apply/source URLs:")
+        lines.extend(urls)
+    return "\n".join(lines)
+
+
+def _emit_terminal_report_table(run_dir: Path, receipt: dict[str, Any] | None = None) -> None:
+    table = _terminal_report_table(run_dir, receipt)
+    if table:
+        typer.echo(table, err=True)
+
+
 def _receipt_status(path: Path) -> str:
     if not path.is_file():
         return "MISSING"
@@ -1665,6 +1894,7 @@ def run_command(
         _fail(exc)
     except ValueError as exc:
         _fail(ContractError("RUN_REJECTED", str(exc)))
+    _emit_terminal_report_table(out, receipt)
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
 
@@ -3008,6 +3238,7 @@ def nightly(
     write_json(nightly_receipt_path, nightly_receipt)
     if promote_latest_on_success:
         _promote_nightly_latest(out)
+    _emit_terminal_report_table(out, nightly_receipt)
     typer.echo(json.dumps({**nightly_receipt, "receipt": str(nightly_receipt_path)}, indent=2, sort_keys=True))
 
 

@@ -95,6 +95,29 @@ def human_browser_required_receipt(
     return finalize_receipt(receipt)
 
 
+def unavailable_required_source_receipt(
+    *,
+    provider: str,
+    required_source_id: str,
+    target: str,
+    source_class: str,
+    channel: str,
+    limitation: str,
+    evidence_refs: list[str] | None = None,
+) -> dict[str, Any]:
+    """Honest receipt for a mandatory source with no live adapter wired yet."""
+
+    receipt = base_receipt("C", provider, target, source_class)
+    receipt["required_source_id"] = required_source_id
+    receipt["channel"] = channel
+    receipt["request_summary"] = f"{target} mandatory source adapter lookup"
+    receipt["result_status"] = "FEED_DOWN"
+    receipt["parser_result"] = "BLOCKED"
+    receipt["evidence_refs"] = list(evidence_refs or [])
+    receipt["limitations"].append(limitation)
+    return finalize_receipt(receipt)
+
+
 def client_research_receipt(skill_dir: Path) -> dict[str, Any]:
     """Mandatory client-services research over the candidate's mandates.
 
