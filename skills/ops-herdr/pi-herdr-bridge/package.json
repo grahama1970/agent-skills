@@ -19,7 +19,7 @@
     "herdr-bridge": "./bridge-cli.mjs"
   },
   "scripts": {
-    "test": "node --test test/bridge.test.mjs"
+    "test": "node --test test/bridge.test.mjs test/inbox.test.mjs"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",

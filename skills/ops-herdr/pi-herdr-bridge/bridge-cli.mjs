@@ -5,6 +5,7 @@
 //   bridge-cli.mjs listen --name <name>   (register on broker, print inbound as JSONL)
 import { BrokerClient } from "./broker.mjs";
 import { buildRoster, sendToTarget, pickLane } from "./route.mjs";
+import { readInbox } from "./inbox.mjs";
 
 function parseArgs(argv) {
   const args = { _: [] };
@@ -70,6 +71,12 @@ if (command === "list") {
     process.exit(0);
   });
   // Keep process alive on the socket.
+} else if (command === "inbox") {
+  if (!args.key) fail("inbox requires --key <session-ref-or-pane-key>");
+  const key = String(args.key).replace(/[^a-zA-Z0-9._-]+/g, "_");
+  const { path, entries } = readInbox(key, { consume: Boolean(args.consume) });
+  process.stdout.write(JSON.stringify({ path, count: entries.length, consumed: Boolean(args.consume), entries }, null, 2) + "\n");
+  process.exit(0);
 } else {
-  fail("usage: bridge-cli.mjs <list|send|listen> [options]");
+  fail("usage: bridge-cli.mjs <list|send|listen|inbox> [options]");
 }

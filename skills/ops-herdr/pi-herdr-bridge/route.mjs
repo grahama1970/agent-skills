@@ -6,6 +6,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { BrokerClient } from "./broker.mjs";
 import { herdrRoster, mergeRoster, normalizeBrokerSessions, resolveTarget } from "./roster.mjs";
+import { appendInbox, inboxKey } from "./inbox.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -69,8 +70,15 @@ export async function buildRoster({ fromName } = {}) {
   return { roster: mergeRoster(brokerOk, herdrOk), errors };
 }
 
+// Statuses where typing into a pane risks feeding a working agent, an
+// approval dialog, or an unknown surface. intercom and codex-queue lanes have
+// real queues upstream; only the raw-terminal lane needs this gate.
+const HERDR_PROMPT_UNSAFE_STATUSES = new Set(["working", "blocked", "unknown"]);
+
 export async function sendToTarget(query, text, opts = {}) {
-  const { roster, errors } = await buildRoster(opts);
+  const { roster, errors } = opts.rosterOverride
+    ? { roster: opts.rosterOverride, errors: [] }
+    : await buildRoster(opts);
   const resolved = resolveTarget(roster, query);
   if (resolved.error) {
     return { ok: false, error: resolved.error, matches: resolved.matches, rosterErrors: errors };
@@ -80,11 +88,30 @@ export async function sendToTarget(query, text, opts = {}) {
   if (!lane) {
     return { ok: false, error: `no delivery lane for target (provider=${entry.provider}, source=${entry.source})`, entry };
   }
+  const key = inboxKey(entry);
+  const base = { from: opts.fromName ?? null, to: query, lane, text };
+
+  if (lane === "herdr-prompt" && HERDR_PROMPT_UNSAFE_STATUSES.has(entry.status)) {
+    const inboxFile = appendInbox(key, { ...base, delivered: false, deferred: true, reason: `pane status ${entry.status}` });
+    return {
+      ok: true,
+      deferred: true,
+      delivered: false,
+      entry,
+      lane,
+      inbox: inboxFile,
+      note: `target pane is ${entry.status}; message stored in inbox only — a Stop hook or monitor tick surfaces it`,
+      rosterErrors: errors,
+    };
+  }
+
   const senders = { "intercom": sendIntercom, "codex-queue": sendCodexQueue, "herdr-prompt": sendHerdrPrompt };
   try {
     const result = await senders[lane](entry, text, opts);
-    return { ok: true, entry, ...result, rosterErrors: errors };
+    const inboxFile = appendInbox(key, { ...base, delivered: true });
+    return { ok: true, delivered: true, entry, inbox: inboxFile, ...result, rosterErrors: errors };
   } catch (error) {
-    return { ok: false, error: String(error), lane, entry, rosterErrors: errors };
+    const inboxFile = appendInbox(key, { ...base, delivered: false, error: String(error) });
+    return { ok: false, error: String(error), lane, entry, inbox: inboxFile, rosterErrors: errors };
   }
 }
