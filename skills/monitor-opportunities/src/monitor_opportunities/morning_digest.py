@@ -81,6 +81,20 @@ def _candidate_id(opp: dict[str, Any]) -> str:
     return f"{org}:{title}"
 
 
+def _is_protected_local_cluster(entry: dict[str, Any]) -> bool:
+    drivers = entry.get("drivers") if isinstance(entry.get("drivers"), dict) else {}
+    try:
+        fit = float(drivers.get("fit") or 0.0)
+        local = float(drivers.get("local") or 0.0)
+    except (TypeError, ValueError):
+        return False
+    return (
+        entry.get("opportunity_type") == "employment"
+        and fit >= 0.85
+        and local >= 0.8
+    )
+
+
 def _balanced_top(
     entries: list[dict[str, Any]], top_n: int, max_per_org: int
 ) -> list[dict[str, Any]]:
@@ -111,7 +125,7 @@ def _balanced_top(
             if len(out) >= limit:
                 break
             org = str(e.get("organization") or "").lower()
-            if seen_org.get(org, 0) >= max_per_org:
+            if seen_org.get(org, 0) >= max_per_org and not _is_protected_local_cluster(e):
                 continue
             seen_org[org] = seen_org.get(org, 0) + 1
             out.append(e)
@@ -161,6 +175,8 @@ def _exclusion_reason(
         if str(item.get("organization") or "").lower() == org
     )
     if same_org_included >= max_per_org:
+        if _is_protected_local_cluster(entry):
+            return "protected_local_cluster_below_digest_cutoff"
         return "org_diversity_cap"
     if entry.get("opportunity_type") == "employment":
         return "employment_below_balanced_digest_cutoff"
