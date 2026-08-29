@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import pytest
 import monitor_opportunities.relevance as rel
 
 
@@ -56,6 +57,14 @@ def _patch_memory_client(monkeypatch, *, payload: Any | None = None, error: Exce
     return _FakeClient
 
 
+@pytest.fixture(autouse=True)
+def _reset_memory_endpoint_state(monkeypatch):
+    monkeypatch.setattr(rel, "_MEMORY_ENDPOINT_BACKOFF_UNTIL", 0.0)
+    rel._NON_AUTHORITATIVE_COLLECTIONS.clear()
+    yield
+    rel._NON_AUTHORITATIVE_COLLECTIONS.clear()
+
+
 def test_empty_text_returns_none() -> None:
     assert rel.mandate_hits("") is None
     assert rel.mandate_hits("   ") is None
@@ -88,8 +97,17 @@ def test_memory_unavailable_fails_soft(monkeypatch) -> None:
     assert rel.is_mandate_relevant("Staff AI Engineer") is None
 
 
+def test_memory_timeout_backoff_avoids_repeated_endpoint_calls(monkeypatch) -> None:
+    fake = _patch_memory_client(monkeypatch, error=httpx.TimeoutException("memory timeout"))
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_EXTRACT_ENTITIES_BACKOFF_SECONDS", "300")
+
+    assert rel.mandate_hits("Staff AI Engineer") is None
+    assert rel.mandate_hits("Principal Agentic AI Engineer") is None
+    assert len(fake.calls) == 1
+
+
 def test_memory_response_for_wrong_collection_fails_soft(monkeypatch) -> None:
-    _patch_memory_client(
+    fake = _patch_memory_client(
         monkeypatch,
         payload={
             "resolved_entities": [
@@ -102,6 +120,8 @@ def test_memory_response_for_wrong_collection_fails_soft(monkeypatch) -> None:
     monkeypatch.setattr(rel.subprocess, "run", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("subprocess should not run")))
 
     assert rel.mandate_hits("Artificial Intelligence document extraction") is None
+    assert rel.mandate_hits("Principal Agentic AI Engineer") is None
+    assert len(fake.calls) == 1
 
 
 def test_relevance_module_no_longer_shells_out_per_title(monkeypatch) -> None:

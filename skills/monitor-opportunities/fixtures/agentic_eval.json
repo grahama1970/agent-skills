@@ -1641,19 +1641,19 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_relevance.py::test_memory_extract_entities_endpoint_returns_labels skills/monitor-opportunities/tests/test_relevance.py::test_memory_unavailable_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_memory_response_for_wrong_collection_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_relevance_module_no_longer_shells_out_per_title skills/monitor-opportunities/tests/test_relevance.py::test_monitor_source_does_not_shell_out_to_extract_entities -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_relevance.py::test_memory_extract_entities_endpoint_returns_labels skills/monitor-opportunities/tests/test_relevance.py::test_memory_unavailable_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_memory_timeout_backoff_avoids_repeated_endpoint_calls skills/monitor-opportunities/tests/test_relevance.py::test_memory_response_for_wrong_collection_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_relevance_module_no_longer_shells_out_per_title skills/monitor-opportunities/tests/test_relevance.py::test_monitor_source_does_not_shell_out_to_extract_entities -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "5 passed"
+          "6 passed"
         ],
         "stderr_excludes": [
           "extract_entities.py",
           "TimeoutExpired"
         ]
       },
-      "proves": "Mandate relevance calls Memory /extract-entities with the opportunity_vocabulary payload, fails soft when Memory is unavailable or returns a non-authoritative collection, and does not shell out to extract-entities per title unless explicitly opted in.",
+      "proves": "Mandate relevance calls Memory /extract-entities with the opportunity_vocabulary payload, backs off after timeout, disables non-authoritative collection responses, and does not shell out to extract-entities per title unless explicitly opted in.",
       "does_not_prove": "A fresh full nightly reaches nightly-receipt.json or that the live Memory service returns opportunity_vocabulary-specific labels during cron."
     },
     {

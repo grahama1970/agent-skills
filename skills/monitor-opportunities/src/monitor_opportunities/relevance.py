@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,8 @@ from loguru import logger
 EXTRACT_ENTITIES_RUN = Path(__file__).resolve().parents[3] / "extract-entities" / "run.sh"
 VOCABULARY_COLLECTION = "opportunity_vocabulary"
 DEFAULT_MEMORY_URL = "http://127.0.0.1:8601"
+_MEMORY_ENDPOINT_BACKOFF_UNTIL = 0.0
+_NON_AUTHORITATIVE_COLLECTIONS: set[str] = set()
 
 
 def _memory_url() -> str:
@@ -45,6 +48,15 @@ def _truthy_env(name: str) -> bool:
     return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _memory_backoff_seconds() -> float:
+    return float(os.environ.get("MONITOR_OPPORTUNITIES_EXTRACT_ENTITIES_BACKOFF_SECONDS", "300"))
+
+
+def _entity_result_collection(result: dict[str, Any]) -> str | None:
+    value = result.get("collection") or result.get("vocabulary_collection") or result.get("source_collection")
+    return str(value) if value else None
+
+
 def _entity_label(entity: Any) -> str | None:
     if not isinstance(entity, dict):
         return None
@@ -56,8 +68,7 @@ def _entity_label(entity: Any) -> str | None:
 
 
 def _labels_from_entity_result(result: dict[str, Any], collection: str) -> list[str] | None:
-    result_collection = result.get("collection") or result.get("vocabulary_collection") or result.get("source_collection")
-    if result_collection != collection:
+    if _entity_result_collection(result) != collection:
         return None
 
     labels: set[str] = set()
@@ -73,6 +84,14 @@ def _labels_from_entity_result(result: dict[str, Any], collection: str) -> list[
 
 
 def _mandate_hits_via_memory(text: str, collection: str) -> list[str] | None:
+    global _MEMORY_ENDPOINT_BACKOFF_UNTIL
+
+    now = time.monotonic()
+    if collection in _NON_AUTHORITATIVE_COLLECTIONS:
+        return None
+    if now < _MEMORY_ENDPOINT_BACKOFF_UNTIL:
+        return None
+
     payload = {
         "text": text,
         "collection": collection,
@@ -86,11 +105,20 @@ def _mandate_hits_via_memory(text: str, collection: str) -> list[str] | None:
             result = response.json()
     except (httpx.TimeoutException, httpx.HTTPError, ValueError, json.JSONDecodeError) as exc:
         logger.warning("opportunity relevance Memory /extract-entities unavailable: {}", exc)
+        _MEMORY_ENDPOINT_BACKOFF_UNTIL = now + _memory_backoff_seconds()
         return None
     if not isinstance(result, dict):
         logger.warning("opportunity relevance Memory /extract-entities returned non-object JSON")
+        _MEMORY_ENDPOINT_BACKOFF_UNTIL = now + _memory_backoff_seconds()
         return None
-    return _labels_from_entity_result(result, collection)
+    hits = _labels_from_entity_result(result, collection)
+    if hits is None and _entity_result_collection(result) != collection:
+        logger.warning(
+            "opportunity relevance Memory /extract-entities ignored collection {}; disabling endpoint for this process",
+            collection,
+        )
+        _NON_AUTHORITATIVE_COLLECTIONS.add(collection)
+    return hits
 
 
 def _mandate_hits_via_subprocess(text: str, collection: str) -> list[str] | None:
