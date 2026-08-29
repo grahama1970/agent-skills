@@ -767,6 +767,47 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert rows[1]["location_display"] == "New York, NY (On-site)"
 
 
+def test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls(tmp_path: Path) -> None:
+    evidence = tmp_path / "linkedin-top-applicant-evidence.json"
+    collection_url = "https://www.linkedin.com/jobs/collections/top-applicant/"
+    job_url = "https://www.linkedin.com/jobs/view/4437451674/"
+    evidence.write_text(
+        json.dumps(
+            {
+                "schema_version": "ops-linkedin.opportunity_capture.v1",
+                "source": "human_authorized_linkedin_tab",
+                "automation_policy": LINKEDIN_AUTHORIZED_READ_ONLY_POLICY,
+                "linkedin_url": collection_url,
+                "primary_evidence_url": collection_url,
+                "top_candidate": True,
+                "opportunities": [
+                    {
+                        "source": "human_authorized_linkedin_tab",
+                        "title": "Sr. Software Engineer",
+                        "organization": "Moog Inc.",
+                        "location": "Buffalo, NY (On-site)",
+                        "linkedin_url": collection_url,
+                        "primary_evidence_url": job_url,
+                        "top_candidate": True,
+                        "warm_path": 0.9,
+                        "warm_path_via": "LinkedIn: connection works here",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    receipt, rows = _linkedin_evidence_candidates(evidence)
+
+    assert receipt["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
+    assert job_url in receipt["evidence_refs"]
+    assert collection_url in receipt["evidence_refs"]
+    assert rows[0]["source_identity"] == collection_url
+    assert rows[0]["primary_evidence_url"] == job_url
+    assert rows[0]["warm_path_via"] == "LinkedIn: connection works here"
+
+
 def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_path: Path) -> None:
     base = tmp_path / "advanced.json"
     other = tmp_path / "premium.json"
@@ -796,6 +837,7 @@ def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_
                         "title": "Applied AI Engineer",
                         "organization": "Example AI",
                         "primary_evidence_url": "https://www.linkedin.com/jobs/view/123/",
+                        "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
                         "top_candidate": True,
                         "easy_apply": True,
                         "under_10_applicants": True,
@@ -821,6 +863,7 @@ def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_
     assert row["competition"] == 0.1
     assert row["warm_path"] == 0.9
     assert row["warm_path_via"] == "LinkedIn: connection works here"
+    assert row["linkedin_url"] == "https://www.linkedin.com/jobs/collections/top-applicant/"
 
 
 def test_meetup_evidence_emits_only_attend_or_watch_source_intel() -> None:

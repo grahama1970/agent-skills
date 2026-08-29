@@ -156,6 +156,15 @@ def _linkedin_record_url(record: dict[str, Any]) -> str | None:
     return url or None
 
 
+def _linkedin_record_urls(record: dict[str, Any]) -> list[str]:
+    urls: list[str] = []
+    for key in ("primary_evidence_url", "posting_url", "job_url", "linkedin_url"):
+        url = str(record.get(key) or "").strip()
+        if url:
+            urls.append(url)
+    return list(dict.fromkeys(urls))
+
+
 # LinkedIn's top-applicant collection renders each row as
 # "<title>\n<title> with verification\n<employer>\n<location>", so a capture that
 # reads positionally lands the accessibility echo of the title in `organization`
@@ -338,7 +347,11 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         dict.fromkeys(
             [
                 *receipt["evidence_refs"],
-                *[url for record in records if (url := _linkedin_record_url(record))],
+                *[
+                    url
+                    for record in records
+                    for url in _linkedin_record_urls(record)
+                ],
             ]
         )
     )
@@ -2466,7 +2479,13 @@ def _merge_linkedin_priority_fields(existing: dict[str, Any], row: dict[str, Any
         if row.get(field) and not existing.get(field):
             existing[field] = row[field]
             changed = True
-    for field in ("top_candidate_text", "evidence_text", "matched_query", "warm_path_via"):
+    for field in (
+        "top_candidate_text",
+        "evidence_text",
+        "matched_query",
+        "warm_path_via",
+        "linkedin_url",
+    ):
         if row.get(field) not in (None, "", [], {}) and existing.get(field) in (None, "", [], {}):
             existing[field] = row[field]
             changed = True

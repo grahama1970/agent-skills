@@ -1574,6 +1574,7 @@
       "timeout_seconds": 120,
       "seams": [
         "discovery.required_source_receipts",
+        "discovery.linkedin_top_applicant_evidence_refs",
         "discovery.slack_channel_coverage",
         "discovery.discord_channel_coverage",
         "discovery.gmail_mailbox_coverage"
@@ -1581,12 +1582,12 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "3 passed"
+          "4 passed"
         ],
         "stderr_excludes": [
           "KeyError",
