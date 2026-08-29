@@ -48,7 +48,12 @@ def test_report_schema_allows_mandatory_social_and_mail_source_receipts(tmp_path
     schema = json.loads(Path("skills/monitor-opportunities/schemas/report.schema.json").read_text())
     manifest = json.loads((out / "report-manifest.json").read_text())
     template = dict(manifest["source_receipts"][0])
-    for source_class in ("slack_channel_capture", "discord_channel_capture", "mailbox_mined_gmail"):
+    policy_by_source_class = {
+        "slack_channel_capture": "read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply",
+        "discord_channel_capture": "read_only_message_evidence_no_send_no_reply_no_apply",
+        "mailbox_mined_gmail": "read_only_message_evidence_no_send_no_reply_no_apply",
+    }
+    for source_class, automation_policy in policy_by_source_class.items():
         receipt = dict(template)
         receipt["receipt_id"] = f"src:test:{source_class}"
         receipt["lane"] = "C"
@@ -59,6 +64,7 @@ def test_report_schema_allows_mandatory_social_and_mail_source_receipts(tmp_path
         receipt["response_status"] = None
         receipt["response_bytes"] = 0
         receipt["content_sha256"] = None
+        receipt["automation_policy"] = automation_policy
         receipt["limitations"] = [f"{source_class} adapter unavailable in this fixture."]
         manifest["source_receipts"].append(receipt)
     Draft202012Validator(schema).validate(manifest)
