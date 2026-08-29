@@ -22,6 +22,7 @@ from monitor_opportunities.browser_capture import (
     _ats_field_type,
     _ats_provider_from_url,
     _classify_application_workplace,
+    _g2i_slack_records_from_text,
     _generic_form_from_dom,
     _workday_application_metadata_from_html,
     capture_ats_form,
@@ -58,6 +59,47 @@ def test_provider_parse_unknown() -> None:
     p, site, _ = _ats_provider_from_url("https://careers.example.com/apply/9")
     assert p == "unknown"
     assert site == "careers.example.com"
+
+
+def test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat() -> None:
+    text = """
+05_g2i-job-alerts
+Jobs @ G2i! For the full list of available opportunities please visit the G2i portal: portal.g2i.co
+Monday, August 10th
+Juliana Basseto
+  11:16 AM
+
+AI Engineer | High Ticket
+[Must have: AI Agentic Coding assessment from G2i] [Direct hire] [40 hours]
+Location: Americas (South/Central/North), or Europe
+High Ticket is looking for an AI Engineer. For more information and application, click here: g2idev.com/share/applications/...
+Tuesday, August 18th
+Rickin Shah
+  4:32 PM
+
+Hey - are there any AI training opportunities?
+Thursday, August 20th
+Gaby Morua
+  8:33 AM
+
+Sr AI Engineer (AI/LLM Integration) | Banesco USA
+[Must have: Python, Typescript GCP] [Direct hire] [40 hours]
+Location: USA/ PREFERENCE: Miami / Florida
+Banesco USA is looking for an AI Engineer with experience integrating LLM APIs.
+"""
+
+    records = _g2i_slack_records_from_text(
+        text,
+        channel_url="https://app.slack.com/client/T02NLNJ2D/C01H317TX7X",
+    )
+
+    assert [row["title"] for row in records] == [
+        "AI Engineer",
+        "Sr AI Engineer (AI/LLM Integration)",
+    ]
+    assert [row["company"] for row in records] == ["High Ticket", "Banesco USA"]
+    assert all(row["channel"] == "05_g2i-job-alerts" for row in records)
+    assert all("Rickin Shah" not in row["content"] for row in records)
 
 
 def test_field_type_sensitive_and_kinds() -> None:

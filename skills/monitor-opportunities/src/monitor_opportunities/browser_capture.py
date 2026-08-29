@@ -20,6 +20,7 @@ import contextlib
 import json
 import multiprocessing
 import os
+import re
 import signal
 import subprocess
 import time
@@ -114,6 +115,9 @@ _MEETUP_ATTENDEE_EXTRACT_JS = (
 
 _HIDDENJOBS_URL = "https://hiddenjobs.dev/"
 _INDEED_AI_BUFFALO_URL = "https://www.indeed.com/jobs?q=AI&l=Buffalo%2C%20NY"
+_G2I_SLACK_TEAM_ID = "T02NLNJ2D"
+_G2I_SLACK_JOB_ALERTS_CHANNEL_ID = "C01H317TX7X"
+_G2I_SLACK_JOB_ALERTS_URL = f"https://app.slack.com/client/{_G2I_SLACK_TEAM_ID}/{_G2I_SLACK_JOB_ALERTS_CHANNEL_ID}"
 
 _HIDDENJOBS_EXTRACT_JS = (
     "(function(){"
@@ -158,6 +162,13 @@ _INDEED_EXTRACT_JS = (
     "}"
     "return JSON.stringify({url:location.href,title:document.title,"
     "text:(document.body.innerText||'').slice(0,12000),records:out.slice(0,80)});"
+    "})()"
+)
+
+_G2I_SLACK_EXTRACT_JS = (
+    "(function(){"
+    "return JSON.stringify({url:location.href,title:document.title,"
+    "text:(document.body.innerText||'').slice(0,24000)});"
     "})()"
 )
 
@@ -639,6 +650,157 @@ def capture_indeed_jobs(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dic
         extract_js=_INDEED_EXTRACT_JS,
         wait_seconds="5",
     )
+
+
+def _g2i_slack_records_from_text(text: str, *, channel_url: str) -> list[dict[str, Any]]:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    date_line = re.compile(r"^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),", re.I)
+    post_title = re.compile(
+        r"\b(?:ai|llm|backend|fullstack|full-stack|systems?|software|developer|engineer|architect|programmer)\b",
+        re.I,
+    )
+    post_context = re.compile(
+        r"\b(?:must have|direct hire|contract|hours|location:|looking for|application|g2idev\\.com|apply)\b",
+        re.I,
+    )
+    records: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, line in enumerate(lines):
+        if "|" not in line or not post_title.search(line):
+            continue
+        body: list[str] = [line]
+        for follow in lines[index + 1 : index + 10]:
+            if date_line.search(follow):
+                break
+            if "|" in follow and post_title.search(follow):
+                break
+            if follow in {"View thread", "Message 05_g2i-job-alerts"}:
+                break
+            body.append(follow)
+        content = "\n".join(body)
+        if not post_context.search(content):
+            continue
+        title, organization = [part.strip() for part in line.split("|", 1)]
+        key = f"{title.lower()}|{organization.lower()}"
+        if key in seen:
+            continue
+        seen.add(key)
+        records.append(
+            {
+                "title": title,
+                "company": organization,
+                "channel": "05_g2i-job-alerts",
+                "content": content,
+                "url": channel_url,
+                "permalink": channel_url,
+            }
+        )
+    return records
+
+
+def _find_existing_slack_tab(surf_run: Path) -> str | None:
+    raw = _surf(surf_run, "tab.list", "--json", timeout=25)
+    try:
+        tabs = json.loads(raw)
+    except ValueError:
+        return None
+    if not isinstance(tabs, list):
+        return None
+    for tab in tabs:
+        if not isinstance(tab, dict):
+            continue
+        url = str(tab.get("url") or "")
+        title = str(tab.get("title") or "")
+        if _G2I_SLACK_TEAM_ID in url or "G2i - Slack" in title:
+            tab_id = tab.get("id")
+            return str(tab_id) if tab_id is not None else None
+    return None
+
+
+def capture_g2i_slack_jobs(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    """Read G2i's job-alerts Slack channel from the authenticated browser tab."""
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "g2i_slack_job_alerts",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply",
+        "team_id": _G2I_SLACK_TEAM_ID,
+        "channel_id": _G2I_SLACK_JOB_ALERTS_CHANNEL_ID,
+        "channel": "05_g2i-job-alerts",
+        "url": _G2I_SLACK_JOB_ALERTS_URL,
+    }
+    tab_id = ""
+    created_tab = False
+    try:
+        ensure_browser(surf_run)
+        tab_id = _find_existing_slack_tab(surf_run) or ""
+        if not tab_id:
+            created = _surf(surf_run, "tab.new", _G2I_SLACK_JOB_ALERTS_URL, "--json", timeout=30)
+            tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+            created_tab = True
+        if not tab_id:
+            raise BrowserCaptureError("could not find or create an authenticated G2i Slack tab")
+        _surf_js(surf_run, tab_id, _nav_js(_G2I_SLACK_JOB_ALERTS_URL), timeout=20)
+        _surf_pause(surf_run, "7")
+        raw = _surf_js(surf_run, tab_id, _G2I_SLACK_EXTRACT_JS, timeout=45)
+        snapshot = _surf_json_value(raw, {})
+        if not isinstance(snapshot, dict):
+            snapshot = {}
+        text = str(snapshot.get("text") or "")
+        records = _g2i_slack_records_from_text(text, channel_url=str(snapshot.get("url") or _G2I_SLACK_JOB_ALERTS_URL))
+        evidence = {
+            "schema_version": "monitor_opportunities.slack_channel_capture.v1",
+            "source": "g2i_slack_job_alerts",
+            "capture_method": "surf_read_only_authenticated_slack_tab",
+            "automation_policy": receipt["automation_policy"],
+            "external_effects": False,
+            "observed_at": utc_now(),
+            "team_id": _G2I_SLACK_TEAM_ID,
+            "channel_id": _G2I_SLACK_JOB_ALERTS_CHANNEL_ID,
+            "channel": "05_g2i-job-alerts",
+            "url": snapshot.get("url") or _G2I_SLACK_JOB_ALERTS_URL,
+            "title": snapshot.get("title"),
+            "text": text,
+            "messages": records,
+            "non_claims": [
+                "This is read-only Slack browser evidence from Graham's authenticated session.",
+                "No Slack message, reply, reaction, DM, join, or application action was taken.",
+                "G2i posts still require primary-source review in the G2i portal before outreach or application.",
+            ],
+        }
+        evidence_path = out_dir / "g2i-slack-job-alerts-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["status"] = "OK" if records else "EMPTY"
+        receipt["records_captured"] = len(records)
+        receipt["evidence_path"] = str(evidence_path)
+        receipt["tab_id"] = tab_id
+        receipt["created_tab"] = created_tab
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+        logger.warning("G2i Slack job-alert capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+        receipt["records_captured"] = 0
+        receipt["evidence_path"] = None
+        receipt["diagnostic_bundle"] = _write_surf_diagnostic_bundle(
+            out_dir,
+            source="g2i_slack_job_alerts",
+            surf_run=surf_run,
+            tab_id=tab_id or None,
+            reason="g2i_slack_job_alert_capture_failed",
+            url=_G2I_SLACK_JOB_ALERTS_URL,
+            error=exc,
+        )
+    finally:
+        if tab_id and created_tab:
+            _close_tab(surf_run, tab_id, "G2i Slack job alerts")
+    (out_dir / "g2i-slack-job-alerts-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return receipt
 
 
 _LINKEDIN_TOP_APPLICANT_URL = "https://www.linkedin.com/jobs/collections/top-applicant/"

@@ -1581,19 +1581,19 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "3 passed"
         ],
         "stderr_excludes": [
           "KeyError",
           "AssertionError"
         ]
       },
-      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when evidence is absent, and supplied read-only Slack/Discord/Gmail evidence is parsed into MATCHES receipts and lane C candidates instead of staying hard-coded as unwired.",
+      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when evidence is absent, supplied read-only Slack/Discord/Gmail evidence is parsed into MATCHES receipts and lane C candidates instead of staying hard-coded as unwired, and G2i Slack job-alert text is split into concrete job posts while ordinary chat is skipped.",
       "does_not_prove": "That Slack, Discord, or Gmail connector APIs were called live from cron, or that any parsed opportunity is semantically relevant enough to submit."
     },
     {

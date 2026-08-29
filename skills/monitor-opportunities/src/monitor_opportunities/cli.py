@@ -2790,6 +2790,7 @@ def nightly(
     from .browser_capture import (
         browser_control_summary,
         capture_hiddenjobs,
+        capture_g2i_slack_jobs,
         capture_indeed_jobs,
         capture_linkedin_advanced_search,
         capture_linkedin_actively_hiring,
@@ -2916,11 +2917,21 @@ def nightly(
         "captured": hiddenjobs_receipt.get("records_captured"),
     }
     hiddenjobs_evidence = hiddenjobs_receipt.get("evidence_path")
+    g2i_slack_receipt = capture_g2i_slack_jobs(capture_dir)
+    steps["browser_capture_g2i_slack_jobs"] = {
+        "status": g2i_slack_receipt.get("status"),
+        "captured": g2i_slack_receipt.get("records_captured"),
+        "evidence_path": g2i_slack_receipt.get("evidence_path"),
+    }
     slack_evidence = _resolve_evidence_path(
         slack_evidence,
         env_var="MONITOR_SLACK_EVIDENCE",
         steps=steps,
     )
+    if slack_evidence is None and g2i_slack_receipt.get("evidence_path"):
+        slack_evidence = Path(str(g2i_slack_receipt["evidence_path"]))
+        steps.setdefault("social_mail_evidence", {})["MONITOR_SLACK_EVIDENCE"]["selected_path"] = str(slack_evidence)
+        steps["social_mail_evidence"]["MONITOR_SLACK_EVIDENCE"]["source"] = "g2i_slack_browser_capture"
     discord_evidence = _resolve_evidence_path(
         discord_evidence,
         env_var="MONITOR_DISCORD_EVIDENCE",
