@@ -964,6 +964,29 @@
       ]
     },
     {
+      "name": "moog-local-cluster-digest-regression",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_morning_digest.py::test_per_org_diversity_cap_prevents_one_company_flooding skills/monitor-opportunities/tests/test_morning_digest.py::test_high_fit_wny_local_cluster_is_not_hidden_by_org_cap -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "proves": "The morning digest still caps ordinary same-org floods, but does not hide multiple high-fit WNY onsite roles from the same target employer.",
+      "does_not_prove": "A live Moog source will always publish the same roles; the nightly source receipts remain the authority for current openings.",
+      "seams": [
+        "ranking.response_score",
+        "report.morning_digest_selection"
+      ]
+    },
+    {
       "name": "linkedin-easy-apply-safety",
       "type": "adversarial",
       "evidence_class": "deterministic",

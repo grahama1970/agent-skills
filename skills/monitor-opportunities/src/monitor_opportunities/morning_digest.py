@@ -68,6 +68,33 @@ def _org_signal(org: str, lookup: dict[str, Any], key: str) -> float:
     return 0.0
 
 
+def _candidate_id(opp: dict[str, Any]) -> str:
+    candidate_id = (
+        opp.get("candidate_id")
+        or opp.get("opportunity_id")
+        or opp.get("id")
+    )
+    if candidate_id:
+        return str(candidate_id)
+    org = str(opp.get("organization") or "unknown-org").strip().lower()
+    title = str(opp.get("title") or "unknown-title").strip().lower()
+    return f"{org}:{title}"
+
+
+def _is_protected_local_cluster(entry: dict[str, Any]) -> bool:
+    drivers = entry.get("drivers") if isinstance(entry.get("drivers"), dict) else {}
+    try:
+        fit = float(drivers.get("fit") or 0.0)
+        local = float(drivers.get("local") or 0.0)
+    except (TypeError, ValueError):
+        return False
+    return (
+        entry.get("opportunity_type") == "employment"
+        and fit >= 0.85
+        and local >= 0.8
+    )
+
+
 def _balanced_top(
     entries: list[dict[str, Any]], top_n: int, max_per_org: int
 ) -> list[dict[str, Any]]:
@@ -98,7 +125,7 @@ def _balanced_top(
             if len(out) >= limit:
                 break
             org = str(e.get("organization") or "").lower()
-            if seen_org.get(org, 0) >= max_per_org:
+            if seen_org.get(org, 0) >= max_per_org and not _is_protected_local_cluster(e):
                 continue
             seen_org[org] = seen_org.get(org, 0) + 1
             out.append(e)
@@ -137,6 +164,77 @@ def _cap_per_org(
     return top
 
 
+def _exclusion_reason(
+    entry: dict[str, Any],
+    included: list[dict[str, Any]],
+    max_per_org: int,
+) -> str:
+    org = str(entry.get("organization") or "").lower()
+    same_org_included = sum(
+        1 for item in included
+        if str(item.get("organization") or "").lower() == org
+    )
+    if same_org_included >= max_per_org:
+        if _is_protected_local_cluster(entry):
+            return "protected_local_cluster_below_digest_cutoff"
+        return "org_diversity_cap"
+    if entry.get("opportunity_type") == "employment":
+        return "employment_below_balanced_digest_cutoff"
+    if entry.get("opportunity_type") == "consulting":
+        return "consulting_below_balanced_digest_cutoff"
+    return "below_digest_cutoff"
+
+
+def _selection_accounting(
+    entries: list[dict[str, Any]],
+    top: list[dict[str, Any]],
+    max_per_org: int,
+) -> dict[str, Any]:
+    included_ids = {id(entry) for entry in top}
+    by_type: dict[str, dict[str, int]] = {}
+    candidates: list[dict[str, Any]] = []
+    included_count = 0
+    excluded_count = 0
+
+    for entry in entries:
+        opportunity_type = str(entry.get("opportunity_type") or "unknown")
+        bucket = by_type.setdefault(
+            opportunity_type,
+            {"input": 0, "included": 0, "excluded": 0},
+        )
+        bucket["input"] += 1
+        included = id(entry) in included_ids
+        if included:
+            disposition = "included"
+            reason_code = "selected_for_digest_top"
+            bucket["included"] += 1
+            included_count += 1
+        else:
+            disposition = "excluded"
+            reason_code = _exclusion_reason(entry, top, max_per_org)
+            bucket["excluded"] += 1
+            excluded_count += 1
+        candidates.append({
+            "candidate_id": _candidate_id(entry),
+            "organization": entry.get("organization"),
+            "title": entry.get("title"),
+            "opportunity_type": opportunity_type,
+            "disposition": disposition,
+            "reason_code": reason_code,
+            "response_score": entry.get("response_score"),
+        })
+
+    return {
+        "schema": "monitor_opportunities.morning_digest.selection_accounting.v1",
+        "input": len(entries),
+        "included": included_count,
+        "excluded": excluded_count,
+        "unaccounted": len(entries) - included_count - excluded_count,
+        "by_type": by_type,
+        "candidates": candidates,
+    }
+
+
 def build_digest(
     shortlist: list[dict[str, Any]],
     top_n: int = 8,
@@ -170,7 +268,7 @@ def build_digest(
         entries.append({
             "organization": opp.get("organization"),
             "title": opp.get("title"),
-            "candidate_id": opp.get("candidate_id"),
+            "candidate_id": _candidate_id(opp),
             "opportunity_type": classified["opportunity_type"],
             "action": classified["action_plan"],
             "response_score": scored["response_score"],
@@ -182,6 +280,7 @@ def build_digest(
         })
     entries.sort(key=lambda e: -e["response_score"])
     top = _balanced_top(entries, top_n, max_per_org)
+    accounting = _selection_accounting(entries, top, max_per_org)
     return {
         "schema": "monitor_opportunities.morning_digest.v1",
         "counts": {
@@ -197,5 +296,6 @@ def build_digest(
                 float(o.get("warm_path") or 0.0) > 0 for o in shortlist
             ),
         },
+        "selection_accounting": accounting,
         "top": top,
     }

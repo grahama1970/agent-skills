@@ -42,6 +42,64 @@ def test_per_org_diversity_cap_prevents_one_company_flooding() -> None:
     assert "Vanta" in orgs  # diversity preserved
 
 
+def test_high_fit_wny_local_cluster_is_not_hidden_by_org_cap() -> None:
+    sl = [
+        {
+            "organization": "Moog",
+            "title": title,
+            "lane": "A",
+            "fit_score": 0.86,
+            "workplace_type": "WNY_ONSITE",
+            "source_provider": "workday",
+            "candidate_id": f"moog-{idx}",
+            "apply_url": f"https://moog.example/jobs/{idx}",
+        }
+        for idx, title in enumerate(
+            [
+                "AI Program Manager",
+                "AI Systems Analyst",
+                "Corporate AI Security Architect",
+                "Corporate AI Security Engineer",
+            ]
+        )
+    ]
+    sl += [
+        {
+            "organization": f"Fed{i}",
+            "title": "AI solicitation",
+            "lane": "B",
+            "signal_type": "federal",
+            "fit_score": 0.6,
+            "candidate_id": f"fed-{i}",
+        }
+        for i in range(3)
+    ]
+    sl.append({
+        "organization": "Unstructured",
+        "title": "Principal Software Engineer",
+        "lane": "A",
+        "fit_score": 0.75,
+        "source_class": "ashby",
+        "candidate_id": "unstructured-1",
+    })
+
+    digest = build_digest(sl, top_n=8, max_per_org=2)
+    moog_rows = [row for row in digest["top"] if row["organization"] == "Moog"]
+    accounting = {
+        row["candidate_id"]: row
+        for row in digest["selection_accounting"]["candidates"]
+        if row["organization"] == "Moog"
+    }
+
+    assert [row["title"] for row in moog_rows] == [
+        "AI Program Manager",
+        "AI Systems Analyst",
+        "Corporate AI Security Architect",
+        "Corporate AI Security Engineer",
+    ]
+    assert all(row["reason_code"] == "selected_for_digest_top" for row in accounting.values())
+
+
 def test_live_trigger_reorders_and_surfaces_evidence() -> None:
     sl = [
         {"organization": "Alpha", "title": "AI Architect", "fit_score": 0.8, "source_class": "ashby"},
