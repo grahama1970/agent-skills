@@ -270,11 +270,42 @@
         ]
       },
       "proves": "Moog-style Workday application URLs are parsed, public Workday JobPosting JSON-LD is captured as apply-page location authority, East Aurora is classified as WNY_ONSITE, and a Workday page with no anonymous form fields records an OK read-only metadata capture instead of ATS_DOM_CAPTURE_EMPTY.",
-      "does_not_prove": "A fresh live Workday network request is reachable tonight, that Workday submit is implemented, or that Graham has authorized a Moog application submission.",
+      "does_not_prove": "A fresh live Workday network request is reachable tonight, a live Workday submit succeeded, or that Graham has authorized a Moog application submission.",
       "seams": [
         "browser_capture._ats_provider_from_url",
         "browser_capture._workday_application_metadata_from_html",
         "browser_capture.capture_ats_form"
+      ]
+    },
+    {
+      "name": "workday-commit-gate-regression-1549",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_workday_commit_gate.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WORKDAY_COMMIT_GATE_OK",
+          "command=commit-workday",
+          "mismatches_refused=4",
+          "submitted=False"
+        ],
+        "stderr_excludes": [
+          "WORKDAY_COMMIT_COMMAND_MISSING",
+          "AUTHORIZATION_ACCEPTED_BAD"
+        ]
+      },
+      "proves": "A shortlisted Moog-style Workday role can no longer be stranded behind only the generic Stage 0 apply gate: the command surface exposes commit-workday, and exact post-report authorization refuses mismatched candidate id, posting URL, apply URL, and payload digest.",
+      "does_not_prove": "A live Workday application was submitted; the retained proof deliberately keeps submission blocked and records the human-handoff boundary.",
+      "seams": [
+        "ats.workday_commit",
+        "applications.authorization_ledger"
       ]
     },
     {

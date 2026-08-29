@@ -98,6 +98,7 @@ IMPLEMENTED = [
     "github-intelligence",
     "nightly",
     "apply",
+    "commit-workday",
     "tau-semantic-prepare",
     "tau-semantic-provider-eval",
     "tau-semantic-install",
@@ -2389,6 +2390,79 @@ def commit_linkedin_command(
     except Exception as exc:  # noqa: BLE001
         _fail(ContractError("LINKEDIN_COMMIT_FAILED", repr(exc)))
     typer.echo(json.dumps({"status": receipt["state"], **receipt}, indent=2, sort_keys=True))
+
+
+@app.command("commit-workday")
+def commit_workday_command(
+    candidate_id: str = typer.Option(..., "--candidate-id"),
+    posting_url: str = typer.Option(..., "--posting-url"),
+    apply_url: str = typer.Option(..., "--apply-url"),
+    payload_digest: str = typer.Option(..., "--payload-digest"),
+    form_schema: Path = typer.Option(
+        ...,
+        "--form-schema",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Captured Workday ATS schema from ats-inspect/capture_ats_form.",
+    ),
+    approved_answers: Path = typer.Option(
+        ...,
+        "--approved-answers",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Approved answer bank; only schema-bound exact approved answers may be filled.",
+    ),
+    promotion: Path = typer.Option(
+        ...,
+        "--promotion",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Scoped human promotion receipt: ats_form_submit:workday:<site>, exact candidate/site.",
+    ),
+    authorization: Path = typer.Option(
+        ...,
+        "--authorization",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Exact post-report human authorization for candidate/posting/apply URL/payload digest.",
+    ),
+    out: Path = typer.Option(..., "--out", file_okay=False, help="Directory for refusal/commit receipt and browser evidence."),
+    tab_id: str | None = typer.Option(None, "--tab-id", help="surf tab id already on the authorized Workday application page."),
+    submit: bool = typer.Option(False, "--submit", help="Attempt Workday submit after every gate passes."),
+    allow_duplicate: bool = typer.Option(False, "--allow-duplicate"),
+) -> None:
+    """Gated Workday application commit path.
+
+    The command refuses unless the Workday site promotion and post-report human
+    authorization match this exact candidate, posting URL, apply URL, and
+    payload digest. Captcha/login/2FA and unresolved required fields produce a
+    human-handoff receipt, not silent success.
+    """
+    _configure_logging()
+    from .ats.workday_apply import SurfWorkdayAdapter, commit_workday_application
+
+    adapter = SurfWorkdayAdapter(tab_id=tab_id) if tab_id else None
+    receipt = commit_workday_application(
+        candidate_id=candidate_id,
+        posting_url=posting_url,
+        apply_url=apply_url,
+        payload_digest=payload_digest,
+        form_schema=read_json(form_schema),
+        approved_answers=read_json(approved_answers),
+        promotion=read_json(promotion),
+        authorization=read_json(authorization),
+        out_dir=out,
+        submit=submit,
+        adapter=adapter,
+        allow_duplicate=allow_duplicate,
+    )
+    typer.echo(json.dumps({"status": receipt["state"], **receipt}, indent=2, sort_keys=True))
+    if receipt["state"] != "COMMITTED":
+        raise typer.Exit(code=2)
 
 
 @app.command("memory-sync")

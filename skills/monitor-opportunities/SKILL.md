@@ -372,6 +372,7 @@ only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 ./run.sh decision ...                          # append-only human decision event
 ./run.sh replay --run <run-id>                 # rebuild projection from events
 ./run.sh apply --posting <key>                 # separately gated ATS effect only
+./run.sh commit-workday ...                    # gated Workday commit path; exact human authorization required
 ./run.sh status --json                         # readiness, stage, feeds, blockers
 ./run.sh verify --out <dir>                    # machine-readable verification receipt
 ./run.sh schedule --cron "0 2 * * *"           # register the full run, then read back
