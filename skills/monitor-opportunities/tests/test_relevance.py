@@ -3,28 +3,56 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import monitor_opportunities.relevance as rel
 
 
+class _FakeResponse:
+    def __init__(self, documents: list[dict[str, object]]) -> None:
+        self._documents = documents
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict[str, object]:
+        return {"documents": self._documents}
+
+
+class _FakeMemoryClient:
+    def __init__(self, pages: list[list[dict[str, object]]]) -> None:
+        self.pages = pages
+        self.calls: list[dict[str, object]] = []
+        self.closed = False
+
+    def post(self, path: str, *, json: dict[str, object]) -> _FakeResponse:
+        assert path == "/list"
+        self.calls.append(json)
+        index = len(self.calls) - 1
+        return _FakeResponse(self.pages[index] if index < len(self.pages) else [])
+
+    def close(self) -> None:
+        self.closed = True
+
+
 def test_empty_text_returns_none() -> None:
+    rel.clear_mandate_cache()
     assert rel.mandate_hits("") is None
     assert rel.mandate_hits("   ") is None
 
 
-def test_missing_extractor_fails_soft(monkeypatch) -> None:
-    # If /extract-entities is not present, return None (caller falls back), never raise.
-    monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/nonexistent/run.sh"))
+def test_memory_unavailable_fails_soft(monkeypatch) -> None:
+    # If Memory is unavailable, return None (caller falls back), never raise.
+    rel.clear_mandate_cache()
+    monkeypatch.setattr(rel, "_make_memory_client", lambda: (_ for _ in ()).throw(OSError("down")))
     assert rel.mandate_hits("Staff AI Engineer") is None
     assert rel.is_mandate_relevant("Staff AI Engineer") is None
 
 
 def test_prospect_queue_falls_back_to_regex_when_extractor_missing(monkeypatch) -> None:
-    # With the extractor unavailable, prospect_queue must still filter via regex fallback.
+    # With Memory unavailable, prospect_queue must still filter via regex fallback.
     import monitor_opportunities.prospect_queue as pq
 
-    monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/nonexistent/run.sh"))
+    rel.clear_mandate_cache()
+    monkeypatch.setattr(rel, "_make_memory_client", lambda: (_ for _ in ()).throw(OSError("down")))
     sam = {
         "opportunities": [
             {"title": "Flooring Abatement", "url": "https://sam.gov/workspace/contract/opp/a/view"},
@@ -35,3 +63,35 @@ def test_prospect_queue_falls_back_to_regex_when_extractor_missing(monkeypatch) 
     orgs = [p["organization"] for p in fed]
     assert "Artificial Intelligence Document Extraction" in orgs
     assert not any("Flooring" in o for o in orgs)
+
+
+def test_mandate_hits_uses_memory_list_once_for_repeated_batch(monkeypatch) -> None:
+    rel.clear_mandate_cache()
+    client = _FakeMemoryClient([
+        [
+            {
+                "_key": "ai",
+                "name": "Artificial Intelligence",
+                "label": "artificial intelligence",
+                "aliases": ["agentic ai"],
+            },
+            {
+                "_key": "document_extraction",
+                "name": "Document Extraction",
+                "label": "document extraction",
+            },
+        ]
+    ])
+    monkeypatch.setattr(rel, "_make_memory_client", lambda: client)
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_VOCABULARY_LIMIT", "500")
+
+    assert rel.mandate_hits("Principal Agentic AI Engineer") == ["artificial intelligence"]
+    assert rel.mandate_hits("Document Extraction automation") == ["document extraction"]
+    assert rel.mandate_hits("Flooring Abatement") == []
+    assert len(client.calls) == 1
+    assert client.calls[0]["collection"] == "opportunity_vocabulary"
+    assert client.closed is True
+
+
+def test_relevance_module_no_longer_shells_out_per_title() -> None:
+    assert not hasattr(rel, "subprocess")

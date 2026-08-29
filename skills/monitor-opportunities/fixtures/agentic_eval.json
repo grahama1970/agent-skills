@@ -200,6 +200,35 @@
       "does_not_prove": "That a fresh LinkedIn authenticated browser session exposes Top Applicant or Easy Apply rows."
     },
     {
+      "name": "mandate-relevance-memory-backed-no-subprocess-loop",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "relevance.memory_vocabulary_loader",
+        "relevance.flashtext_matcher_cache",
+        "relevance.no_per_title_extract_entities_subprocess"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_relevance.py::test_memory_unavailable_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_mandate_hits_uses_memory_list_once_for_repeated_batch skills/monitor-opportunities/tests/test_relevance.py::test_relevance_module_no_longer_shells_out_per_title -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ],
+        "stderr_excludes": [
+          "extract_entities.py",
+          "TimeoutExpired"
+        ]
+      },
+      "proves": "Mandate relevance loads opportunity_vocabulary through Memory /list, reuses one FlashText matcher across repeated title checks, fails soft when Memory is unavailable, and does not shell out to extract-entities per title.",
+      "does_not_prove": "A fresh full nightly reaches nightly-receipt.json or that the live Memory service returns non-empty opportunity_vocabulary during cron."
+    },
+    {
       "name": "moog-workday-source-discovery",
       "type": "negative",
       "real_world": true,
