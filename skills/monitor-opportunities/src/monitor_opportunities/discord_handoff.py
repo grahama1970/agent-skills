@@ -1,4 +1,4 @@
-"""Morning Discord/Slack handoff for the opportunity report."""
+"""Morning Discord handoff for the opportunity report."""
 
 from __future__ import annotations
 
@@ -135,7 +135,7 @@ def send_morning_discord_handoff(
     payload_path = out.parent / "morning-discord-message.json"
     write_json(payload_path, payload)
 
-    resolved_webhook = webhook or os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK") or "slack"
+    resolved_webhook = webhook or os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK") or "discord"
     resolved_channel_name = channel_name or os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL") or "horus"
     command = [
         str(ops_discord_run),

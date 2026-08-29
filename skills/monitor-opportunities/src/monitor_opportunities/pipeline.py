@@ -1523,6 +1523,7 @@ def _publication_status(run_dir: Path, receipt: dict[str, Any]) -> dict[str, Any
             "memory_summary": None,
             "relationship_graph": None,
             "buzz_summary": None,
+            "discord_handoff": None,
         },
         "read_only_checks": {
             "prior_application_history": None,
@@ -1580,6 +1581,7 @@ def _canonical_publication_states(
     digest_path = run_dir / "morning-digest.json"
     memory_path = run_dir / "memory-sync-receipt.json"
     buzz_path = run_dir / "buzz-summary" / "buzz-summary-receipt.json"
+    discord_path = run_dir / "discord-handoff" / "morning-discord-receipt.json"
     tracker_policy = _publication_policy_value(publication, "separately_gated", "tracker")
     ats_policy = _publication_policy_value(
         publication, "separately_gated", "ats_selector_memory_write"
@@ -1628,7 +1630,16 @@ def _canonical_publication_states(
             status="WRITTEN" if buzz_path.exists() else "NOT_ATTEMPTED",
             evidence_path=str(buzz_path) if buzz_path.exists() else "",
             evidence_field="buzz-summary-receipt.posted",
-            note="Buzz uses legacy posted=true readback, classified here as an internal destination write.",
+            note="Legacy Buzz summary path; Discord is the preferred morning handoff.",
+        ),
+        _publication_state(
+            destination="discord_handoff",
+            policy=_publication_policy_value(publication, "publications", "discord_handoff"),
+            effect_class="INTERNAL_DESTINATION_WRITTEN",
+            status="WRITTEN" if discord_path.exists() else "NOT_ATTEMPTED",
+            evidence_path=str(discord_path) if discord_path.exists() else "",
+            evidence_field="morning-discord-receipt.status",
+            note="Discord handoff is the preferred morning discussion surface; it is not application authority.",
         ),
         _publication_state(
             destination="prior_application_history",

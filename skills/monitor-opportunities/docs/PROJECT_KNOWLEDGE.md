@@ -131,7 +131,8 @@ Latest deterministic receipts on `main`:
   entries;
 - Memory readback: `readback_found=true`,
   `relationship_readback_found=true`, `external_effects=false`;
-- Buzz readback: `posted=true`, `live=true`, `external_effects=false`;
+- Discord handoff readback: `status=PASS`, `dry_run=false`, `external_effects=true`
+  for promoted morning notification; Buzz is legacy/manual only;
 - Tau local evaluator smoke:
   `/tmp/monitor-opportunities-tau-eval-smoke-20260814T2120Z/tau-eval-smoke-receipt.json`,
   with `status=PASS`, `mocked=false`, `live=true`, `provider_live=false`,
@@ -164,7 +165,8 @@ Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
    `grahama1970/opportunities`, deduped by `content_hash`, lifecycle via labels; dual
    queues `track:employment` and `track:consulting` (prospect queue = federal
    solicitations + commercial signals, mandate-filtered).
-6. **Delivery** — memory (`morning_opportunities`) + Buzz summary; query via ops-buzz.
+6. **Delivery** — memory (`morning_opportunities`) + Discord morning handoff; query
+   via chat/memory and the frozen report receipt.
 
 Still not complete against the immutable goal (honest gaps):
 - Full per-opportunity `/tau` semantic provider evaluation loop in the nightly path
@@ -182,13 +184,12 @@ Still not complete against the immutable goal (honest gaps):
 Live nightly readiness is no longer gated on Indeed/HiddenJobs, claim authority, or
 delivery/readback for the current Stage 0 cron path; those have receipt-backed coverage.
 
-The local kernel now includes two Buzz adapters. `buzz-summary` turns a completed report
-run into an `ops_buzz.message.v1` shortlist/result summary and receipts it through
-`ops-buzz post`; dry-run is the safe default, while `--post` is an explicit Buzz write.
-`buzz-review` turns the same run into an `ops_buzz.agent_request.v1` advisory handoff and
-runs it through `ops-buzz ask-agent --dry-run`. These prove typed seams and receipts only.
-They do not make Buzz the opportunity finder, observe agent response quality, create
-Gmail/InMail drafts, or mutate the monitor decision ledger.
+The local kernel now uses `morning-discord` as the primary morning handoff. It turns a
+completed report run into a short `monitor_opportunities.morning_discord_handoff.v1`
+message and receipts it through `ops-discord notify`; promoted nightly requires the
+Discord receipt readback. The older `buzz-summary` and `buzz-review` commands remain
+legacy/manual adapters only. They do not make Buzz the opportunity finder, observe agent
+response quality, create Gmail/InMail drafts, or mutate the monitor decision ledger.
 
 Draft storage decision (Graham, 2026-08-05): outreach drafts of record live in the
 memory service's ArangoDB `outreach_drafts` collection (`POST /store` on
@@ -200,15 +201,14 @@ mailbox namespace is ambiguous (subject collisions with pre-existing drafts) and
 automation is brittle. Nightly runs should write drafts to memory, not Gmail. Gmail
 send and LinkedIn automation remain permanently forbidden; the human transmits.
 
-Interface decision (Graham, 2026-08-05): chat is the interface; the report is a
-receipt. The nightly transaction (`run.sh nightly`) runs the sweep, publishes the
+Interface decision (Graham, updated 2026-08-29): chat is the interface; the report is
+a receipt. The nightly transaction (`run.sh nightly`) runs the sweep, publishes the
 shortlist into the memory `morning_opportunities` collection (recallable via
-/memory, BM25 + semantic), and posts the Buzz summary to the configured channel
-(`config/notifications.json`). Graham asks agents about the morning shortlist and
-records decisions through the ledger-backed `decision` command; the rendered
-report stays in the run directory as the frozen audit artifact and no longer
-requires Tailscale serving or remote readback. Scheduler registration
-(`monitor-opportunities-nightly`, cron 0 2 * * *) is live.
+/memory, BM25 + semantic), and posts the morning handoff through `ops-discord`.
+Graham asks agents about the morning shortlist and records decisions through the
+ledger-backed `decision` command; the rendered report stays in the run directory as
+the frozen audit artifact and no longer requires Tailscale serving or remote readback.
+Scheduler registration (`monitor-opportunities-nightly`, cron 0 2 * * *) is live.
 
 The report is the product. The first working-value milestone is not autonomous apply; it is a
 zero-network Stage 0 kernel that can validate and render the expected morning report,

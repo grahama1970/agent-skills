@@ -218,22 +218,21 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
                 encoding="utf-8",
             )
             return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
-        if action == "buzz-summary":
-            receipt = out / "buzz-summary" / "buzz-summary-receipt.json"
-            receipt.parent.mkdir(parents=True, exist_ok=True)
-            receipt.write_text(
-                json.dumps(
+        if action == "notify":
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps(
                     {
-                        "posted": True,
-                        "live": True,
-                        "dry_run": False,
-                        "external_effects": False,
+                        "schema": "ops_discord.notification_receipt.v1",
+                        "status": "SENT",
+                        "webhook": "discord",
+                        "source": "env:DISCORD_WEBHOOK_URL",
+                        "message_url": "https://discord.com/channels/1/2/3",
                     }
-                )
-                + "\n",
-                encoding="utf-8",
+                ),
+                stderr="",
             )
-            return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
         raise AssertionError(f"unexpected subprocess command: {cmd!r}")
 
     monkeypatch.setattr("subprocess.run", fake_subprocess_run)
@@ -241,12 +240,14 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     result = runner.invoke(app, ["nightly", "--promoted-stage0", "--out", str(out)])
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    assert "MONITOR-OPPORTUNITIES TERMINAL REPORT" in result.output
+    payload = json.loads((out / "nightly-receipt.json").read_text(encoding="utf-8"))
     assert payload["mode"] == "PROMOTED_STAGE_0"
     assert payload["external_effects"] is False
     assert Path(payload["artifacts"]["effect_policy"]).is_file()
     assert Path(payload["artifacts"]["memory"]).is_file()
-    assert Path(payload["artifacts"]["buzz"]).is_file()
+    assert payload["artifacts"]["buzz"] is None
+    assert Path(payload["artifacts"]["discord_handoff"]).is_file()
     assert Path(payload["artifacts"]["tau_semantic_prepare"]).is_file()
     assert Path(payload["artifacts"]["receipt_consistency"]).is_file()
     assert Path(payload["artifacts"]["zero_effect_replay"]).is_file()
@@ -261,9 +262,13 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     states = {row["destination"]: row for row in consistency["publication_states"]}
     assert states["memory_summary"]["effect_class"] == "INTERNAL_DESTINATION_WRITTEN"
     assert states["memory_summary"]["status"] == "WRITTEN"
-    assert states["buzz_summary"]["evidence_field"] == "buzz-summary-receipt.posted"
-    assert states["buzz_summary"]["effect_class"] == "INTERNAL_DESTINATION_WRITTEN"
-    assert states["buzz_summary"]["status"] == "WRITTEN"
+    assert states["buzz_summary"]["status"] == "NOT_ATTEMPTED"
+    assert states["discord_handoff"]["evidence_field"] == "morning-discord-receipt.status"
+    assert states["discord_handoff"]["effect_class"] == "INTERNAL_DESTINATION_WRITTEN"
+    assert states["discord_handoff"]["status"] == "WRITTEN"
+    assert payload["steps"]["discord_handoff"]["status"] == "PASS"
+    assert payload["steps"]["discord_handoff"]["ops_discord_status"] == "SENT"
+    assert payload["steps"]["discord_handoff"]["external_effects"] is True
     assert payload["steps"]["tau_semantic"]["status"] == "PASS"
     assert payload["steps"]["tau_semantic"]["selected_count"] == 2
     assert payload["steps"]["tau_semantic"]["provider_live"] is True
@@ -294,7 +299,8 @@ def test_promoted_stage0_nightly_writes_publication_receipts(
     effect_policy = json.loads(Path(payload["artifacts"]["effect_policy"]).read_text())
     assert effect_policy["publications"]["memory_summary"] == "ENABLED"
     assert effect_policy["publications"]["relationship_graph"] == "ENABLED"
-    assert effect_policy["publications"]["buzz_summary"] == "ENABLED"
+    assert effect_policy["publications"]["buzz_summary"] == "SKIPPED"
+    assert effect_policy["publications"]["discord_handoff"] == "ENABLED"
     assert effect_policy["read_only_checks"]["prior_application_history"] == "ENABLED"
     assert effect_policy["separately_gated"]["tracker"] == "SKIPPED"
     assert effect_policy["separately_gated"]["ats_selector_memory_write"] == "SKIPPED"
@@ -504,22 +510,21 @@ def test_promoted_stage0_fails_on_zero_effect_replay_failure_and_replaces_stale_
                 encoding="utf-8",
             )
             return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
-        if action == "buzz-summary":
-            receipt = out / "buzz-summary" / "buzz-summary-receipt.json"
-            receipt.parent.mkdir(parents=True, exist_ok=True)
-            receipt.write_text(
-                json.dumps(
+        if action == "notify":
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps(
                     {
-                        "posted": True,
-                        "live": True,
-                        "dry_run": False,
-                        "external_effects": False,
+                        "schema": "ops_discord.notification_receipt.v1",
+                        "status": "SENT",
+                        "webhook": "discord",
+                        "source": "env:DISCORD_WEBHOOK_URL",
+                        "message_url": "https://discord.com/channels/1/2/3",
                     }
-                )
-                + "\n",
-                encoding="utf-8",
+                ),
+                stderr="",
             )
-            return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
         raise AssertionError(f"unexpected subprocess command: {cmd!r}")
 
     monkeypatch.setattr("subprocess.run", fake_subprocess_run)
@@ -732,22 +737,21 @@ def test_promoted_stage0_fails_on_report_acceptance_failure(
                 encoding="utf-8",
             )
             return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
-        if action == "buzz-summary":
-            receipt = out / "buzz-summary" / "buzz-summary-receipt.json"
-            receipt.parent.mkdir(parents=True, exist_ok=True)
-            receipt.write_text(
-                json.dumps(
+        if action == "notify":
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps(
                     {
-                        "posted": True,
-                        "live": True,
-                        "dry_run": False,
-                        "external_effects": False,
+                        "schema": "ops_discord.notification_receipt.v1",
+                        "status": "SENT",
+                        "webhook": "discord",
+                        "source": "env:DISCORD_WEBHOOK_URL",
+                        "message_url": "https://discord.com/channels/1/2/3",
                     }
-                )
-                + "\n",
-                encoding="utf-8",
+                ),
+                stderr="",
             )
-            return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
         raise AssertionError(f"unexpected subprocess command: {cmd!r}")
 
     monkeypatch.setattr("subprocess.run", fake_subprocess_run)

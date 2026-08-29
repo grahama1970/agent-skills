@@ -190,7 +190,8 @@ def _scheduler_effect_policy(*, diagnostic: bool) -> dict[str, str]:
         "linkedin_action": "FORBIDDEN",
         "meetup_rsvp": "FORBIDDEN",
         "ats_submit": "FORBIDDEN",
-        "buzz_summary": "SKIPPED" if diagnostic else "ENABLED",
+        "buzz_summary": "SKIPPED",
+        "discord_handoff": "SKIPPED" if diagnostic else "ENABLED",
     }
 
 
@@ -277,9 +278,17 @@ def _scheduler_equivalence_receipt(
         )
         checks["diagnostic_flag_absent"] = "--diagnostic" not in intent["nightly_args"]
         checks["registered_diagnostic_flag_absent"] = "--diagnostic" not in registered_command
-        checks["buzz_enabled_for_promoted"] = (
-            intent["effect_policy"].get("buzz_summary") == "ENABLED"
+        checks["buzz_skipped_for_promoted"] = (
+            intent["effect_policy"].get("buzz_summary") == "SKIPPED"
         )
+        checks["discord_handoff_enabled_for_promoted"] = (
+            intent["effect_policy"].get("discord_handoff") == "ENABLED"
+        )
+        checks["discord_handoff_transport_bound"] = (
+            intent["environment"].get("MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT")
+            in {"1", "true", "yes", "on"}
+            and bool(intent["environment"].get("MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL"))
+        ) or bool(intent["environment"].get("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK"))
         checks["tau_semantic_provider_enabled_for_promoted"] = (
             intent["effect_policy"].get("tau_semantic_provider") == "ENABLED"
         )
@@ -292,6 +301,9 @@ def _scheduler_equivalence_receipt(
         )
         checks["buzz_skipped_for_diagnostic"] = (
             intent["effect_policy"].get("buzz_summary") == "SKIPPED"
+        )
+        checks["discord_handoff_skipped_for_diagnostic"] = (
+            intent["effect_policy"].get("discord_handoff") == "SKIPPED"
         )
     status = "PASS" if all(checks.values()) else "FAIL"
     return {
@@ -761,8 +773,9 @@ def _scheduler_execution_equivalence_preflight(
                 == 1,
                 "tau_semantic_handler_is_gpt_5_5_high": "gpt-5.5-high" in command,
                 "diagnostic_flag_absent": _count_token(command, "--diagnostic") == 0,
-                "buzz_not_skipped": _count_token(command, "--skip-buzz") == 0,
-                "buzz_summary_enabled": effect_policy.get("buzz_summary") == "ENABLED",
+                "buzz_skipped": _count_token(command, "--skip-buzz") == 1,
+                "buzz_summary_skipped": effect_policy.get("buzz_summary") == "SKIPPED",
+                "discord_handoff_enabled": effect_policy.get("discord_handoff") == "ENABLED",
                 "tau_semantic_provider_enabled": effect_policy.get("tau_semantic_provider")
                 == "ENABLED",
             }
@@ -816,6 +829,30 @@ def _scheduler_self_repair_notify_enabled() -> bool:
     )
 
 
+def _scheduler_self_repair_webhook_name() -> str:
+    explicit = os.environ.get("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK")
+    if explicit:
+        return explicit
+    if os.environ.get("DISCORD_WEBHOOK_URL") or os.environ.get(
+        "OPS_DISCORD_WEBHOOK_DISCORD_URL"
+    ):
+        return "discord"
+    if os.environ.get("SLACK_WEBHOOK_URL"):
+        return "slack"
+    return "discord"
+
+
+def _morning_discord_should_use_bot() -> bool:
+    explicit = os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT")
+    if explicit is not None:
+        return explicit.strip().lower() in {"1", "true", "yes", "on"}
+    if os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK"):
+        return False
+    if os.getenv("DISCORD_WEBHOOK_URL") or os.getenv("OPS_DISCORD_WEBHOOK_DISCORD_URL"):
+        return False
+    return True
+
+
 def _notify_scheduler_self_repair(
     *,
     workdir: Path,
@@ -842,7 +879,7 @@ def _notify_scheduler_self_repair(
         notification.update({"status": "SKIPPED", "reason": "ops-discord runner missing"})
         return notification
 
-    webhook_name = os.environ.get("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK", "slack")
+    webhook_name = _scheduler_self_repair_webhook_name()
     notify_dry_run = dry_run or _truthy_env("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN")
     content = (
         f"monitor-opportunities required step failed and entered self-repair.\n"
@@ -1976,7 +2013,7 @@ def buzz_summary(
 @app.command("morning-discord")
 def morning_discord(
     run: Path | None = typer.Option(None, "--run", file_okay=False, help="Run directory; defaults to local/nightly/latest."),
-    webhook: str | None = typer.Option(None, "--webhook", help="ops-discord webhook name; defaults to slack."),
+    webhook: str | None = typer.Option(None, "--webhook", help="ops-discord webhook name; defaults to discord."),
     discord_bot: bool = typer.Option(False, "--discord-bot", help="Send through Discord bot API instead of webhook."),
     channel_id: str | None = typer.Option(None, "--channel-id", help="Discord channel id for --discord-bot."),
     channel_name: str | None = typer.Option(None, "--channel-name", help="Discord channel name for --discord-bot."),
@@ -1991,6 +2028,8 @@ def morning_discord(
     run_dir = (run or _default_nightly_out(repo_root)).resolve()
     if out is None:
         out = run_dir / "discord-handoff" / "morning-discord-receipt.json"
+    if not discord_bot:
+        discord_bot = _morning_discord_should_use_bot()
     receipt = send_morning_discord_handoff(
         run_dir=run_dir,
         workdir=repo_root,
@@ -2395,7 +2434,7 @@ def nightly(
     promoted_stage0: bool = typer.Option(
         False,
         "--promoted-stage0",
-        help="Publish the gated Stage 0 report, digest, Memory graph, and Buzz summary.",
+        help="Publish the gated Stage 0 report, digest, Memory graph, and Discord handoff.",
     ),
     require_clean: bool = typer.Option(False, "--require-clean", help="Fail before capture if this skill tree is dirty."),
     expected_revision: str | None = typer.Option(None, "--expected-revision", help="Fail unless the running commit matches."),
@@ -2403,7 +2442,8 @@ def nightly(
     skip_ats_memory: bool = typer.Option(False, "--skip-ats-memory", help="Do not persist learned ATS forms to Memory."),
     skip_memory_sync: bool = typer.Option(False, "--skip-memory-sync", help="Do not publish the run summary to Memory."),
     skip_relationship_memory: bool = typer.Option(False, "--skip-relationship-memory", help="Exclude relationship graph docs from Memory sync."),
-    skip_buzz: bool = typer.Option(False, "--skip-buzz", help="Skip the Buzz shortlist post."),
+    skip_buzz: bool = typer.Option(False, "--skip-buzz", help="Skip the legacy Buzz shortlist post."),
+    skip_discord_handoff: bool = typer.Option(False, "--skip-discord-handoff", help="Skip the morning Discord handoff."),
     skip_tau_semantic_prepare: bool = typer.Option(
         False,
         "--skip-tau-semantic-prepare",
@@ -2419,10 +2459,10 @@ def nightly(
     tau_semantic_timeout_seconds: int = typer.Option(3600, "--tau-semantic-timeout-seconds", min=60),
     tau_semantic_browser_lock_timeout: int = typer.Option(1800, "--tau-semantic-browser-lock-timeout", min=60),
 ) -> None:
-    """One nightly transaction: run, publish shortlist to memory, post Buzz summary.
+    """One nightly transaction: run, publish shortlist to memory, post Discord handoff.
 
     The rendered report stays in the run directory as a frozen receipt; the
-    memory collection and Buzz post are the interaction surface.
+    memory collection and Discord handoff are the interaction surface.
     """
     _configure_logging()
     import shutil
@@ -2442,15 +2482,17 @@ def nightly(
         _fail(ContractError("NIGHTLY_MODE_CONFLICT", "Choose diagnostic or promoted Stage 0, not both"))
     if diagnostic:
         skip_buzz = True
+        skip_discord_handoff = True
         skip_tracker = True
         skip_ats_memory = True
         require_clean = True
     elif promoted_stage0:
-        if skip_memory_sync or skip_relationship_memory or skip_buzz:
+        skip_buzz = True
+        if skip_memory_sync or skip_relationship_memory or skip_discord_handoff:
             _fail(
                 ContractError(
                     "PROMOTED_STAGE0_PUBLICATION_DISABLED",
-                    "Promoted Stage 0 requires Memory, relationship graph, and Buzz publication",
+                    "Promoted Stage 0 requires Memory, relationship graph, and Discord handoff",
                 )
             )
         skip_tracker = True
@@ -2467,6 +2509,7 @@ def nightly(
         out / "memory-sync-receipt.json",
         out / "nightly-receipt.json",
         out / "buzz-summary" / "buzz-summary-receipt.json",
+        out / "discord-handoff" / "morning-discord-receipt.json",
     ):
         if stale_receipt.exists():
             stale_receipt.unlink()
@@ -2532,6 +2575,7 @@ def nightly(
             "memory_summary": "SKIPPED" if skip_memory_sync else "ENABLED",
             "relationship_graph": "SKIPPED" if skip_relationship_memory else "ENABLED",
             "buzz_summary": "SKIPPED" if skip_buzz else "ENABLED",
+            "discord_handoff": "SKIPPED" if skip_discord_handoff else "ENABLED",
         },
         "read_only_checks": {
             "prior_application_history": "ENABLED",
@@ -3213,6 +3257,9 @@ def nightly(
             "digest": str(out / "morning-digest.json"),
             "memory": str(out / "memory-sync-receipt.json") if not skip_memory_sync else None,
             "buzz": str(out / "buzz-summary" / "buzz-summary-receipt.json") if not skip_buzz else None,
+            "discord_handoff": str(out / "discord-handoff" / "morning-discord-receipt.json")
+            if not skip_discord_handoff
+            else None,
             "tau_semantic_prepare": str(out / "tau-semantic" / "tau-semantic-prepare-receipt.json")
             if semantic_prepare_receipt is not None
             else None,
@@ -3236,6 +3283,104 @@ def nightly(
     }
     nightly_receipt_path = out / "nightly-receipt.json"
     write_json(nightly_receipt_path, nightly_receipt)
+    if skip_discord_handoff:
+        steps["discord_handoff"] = {"skipped": True}
+        nightly_receipt["steps"] = steps
+        write_json(nightly_receipt_path, nightly_receipt)
+    else:
+        discord_receipt_path = out / "discord-handoff" / "morning-discord-receipt.json"
+        discord_bot = _morning_discord_should_use_bot()
+        repo_root = _canonical_repo_root()
+        discord_receipt = send_morning_discord_handoff(
+            run_dir=out,
+            workdir=repo_root,
+            ops_discord_run=repo_root / "skills" / "ops-discord" / "run.sh",
+            out=discord_receipt_path,
+            webhook=os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK") or "discord",
+            discord_bot=discord_bot,
+            channel_id=os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL_ID"),
+            channel_name=os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL"),
+            report_url=f"file://{out}/report/index.html",
+            post=promoted_stage0,
+        )
+        steps["discord_handoff"] = {
+            "status": discord_receipt.get("status"),
+            "receipt": str(discord_receipt_path),
+            "dry_run": discord_receipt.get("dry_run"),
+            "external_effects": discord_receipt.get("external_effects"),
+            "transport": discord_receipt.get("transport"),
+            "ops_discord_status": discord_receipt.get("ops_discord_status"),
+            "message_url": discord_receipt.get("message_url"),
+        }
+        if promoted_stage0 and (
+            discord_receipt.get("status") != "PASS"
+            or discord_receipt.get("dry_run") is not False
+            or discord_receipt.get("external_effects") is not True
+        ):
+            nightly_receipt["status"] = "ERROR"
+            write_json(nightly_receipt_path, nightly_receipt)
+            _fail(
+                ContractError(
+                    "PROMOTED_STAGE0_DISCORD_HANDOFF_FAILED",
+                    "Discord handoff receipt did not prove a live morning notification",
+                )
+            )
+        if run_receipt_path.exists() and (out / "report-manifest.json").exists():
+            consistency = build_receipt_consistency(
+                run_dir=out,
+                receipt=read_json(run_receipt_path),
+                manifest=read_json(out / "report-manifest.json"),
+            )
+            write_json(consistency_path, consistency)
+            replay_receipt = build_zero_effect_replay_receipt(out, decision_projection)
+            write_json(replay_receipt_path, replay_receipt)
+            steps["zero_effect_replay"] = {
+                "status": replay_receipt.get("status"),
+                "receipt": str(replay_receipt_path),
+                "event_count": replay_receipt.get("event_count"),
+                "projection_digest": replay_receipt.get("projection_digest"),
+                "external_effects": replay_receipt.get("external_effects"),
+            }
+            report_acceptance_receipt = validate_report_acceptance(
+                out,
+                require_zero_effect_replay=True,
+                require_stage_ledger=promoted_stage0,
+            )
+            report_acceptance_sha256 = sha256_json(report_acceptance_receipt)
+            steps["report_acceptance"] = {
+                "status": report_acceptance_receipt.get("status"),
+                "receipt": str(report_acceptance_path),
+                "sha256": report_acceptance_sha256,
+                "external_effects": report_acceptance_receipt.get("external_effects"),
+                "failure_count": len(report_acceptance_receipt.get("failures") or []),
+            }
+            if promoted_stage0 and consistency.get("status") != "PASS":
+                nightly_receipt["status"] = "ERROR"
+                nightly_receipt["receipt_consistency_status"] = consistency.get("status")
+                nightly_receipt["steps"] = steps
+                write_json(nightly_receipt_path, nightly_receipt)
+                _fail(
+                    ContractError(
+                        "PROMOTED_STAGE0_RECEIPT_CONSISTENCY_FAILED",
+                        f"Receipt consistency failed after Discord handoff: {consistency}",
+                    )
+                )
+            if promoted_stage0 and report_acceptance_receipt.get("status") != "PASS":
+                nightly_receipt["status"] = "ERROR"
+                nightly_receipt["report_acceptance_status"] = report_acceptance_receipt.get("status")
+                nightly_receipt["steps"] = steps
+                write_json(nightly_receipt_path, nightly_receipt)
+                _fail(
+                    ContractError(
+                        "PROMOTED_STAGE0_REPORT_ACCEPTANCE_FAILED",
+                        f"Report acceptance failed after Discord handoff: {report_acceptance_receipt}",
+                    )
+                )
+            nightly_receipt["artifact_hashes"]["report_acceptance"] = report_acceptance_sha256
+            nightly_receipt["receipt_consistency_status"] = consistency.get("status")
+            nightly_receipt["report_acceptance_status"] = report_acceptance_receipt.get("status")
+        nightly_receipt["steps"] = steps
+        write_json(nightly_receipt_path, nightly_receipt)
     if promote_latest_on_success:
         _promote_nightly_latest(out)
     _emit_terminal_report_table(out, nightly_receipt)
@@ -3329,7 +3474,6 @@ def schedule(
     )
     if diagnostic:
         nightly_args.extend(["--diagnostic", "--skip-buzz"])
-        buzz_bin = None
         if claim_snapshot is None and default_claim_snapshot.is_file():
             claim_snapshot = default_claim_snapshot
     else:
@@ -3342,15 +3486,7 @@ def schedule(
                     )
                 )
             claim_snapshot = default_claim_snapshot
-        buzz_bin = shutil.which("buzz")
-        if not buzz_bin:
-            _fail(
-                ContractError(
-                    "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED",
-                    "Promoted Stage 0 requires buzz-cli on PATH before scheduler registration",
-                )
-            )
-        nightly_args.append("--promoted-stage0")
+        nightly_args.extend(["--promoted-stage0", "--skip-buzz"])
         nightly_args.append("--tau-semantic-provider")
         nightly_args.extend(["--tau-semantic-handler", "gpt-5.5-high"])
     if claim_snapshot is not None:
@@ -3360,8 +3496,17 @@ def schedule(
         "MONITOR_ATS_MEMORY_ENABLED": "0",
         "MONITOR_RELATIONSHIP_SIGNALS_ENABLED": "1",
     }
-    if buzz_bin:
-        environment["BUZZ_BIN"] = str(buzz_bin)
+    if not diagnostic:
+        environment["MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT"] = os.environ.get(
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT", "1"
+        )
+        environment["MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL"] = os.environ.get(
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL", "horus"
+        )
+        if os.environ.get("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK"):
+            environment["MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK"] = os.environ[
+                "MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK"
+            ]
     if claim_snapshot is not None:
         environment["MONITOR_CLAIM_SNAPSHOT_PATH"] = str(claim_snapshot)
     effect_policy = _scheduler_effect_policy(diagnostic=diagnostic)
@@ -3467,7 +3612,7 @@ def schedule(
 @app.command("schedule-morning-discord")
 def schedule_morning_discord(
     cron: str = typer.Option("0 8 * * *", "--cron"),
-    webhook: str | None = typer.Option(None, "--webhook", help="ops-discord webhook name; defaults to slack."),
+    webhook: str | None = typer.Option(None, "--webhook", help="ops-discord webhook name; defaults to discord."),
     discord_bot: bool = typer.Option(False, "--discord-bot", help="Send through Discord bot API instead of webhook."),
     channel_id: str | None = typer.Option(None, "--channel-id", help="Discord channel id for --discord-bot."),
     channel_name: str | None = typer.Option(None, "--channel-name", help="Discord channel name for --discord-bot."),
@@ -3507,7 +3652,7 @@ def schedule_morning_discord(
         elif channel_name:
             args.extend(["--channel-name", channel_name])
     else:
-        args.extend(["--webhook", webhook or os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK") or "slack"])
+        args.extend(["--webhook", webhook or os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK") or "discord"])
     if post:
         args.append("--post")
     command = f"zsh -lc {shlex.quote('source ~/.zshrc >/dev/null 2>&1; exec ' + shlex.join(args))}"

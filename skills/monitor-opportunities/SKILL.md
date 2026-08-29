@@ -42,7 +42,7 @@ composes:
   - extract-entities
   - surf
   - ticket
-  - ops-buzz
+  - ops-discord
   - classifier-lab
   - mailbox-mining
   - ops-linkedin
@@ -51,6 +51,7 @@ composes:
   - scheduler
   - task-monitor
   - agentic-evals
+  - ops-buzz
 complies:
   - best-practices-skills
   - best-practices-python
@@ -125,7 +126,7 @@ cron (0 2 * * *) → deterministic nightly (reliable orchestration; keep)
   tailor     → claim-bound resume · live ATS form capture (human-gated submit)
   track      → PRIVATE repo grahama1970/opportunities (issue per opp, dedup, lifecycle labels)
                dual queues: track:employment · track:consulting (prospect queue)
-  deliver    → /memory (morning_opportunities) + Buzz summary
+  deliver    → /memory (morning_opportunities) + Discord morning handoff
   flywheel   → opportunity_labels accumulate → /classifier-lab trains learned relevance at N≥300
 ```
 
@@ -361,8 +362,10 @@ only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 ./run.sh tailor --posting <key> --out <dir>    # claim-bound resume artifacts
 ./run.sh report --input <manifest> --out <dir> # validate and render one report
 ./run.sh serve --report <run-dir>              # loopback decision entry point
-./run.sh buzz-summary --run <run-dir> ...      # Buzz-ready report summary via ops-buzz
-./run.sh buzz-review --run <run-dir> ...       # dry-run Buzz agent review request
+./run.sh morning-discord --run <run-dir> ...   # Discord morning handoff via ops-discord
+./run.sh schedule-morning-discord              # register the 8 AM Discord handoff
+./run.sh buzz-summary --run <run-dir> ...      # legacy/manual Buzz summary via ops-buzz
+./run.sh buzz-review --run <run-dir> ...       # legacy/manual Buzz agent review request
 ./run.sh tau-semantic-prepare --run <run-dir> --out <dir> --top-n 3
 ./run.sh tau-semantic-provider-eval --input <json> --out <dir> --execute
 ./run.sh tau-semantic-install --run <run-dir> --provider-receipt <json>
@@ -477,7 +480,7 @@ Scheduler failure self-repair may emit an operational notification through
 
 ```bash
 export MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY=1
-export MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK=slack
+export MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK=discord
 ```
 
 `MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN=1` resolves the webhook and

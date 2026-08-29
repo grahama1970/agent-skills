@@ -33,6 +33,7 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "abc123",
             "--require-clean",
             "--promoted-stage0",
+            "--skip-buzz",
             "--tau-semantic-provider",
             "--tau-semantic-handler",
             "gpt-5.5-high",
@@ -41,6 +42,8 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "MONITOR_TRACKER_ENABLED": "0",
             "MONITOR_ATS_MEMORY_ENABLED": "0",
             "MONITOR_RELATIONSHIP_SIGNALS_ENABLED": "1",
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT": "1",
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL": "horus",
         },
         "expected_revision": "abc123",
         "claim_snapshot": str(repo / "claim-snapshot.json"),
@@ -53,7 +56,8 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "linkedin_action": "FORBIDDEN",
             "meetup_rsvp": "FORBIDDEN",
             "ats_submit": "FORBIDDEN",
-            "buzz_summary": "ENABLED",
+            "buzz_summary": "SKIPPED",
+            "discord_handoff": "ENABLED",
         },
         "workdir": str(repo),
         "cron": "0 2 * * *",
@@ -71,7 +75,7 @@ def _scheduler_test_receipt(repo: Path, command: str | None = None) -> dict[str,
         "zsh -lc 'exec "
         f"{repo}/skills/monitor-opportunities/run.sh nightly "
         "--expected-revision abc123 --require-clean --skip-tracker "
-        "--skip-ats-memory --promoted-stage0 --tau-semantic-provider "
+        "--skip-ats-memory --promoted-stage0 --skip-buzz --tau-semantic-provider "
         "--tau-semantic-handler gpt-5.5-high'"
     )
     readback = {
@@ -191,8 +195,10 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert "--promoted-stage0" in source
     assert "--tau-semantic-provider" in source
     assert "PROMOTED_STAGE0_CLAIM_SNAPSHOT_REQUIRED" in source
-    assert "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED" in source
-    assert 'environment["BUZZ_BIN"]' in source
+    assert "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED" not in source
+    assert 'environment["BUZZ_BIN"]' not in source
+    assert "--skip-buzz" in source
+    assert "discord_handoff" in source
     assert "monitor-opportunities-nightly-receipt.json" in source
     assert "monitor-opportunities-nightly-equivalence.json" in source
     assert "scheduler-exec-check" in source
@@ -244,10 +250,6 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
 
     monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
     monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
-    monkeypatch.setattr(
-        "shutil.which",
-        lambda name: "/usr/local/bin/buzz" if name == "buzz" else None,
-    )
     monkeypatch.setattr("subprocess.run", fake_run)
 
     result = runner.invoke(
@@ -270,7 +272,8 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert "--promoted-stage0" in payload["command"]
     assert "--diagnostic" not in payload["command"]
     assert "MONITOR_CLAIM_SNAPSHOT_PATH=" in payload["command"]
-    assert "BUZZ_BIN=/usr/local/bin/buzz" in payload["command"]
+    assert "--skip-buzz" in payload["command"]
+    assert "BUZZ_BIN=" not in payload["command"]
     assert payload["effect_policy"] == {
         "tracker": "SKIPPED",
         "prior_application_history": "ENABLED",
@@ -280,7 +283,8 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "linkedin_action": "FORBIDDEN",
         "meetup_rsvp": "FORBIDDEN",
         "ats_submit": "FORBIDDEN",
-        "buzz_summary": "ENABLED",
+        "buzz_summary": "SKIPPED",
+        "discord_handoff": "ENABLED",
     }
     assert Path(payload["receipt"]).is_file()
     equivalence_path = Path(payload["scheduler_equivalence_receipt"])
@@ -304,6 +308,9 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert equivalence["checks"]["ats_memory_disabled_in_environment"] is True
     assert equivalence["checks"]["forbidden_effect_policy"] is True
     assert equivalence["checks"]["external_effects_false"] is True
+    assert equivalence["checks"]["buzz_skipped_for_promoted"] is True
+    assert equivalence["checks"]["discord_handoff_enabled_for_promoted"] is True
+    assert equivalence["checks"]["discord_handoff_transport_bound"] is True
     assert equivalence["intent"]["nightly_args"] == [
         "nightly",
         "--expected-revision",
@@ -312,11 +319,17 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "--skip-tracker",
         "--skip-ats-memory",
         "--promoted-stage0",
+        "--skip-buzz",
         "--tau-semantic-provider",
         "--tau-semantic-handler",
         "gpt-5.5-high",
     ]
-    assert equivalence["intent"]["environment"]["BUZZ_BIN"] == "/usr/local/bin/buzz"
+    assert "BUZZ_BIN" not in equivalence["intent"]["environment"]
+    assert equivalence["intent"]["environment"]["MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT"] == "1"
+    assert (
+        equivalence["intent"]["environment"]["MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL"]
+        == "horus"
+    )
 
 
 def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
@@ -363,10 +376,6 @@ def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
 
     monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
     monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
-    monkeypatch.setattr(
-        "shutil.which",
-        lambda name: "/usr/local/bin/buzz" if name == "buzz" else None,
-    )
     monkeypatch.setattr("subprocess.run", fake_run)
 
     result = runner.invoke(
@@ -550,6 +559,7 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
         "meetup_rsvp": "FORBIDDEN",
         "ats_submit": "FORBIDDEN",
         "buzz_summary": "SKIPPED",
+        "discord_handoff": "SKIPPED",
     }
     equivalence = json.loads(
         Path(payload["scheduler_equivalence_receipt"]).read_text(encoding="utf-8")
@@ -559,6 +569,7 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
     assert equivalence["checks"]["diagnostic_flag_matches"] is True
     assert equivalence["checks"]["promoted_stage0_flag_absent"] is True
     assert equivalence["checks"]["buzz_skipped_for_diagnostic"] is True
+    assert equivalence["checks"]["discord_handoff_skipped_for_diagnostic"] is True
     assert equivalence["intent"]["nightly_args"] == [
         "nightly",
         "--expected-revision",
@@ -580,7 +591,7 @@ def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
     command = (
         "zsh -lc 'exec /repo/run.sh nightly --expected-revision abc123 "
         "--require-clean --skip-tracker --skip-ats-memory --promoted-stage0 "
-        "--tau-semantic-provider --tau-semantic-handler gpt-5.5-high'"
+        "--skip-buzz --tau-semantic-provider --tau-semantic-handler gpt-5.5-high'"
     )
     _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
     out = tmp_path / "execution-equivalence.json"
@@ -1159,8 +1170,9 @@ def test_scheduler_exec_check_notifies_ops_discord_when_webhook_env_exists(
     out = tmp_path / "execution-equivalence.json"
     captured: dict[str, object] = {}
     monkeypatch.delenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY", raising=False)
+    monkeypatch.delenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK", raising=False)
     monkeypatch.setenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN", "1")
-    monkeypatch.setenv("SLACK_WEBHOOK_URL", "https://example.invalid/webhook")
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://example.invalid/webhook")
 
     def fake_run(cmd, **kwargs):
         if cmd == ["git", "rev-parse", "HEAD"]:
@@ -1186,14 +1198,14 @@ def test_scheduler_exec_check_notifies_ops_discord_when_webhook_env_exists(
             return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(stdout), stderr="")
         assert cmd[0] == str(ops_discord_runner)
         assert cmd[1] == "notify"
-        assert cmd[cmd.index("--webhook") + 1] == "slack"
+        assert cmd[cmd.index("--webhook") + 1] == "discord"
         assert "--dry-run" in cmd
         captured["ops_discord_notify_cmd"] = cmd
         stdout = {
             "schema": "ops_discord.notification_receipt.v1",
             "status": "DRY_RUN",
-            "webhook": "slack",
-            "source": "env:SLACK_WEBHOOK_URL",
+            "webhook": "discord",
+            "source": "env:DISCORD_WEBHOOK_URL",
             "dry_run": True,
             "external_effects": False,
         }
@@ -1216,7 +1228,7 @@ def test_scheduler_exec_check_notifies_ops_discord_when_webhook_env_exists(
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert captured["ops_discord_notify_cmd"]
     assert payload["self_repair"]["notification"]["status"] == "DRY_RUN"
-    assert payload["self_repair"]["notification"]["ops_discord_source"] == "env:SLACK_WEBHOOK_URL"
+    assert payload["self_repair"]["notification"]["ops_discord_source"] == "env:DISCORD_WEBHOOK_URL"
 
 
 def test_scheduler_exec_check_fails_on_mismatched_final_acceptance_hash(

@@ -101,8 +101,8 @@ def test_morning_discord_send_uses_ops_discord_dry_run(tmp_path: Path, monkeypat
                 {
                     "schema": "ops_discord.notification_receipt.v1",
                     "status": "DRY_RUN",
-                    "webhook": "slack",
-                    "source": "env:SLACK_WEBHOOK_URL",
+                    "webhook": "discord",
+                    "source": "env:DISCORD_WEBHOOK_URL",
                 }
             ),
             stderr="",
@@ -114,7 +114,7 @@ def test_morning_discord_send_uses_ops_discord_dry_run(tmp_path: Path, monkeypat
         workdir=tmp_path,
         ops_discord_run=ops,
         out=run_dir / "discord-handoff" / "morning-discord-receipt.json",
-        webhook="slack",
+        webhook="discord",
     )
 
     assert receipt["status"] == "PASS"
@@ -122,6 +122,7 @@ def test_morning_discord_send_uses_ops_discord_dry_run(tmp_path: Path, monkeypat
     assert receipt["external_effects"] is False
     assert "--dry-run" in captured["cmd"]
     assert captured["cmd"][:2] == [str(ops), "notify"]
+    assert captured["cmd"][captured["cmd"].index("--webhook") + 1] == "discord"
 
 
 def test_schedule_morning_discord_registers_8am_handoff(tmp_path: Path, monkeypatch) -> None:

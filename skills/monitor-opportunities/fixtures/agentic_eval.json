@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "monitor-opportunities",
   "trials": 2,
-  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, prints a terminal opportunity table for human review, emits honest Slack/Discord/Gmail source coverage receipts, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold",
+  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, prints a terminal opportunity table for human review, emits honest Slack/Discord/Gmail source coverage receipts, makes Discord the primary morning handoff while Buzz remains legacy/manual, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold",
   "claims": {
-    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, prints the opportunity table in terminal output, emits visible Slack/Discord/Gmail source receipts instead of omitting those lanes, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim",
+    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, prints the opportunity table in terminal output, emits visible Slack/Discord/Gmail source receipts instead of omitting those lanes, uses Discord as the morning discussion handoff and skips Buzz in promoted Stage 0, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim",
     "does_not_prove": "real successful application submissions (deliberately human-gated), long-run scheduler reliability, or semantic quality of tailored resumes"
   },
   "cases": [
@@ -1435,11 +1435,14 @@
       "does_not_prove": "A fresh live nightly run passes external source capture, Tau provider evaluation, or report acceptance."
     },
     {
-      "name": "promoted-stage0-nightly-builds-stage-ledger-before-acceptance",
+      "name": "promoted-stage0-nightly-discord-handoff-before-acceptance",
       "type": "adversarial",
       "real_world": false,
       "timeout_seconds": 120,
       "seams": [
+        "nightly.discord_handoff",
+        "ops_discord.notify_invocation",
+        "publication_policy.buzz_legacy_skip",
         "nightly.promoted_stage0_final_gate",
         "report_acceptance.stage_ledger_gate",
         "stage_ledger.stage_conservation"
@@ -1455,11 +1458,13 @@
           "1 passed"
         ],
         "stderr_excludes": [
+          "PROMOTED_STAGE0_DISCORD_HANDOFF_FAILED",
+          "PROMOTED_STAGE0_BUZZ",
           "PROMOTED_STAGE0_REPORT_ACCEPTANCE_FAILED",
           "stage-ledger.json is missing"
         ]
       },
-      "proves": "Promoted Stage 0 nightly writes or backfills stage-ledger.json before report acceptance requires it, so the final publication gate cannot fail solely because digest-stage ledger generation was bypassed.",
+      "proves": "Promoted Stage 0 nightly skips legacy Buzz, writes a Discord morning handoff receipt through ops-discord before final acceptance, refreshes receipt-consistency/report-acceptance after that handoff, and writes or backfills stage-ledger.json before report acceptance requires it.",
       "does_not_prove": "A fresh live nightly has semantically correct opportunities, that source/browser capture passed, or that any external application action is authorized."
     },
     {
