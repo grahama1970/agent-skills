@@ -1583,12 +1583,12 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat skills/monitor-opportunities/tests/test_ats_form_capture.py::test_discord_records_from_text_keeps_hiring_posts_and_skips_chatter skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_records_from_rows_keeps_search_result_opportunities_and_skips_noise skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_capture_continues_after_navigation_timeout -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat skills/monitor-opportunities/tests/test_ats_form_capture.py::test_discord_records_from_text_keeps_hiring_posts_and_skips_chatter skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_records_from_rows_keeps_search_result_opportunities_and_skips_noise skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_capture_continues_after_navigation_timeout skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_capture_retries_fast_dom_after_extraction_timeout -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "7 passed"
+          "8 passed"
         ],
         "stderr_excludes": [
           "KeyError",

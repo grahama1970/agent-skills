@@ -885,6 +885,27 @@ _GMAIL_EXTRACT_JS = (
     "})()"
 )
 
+_GMAIL_FAST_EXTRACT_JS = (
+    "(function(){"
+    "function clean(x){return (x||'').replace(/\\s+/g,' ').trim();}"
+    "function txt(e,s){var n=e.querySelector(s);return n?clean(n.textContent||''):'';}"
+    "function attr(e,s,a){var n=e.querySelector(s);return n?clean(n.getAttribute(a)||''):'';}"
+    "var nodes=document.querySelectorAll('.zA');"
+    "var rows=[];"
+    "for(var i=0;i<nodes.length&&rows.length<50;i++){"
+    "var e=nodes[i];"
+    "rows.push({"
+    "sender:attr(e,'.yW span[email],.bA4 span[email]','email')||txt(e,'.yP,.zF,.yW,.bA4'),"
+    "subject:txt(e,'.bog'),"
+    "snippet:txt(e,'.y2'),"
+    "date:attr(e,'.xW span[title]','title')||txt(e,'.xW'),"
+    "text:''"
+    "});"
+    "}"
+    "return JSON.stringify({url:location.href,title:document.title,rows:rows,extractor:'fast_dom'});"
+    "})()"
+)
+
 
 def _gmail_records_from_rows(rows: list[dict[str, Any]], *, search_url: str) -> list[dict[str, Any]]:
     opportunity_signal = re.compile(
@@ -977,7 +998,13 @@ def capture_gmail_opportunity_search(out_dir: Path, surf_run: Path = SURF_RUN_DE
             receipt["navigation_timeout"] = str(exc)
             logger.warning("Gmail opportunity search navigation timed out; attempting current-tab extraction: {}", exc)
         _surf_pause(surf_run, "6")
-        raw = _surf_js(surf_run, tab_id, _GMAIL_EXTRACT_JS, timeout=60)
+        try:
+            raw = _surf_js(surf_run, tab_id, _GMAIL_EXTRACT_JS, timeout=60)
+        except subprocess.TimeoutExpired as exc:
+            receipt["extraction_timeout"] = str(exc)
+            receipt["extraction_fallback"] = "fast_dom"
+            logger.warning("Gmail opportunity search full extraction timed out; retrying fast DOM extraction: {}", exc)
+            raw = _surf_js(surf_run, tab_id, _GMAIL_FAST_EXTRACT_JS, timeout=25)
         snapshot = _surf_json_value(raw, {})
         if not isinstance(snapshot, dict):
             snapshot = {}
