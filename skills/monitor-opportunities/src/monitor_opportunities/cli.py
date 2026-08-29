@@ -861,7 +861,21 @@ def _scheduler_self_repair_notify_enabled() -> bool:
         return explicit.strip().lower() in {"1", "true", "yes", "on"}
     return bool(
         os.environ.get("SLACK_WEBHOOK_URL") or os.environ.get("DISCORD_WEBHOOK_URL")
+        or os.environ.get("OPS_DISCORD_WEBHOOK_DISCORD_URL")
+        or _scheduler_self_repair_should_use_bot()
     )
+
+
+def _scheduler_self_repair_should_use_bot() -> bool:
+    explicit = os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_DISCORD_BOT")
+    if explicit is not None:
+        return explicit.strip().lower() in {"1", "true", "yes", "on"}
+    if os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK"):
+        return False
+    inherited = os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT")
+    if inherited is not None:
+        return inherited.strip().lower() in {"1", "true", "yes", "on"}
+    return False
 
 
 def _scheduler_self_repair_webhook_name() -> str:
@@ -915,6 +929,7 @@ def _notify_scheduler_self_repair(
         return notification
 
     webhook_name = _scheduler_self_repair_webhook_name()
+    use_discord_bot = _scheduler_self_repair_should_use_bot()
     notify_dry_run = dry_run or _truthy_env("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN")
     content = (
         f"monitor-opportunities required step failed and entered self-repair.\n"
@@ -926,14 +941,26 @@ def _notify_scheduler_self_repair(
     cmd = [
         str(runner),
         "notify",
-        "--webhook",
-        webhook_name,
         "--title",
         "monitor-opportunities self-repair",
         "--content",
         content,
         "--json",
     ]
+    if use_discord_bot:
+        cmd.append("--discord-bot")
+        channel_id = os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_DISCORD_CHANNEL_ID") or os.getenv(
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL_ID"
+        )
+        channel_name = os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_DISCORD_CHANNEL") or os.getenv(
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL"
+        )
+        if channel_id:
+            cmd.extend(["--channel-id", channel_id])
+        elif channel_name:
+            cmd.extend(["--channel-name", channel_name])
+    else:
+        cmd.extend(["--webhook", webhook_name])
     if notify_dry_run:
         cmd.append("--dry-run")
 

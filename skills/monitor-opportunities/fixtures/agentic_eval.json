@@ -1445,17 +1445,18 @@
       "seams": [
         "scheduler.execution_equivalence",
         "failure.pipeline_self_repair",
+        "ops_discord.bot_notification",
         "ops_discord.failure_notification"
       ],
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_when_enabled -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_when_enabled skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_bot_when_configured -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ],
         "stderr_excludes": [
           "Webhook not found",
