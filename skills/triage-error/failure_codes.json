@@ -3,6 +3,51 @@
   "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
   "codes": [
     {
+      "code": "tau_project_dag_missing_required_evidence",
+      "layer": "tau.project_dag",
+      "match": ["missing_required_evidence", "node response did not include required evidence", "required evidence", "MISSING_REQUIRED_EVIDENCE"],
+      "cause": "A required Tau DAG node response omitted one or more evidence kinds declared by node.required_evidence, so downstream DAG progress must stay blocked.",
+      "next_command": "Open the failed-step receipt named in pipeline_self_repair.failed_step_receipt; repair the same node handler so result.evidence includes every missing kind with the active goal_hash; run the retained agentic eval; mark the repair ledger CATEGORY_GREEN; rerun tau dag-run against the same receipt directory.",
+      "recoverable": true,
+      "not_this": ["provider authentication", "Discord delivery failure", "watchdog dispatch failure"]
+    },
+    {
+      "code": "tau_project_dag_ops_discord_notification_failed",
+      "layer": "tau.project_dag",
+      "match": ["OPS_DISCORD_NOTIFICATION_FAILED", "CHANNEL_NOT_FOUND", "SEND_FAILED", "ops_discord_notification_ok", "ops-discord notification"],
+      "cause": "Tau reached the human-adjudication route, but the ops-discord notification receipt reported a delivery failure or missing channel.",
+      "next_command": "Read the ops_discord.notification_receipt.v1 path from the repair projection, fix the Discord channel/token/policy through the ops-discord skill, then rerun the same Tau repair notification path and verify the viewer exposes SENT or a typed failure.",
+      "recoverable": true,
+      "not_this": ["handler evidence missing", "repair category closed", "status receipt unblocks repair"]
+    },
+    {
+      "code": "tau_project_dag_human_adjudication_required",
+      "layer": "tau.project_dag",
+      "match": ["HUMAN_ADJUDICATION_REQUIRED", "AWAITING_ADJUDICATION", "WAITING_FOR_HUMAN", "human adjudication", "human_adjudication_required"],
+      "cause": "A Tau repair category requires a typed human decision before the same semantic node can rerun or downstream nodes can advance.",
+      "next_command": "Send or inspect the ops-discord question receipt; accept only a tau.discord_human_answer.v1 receipt matching question_id, run_id, node_id, goal_hash, and allowed answer; do not treat status text as an unblock.",
+      "recoverable": true,
+      "not_this": ["agentic eval proof", "GitHub ticket closure", "provider semantic pass"]
+    },
+    {
+      "code": "tau_project_dag_ticket_watchdog_repair_not_green",
+      "layer": "tau.project_dag",
+      "match": ["ticket_skipped", "watchdog dispatch disabled", "watchdog", "ticket disposition", "lacks ticket disposition", "repair_state=TICKETED", "repair_state=WATCHDOG_DISPATCHED"],
+      "cause": "A Tau repair category has not completed the durable ticket/watchdog/eval closure path required for CATEGORY_GREEN.",
+      "next_command": "Bind or create the focused GitHub ticket with the repair category marker, run project-watchdog for the exact issue or record its refusal receipt, attach the retained agentic-evals report, then run pipeline-self-repair mark-repaired and validate-ledger --require-agentic-eval.",
+      "recoverable": true,
+      "not_this": ["Discord delivery only", "local status JSON only", "pytest-only proof"]
+    },
+    {
+      "code": "tau_project_dag_agentic_eval_not_ready",
+      "layer": "tau.project_dag",
+      "match": ["agentic-evals", "readiness", "NOT_READY", "BLOCKED", "fixture rejected", "low-value ('slop')"],
+      "cause": "A Tau repair closure proof lacks a retained READY/PASS agentic-evals report or the eval fixture was rejected as low value.",
+      "next_command": "Repair the eval fixture so it has a real_world adversarial case, rerun skills/agentic-evals/run.sh run for the Tau manifest, read back readiness=READY, then attach that report to the repair ledger before rerun.",
+      "recoverable": true,
+      "not_this": ["pytest green", "manual reviewer prose", "Discord status update"]
+    },
+    {
       "code": "webgpt_attachment_bundle_rejected",
       "layer": "surf",
       "match": ["attach_file_preflight_failed", "maximum is", "zip contains"],
