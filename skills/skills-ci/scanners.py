@@ -100,7 +100,7 @@ _NOUN_ALLOWLIST = {
     "plan", "project-state", "recommend-skill-chain", "regressor-lab",
     "service-status", "skill-lab", "streamdeck-lab", "surf",
     "sync-sites", "table-lab", "task-monitor", "test-lab",
-    "voice-lab",
+    "voice-lab", "shame",
     "qra-review",
     # Batch added 2026-03-29 -- established noun-only names
     "checkpoint", "chutes-call", "clean-text", "code-runner",

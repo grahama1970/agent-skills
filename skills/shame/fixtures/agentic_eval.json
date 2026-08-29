@@ -1,0 +1,132 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "deterministic JSONL capture plus live Memory /store and /recall/by-keys read-back for shame_training_examples",
+  "claims": {
+    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, and live Memory write/read-back records for classifier training",
+    "does_not_prove": "classifier training quality, automatic transcript discovery in every Pi session shape, or future model promotion"
+  },
+  "capability_claims": [
+    {
+      "id": "shame.capture_training_example",
+      "description": "Capture a labeled assistant response as reusable classifier training data.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.memory_persistence",
+      "description": "Persist shame examples to the Memory daemon and independently read them back.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "local-jsonl-capture-contract",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.capture_training_example"
+      ],
+      "seams": [
+        "session-selection",
+        "jsonl-schema"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && session=$(mktemp) && out=$(mktemp) && printf '%s\\n' '{\"type\":\"message\",\"id\":\"u1\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"what is your actual status\"}]}}' '{\"type\":\"message\",\"id\":\"a1\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Committed and pushed. Done.\"}]}}' > $session && ./run.sh capture --session $session --entry-id a1 --out $out --verdict reject --reason commit_laundering --note 'missing actual status' --no-memory >/tmp/shame_local_eval_receipt.json && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); if(row.classifier_label!=='bullshit_update') throw new Error('bad classifier'); if(!row.user_text.includes('actual status')) throw new Error('missing user text'); console.log('LOCAL_JSONL_CAPTURE_OK')\" $out"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LOCAL_JSONL_CAPTURE_OK"
+        ]
+      }
+    },
+    {
+      "name": "legacy-label-no-memory-contract",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.capture_training_example"
+      ],
+      "seams": [
+        "legacy-label-mapping"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && out=$(mktemp) && ./run.sh capture --text 'Committed and pushed.' --label commit_laundering --no-memory --out $out | tee /tmp/shame_legacy_eval.out && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); console.log('LEGACY_LABEL_OK')\" $out"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LEGACY_LABEL_OK"
+        ]
+      }
+    },
+    {
+      "name": "live-memory-store-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.memory_persistence"
+      ],
+      "seams": [
+        "memory-store",
+        "memory-readback"
+      ],
+      "timeout_seconds": 90,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && out=$(mktemp) && receipt=$(./run.sh capture --text 'Committed and pushed.' --verdict reject --reason vague_git_update --reason synthetic_fixture --note 'agentic eval live memory write' --out $out --memory-collection shame_training_examples) && printf '%s\\n' \"$receipt\" > /tmp/shame_live_memory_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_live_memory_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.memory.collection!=='shame_training_examples') throw new Error('wrong collection'); if(d.memory.read_back_count!==1) throw new Error('no readback'); console.log('LIVE_MEMORY_READBACK_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LIVE_MEMORY_READBACK_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/shame_live_memory_receipt.json",
+            "json_pointer": "/memory/read_back_count",
+            "equals": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "unsafe-memory-collection-rejected-before-write",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.capture_training_example"
+      ],
+      "seams": [
+        "input-validation"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh capture --text 'bad update' --verdict reject --reason vague_git_update --memory-collection _system"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "memory collection must not be a system collection"
+        ]
+      }
+    }
+  ]
+}
