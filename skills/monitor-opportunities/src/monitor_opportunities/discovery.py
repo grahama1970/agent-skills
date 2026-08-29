@@ -471,6 +471,197 @@ def _required_browser_evidence_receipt(
     return _finalize_receipt(receipt), []
 
 
+SOCIAL_OPPORTUNITY_TERMS = (
+    "agentic",
+    "ai engineer",
+    "artificial intelligence",
+    "machine learning",
+    "llm",
+    "automation",
+    "document extraction",
+    "data extraction",
+    "contract",
+    "consulting",
+    "part-time",
+    "fractional",
+    "buffalo",
+    "remote",
+    "python",
+    "react",
+    "node",
+)
+SOCIAL_POLICY = "read_only_message_evidence_no_send_no_reply_no_apply"
+
+
+def _load_message_records(path: Path) -> list[dict[str, Any]]:
+    raw = path.read_text(encoding="utf-8")
+    try:
+        payload = json.loads(raw)
+    except ValueError:
+        record = _text_evidence_record(raw)
+        return [record] if record else []
+    if isinstance(payload, list):
+        return [row for row in payload if isinstance(row, dict)]
+    if isinstance(payload, dict):
+        for key in ("messages", "emails", "threads", "records", "items", "opportunities"):
+            rows = payload.get(key)
+            if isinstance(rows, list):
+                return [row for row in rows if isinstance(row, dict)]
+        return [payload]
+    return []
+
+
+def _message_text(record: dict[str, Any]) -> str:
+    parts = [
+        record.get("title"),
+        record.get("subject"),
+        record.get("role"),
+        record.get("company"),
+        record.get("organization"),
+        record.get("channel"),
+        record.get("sender"),
+        record.get("author"),
+        record.get("body"),
+        record.get("content"),
+        record.get("text"),
+        record.get("snippet"),
+        record.get("raw_text_excerpt"),
+    ]
+    return "\n".join(str(part) for part in parts if part)
+
+
+def _message_url(record: dict[str, Any]) -> str | None:
+    for key in ("url", "permalink", "message_url", "thread_url", "job_url", "posting_url", "apply_url"):
+        value = str(record.get(key) or "").strip()
+        if value:
+            return value
+    return None
+
+
+def _message_hits(record: dict[str, Any]) -> list[str]:
+    low = f" {_message_text(record).lower()} "
+    hits = []
+    for term in SOCIAL_OPPORTUNITY_TERMS:
+        if term in {"llm"}:
+            matched = re.search(r"(?<![a-z0-9])llms?(?![a-z0-9])", low) is not None
+        elif term == "python":
+            matched = re.search(r"(?<![a-z0-9])python(?![a-z0-9])", low) is not None
+        elif term == "react":
+            matched = re.search(r"(?<![a-z0-9])react(?![a-z0-9])", low) is not None
+        elif term == "node":
+            matched = re.search(r"(?<![a-z0-9])node(?:\\.js)?(?![a-z0-9])", low) is not None
+        else:
+            matched = term in low
+        if matched:
+            hits.append(term)
+    return hits
+
+
+def _message_evidence_candidates(
+    path: Path,
+    *,
+    provider: str,
+    required_source_id: str,
+    target: str,
+    source_class: str,
+    channel: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    raw = path.read_bytes()
+    receipt = _base_receipt("C", provider, target, source_class)
+    receipt["required_source_id"] = required_source_id
+    receipt["channel"] = channel
+    receipt["automation_policy"] = SOCIAL_POLICY
+    receipt["external_effects"] = False
+    receipt["request_summary"] = (
+        f"Read local {provider} opportunity evidence artifact {path.name}; "
+        "no send, reply, DM, apply, archive, label, or platform mutation"
+    )
+    receipt["response_status"] = None
+    receipt["content_type"] = "application/json" if path.suffix.lower() == ".json" else "text/plain"
+    receipt["response_bytes"] = len(raw)
+    receipt["content_sha256"] = sha256_bytes(raw)
+    receipt["evidence_refs"] = [_local_file_ref(path)]
+    receipt["limitations"].extend(
+        [
+            f"{provider} evidence is a read-only opportunity signal.",
+            "Rows are admitted only when the captured message text contains explicit opportunity terms.",
+            f"Automation policy: {SOCIAL_POLICY}.",
+        ]
+    )
+    try:
+        records = _load_message_records(path)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        receipt["result_status"] = "INVALID_RESPONSE"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Local {provider} artifact could not be parsed: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+
+    candidates: list[dict[str, Any]] = []
+    skipped = 0
+    for index, record in enumerate(records, start=1):
+        hits = _message_hits(record)
+        if not hits:
+            skipped += 1
+            continue
+        text = _message_text(record)
+        title = str(record.get("title") or record.get("subject") or record.get("role") or "").strip()
+        if not title:
+            title = f"{provider.title()} opportunity signal #{index}"
+        organization = str(
+            record.get("organization")
+            or record.get("company")
+            or record.get("client")
+            or record.get("sender")
+            or record.get("author")
+            or record.get("channel")
+            or target
+        ).strip()
+        evidence_url = _message_url(record) or _local_file_ref(path)
+        location = str(record.get("location") or record.get("location_display") or "Opportunity channel; delivery model unknown").strip()
+        payload = {
+            "lane": "C",
+            "source_receipt_id": receipt["receipt_id"],
+            "source_provider": provider,
+            "source_class": source_class,
+            "source_identity": str(record.get("id") or record.get("message_id") or evidence_url),
+            "automation_policy": SOCIAL_POLICY,
+            "organization": organization,
+            "title": title,
+            "location_display": location,
+            "workplace_type": _workplace_type(location, text),
+            "relocation_required": False,
+            "clearance_required": False,
+            "posting_url": evidence_url,
+            "apply_url": str(record.get("apply_url") or record.get("job_url") or "") or None,
+            "primary_evidence_url": evidence_url,
+            "published_at": record.get("published_at") or record.get("sent_at") or record.get("timestamp") or record.get("observed_at"),
+            "updated_at": record.get("updated_at") or record.get("observed_at"),
+            "content_hash": sha256_bytes(json.dumps(record, sort_keys=True).encode("utf-8")),
+            "posting_text": text[:14000],
+            "fit_score": float(record.get("fit_score") or min(0.72, 0.36 + 0.04 * len(hits))),
+            "contact_state": "CONTACT_PRESENT"
+            if (record.get("sender") or record.get("author") or record.get("contact"))
+            else "CONTACT_UNKNOWN",
+            "unresolved_assumptions": [
+                "Message evidence is a lead; primary-source opportunity details must be checked before any application or outreach.",
+                "No Slack, Discord, Gmail, LinkedIn, ATS, or Meetup external action is authorized by this evidence.",
+            ],
+        }
+        payload["candidate_id"] = _candidate_id(f"candidate:c:{provider}", payload)
+        candidates.append(payload)
+        receipt["evidence_refs"].append(evidence_url)
+    receipt["result_status"] = "MATCHES" if candidates else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt["evidence_refs"] = list(dict.fromkeys(receipt["evidence_refs"]))
+    receipt["limitations"].append(
+        f"{len(records)} {provider} records inspected; {len(candidates)} opportunity candidates emitted; {skipped} skipped."
+    )
+    finalized = _finalize_receipt(receipt)
+    for candidate in candidates:
+        candidate["source_receipt_id"] = finalized["receipt_id"]
+    return finalized, candidates
+
+
 def _as_str_list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [str(item).strip() for item in value if str(item).strip()]
@@ -2003,6 +2194,9 @@ def sweep(
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
     github_evidence: Path | None = None,
+    slack_evidence: Path | None = None,
+    discord_evidence: Path | None = None,
+    gmail_evidence: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     if fixture_dir is not None:
@@ -2089,50 +2283,84 @@ def sweep(
                 candidates.extend(rows)
         if "C" in lanes:
             receipts.append(_client_research_receipt(skill_dir))
-            receipts.append(
-                _unavailable_required_source_receipt(
+            if slack_evidence is not None:
+                receipt, rows = _message_evidence_candidates(
+                    slack_evidence,
                     provider="slack",
                     required_source_id="slack_channels",
                     target="Slack opportunity channels",
                     source_class="slack_channel_capture",
                     channel="slack",
-                    limitation=(
-                        "Slack channel capture adapter is not wired into "
-                        "monitor-opportunities discovery yet; use Slack connector "
-                        "or a future adapter for G2i/job-alert channel mining."
-                    ),
-                    evidence_refs=["slack://C01H317TX7X"],
                 )
-            )
-            receipts.append(
-                _unavailable_required_source_receipt(
+                receipts.append(receipt)
+                candidates.extend(rows)
+            else:
+                receipts.append(
+                    _unavailable_required_source_receipt(
+                        provider="slack",
+                        required_source_id="slack_channels",
+                        target="Slack opportunity channels",
+                        source_class="slack_channel_capture",
+                        channel="slack",
+                        limitation=(
+                            "Slack channel evidence was not supplied; provide --slack-evidence "
+                            "from the Slack connector or a read-only channel export for G2i/job-alert mining."
+                        ),
+                        evidence_refs=["slack://C01H317TX7X"],
+                    )
+                )
+            if discord_evidence is not None:
+                receipt, rows = _message_evidence_candidates(
+                    discord_evidence,
                     provider="discord",
                     required_source_id="discord_channels",
                     target="Discord opportunity channels",
                     source_class="discord_channel_capture",
                     channel="discord",
-                    limitation=(
-                        "Discord channel capture adapter is not wired into "
-                        "monitor-opportunities discovery yet; current surf read "
-                        "requires a loaded content script on the target tab."
-                    ),
-                    evidence_refs=["https://discord.com/channels/1344341191893979290/1344341192518799442"],
                 )
-            )
-            receipts.append(
-                _unavailable_required_source_receipt(
+                receipts.append(receipt)
+                candidates.extend(rows)
+            else:
+                receipts.append(
+                    _unavailable_required_source_receipt(
+                        provider="discord",
+                        required_source_id="discord_channels",
+                        target="Discord opportunity channels",
+                        source_class="discord_channel_capture",
+                        channel="discord",
+                        limitation=(
+                            "Discord channel evidence was not supplied; provide --discord-evidence "
+                            "from ops-discord, a read-only channel export, or a surf capture."
+                        ),
+                        evidence_refs=["https://discord.com/channels/1344341191893979290/1344341192518799442"],
+                    )
+                )
+            if gmail_evidence is not None:
+                receipt, rows = _message_evidence_candidates(
+                    gmail_evidence,
                     provider="gmail",
                     required_source_id="gmail_mailbox",
                     target="graham@grahama.co mailbox mining",
                     source_class="mailbox_mined_gmail",
                     channel="mailbox_mining",
-                    limitation=(
-                        "Gmail mailbox mining adapter is not wired into "
-                        "monitor-opportunities discovery yet; Gmail send remains forbidden."
-                    ),
-                    evidence_refs=["mailto:graham@grahama.co"],
                 )
-            )
+                receipts.append(receipt)
+                candidates.extend(rows)
+            else:
+                receipts.append(
+                    _unavailable_required_source_receipt(
+                        provider="gmail",
+                        required_source_id="gmail_mailbox",
+                        target="graham@grahama.co mailbox mining",
+                        source_class="mailbox_mined_gmail",
+                        channel="mailbox_mining",
+                        limitation=(
+                            "Gmail mailbox evidence was not supplied; provide --gmail-evidence "
+                            "from a read-only mailbox-mining export. Gmail send remains forbidden."
+                        ),
+                        evidence_refs=["mailto:graham@grahama.co"],
+                    )
+                )
             for target in targets.get("commercial", []):
                 receipt, rows = _commercial_receipt(target)
                 receipts.append(receipt)

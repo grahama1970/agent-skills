@@ -1581,20 +1581,20 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ],
         "stderr_excludes": [
           "KeyError",
           "AssertionError"
         ]
       },
-      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when live adapters are not wired, so the nightly report cannot omit those lanes silently.",
-      "does_not_prove": "That Slack, Discord, or Gmail messages were live-searched, or that any opportunity from those channels was semantically relevant."
+      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when evidence is absent, and supplied read-only Slack/Discord/Gmail evidence is parsed into MATCHES receipts and lane C candidates instead of staying hard-coded as unwired.",
+      "does_not_prove": "That Slack, Discord, or Gmail connector APIs were called live from cron, or that any parsed opportunity is semantically relevant enough to submit."
     },
     {
       "name": "social-and-mail-report-schema-regression",

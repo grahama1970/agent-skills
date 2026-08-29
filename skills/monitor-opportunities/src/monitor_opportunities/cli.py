@@ -153,6 +153,40 @@ def _resolve_cli_path(path: Path | None) -> Path | None:
     return path.expanduser().resolve()
 
 
+def _resolve_evidence_path(
+    explicit: Path | None,
+    *,
+    env_var: str,
+    steps: dict[str, object] | None = None,
+) -> Path | None:
+    if explicit is not None:
+        path = explicit.expanduser().resolve()
+        if steps is not None:
+            steps.setdefault("social_mail_evidence", {})[env_var] = {
+                "source": "cli",
+                "path": str(path),
+                "exists": path.is_file(),
+            }
+        return path
+    configured = os.getenv(env_var)
+    if not configured:
+        if steps is not None:
+            steps.setdefault("social_mail_evidence", {})[env_var] = {
+                "source": "env",
+                "path": None,
+                "exists": False,
+            }
+        return None
+    path = Path(configured).expanduser().resolve()
+    if steps is not None:
+        steps.setdefault("social_mail_evidence", {})[env_var] = {
+            "source": "env",
+            "path": str(path),
+            "exists": path.is_file(),
+        }
+    return path if path.is_file() else None
+
+
 def _nightly_subprocess_env(skill_dir: Path, steps: dict[str, object]) -> dict[str, str]:
     env = os.environ.copy()
     configured = env.get("MONITOR_CLAIM_SNAPSHOT_PATH")
@@ -1595,6 +1629,30 @@ def sweep(
         readable=True,
         help="Local read-only HiddenJobs browser capture; source-health only.",
     ),
+    slack_evidence: Path | None = typer.Option(
+        None,
+        "--slack-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Slack opportunity-channel evidence; no send, reply, or apply.",
+    ),
+    discord_evidence: Path | None = typer.Option(
+        None,
+        "--discord-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Discord opportunity-channel evidence; no send, reply, or apply.",
+    ),
+    gmail_evidence: Path | None = typer.Option(
+        None,
+        "--gmail-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Gmail opportunity evidence; Gmail send remains forbidden.",
+    ),
 ) -> None:
     """Run read-only source discovery and write local receipts."""
     _configure_logging()
@@ -1610,6 +1668,9 @@ def sweep(
         github_evidence=github_evidence,
         indeed_evidence=indeed_evidence,
         hiddenjobs_evidence=hiddenjobs_evidence,
+        slack_evidence=_resolve_cli_path(slack_evidence),
+        discord_evidence=_resolve_cli_path(discord_evidence),
+        gmail_evidence=_resolve_cli_path(gmail_evidence),
     )
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
@@ -1871,6 +1932,30 @@ def run_command(
         readable=True,
         help="Local read-only HiddenJobs browser capture; source-health only.",
     ),
+    slack_evidence: Path | None = typer.Option(
+        None,
+        "--slack-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Slack opportunity-channel evidence; no send, reply, or apply.",
+    ),
+    discord_evidence: Path | None = typer.Option(
+        None,
+        "--discord-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Discord opportunity-channel evidence; no send, reply, or apply.",
+    ),
+    gmail_evidence: Path | None = typer.Option(
+        None,
+        "--gmail-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Gmail opportunity evidence; Gmail send remains forbidden.",
+    ),
     outreach_effects: Path | None = typer.Option(
         None,
         "--outreach-effects",
@@ -1906,6 +1991,9 @@ def run_command(
     linkedin_contact_evidence = _resolve_cli_path(linkedin_contact_evidence)
     indeed_evidence = _resolve_cli_path(indeed_evidence)
     hiddenjobs_evidence = _resolve_cli_path(hiddenjobs_evidence)
+    slack_evidence = _resolve_cli_path(slack_evidence)
+    discord_evidence = _resolve_cli_path(discord_evidence)
+    gmail_evidence = _resolve_cli_path(gmail_evidence)
     outreach_effects = _resolve_cli_path(outreach_effects)
     if disable_relationship_signals:
         import os
@@ -1925,6 +2013,9 @@ def run_command(
             linkedin_contact_evidence=linkedin_contact_evidence,
             indeed_evidence=indeed_evidence,
             hiddenjobs_evidence=hiddenjobs_evidence,
+            slack_evidence=slack_evidence,
+            discord_evidence=discord_evidence,
+            gmail_evidence=gmail_evidence,
             memory_url=memory_url,
             degrade_required_source_failures=degrade_required_sources,
         )
@@ -2532,6 +2623,30 @@ def nightly(
     tau_semantic_handler: str = typer.Option("webgpt", "--tau-semantic-handler"),
     tau_semantic_timeout_seconds: int = typer.Option(3600, "--tau-semantic-timeout-seconds", min=60),
     tau_semantic_browser_lock_timeout: int = typer.Option(1800, "--tau-semantic-browser-lock-timeout", min=60),
+    slack_evidence: Path | None = typer.Option(
+        None,
+        "--slack-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Slack opportunity-channel evidence; no send, reply, or apply.",
+    ),
+    discord_evidence: Path | None = typer.Option(
+        None,
+        "--discord-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Discord opportunity-channel evidence; no send, reply, or apply.",
+    ),
+    gmail_evidence: Path | None = typer.Option(
+        None,
+        "--gmail-evidence",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+        help="Local read-only Gmail opportunity evidence; Gmail send remains forbidden.",
+    ),
 ) -> None:
     """One nightly transaction: run, publish shortlist to memory, post Discord handoff.
 
@@ -2801,6 +2916,21 @@ def nightly(
         "captured": hiddenjobs_receipt.get("records_captured"),
     }
     hiddenjobs_evidence = hiddenjobs_receipt.get("evidence_path")
+    slack_evidence = _resolve_evidence_path(
+        slack_evidence,
+        env_var="MONITOR_SLACK_EVIDENCE",
+        steps=steps,
+    )
+    discord_evidence = _resolve_evidence_path(
+        discord_evidence,
+        env_var="MONITOR_DISCORD_EVIDENCE",
+        steps=steps,
+    )
+    gmail_evidence = _resolve_evidence_path(
+        gmail_evidence,
+        env_var="MONITOR_GMAIL_EVIDENCE",
+        steps=steps,
+    )
 
     # Client-prospecting engine (separate from jobs): Sales Navigator saved leads,
     # strictly read-only. Best-effort; captured to its own evidence, not fed to the
@@ -2910,6 +3040,12 @@ def nightly(
         run_cmd += ["--indeed-evidence", str(indeed_evidence)]
     if hiddenjobs_evidence:
         run_cmd += ["--hiddenjobs-evidence", str(hiddenjobs_evidence)]
+    if slack_evidence:
+        run_cmd += ["--slack-evidence", str(slack_evidence)]
+    if discord_evidence:
+        run_cmd += ["--discord-evidence", str(discord_evidence)]
+    if gmail_evidence:
+        run_cmd += ["--gmail-evidence", str(gmail_evidence)]
     run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600, env=run_env)
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:
