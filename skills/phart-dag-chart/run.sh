@@ -32,7 +32,7 @@ cmd="${1:-}"
 shift || true
 
 case "$cmd" in
-  chart|validate|research-round)
+  chart|validate|watch|research-round)
     exec uv run --project "$SCRIPT_DIR" phart-dag-chart "$cmd" "$@"
     ;;
   ""|help|-h|--help)
@@ -42,6 +42,7 @@ case "$cmd" in
 Usage:
   ./run.sh validate <dag.json> [--json]
   ./run.sh chart <dag.json>
+  ./run.sh watch <dag.json> --progress <dag-progress.json> [--once]
 
 Exit codes:
   0  success
@@ -49,6 +50,7 @@ Exit codes:
   2  usage / missing uv
 
 Contract: DAG.json in → chart on stdout or fix errors on stderr (no tracebacks).
+Watch mode reads Tau dag-progress.json and refreshes a compact terminal status until terminal state.
 Requires Python >=3.14 (PHART 1.5 from github.com/scottvr/phart).
 EOF
     ;;

@@ -49,3 +49,37 @@ def test_missing_file():
     result = runner.invoke(app, ["validate", "/nonexistent/dag.json"])
     assert result.exit_code == 1
     assert "not found" in result.stderr.lower()
+
+
+def test_watch_once_reads_tau_progress(tmp_path: Path):
+    progress = {
+        "schema": "tau.dag_progress.v1",
+        "dag_id": "watch-proof",
+        "status": "PASS",
+        "event_count": 3,
+        "last_event": {"event": "scheduler_finished", "status": "PASS", "ts": "2026-08-29T00:00:00Z"},
+        "node_progress": [
+            {"node_id": "memory_a", "status": "COMPLETED", "attempt": 1},
+            {"node_id": "memory_b", "status": "COMPLETED", "attempt": 1},
+            {"node_id": "join", "status": "COMPLETED", "attempt": 1},
+        ],
+    }
+    progress_path = tmp_path / "dag-progress.json"
+    progress_path.write_text(json.dumps(progress))
+
+    result = runner.invoke(
+        app,
+        ["watch", str(FIXTURES / "memory-fanout.dag.json"), "--progress", str(progress_path), "--once", "--no-chart"],
+    )
+
+    assert result.exit_code == 0
+    assert "Tau DAG terminal monitor · watch-proof" in result.stdout
+    assert "State: PASS" in result.stdout
+    assert "✓ memory_a" in result.stdout
+
+
+def test_watch_missing_progress_is_helpful():
+    result = runner.invoke(app, ["watch", str(FIXTURES / "memory-fanout.dag.json"), "--progress", "/no/progress.json", "--once"])
+    assert result.exit_code == 1
+    assert "progress file not found" in result.stderr
+    assert "dag-progress.json" in result.stderr

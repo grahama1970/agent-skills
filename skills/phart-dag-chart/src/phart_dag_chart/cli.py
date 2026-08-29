@@ -13,6 +13,7 @@ from phart_dag_chart.chart import render_chart
 from phart_dag_chart.dag_validate import validation_report, validate_dag
 from phart_dag_chart.errors import DagChartError
 from phart_dag_chart.load import load_dag_file
+from phart_dag_chart.watch import progress_path_from_options, render_watch_frame, watch_until_terminal
 
 app = typer.Typer(
     name="phart-dag-chart",
@@ -84,6 +85,45 @@ def cmd_chart(
             validate_dag(raw, chart_only=True)
         typer.echo(render_chart(raw, validate=not no_validate, plain=plain))
         raise typer.Exit(code=EXIT_OK)
+    except DagChartError as exc:
+        _emit_error(exc)
+        raise typer.Exit(code=EXIT_VALIDATION) from None
+
+
+@app.command("watch")
+def cmd_watch(
+    dag_file: Annotated[Path, typer.Argument(help="Path to DAG JSON file")],
+    progress_file: Annotated[
+        Path | None,
+        typer.Option("--progress", help="Tau dag-progress.json path. Defaults to --run-dir/dag-progress.json."),
+    ] = None,
+    run_dir: Annotated[Path | None, typer.Option("--run-dir", help="Tau run directory containing dag-progress.json")] = None,
+    interval: Annotated[float, typer.Option("--interval", min=0.1, help="Polling interval in seconds")] = 1.0,
+    max_seconds: Annotated[float, typer.Option("--max-seconds", min=0.1, help="Maximum watch window")] = 600.0,
+    once: Annotated[bool, typer.Option("--once", help="Render one frame and exit without polling")] = False,
+    no_clear: Annotated[bool, typer.Option("--no-clear", help="Do not clear the terminal between frames")] = False,
+    no_chart: Annotated[bool, typer.Option("--no-chart", help="Hide the PHART ASCII graph; show compact status only")] = False,
+) -> None:
+    """Watch Tau progress JSON and re-render a compact terminal DAG view."""
+    try:
+        progress_path = progress_path_from_options(
+            dag_file=dag_file,
+            run_dir=run_dir,
+            progress_file=progress_file,
+        )
+        if once:
+            typer.echo(render_watch_frame(dag_file, progress_path, include_chart=not no_chart))
+            raise typer.Exit(code=EXIT_OK)
+        status = watch_until_terminal(
+            dag_file,
+            progress_path,
+            interval_seconds=interval,
+            max_seconds=max_seconds,
+            include_chart=not no_chart,
+            clear=not no_clear,
+            emit=typer.echo,
+        )
+        raise typer.Exit(code=EXIT_OK if status == "PASS" else EXIT_VALIDATION)
     except DagChartError as exc:
         _emit_error(exc)
         raise typer.Exit(code=EXIT_VALIDATION) from None
