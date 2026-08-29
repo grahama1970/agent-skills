@@ -395,6 +395,13 @@ def _section(title: str, value: str) -> str:
     return f"## {title}\n\n{value}\n"
 
 
+def _skill_id_from_target(target: str) -> str:
+    parts = target.strip().rstrip("/").split("/")
+    if len(parts) >= 2 and parts[0] == "skills" and parts[1]:
+        return parts[1]
+    return ""
+
+
 def _body(
     *,
     ticket_type: str,
@@ -466,11 +473,13 @@ def _body(
                 + "\n".join(f"- blocked-by: {item}" for item in depends_on),
             )
         )
+    skill_id = _skill_id_from_target(target)
     lines.append(
         "<!-- ticket-skill\n"
         f"type: {ticket_type}\n"
         f"target: {target}\n"
-        f"route: {route}\n"
+        + (f"skill_id: {skill_id}\n" if skill_id else "")
+        + f"route: {route}\n"
         f"agent: {agent or 'unspecified'}\n"
         + (f"context_files: {','.join(context_files)}\n" if context_files else "")
         + (f"required_skills: {','.join(required_skills)}\n" if required_skills else "")

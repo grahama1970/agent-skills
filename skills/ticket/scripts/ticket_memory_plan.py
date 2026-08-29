@@ -67,6 +67,7 @@ class TicketConcepts:
     requested_agent: str
     lane: str
     target: str
+    skill_id: str
     target_paths: tuple[str, ...]
     current_state: str
     requested_outcome: str
@@ -96,6 +97,7 @@ class TicketConcepts:
             "requested_agent": self.requested_agent,
             "lane": self.lane,
             "target": self.target,
+            "skill_id": self.skill_id,
             "target_paths": list(self.target_paths),
             "current_state": self.current_state,
             "requested_outcome": self.requested_outcome,
@@ -242,12 +244,49 @@ def _extract_artifacts(text: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(names))
 
 
+def _unsafe_path_reason(value: str) -> str | None:
+    """Return a deterministic unsafe-target code for a repo-relative path."""
+    if "," in value:
+        return "unsafe_multi_target"
+    if any(char.isspace() for char in value):
+        return "unsafe_whitespace_target"
+    if value.startswith(("/", "~")):
+        return "unsafe_absolute_target"
+    if ".." in Path(value).parts:
+        return "unsafe_traversal_target"
+    if any(token in value for token in ("*", "?", "[", "]")):
+        return "unsafe_glob_target"
+    normalized = value.strip().rstrip("/")
+    if normalized in {"", ".", "./", "skills"}:
+        return "unsafe_broad_target"
+    if not SAFE_PATH_RE.fullmatch(value):
+        return "unsafe_target_path"
+    return None
+
+
 def _validate_safe_values(label: str, values: tuple[str, ...]) -> None:
     for value in values:
-        if value.startswith(("/", "~")) or ".." in Path(value).parts:
-            _die(f"unsafe {label}: {value!r}")
-        if label in {"target path", "context file"} and not SAFE_PATH_RE.fullmatch(value):
-            _die(f"unsafe {label}: {value!r}")
+        reason = _unsafe_path_reason(value)
+        if reason:
+            _die(f"{reason}: unsafe {label}: {value!r}")
+
+
+def _derive_skill_id(target: str, target_paths: tuple[str, ...], marker: dict[str, str]) -> str:
+    """Derive and validate the skill identity encoded by a ticket target."""
+    paths = (target, *target_paths)
+    skill_ids: list[str] = []
+    for path in paths:
+        parts = path.strip().rstrip("/").split("/")
+        if len(parts) >= 2 and parts[0] == "skills" and parts[1]:
+            skill_ids.append(parts[1])
+    unique = tuple(dict.fromkeys(skill_ids))
+    if len(unique) > 1:
+        _die(f"unsafe_multi_skill_target: target spans multiple skills: {', '.join(unique)}")
+    derived = unique[0] if unique else ""
+    marker_skill = marker.get("skill_id", "").strip()
+    if marker_skill and marker_skill != derived:
+        _die(f"skill_id_mismatch: marker skill_id {marker_skill!r} does not match target {derived!r}")
+    return derived
 
 
 def _derive_lane(route: str, labels: list[str]) -> str:
@@ -301,8 +340,10 @@ def _concepts_from_issue(issue: IssueSource, *, recipe_id: str) -> TicketConcept
     )
     commands = _extract_commands(proof_contract)
     artifacts = _extract_artifacts(proof_contract)
+    _validate_safe_values("target", (target,) if target else ())
     _validate_safe_values("target path", tuple(path for path in target_paths if path))
     _validate_safe_values("context file", tuple(path for path in context_files if path))
+    skill_id = _derive_skill_id(target, tuple(target_paths), marker)
     if ticket_type in HUMAN_FIRST_TYPES and marker_recipe:
         _die("human-first tickets cannot become dispatchable by adding memory_recipe")
     if not ticket_type or not target or not proof_contract:
@@ -320,6 +361,7 @@ def _concepts_from_issue(issue: IssueSource, *, recipe_id: str) -> TicketConcept
         requested_agent=agent,
         lane=_derive_lane(route, issue.labels),
         target=target,
+        skill_id=skill_id,
         target_paths=tuple(target_paths),
         current_state=current_state,
         requested_outcome=requested_outcome,
