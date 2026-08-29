@@ -155,8 +155,9 @@ Pipeline (deterministic orchestrator; browser/LLM work is bounded sub-steps):
    Greenhouse/Ashby ATS sweeps; brave-search client research. Dead API → website fallback
    is enforced in code (`_enforce_api_website_fallback`).
 2. **Filtering** — 2-week recency gate (`REJECT_STALE_AGE`), role-type targeting
-   (`REJECT_ROLE_TYPE`, token-safe), and mandate relevance via `/extract-entities` against
-   the `opportunity_vocabulary` ArangoDB corpus (NOT regex; fail-soft to regex).
+   (`REJECT_ROLE_TYPE`, token-safe), and mandate relevance through Memory-backed
+   `opportunity_vocabulary` loading (`/list` once per process + cached FlashText;
+   no extract-entities subprocess; fail-soft to regex).
 3. **Tailoring** — claim-bound custom resume per top job (`apply-prep`, top-N, gated).
 4. **ATS capture** — live read-only application-form schema (Greenhouse API / surf DOM).
 5. **Tracking** — each opportunity is a GitHub issue in the PRIVATE repo

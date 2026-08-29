@@ -2,8 +2,9 @@
 
 The corpus (config/opportunity_vocabulary.json) is version-controlled like the
 SPARTA/aerospace corpora; this idempotently upserts each concept (by _key) into
-the `opportunity_vocabulary` collection that /extract-entities matches against.
-Run after editing the corpus.
+the `opportunity_vocabulary` collection. monitor-opportunities reads that
+collection through the warm Memory service and caches a FlashText matcher; it
+must not shell out to extract-entities per title. Run after editing the corpus.
 """
 
 from __future__ import annotations

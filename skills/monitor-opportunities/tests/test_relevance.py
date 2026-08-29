@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import monitor_opportunities.relevance as rel
 
 
@@ -95,3 +97,19 @@ def test_mandate_hits_uses_memory_list_once_for_repeated_batch(monkeypatch) -> N
 
 def test_relevance_module_no_longer_shells_out_per_title() -> None:
     assert not hasattr(rel, "subprocess")
+
+
+def test_monitor_source_does_not_shell_out_to_extract_entities() -> None:
+    root = Path(__file__).resolve().parents[1] / "src" / "monitor_opportunities"
+    forbidden = (
+        "extract_entities.py",
+        "extract-entities/run.sh",
+        "skills/extract-entities",
+    )
+    offenders: list[str] = []
+    for path in sorted(root.rglob("*.py")):
+        text = path.read_text(encoding="utf-8")
+        for needle in forbidden:
+            if needle in text:
+                offenders.append(f"{path.relative_to(root)} contains {needle}")
+    assert offenders == []

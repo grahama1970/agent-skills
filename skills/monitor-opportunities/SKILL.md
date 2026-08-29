@@ -118,7 +118,8 @@ autonomously apply.
 cron (0 2 * * *) → deterministic nightly (reliable orchestration; keep)
   discovery  → SAM.gov + LinkedIn (read-only, human's own session) + Greenhouse/Ashby + brave-search
              + monitor-contacts relationship graph (direct + adjacent contacts, event co-presence)
-  filter     → recency (2wk) · role-type · mandate relevance via /extract-entities vocabulary (not regex)
+  filter     → recency (2wk) · role-type · mandate relevance via Memory-backed
+             opportunity_vocabulary (`/list` once per process + cached FlashText; no subprocess)
   per top-N  → validated Tau semantic inputs materialized in the nightly run
              → optional `/ask tau-dag` provider-live addenda only with explicit `--tau-semantic-provider`
   tailor     → claim-bound resume · live ATS form capture (human-gated submit)

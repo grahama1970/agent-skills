@@ -22,10 +22,10 @@ Three dispositions per requirement:
 
 Requirement text comes from evidence already captured in
 `discovery/candidates.jsonl` (`posting_text`, which holds the posting's own HTML)
-and, for LinkedIn rows, from the premium match panel captured per job. Concept
-matching delegates to `/extract-entities` over the `opportunity_vocabulary`
-corpus, the same path ranking uses, and degrades to no-match rather than
-guessing when that vocabulary is unavailable.
+and, for LinkedIn rows, from the premium match panel captured per job. Mandate
+relevance uses the Memory-backed `opportunity_vocabulary` matcher in
+`relevance.py`; it must not shell out to `extract-entities` per requirement.
+Unavailable vocabulary degrades to no-match rather than guessing.
 """
 
 from __future__ import annotations

@@ -18,7 +18,7 @@ from typing import Any
 
 from .relevance import mandate_hits as _entity_mandate_hits
 
-# Fallback ONLY when /extract-entities or /memory is unavailable. The primary
+# Fallback ONLY when the Memory-backed opportunity vocabulary is unavailable. The primary
 # path is vocabulary-based whole-phrase matching via relevance.mandate_hits
 # (best-practices-python: no regex for classifying unknown text).
 _FALLBACK_MANDATE_RE = re.compile(
@@ -37,7 +37,7 @@ _JUNK_RE = re.compile(
 
 
 def _mandate_hits(text: str) -> list[str]:
-    """Vocabulary match via /extract-entities; regex fallback if unavailable."""
+    """Vocabulary match via Memory-backed relevance; regex fallback if unavailable."""
     hits = _entity_mandate_hits(text)
     if hits is not None:
         return hits
