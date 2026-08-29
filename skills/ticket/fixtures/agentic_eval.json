@@ -54,6 +54,23 @@
       }
     },
     {
+      "name": "skill-target-memory-plan",
+      "category": "skill-target-memory-plan",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/ticket\" && uv run --project . pytest tests/test_memory_plan.py -q -k 'skill_target or cross_skill or marker_skill_id or byte_identical or compact_memory_marker'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "notes": "Regression guard for issue 1547: memory-plan emits skill_id for valid single-skill targets and fails closed on comma-packed, absolute, traversal, glob, repo-root, and cross-skill targets."
+    },
+    {
       "name": "close-audit-parses-markdown-scoped-files",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

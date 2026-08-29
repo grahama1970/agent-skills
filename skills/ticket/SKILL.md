@@ -184,6 +184,12 @@ leaves the body byte-identical to before. They are mirrored into the
 `ticket-skill` marker block for machine reads, and `--depends-on` renders
 `blocked-by: owner/repo#N`.
 
+For `agent-skills`, skill identity is path-scoped, not label-scoped. A target
+such as `skills/battle` emits `skill_id: battle` in the marker and memory-plan
+concepts. Do not comma-pack multiple skills into one `--target`; split the work
+or use `--depends-on` for cross-skill sequencing. `memory-plan` fails closed on
+comma-packed, absolute, traversal, glob, repo-root, and cross-skill targets.
+
 Agent-routable tickets may also carry compact Memory planning anchors:
 
 ```bash
