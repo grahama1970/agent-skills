@@ -971,7 +971,11 @@ def capture_gmail_opportunity_search(out_dir: Path, surf_run: Path = SURF_RUN_DE
             created_tab = True
         if not tab_id:
             raise BrowserCaptureError("could not find or create an authenticated Gmail tab")
-        _surf_js(surf_run, tab_id, _nav_js(_GMAIL_OPPORTUNITY_SEARCH_URL), timeout=20)
+        try:
+            _surf_js(surf_run, tab_id, _nav_js(_GMAIL_OPPORTUNITY_SEARCH_URL), timeout=75)
+        except (BrowserCaptureError, subprocess.TimeoutExpired) as exc:
+            receipt["navigation_timeout"] = str(exc)
+            logger.warning("Gmail opportunity search navigation timed out; attempting current-tab extraction: {}", exc)
         _surf_pause(surf_run, "6")
         raw = _surf_js(surf_run, tab_id, _GMAIL_EXTRACT_JS, timeout=60)
         snapshot = _surf_json_value(raw, {})

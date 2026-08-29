@@ -168,6 +168,47 @@ def test_gmail_records_from_rows_keeps_search_result_opportunities_and_skips_noi
     assert records[1]["thread_url"] == "https://mail.google.com/mail/u/0/#search/newer_than%3A14d"
 
 
+def test_gmail_capture_continues_after_navigation_timeout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    monkeypatch.setattr(browser_capture, "ensure_browser", lambda _surf_run: "existing")
+    monkeypatch.setattr(browser_capture, "_find_existing_gmail_tab", lambda _surf_run: "123")
+    monkeypatch.setattr(browser_capture, "_surf_pause", lambda *_args, **_kwargs: None)
+
+    def fake_surf_js(_surf_run: Path, _tab_id: str, script: str, *, timeout: int = 90) -> str:
+        calls.append(script)
+        if len(calls) == 1:
+            raise subprocess.TimeoutExpired(cmd=["surf", "js"], timeout=timeout)
+        return json.dumps(
+            {
+                "url": "https://mail.google.com/mail/u/0/#search/newer_than%3A14d",
+                "title": "Search results - GrahamCo Mail",
+                "rows": [
+                    {
+                        "sender": "Indeed",
+                        "subject": "AI Engineer at SmartAdvocate in Remote and 1 more new job",
+                        "snippet": "Your background as a Principal AI Architect could be a strong fit.",
+                        "date": "Aug 28",
+                    }
+                ],
+            }
+        )
+
+    monkeypatch.setattr(browser_capture, "_surf_js", fake_surf_js)
+
+    receipt = browser_capture.capture_gmail_opportunity_search(tmp_path)
+
+    assert receipt["status"] == "OK"
+    assert receipt["records_captured"] == 1
+    assert receipt["rows_seen"] == 1
+    assert "navigation_timeout" in receipt
+    assert Path(receipt["evidence_path"]).exists()
+    assert len(calls) == 2
+
+
 def test_field_type_sensitive_and_kinds() -> None:
     assert _ats_field_type("Are you legally authorized to work?", "select", "", True) == "work_authorization"
     assert _ats_field_type("Gender", "select", "", True) == "self_identification"
