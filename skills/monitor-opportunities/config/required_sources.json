@@ -164,6 +164,63 @@
         "POLICY_BLOCKED",
         "STALE_DATA"
       ]
+    },
+    {
+      "id": "slack_channels",
+      "lane": "C",
+      "channel": "slack",
+      "note": "Subscribed Slack opportunity channels such as G2i job alerts. Mandatory source; a run must emit a receipt and visible coverage state.",
+      "source_classes": [
+        "slack_channel_capture"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA"
+      ]
+    },
+    {
+      "id": "discord_channels",
+      "lane": "C",
+      "channel": "discord",
+      "note": "Subscribed Discord opportunity channels. Mandatory source; a run must emit a receipt and visible coverage state.",
+      "source_classes": [
+        "discord_channel_capture"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA"
+      ]
+    },
+    {
+      "id": "gmail_mailbox",
+      "lane": "C",
+      "channel": "mailbox_mining",
+      "note": "graham@grahama.co mailbox opportunity and warm-contact mining. Mandatory source; Gmail send remains forbidden.",
+      "source_classes": [
+        "mailbox_mined_gmail"
+      ],
+      "accepted_statuses": [
+        "MATCHES",
+        "NO_MATCHES",
+        "FEED_DOWN",
+        "AUTH_REQUIRED",
+        "AUTH_FAILED",
+        "RATE_LIMITED",
+        "POLICY_BLOCKED",
+        "STALE_DATA"
+      ]
     }
   ],
   "accepted_non_match_states": [

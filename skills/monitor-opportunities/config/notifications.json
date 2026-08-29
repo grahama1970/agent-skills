@@ -1,5 +1,7 @@
 {
  "schema": "monitor_opportunities.notifications.v1",
  "buzz_channel": "ed942a5f-609d-4849-9128-3168c6dfac8c",
- "note": "Fallback Buzz channel proven 2026-08-04/05; buzz-summary posts the morning shortlist here."
+ "discord_webhook": "discord",
+ "discord_channel": "horus",
+ "note": "Discord is the primary morning handoff. Buzz is retained as a legacy/manual adapter only."
 }

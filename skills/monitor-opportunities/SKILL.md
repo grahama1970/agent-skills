@@ -42,17 +42,16 @@ composes:
   - extract-entities
   - surf
   - ticket
-  - ops-buzz
+  - ops-discord
   - classifier-lab
   - mailbox-mining
   - ops-linkedin
-  - monitor-website
-  - test-interactions
   - gmail
   - ask
   - scheduler
   - task-monitor
   - agentic-evals
+  - ops-buzz
 complies:
   - best-practices-skills
   - best-practices-python
@@ -120,13 +119,14 @@ autonomously apply.
 cron (0 2 * * *) → deterministic nightly (reliable orchestration; keep)
   discovery  → SAM.gov + LinkedIn (read-only, human's own session) + Greenhouse/Ashby + brave-search
              + monitor-contacts relationship graph (direct + adjacent contacts, event co-presence)
-  filter     → recency (2wk) · role-type · mandate relevance via /extract-entities vocabulary (not regex)
+  filter     → recency (2wk) · role-type · mandate relevance via Memory-backed
+             opportunity_vocabulary (`/list` once per process + cached FlashText; no subprocess)
   per top-N  → validated Tau semantic inputs materialized in the nightly run
              → optional `/ask tau-dag` provider-live addenda only with explicit `--tau-semantic-provider`
   tailor     → claim-bound resume · live ATS form capture (human-gated submit)
   track      → PRIVATE repo grahama1970/opportunities (issue per opp, dedup, lifecycle labels)
                dual queues: track:employment · track:consulting (prospect queue)
-  deliver    → /memory (morning_opportunities) + Buzz summary
+  deliver    → /memory (morning_opportunities) + Discord morning handoff
   flywheel   → opportunity_labels accumulate → /classifier-lab trains learned relevance at N≥300
 ```
 
@@ -350,30 +350,6 @@ presentation, and appear in the morning report before use. The public workflow r
 only the public canonical resume; the tailoring runtime owns per-opportunity rendering
 after claim validation passes.
 
-## Public website interaction gate — no exceptions
-
-`grahama.co` and `grahama.co/resume` are opportunity-facing artifacts. Any
-morning report, targeted resume handoff, LinkedIn profile handoff, or outreach
-packet that relies on the public site must require a fresh `monitor-website`
-interaction receipt from `$test-interactions` discovery plus replay.
-
-Use the executable gate:
-
-```bash
-./run.sh website-gate --output-dir <dir> --json
-```
-
-This delegates to `monitor-website interaction-check` for:
-
-- `https://grahama.co/`
-- `https://grahama.co/resume`
-
-The gate is required before committing or pushing UI-visible grahama.co changes
-or using those public surfaces as current opportunity evidence. A stale
-screenshot, stale CDP marker, DOM-only grep, or successful static build is not a
-substitute. This gate does not authorize LinkedIn mutation, ATS submit, email
-send, or Calendly booking effects.
-
 ## Intended command surface
 
 The command list is the target contract. Current implementation status is authoritative
@@ -386,8 +362,10 @@ only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 ./run.sh tailor --posting <key> --out <dir>    # claim-bound resume artifacts
 ./run.sh report --input <manifest> --out <dir> # validate and render one report
 ./run.sh serve --report <run-dir>              # loopback decision entry point
-./run.sh buzz-summary --run <run-dir> ...      # Buzz-ready report summary via ops-buzz
-./run.sh buzz-review --run <run-dir> ...       # dry-run Buzz agent review request
+./run.sh morning-discord --run <run-dir> ...   # Discord morning handoff via ops-discord
+./run.sh schedule-morning-discord              # register the 8 AM Discord handoff
+./run.sh buzz-summary --run <run-dir> ...      # legacy/manual Buzz summary via ops-buzz
+./run.sh buzz-review --run <run-dir> ...       # legacy/manual Buzz agent review request
 ./run.sh tau-semantic-prepare --run <run-dir> --out <dir> --top-n 3
 ./run.sh tau-semantic-provider-eval --input <json> --out <dir> --execute
 ./run.sh tau-semantic-install --run <run-dir> --provider-receipt <json>
@@ -396,7 +374,6 @@ only in `./run.sh status --json` and `docs/PROJECT_KNOWLEDGE.md`.
 ./run.sh apply --posting <key>                 # separately gated ATS effect only
 ./run.sh status --json                         # readiness, stage, feeds, blockers
 ./run.sh verify --out <dir>                    # machine-readable verification receipt
-./run.sh website-gate --output-dir <dir>       # live grahama.co + /resume test-interactions gate
 ./run.sh schedule --cron "0 2 * * *"           # register the full run, then read back
 ./sanity.sh                                    # deterministic behavioral gates
 ```
@@ -503,7 +480,7 @@ Scheduler failure self-repair may emit an operational notification through
 
 ```bash
 export MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY=1
-export MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK=slack
+export MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK=discord
 ```
 
 `MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN=1` resolves the webhook and

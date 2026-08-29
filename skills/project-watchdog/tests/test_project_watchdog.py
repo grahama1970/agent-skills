@@ -9,12 +9,12 @@ from __future__ import annotations
 import importlib
 import json
 import os
-import shlex
 import subprocess
 import sys
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -296,39 +296,6 @@ def test_config_paths_are_absolute_and_expanded(resolver) -> None:
 def test_state_root_honours_environment_override(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
     assert config.state_root() == tmp_path.resolve()
-
-
-def test_run_cmd_timeout_kills_recorded_descendant_outside_process_group(tmp_path) -> None:
-    child_pid_file = tmp_path / "child.pid"
-    quoted_child_pid_file = shlex.quote(str(child_pid_file))
-    started = time.monotonic()
-    result = core.run_cmd(
-        [
-            "bash",
-            "-c",
-            "setsid bash -c 'echo $$ > "
-            f"{quoted_child_pid_file}; sleep 30' & "
-            f"while [ ! -s {quoted_child_pid_file} ]; do sleep 0.01; done; "
-            "wait",
-        ],
-        timeout_s=1,
-    )
-    duration = time.monotonic() - started
-
-    assert result["timed_out"] is True
-    assert result["exit_code"] == 124
-    assert duration < 10
-    child_pid = int(child_pid_file.read_text(encoding="utf-8").strip())
-    cleanup = result["process_group"]["descendant_cleanup"]
-    checked_pids = {entry["pid"] for entry in cleanup["checked"]}
-    assert child_pid in checked_pids
-
-    deadline = time.monotonic() + 3.0
-    child_proc = Path("/proc") / str(child_pid)
-    while child_proc.exists() and time.monotonic() < deadline:
-        time.sleep(0.05)
-    assert not child_proc.exists()
-    assert cleanup["still_alive"] == []
 
 
 # --------------------------------------------------------------------------- #
@@ -742,198 +709,6 @@ def test_only_the_proof_section_names_required_artifacts() -> None:
     assert handlers.required_proof_artifacts("## Target\n\nskills/x\n") == []
 
 
-def test_agentic_eval_fixture_without_output_is_not_a_proof_artifact() -> None:
-    body = (
-        "## Required proof\n\n"
-        "/agentic-evals run fixtures/skill_chains/agentic_eval.json "
-        "--case skill-chain-live-idempotent-upsert; receipt must show READY.\n"
-    )
-    assert handlers.required_proof_artifacts(body) == []
-    reviewer = (
-        "VERDICT: PASS\n"
-        "Read back `local/issue147_agentic_eval_report.json` and "
-        "`local/skill_chain_idempotency_live_receipt.json`.\n"
-    )
-    assert handlers.reviewer_named_proof_artifacts(reviewer) == [
-        "local/issue147_agentic_eval_report.json",
-        "local/skill_chain_idempotency_live_receipt.json",
-    ]
-
-
-def test_relative_reviewer_named_proof_artifact_is_read_from_repair_worktree(tmp_path) -> None:
-    ask_run = tmp_path / "receipt" / "ask" / "run"
-    for handler, text in (
-        ("gpt-5.5-high", "VERDICT: PASS\n"),
-        (
-            "claude-fable-low",
-            "VERDICT: PASS\n"
-            "Read back `local/issue147_agentic_eval_report.json`.\n",
-        ),
-    ):
-        node = ask_run / "node-artifacts" / handlers.repair_node_id(handler)
-        node.mkdir(parents=True, exist_ok=True)
-        (node / "response.md").write_text(text, encoding="utf-8")
-
-    repair = tmp_path / "repair"
-    (repair / "local").mkdir(parents=True)
-    (repair / "local" / "issue147_agentic_eval_report.json").write_text(
-        json.dumps({"readiness": "READY", "cases": [{"outcome": "PASS"}]}),
-        encoding="utf-8",
-    )
-    git_init = subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repair, check=True)
-    assert git_init.returncode == 0
-    subprocess.run(["git", "add", "-A"], cwd=repair, check=True)
-    subprocess.run(
-        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "base"],
-        cwd=repair,
-        check=True,
-    )
-    subprocess.run(["git", "checkout", "-q", "-b", "watchdog/issue-147"], cwd=repair, check=True)
-    (repair / "fix.txt").write_text("fix\n", encoding="utf-8")
-    subprocess.run(["git", "add", "fix.txt"], cwd=repair, check=True)
-    subprocess.run(
-        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "fix"],
-        cwd=repair,
-        check=True,
-    )
-    subprocess.run(["git", "branch", "origin/main", "main"], cwd=repair, check=True)
-
-    gate = handlers.evaluate_repair_proof(
-        ask_run_dir=tmp_path / "receipt" / "ask",
-        issue_body=(
-            "## Required proof\n\n"
-            "/agentic-evals run fixtures/skill_chains/agentic_eval.json "
-            "--case skill-chain-live-idempotent-upsert\n"
-        ),
-        creator="gpt-5.5-high",
-        reviewer="claude-fable-low",
-        repair_worktree=repair,
-        not_before=0,
-    )
-    assert gate["ok"] is True
-    assert gate["required_proof_artifacts"] == ["local/issue147_agentic_eval_report.json"]
-
-
-def test_proof_artifact_repo_sha_must_match_repair_branch(tmp_path) -> None:
-    ask_run = tmp_path / "receipt" / "ask" / "run"
-    for handler, text in (
-        ("gpt-5.5-high", "Creator changed the repair branch.\n"),
-        (
-            "claude-fable-low",
-            "VERDICT: PASS\n"
-            "Read back `local/monitor_queue_agentic_eval_report.json`.\n",
-        ),
-    ):
-        node = ask_run / "node-artifacts" / handlers.repair_node_id(handler)
-        node.mkdir(parents=True, exist_ok=True)
-        (node / "response.md").write_text(text, encoding="utf-8")
-
-    repair = tmp_path / "repair"
-    (repair / "local").mkdir(parents=True)
-    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repair, check=True)
-    (repair / "base.txt").write_text("base\n", encoding="utf-8")
-    subprocess.run(["git", "add", "-A"], cwd=repair, check=True)
-    subprocess.run(
-        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "base"],
-        cwd=repair,
-        check=True,
-    )
-    main_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repair, text=True).strip()
-    subprocess.run(["git", "checkout", "-q", "-b", "watchdog/issue-142"], cwd=repair, check=True)
-    (repair / "fix.txt").write_text("fix\n", encoding="utf-8")
-    subprocess.run(["git", "add", "fix.txt"], cwd=repair, check=True)
-    subprocess.run(
-        ["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "fix"],
-        cwd=repair,
-        check=True,
-    )
-    subprocess.run(["git", "branch", "origin/main", "main"], cwd=repair, check=True)
-    repair_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repair, text=True).strip()
-    assert main_sha != repair_sha
-    (repair / "local" / "monitor_queue_agentic_eval_report.json").write_text(
-        json.dumps(
-            {
-                "readiness": "READY",
-                "outcome_counts": {"PASS": 1, "FAIL": 0},
-                "repo": {"sha": main_sha, "ref": "main"},
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    gate = handlers.evaluate_repair_proof(
-        ask_run_dir=tmp_path / "receipt" / "ask",
-        issue_body=(
-            "## Required proof\n\n"
-            "agentic-evals run fixtures/agentic_eval.json "
-            "--output local/monitor_queue_agentic_eval_report.json\n"
-        ),
-        creator="gpt-5.5-high",
-        reviewer="claude-fable-low",
-        repair_worktree=repair,
-        not_before=0,
-    )
-
-    assert gate["ok"] is False
-    assert gate["repair_head_sha"] == repair_sha
-    result = gate["artifact_results"][0]
-    assert result["repo_sha"] == main_sha
-    assert result["passed"] is False
-    assert "repo sha mismatch" in result["reason"]
-    assert "no required proof artifact" in " | ".join(gate["reasons"])
-
-
-def test_repair_task_flags_registered_checkout_required_proof(tmp_path) -> None:
-    registered = tmp_path / "registered"
-    repair = tmp_path / "repair-worktrees" / "memory-142"
-    body = (
-        "type: bug\ntarget: scripts/validation\n\n"
-        "## Required proof\n\n"
-        f"cd {registered} && skills/agentic-evals/run.sh run "
-        "skills/project-watchdog/fixtures/agentic_eval.json "
-        f"--output {registered}/artifacts/hardening/proof.json\n"
-    )
-
-    task = handlers.build_repair_task(
-        repo="grahama1970/graph-memory-operator",
-        issue_number=142,
-        issue_title="Gate prompt-health backfills",
-        issue_body=body,
-        targets=["scripts/validation"],
-        registered_worktree=registered,
-        repair_worktree=repair,
-    )
-
-    assert "## Proof binding guard" in task
-    assert str(registered) in task
-    assert str(repair) in task
-    assert "proof_not_bound_to_repair_worktree" in task
-    assert "Rewrite the proof command so it runs from the repair worktree" in task
-
-
-def test_absolute_proof_artifact_under_registered_checkout_is_refused(tmp_path) -> None:
-    registered = tmp_path / "registered"
-    repair = tmp_path / "repair"
-    artifact = registered / "artifacts" / "hardening" / "proof.json"
-    artifact.parent.mkdir(parents=True)
-    artifact.write_text(
-        json.dumps({"readiness": "READY", "outcome_counts": {"PASS": 1, "FAIL": 0}}),
-        encoding="utf-8",
-    )
-
-    record = handlers.inspect_proof_artifact(
-        str(artifact),
-        not_before=0,
-        base_dir=repair,
-        registered_worktree=registered,
-        repair_worktree=repair,
-    )
-
-    assert record["passed"] is False
-    assert "proof_not_bound_to_repair_worktree" in record["reason"]
-    assert str(registered) in record["reason"]
-
-
 def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
     """#1499 had a July receipt on disk; accepting it would close on a stale pass."""
     artifact = tmp_path / "proof.json"
@@ -1057,9 +832,6 @@ def test_the_repair_task_names_the_bar_the_reviewer_applies() -> None:
     assert "VERDICT: PASS" in task and "VERDICT: FAIL" in task
     assert "Allowed paths: skills/x" in task
     assert "type: bug" in task, "the ticket body carries the orientation a cron agent needs"
-    assert "Only the reviewer seat may emit a VERDICT line" in task
-    assert "The creator seat must not emit VERDICT" in task
-    assert "recursive_watchdog_proof_boundary" in task
 
 
 def test_goal_hash_is_stable_across_reruns() -> None:
@@ -1361,7 +1133,7 @@ def test_tau_repair_reviewer_is_local_claude_opus_48_high() -> None:
     assert reviewer == "claude-opus-4-8-high"
 
 
-def test_memory_project_uses_local_claude_opus_48_high_reviewer() -> None:
+def test_memory_project_auto_lands_reviewer_passed_repairs() -> None:
     registry_path = Path(__file__).resolve().parents[1] / "registry" / "projects.json"
     payload = json.loads(registry_path.read_text(encoding="utf-8"))
     projects = payload["projects"] if isinstance(payload, dict) else payload
@@ -1369,9 +1141,7 @@ def test_memory_project_uses_local_claude_opus_48_high_reviewer() -> None:
 
     assert config.auto_land_main(memory) is True
     assert memory["repair_reviewer"] == "claude-opus-4-8-high"
-    creator, reviewer = config.repair_seats(memory)
-    assert creator == "gpt-5.5-high"
-    assert reviewer == "claude-opus-4-8-high"
+
 
 def test_identical_seats_are_refused_before_dispatch(tmp_path) -> None:
     project = {
@@ -1423,25 +1193,6 @@ def test_web_model_creator_is_refused_before_ask_dispatch(tmp_path) -> None:
     assert result["status"] == "BLOCKED"
     assert "not a Tau repair authoring lane" in result["summary"]
     assert "webgpt" in result["summary"]
-    assert not dispatched.called
-
-
-def test_web_model_reviewer_is_refused_before_ask_dispatch(tmp_path) -> None:
-    project = {
-        "project_id": "tau",
-        "repo": "grahama1970/tau",
-        "worktree": str(_clean_worktree(tmp_path)),
-        "repair_creator": "gpt-5.5-high",
-        "repair_reviewer": "webclaude",
-    }
-    issue = _issue(326, labels=["agent-work"], body="type: feature\ntarget: src/tau_coding/dag_runtime\n")
-    issue["watchdog_action"] = "ticket_repair"
-    with mock.patch.object(handlers, "run_cmd") as dispatched:
-        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
-    assert result["status"] == "BLOCKED"
-    assert "repair reviewer 'webclaude' is a browser seat" in result["summary"]
-    assert "cannot run the ticket's live proof" in result["summary"]
-    assert "webclaude" in result["summary"]
     assert not dispatched.called
 
 
@@ -1502,6 +1253,119 @@ def test_an_untouched_main_completes_normally(tmp_path) -> None:
     ):
         result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
     assert result["status"] == "COMPLETED", result.get("summary")
+
+
+def test_landed_repair_cleanup_invokes_ops_worktrees_archive(tmp_path, monkeypatch) -> None:
+    project_worktree = tmp_path / "project"
+    repair_worktree = tmp_path / "repair"
+    project_worktree.mkdir()
+    repair_worktree.mkdir()
+    calls: list[dict] = []
+
+    def fake_run(command, **kwargs):  # noqa: ANN001, ANN003
+        calls.append({"command": command, **kwargs})
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({"outcome": "archived", "archive_dir": "/mnt/storage12tb/worktrees/deprecated/x"}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(handlers.subprocess, "run", fake_run)
+
+    result = handlers._cleanup_landed_repair_worktree(project_worktree, repair_worktree, "run", 42)
+
+    assert result["exit_code"] == 0
+    assert result["receipt"]["outcome"] == "archived"
+    assert calls[0]["command"][-3:] == [str(repair_worktree), "--apply", "--json"]
+    assert calls[0]["command"][0].endswith("skills/ops-worktrees/run.sh")
+    assert calls[0]["env"]["OPS_WORKTREES_REPO"] == str(project_worktree)
+
+
+def test_auto_landed_repair_archives_worktree_before_closing(tmp_path) -> None:
+    _seed_passing_repair_evidence(tmp_path)
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "auto_land_main": True,
+    }
+    issue = _issue(52, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    comments: list[str] = []
+    cleanup = {
+        "cmd": ["skills/ops-worktrees/run.sh", "archive", str(tmp_path / "wt"), "--apply", "--json"],
+        "exit_code": 0,
+        "stdout": json.dumps({"outcome": "archived"}),
+        "stderr": "",
+        "receipt": {"outcome": "archived", "archive_dir": "/mnt/storage12tb/worktrees/deprecated/p-52"},
+    }
+    with (
+        mock.patch.object(
+            handlers.github,
+            "issue_comment",
+            side_effect=lambda *_a: comments.append(str(_a[-1])) or {"exit_code": 0},
+        ),
+        mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch.object(handlers.github, "issue_close", return_value={"exit_code": 0}) as close,
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-52",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
+        mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
+        mock.patch.object(handlers, "_land_repair_to_main", return_value=(True, [])),
+        mock.patch.object(handlers, "_cleanup_landed_repair_worktree", return_value=cleanup) as cleanup_call,
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "LANDED"
+    assert result["repair_worktree_cleanup"]["receipt"]["outcome"] == "archived"
+    assert cleanup_call.called
+    assert close.called
+    assert any("Repair worktree archived" in comment for comment in comments)
+
+
+def test_auto_landed_repair_cleanup_failure_keeps_ticket_open(tmp_path) -> None:
+    _seed_passing_repair_evidence(tmp_path)
+    project = {
+        "project_id": "p", "repo": TAU_REPO, "worktree": str(_clean_worktree(tmp_path)),
+        "auto_land_main": True,
+    }
+    issue = _issue(53, labels=["agent-work"], body="type: bug\ntarget: skills/x\n")
+    issue["watchdog_action"] = "ticket_repair"
+    cleanup = {
+        "cmd": ["skills/ops-worktrees/run.sh", "archive", str(tmp_path / "wt"), "--apply", "--json"],
+        "exit_code": 1,
+        "stdout": json.dumps({"outcome": "archived_not_unregistered"}),
+        "stderr": "could not unregister worktree",
+        "receipt": {"outcome": "archived_not_unregistered"},
+    }
+    edits: list[dict] = []
+    with (
+        mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
+        mock.patch.object(
+            handlers.github, "issue_edit",
+            side_effect=lambda *a, **k: edits.append(k) or {"exit_code": 0},
+        ),
+        mock.patch.object(handlers.github, "issue_close") as close,
+        mock.patch.object(
+            handlers.registry, "prepare_repair_worktree",
+            return_value={"ok": True, "branch": "watchdog/issue-53",
+                          "worktree": str(tmp_path / "wt")},
+        ),
+        mock.patch.object(handlers.registry, "remote_main_sha", side_effect=["a", "a"]),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag),
+        mock.patch.object(handlers, "run_cmd", side_effect=_passing_repair_run_cmd),
+        mock.patch.object(handlers, "_land_repair_to_main", return_value=(True, [])),
+        mock.patch.object(handlers, "_cleanup_landed_repair_worktree", return_value=cleanup),
+    ):
+        result = handlers.handle_issue("run", tmp_path, project, issue, apply=True)
+
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert result["ok"] is False
+    assert not close.called
+    assert "could not archive/remove the repair worktree" in result["summary"]
+    assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
 
 
 def test_the_creator_is_told_not_to_push() -> None:

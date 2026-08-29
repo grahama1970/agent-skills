@@ -33,6 +33,7 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "abc123",
             "--require-clean",
             "--promoted-stage0",
+            "--skip-buzz",
             "--tau-semantic-provider",
             "--tau-semantic-handler",
             "gpt-5.5-high",
@@ -41,6 +42,8 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "MONITOR_TRACKER_ENABLED": "0",
             "MONITOR_ATS_MEMORY_ENABLED": "0",
             "MONITOR_RELATIONSHIP_SIGNALS_ENABLED": "1",
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT": "1",
+            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL": "horus",
         },
         "expected_revision": "abc123",
         "claim_snapshot": str(repo / "claim-snapshot.json"),
@@ -53,7 +56,8 @@ def _scheduler_test_intent(repo: Path) -> dict[str, object]:
             "linkedin_action": "FORBIDDEN",
             "meetup_rsvp": "FORBIDDEN",
             "ats_submit": "FORBIDDEN",
-            "buzz_summary": "ENABLED",
+            "buzz_summary": "SKIPPED",
+            "discord_handoff": "ENABLED",
         },
         "workdir": str(repo),
         "cron": "0 2 * * *",
@@ -71,7 +75,7 @@ def _scheduler_test_receipt(repo: Path, command: str | None = None) -> dict[str,
         "zsh -lc 'exec "
         f"{repo}/skills/monitor-opportunities/run.sh nightly "
         "--expected-revision abc123 --require-clean --skip-tracker "
-        "--skip-ats-memory --promoted-stage0 --tau-semantic-provider "
+        "--skip-ats-memory --promoted-stage0 --skip-buzz --tau-semantic-provider "
         "--tau-semantic-handler gpt-5.5-high'"
     )
     readback = {
@@ -105,7 +109,7 @@ def _scheduler_test_receipt(repo: Path, command: str | None = None) -> dict[str,
     }
 
 
-def _write_scheduler_execution_artifacts(repo: Path) -> Path:
+def _write_scheduler_execution_artifacts(repo: Path, *, skill_tree_dirty: bool = False) -> Path:
     run_dir = repo / "skills" / "monitor-opportunities" / "local" / "nightly" / "latest"
     run_dir.mkdir(parents=True)
     report_acceptance = {
@@ -135,6 +139,20 @@ def _write_scheduler_execution_artifacts(repo: Path) -> Path:
             "artifact_hashes": {"report_acceptance": sha256_json(report_acceptance)},
             "steps": {
                 "attestation": {"expected_revision_matches": True},
+                "browser_capture_linkedin": {
+                    "status": "EMPTY",
+                    "captured": 0,
+                    "top_applicant_count": 0,
+                    "easy_apply_count": 0,
+                },
+                "browser_capture_linkedin_premium": {
+                    "status": "EMPTY",
+                    "captured": 0,
+                    "top_applicant_count": 0,
+                    "easy_apply_count": 0,
+                    "under_10_applicants_count": 0,
+                    "warm_paths_found": 0,
+                },
                 "tau_semantic": {
                     "status": "PASS",
                     "provider_live": True,
@@ -147,7 +165,7 @@ def _write_scheduler_execution_artifacts(repo: Path) -> Path:
         run_dir / "run-attestation.json",
         {
             "schema": "monitor_opportunities.run_attestation.v1",
-            "code": {"git_revision_full": "abc123", "skill_tree_dirty": False},
+            "code": {"git_revision_full": "abc123", "skill_tree_dirty": skill_tree_dirty},
         },
     )
     _write_json(run_dir / "run-receipt.json", {"status": "PASS", "external_effects": False})
@@ -177,8 +195,10 @@ def test_scheduler_command_is_full_run_transaction() -> None:
     assert "--promoted-stage0" in source
     assert "--tau-semantic-provider" in source
     assert "PROMOTED_STAGE0_CLAIM_SNAPSHOT_REQUIRED" in source
-    assert "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED" in source
-    assert 'environment["BUZZ_BIN"]' in source
+    assert "PROMOTED_STAGE0_BUZZ_BIN_REQUIRED" not in source
+    assert 'environment["BUZZ_BIN"]' not in source
+    assert "--skip-buzz" in source
+    assert "discord_handoff" in source
     assert "monitor-opportunities-nightly-receipt.json" in source
     assert "monitor-opportunities-nightly-equivalence.json" in source
     assert "scheduler-exec-check" in source
@@ -230,10 +250,6 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
 
     monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
     monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
-    monkeypatch.setattr(
-        "shutil.which",
-        lambda name: "/usr/local/bin/buzz" if name == "buzz" else None,
-    )
     monkeypatch.setattr("subprocess.run", fake_run)
 
     result = runner.invoke(
@@ -256,7 +272,8 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert "--promoted-stage0" in payload["command"]
     assert "--diagnostic" not in payload["command"]
     assert "MONITOR_CLAIM_SNAPSHOT_PATH=" in payload["command"]
-    assert "BUZZ_BIN=/usr/local/bin/buzz" in payload["command"]
+    assert "--skip-buzz" in payload["command"]
+    assert "BUZZ_BIN=" not in payload["command"]
     assert payload["effect_policy"] == {
         "tracker": "SKIPPED",
         "prior_application_history": "ENABLED",
@@ -266,7 +283,8 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "linkedin_action": "FORBIDDEN",
         "meetup_rsvp": "FORBIDDEN",
         "ats_submit": "FORBIDDEN",
-        "buzz_summary": "ENABLED",
+        "buzz_summary": "SKIPPED",
+        "discord_handoff": "ENABLED",
     }
     assert Path(payload["receipt"]).is_file()
     equivalence_path = Path(payload["scheduler_equivalence_receipt"])
@@ -290,6 +308,9 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
     assert equivalence["checks"]["ats_memory_disabled_in_environment"] is True
     assert equivalence["checks"]["forbidden_effect_policy"] is True
     assert equivalence["checks"]["external_effects_false"] is True
+    assert equivalence["checks"]["buzz_skipped_for_promoted"] is True
+    assert equivalence["checks"]["discord_handoff_enabled_for_promoted"] is True
+    assert equivalence["checks"]["discord_handoff_transport_bound"] is True
     assert equivalence["intent"]["nightly_args"] == [
         "nightly",
         "--expected-revision",
@@ -298,11 +319,17 @@ def test_promoted_stage0_schedule_registers_claim_bound_publication(
         "--skip-tracker",
         "--skip-ats-memory",
         "--promoted-stage0",
+        "--skip-buzz",
         "--tau-semantic-provider",
         "--tau-semantic-handler",
         "gpt-5.5-high",
     ]
-    assert equivalence["intent"]["environment"]["BUZZ_BIN"] == "/usr/local/bin/buzz"
+    assert "BUZZ_BIN" not in equivalence["intent"]["environment"]
+    assert equivalence["intent"]["environment"]["MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT"] == "1"
+    assert (
+        equivalence["intent"]["environment"]["MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL"]
+        == "horus"
+    )
 
 
 def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
@@ -349,10 +376,6 @@ def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
 
     monkeypatch.setattr("monitor_opportunities.cli._canonical_repo_root", lambda: repo)
     monkeypatch.setenv("SCHEDULER_DATA_DIR", str(scheduler_data))
-    monkeypatch.setattr(
-        "shutil.which",
-        lambda name: "/usr/local/bin/buzz" if name == "buzz" else None,
-    )
     monkeypatch.setattr("subprocess.run", fake_run)
 
     result = runner.invoke(
@@ -366,7 +389,7 @@ def test_scheduler_readback_drift_writes_failed_equivalence_receipt(
     )
 
     assert result.exit_code == 2
-    assert "SCHEDULER_EQUIVALENCE_FAILED" in result.output
+    assert "SCHEDULER_EQUIVALENCE_FAILED" in result.stderr
     equivalence_path = (
         scheduler_data / "receipts" / "monitor-opportunities-nightly-equivalence.json"
     )
@@ -536,6 +559,7 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
         "meetup_rsvp": "FORBIDDEN",
         "ats_submit": "FORBIDDEN",
         "buzz_summary": "SKIPPED",
+        "discord_handoff": "SKIPPED",
     }
     equivalence = json.loads(
         Path(payload["scheduler_equivalence_receipt"]).read_text(encoding="utf-8")
@@ -545,6 +569,7 @@ def test_diagnostic_schedule_uses_default_claim_snapshot_when_available(
     assert equivalence["checks"]["diagnostic_flag_matches"] is True
     assert equivalence["checks"]["promoted_stage0_flag_absent"] is True
     assert equivalence["checks"]["buzz_skipped_for_diagnostic"] is True
+    assert equivalence["checks"]["discord_handoff_skipped_for_diagnostic"] is True
     assert equivalence["intent"]["nightly_args"] == [
         "nightly",
         "--expected-revision",
@@ -566,7 +591,7 @@ def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
     command = (
         "zsh -lc 'exec /repo/run.sh nightly --expected-revision abc123 "
         "--require-clean --skip-tracker --skip-ats-memory --promoted-stage0 "
-        "--tau-semantic-provider --tau-semantic-handler gpt-5.5-high'"
+        "--skip-buzz --tau-semantic-provider --tau-semantic-handler gpt-5.5-high'"
     )
     _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
     out = tmp_path / "execution-equivalence.json"
@@ -620,6 +645,63 @@ def test_scheduler_exec_check_executes_exact_readback_and_binds_receipts(
     assert payload["artifacts"]["nightly"]["present"] is True
     assert payload["artifacts"]["report_acceptance"]["json_sha256"]
     assert Path(payload["receipt"]) == out
+
+
+def test_scheduler_exec_check_records_dirty_tree_without_blocking_execution(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=" M skills/monitor-opportunities/src/monitor_opportunities/cli.py\n",
+                stderr="",
+            )
+        assert cmd == command
+        assert kwargs["shell"] is True
+        assert kwargs["cwd"] == repo
+        captured["executed_command"] = cmd
+        run_dir = _write_scheduler_execution_artifacts(repo, skill_tree_dirty=True)
+        return subprocess.CompletedProcess(
+            cmd,
+            0,
+            stdout=json.dumps({"status": "PASS", "out": str(run_dir)}) + "\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert captured["executed_command"] == command
+    assert payload["status"] == "PASS"
+    assert payload["preflight"]["skill_tree_dirty"] is True
+    assert payload["preflight"]["dirty_tree_policy"] == "record_only"
+    assert "skill_tree_clean" not in payload["checks"]
+    assert "attestation_skill_tree_clean" not in payload["checks"]
+    assert payload["execution"]["exit_code"] == 0
 
 
 def test_scheduler_exec_check_dry_run_checks_preflight_only(
@@ -907,6 +989,89 @@ def test_scheduler_exec_check_records_self_repair_on_failure(
     assert payload["self_repair"]["notification"]["external_effects"] is False
 
 
+def test_scheduler_exec_check_records_self_repair_when_top_applicant_capture_failed(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    pipeline_runner = repo / "skills" / "pipeline-self-repair" / "run.sh"
+    pipeline_runner.parent.mkdir(parents=True)
+    pipeline_runner.write_text("#!/bin/sh\n", encoding="utf-8")
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+    captured: dict[str, object] = {}
+
+    def fake_run(cmd, **kwargs):
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd == command:
+            run_dir = _write_scheduler_execution_artifacts(repo)
+            nightly_path = run_dir / "nightly-receipt.json"
+            nightly = json.loads(nightly_path.read_text(encoding="utf-8"))
+            nightly["steps"]["browser_capture_linkedin"] = {
+                "status": "FAILED",
+                "captured": None,
+                "top_applicant_count": None,
+                "easy_apply_count": None,
+            }
+            _write_json(nightly_path, nightly)
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps({"status": "PASS", "out": str(run_dir)}) + "\n",
+                stderr="",
+            )
+        assert cmd[0] == str(pipeline_runner)
+        assert cmd[1] == "record-failure"
+        assert cmd[cmd.index("--step-id") + 1] == "scheduler-exec-check"
+        ledger = Path(cmd[cmd.index("--ledger") + 1])
+        ledger.parent.mkdir(parents=True, exist_ok=True)
+        ledger.write_text('{"schema":"pipeline_self_repair.event.v1"}\n', encoding="utf-8")
+        captured["pipeline_self_repair_cmd"] = cmd
+        stdout = {
+            "status": "RECORDED_REPAIR_REQUIRED",
+            "ledger": str(ledger),
+            "event": {
+                "event_id": "evt_linkedin_top_applicant",
+                "category_key": "monitor-opportunities/scheduler-exec-check/linkedin-top-applicant/v1",
+                "failure_category_id": "agentic-evals:agent-skills:monitor-opportunities-linkedin-source-accounting",
+                "triage": {"code": "monitor_opportunities_linkedin_top_applicant_capture_failed"},
+            },
+        }
+        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(stdout), stderr="")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert captured["pipeline_self_repair_cmd"]
+    assert payload["status"] == "FAIL"
+    assert payload["checks"]["execution_exit_code_zero"] is True
+    assert payload["checks"]["nightly_status_pass"] is True
+    assert payload["checks"]["linkedin_top_applicant_status_accounted"] is False
+    assert payload["checks"]["linkedin_top_applicant_counts_accounted"] is False
+    assert payload["source_accounting"]["linkedin_top_applicant"]["status"] == "FAILED"
+    assert payload["self_repair"]["status"] == "RECORDED"
+    assert payload["self_repair"]["triage_code"] == (
+        "monitor_opportunities_linkedin_top_applicant_capture_failed"
+    )
+
+
 def test_scheduler_exec_check_notifies_ops_discord_when_enabled(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -986,6 +1151,85 @@ def test_scheduler_exec_check_notifies_ops_discord_when_enabled(
     assert notification["ops_discord_status"] == "DRY_RUN"
     assert notification["ops_discord_source"] == "env:SLACK_WEBHOOK_URL"
     assert notification["external_effects"] is False
+
+
+def test_scheduler_exec_check_notifies_ops_discord_when_webhook_env_exists(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "skills" / "monitor-opportunities").mkdir(parents=True)
+    pipeline_runner = repo / "skills" / "pipeline-self-repair" / "run.sh"
+    pipeline_runner.parent.mkdir(parents=True)
+    pipeline_runner.write_text("#!/bin/sh\n", encoding="utf-8")
+    ops_discord_runner = repo / "skills" / "ops-discord" / "run.sh"
+    ops_discord_runner.parent.mkdir(parents=True)
+    ops_discord_runner.write_text("#!/bin/sh\n", encoding="utf-8")
+    schedule_receipt = tmp_path / "schedule-receipt.json"
+    command = str(_scheduler_test_receipt(repo)["command"])
+    _write_json(schedule_receipt, _scheduler_test_receipt(repo, command=command))
+    out = tmp_path / "execution-equivalence.json"
+    captured: dict[str, object] = {}
+    monkeypatch.delenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY", raising=False)
+    monkeypatch.delenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK", raising=False)
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN", "1")
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://example.invalid/webhook")
+
+    def fake_run(cmd, **kwargs):
+        if cmd == ["git", "rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="abc123\n", stderr="")
+        if cmd == ["git", "status", "--porcelain=v1", "--", "skills/monitor-opportunities"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd == command:
+            return subprocess.CompletedProcess(cmd, 9, stdout="", stderr="boom")
+        if cmd[0] == str(pipeline_runner):
+            ledger = Path(cmd[cmd.index("--ledger") + 1])
+            ledger.parent.mkdir(parents=True, exist_ok=True)
+            ledger.write_text('{"schema":"pipeline_self_repair.event.v1"}\n', encoding="utf-8")
+            stdout = {
+                "status": "RECORDED_REPAIR_REQUIRED",
+                "ledger": str(ledger),
+                "event": {
+                    "event_id": "evt_test",
+                    "category_key": "monitor-opportunities/scheduler-exec-check/test/v1",
+                    "failure_category_id": "agentic-evals:agent-skills:monitor-opportunities-test",
+                    "triage": {"code": "monitor_opportunities_scheduler_exec_failed"},
+                },
+            }
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(stdout), stderr="")
+        assert cmd[0] == str(ops_discord_runner)
+        assert cmd[1] == "notify"
+        assert cmd[cmd.index("--webhook") + 1] == "discord"
+        assert "--dry-run" in cmd
+        captured["ops_discord_notify_cmd"] = cmd
+        stdout = {
+            "schema": "ops_discord.notification_receipt.v1",
+            "status": "DRY_RUN",
+            "webhook": "discord",
+            "source": "env:DISCORD_WEBHOOK_URL",
+            "dry_run": True,
+            "external_effects": False,
+        }
+        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(stdout), stderr="")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = runner.invoke(
+        app,
+        [
+            "scheduler-exec-check",
+            "--schedule-receipt",
+            str(schedule_receipt),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert captured["ops_discord_notify_cmd"]
+    assert payload["self_repair"]["notification"]["status"] == "DRY_RUN"
+    assert payload["self_repair"]["notification"]["ops_discord_source"] == "env:DISCORD_WEBHOOK_URL"
+
 
 def test_scheduler_exec_check_fails_on_mismatched_final_acceptance_hash(
     tmp_path: Path, monkeypatch

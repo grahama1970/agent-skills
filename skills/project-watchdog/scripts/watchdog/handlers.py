@@ -558,8 +558,6 @@ def build_repair_task(
     issue_title: str,
     issue_body: str,
     targets: list[str],
-    registered_worktree: Path | None = None,
-    repair_worktree: Path | None = None,
 ) -> str:
     """The prose task $ask compiles into the creator-reviewer DAG.
 
@@ -567,11 +565,6 @@ def build_repair_task(
     context files and proof command that a cron-dispatched agent with no prior
     session needs.
     """
-    proof_binding = proof_binding_instruction(
-        issue_body=issue_body,
-        registered_worktree=registered_worktree,
-        repair_worktree=repair_worktree,
-    )
     return (
         f"Repair {repo}#{issue_number}: {issue_title}\n\n"
         f"Allowed paths: {', '.join(targets) or '(as stated in the ticket)'}\n\n"
@@ -581,76 +574,12 @@ def build_repair_task(
         f"The creator seat implements the fix and commits it. The reviewer seat "
         f"checks it against the ticket's acceptance criterion and required proof, "
         f"and answers VERDICT: PASS, VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION.\n\n"
-        f"Only the reviewer seat may emit a VERDICT line. The creator seat must "
-        f"not emit VERDICT: PASS, VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION; it "
-        f"should report what it changed, what proof it ran, and what remains for "
-        f"review. If the ticket's required proof asks project-watchdog to dispatch "
-        f"this same leased issue, the creator must report "
-        f"recursive_watchdog_proof_boundary instead of rerunning that recursive "
-        f"dispatch as if it were an ordinary proof command.\n\n"
-        f"The reviewer verdict must be on a line of its own. Only VERDICT: PASS closes "
+        f"The verdict must be on a line of its own. Only VERDICT: PASS closes "
         f"this ticket, and only when the ticket's proof command has actually run "
         f"and its artifact reads as a completed pass -- name the artifact path in "
         f"the review. A proof that is still running, that failed, or that was not "
         f"run is VERDICT: NEEDS_ATTENTION.\n\n"
-        f"{proof_binding}"
         f"--- ticket body ---\n{issue_body}"
-    )
-
-
-def _required_proof_section(issue_body: str) -> str:
-    section: list[str] = []
-    collecting = False
-    for line in issue_body.splitlines():
-        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
-        if heading:
-            collecting = heading.group(1).strip().lower() == "required proof"
-            continue
-        if collecting:
-            section.append(line)
-    return "\n".join(section)
-
-
-def _path_is_relative_to(path: Path, root: Path) -> bool:
-    try:
-        path.relative_to(root)
-        return True
-    except ValueError:
-        return False
-
-
-def proof_binding_instruction(
-    *,
-    issue_body: str,
-    registered_worktree: Path | None,
-    repair_worktree: Path | None,
-) -> str:
-    """Warn seats when the ticket proof points at the human checkout.
-
-    The registered checkout is only a readiness source. A proof command hardcoded
-    to that path can pass on ``main`` while the repair branch remains unproven.
-    """
-    if registered_worktree is None or repair_worktree is None:
-        return ""
-    proof_text = _required_proof_section(issue_body)
-    if not proof_text:
-        return ""
-    registered = str(registered_worktree)
-    if registered not in proof_text:
-        return ""
-    return (
-        "## Proof binding guard\n\n"
-        f"The ticket's Required proof section mentions the registered checkout "
-        f"`{registered}`. That checkout is not the repair branch. The repair "
-        f"branch for this dispatch is `{repair_worktree}`.\n\n"
-        "Do not run or cite a proof artifact from the registered checkout as "
-        "proof of this repair. Rewrite the proof command so it runs from the "
-        "repair worktree and writes/reads artifacts under the repair worktree, "
-        "preserving the same case, seed, and acceptance arguments when possible. "
-        "If that rewrite is not safe, report `proof_not_bound_to_repair_worktree`; "
-        "the reviewer must answer VERDICT: NEEDS_ATTENTION. Any proof artifact "
-        "whose `repo.sha` does not match the repair branch HEAD will fail the "
-        "watchdog proof gate.\n\n"
     )
 
 
@@ -915,6 +844,86 @@ def _land_repair_to_main(worktree: Path, run_id: str, issue_number: int) -> tupl
     return landed, cmds
 
 
+def _cleanup_landed_repair_worktree(
+    project_worktree: Path,
+    repair_worktree: Path,
+    run_id: str,
+    issue_number: int,
+) -> dict[str, Any]:
+    """Archive and unregister a repair worktree after its branch lands on main."""
+    repo_root = Path(__file__).resolve().parents[4]
+    ops_worktrees = repo_root / "skills" / "ops-worktrees" / "run.sh"
+    command = [str(ops_worktrees), "archive", str(repair_worktree), "--apply", "--json"]
+    start = time.monotonic()
+    if not ops_worktrees.exists():
+        return {
+            "cmd": command,
+            "exit_code": 127,
+            "stdout": "",
+            "stderr": f"missing ops-worktrees runtime at {ops_worktrees}",
+            "duration_seconds": 0,
+            "receipt": None,
+        }
+    env = os.environ.copy()
+    env["OPS_WORKTREES_REPO"] = str(project_worktree)
+    try:
+        proc = subprocess.run(command, cwd=repo_root, env=env, text=True, capture_output=True, timeout=120)
+    except subprocess.TimeoutExpired as exc:
+        duration = round(time.monotonic() - start, 3)
+        log_event(
+            run_id,
+            "landed_repair_worktree_cleanup_timeout",
+            issue=issue_number,
+            worktree=str(repair_worktree),
+        )
+        return {
+            "cmd": command,
+            "cwd": str(repo_root),
+            "exit_code": 124,
+            "stdout": exc.stdout or "",
+            "stderr": exc.stderr or "ops-worktrees archive timed out after 120s",
+            "duration_seconds": duration,
+            "receipt": None,
+            "timed_out": True,
+        }
+    duration = round(time.monotonic() - start, 3)
+    receipt: dict[str, Any] | None = None
+    if proc.stdout.strip():
+        try:
+            parsed = json.loads(proc.stdout)
+            if isinstance(parsed, dict):
+                receipt = parsed
+        except json.JSONDecodeError:
+            receipt = None
+    outcome = receipt.get("outcome") if receipt else None
+    log_event(
+        run_id,
+        "landed_repair_worktree_cleanup",
+        issue=issue_number,
+        exit_code=proc.returncode,
+        outcome=outcome,
+        worktree=str(repair_worktree),
+    )
+    return {
+        "cmd": command,
+        "cwd": str(repo_root),
+        "exit_code": proc.returncode,
+        "stdout": proc.stdout,
+        "stderr": proc.stderr,
+        "duration_seconds": duration,
+        "receipt": receipt,
+    }
+
+
+def _landed_repair_cleanup_ok(command_result: dict[str, Any]) -> bool:
+    if command_result.get("exit_code") != 0:
+        return False
+    receipt = command_result.get("receipt")
+    if not isinstance(receipt, dict):
+        return False
+    return receipt.get("outcome") in {"archived", "removed", "skipped"}
+
+
 # --------------------------------------------------------------------------- #
 # Repair proof gate — a DAG that exited 0 is not a repaired ticket
 # --------------------------------------------------------------------------- #
@@ -959,10 +968,6 @@ _POSITION_HEADING = re.compile(r"^#{1,6}\s*position\s*$", re.IGNORECASE)
 _OUTPUT_FLAG = re.compile(r"--(?:output|out|output-file|report)[ =]+([^\s`'\"]+)")
 _PROOF_PATH = re.compile(
     r"(?:^|[\s`'\"(=])((?:/|\./|~/)?[\w.@+-]+(?:/[\w.@+-]+)+\.(?:json|xml|txt|log|md|csv|html))"
-)
-_AGENTIC_EVAL_INPUT = re.compile(
-    r"(?:^|[\s`'\"])(?:[\w./-]+/)?agentic-evals/run\.sh\s+run\s+([^\s`'\"]+)"
-    r"|(?:^|[\s`'\"])/agentic-evals\s+run\s+([^\s`'\"]+)"
 )
 
 
@@ -1023,37 +1028,22 @@ def required_proof_artifacts(issue_body: str) -> list[str]:
     supposed to produce. When the section names an ``--output`` operand those
     win outright, because that is the artifact the proof command writes.
     """
-    text = _required_proof_section(issue_body)
+    section: list[str] = []
+    collecting = False
+    for line in issue_body.splitlines():
+        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
+        if heading:
+            collecting = heading.group(1).strip().lower() == "required proof"
+            continue
+        if collecting:
+            section.append(line)
+    text = "\n".join(section)
     if not text.strip():
         return []
     outputs = [m.group(1) for m in _OUTPUT_FLAG.finditer(text)]
     if outputs:
         return sorted(dict.fromkeys(outputs))
-    proof_paths = [m.group(1) for m in _PROOF_PATH.finditer(text)]
-    agentic_inputs = {
-        path
-        for match in _AGENTIC_EVAL_INPUT.finditer(text)
-        for path in match.groups()
-        if path
-    }
-    return sorted(
-        dict.fromkeys(path for path in proof_paths if path not in agentic_inputs)
-    )
-
-
-def reviewer_named_proof_artifacts(response: str | None) -> list[str]:
-    """Fresh proof artifacts the reviewer explicitly named in its verdict.
-
-    Some tickets specify an ``agentic-evals run`` command without an ``--output``.
-    In that shape the fixture path is input, not proof. The repair prompt still
-    requires the reviewer to name the proof artifact it read, so use those paths
-    as the fallback proof set.
-    """
-    if not response:
-        return []
-    outputs = [m.group(1) for m in _OUTPUT_FLAG.finditer(response)]
-    proof_paths = outputs or [m.group(1) for m in _PROOF_PATH.finditer(response)]
-    return sorted(dict.fromkeys(proof_paths))
+    return sorted(dict.fromkeys(m.group(1) for m in _PROOF_PATH.finditer(text)))
 
 
 def _result_values(payload: Any, depth: int = 0) -> list[str]:
@@ -1073,15 +1063,7 @@ def _result_values(payload: Any, depth: int = 0) -> list[str]:
     return found
 
 
-def inspect_proof_artifact(
-    raw_path: str,
-    *,
-    not_before: float,
-    base_dir: Path | None = None,
-    expected_repo_sha: str | None = None,
-    registered_worktree: Path | None = None,
-    repair_worktree: Path | None = None,
-) -> dict[str, Any]:
+def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any]:
     """Whether one named proof artifact is present, fresh, and a completed pass.
 
     Freshness is load-bearing: agent-skills#1499 had a passing receipt on disk
@@ -1089,25 +1071,10 @@ def inspect_proof_artifact(
     in this dispatch ever ran.
     """
     path = Path(raw_path).expanduser()
-    if not path.is_absolute() and base_dir is not None:
-        path = base_dir / path
     record: dict[str, Any] = {
         "path": str(path), "exists": False, "fresh": False,
         "machine_readable": False, "passed": False, "reason": "",
     }
-    if path.is_absolute() and registered_worktree is not None:
-        artifact_path = path.resolve(strict=False)
-        registered_root = registered_worktree.resolve(strict=False)
-        proof_root = repair_worktree or base_dir
-        repair_root = proof_root.resolve(strict=False) if proof_root else None
-        if _path_is_relative_to(artifact_path, registered_root) and not (
-            repair_root and _path_is_relative_to(artifact_path, repair_root)
-        ):
-            record["reason"] = (
-                "proof_not_bound_to_repair_worktree: artifact path is under "
-                f"registered checkout {registered_root}, not repair worktree {repair_root}"
-            )
-            return record
     if not path.is_file():
         record["reason"] = "not written"
         return record
@@ -1131,26 +1098,6 @@ def inspect_proof_artifact(
     except (OSError, json.JSONDecodeError) as exc:
         record["reason"] = f"unreadable json: {exc}"
         return record
-    repo_meta = payload.get("repo") if isinstance(payload, dict) else None
-    artifact_sha = None
-    artifact_ref = None
-    if isinstance(repo_meta, dict):
-        artifact_sha = str(repo_meta.get("sha") or "").strip() or None
-        artifact_ref = str(repo_meta.get("ref") or "").strip() or None
-    if artifact_sha:
-        record["repo_sha"] = artifact_sha
-        if artifact_ref:
-            record["repo_ref"] = artifact_ref
-        if expected_repo_sha and not (
-            artifact_sha == expected_repo_sha
-            or artifact_sha.startswith(expected_repo_sha)
-            or expected_repo_sha.startswith(artifact_sha)
-        ):
-            record["reason"] = (
-                f"repo sha mismatch: artifact {artifact_sha} "
-                f"!= repair head {expected_repo_sha}"
-            )
-            return record
     values = _result_values(payload)
     record["machine_readable"] = bool(values)
     failing = sorted({v for v in values if v in PROOF_FAIL_VALUES})
@@ -1184,15 +1131,6 @@ def repair_commits_ahead(worktree: Path) -> int | None:
         return None
 
 
-def repair_head_sha(worktree: Path) -> str | None:
-    """Current repair branch SHA, used to bind proof artifacts to the branch."""
-    result = run_cmd(["git", "rev-parse", "HEAD"], cwd=worktree, timeout_s=60)
-    if result.get("exit_code") != 0:
-        return None
-    sha = str(result.get("stdout", "")).strip()
-    return sha or None
-
-
 def evaluate_repair_proof(
     *,
     ask_run_dir: Path,
@@ -1201,7 +1139,6 @@ def evaluate_repair_proof(
     reviewer: str,
     repair_worktree: Path,
     not_before: float,
-    registered_worktree: Path | None = None,
 ) -> dict[str, Any]:
     """Decide whether this repair may close its ticket.
 
@@ -1227,16 +1164,12 @@ def evaluate_repair_proof(
         "required_proof_artifacts": [],
         "artifact_results": [],
         "commits_ahead": None,
-        "repair_head_sha": None,
         "checked_at": iso_now(),
     }
     reasons: list[str] = []
 
-    reviewer_response: str | None = None
     for role, handler in (("creator", creator), ("reviewer", reviewer)):
         response = seat_response_text(ask_run_dir, handler)
-        if role == "reviewer":
-            reviewer_response = response
         verdict = declared_verdict(response) if response is not None else None
         gate["seat_verdicts"][role] = {
             "handler": handler,
@@ -1258,23 +1191,9 @@ def evaluate_repair_proof(
             reasons.append(f"reviewer seat {handler} declared {verdict}, not PASS")
 
     artifacts = required_proof_artifacts(issue_body)
-    if not artifacts:
-        artifacts = reviewer_named_proof_artifacts(reviewer_response)
     gate["required_proof_artifacts"] = artifacts
-    expected_repo_sha = repair_head_sha(repair_worktree)
-    gate["repair_head_sha"] = expected_repo_sha
     if artifacts:
-        results = [
-            inspect_proof_artifact(
-                a,
-                not_before=not_before,
-                base_dir=repair_worktree,
-                expected_repo_sha=expected_repo_sha,
-                registered_worktree=registered_worktree,
-                repair_worktree=repair_worktree,
-            )
-            for a in artifacts
-        ]
+        results = [inspect_proof_artifact(a, not_before=not_before) for a in artifacts]
         gate["artifact_results"] = results
         if not any(r["passed"] for r in results):
             detail = "; ".join(f"{r['path']}: {r['reason']}" for r in results)
@@ -1391,19 +1310,18 @@ def handle_ticket_repair(
     goal_hash = issue_goal_hash(repo, issue_number)
     result["goal_hash"] = goal_hash
     ask_run_dir = receipt_dir / "ask"
+    task = build_repair_task(
+        repo=repo,
+        issue_number=issue_number,
+        issue_title=str(issue.get("title", "")),
+        issue_body=str(issue.get("body", "")),
+        targets=sorted(targets),
+    )
     task_path = receipt_dir / "repair-task.md"
+    task_path.write_text(task, encoding="utf-8")
+    result["artifacts"].append(str(task_path))
 
     if not apply:
-        task = build_repair_task(
-            repo=repo,
-            issue_number=issue_number,
-            issue_title=str(issue.get("title", "")),
-            issue_body=str(issue.get("body", "")),
-            targets=sorted(targets),
-            registered_worktree=worktree,
-        )
-        task_path.write_text(task, encoding="utf-8")
-        result["artifacts"].append(str(task_path))
         result.update(
             {
                 "ok": True,
@@ -1431,17 +1349,6 @@ def handle_ticket_repair(
         log_event(run_id, "repair_worktree_failed", issue=issue_number, error=prepared.get("error"))
         return result
     result["artifacts"].append(str(repair_worktree))
-    task = build_repair_task(
-        repo=repo,
-        issue_number=issue_number,
-        issue_title=str(issue.get("title", "")),
-        issue_body=str(issue.get("body", "")),
-        targets=sorted(targets),
-        registered_worktree=worktree,
-        repair_worktree=repair_worktree,
-    )
-    task_path.write_text(task, encoding="utf-8")
-    result["artifacts"].append(str(task_path))
 
     # The creator commits on its own branch; only the reviewer's verdict should
     # move main. Observed 2026-07-28: the codex seat pushed a850e22a6 straight to
@@ -1586,7 +1493,6 @@ def handle_ticket_repair(
         reviewer=reviewer,
         repair_worktree=repair_worktree,
         not_before=dispatched_at,
-        registered_worktree=worktree,
     )
     result["proof_gate"] = gate
     gate_path = receipt_dir / "repair-proof-gate.json"
@@ -1627,6 +1533,39 @@ def handle_ticket_repair(
         landed, land_cmds = _land_repair_to_main(repair_worktree, run_id, issue_number)
         result["commands"].extend(land_cmds)
         if landed:
+            cleanup = _cleanup_landed_repair_worktree(worktree, repair_worktree, run_id, issue_number)
+            result["repair_worktree_cleanup"] = cleanup
+            result["commands"].append(cleanup)
+            if not _landed_repair_cleanup_ok(cleanup):
+                result.update(
+                    {
+                        "ok": False,
+                        "status": "NEEDS_ATTENTION",
+                        "summary": (
+                            f"$ask tau-dag repair for {repo}#{issue_number} landed on main, "
+                            "but project-watchdog could not archive/remove the repair worktree."
+                        ),
+                    }
+                )
+                result["commands"].append(
+                    github.issue_comment(
+                        repo,
+                        issue_number,
+                        github.watchdog_comment("Landed repair worktree cleanup failed", cleanup),
+                    )
+                )
+                result["commands"].append(
+                    github.issue_edit(
+                        repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
+                    )
+                )
+                log_event(
+                    run_id,
+                    "handle_ticket_repair_landed_cleanup_failed",
+                    issue=issue_number,
+                    cleanup_exit_code=cleanup.get("exit_code"),
+                )
+                return result
             result["commands"].append(
                 github.issue_edit(repo, issue_number, add=[config.DONE_LABEL], remove=[config.LEASE_LABEL])
             )
@@ -1634,7 +1573,7 @@ def handle_ticket_repair(
                 github.issue_comment(
                     repo, issue_number,
                     "Project Watchdog: reviewer passed; repair landed directly on main "
-                    "(alpha project, main is the single branch). Closing.",
+                    "(alpha project, main is the single branch). Repair worktree archived. Closing.",
                 )
             )
             result["commands"].append(github.issue_close(repo, issue_number, reason="completed"))

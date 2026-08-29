@@ -170,6 +170,64 @@ def test_ashby_provider_workplace_type_disambiguates_non_buffalo_onsite() -> Non
     assert discovery._workplace_type("United States", "", "Remote") == "REMOTE"
 
 
+def test_ashby_keyword_match_survives_employer_cap() -> None:
+    jobs = [
+        {
+            "title": "Commercial Counsel",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/commercial-counsel",
+            "descriptionHtml": "Support engineers building AI products and agentic workflows.",
+            "location": "San Francisco",
+        },
+        {
+            "title": "IT Engineer",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/it-engineer",
+            "descriptionHtml": "General endpoint support.",
+            "location": "San Francisco",
+        },
+    ]
+    jobs.extend(
+        {
+            "title": f"Operations Role {index}",
+            "jobUrl": f"https://jobs.ashbyhq.com/cognition/ops-{index}",
+            "descriptionHtml": "General operations role.",
+            "location": "San Francisco",
+        }
+        for index in range(10)
+    )
+    jobs.append(
+        {
+            "id": "811c3f5a-b26d-4162-b49b-93890a91794d",
+            "title": "Applied AI Engineer",
+            "jobUrl": "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d",
+            "descriptionHtml": "Build agentic AI systems.",
+            "location": "San Francisco",
+        }
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url) == "https://api.ashbyhq.com/posting-api/job-board/cognition"
+        return httpx.Response(200, json={"jobs": jobs})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    _receipt, candidates = _ashby_candidates(
+        client,
+        {
+            "name": "Cognition",
+            "provider": "ashby",
+            "slug": "cognition",
+            "limit": 10,
+            "need_keywords": ["agentic", "AI", "engineer"],
+            "default_fit_score": 0.7,
+        },
+    )
+
+    assert any(
+        row["posting_url"] == "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d"
+        for row in candidates
+    )
+    assert candidates[0]["title"] == "Applied AI Engineer"
+
+
 def test_sweep_emits_honest_browser_required_receipts_without_human_evidence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -219,6 +277,61 @@ def test_sweep_emits_honest_browser_required_receipts_without_human_evidence(
     assert required["indeed"]["source_class"] == "human_supplied_indeed"
     assert required["hiddenjobs"]["source_class"] == "human_supplied_hiddenjobs"
     assert {required["indeed"]["result_status"], required["hiddenjobs"]["result_status"]} == {"AUTH_REQUIRED"}
+
+
+def test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        discovery,
+        "_load_targets",
+        lambda _skill_dir: {
+            "source_locators": [],
+            "employment": [],
+            "commercial": [],
+        },
+    )
+    monkeypatch.setattr(
+        discovery,
+        "_client_research_receipt",
+        lambda _skill_dir: {
+            "receipt_id": "client-research",
+            "lane": "C",
+            "provider": "client-research",
+            "target": "Client-services prospects",
+            "required_source_id": "client_research",
+            "channel": "brave_search",
+            "source_class": "source_locator",
+            "result_status": "NO_MATCHES",
+            "observed_at": "2026-08-29T00:00:00Z",
+            "request_summary": "stubbed for unit test",
+            "response_status": 200,
+            "content_type": None,
+            "response_bytes": 1,
+            "content_sha256": "a" * 64,
+            "evidence_refs": [],
+            "limitations": [],
+        },
+    )
+    out = tmp_path / "discovery"
+    result = runner.invoke(app, ["sweep", "--lane", "C", "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    receipts = [
+        json.loads(line)
+        for line in (out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    required = {
+        row.get("required_source_id"): row
+        for row in receipts
+        if row.get("required_source_id") in {"slack_channels", "discord_channels", "gmail_mailbox"}
+    }
+    assert set(required) == {"slack_channels", "discord_channels", "gmail_mailbox"}
+    assert {row["result_status"] for row in required.values()} == {"FEED_DOWN"}
+    assert required["slack_channels"]["channel"] == "slack"
+    assert required["discord_channels"]["channel"] == "discord"
+    assert required["gmail_mailbox"]["channel"] == "mailbox_mining"
 
 
 def test_sweep_uses_browser_required_source_evidence_for_source_health_only(
@@ -360,64 +473,6 @@ def test_ashby_candidate_maps_primary_fields() -> None:
     assert rows[0]["title"] == "Applied AI Engineer"
     assert rows[0]["primary_evidence_url"] == "https://jobs.example/ai"
     assert rows[0]["workplace_type"] == "REMOTE"
-
-
-def test_ashby_keyword_match_survives_employer_cap() -> None:
-    jobs = [
-        {
-            "title": "Commercial Counsel",
-            "jobUrl": "https://jobs.ashbyhq.com/cognition/commercial-counsel",
-            "descriptionHtml": "Support engineers building AI products and agentic workflows.",
-            "location": "San Francisco",
-        },
-        {
-            "title": "IT Engineer",
-            "jobUrl": "https://jobs.ashbyhq.com/cognition/it-engineer",
-            "descriptionHtml": "General endpoint support.",
-            "location": "San Francisco",
-        },
-    ]
-    jobs.extend(
-        {
-            "title": f"Operations Role {index}",
-            "jobUrl": f"https://jobs.ashbyhq.com/cognition/ops-{index}",
-            "descriptionHtml": "General operations role.",
-            "location": "San Francisco",
-        }
-        for index in range(10)
-    )
-    jobs.append(
-        {
-            "id": "811c3f5a-b26d-4162-b49b-93890a91794d",
-            "title": "Applied AI Engineer",
-            "jobUrl": "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d",
-            "descriptionHtml": "Build agentic AI systems.",
-            "location": "San Francisco",
-        }
-    )
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        assert str(request.url) == "https://api.ashbyhq.com/posting-api/job-board/cognition"
-        return httpx.Response(200, json={"jobs": jobs})
-
-    client = httpx.Client(transport=httpx.MockTransport(handler))
-    _receipt, candidates = _ashby_candidates(
-        client,
-        {
-            "name": "Cognition",
-            "provider": "ashby",
-            "slug": "cognition",
-            "limit": 10,
-            "need_keywords": ["agentic", "AI", "engineer"],
-            "default_fit_score": 0.7,
-        },
-    )
-
-    assert any(
-        row["posting_url"] == "https://jobs.ashbyhq.com/cognition/811c3f5a-b26d-4162-b49b-93890a91794d"
-        for row in candidates
-    )
-    assert candidates[0]["title"] == "Applied AI Engineer"
 
 
 def test_ashby_large_valid_board_under_employer_ats_cap_is_parsed() -> None:

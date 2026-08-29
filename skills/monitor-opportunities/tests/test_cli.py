@@ -218,3 +218,26 @@ def test_apply_blocks_unresolved_human_required_fields(tmp_path: Path) -> None:
     assert payload["does_not_submit"] is True
     assert payload["unresolved_required_fields"] == ["Why this role?"]
     assert payload["command"] == "apply"
+
+
+def test_run_prints_terminal_opportunity_table_without_breaking_json_stdout(tmp_path: Path) -> None:
+    fixture_dir = Path(__file__).parent / "fixtures" / "discovery"
+    out = tmp_path / "run"
+
+    result = runner.invoke(app, ["run", "--fixture-dir", str(fixture_dir), "--out", str(out)])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "PASS"
+    assert payload["external_effects"] is False
+    assert "MONITOR-OPPORTUNITIES TERMINAL REPORT" in result.stderr
+    assert f"Run: {out}" in result.stderr
+    assert "Counts: total=2 employment=2 consulting=0" in result.stderr
+    assert "Sources: " in result.stderr
+    assert "slack=NOT_SEARCHED" in result.stderr
+    assert "discord=NOT_SEARCHED" in result.stderr
+    assert "gmail=NOT_SEARCHED" in result.stderr
+    assert "| #   | Type" in result.stderr
+    assert "Acme Aerospace" in result.stderr
+    assert "Principal AI Architect" in result.stderr
+    assert "Apply/source URLs:" in result.stderr

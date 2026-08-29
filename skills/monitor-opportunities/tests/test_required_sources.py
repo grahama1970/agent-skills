@@ -65,6 +65,21 @@ def test_all_required_present_passes(tmp_path: Path) -> None:
     assert result["required_sources_enforced"] is True
 
 
+def test_required_sources_include_human_declared_channels() -> None:
+    required_ids = set(_required_config())
+
+    assert {
+        "linkedin_top_applicant",
+        "indeed",
+        "ashby",
+        "hiddenjobs",
+        "slack_channels",
+        "discord_channels",
+        "gmail_mailbox",
+        "client_research",
+    }.issubset(required_ids)
+
+
 def test_absent_required_source_fails(tmp_path: Path) -> None:
     rows = [r for r in _all_required() if r[0] != "client_research"]
     d = _write_receipts(tmp_path, rows)

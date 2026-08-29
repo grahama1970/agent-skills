@@ -1,6 +1,6 @@
 """Publish one completed run's shortlist into the memory service.
 
-The memory collections are the product surface: chat/Buzz agents answer
+The memory collections are the product surface: chat/Discord agents answer
 "what came in overnight?" from `morning_opportunities` and record decisions
 through the ledger-backed `decision` command. The rendered report remains a
 frozen per-run receipt, not the interaction surface. Writes go through the

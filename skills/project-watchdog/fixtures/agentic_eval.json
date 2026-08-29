@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root",
   "claims": {
-    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, and that activate reports schedule and state together",
+    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, and that activate reports schedule and state together, uses Discord as the morning discussion handoff and skips Buzz in promoted Stage 0",
     "does_not_prove": "that a live repair, closure audit, or completion attestation succeeds. Those dispatch models through $ask/Tau and are proven only by a live receipt read back from the produced artifact, not by this fixture."
   },
   "cases": [
@@ -1173,6 +1173,32 @@
           "1 passed"
         ]
       }
+    },
+    {
+      "name": "auto-landed-repair-worktree-cleanup",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_landed_repair_cleanup_invokes_ops_worktrees_archive",
+        "../tests/test_project_watchdog.py::test_auto_landed_repair_archives_worktree_before_closing",
+        "../tests/test_project_watchdog.py::test_auto_landed_repair_cleanup_failure_keeps_ticket_open",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ]
+      },
+      "proves": "After a reviewer-passed repair lands on main, project-watchdog invokes ops-worktrees archive --apply for the repair worktree before closing; if cleanup fails, the ticket stays open and is marked needs-attention.",
+      "does_not_prove": "A live GitHub repair branch was landed or a real filesystem worktree was archived; these tests mock the GitHub and subprocess effects and prove watchdog control flow only."
     }
   ]
 }

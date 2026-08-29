@@ -19,6 +19,7 @@ from .required_source_receipts import (
     federal_website_receipt as _federal_website_receipt,
     human_browser_required_receipt as _human_browser_required_receipt,
     linkedin_required_receipt as _linkedin_required_receipt,
+    unavailable_required_source_receipt as _unavailable_required_source_receipt,
 )
 from .util import read_json, sha256_bytes, stable_id, utc_now, write_json, write_jsonl
 
@@ -2088,6 +2089,50 @@ def sweep(
                 candidates.extend(rows)
         if "C" in lanes:
             receipts.append(_client_research_receipt(skill_dir))
+            receipts.append(
+                _unavailable_required_source_receipt(
+                    provider="slack",
+                    required_source_id="slack_channels",
+                    target="Slack opportunity channels",
+                    source_class="slack_channel_capture",
+                    channel="slack",
+                    limitation=(
+                        "Slack channel capture adapter is not wired into "
+                        "monitor-opportunities discovery yet; use Slack connector "
+                        "or a future adapter for G2i/job-alert channel mining."
+                    ),
+                    evidence_refs=["slack://C01H317TX7X"],
+                )
+            )
+            receipts.append(
+                _unavailable_required_source_receipt(
+                    provider="discord",
+                    required_source_id="discord_channels",
+                    target="Discord opportunity channels",
+                    source_class="discord_channel_capture",
+                    channel="discord",
+                    limitation=(
+                        "Discord channel capture adapter is not wired into "
+                        "monitor-opportunities discovery yet; current surf read "
+                        "requires a loaded content script on the target tab."
+                    ),
+                    evidence_refs=["https://discord.com/channels/1344341191893979290/1344341192518799442"],
+                )
+            )
+            receipts.append(
+                _unavailable_required_source_receipt(
+                    provider="gmail",
+                    required_source_id="gmail_mailbox",
+                    target="graham@grahama.co mailbox mining",
+                    source_class="mailbox_mined_gmail",
+                    channel="mailbox_mining",
+                    limitation=(
+                        "Gmail mailbox mining adapter is not wired into "
+                        "monitor-opportunities discovery yet; Gmail send remains forbidden."
+                    ),
+                    evidence_refs=["mailto:graham@grahama.co"],
+                )
+            )
             for target in targets.get("commercial", []):
                 receipt, rows = _commercial_receipt(target)
                 receipts.append(receipt)
