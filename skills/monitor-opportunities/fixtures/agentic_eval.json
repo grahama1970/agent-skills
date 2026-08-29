@@ -1583,19 +1583,19 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat skills/monitor-opportunities/tests/test_ats_form_capture.py::test_discord_records_from_text_keeps_hiring_posts_and_skips_chatter -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat skills/monitor-opportunities/tests/test_ats_form_capture.py::test_discord_records_from_text_keeps_hiring_posts_and_skips_chatter skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_records_from_rows_keeps_search_result_opportunities_and_skips_noise -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "5 passed"
+          "6 passed"
         ],
         "stderr_excludes": [
           "KeyError",
           "AssertionError"
         ]
       },
-      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when evidence is absent, supplied read-only Slack/Discord/Gmail evidence is parsed into MATCHES receipts and lane C candidates instead of staying hard-coded as unwired, G2i Slack job-alert text is split into concrete job posts while ordinary chat is skipped, and Discord channel text emits hiring posts without admitting generic AI chatter.",
+      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when evidence is absent, supplied read-only Slack/Discord/Gmail evidence is parsed into MATCHES receipts and lane C candidates instead of staying hard-coded as unwired, G2i Slack job-alert text is split into concrete job posts while ordinary chat is skipped, Discord channel text emits hiring posts without admitting generic AI chatter, and Gmail search-result rows emit opportunity/interview signals without admitting newsletter noise.",
       "does_not_prove": "That Slack, Discord, or Gmail connector APIs were called live from cron, or that any parsed opportunity is semantically relevant enough to submit."
     },
     {

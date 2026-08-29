@@ -461,6 +461,10 @@ def test_sweep_parses_read_only_social_and_mail_evidence(
         required["discord_channels"]["automation_policy"]
         == "read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply"
     )
+    assert (
+        required["gmail_mailbox"]["automation_policy"]
+        == "read_only_gmail_search_capture_no_open_no_send_no_draft_no_label_no_archive"
+    )
     assert any(
         "1 opportunity candidates emitted; 1 skipped." in limitation
         for limitation in required["gmail_mailbox"]["limitations"]

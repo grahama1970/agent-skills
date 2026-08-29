@@ -2817,6 +2817,7 @@ def nightly(
     from .browser_capture import (
         browser_control_summary,
         capture_discord_opportunity_channel,
+        capture_gmail_opportunity_search,
         capture_hiddenjobs,
         capture_g2i_slack_jobs,
         capture_indeed_jobs,
@@ -2984,6 +2985,21 @@ def nightly(
         env_var="MONITOR_GMAIL_EVIDENCE",
         steps=steps,
     )
+    gmail_capture_receipt = capture_gmail_opportunity_search(capture_dir)
+    steps["browser_capture_gmail_opportunity_search"] = {
+        "status": gmail_capture_receipt.get("status"),
+        "captured": gmail_capture_receipt.get("records_captured"),
+        "rows_seen": gmail_capture_receipt.get("rows_seen"),
+        "evidence_path": gmail_capture_receipt.get("evidence_path"),
+    }
+    if gmail_evidence is None and gmail_capture_receipt.get("evidence_path"):
+        gmail_evidence = Path(str(gmail_capture_receipt["evidence_path"]))
+        steps.setdefault("social_mail_evidence", {})["MONITOR_GMAIL_EVIDENCE"][
+            "selected_path"
+        ] = str(gmail_evidence)
+        steps["social_mail_evidence"]["MONITOR_GMAIL_EVIDENCE"][
+            "source"
+        ] = "gmail_browser_search_capture"
 
     # Client-prospecting engine (separate from jobs): Sales Navigator saved leads,
     # strictly read-only. Best-effort; captured to its own evidence, not fed to the

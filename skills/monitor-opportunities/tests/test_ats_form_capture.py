@@ -24,6 +24,7 @@ from monitor_opportunities.browser_capture import (
     _classify_application_workplace,
     _discord_records_from_text,
     _g2i_slack_records_from_text,
+    _gmail_records_from_rows,
     _generic_form_from_dom,
     _workday_application_metadata_from_html,
     capture_ats_form,
@@ -131,6 +132,40 @@ def test_discord_records_from_text_keeps_hiring_posts_and_skips_chatter() -> Non
     assert records[0]["channel"] == "discord:#general"
     assert "AI training opportunities" not in records[0]["content"]
     assert records[0]["permalink"] == "https://discord.com/channels/1344341191893979290/1344341192518799442"
+
+
+def test_gmail_records_from_rows_keeps_search_result_opportunities_and_skips_noise() -> None:
+    rows = [
+        {
+            "sender": "Howie Liu",
+            "subject": "Confirmed: Interview with DriveWealth | Principal AI Engineer - Core Platform",
+            "snippet": "- DriveWealth Virtual Interview for Principal AI Engineer - Core Platform | Graham Anderson.",
+            "date": "Aug 28",
+        },
+        {
+            "sender": "The Substack Post",
+            "subject": "Nice people are wonderful, but you cannot build a life on being liked",
+            "snippet": "I do not believe a certain opportunity, job, or partner will fix me anymore.",
+            "date": "9:42 AM",
+        },
+        {
+            "sender": "Indeed",
+            "subject": "AI Engineer at SmartAdvocate in Remote and 1 more new job",
+            "snippet": "Your background as a Principal AI Architect could be a strong fit.",
+            "date": "Aug 28",
+        },
+    ]
+
+    records = _gmail_records_from_rows(
+        rows,
+        search_url="https://mail.google.com/mail/u/0/#search/newer_than%3A14d",
+    )
+
+    assert [row["sender"] for row in records] == ["Howie Liu", "Indeed"]
+    assert all(row["channel"] == "gmail_search_results" for row in records)
+    assert records[0]["title"] == "Confirmed: Interview with DriveWealth | Principal AI Engineer - Core Platform"
+    assert all("Substack" not in row["sender"] for row in records)
+    assert records[1]["thread_url"] == "https://mail.google.com/mail/u/0/#search/newer_than%3A14d"
 
 
 def test_field_type_sensitive_and_kinds() -> None:

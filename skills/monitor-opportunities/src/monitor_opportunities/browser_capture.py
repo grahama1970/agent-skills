@@ -26,7 +26,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 from loguru import logger
 
@@ -118,6 +118,14 @@ _INDEED_AI_BUFFALO_URL = "https://www.indeed.com/jobs?q=AI&l=Buffalo%2C%20NY"
 _G2I_SLACK_TEAM_ID = "T02NLNJ2D"
 _G2I_SLACK_JOB_ALERTS_CHANNEL_ID = "C01H317TX7X"
 _G2I_SLACK_JOB_ALERTS_URL = f"https://app.slack.com/client/{_G2I_SLACK_TEAM_ID}/{_G2I_SLACK_JOB_ALERTS_CHANNEL_ID}"
+_GMAIL_OPPORTUNITY_SEARCH_QUERY = (
+    'newer_than:14d (opportunity OR hiring OR recruiter OR "AI Engineer" OR LLM '
+    'OR agentic OR "machine learning" OR contract OR interview)'
+)
+_GMAIL_OPPORTUNITY_SEARCH_URL = (
+    "https://mail.google.com/mail/u/0/#search/"
+    + quote(_GMAIL_OPPORTUNITY_SEARCH_QUERY, safe='():')
+)
 
 _HIDDENJOBS_EXTRACT_JS = (
     "(function(){"
@@ -858,6 +866,172 @@ def _discord_records_from_text(text: str, *, channel_url: str) -> list[dict[str,
             }
         )
     return records
+
+
+_GMAIL_EXTRACT_JS = (
+    "(function(){"
+    "function clean(x){return (x||'').replace(/\\s+/g,' ').trim();}"
+    "function q(e,s){var n=e.querySelector(s);return n?clean(n.innerText||n.textContent||''):'';}"
+    "var rows=[].slice.call(document.querySelectorAll('.zA')).slice(0,50).map(function(e){"
+    "return {"
+    "sender:q(e,'.yX.xY,.yW span[email],.bA4 span[email],.yP,.zF'),"
+    "subject:q(e,'.bog'),"
+    "snippet:q(e,'.y2'),"
+    "date:q(e,'.xW.xY,.xW'),"
+    "text:clean(e.innerText||e.textContent||'').slice(0,1200)"
+    "};"
+    "});"
+    "return JSON.stringify({url:location.href,title:document.title,rows:rows});"
+    "})()"
+)
+
+
+def _gmail_records_from_rows(rows: list[dict[str, Any]], *, search_url: str) -> list[dict[str, Any]]:
+    opportunity_signal = re.compile(
+        r"\b(?:ai engineer|ai architect|principal ai|llm|agentic|machine learning|"
+        r"ml engineer|technical assessment|interview|hiring|recruiter|contract|"
+        r"right to present|opportunity|new job)\b",
+        re.I,
+    )
+    noise = re.compile(r"\b(?:unsubscribe|newsletter|substack|digest|calendar update only)\b", re.I)
+    records: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in rows:
+        subject = str(row.get("subject") or "").strip()
+        sender = str(row.get("sender") or "").strip()
+        snippet = str(row.get("snippet") or "").strip()
+        date = str(row.get("date") or "").strip()
+        text = "\n".join(part for part in (subject, sender, snippet) if part)
+        if not subject or not opportunity_signal.search(text):
+            continue
+        if noise.search(sender) or (noise.search(subject) and not re.search(r"\b(job|role|interview|hiring)\b", subject, re.I)):
+            continue
+        key = f"{sender.lower()}|{subject.lower()}|{date.lower()}"
+        if key in seen:
+            continue
+        seen.add(key)
+        content = "\n".join(part for part in (subject, snippet) if part)
+        records.append(
+            {
+                "subject": subject,
+                "title": subject,
+                "sender": sender or "Gmail search result",
+                "content": content[:1400],
+                "snippet": snippet[:700],
+                "date_display": date,
+                "channel": "gmail_search_results",
+                "url": search_url,
+                "thread_url": search_url,
+            }
+        )
+    return records
+
+
+def _find_existing_gmail_tab(surf_run: Path) -> str | None:
+    raw = _surf(surf_run, "tab.list", "--json", timeout=25)
+    try:
+        tabs = json.loads(raw)
+    except ValueError:
+        return None
+    if not isinstance(tabs, list):
+        return None
+    for tab in tabs:
+        if not isinstance(tab, dict):
+            continue
+        url = str(tab.get("url") or "")
+        title = str(tab.get("title") or "")
+        if "mail.google.com/mail" in url or "GrahamCo Mail" in title:
+            tab_id = tab.get("id")
+            return str(tab_id) if tab_id is not None else None
+    return None
+
+
+def capture_gmail_opportunity_search(out_dir: Path, surf_run: Path = SURF_RUN_DEFAULT) -> dict[str, Any]:
+    """Read Gmail search-result rows for opportunity signals without opening messages."""
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt: dict[str, Any] = {
+        "schema": "monitor_opportunities.browser_capture_receipt.v1",
+        "source": "gmail_opportunity_search",
+        "captured_at": utc_now(),
+        "external_effects": False,
+        "automation_policy": "read_only_gmail_search_capture_no_open_no_send_no_draft_no_label_no_archive",
+        "channel": "gmail_search_results",
+        "url": _GMAIL_OPPORTUNITY_SEARCH_URL,
+        "query": _GMAIL_OPPORTUNITY_SEARCH_QUERY,
+    }
+    tab_id = ""
+    created_tab = False
+    try:
+        ensure_browser(surf_run)
+        tab_id = _find_existing_gmail_tab(surf_run) or ""
+        if not tab_id:
+            created = _surf(surf_run, "tab.new", _GMAIL_OPPORTUNITY_SEARCH_URL, "--json", timeout=30)
+            tab_id = "".join(ch for ch in created.split(":", 1)[0] if ch.isdigit())
+            created_tab = True
+        if not tab_id:
+            raise BrowserCaptureError("could not find or create an authenticated Gmail tab")
+        _surf_js(surf_run, tab_id, _nav_js(_GMAIL_OPPORTUNITY_SEARCH_URL), timeout=20)
+        _surf_pause(surf_run, "6")
+        raw = _surf_js(surf_run, tab_id, _GMAIL_EXTRACT_JS, timeout=60)
+        snapshot = _surf_json_value(raw, {})
+        if not isinstance(snapshot, dict):
+            snapshot = {}
+        rows = snapshot.get("rows") if isinstance(snapshot.get("rows"), list) else []
+        normalized_rows = [row for row in rows if isinstance(row, dict)]
+        page_url = str(snapshot.get("url") or _GMAIL_OPPORTUNITY_SEARCH_URL)
+        records = _gmail_records_from_rows(normalized_rows, search_url=page_url)
+        evidence = {
+            "schema_version": "monitor_opportunities.gmail_search_capture.v1",
+            "source": "gmail_opportunity_search",
+            "capture_method": "surf_read_only_authenticated_gmail_search_results",
+            "automation_policy": receipt["automation_policy"],
+            "external_effects": False,
+            "observed_at": utc_now(),
+            "channel": "gmail_search_results",
+            "url": page_url,
+            "query": _GMAIL_OPPORTUNITY_SEARCH_QUERY,
+            "title": snapshot.get("title"),
+            "rows_seen": len(normalized_rows),
+            "emails": records,
+            "non_claims": [
+                "This is read-only Gmail browser evidence from Graham's authenticated session.",
+                "No Gmail message was opened and no body, attachment, draft, send, label, archive, trash, or forward action was taken.",
+                "Rows are search-result metadata and snippets only; primary-source opportunity details must be checked before outreach or application.",
+            ],
+        }
+        evidence_path = out_dir / "gmail-opportunity-search-evidence.json"
+        evidence_path.write_text(json.dumps(evidence, indent=1), encoding="utf-8")
+        receipt["status"] = "OK" if records else "EMPTY"
+        receipt["records_captured"] = len(records)
+        receipt["rows_seen"] = len(normalized_rows)
+        receipt["evidence_path"] = str(evidence_path)
+        receipt["tab_id"] = tab_id
+        receipt["created_tab"] = created_tab
+    except (BrowserCaptureError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired) as exc:
+        logger.warning("Gmail opportunity search capture failed: {}", exc)
+        receipt["status"] = "FAILED"
+        receipt["error"] = str(exc)
+        receipt["records_captured"] = 0
+        receipt["rows_seen"] = 0
+        receipt["evidence_path"] = None
+        receipt["diagnostic_bundle"] = _write_surf_diagnostic_bundle(
+            out_dir,
+            source="gmail_opportunity_search",
+            surf_run=surf_run,
+            tab_id=tab_id or None,
+            reason="gmail_opportunity_search_capture_failed",
+            url=_GMAIL_OPPORTUNITY_SEARCH_URL,
+            error=exc,
+        )
+    finally:
+        if tab_id and created_tab:
+            _close_tab(surf_run, tab_id, "Gmail opportunity search")
+    (out_dir / "gmail-opportunity-search-receipt.json").write_text(
+        json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return receipt
 
 
 def _find_existing_discord_tab(surf_run: Path) -> str | None:

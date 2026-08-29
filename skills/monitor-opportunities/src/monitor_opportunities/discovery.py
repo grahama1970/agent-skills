@@ -2402,6 +2402,7 @@ def sweep(
                     target="graham@grahama.co mailbox mining",
                     source_class="mailbox_mined_gmail",
                     channel="mailbox_mining",
+                    automation_policy="read_only_gmail_search_capture_no_open_no_send_no_draft_no_label_no_archive",
                 )
                 receipts.append(receipt)
                 candidates.extend(rows)
