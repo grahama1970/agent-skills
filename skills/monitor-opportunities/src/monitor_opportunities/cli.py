@@ -26,6 +26,7 @@ from .buzz_review import (
 from .contracts import CONTRACT_VERSION, IMMUTABLE_GOAL, STAGE, ContractError
 from .decisions import append_decision
 from .decisions import replay as replay_decisions
+from .discord_handoff import send_morning_discord_handoff
 from .discovery import _merge_linkedin_top_candidate, sweep as sweep_sources
 from .github_repo_intelligence import (
     DEFAULT_OWNER_NAMES as DEFAULT_GITHUB_INTELLIGENCE_OWNER_NAMES,
@@ -87,6 +88,8 @@ IMPLEMENTED = [
     "serve",
     "buzz-review",
     "buzz-summary",
+    "morning-discord",
+    "schedule-morning-discord",
     "ats-inspect",
     "ats-prefill",
     "base-resume",
@@ -1740,6 +1743,42 @@ def buzz_summary(
     typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
 
 
+@app.command("morning-discord")
+def morning_discord(
+    run: Path | None = typer.Option(None, "--run", file_okay=False, help="Run directory; defaults to local/nightly/latest."),
+    webhook: str | None = typer.Option(None, "--webhook", help="ops-discord webhook name; defaults to slack."),
+    discord_bot: bool = typer.Option(False, "--discord-bot", help="Send through Discord bot API instead of webhook."),
+    channel_id: str | None = typer.Option(None, "--channel-id", help="Discord channel id for --discord-bot."),
+    channel_name: str | None = typer.Option(None, "--channel-name", help="Discord channel name for --discord-bot."),
+    report_url: str | None = typer.Option(None, "--report-url", help="Report URL to include in the handoff."),
+    out: Path | None = typer.Option(None, "--out", dir_okay=False, help="Receipt path."),
+    post: bool = typer.Option(False, "--post", help="Actually send; default is dry-run."),
+    max_items: int = typer.Option(5, "--max-items", min=1, max=10),
+) -> None:
+    """Send the morning opportunity handoff through ops-discord."""
+    _configure_logging()
+    repo_root = _canonical_repo_root()
+    run_dir = (run or _default_nightly_out(repo_root)).resolve()
+    if out is None:
+        out = run_dir / "discord-handoff" / "morning-discord-receipt.json"
+    receipt = send_morning_discord_handoff(
+        run_dir=run_dir,
+        workdir=repo_root,
+        ops_discord_run=repo_root / "skills" / "ops-discord" / "run.sh",
+        out=out,
+        webhook=webhook,
+        discord_bot=discord_bot,
+        channel_id=channel_id,
+        channel_name=channel_name,
+        report_url=report_url,
+        post=post,
+        max_items=max_items,
+    )
+    typer.echo(json.dumps(receipt, indent=2, sort_keys=True))
+    if receipt.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command("tailor-artifact")
 def tailor_artifact_command(
     run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
@@ -3192,6 +3231,120 @@ def schedule(
             sort_keys=True,
         )
     )
+
+
+@app.command("schedule-morning-discord")
+def schedule_morning_discord(
+    cron: str = typer.Option("0 8 * * *", "--cron"),
+    webhook: str | None = typer.Option(None, "--webhook", help="ops-discord webhook name; defaults to slack."),
+    discord_bot: bool = typer.Option(False, "--discord-bot", help="Send through Discord bot API instead of webhook."),
+    channel_id: str | None = typer.Option(None, "--channel-id", help="Discord channel id for --discord-bot."),
+    channel_name: str | None = typer.Option(None, "--channel-name", help="Discord channel name for --discord-bot."),
+    post: bool = typer.Option(True, "--post/--dry-run", help="Register a live post or dry-run handoff."),
+) -> None:
+    """Register the 8am operational handoff notification."""
+    _configure_logging()
+    repo_root = _canonical_repo_root()
+    scheduler = repo_root / "skills" / "scheduler" / "run.sh"
+    run_sh = repo_root / "skills" / "monitor-opportunities" / "run.sh"
+    run_dir = _default_nightly_out(repo_root)
+    handoff_receipt_path = run_dir / "discord-handoff" / "morning-discord-receipt.json"
+    report_url = f"file://{run_dir}/report/index.html"
+    revision = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    ).stdout.strip()
+
+    args = [
+        str(run_sh),
+        "morning-discord",
+        "--run",
+        str(run_dir),
+        "--report-url",
+        report_url,
+        "--out",
+        str(handoff_receipt_path),
+    ]
+    if discord_bot:
+        args.append("--discord-bot")
+        if channel_id:
+            args.extend(["--channel-id", channel_id])
+        elif channel_name:
+            args.extend(["--channel-name", channel_name])
+    else:
+        args.extend(["--webhook", webhook or os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_WEBHOOK") or "slack"])
+    if post:
+        args.append("--post")
+    command = f"zsh -lc {shlex.quote('source ~/.zshrc >/dev/null 2>&1; exec ' + shlex.join(args))}"
+    register = subprocess.run(
+        [
+            str(scheduler),
+            "register",
+            "--name",
+            "monitor-opportunities-morning-discord",
+            "--cron",
+            cron,
+            "--command",
+            command,
+            "--workdir",
+            str(repo_root),
+            "--description",
+            "Morning opportunity handoff notification",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    listing = subprocess.run(
+        [str(scheduler), "list", "--json"],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    jobs = json.loads(listing.stdout)
+    job = jobs.get("monitor-opportunities-morning-discord")
+    checks = {
+        "job_readback_present": bool(job),
+        "cron_matches": bool(job) and job.get("cron") == cron,
+        "command_matches": bool(job) and job.get("command") == command,
+        "workdir_matches": bool(job) and job.get("workdir") == str(repo_root),
+        "enabled": bool(job) and job.get("enabled") is True,
+        "post_flag_matches": ("--post" in command) is post,
+        "uses_morning_discord_command": "morning-discord" in command,
+    }
+    scheduler_data_dir = Path(
+        os.environ.get("SCHEDULER_DATA_DIR", str(Path.home() / ".pi" / "scheduler"))
+    )
+    schedule_receipt_path = (
+        scheduler_data_dir / "receipts" / "monitor-opportunities-morning-discord-receipt.json"
+    )
+    receipt = {
+        "schema": "monitor_opportunities.morning_discord_schedule_receipt.v1",
+        "status": "PASS" if all(checks.values()) else "FAILED",
+        "name": "monitor-opportunities-morning-discord",
+        "cron": cron,
+        "command": command,
+        "workdir": str(repo_root),
+        "expected_revision": revision,
+        "post": post,
+        "external_effects": post,
+        "run_dir": str(run_dir),
+        "handoff_receipt": str(handoff_receipt_path),
+        "report_url": report_url,
+        "register_stdout": register.stdout,
+        "readback": job,
+        "checks": checks,
+    }
+    write_json(schedule_receipt_path, receipt)
+    typer.echo(json.dumps({**receipt, "receipt": str(schedule_receipt_path)}, indent=2, sort_keys=True))
+    if receipt["status"] != "PASS":
+        raise typer.Exit(1)
 
 
 @app.command("scheduler-exec-check")

@@ -229,6 +229,35 @@
       "does_not_prove": "A fresh full nightly reaches nightly-receipt.json or that the live Memory service returns non-empty opportunity_vocabulary during cron."
     },
     {
+      "name": "morning-discord-handoff-scheduled-8am",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "discord_handoff.morning_message",
+        "ops_discord.notify_invocation",
+        "scheduler.morning_discord_cron"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discord_handoff.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ],
+        "stderr_excludes": [
+          "SEND_FAILED",
+          "NO_WEBHOOK"
+        ]
+      },
+      "proves": "The morning handoff message is built from real run/digest receipt shapes, states the Easy Apply authorization boundary, invokes ops-discord notify in dry-run without external effects, and registers a scheduler job at 8am.",
+      "does_not_prove": "That a live Discord bot/webhook post succeeded or that Graham authorized any application submission."
+    },
+    {
       "name": "moog-workday-source-discovery",
       "type": "negative",
       "real_world": true,
