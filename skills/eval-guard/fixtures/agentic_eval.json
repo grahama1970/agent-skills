@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "skill": "eval-guard",
+  "trials": 3,
+  "proof_scope": "deterministic claim/triage guard through the real checker CLI, including a live /agentic-evals receipt",
+  "claims": {
+    "proves": "through the production checker CLI: a works-claim without a receipt is rejected with completion_claim_without_eval_receipt and proof_laundering_git; failure prose without a Triage: line is rejected; a minted *_unclassified_* triage code passes; a bogus triage code is rejected against the live /triage-error catalog; an honest unverified statement passes; a works-claim with a fresh live /agentic-evals report for the matching skill passes; the same report against the wrong skill dir is rejected via fixture_sha256; a unit-only fixture is rejected with eval_receipt_unit_only",
+    "does_not_prove": "the Pi extension's message_end wiring inside a live Pi session, Claude/Codex hook enforcement, or that agents cannot phrase claims outside the detection regexes"
+  },
+  "cases": [
+    {
+      "name": "claim-without-receipt-and-git-laundering-rejected",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && printf 'The feature now works and is complete. Committed as abc1234def5678.\\n' > /tmp/eval-guard-claim.txt && ./run.sh --message-file /tmp/eval-guard-claim.txt"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "completion_claim_without_eval_receipt",
+          "proof_laundering_git"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "failure-prose-without-triage-code-rejected",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && printf 'The tick failed with exit code 2. Something went wrong.\\n' > /tmp/eval-guard-fail.txt && ./run.sh --message-file /tmp/eval-guard-fail.txt"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "failure_without_triage_code",
+          "triage-error"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "minted-triage-code-and-honest-unverified-pass",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && printf 'The tick failed with exit code 2.\\nTriage: herdr_socket_unreachable_unclassified_a1\\n' > /tmp/eval-guard-minted.txt && ./run.sh --message-file /tmp/eval-guard-minted.txt && printf 'Implementation drafted; behavior is unverified pending /agentic-evals.\\n' > /tmp/eval-guard-honest.txt && ./run.sh --message-file /tmp/eval-guard-honest.txt"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "bogus-triage-code-rejected-against-live-catalog",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && printf 'The tick failed with exit code 2.\\nTriage: totally_made_up_code\\n' > /tmp/eval-guard-bogus.txt && ./run.sh --message-file /tmp/eval-guard-bogus.txt --catalog ../triage-error/failure_codes.json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "triage_code_not_in_catalog"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "claim-with-fresh-live-receipt-passes-and-wrong-skill-rejected",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../triage-error && ../agentic-evals/run.sh run fixtures/agentic_eval.json > /tmp/eval-guard-triage-report.json 2>/dev/null; cd ../eval-guard && printf 'triage-error classify works as expected; verified.\\n' > /tmp/eval-guard-claim2.txt && ./run.sh --message-file /tmp/eval-guard-claim2.txt --report /tmp/eval-guard-triage-report.json --skill-dir ../triage-error && ! ./run.sh --message-file /tmp/eval-guard-claim2.txt --report /tmp/eval-guard-triage-report.json --skill-dir ../ops-herdr && echo WRONG_SKILL_REJECTED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true",
+          "eval_receipt_wrong_skill",
+          "WRONG_SKILL_REJECTED"
+        ]
+      },
+      "timeout_seconds": 300
+    },
+    {
+      "name": "unit-only-fixture-rejected",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && rm -rf /tmp/eval-guard-unit-skill && mkdir -p /tmp/eval-guard-unit-skill/fixtures && printf '{\"cases\":[{\"name\":\"u\",\"command\":[\"bash\",\"-c\",\"npm test\"],\"real_world\":true}]}' > /tmp/eval-guard-unit-skill/fixtures/agentic_eval.json && python3 -c \"import json,hashlib; sha='sha256:'+hashlib.sha256(open('/tmp/eval-guard-unit-skill/fixtures/agentic_eval.json','rb').read()).hexdigest(); json.dump({'schema':'agentic_evals.report.v2','readiness':'READY','fixture_sha256':sha,'source':'fixtures/agentic_eval.json'},open('/tmp/eval-guard-unit-report.json','w'))\" && sleep 1 && touch /tmp/eval-guard-unit-report.json && printf 'the feature works as expected\\n' > /tmp/eval-guard-claim3.txt && ./run.sh --message-file /tmp/eval-guard-claim3.txt --report /tmp/eval-guard-unit-report.json --skill-dir /tmp/eval-guard-unit-skill"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "eval_receipt_unit_only"
+        ]
+      },
+      "timeout_seconds": 60
+    }
+  ]
+}
