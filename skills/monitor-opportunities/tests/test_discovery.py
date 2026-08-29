@@ -458,6 +458,10 @@ def test_sweep_parses_read_only_social_and_mail_evidence(
     assert required["discord_channels"]["source_class"] == "discord_channel_capture"
     assert required["gmail_mailbox"]["source_class"] == "mailbox_mined_gmail"
     assert (
+        required["slack_channels"]["automation_policy"]
+        == "read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply"
+    )
+    assert (
         required["discord_channels"]["automation_policy"]
         == "read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply"
     )

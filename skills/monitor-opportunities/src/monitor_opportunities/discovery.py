@@ -2349,6 +2349,7 @@ def sweep(
                     target="Slack opportunity channels",
                     source_class="slack_channel_capture",
                     channel="slack",
+                    automation_policy="read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply",
                 )
                 receipts.append(receipt)
                 candidates.extend(rows)
