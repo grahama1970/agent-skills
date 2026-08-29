@@ -1,0 +1,111 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "tau-reasoning-loop",
+  "goal": {
+    "goal_id": "best-practices-reasoning",
+    "goal_version": 1,
+    "goal_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "immutable_goal": "Break the human goal into isolated MVPs and let Tau own bounded attempts, escalation, and closure evidence."
+  },
+  "target": {
+    "repo": "local/agent-skills",
+    "target": "best-practices-reasoning"
+  },
+  "entry_node": "freeze-goal",
+  "terminal_nodes": ["human"],
+  "limits": {
+    "resume": true,
+    "default_timeout_seconds": 300,
+    "max_total_attempts": 6,
+    "max_concurrency": 3
+  },
+  "nodes": [
+    {
+      "id": "freeze-goal",
+      "agent": "goal-guardian",
+      "executor": "scheduler",
+      "max_attempts": 1,
+      "required_evidence": ["goal_hash"]
+    },
+    {
+      "id": "decompose-mvps",
+      "agent": "mvp-planner",
+      "executor": "local",
+      "max_attempts": 1,
+      "required_evidence": ["mvp_manifest"]
+    },
+    {
+      "id": "implement-mvp",
+      "agent": "codex-worker",
+      "executor": "local",
+      "max_attempts": 2,
+      "command_spec": "command-specs/implement-mvp/tau-dispatch-command.json",
+      "required_evidence": ["changed_files", "focused_proof"]
+    },
+    {
+      "id": "review-mvp",
+      "agent": "reviewer",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/review-mvp/tau-dispatch-command.json",
+      "required_evidence": ["review_verdict"]
+    },
+    {
+      "id": "brave-search",
+      "agent": "research-auditor",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/brave-search/tau-dispatch-command.json",
+      "required_evidence": ["brave_search_receipt"]
+    },
+    {
+      "id": "ask-escalation",
+      "agent": "ask-runtime",
+      "executor": "local",
+      "max_attempts": 1,
+      "command_spec": "command-specs/ask-escalation/tau-dispatch-command.json",
+      "required_evidence": ["ask_run_dir", "node_receipts"]
+    },
+    {
+      "id": "mvp-pass",
+      "agent": "goal-guardian",
+      "executor": "local",
+      "max_attempts": 1,
+      "required_evidence": ["mvp_gate_passed", "review_verdict"]
+    },
+    {
+      "id": "audit-or-block",
+      "agent": "goal-guardian",
+      "executor": "local",
+      "max_attempts": 1,
+      "required_evidence": ["final_verdict", "proof_boundary"]
+    }
+  ],
+  "edges": [
+    {"from": "freeze-goal", "to": "decompose-mvps"},
+    {"from": "decompose-mvps", "to": "implement-mvp"},
+    {"from": "implement-mvp", "to": "review-mvp"},
+    {"from": "review-mvp", "to": "brave-search", "condition": "two_failed_attempts_and_retry_budget_remains"},
+    {"from": "brave-search", "to": "ask-escalation", "condition": "still_blocked_or_strategy_needed"},
+    {"from": "review-mvp", "to": "mvp-pass", "condition": "review_pass"},
+    {"from": "mvp-pass", "to": "audit-or-block"},
+    {"from": "ask-escalation", "to": "audit-or-block"},
+    {"from": "audit-or-block", "to": "human"}
+  ],
+  "required_evidence": [
+    "dag_monitor_receipt",
+    "mvp_manifest",
+    "focused_proof",
+    "review_verdict",
+    "no_open_unacknowledged_blocker"
+  ],
+  "fail_closed_on": [
+    "goal_hash_mismatch",
+    "target_changed",
+    "unexpected_node",
+    "unexpected_edge",
+    "missing_required_evidence",
+    "max_attempts_exceeded",
+    "unresolved_block_alert"
+  ]
+}

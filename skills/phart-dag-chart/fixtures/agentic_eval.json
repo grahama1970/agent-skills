@@ -1,23 +1,96 @@
 {
-  "version": 2,
-  "skill": "phart-dag-chart",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
-  "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+ "version": 2,
+ "skill": "phart-dag-chart",
+ "trials": 3,
+ "proof_scope": "entrypoint-backed DAG validation and chart rendering for ask/scillm/Tau display schemas",
+ "claims": {
+  "proves": "the skill entrypoint validates and renders supported DAG display inputs and fails closed on invalid structure",
+  "does_not_prove": "Tau runtime execution, browser/provider behavior, semantic correctness of a workflow, or release readiness"
+ },
+ "cases": [
+  {
+   "name": "sanity",
+   "type": "positive",
+   "command": [
+    "bash",
+    "../sanity.sh"
+   ],
+   "expected": {
+    "exit_code": 0
+   }
   },
-  "cases": [
-    {
-      "name": "sanity",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
-    }
-  ]
+  {
+   "name": "tau-dag-contract-generated-input-real-world",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "D=$(mktemp); printf '%s\\n' '{\"schema\":\"tau.dag_contract.v1\",\"dag_id\":\"generated-tau-loop\",\"goal\":{\"goal_id\":\"g\",\"goal_version\":1,\"goal_hash\":\"sha256:1111111111111111111111111111111111111111111111111111111111111111\",\"immutable_goal\":\"generated Tau chart input\"},\"target\":{\"repo\":\"local/agent-skills\",\"target\":\"phart\"},\"entry_node\":\"start\",\"terminal_nodes\":[\"human\"],\"limits\":{\"max_concurrency\":2},\"nodes\":[{\"id\":\"start\",\"agent\":\"goal-guardian\",\"executor\":\"scheduler\"},{\"id\":\"worker\",\"agent\":\"codex-worker\",\"executor\":\"local\",\"max_attempts\":2},{\"id\":\"review\",\"agent\":\"reviewer\",\"executor\":\"local\"}],\"edges\":[{\"from\":\"start\",\"to\":\"worker\"},{\"from\":\"worker\",\"to\":\"review\"},{\"from\":\"review\",\"to\":\"human\"}],\"required_evidence\":[\"receipt\"],\"fail_closed_on\":[\"goal_hash_mismatch\"]}' > \"$D\"; ../run.sh validate \"$D\" --json && ../run.sh chart \"$D\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"source_graph_version\": \"tau.dag_contract.v1\"",
+     "generated-tau-loop",
+     "worker",
+     "human"
+    ]
+   }
+  },
+  {
+   "name": "tau-dag-contract-chart-regression",
+   "type": "positive",
+   "command": [
+    "bash",
+    "-c",
+    "../run.sh validate ../tests/fixtures/tau-reasoning-contract.dag.json --json && ../run.sh chart ../tests/fixtures/tau-reasoning-contract.dag.json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"source_graph_version\": \"tau.dag_contract.v1\"",
+     "tau.dag_contract.v1 -> ask.dag.v1",
+     "brave-search",
+     "ask-escalation"
+    ]
+   }
+  },
+  {
+   "name": "duplicate-id-fails-closed",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "../run.sh validate ../tests/fixtures/duplicate-id.dag.json --json"
+   ],
+   "expected": {
+    "exit_code": 1,
+    "stdout_contains": [
+     "\"ok\": false",
+     "duplicated"
+    ],
+    "stdout_excludes": [
+     "Traceback"
+    ]
+   }
+  },
+  {
+   "name": "research-round-generator-with-expansion-markers",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "out=$(mktemp -d) && ../run.sh research-round \"$out/round.dag.json\" && ../run.sh validate \"$out/round.dag.json\" && ../run.sh chart \"$out/round.dag.json\" | grep -q 'expands' && echo MARKERS-RENDERED"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "wrote",
+     "MARKERS-RENDERED"
+    ]
+   }
+  }
+ ]
 }

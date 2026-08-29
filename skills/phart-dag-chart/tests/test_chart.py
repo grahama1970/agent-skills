@@ -63,6 +63,29 @@ def test_scillm_fixture_validates():
     assert payload["node_count"] == 1
 
 
+def test_tau_contract_fixture_validates_and_preserves_source_schema():
+    result = runner.invoke(app, ["validate", str(FIXTURES / "tau-reasoning-contract.dag.json"), "--json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is True
+    assert payload["schema_version"] == "ask.dag.v1"
+    assert payload["source_graph_version"] == "tau.dag_contract.v1"
+    assert payload["graph_id"] == "tau-reasoning-loop"
+    assert payload["node_count"] == 9
+    assert payload["topo_order"][0] == "freeze-goal"
+    assert payload["topo_order"][-1] == "human"
+
+
+def test_tau_contract_chart_renders_source_schema_and_escalation_nodes():
+    result = runner.invoke(app, ["chart", str(FIXTURES / "tau-reasoning-contract.dag.json"), "--plain"])
+    assert result.exit_code == 0
+    assert "tau.dag_contract.v1 -> ask.dag.v1" in result.stdout
+    assert "mvp-pass" in result.stdout
+    assert "brave-search" in result.stdout
+    assert "ask-escalation" in result.stdout
+    assert "human" in result.stdout
+
+
 def test_validate_json_error_no_traceback(tmp_path: Path):
     bad = {
         "schema_version": "ask.dag.v1",

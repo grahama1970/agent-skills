@@ -42,21 +42,42 @@ def _node_label(node: dict[str, Any]) -> str:
     if node.get("allow_failure"):
         lines.append("optional")
 
+    # Self-expanding refinement semantics (2026-08-27): a node may declare
+    # `role` so the chart explains the expansion topology without prose.
+    role = str(node.get("role") or "")
+    if role == "expansion":
+        lines.append(">> EXPANDS NEXT FANOUT <<")
+    elif role == "gate":
+        lines.append(">> DRY? settle : next ROUND <<")
+    elif role == "terminal":
+        lines.append("[terminal proof]")
+
     label = "\n".join(lines)
     if len(label) > 120:
         return label[:117] + "..."
     return label
 
 
+_ROLE_MARKS = {"expansion": "»expands»", "gate": "?dry-gate?", "terminal": "=proof="}
+
+
+def _display_name(node: dict[str, Any]) -> str:
+    """PHART's minimal style renders node NAMES, so expansion semantics ride
+    in the name itself: refine nodes that author the next fanout, the gate
+    that decides settle-vs-next-round, and the terminal proof node."""
+    mark = _ROLE_MARKS.get(str(node.get("role") or ""))
+    return f"{node['id']} {mark}" if mark else str(node["id"])
+
+
 def dag_to_nx(dag: dict[str, Any]) -> nx.DiGraph:
     graph = nx.DiGraph()
-    ids = {node["id"] for node in dag["nodes"]}
+    display = {node["id"]: _display_name(node) for node in dag["nodes"]}
     for node in dag["nodes"]:
-        graph.add_node(node["id"], label=_node_label(node))
+        graph.add_node(display[node["id"]], label=_node_label(node))
     for node in dag["nodes"]:
         for parent_id in node.get("depends_on", []):
-            if parent_id in ids:
-                graph.add_edge(parent_id, node["id"])
+            if parent_id in display:
+                graph.add_edge(display[parent_id], display[node["id"]])
     return graph
 
 
@@ -86,7 +107,13 @@ def render_chart(dag: dict[str, Any], *, validate: bool = True, plain: bool = Fa
             hint="Run validate first; fix cycles, duplicate ids, or unknown depends_on.",
         ) from None
     graph_id = str(dag.get("graph_id") or "dag")
-    schema = str(dag.get("schema_version") or dag.get("source_graph_version") or "")
+    schema_version = str(dag.get("schema_version") or "")
+    source_graph_version = str(dag.get("source_graph_version") or "")
+    schema = (
+        f"{source_graph_version} -> {schema_version}"
+        if source_graph_version
+        else schema_version
+    )
     header = [
         f"DAG decision tree · {graph_id} (phart 1.5 git)",
         f"schema={schema}",
