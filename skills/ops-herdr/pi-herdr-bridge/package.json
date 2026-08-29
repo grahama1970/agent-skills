@@ -10,6 +10,10 @@
     "roster.mjs",
     "route.mjs",
     "bridge-cli.mjs",
+    "schema.mjs",
+    "inbox.mjs",
+    "memory-mirror.mjs",
+    "claude-stop-hook.mjs",
     "README.md"
   ],
   "pi": {

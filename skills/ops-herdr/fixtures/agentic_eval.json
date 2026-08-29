@@ -193,7 +193,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "# pass 10",
+          "# pass 14",
           "# fail 0"
         ]
       },

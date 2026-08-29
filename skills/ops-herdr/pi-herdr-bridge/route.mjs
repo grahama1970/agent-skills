@@ -6,7 +6,8 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { BrokerClient } from "./broker.mjs";
 import { herdrRoster, mergeRoster, normalizeBrokerSessions, resolveTarget } from "./roster.mjs";
-import { appendInbox, inboxKey } from "./inbox.mjs";
+import { appendMessage, inboxKey } from "./inbox.mjs";
+import { makeMessage } from "./schema.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -89,16 +90,30 @@ export async function sendToTarget(query, text, opts = {}) {
     return { ok: false, error: `no delivery lane for target (provider=${entry.provider}, source=${entry.source})`, entry };
   }
   const key = inboxKey(entry);
-  const base = { from: opts.fromName ?? null, to: query, lane, text };
+  const envelope = (overrides) => makeMessage({
+    from: { agent: opts.fromName ?? "unknown", ...(opts.fromProvider ? { provider: opts.fromProvider } : {}), session_ref: opts.fromSessionRef ?? null },
+    to: { agent: entry.name ?? query, provider: entry.provider, session_ref: entry.sessionRef?.value ?? entry.paneId ?? null },
+    text,
+    kind: opts.kind ?? "notification",
+    lane,
+    replyTo: opts.replyTo,
+    expectsReply: Boolean(opts.expectsReply),
+    skillChain: opts.skillChain,
+    artifacts: opts.artifacts,
+    goal: opts.goal,
+    ...overrides,
+  });
 
   if (lane === "herdr-prompt" && HERDR_PROMPT_UNSAFE_STATUSES.has(entry.status)) {
-    const inboxFile = appendInbox(key, { ...base, delivered: false, deferred: true, reason: `pane status ${entry.status}` });
+    const msg = envelope({ lane: "inbox-only", delivered: false, deferred: true, reason: `pane status ${entry.status}` });
+    const inboxFile = appendMessage(key, msg);
     return {
       ok: true,
       deferred: true,
       delivered: false,
+      messageId: msg.id,
       entry,
-      lane,
+      lane: "inbox-only",
       inbox: inboxFile,
       note: `target pane is ${entry.status}; message stored in inbox only — a Stop hook or monitor tick surfaces it`,
       rosterErrors: errors,
@@ -108,10 +123,12 @@ export async function sendToTarget(query, text, opts = {}) {
   const senders = { "intercom": sendIntercom, "codex-queue": sendCodexQueue, "herdr-prompt": sendHerdrPrompt };
   try {
     const result = await senders[lane](entry, text, opts);
-    const inboxFile = appendInbox(key, { ...base, delivered: true });
-    return { ok: true, delivered: true, entry, inbox: inboxFile, ...result, rosterErrors: errors };
+    const msg = envelope({ delivered: true });
+    const inboxFile = appendMessage(key, msg);
+    return { ok: true, delivered: true, messageId: msg.id, entry, inbox: inboxFile, ...result, rosterErrors: errors };
   } catch (error) {
-    const inboxFile = appendInbox(key, { ...base, delivered: false, error: String(error) });
-    return { ok: false, error: String(error), lane, entry, inbox: inboxFile, rosterErrors: errors };
+    const msg = envelope({ delivered: false, reason: String(error) });
+    const inboxFile = appendMessage(key, msg);
+    return { ok: false, error: String(error), messageId: msg.id, lane, entry, inbox: inboxFile, rosterErrors: errors };
   }
 }

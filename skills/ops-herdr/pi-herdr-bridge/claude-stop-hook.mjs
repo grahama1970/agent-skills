@@ -30,18 +30,18 @@ try {
 }
 
 const key = String(sessionId).replace(/[^a-zA-Z0-9._-]+/g, "_");
-const { path, entries } = readInbox(key);
-if (entries.length === 0 || stopHookActive) process.exit(0);
+const { path, unread } = readInbox(key);
+if (unread.length === 0 || stopHookActive) process.exit(0);
 
-const preview = entries
+const preview = unread
   .slice(-5)
-  .map((e) => `- from ${e.from ?? "unknown"} via ${e.lane ?? "?"}: ${String(e.text ?? "").slice(0, 200)}`)
+  .map((m) => `- [${m.kind}] from ${m.from?.agent ?? "unknown"} via ${m.lane}: ${String(m.text ?? "").slice(0, 200)}`)
   .join("\n");
 
 process.stdout.write(JSON.stringify({
   decision: "block",
   reason:
-    `You have ${entries.length} unread bridge message(s) from other agent sessions in ${path}.\n`
+    `You have ${unread.length} unread bridge message(s) from other agent sessions in ${path}.\n`
     + `${preview}\n`
     + `Read and consume them with: node ${new URL("./bridge-cli.mjs", import.meta.url).pathname} inbox --key ${key} --consume\n`
     + `Then act on each message (answer the question, note the handoff, or reply via the bridge send command) before stopping.`,

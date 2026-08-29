@@ -5,7 +5,7 @@
 //   bridge-cli.mjs listen --name <name>   (register on broker, print inbound as JSONL)
 import { BrokerClient } from "./broker.mjs";
 import { buildRoster, sendToTarget, pickLane } from "./route.mjs";
-import { readInbox } from "./inbox.mjs";
+import { readInbox, ackMessages } from "./inbox.mjs";
 
 function parseArgs(argv) {
   const args = { _: [] };
@@ -54,7 +54,13 @@ if (command === "list") {
   if (!args.to || !args.text) fail("send requires --to and --text");
   const result = await sendToTarget(args.to, args.text, {
     fromName: args.from,
+    fromSessionRef: args["from-session"] ?? null,
+    kind: args.kind,
+    replyTo: args["reply-to"],
     expectsReply: Boolean(args["expects-reply"]),
+    goal: args.goal,
+    artifacts: args.artifact ? [args.artifact] : undefined,
+    skillChain: args["skill-chain"] ? { recommended: String(args["skill-chain"]).split(","), final: [] } : undefined,
   });
   process.stdout.write(JSON.stringify(result, null, 2) + "\n");
   process.exit(result.ok ? 0 : 1);
@@ -74,8 +80,26 @@ if (command === "list") {
 } else if (command === "inbox") {
   if (!args.key) fail("inbox requires --key <session-ref-or-pane-key>");
   const key = String(args.key).replace(/[^a-zA-Z0-9._-]+/g, "_");
-  const { path, entries } = readInbox(key, { consume: Boolean(args.consume) });
-  process.stdout.write(JSON.stringify({ path, count: entries.length, consumed: Boolean(args.consume), entries }, null, 2) + "\n");
+  const box = readInbox(key);
+  let ackResult = null;
+  let mirror = null;
+  if (args.consume || args.ack) {
+    const by = args.by || "bridge-cli";
+    const ids = args.ack && args.ack !== true ? String(args.ack).split(",") : [];
+    const toMirror = ids.length > 0 ? box.unread.filter((m) => ids.includes(m.id)) : box.unread;
+    ackResult = ackMessages(key, ids, { by });
+    const { mirrorMessages } = await import("./memory-mirror.mjs");
+    const syntheticAcks = toMirror.map((m) => ({ msg_id: m.id, ts: Date.now(), by }));
+    mirror = await mirrorMessages(toMirror, { acks: syntheticAcks });
+  }
+  process.stdout.write(JSON.stringify({
+    path: box.path,
+    messages: box.messages,
+    unread_count: box.unread.length,
+    dead_lettered: box.dead,
+    ack: ackResult,
+    memory_mirror: mirror,
+  }, null, 2) + "\n");
   process.exit(0);
 } else {
   fail("usage: bridge-cli.mjs <list|send|listen|inbox> [options]");
