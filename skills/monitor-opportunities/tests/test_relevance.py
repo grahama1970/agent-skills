@@ -4,8 +4,56 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
+import httpx
 import monitor_opportunities.relevance as rel
+
+
+class _FakeResponse:
+    def __init__(self, payload: Any, status_code: int = 200) -> None:
+        self._payload = payload
+        self.status_code = status_code
+
+    def raise_for_status(self) -> None:
+        if self.status_code >= 400:
+            raise httpx.HTTPStatusError("bad status", request=httpx.Request("POST", "http://memory/extract-entities"), response=httpx.Response(self.status_code))
+
+    def json(self) -> Any:
+        return self._payload
+
+
+class _FakeClient:
+    calls: list[dict[str, Any]] = []
+    payload: Any = {"collection": rel.VOCABULARY_COLLECTION, "entities": [{"label": "AI Engineer"}]}
+    error: Exception | None = None
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self.args = args
+        self.kwargs = kwargs
+
+    def __enter__(self) -> "_FakeClient":
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        return None
+
+    def post(self, path: str, json: dict[str, Any]) -> _FakeResponse:
+        self.calls.append({"path": path, "json": json, "kwargs": self.kwargs})
+        if self.error:
+            raise self.error
+        return _FakeResponse(self.payload)
+
+
+def _patch_memory_client(monkeypatch, *, payload: Any | None = None, error: Exception | None = None) -> type[_FakeClient]:
+    _FakeClient.calls = []
+    _FakeClient.payload = payload if payload is not None else {
+        "collection": rel.VOCABULARY_COLLECTION,
+        "entities": [{"label": "AI Engineer"}, {"key": "document extraction"}],
+    }
+    _FakeClient.error = error
+    monkeypatch.setattr(rel.httpx, "Client", _FakeClient)
+    return _FakeClient
 
 
 def test_empty_text_returns_none() -> None:
@@ -13,11 +61,68 @@ def test_empty_text_returns_none() -> None:
     assert rel.mandate_hits("   ") is None
 
 
-def test_missing_extractor_fails_soft(monkeypatch) -> None:
-    # If /extract-entities is not present, return None (caller falls back), never raise.
+def test_memory_extract_entities_endpoint_returns_labels(monkeypatch) -> None:
+    fake = _patch_memory_client(monkeypatch)
+    monkeypatch.setattr(rel.subprocess, "run", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("subprocess should not run")))
+
+    assert rel.mandate_hits("Staff AI Engineer document extraction") == ["AI Engineer", "document extraction"]
+    assert fake.calls == [
+        {
+            "path": "/extract-entities",
+            "json": {
+                "text": "Staff AI Engineer document extraction",
+                "collection": rel.VOCABULARY_COLLECTION,
+                "include_taxonomy": False,
+                "view": "legacy",
+            },
+            "kwargs": {"base_url": "http://127.0.0.1:8601", "timeout": rel._extract_entities_timeout()},
+        }
+    ]
+
+
+def test_memory_unavailable_fails_soft(monkeypatch) -> None:
+    # If Memory /extract-entities is unavailable, return None (caller falls back), never raise.
     monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/nonexistent/run.sh"))
+    _patch_memory_client(monkeypatch, error=httpx.TimeoutException("memory timeout"))
     assert rel.mandate_hits("Staff AI Engineer") is None
     assert rel.is_mandate_relevant("Staff AI Engineer") is None
+
+
+def test_memory_response_for_wrong_collection_fails_soft(monkeypatch) -> None:
+    _patch_memory_client(
+        monkeypatch,
+        payload={
+            "resolved_entities": [
+                {"mention": "Artificial Intelligence", "canonical_id": "T1588.007"},
+            ],
+            "domain_terms": [],
+            "external_entities": [],
+        },
+    )
+    monkeypatch.setattr(rel.subprocess, "run", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("subprocess should not run")))
+
+    assert rel.mandate_hits("Artificial Intelligence document extraction") is None
+
+
+def test_relevance_module_no_longer_shells_out_per_title(monkeypatch) -> None:
+    _patch_memory_client(monkeypatch, error=httpx.ConnectError("memory unavailable"))
+    monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/tmp/extract-entities/run.sh"))
+    monkeypatch.setattr(rel.subprocess, "run", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("extract-entities subprocess should be disabled by default")))
+
+    assert rel.mandate_hits("Agentic AI Engineer") is None
+
+
+def test_monitor_source_does_not_shell_out_to_extract_entities(monkeypatch) -> None:
+    import monitor_opportunities.required_source_receipts as receipts
+
+    _patch_memory_client(monkeypatch, error=httpx.ConnectError("memory unavailable"))
+    monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/tmp/extract-entities/run.sh"))
+    monkeypatch.setattr(rel.subprocess, "run", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("extract-entities subprocess should be disabled by default")))
+
+    relevant, score, hits = receipts._sam_relevance("Artificial Intelligence document extraction")
+    assert relevant is True
+    assert score > 0
+    assert hits
 
 
 def test_prospect_queue_falls_back_to_regex_when_extractor_missing(monkeypatch) -> None:
@@ -25,6 +130,7 @@ def test_prospect_queue_falls_back_to_regex_when_extractor_missing(monkeypatch) 
     import monitor_opportunities.prospect_queue as pq
 
     monkeypatch.setattr(rel, "EXTRACT_ENTITIES_RUN", Path("/nonexistent/run.sh"))
+    _patch_memory_client(monkeypatch, error=httpx.ConnectError("memory unavailable"))
     sam = {
         "opportunities": [
             {"title": "Flooring Abatement", "url": "https://sam.gov/workspace/contract/opp/a/view"},

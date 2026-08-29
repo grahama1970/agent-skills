@@ -1,4 +1,4 @@
-"""Mandate relevance via /extract-entities — deterministic, NO REGEX.
+"""Mandate relevance via Memory /extract-entities — deterministic, NO REGEX.
 
 Replaces substring keyword regex (which mis-fired, e.g. matching "ai" inside
 unrelated words) with whole-phrase Flashtext matching against a mandate
@@ -8,28 +8,95 @@ live in ArangoDB, not Python lists). Delegates to the /extract-entities skill
 rather than reimplementing Flashtext.
 
 A title/solicitation is mandate-relevant iff it matches >=1 vocabulary concept.
-Fail-soft: if the skill or /memory is unavailable, returns None so the caller can
-fall back to a conservative default instead of crashing the nightly.
+Fail-soft: if /memory is unavailable, returns None so the caller can fall back to
+a conservative default instead of crashing the nightly.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
+from typing import Any
+
+import httpx
+from loguru import logger
 
 EXTRACT_ENTITIES_RUN = Path(__file__).resolve().parents[3] / "extract-entities" / "run.sh"
 VOCABULARY_COLLECTION = "opportunity_vocabulary"
+DEFAULT_MEMORY_URL = "http://127.0.0.1:8601"
 
 
-def mandate_hits(text: str, collection: str = VOCABULARY_COLLECTION) -> list[str] | None:
-    """Concept labels the text matches in the mandate vocabulary.
+def _memory_url() -> str:
+    return (
+        os.environ.get("MONITOR_OPPORTUNITIES_MEMORY_URL")
+        or os.environ.get("MONITOR_MEMORY_URL")
+        or os.environ.get("MEMORY_URL")
+        or DEFAULT_MEMORY_URL
+    ).rstrip("/")
 
-    Returns [] for a real-but-irrelevant title (e.g. "Flooring Abatement"),
-    a non-empty list for a relevant one, or None if extraction is unavailable.
-    """
-    if not text or not text.strip() or not EXTRACT_ENTITIES_RUN.exists():
+
+def _extract_entities_timeout() -> httpx.Timeout:
+    return httpx.Timeout(connect=1.0, read=3.0, write=1.0, pool=1.0)
+
+
+def _truthy_env(name: str) -> bool:
+    return str(os.environ.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _entity_label(entity: Any) -> str | None:
+    if not isinstance(entity, dict):
         return None
+    for key in ("label", "key", "name", "term", "mention", "control_id"):
+        value = entity.get(key)
+        if value:
+            return str(value)
+    return None
+
+
+def _labels_from_entity_result(result: dict[str, Any], collection: str) -> list[str] | None:
+    result_collection = result.get("collection") or result.get("vocabulary_collection") or result.get("source_collection")
+    if result_collection != collection:
+        return None
+
+    labels: set[str] = set()
+    for field in ("entities", "resolved_entities", "domain_terms"):
+        value = result.get(field)
+        if not isinstance(value, list):
+            continue
+        for entity in value:
+            label = _entity_label(entity)
+            if label:
+                labels.add(label)
+    return sorted(labels)
+
+
+def _mandate_hits_via_memory(text: str, collection: str) -> list[str] | None:
+    payload = {
+        "text": text,
+        "collection": collection,
+        "include_taxonomy": False,
+        "view": "legacy",
+    }
+    try:
+        with httpx.Client(base_url=_memory_url(), timeout=_extract_entities_timeout()) as client:
+            response = client.post("/extract-entities", json=payload)
+            response.raise_for_status()
+            result = response.json()
+    except (httpx.TimeoutException, httpx.HTTPError, ValueError, json.JSONDecodeError) as exc:
+        logger.warning("opportunity relevance Memory /extract-entities unavailable: {}", exc)
+        return None
+    if not isinstance(result, dict):
+        logger.warning("opportunity relevance Memory /extract-entities returned non-object JSON")
+        return None
+    return _labels_from_entity_result(result, collection)
+
+
+def _mandate_hits_via_subprocess(text: str, collection: str) -> list[str] | None:
+    if not EXTRACT_ENTITIES_RUN.exists():
+        return None
+    timeout = float(os.environ.get("MONITOR_OPPORTUNITIES_EXTRACT_ENTITIES_SUBPROCESS_TIMEOUT", "10"))
     try:
         # Stdin NLP mode (no subcommand) outputs JSON by default; --json is invalid here.
         proc = subprocess.run(
@@ -37,7 +104,7 @@ def mandate_hits(text: str, collection: str = VOCABULARY_COLLECTION) -> list[str
             input=text,
             capture_output=True,
             text=True,
-            timeout=45,
+            timeout=timeout,
         )
     except (subprocess.TimeoutExpired, OSError):
         return None
@@ -57,7 +124,23 @@ def mandate_hits(text: str, collection: str = VOCABULARY_COLLECTION) -> list[str
         result = json.loads(proc.stdout[start:])
     except (ValueError, json.JSONDecodeError):
         return None
-    return sorted({str(e.get("label") or e.get("key")) for e in result.get("entities", []) if e.get("label") or e.get("key")})
+    return _labels_from_entity_result(result, collection)
+
+
+def mandate_hits(text: str, collection: str = VOCABULARY_COLLECTION) -> list[str] | None:
+    """Concept labels the text matches in the mandate vocabulary.
+
+    Returns [] for a real-but-irrelevant title (e.g. "Flooring Abatement"),
+    a non-empty list for a relevant one, or None if extraction is unavailable.
+    """
+    if not text or not text.strip():
+        return None
+    hits = _mandate_hits_via_memory(text, collection)
+    if hits is not None:
+        return hits
+    if not _truthy_env("MONITOR_OPPORTUNITIES_EXTRACT_ENTITIES_SUBPROCESS"):
+        return None
+    return _mandate_hits_via_subprocess(text, collection)
 
 
 def is_mandate_relevant(text: str) -> bool | None:

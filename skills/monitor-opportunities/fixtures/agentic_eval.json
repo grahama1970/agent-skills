@@ -1634,27 +1634,27 @@
       "evidence_class": "deterministic",
       "timeout_seconds": 120,
       "seams": [
-        "relevance.memory_vocabulary_loader",
-        "relevance.flashtext_matcher_cache",
+        "relevance.memory_extract_entities_endpoint",
+        "relevance.endpoint_fail_soft",
         "relevance.no_per_title_extract_entities_subprocess"
       ],
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_relevance.py::test_memory_unavailable_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_mandate_hits_uses_memory_list_once_for_repeated_batch skills/monitor-opportunities/tests/test_relevance.py::test_relevance_module_no_longer_shells_out_per_title skills/monitor-opportunities/tests/test_relevance.py::test_monitor_source_does_not_shell_out_to_extract_entities -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_relevance.py::test_memory_extract_entities_endpoint_returns_labels skills/monitor-opportunities/tests/test_relevance.py::test_memory_unavailable_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_memory_response_for_wrong_collection_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_relevance_module_no_longer_shells_out_per_title skills/monitor-opportunities/tests/test_relevance.py::test_monitor_source_does_not_shell_out_to_extract_entities -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "4 passed"
+          "5 passed"
         ],
         "stderr_excludes": [
           "extract_entities.py",
           "TimeoutExpired"
         ]
       },
-      "proves": "Mandate relevance loads opportunity_vocabulary through Memory /list, reuses one FlashText matcher across repeated title checks, fails soft when Memory is unavailable, and does not shell out to extract-entities per title.",
-      "does_not_prove": "A fresh full nightly reaches nightly-receipt.json or that the live Memory service returns non-empty opportunity_vocabulary during cron."
+      "proves": "Mandate relevance calls Memory /extract-entities with the opportunity_vocabulary payload, fails soft when Memory is unavailable or returns a non-authoritative collection, and does not shell out to extract-entities per title unless explicitly opted in.",
+      "does_not_prove": "A fresh full nightly reaches nightly-receipt.json or that the live Memory service returns opportunity_vocabulary-specific labels during cron."
     },
     {
       "name": "morning-discord-handoff-scheduled-8am",
