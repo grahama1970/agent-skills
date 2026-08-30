@@ -4,7 +4,7 @@
 // reject only report-like delivery/status answers that lack a final titled,
 // plain-English bullet summary with an honest evidence boundary.
 
-const CHECKER_VERSION = '2026-08-30.agentic-eval-and-push-v8';
+const CHECKER_VERSION = '2026-08-30.agentic-eval-and-push-v9';
 const FORCE_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_FORCE_STATUS || '');
 const STRICT_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_STRICT_STATUS || '');
 const MUTATING_TURN = /^(1|true|yes)$/i.test(process.env.LRSSS_MUTATING_TURN || '');
@@ -210,7 +210,10 @@ function isNoRemainingWorkBullet(value) {
 }
 
 function isLegitimateBlockerBullet(value) {
-  return /\b(?:blocked|needs_attention|need(?:s)? human|waiting for|requires (?:human|operator|user) (?:approval|decision|authorization)|missing credential|external authorization|no safe next action)\b/i.test(value);
+  return /\b(?:blocked|needs_attention|need(?:s)? human|waiting for|requires (?:human|operator|user) (?:approval|decision|authorization)|missing credential|external authorization|no safe next action)\b/i.test(value)
+    || /\b(?:not available|unavailable)\b.{0,80}\b(?:tool context|api context|current context)\b/i.test(value)
+    || /\btarget\s+(?:Pi\s+)?TUI\s+owner\b/i.test(value)
+    || /\b(?:human|operator|user|owner)\b.{0,80}\brun\s+`?\/?reload`?\b/i.test(value);
 }
 
 function isActiveGoalNextStepBullet(value) {
