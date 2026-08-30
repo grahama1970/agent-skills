@@ -16,11 +16,15 @@ function assert(condition, message, details = {}) {
   }
 }
 
+let extensionImportCounter = 0;
+
 async function loadExtension() {
   const handlers = {};
   const commands = {};
   const sent = [];
-  const mod = await import(pathToFileURL(indexPath));
+  const moduleUrl = pathToFileURL(indexPath);
+  moduleUrl.searchParams.set('probe_import', String(extensionImportCounter++));
+  const mod = await import(moduleUrl.href);
   const pi = {
     on(name, fn) { (handlers[name] ||= []).push(fn); },
     registerCommand(name, spec) { commands[name] = spec; },
