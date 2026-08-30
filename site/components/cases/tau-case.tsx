@@ -49,8 +49,6 @@ export function TauCase({ project }: TauCaseProps) {
           src="/artifacts/tau-dag-ledger-card.svg"
           alt="Animated Tau DAG card showing ask routed through Tau, a Tau-owned scillm adapter, receipt admission, and an inspectable ledger."
         />
-        <span>{project.name}</span>
-        <b>{project.blurb}</b>
       </a>
     </article>
   );

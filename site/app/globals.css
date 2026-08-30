@@ -935,8 +935,8 @@ h1 .it::after {
   scroll-margin-top: 92px;
 }
 .tau-case {
-  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
-  align-items: stretch;
+  grid-template-columns: minmax(0, 0.82fr) minmax(360px, 1.18fr);
+  align-items: center;
 }
 .sparta-case,
 .persona-case {
@@ -1012,6 +1012,11 @@ h1 .it::after {
   width: 100%;
   height: auto;
   display: block;
+}
+.tau-case__artifact {
+  align-self: start;
+  align-content: center;
+  padding: clamp(0.45rem, 0.9vw, 0.75rem);
 }
 .tau-case__artifact span,
 .tau-case__artifact b,

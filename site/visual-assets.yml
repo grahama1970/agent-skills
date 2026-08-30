@@ -356,7 +356,7 @@ assets:
   kind: svg
   source: docs/assets/project-cards/tau-dag-ledger-card.svg
   creation_method: ask_webgpt_svg_design_reviewed_and_installed
-  sha256: 98b51280967a49b2e79e99311480872adaf53d1be78b53c14df98c07bafe0617
+  sha256: 1a98b91d65cc80ccdf49aa53ea200ec5f02ab49f68e103d16bae900a2c596393
   project_ids:
   - tau
   public_approval: true
