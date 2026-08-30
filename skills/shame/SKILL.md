@@ -46,8 +46,9 @@ It also owns the installed shame audio policy: one short Chatterbox word, `shame
 Preferred human UX is collaborative, not punitive:
 
 1. Extension rejects the bad answer and shows the raw candidate hash, machine reason, excerpt, and correction target.
-2. Agent rewrites the answer with the required `Status Report` footer.
-3. Human labels the raw candidate with the Pi extension command:
+2. Extension writes `/mnt/storage12tb/skills/shame/training/pending-review-packet.json` so `/shame show` can recover the candidate after a reload.
+3. Agent rewrites the answer with the required `Status Report` footer.
+4. Human labels the raw candidate with the Pi extension command:
 
 ```text
 /shame reject commit_laundering -- no final Status Report
@@ -57,7 +58,7 @@ Preferred human UX is collaborative, not punitive:
 /shame undo
 ```
 
-The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, machine decision, checker version, excerpt, and copyable label commands before deciding.
+The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, pending packet path, machine decision, checker version, excerpt, and copyable label commands before deciding.
 
 For inline `$shame`, the self-corrected answer must be short and must end exactly in this shape:
 
@@ -67,6 +68,12 @@ Status Report
 - Verified: exact command/readback and observed result, or Not verified: exact reason.
 - Proof: concrete path, URL, issue/PR number, receipt, or Missing: exact reason.
 - Not done: none, or exact unfinished item and next concrete step.
+```
+
+The pending review packet is overwritten on each new rejected candidate:
+
+```text
+/mnt/storage12tb/skills/shame/training/pending-review-packet.json
 ```
 
 Training data is written to all of these:
@@ -165,6 +172,7 @@ The fixture must prove:
 - strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - extension rejection notices are correction packets with a final `Status Report` footer rather than bare gate JSON;
+- rejected candidates are written to a pending review packet that `/shame show` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 
 The skill records examples only. It does not train or promote a classifier.

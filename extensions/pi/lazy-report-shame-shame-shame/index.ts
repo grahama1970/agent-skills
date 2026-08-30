@@ -11,6 +11,7 @@ const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 const REPORT_CHECK = join(EXTENSION_DIR, "report-check.mjs");
 const SHAME_AUDIO = process.env.LAZY_REPORT_SHAME_AUDIO || join(EXTENSION_DIR, "shame.wav");
 const TRAINING_JSONL = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || "/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl";
+const PENDING_REVIEW_PACKET = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || "/mnt/storage12tb/skills/shame/training/pending-review-packet.json";
 const CONFIGURED_MEMORY_URL = process.env.MEMORY_SERVICE_URL || process.env.MEMORY_API_URL || "";
 const MEMORY_URL = (CONFIGURED_MEMORY_URL.startsWith("unix://") ? "http://127.0.0.1:8601" : (CONFIGURED_MEMORY_URL || "http://127.0.0.1:8601")).replace(/\/+$/, "");
 const MEMORY_COLLECTION = process.env.SHAME_MEMORY_COLLECTION || "shame_training_examples";
@@ -19,7 +20,7 @@ const MEMORY_ENABLED = !/^(0|false|off|no)$/i.test(process.env.LAZY_REPORT_SHAME
 const AUDIO_COOLDOWN_MS = 10_000;
 const MAX_REJECTED_EXCERPT_CHARS = 8_000;
 
-type CheckDecision = "pass" | "reject" | "error";
+type CheckDecision = "pass" | "reject" | "error" | "unknown";
 type HumanVerdict = "allow" | "reject" | "warn" | "needs_review";
 
 const LEGACY_LABELS: Record<string, { verdict: HumanVerdict; reasons: string[] }> = {
@@ -153,8 +154,73 @@ function playShameAudio(lastPlayedAt: { value: number }): void {
   spawnSync("sh", ["-c", "(command -v canberra-gtk-play >/dev/null && nohup canberra-gtk-play -i bell >/dev/null 2>&1 &) || printf '\\a'"] , { timeout: 1000 });
 }
 
-function rejectionNotice(original: string, check: CheckResult, retried: boolean): string {
-  const excerpt = original.replace(/\s+/g, " ").trim().slice(0, 320);
+function candidateExcerpt(candidate: Candidate): string {
+  return candidate.assistant_text.replace(/\s+/g, " ").trim().slice(0, 320) || "(no text extracted)";
+}
+
+function makeReviewPacket(candidate: Candidate, check: CheckResult, retried: boolean) {
+  return {
+    schema: "lazy_report_shame.review_packet.v1",
+    created_at: new Date().toISOString(),
+    candidate_hash: candidate.response_sha256,
+    turn_id: candidate.turn_id,
+    assistant_entry_id: candidate.assistant_entry_id,
+    session_file: candidate.session_file,
+    session_id: candidate.session_id,
+    machine: {
+      decision: check.decision,
+      reason_codes: check.reason_codes,
+      footer_failures: check.footer_failures,
+      checker_version: check.checker_version,
+      retried,
+    },
+    candidate,
+    rejected_excerpt: candidateExcerpt(candidate),
+    human_commands: [
+      "/shame show",
+      "/shame reject commit_laundering -- no final Status Report",
+      "/shame allow normal_answer -- this was acceptable",
+      "/shame warn jargon_no_status -- needs clearer proof",
+    ],
+    correction_contract: {
+      instruction: "Agent rewrites the answer plainly; human labels the raw rejected candidate after reviewing the correction.",
+      required_footer: ["Status Report", "- Changed:", "- Verified:", "- Proof:", "- Not done:"],
+    },
+  };
+}
+
+function writePendingReviewPacket(candidate: Candidate, check: CheckResult, retried: boolean): string {
+  mkdirSync(dirname(PENDING_REVIEW_PACKET), { recursive: true });
+  writeFileSync(PENDING_REVIEW_PACKET, JSON.stringify(makeReviewPacket(candidate, check, retried), null, 2) + "\n", "utf8");
+  return PENDING_REVIEW_PACKET;
+}
+
+function loadPendingCandidate(): Candidate | null {
+  if (!existsSync(PENDING_REVIEW_PACKET)) return null;
+  try {
+    const packet = JSON.parse(readFileSync(PENDING_REVIEW_PACKET, "utf8"));
+    const candidate = packet?.candidate;
+    if (!candidate || typeof candidate.assistant_text !== "string" || typeof candidate.response_sha256 !== "string") return null;
+    return {
+      user_text: String(candidate.user_text || ""),
+      assistant_entry_id: String(candidate.assistant_entry_id || "unknown"),
+      assistant_text: candidate.assistant_text,
+      response_sha256: candidate.response_sha256,
+      machine_decision: ["pass", "reject", "error"].includes(candidate.machine_decision) ? candidate.machine_decision : "unknown" as CheckDecision,
+      machine_reason_codes: Array.isArray(candidate.machine_reason_codes) ? candidate.machine_reason_codes.map(String) : [],
+      checker_version: String(candidate.checker_version || "unknown"),
+      force_status: Boolean(candidate.force_status),
+      session_file: typeof candidate.session_file === "string" ? candidate.session_file : undefined,
+      session_id: typeof candidate.session_id === "string" ? candidate.session_id : undefined,
+      turn_id: String(candidate.turn_id || sha256(`${candidate.user_text || ""}\n---\n${candidate.assistant_text}`)),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function rejectionNotice(candidate: Candidate, check: CheckResult, retried: boolean, reviewPacketPath: string): string {
+  const excerpt = candidateExcerpt(candidate);
   const disposition = retried
     ? "The bad answer was hidden. One automatic retry was already used for this turn, so no second automatic retry was queued."
     : "The bad answer was hidden and one rewrite request was queued.";
@@ -164,6 +230,7 @@ function rejectionNotice(original: string, check: CheckResult, retried: boolean)
 The last answer was rejected because it did not give a plain status report.
 
 Machine check
+- Candidate: ${candidate.response_sha256}
 - Checker: ${check.checker_version}
 - Reasons: ${check.reason_codes.join(", ") || "none"}
 - Footer failures: ${footerFailures}
@@ -173,6 +240,7 @@ ${excerpt ? `> ${excerpt}` : "> (no text extracted)"}
 
 Correction workflow
 - ${disposition}
+- The review packet was saved for human approval and survives extension reloads.
 - The rewrite must give the corrected answer, not more gate JSON.
 - After the corrected answer, label the raw candidate with \`/shame reject|allow|warn <reason> -- <note>\`.
 - Use \`/shame show\` to inspect the raw candidate that will be labeled.
@@ -180,21 +248,23 @@ Correction workflow
 Status Report
 - Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.
 - Verified: report-check.mjs returned ${check.decision}; checker ${check.checker_version}; footer failures: ${footerFailures}.
-- Proof: rejected candidate ${sha256(original)}; excerpt shown above.
+- Proof: ${reviewPacketPath}; rejected candidate ${candidate.response_sha256}; excerpt shown above.
 - Not done: Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer.`;
 }
 
-function retryPrompt(original: string, check: CheckResult): string {
-  const excerpt = truncateForRetry(original.trim());
+function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string): string {
+  const excerpt = truncateForRetry(candidate.assistant_text.trim());
   const footerFailures = check.footer_failures.length ? check.footer_failures.join(", ") : "none";
   return `UNLAZY_FORCED_RETRY
 
 Your previous answer was rejected by lazy-report-shame-shame-shame because it looked like a delivery/status report but did not end with a clear report title and plain-English bullet summary.
 
 Machine check
+- Candidate: ${candidate.response_sha256}
 - Checker: ${check.checker_version}
 - Reasons: ${check.reason_codes.join(", ") || "none"}
 - Footer failures: ${footerFailures}
+- Review packet: ${reviewPacketPath}
 
 Rejected response:
 ${excerpt ? `> ${excerpt.replace(/\n/g, "\n> ")}` : "> (no text extracted)"}
@@ -204,7 +274,8 @@ Rewrite the answer now. Preserve only supported facts. Do not invent commands, r
 Collaborative correction flow:
 - Give the corrected answer first.
 - End with the exact Status Report footer below.
-- The human can then label the raw rejected candidate with \`/shame reject|allow|warn <reason> -- <note>\`.
+- The human can inspect the raw rejected candidate with \`/shame show\`.
+- The human can then label that candidate with \`/shame reject|allow|warn <reason> -- <note>\`.
 
 Status Report
 - Changed: plain-English user-visible/project-visible change, not a commit/SHA/branch by itself.
@@ -432,16 +503,23 @@ export default function lazyReportShameShameShame(pi: any) {
       const alreadyRetried = retryInProgress || retriedTurnIds.has(turnId);
       if (!alreadyRetried) retriedTurnIds.add(turnId);
 
-      const notice = rejectionNotice(text, check, alreadyRetried);
+      let reviewPacketPath = PENDING_REVIEW_PACKET;
+      try {
+        reviewPacketPath = writePendingReviewPacket(lastCandidate, check, alreadyRetried);
+      } catch (error) {
+        ctx?.ui?.notify?.(`lazy-report-shame-shame-shame could not write review packet: ${error instanceof Error ? error.message : String(error)}`, "warning");
+      }
+
+      const notice = rejectionNotice(lastCandidate, check, alreadyRetried, reviewPacketPath);
       playShameAudio(lastAudioPlayedAt);
       if (!alreadyRetried) {
         retryInProgress = true;
         keepGuardForRetry = strictStatus;
         try {
-          pi.sendUserMessage(retryPrompt(text, check), { deliverAs: "followUp", expandPromptTemplates: false });
+          pi.sendUserMessage(retryPrompt(lastCandidate, check, reviewPacketPath), { deliverAs: "followUp", expandPromptTemplates: false });
         } catch (_error) {
           try {
-            pi.sendUserMessage(retryPrompt(text, check), { expandPromptTemplates: false });
+            pi.sendUserMessage(retryPrompt(lastCandidate, check, reviewPacketPath), { expandPromptTemplates: false });
           } catch {
             // Replacement still prevents the lazy answer from standing as the final visible answer.
           }
@@ -482,9 +560,9 @@ export default function lazyReportShameShameShame(pi: any) {
         return;
       }
       if (parsed.action === "show") {
-        const candidate = lastCandidate;
+        const candidate = lastCandidate || loadPendingCandidate();
         if (!candidate) {
-          ctx.ui.notify("No candidate captured yet.", "info");
+          ctx.ui.notify(`No candidate captured yet. No pending review packet found at ${PENDING_REVIEW_PACKET}.`, "info");
           return;
         }
         const excerpt = candidate.assistant_text.replace(/\s+/g, " ").slice(0, 240) || "(no text extracted)";
@@ -492,6 +570,7 @@ export default function lazyReportShameShameShame(pi: any) {
         ctx.ui.notify([
           "Shame review packet",
           `- Candidate: ${candidate.response_sha256}`,
+          `- Pending packet: ${PENDING_REVIEW_PACKET}`,
           `- Machine: ${candidate.machine_decision} (${reasons})`,
           `- Checker: ${candidate.checker_version}`,
           `- Excerpt: ${excerpt}`,
@@ -511,7 +590,7 @@ export default function lazyReportShameShameShame(pi: any) {
         return;
       }
 
-      let candidate = lastCandidate;
+      let candidate = lastCandidate || loadPendingCandidate();
       if (!candidate) {
         const last = getLastAssistantEntry(ctx);
         if (!last) {

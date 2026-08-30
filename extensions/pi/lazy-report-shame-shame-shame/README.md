@@ -33,12 +33,13 @@ The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.m
 The intended human-agent flow is:
 
 1. The extension rejects the bad status answer and shows the machine reason, raw candidate hash, excerpt, and required footer.
-2. The agent rewrites the answer in plain English with `Status Report` bullets.
-3. The human approves or corrects the classification with `/shame allow|reject|warn <reason> -- <note>`.
-4. `/shame show` displays the raw candidate, machine decision, checker version, excerpt, and copyable human-labeling commands.
-5. The captured label goes to JSONL and Memory for the future classifier loop.
+2. The extension writes a pending review packet to `/mnt/storage12tb/skills/shame/training/pending-review-packet.json` so the raw candidate survives an extension reload.
+3. The agent rewrites the answer in plain English with `Status Report` bullets.
+4. The human approves or corrects the classification with `/shame allow|reject|warn <reason> -- <note>`.
+5. `/shame show` displays the raw candidate, pending packet path, machine decision, checker version, excerpt, and copyable human-labeling commands.
+6. The captured label goes to JSONL and Memory for the future classifier loop.
 
-The extension should never leave the human staring at only gate JSON. A rejection notice is a correction packet, not the final product.
+The extension should never leave the human staring at only gate JSON. A rejection notice is a correction packet, not the final product. The pending packet ties the retry prompt and the `/shame show` command to the same `candidate_hash`.
 
 ## Rejected patterns
 
