@@ -6,7 +6,7 @@ cmd="${1:-help}"
 case "$cmd" in
   eval-zero-invalid-pass)
     cat > /tmp/onsg_zero_invalid_candidate.txt <<'EOF'
-VERIFIED: The QRA ledger-auditor eval repair is now through the requested gate: Tau creator-reviewer course-correcting run r8 finished `30/30`, with max 2 creator attempts and zero invalid creator outputs sent to reviewer.
+VERIFIED: The QRA ledger-auditor eval repair is now through the requested gate: Tau creator-reviewer course-correcting run r8 finished `30/30`, with max 2 creator attempts and `0` invalid creator outputs sent to reviewer.
 
 Status Report
 - Changed: QRA ledger-auditor prompt/eval contract now uses deterministic precheck rules.

@@ -63,7 +63,7 @@ const BENIGN_FAILURE_CONTEXT_PATTERNS = [
   /\b(?:recorded|captured|stored|saved|filed|added)\b.{0,120}\b(?:rejected|invalid|bad|failure|failed)\b.{0,120}\b(?:training example|shame example|classifier feedback|negative example|test fixture|fixture|eval case)\b/i,
   /\b(?:training example|shame example|classifier feedback|negative example|test fixture|fixture|eval case)\b.{0,120}\b(?:rejected|invalid|bad|failure|failed)\b/i,
   /\breason\s+`?[a-z0-9_.-]+`?\b/i,
-  /\b(?:zero|0)\s+invalid\b.{0,120}\b(?:outputs?|reviewer|violations?)\b/i,
+  /(?:\bzero\b|`?\b0\b`?)\s+invalid\b.{0,120}\b(?:outputs?|reviewer|violations?)\b/i,
   /\binvalid[-_ ]to[-_ ]reviewer(?:[-_ ]violations)?\s*(?:[:=]|\b)\s*0\b/i,
   /\bfail(?:ure)?[-_ ]?count\s*(?:[:=]|\b)\s*0\b/i,
   /\b0\s+(?:FAIL|failed|failures?)\b/i,
