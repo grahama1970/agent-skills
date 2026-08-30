@@ -96,6 +96,17 @@ EOF
     node "$CHECK" < /tmp/onsg_completed_typed_failure_candidate.txt > /tmp/onsg_completed_typed_failure_pass.json
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_completed_typed_failure_pass.json','utf8')); if(d.decision!=='pass'||d.features.failure_report!==false) throw new Error(JSON.stringify(d)); console.log('COMPLETED_TYPED_FAILURE_PASS_OK')"
     ;;
+  eval-completed-research-routing-triage-pass)
+    cat > /tmp/onsg_research_routing_triage_candidate.txt <<'EOF'
+Status Report
+- Changed: The installed `research-routing-gates` checker now treats successful `triage-error` or Tau evidence as satisfying the broad-error sanity step, so it does not demand an extra `ask_fast_single` call after triage already ran.
+- Verified: `node /home/graham/.pi/agent/extensions/research-routing-gates/research-gate-check.mjs < /tmp/research-routing-status-report-repro-payload.json` returned `decision=pass`; `skills/agentic-evals/run.sh run /home/graham/.pi/agent/extensions/research-routing-gates/fixtures/agentic_eval.json --case real-world-triage-satisfies-broad-error-gate --output /tmp/research-routing-triage-satisfies-broad-error-eval.json` returned `readiness=READY`, `PASS=1`, `trial_count=2`.
+- Proof: `/tmp/research-routing-status-report-repro-after.json`; `/tmp/research-routing-triage-satisfies-broad-error-eval.json`; patched files under `/home/graham/.pi/agent/extensions/research-routing-gates/`.
+- Not done: none for this gate repair.
+EOF
+    node "$CHECK" < /tmp/onsg_research_routing_triage_candidate.txt > /tmp/onsg_research_routing_triage_pass.json
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_research_routing_triage_pass.json','utf8')); if(d.decision!=='pass'||d.features.failure_report!==false) throw new Error(JSON.stringify(d)); console.log('RESEARCH_ROUTING_TRIAGE_COMPLETION_PASS_OK')"
+    ;;
   eval-real-failure-followup)
     cat > /tmp/onsg_real_failure_candidate.txt <<'EOF'
 Status Report
@@ -121,7 +132,7 @@ EOF
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_unacted_next_followup.json','utf8')); if(d.decision!=='follow_up') throw new Error(JSON.stringify(d)); console.log('UNACTED_NEXT_FOLLOWUP_OK')"
     ;;
   help|--help|-h)
-    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-completed-typed-failure-pass|eval-real-failure-followup|eval-unacted-next-followup"
+    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-completed-typed-failure-pass|eval-completed-research-routing-triage-pass|eval-real-failure-followup|eval-unacted-next-followup"
     ;;
   *) echo "unknown command: $cmd" >&2; exit 2;;
 esac

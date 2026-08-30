@@ -2,7 +2,7 @@
 // Deterministic checker for final answers that name an obvious unblocked next step.
 // Reads assistant text from stdin and emits a machine-readable follow_up/pass decision.
 
-const CHECKER_VERSION = '2026-08-30.obvious-next-step.v5';
+const CHECKER_VERSION = '2026-08-30.obvious-next-step.v6';
 
 const text = await new Promise((resolve) => {
   let data = '';
@@ -96,12 +96,18 @@ function bulletBody(line) {
   return match ? match[1].trim() : null;
 }
 
+function normalizeFailureSignal(line) {
+  return line
+    .replace(/\btriage-error\b/gi, 'triage_tool')
+    .replace(/\bbroad-error\b/gi, 'broad_error_gate');
+}
+
 function collectFailureLines(input) {
   return input
     .split(/\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .filter((line) => hasAny(FAILURE_REPORT_PATTERNS, line))
+    .filter((line) => hasAny(FAILURE_REPORT_PATTERNS, normalizeFailureSignal(line)))
     .filter((line) => !hasAny(BENIGN_FAILURE_CONTEXT_PATTERNS, line));
 }
 
