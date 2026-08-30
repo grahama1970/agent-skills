@@ -17,6 +17,26 @@ EOF
     node "$CHECK" < /tmp/onsg_zero_invalid_candidate.txt > /tmp/onsg_zero_invalid_pass.json
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_zero_invalid_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('ZERO_INVALID_COMPLETION_PASS_OK')"
     ;;
+  eval-sensible-memory-status-pass)
+    cat > /tmp/onsg_sensible_status_candidate.txt <<'EOF'
+Yes: I have been thrashing.
+
+Sensible report:
+
+- `$memory` hardening: done by the current receipts.
+  - `12/12` known failure families sealed.
+  - `120/120` response-surface corpus passed.
+  - zero diagnostic leaks on `/answer` and `/deflect`.
+- QRA ledger-auditor: checked `30` eval cases.
+  - `case-01` through `case-30`.
+  - `30/30` passed.
+  - `0` invalid creator outputs sent to reviewer.
+- Human action needed: none.
+- Noise to ignore: the `/reload-runtime` loop. It is not part of the `$memory` hardening result.
+EOF
+    node "$CHECK" < /tmp/onsg_sensible_status_candidate.txt > /tmp/onsg_sensible_status_pass.json
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_sensible_status_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('SENSIBLE_MEMORY_STATUS_PASS_OK')"
+    ;;
   eval-hook-thrash-status-pass)
     cat > /tmp/onsg_hook_thrash_candidate.txt <<'EOF'
 You’re right: this is thrashing.
@@ -61,7 +81,7 @@ EOF
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_unacted_next_followup.json','utf8')); if(d.decision!=='follow_up') throw new Error(JSON.stringify(d)); console.log('UNACTED_NEXT_FOLLOWUP_OK')"
     ;;
   help|--help|-h)
-    echo "Usage: run.sh eval-zero-invalid-pass|eval-hook-thrash-status-pass|eval-real-failure-followup|eval-unacted-next-followup"
+    echo "Usage: run.sh eval-zero-invalid-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-real-failure-followup|eval-unacted-next-followup"
     ;;
   *) echo "unknown command: $cmd" >&2; exit 2;;
 esac

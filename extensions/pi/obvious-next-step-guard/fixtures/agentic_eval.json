@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "obvious-next-step-guard",
   "trials": 2,
-  "proof_scope": "deterministic checker coverage through the extension run.sh entrypoint for completion reports that mention zero invalid outputs/fail_count 0 or hook-thrash status without forcing stale repair loops, while still following up on real failed eval reports and explicit unacted next steps.",
+  "proof_scope": "deterministic checker coverage through the extension run.sh entrypoint for completion reports that mention zero invalid outputs/fail_count 0, sealed failure-family counts, zero diagnostic leaks, or hook-thrash status without forcing stale repair loops, while still following up on real failed eval reports and explicit unacted next steps.",
   "claims": {
-    "proves": "The obvious-next-step checker allows verified complete reports containing zero invalid output, fail_count 0, and hook-thrash-not-target-work language, still follows up on real nonzero failure reports, and still follows up when Not done names an unblocked action.",
+    "proves": "The obvious-next-step checker allows verified complete reports containing zero invalid output, fail_count 0, sealed known-failure-family counts, zero diagnostic-leak statements, and hook-thrash-not-target-work language, still follows up on real nonzero failure reports, and still follows up when Not done names an unblocked action.",
     "does_not_prove": "A live already-running Pi TUI has reloaded the updated extension or that arbitrary prose cannot produce future false positives."
   },
   "capability_claims": [
@@ -50,6 +50,38 @@
         "artifacts": [
           {
             "path": "/tmp/onsg_zero_invalid_pass.json",
+            "json_pointer": "/decision",
+            "equals": "pass"
+          }
+        ]
+      },
+      "real_world": true,
+      "readback": true
+    },
+    {
+      "name": "sensible-memory-status-pass",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "obvious_next_step.false_positive_zero_invalid_suppression"
+      ],
+      "seams": [
+        "checker.failure-line-filter",
+        "actual-checker-entrypoint"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh eval-sensible-memory-status-pass"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SENSIBLE_MEMORY_STATUS_PASS_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/onsg_sensible_status_pass.json",
             "json_pointer": "/decision",
             "equals": "pass"
           }

@@ -69,6 +69,8 @@ const BENIGN_FAILURE_CONTEXT_PATTERNS = [
   /\bfail(?:ure)?[-_ ]?count\s*(?:[:=]|\b)\s*0\b/i,
   /\b0\s+(?:FAIL|failed|failures?)\b/i,
   /\b(?:30\/30|\d+\/\d+)\b.{0,80}\b(?:pass(?:ed)?|finished|complete|ok=true)\b/i,
+  /\b\d+\s*\/\s*\d+\b.{0,80}\b(?:known\s+)?failure\s+famil(?:y|ies)\b.{0,80}\bsealed\b/i,
+  /\bzero\s+diagnostic\s+leaks\b/i,
   /\b(?:hook|harness|reload|runtime|status)\b.{0,120}\bthrash(?:ing)?\b.{0,120}\bnot\b.{0,80}\b`?\$?memory`?\b.{0,40}\bwork\b/i,
 ];
 
