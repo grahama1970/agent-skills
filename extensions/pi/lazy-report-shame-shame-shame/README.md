@@ -19,12 +19,13 @@ The extension is not a reminder. It is a rejection loop.
 On assistant `message_end`, it:
 
 1. extracts the assistant’s final text;
-2. runs `report-check.mjs` as a deterministic checker;
-3. rejects only likely delivery/status reports that are commit-heavy, GitHub-heavy, or jargon-heavy and lack a final `Status Report` footer;
-4. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a final `Status Report` footer so the replacement itself is plain-spoken;
-5. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
-6. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
-7. refuses to queue a second automatic retry for the same originating turn.
+2. ignores tool-call-only assistant messages with no text, so intermediate tool use is not rejected as a missing report;
+3. runs `report-check.mjs` as a deterministic checker;
+4. rejects only likely delivery/status reports that are commit-heavy, GitHub-heavy, or jargon-heavy and lack a final `Status Report` footer;
+5. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a final `Status Report` footer so the replacement itself is plain-spoken;
+6. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
+7. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
+8. refuses to queue a second automatic retry for the same originating turn.
 
 The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `Status Report` footer. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly.
 

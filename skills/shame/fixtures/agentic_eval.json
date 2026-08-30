@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "shame",
   "trials": 2,
-  "proof_scope": "deterministic JSONL capture, live Memory structured/store read-back, searchable Memory recall, strict $shame self-correction checking for missing status/footer, missing per-feature $agentic-evals, uncommitted/unpushed relevant work, collaborative correction-packet rejection notices, pending review packet recovery, and one-word Chatterbox shame audio install",
+  "proof_scope": "deterministic JSONL capture, live Memory structured/store read-back, searchable Memory recall, strict $shame self-correction checking for missing status/footer, missing per-feature $agentic-evals, uncommitted/unpushed relevant work, collaborative correction-packet rejection notices, tool-call-only empty assistant message skip, pending review packet recovery, and one-word Chatterbox shame audio install",
   "claims": {
-    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, live Memory write/read-back records, searchable Memory recall records for classifier training, strict $shame self-correction rejection of answers without a Status Report footer, unacted obvious next steps, control-plane non-status updates with no immutable-goal progress or next step, missing $agentic-evals for newly implemented features, uncommitted/unpushed relevant files/skills/projects, rejection notices that include human labeling guidance and a valid Status Report footer, pending review-packet source wiring for candidate-hash recovery through /shame show, and one short Chatterbox shame-word audio install with no bell/loop",
+    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, live Memory write/read-back records, searchable Memory recall records for classifier training, strict $shame self-correction rejection of answers without a Status Report footer, unacted obvious next steps, control-plane non-status updates with no immutable-goal progress or next step, missing $agentic-evals for newly implemented features, uncommitted/unpushed relevant files/skills/projects, rejection notices that include human labeling guidance and a valid Status Report footer, tool-call-only assistant messages are ignored instead of being rejected as no-text status reports, pending review-packet source wiring for candidate-hash recovery through /shame show, and one short Chatterbox shame-word audio install with no bell/loop",
     "does_not_prove": "classifier training quality, automatic transcript discovery in every Pi session shape, future model promotion, or that every already-running Pi TUI has reloaded the updated extension"
   },
   "capability_claims": [
@@ -271,6 +271,31 @@
       }
     },
     {
+      "name": "tool-call-empty-assistant-message-is-ignored",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_correct_status_footer"
+      ],
+      "seams": [
+        "extension-message-end",
+        "tool-call-only-turn",
+        "no-text-skip"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && rm -f /tmp/shame-empty-tool-packet.json && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-empty-tool-packet.json node --input-type=module -e \"import { existsSync } from 'node:fs'; import ext from 'file:///home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts'; const handlers=new Map(); const sent=[]; const pi={on(n,h){handlers.set(n,h);}, registerCommand(){}, sendUserMessage(t,o){sent.push({t,o});}}; ext(pi); const ctx={hasUI:false, ui:{notify(){}}, sessionManager:{getBranch(){return[];}, getSessionFile(){return '/tmp/fake.jsonl';}, getSessionId(){return 'fake';}}}; await handlers.get('input')({text:'\\$shame check this', source:'user'}); const result=await handlers.get('message_end')({id:'tool-only', message:{id:'tool-only', role:'assistant', content:[]}}, ctx); if (result !== undefined) throw new Error('empty assistant message was rewritten'); if (sent.length !== 0) throw new Error('empty assistant message queued retry'); if (existsSync('/tmp/shame-empty-tool-packet.json')) throw new Error('empty assistant message wrote packet'); console.log('EMPTY_ASSISTANT_MESSAGE_IGNORED_OK');\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EMPTY_ASSISTANT_MESSAGE_IGNORED_OK"
+        ]
+      }
+    },
+    {
       "name": "collaborative-rejection-notice-has-status-footer",
       "type": "positive",
       "evidence_class": "deterministic",
@@ -286,7 +311,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && INDEX=extensions/pi/lazy-report-shame-shame-shame/index.ts && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && node -e \"const fs=require('fs');const src=fs.readFileSync(process.argv[1],'utf8'); for (const s of ['Correction workflow','/shame show','/shame review','/shame reject|allow|warn','Status Report','PENDING_REVIEW_PACKET','writePendingReviewPacket','loadPendingCandidate','candidate_hash','Pending packet','ctx.ui.select','ctx.ui.input']) { if(!src.includes(s)) throw new Error('missing '+s); } console.log('SOURCE_COLLABORATION_STRINGS_OK')\" $INDEX && printf '%b\\n' '🦥 REJECTED_BY_SLOTH_COURT\\n\\nThe last answer was rejected because it did not give a plain status report.\\n\\nMachine check\\n- Checker: 2026\\n- Reasons: delivery_report_missing_titled_bullet_summary\\n- Footer failures: missing_trailing_report_title\\n\\nCorrection workflow\\n- The bad answer was hidden and one rewrite request was queued.\\n- The rewrite must give the corrected answer, not more gate JSON.\\n- After the corrected answer, use `/shame review` for an interactive label picker or label directly with `/shame reject|allow|warn <reason> -- <note>`.\\n- Use `/shame show` to inspect the raw candidate that will be labeled.\\n\\nStatus Report\\n- Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.\\n- Verified: report-check.mjs returned reject; checker 2026; footer failures: missing_trailing_report_title.\\n- Proof: rejected candidate sha256:abc; excerpt shown above.\\n- Not done: Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer.' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_collaborative_notice.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_collaborative_notice.json','utf8')); if(d.decision!=='pass') throw new Error('notice did not pass'); if(!d.parsed_section || d.parsed_section.title!=='Status Report') throw new Error('missing parsed status report'); console.log('COLLABORATIVE_NOTICE_STATUS_OK')\""
+        "cd /home/graham/workspace/experiments/agent-skills && INDEX=extensions/pi/lazy-report-shame-shame-shame/index.ts && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && node -e \"const fs=require('fs');const src=fs.readFileSync(process.argv[1],'utf8'); for (const s of ['Correction workflow','/shame show','/shame review','/shame reject|allow|warn','Status Report','PENDING_REVIEW_PACKET','writePendingReviewPacket','loadPendingCandidate','candidate_hash','Pending packet','ctx.ui.select','ctx.ui.input']) { if(!src.includes(s)) throw new Error('missing '+s); } console.log('SOURCE_COLLABORATION_STRINGS_OK')\" $INDEX && printf '%b\\n' '\ud83e\udda5 REJECTED_BY_SLOTH_COURT\\n\\nThe last answer was rejected because it did not give a plain status report.\\n\\nMachine check\\n- Checker: 2026\\n- Reasons: delivery_report_missing_titled_bullet_summary\\n- Footer failures: missing_trailing_report_title\\n\\nCorrection workflow\\n- The bad answer was hidden and one rewrite request was queued.\\n- The rewrite must give the corrected answer, not more gate JSON.\\n- After the corrected answer, use `/shame review` for an interactive label picker or label directly with `/shame reject|allow|warn <reason> -- <note>`.\\n- Use `/shame show` to inspect the raw candidate that will be labeled.\\n\\nStatus Report\\n- Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.\\n- Verified: report-check.mjs returned reject; checker 2026; footer failures: missing_trailing_report_title.\\n- Proof: rejected candidate sha256:abc; excerpt shown above.\\n- Not done: Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer.' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_collaborative_notice.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_collaborative_notice.json','utf8')); if(d.decision!=='pass') throw new Error('notice did not pass'); if(!d.parsed_section || d.parsed_section.title!=='Status Report') throw new Error('missing parsed status report'); console.log('COLLABORATIVE_NOTICE_STATUS_OK')\""
       ],
       "expected": {
         "exit_code": 0,

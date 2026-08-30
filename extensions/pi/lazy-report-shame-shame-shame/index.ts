@@ -486,6 +486,7 @@ export default function lazyReportShameShameShame(pi: any) {
   pi.on("message_end", async (event: any, ctx: any) => {
     if (event.message?.role !== "assistant") return;
     const text = contentToText(event.message.content);
+    if (!text.trim()) return;
     const forceStatus = sessionGuardActive || turnGuardActive;
     const strictStatus = shameSelfCorrectTurn;
     const check = checkReport(text, forceStatus, mutatingTurn, strictStatus);

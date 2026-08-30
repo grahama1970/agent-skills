@@ -178,6 +178,7 @@ The fixture must prove:
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
 - extension rejection notices are correction packets with a final `Status Report` footer rather than bare gate JSON;
+- tool-call-only assistant messages with no text are ignored instead of being rejected as missing status reports;
 - rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 
