@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent_plausibility_review.v1.schema.json",
+  "title": "Agent plausibility review for a QRA Memory pipeline ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "qra_key",
+    "reviewed_ledger_hash",
+    "verdict",
+    "step_reviews",
+    "authority_boundary",
+    "missing_ledger_fields",
+    "issues",
+    "summary"
+  ],
+  "properties": {
+    "schema": {"const": "agent_plausibility_review.v1"},
+    "qra_key": {"type": ["string", "null"]},
+    "reviewed_ledger_hash": {"type": ["string", "null"]},
+    "verdict": {"enum": ["PASS", "FAIL", "NEEDS_HUMAN_REVIEW"]},
+    "step_reviews": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "agreement", "issue_code", "reason", "evidence_paths"],
+        "properties": {
+          "step": {
+            "enum": [
+              "intent",
+              "entity_extraction",
+              "recall_context_selection",
+              "crosswalk_chain",
+              "policy_admission_gate",
+              "terminal_action",
+              "final_text"
+            ]
+          },
+          "agreement": {"enum": ["AGREE", "DISAGREE", "UNCERTAIN", "NOT_APPLICABLE"]},
+          "issue_code": {"type": ["string", "null"]},
+          "reason": {"type": "string", "minLength": 1, "maxLength": 600},
+          "evidence_paths": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {"type": "string", "pattern": "^(qra|ledger|review_context)\\."}
+          }
+        }
+      }
+    },
+    "authority_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_plausibility_only",
+        "graham_signoff_granted",
+        "expert_verification_granted",
+        "answer_authority_granted",
+        "reason"
+      ],
+      "properties": {
+        "agent_plausibility_only": {"const": true},
+        "graham_signoff_granted": {"const": false},
+        "expert_verification_granted": {"const": false},
+        "answer_authority_granted": {"const": false},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 400}
+      }
+    },
+    "missing_ledger_fields": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {"type": "string", "pattern": "^ledger\\."}
+    },
+    "issues": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "code", "step", "field_path", "message"],
+        "properties": {
+          "severity": {"enum": ["BLOCKER", "MAJOR", "MINOR"]},
+          "code": {"type": "string", "minLength": 1, "maxLength": 80},
+          "step": {"enum": ["intent", "entity_extraction", "recall_context_selection", "crosswalk_chain", "policy_admission_gate", "terminal_action", "final_text", "authority_boundary", "ledger_shape"]},
+          "field_path": {"type": "string", "minLength": 1, "maxLength": 160},
+          "message": {"type": "string", "minLength": 1, "maxLength": 600}
+        }
+      }
+    },
+    "summary": {"type": "string", "minLength": 1, "maxLength": 700}
+  }
+}

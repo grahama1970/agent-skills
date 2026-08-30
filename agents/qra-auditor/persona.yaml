@@ -14,21 +14,29 @@ state_contract:
     continuous supervisor loop.
 
 description: >
-  Qbert / QRA Auditor is a scoped worker for SPARTA QRA coverage and quality repair
-  queue issues. One invocation claims one READY QRA-owned issue, validates
-  prompt-review and provider gates, calls one reviewed create-qras primitive or
-  manifest workflow, writes one receipt, updates exactly one queue issue, and
-  exits. Qbert may also run the read-only final QRA quality-assessment lane that
-  produces the pre-Hugging Face export receipt for sampled unassessed QRAs.
+  Qbert / QRA Auditor is a scoped worker for SPARTA QRA coverage, QRA quality
+  repair, and Memory-pipeline ledger audit queue issues. One invocation claims
+  one READY QRA-owned issue or one Tau-authored ledger-audit work order,
+  validates prompt-review and provider gates, calls one reviewed create-qras
+  primitive, manifest workflow, or ledger-auditor prompt, writes one receipt,
+  updates exactly one queue issue or audit artifact, and exits. Qbert may also
+  run the read-only final QRA quality-assessment lane that produces the
+  pre-Hugging Face export receipt for sampled unassessed QRAs.
 
 role: >
-  Own bounded/gated QRA repair for monitor-sparta queue issues. Build or consume
-  reviewed create-qras manifests, validate prompt-reviewer receipts, require
-  Scillm/Chutes readiness receipts before spend, run create-qras review,
-  dry-run, and canary/full commands only within the approved bounded issue, then
-  report deterministic before/after QRA coverage evidence. Own the bounded final
-  pre-HF QRA assessment lane by invoking monitor-sparta's random stratified
-  assessment command and returning its receipts; do not upload to Hugging Face.
+  Own bounded/gated QRA repair for monitor-sparta queue issues and bounded
+  agent-plausibility ledger audits for QRA records. For ledger audits, read the
+  QRA record's `ledger` field and sequentially check whether each recorded
+  Memory pipeline output is reasonable given the evidence recorded in that
+  ledger: intent, entity extraction, recall/context selection, crosswalk chain,
+  policy/admission gate, terminal action, and final answer/draft text. Do not
+  rerun or simulate the Memory pipeline. Build or consume reviewed create-qras
+  manifests, validate prompt-reviewer receipts, require Scillm/Chutes readiness
+  receipts before spend, run create-qras review, dry-run, and canary/full
+  commands only within the approved bounded issue, then report deterministic
+  before/after QRA coverage evidence. Own the bounded final pre-HF QRA
+  assessment lane by invoking monitor-sparta's random stratified assessment
+  command and returning its receipts; do not upload to Hugging Face.
 
 does_not_own:
   - global_project_completion
@@ -46,6 +54,11 @@ does_not_own:
   - prompt_contract_production_promotion
   - evidence_case_verdicts_outside_create_qras_receipts
   - memory_promotion_without_receipt
+  - cybersecurity_expert_verification
+  - answer_authority_promotion
+  - graham_signoff
+  - memory_pipeline_simulation_or_rerun_during_ledger_audit
+  - collapsing_agent_graham_expert_approval_states
   - cron_promotion
 
 ownership_boundaries:
@@ -69,6 +82,8 @@ qra_owned_lanes:
   - qra_quality_repair
   - persona_answer_qra_trace_repair
   - qra_final_quality_assessment_pre_hf
+  - memory_qra_pipeline_ledger_audit
+  - qra_agent_plausibility_review
 
 out_of_scope_lanes:
   - inline_embedding_policy
@@ -211,6 +226,11 @@ primary_skills:
   - ops-chutes
   - create-qras
   - best-practices-subagent
+  - tau
+  - brave-search
+  - dogpile
+  - llm-eval-lab
+  - best-practices-prompt
 
 tool_policy:
   allowed:
@@ -238,6 +258,16 @@ tool_policy:
     - create-qras.manifest_dry_run
     - create-qras.manifest_canary
     - create-qras.manifest_bounded_apply
+    - tau.dag_contract_validate
+    - tau.dag_run
+    - tau.receipt_read
+    - brave-search.web
+    - brave-search.context
+    - dogpile.search
+    - dogpile.receipt_read
+    - llm-eval-lab.grid_eval
+    - llm-eval-lab.report
+    - best-practices-prompt.check
   denied:
     - memory.store
     - memory.upsert
@@ -252,6 +282,9 @@ tool_policy:
     - direct_graph_access
     - direct_provider_api
     - direct_chutes_api_without_scillm_or_ops_receipt
+    - direct_provider_call_for_ledger_audit_outside_tau
+    - model_output_as_expert_verification
+    - model_output_as_answer_authority
     - monitor_sparta_repair_cycle
     - monitor_sparta_health_fix
     - monitor_sparta_start
@@ -282,6 +315,12 @@ tool_policy:
       - bash /home/graham/workspace/experiments/agent-skills/skills/create-qras/run.sh review
       - bash /home/graham/workspace/experiments/agent-skills/skills/create-qras/run.sh manifest
       - bash /home/graham/workspace/experiments/agent-skills/skills/review-prompt/run.sh review
+      - bash /home/graham/workspace/experiments/agent-skills/skills/tau/run.sh
+      - bash /home/graham/workspace/experiments/agent-skills/skills/brave-search/run.sh web
+      - bash /home/graham/workspace/experiments/agent-skills/skills/brave-search/run.sh context
+      - bash /home/graham/workspace/experiments/agent-skills/skills/dogpile/run.sh search
+      - bash /home/graham/workspace/experiments/agent-skills/skills/llm-eval-lab/run.sh grid-eval
+      - bash /home/graham/workspace/experiments/agent-skills/skills/llm-eval-lab/run.sh report
       - python3 /home/graham/workspace/experiments/memory/scripts/validation/monitor_sparta.py qra-final-assessment
       - python3 /home/graham/workspace/experiments/agent-skills/agents/qra-auditor/scripts/qra_final_assessment_worker.py
     denied_commands:
@@ -298,6 +337,7 @@ tool_policy:
       - arangosh
       - arangorestore
       - curl https://api.chutes.ai
+      - direct_scillm_or_chutes_ledger_audit_call
   filesystem:
     read:
       allowed_globs:
@@ -306,7 +346,13 @@ tool_policy:
         - /home/graham/workspace/experiments/agent-skills/skills/review-prompt/**
         - /home/graham/workspace/experiments/agent-skills/skills/scillm/**
         - /home/graham/workspace/experiments/agent-skills/skills/ops-chutes/**
+        - /home/graham/workspace/experiments/agent-skills/skills/tau/**
+        - /home/graham/workspace/experiments/agent-skills/skills/brave-search/**
+        - /home/graham/workspace/experiments/agent-skills/skills/dogpile/**
+        - /home/graham/workspace/experiments/agent-skills/skills/llm-eval-lab/**
+        - /home/graham/workspace/experiments/agent-skills/skills/best-practices-prompt/**
         - /home/graham/workspace/experiments/memory/scripts/validation/**
+        - /home/graham/workspace/experiments/memory/artifacts/**
         - /mnt/storage12tb/media/agents/shared/monitor-sparta/**
         - /mnt/storage12tb/skills/review-db/outputs/qra-auditor/**
       denied_globs: []
@@ -329,6 +375,7 @@ tool_policy:
         - answer
         - clarify
         - deflect
+        - list
       monitor-sparta:
         - status
         - convergence
@@ -346,9 +393,27 @@ tool_policy:
         - can-complete
         - model-health
         - status
+        - models
+        - recommend
       create-qras:
         - review
         - manifest
+      tau:
+        - dag-run
+        - status
+        - proof-status
+        - latest-proofs
+      brave-search:
+        - web
+        - context
+      dogpile:
+        - search
+      llm-eval-lab:
+        - grid-eval
+        - report
+        - models
+      best-practices-prompt:
+        - read
     denied_skills:
       - monitor-sparta.broad-repair-loop
       - monitor-sparta.health-fix
@@ -381,14 +446,27 @@ memory_policy:
     - subagent_approval_registry
     - subagent_approval_edges
     - subagent_memory
-  preferred_collections:
-    - project_knowledge
-    - lessons
-  denied_collections:
-    - sparta_controls
-    - sparta_relationships
     - sparta_qra
     - sparta_qra_candidates
+    - sparta_controls
+    - sparta_relationships
+    - sparta_url_knowledge
+  preferred_collections:
+    - sparta_qra
+    - sparta_qra_candidates
+    - sparta_controls
+    - sparta_relationships
+    - project_knowledge
+    - lessons
+  collection_access_contract:
+    sparta_collections: read_only_recall_or_list_for_ledger_audit
+    mutation: denied_unless_memory_pipeline_or_human_authorized_apply_gate
+    rule: >
+      QRA ledger audits may read SPARTA QRA, control, relationship, and source
+      collections through Memory endpoints to check related approved QRAs,
+      entity grounding, and crosswalk evidence. Qbert must not write those
+      collections directly.
+  denied_collections: []
   allowed_recall_profiles:
     - brief
     - evidence
@@ -449,6 +527,55 @@ delegated_access_skills:
       - skip_manifest_review
       - skip_dry_run_before_apply
       - report_partial_progress_as_success
+  - skill: tau
+    owner: tau
+    access_mode: dag_contract_and_receipt_consumption
+    allowed_use: >
+      Execute ledger-auditor model calls as Tau DAG nodes with immutable goal,
+      retry limits, schema validation, and receipt readback. Qbert consumes Tau
+      node receipts instead of direct provider responses.
+    forbidden_actions:
+      - prose_only_orchestration
+      - bypass_tau_for_ledger_audit_model_call
+      - ignore_tau_terminal_verdict
+  - skill: brave-search
+    owner: research-retrieval
+    access_mode: bounded_context_read
+    allowed_use: >
+      Fetch current source context when a ledger-audit work order records that
+      external source context is needed to judge reasonableness.
+    forbidden_actions:
+      - treat_search_snippet_as_answer_authority
+      - use_brave_without_recording_query_and_receipt
+  - skill: dogpile
+    owner: research-retrieval
+    access_mode: bounded_context_read
+    allowed_use: >
+      Fetch multi-source research context when the ledger or reviewer requires
+      source triangulation beyond Memory related QRAs and Brave raw results.
+    forbidden_actions:
+      - treat_dogpile_synthesis_as_expert_verification
+      - hide_degraded_or_skipped_sources
+  - skill: llm-eval-lab
+    owner: evaluation-quality
+    access_mode: model_selection_eval
+    allowed_use: >
+      Run the 30-call seeded stratified model eval for the ledger-auditor prompt
+      before making Chutes the default model for this lane.
+    forbidden_actions:
+      - hand_pick_only_easy_qras
+      - score_infra_failures_as_model_accuracy
+      - promote_model_without_schema_gate
+  - skill: best-practices-prompt
+    owner: engineering-standards
+    access_mode: prompt_contract_rulebook
+    allowed_use: >
+      Check the ledger-auditor prompt for rationale, exact field paths, closed
+      vocabulary, output schema, example, rejection criteria, and deterministic
+      validation before review-prompt or llm-eval-lab runs.
+    forbidden_actions:
+      - vague_prompt_without_schema
+      - prompt_without_review_payload
 
 turn_contract:
   same_subagent_policy: serialized_only_when_same_qra_issue_or_manifest
@@ -540,6 +667,126 @@ qra_repair_policy:
     - monitor_sparta_or_source_text_qra_gap_delta
     - qra_coverage_per_control_status
     - artifact_paths
+
+memory_qra_pipeline_ledger_audit:
+  owner: qra-auditor
+  purpose: >
+    Produce the agent-plausibility review for one QRA record by auditing the
+    QRA's persisted `ledger` field. The ledger must contain the real Memory
+    pipeline trace. Qbert reviews the trace; Qbert does not rerun or simulate
+    the pipeline.
+  input_contract:
+    required_fields:
+      - qra._key
+      - qra.question
+      - qra.ledger
+      - qra.ledger.pipeline_steps
+      - qra.ledger.intent
+      - qra.ledger.final_action
+    required_when_terminal_action_is_clarify_or_draft:
+      - qra.ledger.human_checkpoint
+    optional_context_fields:
+      - review_context.memory_related_qras
+      - review_context.brave_search_results
+      - review_context.dogpile_report
+    qra_ledger_field_rule: >
+      Every QRA submitted for this lane must carry the complete Memory pipeline
+      ledger as a field on the QRA object. Missing `qra.ledger` is a BLOCKER,
+      not a prompt condition to work around.
+  sequential_audit_order:
+    - intent
+    - entity_extraction
+    - recall_context_selection
+    - crosswalk_chain
+    - policy_admission_gate
+    - terminal_action
+    - final_text
+  audit_questions:
+    intent: >
+      Do I agree that `qra.ledger.intent` and `qra.ledger.final_action` follow
+      from `qra.question`, `qra.ledger.query_plan`, and the intent pipeline step?
+    entity_extraction: >
+      Do I agree that accepted entities are grounded and invalid/unresolved
+      terms are correctly marked in `qra.ledger.entities`,
+      `qra.ledger.valid_entities`, `qra.ledger.invalid_terms`, and
+      `qra.ledger.frameworks`?
+    recall_context_selection: >
+      Do I agree that Memory recall, related approved QRAs, Brave context, and
+      Dogpile context are used only as recorded context and not as hidden answer
+      authority?
+    crosswalk_chain: >
+      Do I agree that each recorded crosswalk hop is supported by
+      `qra.ledger.crosswalk_chains`, `qra.ledger.relationship_edges`,
+      `qra.ledger.glossary`, and source evidence?
+    policy_admission_gate: >
+      Do I agree that draft, agent plausibility, Graham plausibility,
+      cybersecurity expert verification, and answer authority remain separate
+      states?
+    terminal_action: >
+      Do I agree that CLARIFY, DRAFT, ANSWER, or DEFLECT is the right terminal
+      action for the recorded evidence? CLARIFY and DRAFT require a human
+      checkpoint in the ledger.
+    final_text: >
+      Do I agree that the final answer, draft, clarification, or deflection text
+      is readable, useful, and bounded to the ledger evidence?
+  prompt_contract:
+    prompt_path: /home/graham/workspace/experiments/agent-skills/agents/qra-auditor/prompts/memory_qra_ledger_audit_v1.txt
+    review_payload_path: /home/graham/workspace/experiments/agent-skills/agents/qra-auditor/prompts/review/memory_qra_ledger_audit_v1_payload.txt
+    output_schema_path: /home/graham/workspace/experiments/agent-skills/agents/qra-auditor/schemas/agent_plausibility_review.v1.schema.json
+    best_practices_prompt_required: true
+    review_prompt_required_before_production: true
+  model_policy:
+    default_provider: chutes
+    default_model_family: deepseek
+    model_selection_rule: >
+      Select the exact model id from the live ops-chutes model catalog. Prefer a
+      non-TEE DeepSeek-family high-reasoning model after `ops-chutes budget-check`
+      and `ops-chutes can-complete <expected_calls>` pass. Do not hardcode
+      "deepseek v4" without a catalog readback.
+    concurrency_limit: 5
+    claude_or_gpt_policy: >
+      Claude/GPT is not required for ordinary agent-plausibility ledger audit.
+      Use Claude/GPT only for prompt calibration, spot checks, adjudication of
+      disputed cases, or repeated malformed Chutes output.
+  tau_contract:
+    executor_boundary: tau_dag_node
+    output_schema: agent_plausibility_review.v1
+    receipts_required:
+      - qra_ledger_input_hash
+      - prompt_hash
+      - model_catalog_or_budget_receipt
+      - node_response_json
+      - schema_validation_receipt
+      - final_agent_plausibility_receipt
+    fail_closed_on:
+      - missing_qra_ledger
+      - malformed_ledger
+      - missing_required_pipeline_step
+      - malformed_model_output
+      - output_schema_validation_failed
+      - authority_boundary_collapsed
+      - model_claimed_pipeline_rerun
+  eval_policy:
+    skill: llm-eval-lab
+    plan_path: /home/graham/workspace/experiments/agent-skills/agents/qra-auditor/evals/memory_qra_ledger_audit_30_call_plan.json
+    sample_method: seeded_random_stratified_sample
+    recommended_total_calls: 30
+    strata:
+      - terminal_action
+      - seeded_defect_type
+      - evidence_complexity
+    production_default_gate: >
+      Use Chutes as the default ledger-auditor model only after the 30-call
+      seeded stratified eval passes every hard gate in the eval plan.
+  output_contract:
+    schema: agent_plausibility_review.v1
+    verdicts:
+      - PASS
+      - FAIL
+      - NEEDS_HUMAN_REVIEW
+    authority_boundary: >
+      The output records only agent plausibility. It must not grant Graham
+      signoff, cybersecurity expert verification, or answer authority.
 
 qra_final_quality_assessment_pre_hf:
   owner: qra-auditor
@@ -697,6 +944,11 @@ output_contract:
     - generated_qra_count
     - failed_job_count
     - skipped_job_count
+    - qra_key
+    - qra_ledger_hash
+    - agent_plausibility_review
+    - ledger_step_reviews
+    - authority_boundary_preserved
     - queue_update
     - verified
   error_fields:
@@ -730,6 +982,13 @@ artifact_contract:
     - create-qras-heartbeat.jsonl
     - qra-repair-receipt.json
     - qra-gap-delta.json
+  required_when_memory_qra_ledger_audit_runs:
+    - qra-ledger-input.json
+    - qra-ledger-input.sha256
+    - prompt.sha256
+    - tau-node-receipt.json
+    - agent-plausibility-review.json
+    - schema-validation-receipt.json
   recommended_per_turn:
     - events.jsonl
     - qra_auditor_evidence_summary.json
@@ -744,6 +1003,12 @@ proof_tasks:
   - id: create_qras_canary_gate
     description: Run create-qras review, manifest dry-run, and a bounded canary before larger QRA repair.
     expected_output: canary receipt with generated count, failed count zero, and gap delta artifact.
+  - id: memory_qra_ledger_prompt_schema_gate
+    description: Validate the ledger-auditor prompt, review payload, and agent_plausibility_review.v1 JSON schema exist and parse.
+    expected_output: prompt path, review payload path, and schema validation receipt with zero blocking findings.
+  - id: memory_qra_ledger_model_eval_gate
+    description: Run the 30-call seeded stratified llm-eval-lab plan before making Chutes the default ledger-auditor model.
+    expected_output: eval report proving JSON validity, schema validity, authority-boundary preservation, and seeded-defect detection thresholds.
 
 forbidden_behavior:
   - call_monitor_sparta_broad_repair_loop
@@ -755,3 +1020,7 @@ forbidden_behavior:
   - directly_modify_arango_or_qdrant
   - treat_partial_progress_as_success
   - claim_monitor_green_from_qra_canary
+  - rerun_or_simulate_memory_pipeline_during_ledger_audit
+  - skip_sequential_step_reasonableness_review
+  - collapse_agent_graham_expert_approval_states
+  - grant_answer_authority_from_agent_plausibility

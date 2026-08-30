@@ -35,6 +35,14 @@ Known gaps:
   `/create-qras`, not a Dewey primitive.
 - Current worker intentionally does not call `/create-qras`; it gates on Petey
   and Ryan until those prerequisite receipts exist.
+- Memory QRA ledger-audit contract is now documented in `persona.yaml` and
+  `AGENTS.md`, with prompt, review payload, output schema, and 30-call
+  llm-eval-lab plan under `agents/qra-auditor/`. Tau course-correcting eval r8
+  completed 30/30 with strict JSON/schema validation before reviewer,
+  max 2 creator attempts, and zero invalid-output-to-reviewer violations:
+  `/mnt/storage12tb/skills/ask/outputs/eval-reports/qra-ledger-auditor-v4-course-correcting-jsonmode-r8-20260830T1631Z/results.course_correcting.json`.
+  This proves the seeded agent-plausibility ledger-audit lane, not Graham
+  signoff, cybersecurity expert verification, or answer authority.
 - First live proof must be a small reviewed `/create-qras` manifest canary with
   prompt-review, Scillm/Chutes preflight, dry-run, write receipt, and QRA gap
   delta evidence.

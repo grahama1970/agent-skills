@@ -1,0 +1,89 @@
+{
+  "schema": "qra_auditor.ledger_audit_eval_plan.v1",
+  "title": "30-call seeded stratified eval for Memory QRA ledger auditor",
+  "purpose": "Select the minimum model that can audit QRA Memory pipeline ledgers for agent plausibility.",
+  "prompt_path": "agents/qra-auditor/prompts/memory_qra_ledger_audit_v1.txt",
+  "output_schema_path": "agents/qra-auditor/schemas/agent_plausibility_review.v1.schema.json",
+  "recommended_runner": "skills/llm-eval-lab/run.sh grid-eval",
+  "randomization": {
+    "method": "seeded_random_stratified_sample",
+    "seed": "qra-ledger-audit-v1-20260829",
+    "max_total_calls": 30
+  },
+  "candidate_models": {
+    "primary": [
+      {
+        "provider": "chutes",
+        "model_family": "deepseek",
+        "selection_rule": "Use the exact DeepSeek-family model id returned by `skills/ops-chutes/run.sh models --query deepseek --json` after `budget-check` and `can-complete 30` pass. Prefer non-TEE unless compliance requires TEE."
+      }
+    ],
+    "calibration_optional": [
+      "one Claude or GPT model on 6 highest-risk examples only if Chutes output is malformed, low-confidence, or disputed"
+    ]
+  },
+  "strata": [
+    {
+      "name": "terminal_action",
+      "field": "qra.ledger.final_action",
+      "target_counts": {
+        "ANSWER": 8,
+        "CLARIFY": 8,
+        "DRAFT": 7,
+        "DEFLECT": 7
+      }
+    },
+    {
+      "name": "seeded_defect_type",
+      "field": "eval.expected_defect_type",
+      "target_values": [
+        "clean",
+        "bad_intent",
+        "bad_entities",
+        "bad_crosswalk_chain",
+        "wrong_terminal_action",
+        "missing_human_checkpoint",
+        "authority_boundary_violation",
+        "weak_or_missing_evidence"
+      ]
+    },
+    {
+      "name": "evidence_complexity",
+      "field": "eval.evidence_complexity",
+      "target_values": [
+        "direct_qra",
+        "multi_hop_crosswalk",
+        "similar_qra_context",
+        "external_context_brave_or_dogpile"
+      ]
+    }
+  ],
+  "deterministic_gates": [
+    "response parses as a bare JSON object",
+    "response validates against agent_plausibility_review.v1.schema.json before reviewer involvement",
+    "schema-invalid creator output is returned to the creator as exact course-correction errors; reviewer is skipped",
+    "creator receives at most 2 attempts",
+    "step_reviews contains exactly seven step names in the required order",
+    "authority_boundary.agent_plausibility_only is true",
+    "authority_boundary.graham_signoff_granted is false",
+    "authority_boundary.expert_verification_granted is false",
+    "authority_boundary.answer_authority_granted is false",
+    "every evidence_paths item begins with qra., ledger., or review_context.",
+    "local deterministic precheck derives required verdict from input fields before semantic review",
+    "verdict is FAIL for missing qra.ledger, terminal-action conflicts, missing human checkpoints for CLARIFY/DRAFT, missing crosswalk/relationship evidence for claim-making ANSWER/DRAFT, context-as-answer-authority collapse, authority overclaims, and unsupported final-text entities",
+    "verdict is NEEDS_HUMAN_REVIEW for grounded entities with empty ledger.retrieval_evidence when no FAIL override applies",
+    "output does not claim it reran intent, recall, entity extraction, crosswalk generation, answer, clarify, deflect, brave-search, dogpile, or memory"
+  ],
+  "pass_threshold": {
+    "valid_json": "30/30",
+    "schema_valid": "30/30",
+    "authority_boundary_preserved": "30/30",
+    "seeded_blocker_detection": ">= 95% of blocker cases",
+    "clean_case_false_failure_rate": "<= 10%",
+    "production_default_rule": "Use Chutes as default only if all hard gates pass; route malformed, low-confidence, or disputed cases to human review or optional Claude/GPT calibration."
+  },
+  "proof_boundary": {
+    "proves": "A Chutes DeepSeek-family candidate can produce parseable agent-plausibility ledger audits for a 30-call seeded stratified sample.",
+    "does_not_prove": "Cybersecurity expert verification, answer authority, full corpus quality, or correctness of the underlying Memory pipeline outputs."
+  }
+}

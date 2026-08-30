@@ -1,0 +1,106 @@
+# REVIEW REQUEST FOR WEB LLM
+#
+# Purpose: Review the QRA Auditor prompt that audits one SPARTA QRA Memory-pipeline ledger.
+# Consumer: Tau-managed `qra-auditor` node, Sparta Explorer signoff workflow, and `agent_plausibility_review.v1` JSON validator.
+# Task: Check that the prompt asks the model to sequentially audit recorded Memory pipeline outputs without rerunning or simulating the pipeline.
+#
+# Review criteria:
+# 1. Does the prompt start with task-before-context instructions?
+# 2. Does it cite exact input field paths such as `qra.ledger.intent`, `qra.ledger.entities`, and `qra.ledger.crosswalk_chains[]`?
+# 3. Does it force a closed vocabulary for verdicts, agreements, terminal actions, approvals, and frameworks?
+# 4. Does it preserve the boundary that agent plausibility is not Graham signoff, cybersecurity expert verification, or answer authority?
+# 5. Does the example output match `agent_plausibility_review.v1.schema.json`?
+# 6. Can a deterministic validator reject malformed JSON, missing seven step reviews, bad field-path citations, and authority collapse?
+#
+# Example input: A QRA ledger where GPS spoofing and SV-AC-5 are grounded but asset scope is missing, so the Memory pipeline chose CLARIFY.
+# Expected output: `verdict=PASS`, seven ordered step reviews, `crosswalk_chain=NOT_APPLICABLE`, no authority granted.
+
+================================================================================
+SYSTEM PROMPT
+================================================================================
+
+Use the prompt file exactly as written at:
+`agents/qra-auditor/prompts/memory_qra_ledger_audit_v1.txt`
+
+================================================================================
+USER PROMPT WITH EXAMPLE VALUES FILLED IN
+================================================================================
+
+The prompt includes a complete example input and complete example output in the prompt body. The live caller supplies a JSON object with:
+
+- `qra._key`
+- `qra.question`
+- `qra.reasoning`
+- `qra.answer`
+- `qra.authority_state`
+- `qra.ledger.ledger_hash`
+- `qra.ledger.intent`
+- `qra.ledger.pipeline_steps[]`
+- `qra.ledger.entities`
+- `qra.ledger.valid_entities`
+- `qra.ledger.invalid_terms`
+- `qra.ledger.frameworks`
+- `qra.ledger.recall_profile`
+- `qra.ledger.retrieval_evidence`
+- `qra.ledger.crosswalk_chains[]`
+- `qra.ledger.relationship_edges[]`
+- `qra.ledger.glossary[]`
+- `qra.ledger.evidence_case`
+- `qra.ledger.policy_decisions`
+- `qra.ledger.qra_admission`
+- `qra.ledger.source_admission`
+- `qra.ledger.final_action`
+- `qra.ledger.human_checkpoint`
+- `qra.ledger.answerability`
+- `qra.ledger.deflection`
+- `qra.ledger.source_answer`
+- `qra.ledger.final_response`
+- `review_context.memory_related_qras[]`
+- `review_context.brave_search_results[]`
+- `review_context.dogpile_report`
+
+================================================================================
+VALID OUTPUT EXAMPLE
+================================================================================
+
+{
+  "schema": "agent_plausibility_review.v1",
+  "qra_key": "qra-example-001",
+  "reviewed_ledger_hash": "sha256:example001",
+  "verdict": "PASS",
+  "step_reviews": [
+    {"step": "intent", "agreement": "AGREE", "issue_code": null, "reason": "The question asks about GPS spoofing exposure but does not name the affected asset or mission phase, so CLARIFY follows from the intent evidence.", "evidence_paths": ["qra.question", "ledger.intent.action", "ledger.policy_decisions[0].reason"]},
+    {"step": "entity_extraction", "agreement": "AGREE", "issue_code": null, "reason": "The ledger grounds GPS spoofing and SV-AC-5 and records no rejected terms.", "evidence_paths": ["ledger.entities", "ledger.valid_entities", "ledger.invalid_terms"]},
+    {"step": "recall_context_selection", "agreement": "AGREE", "issue_code": null, "reason": "The related expert-verified QRA is labeled as context and is not used as answer authority.", "evidence_paths": ["ledger.retrieval_evidence[0].used_as", "review_context.memory_related_qras[0].authority_state"]},
+    {"step": "crosswalk_chain", "agreement": "NOT_APPLICABLE", "issue_code": null, "reason": "The ledger records no crosswalk claim and the CLARIFY action does not depend on a crosswalk hop.", "evidence_paths": ["ledger.crosswalk_chains", "ledger.final_action"]},
+    {"step": "policy_admission_gate", "agreement": "AGREE", "issue_code": null, "reason": "The policy gate records asset-scope clarification and the QRA remains draft.", "evidence_paths": ["ledger.policy_decisions[0].decision", "qra.authority_state"]},
+    {"step": "terminal_action", "agreement": "AGREE", "issue_code": null, "reason": "CLARIFY is supported and the required human checkpoint is present.", "evidence_paths": ["ledger.final_action", "ledger.human_checkpoint.question"]},
+    {"step": "final_text", "agreement": "AGREE", "issue_code": null, "reason": "No answer text is emitted as authority; the ledger asks a bounded clarification question.", "evidence_paths": ["qra.answer", "ledger.human_checkpoint.question"]}
+  ],
+  "authority_boundary": {
+    "agent_plausibility_only": true,
+    "graham_signoff_granted": false,
+    "expert_verification_granted": false,
+    "answer_authority_granted": false,
+    "reason": "This review records only agent plausibility. It does not grant Graham signoff, expert verification, or answer authority."
+  },
+  "missing_ledger_fields": [],
+  "issues": [],
+  "summary": "The ledger supports CLARIFY for a grounded GPS spoofing question with missing asset scope. Related QRAs are context only, and no answer authority is granted."
+}
+
+================================================================================
+INVALID OUTPUT EXAMPLES
+================================================================================
+
+1. Invalid: grants authority from agent review.
+Why invalid: `authority_boundary.answer_authority_granted` must be false and `expert_verification_granted` must be false.
+
+2. Invalid: emits six step reviews.
+Why invalid: the schema requires exactly seven step reviews: intent, entity_extraction, recall_context_selection, crosswalk_chain, policy_admission_gate, terminal_action, final_text.
+
+3. Invalid: cites `expert knowledge` without a field path.
+Why invalid: every `evidence_paths[]` item must begin with `qra.`, `ledger.`, or `review_context.`.
+
+4. Invalid: says it reran `/intent` or repaired the QRA.
+Why invalid: this prompt audits recorded ledger outputs only. It does not rerun, simulate, repair, or replace the Memory pipeline.

@@ -3909,9 +3909,9 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
 PROVIDER_HOSTS = {
     "webgpt": ("chatgpt.com", "www.chatgpt.com"),
     "webclaude": ("claude.ai", "www.claude.ai"),
-    # This account is signed in on kimi.ai. kimi.com is the China-region
-    # surface for this workflow and must be treated as provider drift.
-    "webkimi": ("kimi.ai", "www.kimi.ai"),
+    # This account is signed in on kimi.ai. Keep kimi.com as an accepted
+    # provider origin for manually bound tabs and older receipts.
+    "webkimi": ("kimi.ai", "www.kimi.ai", "kimi.com", "www.kimi.com"),
     "webgemini": ("gemini.google.com",),
     "webgrok": ("grok.com", "www.grok.com", "x.com", "www.x.com"),
     "webdeepseek": ("chat.deepseek.com",),
@@ -5579,11 +5579,10 @@ def _handler_prompt(
     elif requires_verdict:
         lines.extend(
             [
-                "Your first non-empty line must be exactly one review verdict:",
+                "Return a review verdict using exactly one of:",
                 "VERDICT: PASS",
                 "VERDICT: FAIL",
                 "VERDICT: NEEDS_ATTENTION",
-                "Do not omit the VERDICT line. Do not put the verdict only in prose.",
                 "",
             ]
         )
@@ -6528,23 +6527,18 @@ def _run_codex_handler(
             "stderr_excerpt": (diff.stderr or "")[:200],
         }
     )
+    if not (diff.stdout or "").strip() and not (status_out.stdout or "").strip() and not committed_diff.strip():
+        raise RuntimeError("codex_no_workspace_change: coder ran but produced no diff")
     final_message = ""
     if final_message_path.is_file():
         final_message = final_message_path.read_text(encoding="utf-8")
-    workspace_changed = bool((diff.stdout or "").strip() or (status_out.stdout or "").strip() or committed_diff.strip())
-    if not workspace_changed and not final_message.strip():
-        raise RuntimeError("codex_no_workspace_change: coder ran but produced no diff")
     diff_text = (diff.stdout or "").strip()
     if not diff_text:
         diff_text = committed_diff.strip()
-    if not diff_text:
-        diff_text = "(no workspace diff)"
     status_text = (status_out.stdout or "").strip()
     if after_head and after_head != before_head:
         head_line = f"HEAD: {before_head or '<none>'} -> {after_head}"
         status_text = f"{head_line}\n{status_text}".strip()
-    if not status_text:
-        status_text = "(clean worktree; no workspace changes)"
     response = "\n".join(
         [
             "## Coder summary",
@@ -6578,7 +6572,6 @@ def _run_codex_handler(
         "duration_seconds": round(duration, 3),
         "diff_bytes": len(diff.stdout or ""),
         "committed_diff_bytes": len(committed_diff or ""),
-        "workspace_changed": workspace_changed,
         "before_head": before_head,
         "after_head": after_head,
         "head_changed": bool(after_head and after_head != before_head),
@@ -6813,6 +6806,8 @@ def _run_scillm_handler(
         payload["temperature"] = 0
     if reasoning_effort:
         payload["reasoning_effort"] = reasoning_effort
+    if os.environ.get("ASK_SCILLM_JSON_MODE") == "1":
+        payload["response_format"] = {"type": "json_object"}
     body = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         f"{base_url}/v1/chat/completions",
@@ -6915,12 +6910,6 @@ def _requires_verdict(request_text: str, prior_receipts: list[dict[str, Any]]) -
     return any(
         marker in lower
         for marker in (
-            "verdict: pass",
-            "verdict: fail",
-            "verdict: needs_attention",
-            "reviewer verdict",
-            "reviewer seat checks",
-            "reviewer seat",
             "pass/fail",
             "pass or fail",
             "pass fail",
