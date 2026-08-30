@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "obvious-next-step-guard",
   "trials": 2,
-  "proof_scope": "deterministic checker coverage through the extension run.sh entrypoint for completion reports that mention zero invalid outputs/fail_count 0, invalid creator output sent to reviewer 0, sealed failure-family counts, zero diagnostic leaks, or hook-thrash status without forcing stale repair loops, while still following up on real failed eval reports and explicit unacted next steps, and completed typed failure repair reports that mention historical failure names, and research-routing triage completion reports that mention triage-error and broad-error as gate names.",
+  "proof_scope": "deterministic checker coverage through the extension run.sh entrypoint for completion reports that mention zero invalid outputs/fail_count 0, invalid creator output sent to reviewer 0, sealed failure-family counts, zero diagnostic leaks, or hook-thrash status without forcing stale repair loops, while still following up on real failed eval reports and explicit unacted next steps, and completed typed failure repair reports that mention historical failure names, and research-routing triage completion reports that mention triage-error and broad-error as gate names, and reload_runtime tool-conflict startup regression.",
   "claims": {
     "proves": "The obvious-next-step checker allows verified complete reports containing zero invalid output, fail_count 0, invalid creator-output-to-reviewer 0, seeded QRA count boundaries, sealed known-failure-family counts, zero diagnostic-leak statements, and hook-thrash-not-target-work language, still follows up on real nonzero failure reports, and still follows up when Not done names an unblocked action.",
     "does_not_prove": "A live already-running Pi TUI has reloaded the updated extension or that arbitrary prose cannot produce future false positives."
@@ -19,6 +19,14 @@
     {
       "id": "obvious_next_step.real_failure_followup",
       "description": "Nonzero failed eval reports still force a follow-up repair action.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "obvious_next_step.no_reload_runtime_tool_conflict",
+      "description": "The obvious-next-step extension does not register a reload_runtime tool that conflicts with Pi native tools or other extensions during startup.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -286,7 +294,50 @@
           }
         ]
       }
+    },
+    {
+      "name": "pi-startup-with-ralph-has-no-reload-runtime-conflict",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "obvious_next_step.no_reload_runtime_tool_conflict"
+      ],
+      "seams": [
+        "extension-load-conflict",
+        "reload-runtime-tool-name"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && ! rg -n \"name:\\s*['\\\"]reload_runtime\" extensions/pi/obvious-next-step-guard/index.ts /home/graham/.pi/agent/extensions/obvious-next-step-guard/index.ts && PI_RALPH_WIGGUM=true PI_RALPH_WIGGUM_DEBUG=true timeout 12s pi --help >/tmp/pi-startup-wiggum-no-reload-conflict.out 2>/tmp/pi-startup-wiggum-no-reload-conflict.err && ! rg -n 'Failed to load extension|Tool \\\"reload_runtime\\\" conflicts|reload_runtime conflicts' /tmp/pi-startup-wiggum-no-reload-conflict.out /tmp/pi-startup-wiggum-no-reload-conflict.err && rg -n '\\[ralph-wiggum\\] Extension enabled' /tmp/pi-startup-wiggum-no-reload-conflict.out /tmp/pi-startup-wiggum-no-reload-conflict.err && echo PI_STARTUP_NO_RELOAD_RUNTIME_CONFLICT_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PI_STARTUP_NO_RELOAD_RUNTIME_CONFLICT_OK"
+        ]
+      }
     }
   ],
-  "live": true
+  "live": true,
+  "seams": [
+    {
+      "seam_id": "extension-load-conflict",
+      "seam_type": "startup",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "reload-runtime-tool-name",
+      "seam_type": "tool-registry",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ]
 }

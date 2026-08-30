@@ -249,26 +249,4 @@ export default function obviousNextStepGuard(pi: any) {
       return;
     },
   });
-
-  pi.registerTool({
-    name: "reload_runtime",
-    label: "Reload Runtime",
-    description: "Reload Pi extensions, skills, prompts, themes, and context files in the current session.",
-    promptSnippet: "Reload Pi runtime resources after extension, skill, prompt, theme, or context-file edits.",
-    promptGuidelines: ["Use reload_runtime after editing Pi extensions, skills, prompt templates, themes, or context files when the current session needs the new runtime behavior."],
-    parameters: { type: "object", properties: {}, additionalProperties: false },
-    async execute(_toolCallId: unknown, _params: unknown, _onUpdate: unknown, ctx: any) {
-      if (typeof ctx?.reload !== "function") {
-        return {
-          content: [{ type: "text", text: "Reload not available in this tool context; no follow-up was queued." }],
-          details: { reloaded: false, queued_follow_up: false },
-        };
-      }
-      await ctx.reload();
-      return {
-        content: [{ type: "text", text: "Reloaded Pi runtime resources in the current session." }],
-        details: { reloaded: true, queued_follow_up: false },
-      };
-    },
-  });
 }
