@@ -91,6 +91,34 @@
       "proves": "The required-source contract accepts a valid current-run receipt even with supplemental locator noise, accepts sam.gov API receipts under browser_or_api, and emits honest auth-required browser receipts for Indeed/HiddenJobs instead of fabricated source coverage."
     },
     {
+      "name": "relationship-edge-evidence-ref-binding-regression",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "report_manifest.validation",
+        "relationship_signals.source_backing"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_relationship_edge_refs_are_bound_to_cited_receipts -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "RELATIONSHIP_EDGE_EVIDENCE_REF_UNRESOLVED",
+          "AssertionError"
+        ]
+      },
+      "proves": "Relationship signal edge evidence refs are normalized to refs present in the cited source receipts, preventing unbacked LinkedIn collection URLs from killing the nightly report after source capture.",
+      "does_not_prove": "That a fresh live nightly passed all browser, memory, Tau, or Discord stages."
+    },
+    {
       "name": "social-and-mail-source-coverage-regression",
       "type": "adversarial",
       "real_world": false,

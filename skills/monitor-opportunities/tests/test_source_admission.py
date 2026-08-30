@@ -10,7 +10,7 @@ import pytest
 
 from monitor_opportunities.contracts import ContractError, validate_manifest
 from monitor_opportunities.discovery import _linkedin_evidence_candidates
-from monitor_opportunities.pipeline import _is_report_opportunity, _source_intel
+from monitor_opportunities.pipeline import _bind_relationship_evidence, _is_report_opportunity, _source_intel
 from monitor_opportunities.verification import built_in_fixture
 
 
@@ -215,6 +215,69 @@ def test_report_visible_relationship_signal_must_cite_source_receipt() -> None:
         validate_manifest(data)
 
     assert exc.value.code == "REPORT_VISIBLE_SOURCE_RECEIPT_MISSING"
+
+
+def test_relationship_edge_refs_are_bound_to_cited_receipts() -> None:
+    data = copy.deepcopy(built_in_fixture())
+    receipt_id = data["source_receipts"][0]["receipt_id"]
+    backed_ref = data["source_receipts"][0]["evidence_refs"][0]
+    unbacked_ref = "https://www.linkedin.com/jobs/collections/top-applicant/"
+    data["relationship_signals"] = [
+        {
+            "schema": "monitor_opportunities.relationship_candidate.v1",
+            "signal_id": "rel:linkedin-top-applicant-collection-ref",
+            "source_opportunity_id": data["opportunities"][0]["opportunity_id"],
+            "signal_type": "direct_contact",
+            "subject": "LinkedIn: connection works here",
+            "organization": data["opportunities"][0]["organization"],
+            "relationship_path": ["Graham Anderson", "LinkedIn: connection works here"],
+            "contact_path": [
+                {
+                    "from": "Graham Anderson",
+                    "to": "LinkedIn: connection works here",
+                    "relationship": "direct_contact",
+                    "evidence_status": "MATCHES",
+                    "evidence_refs": [backed_ref, unbacked_ref],
+                    "source_receipt_ids": [receipt_id],
+                    "limitations": [],
+                }
+            ],
+            "relationship_degree": 1,
+            "degree_label": "direct",
+            "confidence": 0.75,
+            "confidence_reasons": ["direct monitor-contact relationship", "source evidence present"],
+            "evidence_refs": [backed_ref, unbacked_ref],
+            "source_receipt_ids": [receipt_id],
+            "provenance": "LinkedIn relationship evidence copied from source candidate refs.",
+            "recommended_action": "human_decide_reconnect_or_defer",
+            "contact_channel_risk": "corporate_email_may_be_blocked_after_long_gap",
+            "preferred_human_channels": ["LINKEDIN_HUMAN_HANDOFF"],
+            "channel_guidance": ["Use a human-authorized channel."],
+            "recommended_human_channel": "LINKEDIN_HUMAN_HANDOFF",
+            "channel_rationale": "LinkedIn handoff is human-transmitted.",
+            "channel_limitations": ["No automated outreach is authorized."],
+            "human_decision_options": ["RECONNECT", "DEFER", "SKIP"],
+            "external_effects": False,
+            "action_worthy": True,
+            "visible_in_report": True,
+        }
+    ]
+    data["opportunities"][0]["relationship_signal_ids"] = [
+        "rel:linkedin-top-applicant-collection-ref"
+    ]
+    data["opportunities"][0]["relationship_signal_count"] = 1
+    data["artifact_accounting"]["action_worthy_total"] += 1
+    data["artifact_accounting"]["visible_total"] += 1
+
+    with pytest.raises(ContractError) as exc:
+        validate_manifest(copy.deepcopy(data))
+    assert exc.value.code == "RELATIONSHIP_EDGE_EVIDENCE_REF_UNRESOLVED"
+
+    _bind_relationship_evidence(data["relationship_signals"], data["source_receipts"])
+    validate_manifest(data)
+    edge_refs = data["relationship_signals"][0]["contact_path"][0]["evidence_refs"]
+    assert edge_refs == [backed_ref]
+    assert data["relationship_signals"][0]["evidence_refs"] == [backed_ref]
 
 
 def test_visible_derived_artifact_must_reference_visible_source_backed_opportunity() -> None:

@@ -353,6 +353,49 @@ def _bind_source_intel_evidence(
         item["evidence_refs"] = receipt_backed_refs
 
 
+def _bind_relationship_evidence(
+    relationship_signals: list[dict[str, Any]],
+    source_receipts: list[dict[str, Any]],
+) -> None:
+    refs_by_receipt = {
+        str(receipt.get("receipt_id")): _string_list(receipt.get("evidence_refs"))
+        for receipt in source_receipts
+    }
+    for signal in relationship_signals:
+        signal_receipt_ids = _string_list(signal.get("source_receipt_ids"))
+        signal_accepted_refs = list(
+            dict.fromkeys(
+                ref
+                for receipt_id in signal_receipt_ids
+                for ref in refs_by_receipt.get(str(receipt_id), [])
+            )
+        )
+        retained_signal_refs = [
+            ref for ref in _string_list(signal.get("evidence_refs")) if ref in signal_accepted_refs
+        ]
+        retained_edge_refs: list[str] = []
+        for edge in signal.get("contact_path") or []:
+            if not isinstance(edge, dict):
+                continue
+            edge_receipt_ids = _string_list(edge.get("source_receipt_ids"))
+            edge_accepted_refs = list(
+                dict.fromkeys(
+                    ref
+                    for receipt_id in edge_receipt_ids
+                    for ref in refs_by_receipt.get(str(receipt_id), [])
+                )
+            )
+            edge_refs = [ref for ref in _string_list(edge.get("evidence_refs")) if ref in edge_accepted_refs]
+            if not edge_refs and edge_accepted_refs:
+                edge_refs = edge_accepted_refs[:1]
+            edge["evidence_refs"] = edge_refs
+            retained_edge_refs.extend(edge_refs)
+        combined_signal_refs = list(dict.fromkeys([*retained_signal_refs, *retained_edge_refs]))
+        if not combined_signal_refs and signal_accepted_refs:
+            combined_signal_refs = signal_accepted_refs[:1]
+        signal["evidence_refs"] = combined_signal_refs
+
+
 def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
     source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
     evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
@@ -801,6 +844,7 @@ def _report_from_run(
         )
         source_receipts.append(memory_source_receipt)
     _bind_source_intel_evidence(source_intel, source_receipts)
+    _bind_relationship_evidence(relationship_signals, source_receipts)
     relationship_binding_diagnostics = bind_relationship_signals_to_opportunities(
         opportunities, relationship_signals
     )
