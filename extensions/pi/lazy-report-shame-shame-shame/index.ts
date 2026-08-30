@@ -174,8 +174,8 @@ ${excerpt ? `> ${excerpt}` : "> (no text extracted)"}
 Correction workflow
 - ${disposition}
 - The rewrite must give the corrected answer, not more gate JSON.
-- After the corrected answer, label the raw candidate with `/shame reject|allow|warn <reason> -- <note>`.
-- Use `/shame show` to inspect the raw candidate that will be labeled.
+- After the corrected answer, label the raw candidate with \`/shame reject|allow|warn <reason> -- <note>\`.
+- Use \`/shame show\` to inspect the raw candidate that will be labeled.
 
 Status Report
 - Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.
@@ -204,7 +204,7 @@ Rewrite the answer now. Preserve only supported facts. Do not invent commands, r
 Collaborative correction flow:
 - Give the corrected answer first.
 - End with the exact Status Report footer below.
-- The human can then label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`.
+- The human can then label the raw rejected candidate with \`/shame reject|allow|warn <reason> -- <note>\`.
 
 Status Report
 - Changed: plain-English user-visible/project-visible change, not a commit/SHA/branch by itself.
