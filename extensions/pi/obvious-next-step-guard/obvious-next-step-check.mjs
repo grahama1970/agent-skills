@@ -2,7 +2,7 @@
 // Deterministic checker for final answers that name an obvious unblocked next step.
 // Reads assistant text from stdin and emits a machine-readable follow_up/pass decision.
 
-const CHECKER_VERSION = '2026-08-30.obvious-next-step.v4';
+const CHECKER_VERSION = '2026-08-30.obvious-next-step.v5';
 
 const text = await new Promise((resolve) => {
   let data = '';
@@ -57,6 +57,7 @@ const FAILURE_REPORT_PATTERNS = [
   /\b(?:not acceptance|not accepted|not acceptable|insufficient|invalid|rejected)\b/i,
   /\b\d+\s*\/\s*\d+\b.{0,80}\b(?:failed|fail|passed|pass)\b/i,
   /\b(?:failed|fail)\b.{0,80}\b\d+\s*\/\s*\d+\b/i,
+  /\bfail(?:ure)?[-_ ]?count\s*(?:[:=]|\b)\s*(?!0\b)[1-9]\d*\b/i,
   /\b(?:errors?|failures?|score_errors|verdict_mismatch|schema:)\b/i,
 ];
 
@@ -73,6 +74,10 @@ const BENIGN_FAILURE_CONTEXT_PATTERNS = [
   /\b\d+\s*\/\s*\d+\b.{0,80}\b(?:known\s+)?failure\s+famil(?:y|ies)\b.{0,80}\bsealed\b/i,
   /\bzero\s+diagnostic\s+leaks\b/i,
   /\b(?:hook|harness|reload|runtime|status)\b.{0,120}\bthrash(?:ing)?\b.{0,120}\bnot\b.{0,80}\b`?\$?memory`?\b.{0,40}\bwork\b/i,
+  /^\s*(?:[-*+]\s*)?Proof\s*:/i,
+  /\b(?:failure|failed|failing)\b.{0,100}\b(?:now|already|successfully)\b.{0,100}\b(?:typed|classified|mapped|recognized|handled|fixed|repaired|closed)\b/i,
+  /\b(?:typed|classified|mapped|recognized)\s+as\s+`?[a-z0-9_.-]+`?\b/i,
+  /\bactionable\s+recovery\s+code\b/i,
 ];
 
 const GENERIC_FAILURE_CONTINUATION = 'Diagnose the failed gate from the latest evidence, patch the cause, and rerun the same verification/eval until it passes or a verified blocker is proven.';

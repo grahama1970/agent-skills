@@ -83,6 +83,19 @@ EOF
     node "$CHECK" < /tmp/onsg_hook_thrash_candidate.txt > /tmp/onsg_hook_thrash_pass.json
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_hook_thrash_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('HOOK_THRASH_STATUS_PASS_OK')"
     ;;
+  eval-completed-typed-failure-pass)
+    cat > /tmp/onsg_completed_typed_failure_candidate.txt <<'EOF'
+Corrected answer: `agent-skills#1555` is closed, and the Ask/SciLLM empty-response failure is now typed as `scillm_empty_response_200` instead of generic `handler_execution_failed`.
+
+Status Report
+- Changed: Ask now gives an actionable recovery code when SciLLM returns HTTP 200 with empty assistant content; triage-error recognizes the same old receipt shape.
+- Verified: `gh issue view 1555 --repo grahama1970/agent-skills --json number,state,closed,labels,url` read back `state=CLOSED`, `closed=true`; `git fetch origin main && git rev-parse origin/main` read back `9ec27a6659019ba658410abecd21b3cf9bdf4703`.
+- Proof: `/tmp/triage-ask-handler-empty-response-1555-after.json`; `/tmp/ask-1555-agentic-eval.json`; `/tmp/triage-error-1555-agentic-eval.json`; `/tmp/research-routing-retry-brave-project-watchdog-triage-evals-close.json`; issue URL `https://github.com/grahama1970/agent-skills/issues/1555`.
+- Not done: none for `agent-skills#1555` closure.
+EOF
+    node "$CHECK" < /tmp/onsg_completed_typed_failure_candidate.txt > /tmp/onsg_completed_typed_failure_pass.json
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_completed_typed_failure_pass.json','utf8')); if(d.decision!=='pass'||d.features.failure_report!==false) throw new Error(JSON.stringify(d)); console.log('COMPLETED_TYPED_FAILURE_PASS_OK')"
+    ;;
   eval-real-failure-followup)
     cat > /tmp/onsg_real_failure_candidate.txt <<'EOF'
 Status Report
@@ -108,7 +121,7 @@ EOF
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_unacted_next_followup.json','utf8')); if(d.decision!=='follow_up') throw new Error(JSON.stringify(d)); console.log('UNACTED_NEXT_FOLLOWUP_OK')"
     ;;
   help|--help|-h)
-    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-real-failure-followup|eval-unacted-next-followup"
+    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-completed-typed-failure-pass|eval-real-failure-followup|eval-unacted-next-followup"
     ;;
   *) echo "unknown command: $cmd" >&2; exit 2;;
 esac
