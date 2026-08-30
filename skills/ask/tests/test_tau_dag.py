@@ -2608,6 +2608,79 @@ def test_roundtable_scillm_valid_api_key_message_classifies_as_auth_failure(tmp_
     assert "$ticket to $ask at agent-skills@main" in recovery["ticket_instruction"]
 
 
+def test_roundtable_scillm_200_empty_content_classifies_as_empty_response(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "Roundtable the empty response."}) + "\n", encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-claude-fable-high"
+
+    class EmptyContentHandler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            self.send_response(200)
+            self.send_header("content-type", "application/json")
+            self.end_headers()
+            payload = {"choices": [{"message": {"role": "assistant", "content": ""}}], "usage": {}}
+            self.wfile.write(json.dumps(payload).encode("utf-8"))
+
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+    server = HTTPServer(("127.0.0.1", 0), EmptyContentHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_port}"
+
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+                "--node-id",
+                "handler-claude-fable-high",
+                "--handler",
+                "claude-fable-high",
+                "--topology",
+                "concurrent",
+                "--workflow-mode",
+                "roundtable",
+                "--request-file",
+                str(request_path),
+                "--artifact-dir",
+                str(artifact_dir),
+                "--surf-run",
+                "/bin/false",
+                "--browser-oracle-run",
+                "/bin/false",
+                "--scillm-base-url",
+                base_url,
+                "--scillm-api-key",
+                "sk-dev-proxy-123",
+                "--timeout",
+                "3",
+            ],
+            input=json.dumps({"goal": {"goal_hash": "sha256:test"}}),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    recovery = json.loads((artifact_dir / "handler-recovery-packet.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["failure_code"] == "scillm_empty_response_200"
+    assert receipt["failure"] == "scillm_empty_response_200: SciLLM returned HTTP 200 with zero assistant content"
+    assert recovery["failure_code"] == "scillm_empty_response_200"
+    assert recovery["auto_retry_blocked_reason"] == "provider_returned_empty_assistant_content"
+    assert recovery["evidence"]["submit_meta_status"] == 200
+    assert recovery["evidence"]["response_chars"] == 0
+    assert "response.raw.md" in recovery["fallback_instruction"]
+
+
 def test_roundtable_scillm_model_unsupported_401_classifies_as_model_route_failure(tmp_path: Path) -> None:
     request_path = tmp_path / "request.json"
     request_path.write_text(json.dumps({"request": "Run the oc-deepseek repair lane."}) + "\n", encoding="utf-8")

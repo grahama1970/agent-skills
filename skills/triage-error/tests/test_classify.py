@@ -22,6 +22,17 @@ def test_scillm_route_signal_maps_to_canonical() -> None:
     assert r["recoverable"] is True
 
 
+def test_ask_scillm_empty_200_maps_to_actionable_code() -> None:
+    r = t.classify(
+        '{"failure_code":"handler_execution_failed","evidence":{"response_chars":0,"submit_meta_status":200}}',
+        "ask",
+    )
+    assert r["code"] == "scillm_empty_response_200"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "response.raw.md" in r["next_command"]
+
+
 def test_ambiguous_signal_mints_deterministic_code() -> None:
     a = t.classify("novel gizmo exploded 0xdeadbeef", "tau")
     b = t.classify("novel gizmo exploded 0xdeadbeef", "tau")

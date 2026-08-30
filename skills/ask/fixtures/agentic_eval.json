@@ -749,6 +749,29 @@
       "evidence_class": "fault_injected_deterministic"
     },
     {
+      "name": "scillm-200-empty-content-is-actionable-not-generic",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest -q tests/test_tau_dag.py -k scillm_200_empty_content_classifies_as_empty_response"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stdout_excludes": [
+          "handler_execution_failed",
+          "generic_handler_failure_requires_project_agent_review"
+        ]
+      },
+      "evidence_class": "fault_injected_deterministic",
+      "notes": "Regression for agent-skills#1555: a SciLLM-backed Ask roundtable handler returned HTTP 200 with zero assistant content, but Ask only surfaced generic handler_execution_failed. The recovery packet must now preserve scillm_empty_response_200 with an actionable fallback instruction."
+    },
+    {
       "name": "direct-claude-opus-cli-receives-attachments-and-denials-fail-closed",
       "type": "adversarial",
       "real_world": true,

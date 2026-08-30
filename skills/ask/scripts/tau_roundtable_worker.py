@@ -848,6 +848,12 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 }
             )
         ok = bool(response_text.strip())
+        if not ok and not failure:
+            status_value = submit_meta.get("status_code") or submit_meta.get("status") if isinstance(submit_meta, dict) else None
+            if handler not in HANDLER_SUBMIT_COMMANDS and str(status_value) == "200":
+                failure = "scillm_empty_response_200: SciLLM returned HTTP 200 with zero assistant content"
+            else:
+                failure = "handler_empty_response: handler returned zero usable response characters"
         requested_attachments = [str(item) for item in (getattr(args, "attach_files", None) or [])]
         local_attachment_delivery = (
             submit_meta.get("local_attachment_delivery")
@@ -4669,6 +4675,10 @@ def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[s
         return "scillm_auth_invalid_api_key"
     if "http 502" in haystack or "all groups exhausted" in haystack or "router_error" in haystack:
         return "scillm_provider_route_failed"
+    if "scillm_empty_response_200" in haystack or (
+        "zero assistant content" in haystack and "status_code" in haystack and "200" in haystack
+    ):
+        return "scillm_empty_response_200"
     if "subagent-runner" in haystack:
         return "subagent_runner_failed"
     if "codex" in haystack:
@@ -4716,6 +4726,11 @@ def _handler_provider_diagnosis(
     elif failure_code == "scillm_provider_route_failed":
         diagnosis["repair_hint"] = (
             "Check provider health and capacity before retrying; do not relaunch all healthy seats."
+        )
+    elif failure_code == "scillm_empty_response_200":
+        diagnosis["repair_hint"] = (
+            "Inspect response.raw.md for an empty choices[0].message.content; rerun the DAG with a different "
+            "healthy handler or fix the SciLLM adapter that normalized the provider response to empty content."
         )
     else:
         diagnosis["repair_hint"] = "Inspect failure_excerpt and rerun only after the named blocker is addressed."
@@ -4770,6 +4785,7 @@ def _handler_recovery_reason(failure_code: str) -> str:
         "scillm_auth_invalid_api_key": "SciLLM rejected the configured bearer token.",
         "scillm_model_not_found": "SciLLM routed the requested model to a provider/model id that is not available.",
         "scillm_provider_route_failed": "SciLLM exhausted provider routes for the requested model.",
+        "scillm_empty_response_200": "SciLLM returned HTTP 200 but the first assistant message had no usable content.",
         "subagent_runner_failed": "The local subagent-runner handler did not produce a usable answer.",
         "codex_handler_failed": "The local Codex handler did not produce the required workspace evidence.",
         "handler_timeout": "The handler did not produce a usable answer before its timeout.",
@@ -4782,6 +4798,8 @@ def _handler_auto_retry_blocked_reason(failure_code: str) -> str:
         return "auth_requires_configured_scillm_proxy_key"
     if failure_code in {"scillm_model_not_found", "scillm_provider_route_failed"}:
         return "provider_route_requires_model_or_provider_repair"
+    if failure_code == "scillm_empty_response_200":
+        return "provider_returned_empty_assistant_content"
     if failure_code == "prior_handler_receipts_not_ready":
         return "upstream_receipt_not_usable"
     return "generic_handler_failure_requires_project_agent_review"
@@ -4836,6 +4854,8 @@ def _handler_fallback_instruction(failure_code: str) -> str:
         return "Use an available model id from the SciLLM provider list or repair the provider route."
     if failure_code == "scillm_provider_route_failed":
         return "Check SciLLM provider health and rerun with a route that has capacity."
+    if failure_code == "scillm_empty_response_200":
+        return "Read response.raw.md and response.meta.json, verify the SciLLM route returned an empty assistant message, then rerun with a different healthy handler or repair the SciLLM response-shape adapter."
     if failure_code == "prior_handler_receipts_not_ready":
         return "Inspect the upstream node receipt and recovery packet before rerunning the dependent lane."
     return "Inspect the handler recovery packet, then rerun only after the named blocker is addressed."

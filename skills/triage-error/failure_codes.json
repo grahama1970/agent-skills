@@ -66,6 +66,15 @@
       "not_this": ["api key", "model name", "endpoint host"]
     },
     {
+      "code": "scillm_empty_response_200",
+      "layer": "ask",
+      "match": ["scillm_empty_response_200", "\"submit_meta_status\": 200", "\"submit_meta_status\":200"],
+      "cause": "Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.",
+      "next_command": "Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.",
+      "recoverable": true,
+      "not_this": ["provider authentication", "model not found", "browser submit failure"]
+    },
+    {
       "code": "surf_native_host_stale_cjs",
       "layer": "surf",
       "match": ["edits.*no effect", "stale.*host", "host.cjs.*cache"],
