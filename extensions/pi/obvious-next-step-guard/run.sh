@@ -17,6 +17,33 @@ EOF
     node "$CHECK" < /tmp/onsg_zero_invalid_candidate.txt > /tmp/onsg_zero_invalid_pass.json
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_zero_invalid_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('ZERO_INVALID_COMPLETION_PASS_OK')"
     ;;
+  eval-qra-count-status-pass)
+    cat > /tmp/onsg_qra_count_candidate.txt <<'EOF'
+You’re right to ask for the exact number.
+
+**QRA ledger-auditor:** I checked **30 seeded eval cases**, not 12–20.
+
+Those were:
+`case-01` through `case-30`
+
+Breakdown:
+- `12` expected `PASS`
+- `14` expected `FAIL`
+- `4` expected `NEEDS_HUMAN_REVIEW`
+- final result: `30/30` passed
+- invalid creator output sent to reviewer: `0`
+
+Important boundary: these were **QRA ledger-auditor eval cases**, not 30 arbitrary production QRAs manually hardened one-by-one.
+
+Status Report
+- Changed: clarified the actual QRA count and proof boundary.
+- Verified: `python3` read the r8 results and printed `QRA_CASE_COUNT 30`, IDs `case-01` through `case-30`, `QRA_PASS_COUNT 30`, `QRA_FAIL_COUNT 0`, expected verdict counts `{'FAIL': 14, 'NEEDS_HUMAN_REVIEW': 4, 'PASS': 12}`.
+- Proof: `/tmp/memory-hardening-vague-report-qra-count.txt`; QRA r8 result JSON.
+- Not done: none for the QRA count answer.
+EOF
+    node "$CHECK" < /tmp/onsg_qra_count_candidate.txt > /tmp/onsg_qra_count_pass.json
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_qra_count_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('QRA_COUNT_STATUS_PASS_OK')"
+    ;;
   eval-sensible-memory-status-pass)
     cat > /tmp/onsg_sensible_status_candidate.txt <<'EOF'
 Yes: I have been thrashing.
@@ -81,7 +108,7 @@ EOF
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_unacted_next_followup.json','utf8')); if(d.decision!=='follow_up') throw new Error(JSON.stringify(d)); console.log('UNACTED_NEXT_FOLLOWUP_OK')"
     ;;
   help|--help|-h)
-    echo "Usage: run.sh eval-zero-invalid-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-real-failure-followup|eval-unacted-next-followup"
+    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-real-failure-followup|eval-unacted-next-followup"
     ;;
   *) echo "unknown command: $cmd" >&2; exit 2;;
 esac

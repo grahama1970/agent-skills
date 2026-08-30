@@ -66,6 +66,7 @@ const BENIGN_FAILURE_CONTEXT_PATTERNS = [
   /\breason\s+`?[a-z0-9_.-]+`?\b/i,
   /(?:\bzero\b|`?\b0\b`?)\s+invalid\b.{0,120}\b(?:outputs?|reviewer|violations?)\b/i,
   /\binvalid[-_ ]to[-_ ]reviewer(?:[-_ ]violations)?\s*(?:[:=]|\b)\s*`?0`?\b/i,
+  /\binvalid\b.{0,120}\b(?:outputs?|creator\s+outputs?)\b.{0,120}\b(?:sent\s+to\s+)?reviewer\b.{0,40}(?:[:=]|\b)\s*`?0`?\b/i,
   /\bfail(?:ure)?[-_ ]?count\s*(?:[:=]|\b)\s*0\b/i,
   /\b0\s+(?:FAIL|failed|failures?)\b/i,
   /\b(?:30\/30|\d+\/\d+)\b.{0,80}\b(?:pass(?:ed)?|finished|complete|ok=true)\b/i,
