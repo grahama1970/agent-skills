@@ -27,6 +27,46 @@ def test_supported_card_uses_source_text() -> None:
     assert "semantic correctness" in card.qualifier
 
 
+def test_oracle_answer_snippet_uses_answer_not_prompt() -> None:
+    source = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-02-T02 reviewed solution",
+        excerpt=(
+            "Answer key: DW-AI-02-T02 Q: Now the order-status tool changes one field. "
+            "A: Keep both status and order_status during a deprecation window, "
+            "normalize internally, run contract tests for old and new clients, and rollback on unknown terminal values."
+        ),
+        score=0.9,
+        freshness=Freshness.UNKNOWN,
+        repository="live_evidence_answers",
+    )
+
+    card = ExtractiveSummarizer().build("How do you handle compatibility?", "DriveWealth interview", [source])
+
+    assert card.answer.startswith("Keep both status and order_status")
+    assert "contract tests" in card.answer
+    assert "rollback" in card.answer
+    assert "Q:" not in card.answer
+
+
+def test_oracle_answer_can_exceed_talking_point_limit() -> None:
+    long_answer = " ".join(["state field edge terminal outcome"] * 70)
+    source = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-01-T01 reviewed solution",
+        excerpt=f"Reviewed solution: {long_answer}",
+        score=0.9,
+        freshness=Freshness.UNKNOWN,
+        repository="live_evidence_answers",
+        metadata={"topic_kind": "expected_interview_solution"},
+    )
+
+    card = ExtractiveSummarizer().build("Design the graph", "DriveWealth interview", [source])
+
+    assert len(card.answer or "") > len(card.talking_point)
+    assert len(card.talking_point) <= 1000
+
+
 def test_empty_source_set_is_explicitly_insufficient() -> None:
     card = ExtractiveSummarizer().build("Unknown?", "Current discussion", [])
     assert card.status is CardStatus.INSUFFICIENT

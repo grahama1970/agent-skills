@@ -7,11 +7,11 @@ import argparse
 import json
 import os
 import sys
+import urllib.error
+import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-
-import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -39,17 +39,41 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _post_json(base_url: str, path: str, body: dict[str, Any], *, timeout_s: float) -> tuple[int, dict[str, Any]]:
+    request = urllib.request.Request(
+        base_url.rstrip("/") + path,
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout_s) as response:
+            raw = response.read().decode("utf-8")
+            status = response.status
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        status = exc.code
+    try:
+        payload = json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        payload = {"body": raw}
+    return status, payload
+
+
 def _post_briefing(backend_url: str, briefing_pack: dict[str, Any], *, timeout_s: float) -> dict[str, Any]:
-    with httpx.Client(base_url=backend_url.rstrip("/"), timeout=timeout_s) as client:
-        response = client.post("/api/briefing/load", json=briefing_pack)
-        payload = response.json() if response.headers.get("content-type", "").startswith("application/json") else {"body": response.text}
-        return {
-            "endpoint": "/api/briefing/load",
-            "backend_url": backend_url,
-            "status_code": response.status_code,
-            "ok": response.status_code == 202,
-            "response": payload,
-        }
+    status, payload = _post_json(
+        backend_url,
+        "/api/briefing/load",
+        briefing_pack,
+        timeout_s=timeout_s,
+    )
+    return {
+        "endpoint": "/api/briefing/load",
+        "backend_url": backend_url,
+        "status_code": status,
+        "ok": status == 202,
+        "response": payload,
+    }
 
 
 def _recall_probe(
@@ -60,23 +84,23 @@ def _recall_probe(
     expected_keys: list[str],
     timeout_s: float,
 ) -> dict[str, Any]:
-    with httpx.Client(base_url=memory_url.rstrip("/"), timeout=timeout_s) as client:
-        response = client.post(
-            "/recall",
-            json={"q": canonical_question, "collections": collections, "k": 20},
-        )
-        payload = response.json() if response.headers.get("content-type", "").startswith("application/json") else {"body": response.text}
+    status, payload = _post_json(
+        memory_url,
+        "/recall",
+        {"q": canonical_question, "collections": collections, "k": 20},
+        timeout_s=timeout_s,
+    )
     returned_keys = [item.get("_key") for item in payload.get("items", []) if isinstance(item, dict)]
     missing = [key for key in expected_keys if key not in returned_keys]
     return {
         "canonical_question": canonical_question,
-        "status_code": response.status_code,
+        "status_code": status,
         "found": bool(payload.get("found")),
         "confidence": payload.get("confidence"),
         "returned_keys": returned_keys,
         "expected_keys": expected_keys,
         "missing_expected_keys": missing,
-        "ok": response.status_code == 200 and not missing,
+        "ok": status == 200 and not missing,
     }
 
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import subprocess
 
 from .subprocess_env import child_env
@@ -369,6 +370,7 @@ def _memory_items_to_sources(
         if not isinstance(item, dict) or not _memory_item_allowed(item, interview_profile):
             continue
         excerpt = _memory_excerpt(item)
+        excerpt, oracle_metadata = _expand_drivewealth_memory_answer_key(item, excerpt)
         path = _first_text(item, "path", "source_path", "file_path", "source_locator", "source_ref")
         repository = _first_text(item, "repo", "repository", "project", "project_id", "source", "_source")
         url = _first_text(item, "url", "source_url", "canonical_url")
@@ -399,14 +401,83 @@ def _memory_items_to_sources(
                         "source_ref": item.get("source_ref"),
                         "canonical_ref": item.get("canonical_ref"),
                         "topic_id": item.get("topic_id"),
-                        "topic_kind": item.get("topic_kind") or item.get("kind"),
+                        "topic_kind": item.get("topic_kind") or item.get("kind") or oracle_metadata.get("topic_kind"),
                         "recall_rank": index,
+                        **oracle_metadata,
                     },
                 )
             )
         except ValueError as exc:
             logger.warning("memory item skipped by evidence contract: {}", exc)
     return sources
+
+
+def _expand_drivewealth_memory_answer_key(item: dict[str, Any], excerpt: str) -> tuple[str, dict[str, Any]]:
+    """Replace truncated DriveWealth answer-key recall snippets with full A blocks."""
+
+    blob = " ".join(
+        str(part or "")
+        for part in (
+            item.get("_key"),
+            item.get("key"),
+            item.get("id"),
+            item.get("title"),
+            item.get("name"),
+            item.get("topic_id"),
+            item.get("retrieval_text"),
+            item.get("content"),
+            item.get("text"),
+            item.get("summary"),
+            excerpt,
+        )
+    )
+    match = re.search(r"\b(DW-AI-\d{2}-T\d{2})\b", blob, re.IGNORECASE)
+    if not match:
+        return excerpt, {}
+    answer_key_id = match.group(1).upper()
+    answer, question = _read_drivewealth_answer_key(answer_key_id)
+    if not answer:
+        return excerpt, {}
+    expanded = f"Question: {question} Reviewed solution: {answer}" if question else f"Reviewed solution: {answer}"
+    return expanded, {
+        "topic_kind": "expected_interview_solution",
+        "answer_key_id": answer_key_id,
+        "canonical_question": question or None,
+        "expanded_answer_key": True,
+        "expanded_from_memory": True,
+    }
+
+
+def _read_drivewealth_answer_key(answer_key_id: str) -> tuple[str, str]:
+    path = Path.home() / "workspace" / "experiments" / "dw-openapi" / "knowledge" / "answer-key" / f"{answer_key_id.lower()}.md"
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return "", ""
+    question = ""
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("Q:"):
+            question = stripped[2:].lstrip()
+            break
+    answer_start = None
+    for index, line in enumerate(lines):
+        if line.strip().startswith("A:"):
+            answer_start = index
+            break
+    if answer_start is None:
+        return "", question
+    answer_lines: list[str] = []
+    for raw_line in lines[answer_start:]:
+        stripped = raw_line.strip()
+        if stripped.startswith("Source:"):
+            break
+        if stripped:
+            answer_lines.append(stripped)
+    answer = " ".join(answer_lines)
+    if answer.startswith("A:"):
+        answer = answer[2:].lstrip()
+    return answer, question
 
 
 def _memory_label(item: dict[str, Any], profile: str) -> str:
@@ -443,6 +514,7 @@ def _first_useful_memory_text(item: dict[str, Any]) -> str:
     """Return the first content field that is not a generic ingestion marker."""
 
     for key in (
+        "expected_solution",
         "solution",
         "answer",
         "playbook",

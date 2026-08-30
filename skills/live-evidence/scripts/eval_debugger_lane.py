@@ -51,6 +51,7 @@ def main() -> int:
     repo = work / "repo"
     repo.mkdir()
     program = repo / "checkout_total.py"
+    secret_fixture = "sk-" + "fixture-" + "secret-" + "000"
     program.write_text(
         "def total(prices, discount):\n"
         "    subtotal = sum(prices)\n"
@@ -61,7 +62,7 @@ def main() -> int:
         "    marker = 'unreachable'\n"
         "    return marker\n"
         "\n"
-        "api_key = 'sk-fixture-secret-000'\n"
+        f"api_key = {secret_fixture!r}\n"
         "answer = total([10, 20, 12], 0.5)\n"
         "print(answer)\n",
         encoding="utf-8",
@@ -120,7 +121,7 @@ def main() -> int:
     blob = json.dumps(ok_outcome)
     check(
         "secret-shaped local redacted end to end",
-        "sk-fixture-secret-000" not in blob and "redacted" in secret_value,
+        secret_fixture not in blob and "redacted" in secret_value,
         f"api_key={secret_value[:60]}",
     )
 

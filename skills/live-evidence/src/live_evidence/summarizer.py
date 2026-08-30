@@ -43,7 +43,8 @@ class ExtractiveSummarizer:
             )
 
         primary = selected[0]
-        talking_point = _sentence(primary.excerpt, 360)
+        answer = _answer_sentence(primary.excerpt, 1_600)
+        talking_point = answer[:1_000]
         proof_parts = [_source_proof(source) for source in selected[:2]]
         proof = " · ".join(part for part in proof_parts if part)
         qualifier = _qualifier(selected)
@@ -53,7 +54,7 @@ class ExtractiveSummarizer:
             query=query,
             thread=thread,
             question=query,
-            answer=talking_point,
+            answer=answer,
             evidence=proof or _sentence(primary.excerpt, 520),
             talking_point=talking_point,
             proof=proof or _sentence(primary.excerpt, 520),
@@ -90,6 +91,31 @@ def _select_with_lane_diversity(
         else:
             continue
     return selected
+
+
+def _answer_sentence(text: str, limit: int) -> str:
+    oracle = _oracle_answer_text(text)
+    if oracle:
+        return _bounded_text(oracle, limit)
+    return _sentence(text, limit)
+
+
+def _bounded_text(text: str, limit: int) -> str:
+    clean = " ".join(text.split())
+    clean = re.sub(r"(?:^|(?<= ))#{1,6}\s*", "", clean)
+    clean = clean.lstrip("#*>-— \t")
+    if len(clean) <= limit:
+        return clean
+    return clean[: limit - 1].rstrip() + "…"
+
+
+def _oracle_answer_text(text: str) -> str:
+    clean = " ".join(text.split())
+    for marker in ("Reviewed solution:", "Expected solution:", "A:"):
+        index = clean.find(marker)
+        if index >= 0:
+            return clean[index + len(marker):].lstrip(" -—:\t")
+    return ""
 
 
 def _sentence(text: str, limit: int) -> str:

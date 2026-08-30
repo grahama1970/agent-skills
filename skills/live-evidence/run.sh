@@ -297,6 +297,11 @@ PY
     prepare_python_environment
     exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_curate_client_live_evidence.py" "$SCRIPT_DIR" "$@"
     ;;
+  eval-drivewealth-meeting-quality)
+    shift || true
+    prepare_python_environment
+    exec uv run --project "$SCRIPT_DIR" --extra dev python "$SCRIPT_DIR/scripts/eval_drivewealth_meeting_quality.py" "$SCRIPT_DIR" "$@"
+    ;;
   eval-meeting-campaign)
     shift || true
     prepare_python_environment

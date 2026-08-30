@@ -629,6 +629,82 @@
       ]
     },
     {
+      "name": "drivewealth-15-meeting-answer-quality-campaign",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-meeting-quality-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-drivewealth-meeting-quality --meeting-count 15 --questions-per-meeting 4 --out-dir \"$O\" --min-meeting-pass-rate 0.8 --min-question-pass-rate 0.75 --max-failures 4"
+      ],
+      "timeout_seconds": 4800,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "drivewealth meeting quality: PASS",
+          "DriveWealth meeting 15/15"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
+            "json_pointer": "/requested_meetings",
+            "equals": 15
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
+            "json_pointer": "/attempted_meetings",
+            "equals": 15
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
+            "json_pointer": "/question_total",
+            "equals": 60
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/generated-drivewealth-meetings.json",
+            "json_pointer": "/meeting_count",
+            "equals": 15
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/generated-drivewealth-meetings.json",
+            "json_pointer": "/interview_context/role",
+            "equals": "Principal AI Engineer - Core Platform"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/generated-drivewealth-meetings.json",
+            "json_pointer": "/interview_context/recruiter_contact/name",
+            "equals": "Howie Liu"
+          }
+        ]
+      },
+      "infra_blocked_when": [
+        "server did not come up",
+        "chatterbox produced no wav",
+        "no scillm key",
+        "prep pack load failed",
+        "Connection refused",
+        "INFRA_BLOCKED"
+      ],
+      "notes": "DriveWealth answer-quality gate requested by Graham: generate 15 plausible ~10-minute Principal AI Engineer/Core Platform technical interview meetings from curate-client DriveWealth context plus the recruiter email, extract complete-transcript expected Q/A oracles before playback, run Chatterbox -> PipeWire monitor -> Docker RealtimeSTT -> Live Evidence cards, then judge dynamic answers semantically against the pre-run oracles. This is intentionally expensive and live."
+    },
+    {
       "name": "live-youtube-pipewire-audio-to-card",
       "type": "positive",
       "real_world": true,
@@ -712,10 +788,10 @@
       "timeout_seconds": 240,
       "expected": {
         "exit_code": 0,
-          "stdout_contains": [
-            "realistic-length event produced a card (window not annihilated): PASS",
-            "exactly one active card for the question: PASS",
-            "active card is the corrected revision: PASS",
+        "stdout_contains": [
+          "realistic-length event produced a card (window not annihilated): PASS",
+          "exactly one active card for the question: PASS",
+          "active card is the corrected revision: PASS",
           "completed card candidates journaled for post-run audit: PASS",
           "corrected revision is among journaled card candidates: PASS",
           "publication reducer decisions journaled for post-run audit: PASS",
@@ -1698,6 +1774,207 @@
         ]
       },
       "notes": "Execute half of the compose feature: the render node produces a REAL D3 figure from a metrics table via the create-figure skill (verified by bytes on disk, ~28KB PDF, not a mock). _extract_metrics parses a spoken 'label number' table ('coverage 72, supply chain 58, freshness 91'); render_composition writes it to JSON and calls create-figure metrics --type bar. No numeric metrics -> nothing rendered, reported gracefully. Pairs with compose-action-wiring (the propose half). Needs the create-figure skill."
+    },
+    {
+      "name": "fake-meeting-checklist-transcript-rejected",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../best-practices-fake-meeting/run.sh validate --transcript fake_meeting_low_effort_drivewealth.json --output /tmp/live-evidence-fake-meeting-low-effort-report.json"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "\"code\": \"questions_or_prompts_back_to_back\"",
+          "\"code\": \"question_density_too_high\""
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fake-meeting-low-effort-report.json",
+            "json_pointer": "/status",
+            "equals": "FAIL"
+          }
+        ]
+      },
+      "notes": "Regression for the 2026-08-29 fake meeting demo failure: a clean list of DriveWealth questions is not a realistic meeting and must not be accepted for Live Evidence demo audio."
+    },
+    {
+      "name": "webgpt-authored-realistic-meeting-transcript-accepted",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../best-practices-fake-meeting/run.sh validate --transcript realistic_meeting_drivewealth_webgpt.json --output /tmp/live-evidence-realistic-meeting-webgpt-report.json"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "\"turns\": 24",
+          "\"max_consecutive_interviewer_turns\": 1"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-realistic-meeting-webgpt-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      },
+      "notes": "Positive guard for a WebGPT-authored DriveWealth meeting transcript with setup, candidate responses, interruptions, follow-ups, and buried questions."
+    },
+    {
+      "name": "fake-meeting-long-alternating-question-list-rejected",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../best-practices-fake-meeting/run.sh validate --transcript fake_meeting_long_alternating_question_list_drivewealth.json --output /tmp/live-evidence-fake-meeting-long-alternating-report.json"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "\"code\": \"insufficient_dialogue_beats\"",
+          "\"code\": \"missing_closing_exchange\""
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fake-meeting-long-alternating-report.json",
+            "json_pointer": "/status",
+            "equals": "FAIL"
+          }
+        ]
+      },
+      "notes": "Adversarial fake meeting with enough turns and alternating speakers; rejects question-list structure that lacks follow-up/transition/close beats."
+    },
+    {
+      "name": "fake-meeting-filler-separators-rejected",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../best-practices-fake-meeting/run.sh validate --transcript fake_meeting_filler_separators_drivewealth.json --output /tmp/live-evidence-fake-meeting-filler-report.json"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "\"code\": \"candidate_filler_used_as_separator\"",
+          "\"code\": \"question_not_answered_before_next_question\""
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fake-meeting-filler-report.json",
+            "json_pointer": "/status",
+            "equals": "FAIL"
+          }
+        ]
+      },
+      "notes": "Rejects candidate one-word acknowledgments inserted only to defeat adjacent-question checks."
+    },
+    {
+      "name": "fake-meeting-unknown-source-id-rejected",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../best-practices-fake-meeting/run.sh validate --transcript fake_meeting_unknown_source_id_drivewealth.json --output /tmp/live-evidence-fake-meeting-unknown-source-report.json"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "\"code\": \"unknown_source_question_id\""
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fake-meeting-unknown-source-report.json",
+            "json_pointer": "/status",
+            "equals": "FAIL"
+          }
+        ]
+      },
+      "notes": "Rejects convincing metadata when per-turn substantive question mapping names a source ID outside source_question_ids."
+    },
+    {
+      "name": "fake-meeting-tts-unsafe-content-rejected",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../best-practices-fake-meeting/run.sh validate --transcript fake_meeting_tts_unsafe_drivewealth.json --output /tmp/live-evidence-fake-meeting-tts-unsafe-report.json"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "\"code\": \"text_integrity_failure\"",
+          "\"code\": \"tts_unsafe_content\""
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fake-meeting-tts-unsafe-report.json",
+            "json_pointer": "/status",
+            "equals": "FAIL"
+          }
+        ]
+      },
+      "notes": "Rejects structurally valid transcripts that include Markdown/code/URL content unsafe for Chatterbox playback."
+    },
+    {
+      "name": "fake-meeting-post-validation-hash-mismatch-rejected",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "../../best-practices-fake-meeting/run.sh validate --transcript realistic_meeting_drivewealth_webgpt.json --accepted-sha256 sha256:0000000000000000000000000000000000000000000000000000000000000000 --output /tmp/live-evidence-fake-meeting-hash-mismatch-report.json"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "\"code\": \"post_validation_hash_mismatch\""
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-fake-meeting-hash-mismatch-report.json",
+            "json_pointer": "/status",
+            "equals": "FAIL"
+          }
+        ]
+      },
+      "notes": "Proves accepted transcript hash mismatches block playback after validation."
     }
   ]
 }

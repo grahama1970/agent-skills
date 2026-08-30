@@ -1,0 +1,120 @@
+{
+  "schema": "live_evidence.webgpt_authored_meeting.v1",
+  "meeting_id": "drivewealth-long-alternating-question-list-demo",
+  "context_bundle_sha256": "sha256:9c3cb1092b07cf305232f39bd678f731b2858f06582276f071436e0ea5575310",
+  "author_receipt": {
+    "route": "ask webgpt",
+    "run_dir": ".ask_artifacts/tau-dag-runs/ask-tau-author-the-transcript-described--5d6a01b50598",
+    "response_path": ".ask_artifacts/tau-dag-runs/ask-tau-author-the-transcript-described--5d6a01b50598/node-artifacts/handler-webgpt/response.md",
+    "response_sha256": "sha256:9f5be821940259ec9c6ffc9f37237803d99680df46a444a2bf40cf57b36f7b25",
+    "node_receipt_sha256": "sha256:4855841f8e944e0d7da64df9e74092ccfc34a58f8a0108cf48b49cc0cb8a5b37",
+    "context_bundle_sha256": "sha256:9c3cb1092b07cf305232f39bd678f731b2858f06582276f071436e0ea5575310"
+  },
+  "source_question_ids": [
+    "DW-AI-01-T01",
+    "DW-AI-01-T02",
+    "DW-AI-01-T03",
+    "DW-AI-01-T04",
+    "DW-AI-04-T02",
+    "DW-AI-01-T05"
+  ],
+  "turns": [
+    {
+      "speaker": "Interviewer",
+      "kind": "setup",
+      "text": "Hi Graham, thanks for joining the DriveWealth interview today."
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "setup",
+      "text": "Thanks for having me. I am ready to discuss architecture and operations."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "setup",
+      "text": "We will cover brokerage operations, agent reliability, and audit evidence."
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "setup",
+      "text": "That sounds good. I will keep the answers grounded in system behavior and receipts."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T01",
+      "text": "Question 1. Explain the DriveWealth architecture scenario for source DW-AI-01-T01 and give the expected system behavior?"
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "answer",
+      "text": "I would define deterministic state, collect source evidence, apply a versioned policy, and return only an answer that the recorded receipts support."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T02",
+      "text": "Question 2. Explain the DriveWealth architecture scenario for source DW-AI-01-T02 and give the expected system behavior?"
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "answer",
+      "text": "I would define deterministic state, collect source evidence, apply a versioned policy, and return only an answer that the recorded receipts support."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T03",
+      "text": "Question 3. Explain the DriveWealth architecture scenario for source DW-AI-01-T03 and give the expected system behavior?"
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "answer",
+      "text": "I would define deterministic state, collect source evidence, apply a versioned policy, and return only an answer that the recorded receipts support."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T04",
+      "text": "Question 4. Explain the DriveWealth architecture scenario for source DW-AI-01-T04 and give the expected system behavior?"
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "answer",
+      "text": "I would define deterministic state, collect source evidence, apply a versioned policy, and return only an answer that the recorded receipts support."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "question",
+      "source_question_id": "DW-AI-04-T02",
+      "text": "Question 5. Explain the DriveWealth architecture scenario for source DW-AI-04-T02 and give the expected system behavior?"
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "answer",
+      "text": "I would define deterministic state, collect source evidence, apply a versioned policy, and return only an answer that the recorded receipts support."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T05",
+      "text": "Question 6. Explain the DriveWealth architecture scenario for source DW-AI-01-T05 and give the expected system behavior?"
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "answer",
+      "text": "I would define deterministic state, collect source evidence, apply a versioned policy, and return only an answer that the recorded receipts support."
+    },
+    {
+      "speaker": "Interviewer",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T01",
+      "text": "What other operational boundary would you verify before publishing the answer?"
+    },
+    {
+      "speaker": "Candidate",
+      "kind": "answer",
+      "text": "I would verify the retrieval inputs, state transition, confidence band, and human escalation rule before publishing."
+    }
+  ]
+}

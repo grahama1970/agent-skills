@@ -21,6 +21,8 @@ from .solver import FastSolver, SolverChunk, SolverOutcome, extract_solution_dec
 
 PUBLISH_INTERVAL_S = 0.4
 DEFAULT_FIRST_CONTENT_TIMEOUT_S = 8.0
+ANSWER_CHAR_BUDGET = 2_400
+TALKING_POINT_CHAR_BUDGET = 1_000
 
 
 def _first_content_timeout_s() -> float:
@@ -148,7 +150,7 @@ async def stream_fast_answer(
                 display_answer, deck_points = extract_solution_deck(accumulated)
                 snapshot = await state.publish_card_fenced(
                     card.model_copy(update={
-                        "answer": (display_answer or accumulated)[:1_200],
+                        "answer": (display_answer or accumulated)[:ANSWER_CHAR_BUDGET],
                         "solution_deck": [SolutionDeckPoint(**point) for point in deck_points],
                     })
                 )
@@ -191,7 +193,7 @@ async def stream_fast_answer(
         "chunk_count": outcome.chunk_count,
     }
     clean_answer, deck_points = extract_solution_deck(outcome.answer)
-    answer_excerpt = (clean_answer or outcome.answer)[:1_200]
+    answer_excerpt = (clean_answer or outcome.answer)[:ANSWER_CHAR_BUDGET]
     final_sources = [
         *card.sources,
         EvidenceSource(
@@ -208,7 +210,7 @@ async def stream_fast_answer(
     final = card.model_copy(
         update={
             "answer": answer_excerpt,
-            "talking_point": answer_excerpt[:800] or card.talking_point,
+            "talking_point": answer_excerpt[:TALKING_POINT_CHAR_BUDGET] or card.talking_point,
             "evidence": (
                 f"Fast solver response digest {outcome.response_sha256[:16]} "
                 f"from {outcome.model}."

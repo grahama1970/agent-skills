@@ -51,7 +51,11 @@ CODE_PROMPT = (
     "excerpt. Claims about THIS user's specific codebase or files must come "
     "from the provided excerpts only -- ignore excerpts irrelevant to the "
     "question, and say plainly when a codebase-specific claim has no excerpt "
-    "support. Never refuse a general question for lack of excerpts.\n\n"
+    "support. Never refuse a general question for lack of excerpts. If an "
+    "excerpt starts with 'Reviewed solution:' or includes an expected interview "
+    "solution, treat it as the answer contract: answer from that content, do "
+    "not quote or repeat the Q:/Answer key prompt text, and preserve concrete "
+    "code, state fields, failure modes, and terminal outcomes.\n\n"
 )
 
 _DECK_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", re.IGNORECASE)

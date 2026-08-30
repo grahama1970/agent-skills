@@ -1,0 +1,150 @@
+{
+  "schema": "live_evidence.webgpt_authored_meeting.v1",
+  "meeting_id": "drivewealth-filler-separators-demo",
+  "source_question_ids": [
+    "DW-AI-01-T01",
+    "DW-AI-01-T02",
+    "DW-AI-01-T03",
+    "DW-AI-01-T04",
+    "DW-AI-04-T02",
+    "DW-AI-01-T05"
+  ],
+  "turns": [
+    {
+      "speaker": "Interviewer",
+      "text": "Hi Graham, thanks for joining. I’m Ajit, and Neelesh is here as well. We’ll spend the first part on architecture and operating judgment, then move into a short CoderPad exercise.",
+      "kind": "setup"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Thanks, Ajit. Good to meet both of you. That format works for me.",
+      "kind": "setup"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "The examples today are intentionally close to brokerage operations. We care less about fashionable agent terminology and more about bounded behavior, recoverability, and evidence an operator can trust.",
+      "kind": "setup"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "That matches how I approach these systems. I usually start with the workflow, state transitions, and failure boundaries before deciding where a model belongs.",
+      "kind": "setup"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "An operations analyst asks why a customer account is blocked. The system may use account APIs, KYC-status events, and curated policy evidence. What graph would you build, including node responsibilities, state fields, edge conditions, and terminal outcomes?",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T01"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Sorry to interrupt. Make the terminal behavior concrete, especially when the API state and the event history disagree.",
+      "kind": "interruption",
+      "source_question_id": "DW-AI-01-T01"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "You’ve described several specialized components. What concrete failure or scaling boundary justifies multiple agents instead of one agent with three tools, and what evidence would make you collapse the design back to one?",
+      "kind": "follow_up",
+      "source_question_id": "DW-AI-01-T02"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "That distinction is useful. Let’s switch to CoderPad. You can talk while you work, and we’ll focus on the decision policy rather than syntax trivia.",
+      "kind": "transition"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "setup"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Implement decide_next for a run state containing retrieval_count, confidence, tool_error, loop_count, and human_required. It must return retrieve_again, ask_human, answer, or fail_closed. How will you cap retries and make an unsupported answer impossible?",
+      "kind": "question",
+      "source_question_id": "DW-AI-01-T03"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Now assume that function is running in EKS workers and a worker dies after retrieval but before the next node. Which state is persisted, which fields remain immutable, and how do you resume without repeating a side effect or silently changing the goal?",
+      "kind": "follow_up",
+      "source_question_id": "DW-AI-01-T04"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Good. Let’s move from account explanations to event-driven reconciliation. Think about orders, positions, cash movements, settlements, and corporate actions arriving through APIs and queues.",
+      "kind": "transition"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Pressure-test that design for duplicate, delayed, out-of-order, and permanently missing events. Which nodes may run in parallel, which transitions require serialization, and when do you return a degraded result instead of an answer?",
+      "kind": "question",
+      "source_question_id": "DW-AI-04-T02"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Last scenario. A previously reliable blocked-account explanation becomes wrong on Tuesday morning, but only for custodial accounts. Before changing the prompt, what are the first five trace or metric comparisons you make?",
+      "kind": "follow_up",
+      "source_question_id": "DW-AI-01-T05"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Okay.",
+      "kind": "answer"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "That covers the areas we wanted to explore. Neelesh and I will compare notes, including how you handled state ownership, auditability, and the decision to simplify rather than multiply agents.",
+      "kind": "closing"
+    },
+    {
+      "speaker": "Candidate",
+      "text": "Thank you. I enjoyed the discussion. The main principle I’d carry into implementation is that every answer, retry, and escalation should be explainable from persisted state and versioned evidence, especially when the workflow touches brokerage operations.",
+      "kind": "closing"
+    }
+  ],
+  "context_bundle_sha256": "sha256:9c3cb1092b07cf305232f39bd678f731b2858f06582276f071436e0ea5575310",
+  "author_receipt": {
+    "route": "ask webgpt",
+    "run_dir": ".ask_artifacts/tau-dag-runs/ask-tau-author-the-transcript-described--5d6a01b50598",
+    "response_path": ".ask_artifacts/tau-dag-runs/ask-tau-author-the-transcript-described--5d6a01b50598/node-artifacts/handler-webgpt/response.md",
+    "response_sha256": "sha256:9f5be821940259ec9c6ffc9f37237803d99680df46a444a2bf40cf57b36f7b25",
+    "node_receipt_sha256": "sha256:4855841f8e944e0d7da64df9e74092ccfc34a58f8a0108cf48b49cc0cb8a5b37",
+    "context_bundle_sha256": "sha256:9c3cb1092b07cf305232f39bd678f731b2858f06582276f071436e0ea5575310"
+  }
+}

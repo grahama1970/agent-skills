@@ -145,7 +145,8 @@ def main() -> int:
 
     server = None
     try:
-        kb_root = str((build_json or {}).get("prep_pack", {}).get("prep_pack", {}).get("producer", {}).get("kb_root") or "/home/graham/workspace/experiments/dw-openapi")
+        default_kb_root = Path.home() / "workspace" / "experiments" / "dw-openapi"
+        kb_root = str((build_json or {}).get("prep_pack", {}).get("prep_pack", {}).get("producer", {}).get("kb_root") or default_kb_root)
         server = campaign.Server(
             campaign.import_tmp("curate-client-live-evidence"),
             live_resolver=True,

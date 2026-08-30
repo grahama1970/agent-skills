@@ -142,6 +142,16 @@ DriveWealth-style prep, the target frontier is 100-200 questions across
 live loop choose the right skill chain and answer shape, but it must never make
 the card bypass review.
 
+For synthetic meeting demos, do not hand-author a simplified fallback transcript.
+Use `$ask webgpt` or another approved browser-model authoring route with the full
+frozen context bundle, then run `$best-practices-fake-meeting` in
+`production-demo` mode before Chatterbox synthesis. The accepted transcript must
+carry an authoring receipt, context-bundle hash, source question IDs, per-turn
+`kind` labels, and `source_question_id` mappings on substantive sourced
+questions. A structural `PASS` is not proof of company accuracy, meeting quality,
+live STT, playback, or Live Evidence card quality; those require independent
+content review plus live-path receipts.
+
 ## Operating contract
 
 ```text

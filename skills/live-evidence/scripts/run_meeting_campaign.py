@@ -42,6 +42,7 @@ sys.path.insert(0, str(SKILL / "scripts"))
 
 import run_g2i_campaign as campaign  # Server/http helpers
 import eval_live_youtube_oracle as oracle_mod  # null sink + bridge runner
+from load_prep_pack import load_prep_pack  # full client prep-pack loader
 
 CHATTERBOX = "http://127.0.0.1:8018"
 CHATTERBOX_LOGS = Path.home() / "workspace" / "experiments" / "chatterbox" / "logs"
@@ -153,6 +154,16 @@ def capture_live_session(
     if session.get("briefing_pack"):
         pack = json.loads((SKILL / "fixtures" / session["briefing_pack"]).read_text())
         campaign.http("POST", f"{server.url}/api/briefing/load", pack)
+    if session.get("prep_pack"):
+        prep_receipt = load_prep_pack(
+            SKILL / "fixtures" / session["prep_pack"],
+            backend_url=server.url,
+            memory_url="http://127.0.0.1:8601",
+            timeout_s=30.0,
+            skip_recall=True,
+        )
+        if prep_receipt.get("status") != "PASS":
+            raise RuntimeError(f"prep pack load failed: {prep_receipt}")
 
     sink = f"le-campaign-{server.port}"
     oracle_mod.create_virtual_sink(sink)

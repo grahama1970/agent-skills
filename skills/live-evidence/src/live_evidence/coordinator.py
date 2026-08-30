@@ -34,6 +34,8 @@ from .retrieval import (
     is_code_location_query,
     MemoryEvidenceClient,
     RipgrepEvidenceClient,
+    has_reviewed_oracle_answer,
+    prefer_reviewed_oracle_answers,
     rank_sources,
 )
 from .state import RuntimeState
@@ -574,6 +576,7 @@ class EvidenceCoordinator:
             session_id=session_id,
             policy_digest=policy_digest,
         )
+        ranked = prefer_reviewed_oracle_answers(ranked, query)
         if not surface:
             if decision.candidate_fingerprint:
                 self._question_window.forget(decision.candidate_fingerprint)
@@ -595,11 +598,14 @@ class EvidenceCoordinator:
             },
             policy_digest=policy_digest,
         )
+        reviewed_oracle_answer = has_reviewed_oracle_answer(ranked)
         may_ask = (
             verdict.may_invoke_ask
             if verdict is not None
             else _should_solve_with_ask(query, ranked)
         )
+        if reviewed_oracle_answer:
+            may_ask = False
         if not policy.candidate_answer_generation:
             may_ask = False
             await self._state.set_lane(
@@ -654,6 +660,13 @@ class EvidenceCoordinator:
                     result_count=len(ask_result.sources),
                 )
                 ranked = rank_sources([*sources, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
+                ranked = prefer_reviewed_oracle_answers(ranked, query)
+        elif reviewed_oracle_answer:
+            await self._state.set_lane(
+                RetrievalLane.ASK,
+                LaneState.IDLE,
+                "Using reviewed oracle answer",
+            )
         elif verdict is not None:
             await self._state.set_lane(
                 RetrievalLane.ASK,
@@ -782,6 +795,6 @@ class EvidenceCoordinator:
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
 def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
-    return any(
-        source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources
-    )
+    if has_reviewed_oracle_answer(sources):
+        return False
+    return any(source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources)

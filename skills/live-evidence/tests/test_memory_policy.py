@@ -10,7 +10,8 @@ from live_evidence.retrieval.memory import (
     _memory_items_to_sources,
     _memory_recall_queries,
 )
-from live_evidence.retrieval.ranker import rank_sources
+from live_evidence.retrieval.memory import _memory_items_to_sources
+from live_evidence.retrieval.ranker import prefer_reviewed_oracle_answers, rank_sources
 
 
 def profile() -> InterviewProfile:
@@ -156,6 +157,149 @@ def test_workspace_doc_ingestion_summary_does_not_hide_playbook_body() -> None:
 
     assert "never skim" in excerpt
     assert excerpt != "Workspace doc ingestion"
+
+
+def test_drivewealth_memory_answer_key_snippet_expands_to_full_authored_answer() -> None:
+    profile = InterviewProfile(name="drivewealth", memory_scope="drivewealth")
+    payload = {
+        "found": True,
+        "items": [
+            {
+                "_key": "dw-ai-memory",
+                "title": "# Answer key: DW-AI-01-T03",
+                "content": "# Answer key: DW-AI-01-T03 Q: Live coding now. A: I would define an immutable RunState data class and a NextAc…",
+                "source": "lessons",
+            }
+        ],
+    }
+
+    sources = _memory_items_to_sources(payload, "raw", profile)
+
+    assert sources
+    assert sources[0].metadata["topic_kind"] == "expected_interview_solution"
+    assert sources[0].metadata["answer_key_id"] == "DW-AI-01-T03"
+    assert sources[0].excerpt.startswith("Question: Live coding now")
+    assert "Reviewed solution: I would define an immutable RunState" in sources[0].excerpt
+    assert "unsupported answers are structurally impossible" in sources[0].excerpt
+
+
+def test_drivewealth_oracle_answer_prefers_expected_solution_over_question_index() -> None:
+    excerpt = _memory_excerpt(
+        {
+            "kind": "expected_interview_solution",
+            "expected_solution": "Produce a compact implementation strategy with fail-closed behavior.",
+            "retrieval_text": "Answer key: DW-AI-01-T03 Q: Live coding now. Implement decide_next.",
+        }
+    )
+
+    assert excerpt == "Produce a compact implementation strategy with fail-closed behavior."
+    assert "Answer key" not in excerpt
+    assert "Live coding now" not in excerpt
+
+
+def test_drivewealth_oracle_answer_ranks_above_question_echo() -> None:
+    query = "Live coding now. Implement decide_next with bounded retries and fail closed."
+    question_echo = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-01-T03 question",
+        excerpt="Answer key: DW-AI-01-T03 Q: Live coding now. Implement decide_next.",
+        score=0.97,
+        freshness=Freshness.UNKNOWN,
+        repository="live_evidence_questions",
+        metadata={"topic_kind": "mock_interview_question"},
+    )
+    reviewed_answer = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-01-T03 reviewed solution",
+        excerpt="Produce a compact implementation strategy or code answer with fail-closed behavior and testable constraints.",
+        score=0.86,
+        freshness=Freshness.UNKNOWN,
+        repository="live_evidence_answers",
+        metadata={"topic_kind": "expected_interview_solution"},
+    )
+
+    ranked = rank_sources([question_echo, reviewed_answer], query, profile())
+
+    assert ranked[0] is reviewed_answer
+
+
+def test_reviewed_oracle_answer_is_preserved_after_selector_reorder() -> None:
+    question_echo = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-01-T03 question",
+        excerpt="Answer key: DW-AI-01-T03 Q: Live coding now. Implement decide_next.",
+        score=0.97,
+        freshness=Freshness.UNKNOWN,
+        repository="live_evidence_questions",
+        metadata={"topic_kind": "mock_interview_question"},
+    )
+    reviewed_answer = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-01-T03 reviewed solution",
+        excerpt="Reviewed solution: implement a bounded state transition and fail closed.",
+        score=0.86,
+        freshness=Freshness.UNKNOWN,
+        repository="live_evidence_answers",
+        metadata={"topic_kind": "expected_interview_solution"},
+    )
+
+    ordered = prefer_reviewed_oracle_answers([question_echo, reviewed_answer])
+
+    assert ordered[0] is reviewed_answer
+    assert ordered[1] is question_echo
+
+
+def test_reviewed_oracle_answers_sort_by_query_fit_after_selector_reorder() -> None:
+    platform_answer = EvidenceSource(
+        lane=RetrievalLane.RIPGREP,
+        label="dw-openapi/knowledge/answer-key/dw-ai-02-t01.md reviewed solution",
+        excerpt="Reviewed solution: graph contract tool transport contract version negotiation ownership boundaries",
+        score=0.90,
+        freshness=Freshness.CURRENT,
+        repository="dw-openapi",
+        metadata={"topic_kind": "expected_interview_solution", "answer_key_id": "DW-AI-02-T01"},
+    )
+    tool_wrapper_answer = EvidenceSource(
+        lane=RetrievalLane.RIPGREP,
+        label="dw-openapi/knowledge/answer-key/dw-ai-02-t03.md reviewed solution",
+        excerpt="Reviewed solution: asyncio wait_for timeout exception ToolResult error_code latency",
+        score=0.99,
+        freshness=Freshness.CURRENT,
+        repository="dw-openapi",
+        metadata={"topic_kind": "expected_interview_solution", "answer_key_id": "DW-AI-02-T03"},
+    )
+
+    ordered = prefer_reviewed_oracle_answers(
+        [tool_wrapper_answer, platform_answer],
+        "Design an internal agent platform with graph contracts and version negotiation.",
+    )
+
+    assert ordered[0] is platform_answer
+
+
+def test_ripgrep_answer_key_is_treated_as_reviewed_oracle_answer() -> None:
+    question_echo = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-02-T01 question",
+        excerpt="Answer key: DW-AI-02-T01 Q: Design an internal agent platform.",
+        score=0.97,
+        freshness=Freshness.UNKNOWN,
+        repository="lessons",
+        metadata={},
+    )
+    ripgrep_answer = EvidenceSource(
+        lane=RetrievalLane.RIPGREP,
+        label="dw-openapi/knowledge/answer-key/dw-ai-02-t01.md reviewed solution",
+        excerpt="Reviewed solution: separate contracts and pin negotiated versions.",
+        score=0.92,
+        freshness=Freshness.CURRENT,
+        repository="dw-openapi",
+        metadata={"topic_kind": "expected_interview_solution"},
+    )
+
+    ordered = prefer_reviewed_oracle_answers([question_echo, ripgrep_answer])
+
+    assert ordered[0] is ripgrep_answer
 
 
 def test_sparta_memory_index_question_adds_exact_project_index_query() -> None:

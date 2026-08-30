@@ -65,11 +65,60 @@ def rank_sources(
             + locator_score
             + _project_affinity(source, scope)
             + _hard_rules_affinity(query, source)
+            + _oracle_answer_affinity(source)
             + (_code_location_affinity(source) if code_location else 0.0)
         )
         return total, source.label.casefold()
 
     return sorted(sources, key=rank, reverse=True)
+
+
+def has_reviewed_oracle_answer(sources: list[EvidenceSource]) -> bool:
+    return any(_is_reviewed_oracle_answer(source) for source in sources)
+
+
+def prefer_reviewed_oracle_answers(sources: list[EvidenceSource], query: str = "") -> list[EvidenceSource]:
+    """Keep reviewed answer oracle nodes ahead of question/index echoes.
+
+    SurfaceSelector is allowed to judge relevance, but DriveWealth answer-quality
+    runs exposed a harmful reorder: the visible card used a mock question node
+    whose excerpt starts with the prompt, while the adjacent reviewed answer node
+    carried the actual solution contract. For live interview prep, reviewed
+    expected-answer nodes are promoted and sorted by lexical fit to the heard
+    question so adjacent answer keys do not swap positions.
+    """
+
+    answers = [source for source in sources if _is_reviewed_oracle_answer(source)]
+    if not answers:
+        return sources
+    query_tokens = _tokens(query)
+    if query_tokens:
+        answers = sorted(
+            answers,
+            key=lambda source: (
+                len(query_tokens & _tokens(_reviewed_oracle_fit_text(source))),
+                source.score,
+            ),
+            reverse=True,
+        )
+    answer_ids = {id(source) for source in answers}
+    return answers + [source for source in sources if id(source) not in answer_ids]
+
+
+def _reviewed_oracle_fit_text(source: EvidenceSource) -> str:
+    meta = source.metadata or {}
+    question = str(meta.get("canonical_question") or "")
+    return f"{source.label or ''} {question} {source.excerpt or ''}"
+
+
+def _is_reviewed_oracle_answer(source: EvidenceSource) -> bool:
+    if source.lane not in {RetrievalLane.MEMORY, RetrievalLane.RIPGREP}:
+        return False
+    kind = str((source.metadata or {}).get("topic_kind") or "").casefold()
+    if kind == "expected_interview_solution":
+        return True
+    blob = " ".join(f"{source.label or ''} {source.excerpt or ''}".casefold().split())
+    return "answer key: dw-ai" in blob and " a:" in blob
 
 
 def is_code_location_query(query: str) -> bool:
@@ -135,6 +184,24 @@ def _project_affinity(source: EvidenceSource, scope: set[str]) -> float:
     # specific repo, another project's memory is genuinely off-target.
     if "local_memory__" in identity or "experiments-" in identity:
         return -0.30
+    return 0.0
+
+
+def _oracle_answer_affinity(source: EvidenceSource) -> float:
+    """Prefer reviewed answer oracle nodes over question/index echo nodes."""
+
+    if source.lane not in {RetrievalLane.MEMORY, RetrievalLane.RIPGREP}:
+        return 0.0
+    kind = str((source.metadata or {}).get("topic_kind") or "").casefold()
+    if kind == "expected_interview_solution":
+        return 0.35
+    blob = " ".join(f"{source.label or ''} {source.excerpt or ''}".casefold().split())
+    if "answer key: dw-ai" in blob and " a:" in blob:
+        return 0.28
+    if kind in {"mock_interview_question", "supported_by_source_context", "contains_question", "requires_skill_chain"}:
+        return -0.12
+    if "answer key: dw-ai" in blob and " q:" in blob:
+        return -0.08
     return 0.0
 
 

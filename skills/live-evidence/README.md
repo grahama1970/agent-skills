@@ -86,6 +86,23 @@ readiness from live-audio readiness.
 ./run.sh replay fixtures/interview.jsonl --backend-url http://127.0.0.1:8799
 ```
 
+Synthetic meeting demos must not use locally invented clean question lists. For
+DriveWealth-style Chatterbox playback, first validate the WebGPT-authored
+transcript with the production-demo fake-meeting guard:
+
+```bash
+../best-practices-fake-meeting/run.sh validate \
+  --transcript fixtures/realistic_meeting_drivewealth_webgpt.json \
+  --profile production-demo \
+  --output /tmp/live-evidence-realistic-meeting-webgpt-report.json
+```
+
+A `STRUCTURE_PASS` report is not playback approval. Before audio playback, keep
+a manifest that names the transcript hash, context-bundle hash, authoring
+receipt, independent content-review receipt, speaker-to-voice map, rendered
+segment count, non-empty audio proof, and the Live Evidence playback/readback
+receipt.
+
 ## Run live
 
 ```bash

@@ -130,6 +130,8 @@ class RipgrepEvidenceClient:
                 errors += 1
             else:
                 sources.extend(result)
+        for root in self._settings.repo_roots:
+            sources.extend(_drivewealth_answer_key_question_matches(root, query))
         sources = _dedupe(sources)[:12]
         latency_ms = int((monotonic() - started) * 1000)
         detail = f"Current source {len(sources)}"
@@ -355,6 +357,18 @@ def _parse_rg_json(
         if not specific_matches:
             continue
         score = _source_score(path, specific_matches, prefer_code_paths=prefer_code_paths)
+        answer_key = _drivewealth_answer_key_source(
+            path,
+            repository=repository,
+            relative=relative,
+            matched_terms=matched_terms,
+            root=root,
+            fallback_line=_positive_int(line_number),
+            base_score=score,
+        )
+        if answer_key is not None:
+            sources.append(answer_key)
+            continue
         sources.append(
             EvidenceSource(
                 lane=RetrievalLane.RIPGREP,
@@ -376,6 +390,135 @@ def _parse_rg_json(
             )
         )
     return sources
+
+
+def _drivewealth_answer_key_source(
+    path: Path,
+    *,
+    repository: str,
+    relative: Path,
+    matched_terms: list[str],
+    root: Path,
+    fallback_line: int | None,
+    base_score: float,
+) -> EvidenceSource | None:
+    """Expand DriveWealth answer-key hits from the matched Q line to the A block."""
+
+    rel = relative.as_posix()
+    if "knowledge/answer-key/" not in rel or not path.name.casefold().startswith("dw-ai-"):
+        return None
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    question_text = ""
+    for raw_line in lines:
+        stripped = raw_line.strip()
+        if stripped.startswith("Q:"):
+            question_text = stripped[2:].lstrip()
+            break
+    answer_start = None
+    for index, raw_line in enumerate(lines, start=1):
+        if raw_line.strip().startswith("A:"):
+            answer_start = index
+            break
+    if answer_start is None:
+        return None
+    answer_lines: list[str] = []
+    for raw_line in lines[answer_start - 1:]:
+        stripped = raw_line.strip()
+        if stripped.startswith("Source:"):
+            break
+        if stripped:
+            answer_lines.append(stripped)
+    answer_text = " ".join(answer_lines)
+    if answer_text.startswith("A:"):
+        answer_text = answer_text[2:].lstrip()
+    if not answer_text:
+        return None
+    answer_key_id = path.stem.upper()
+    return EvidenceSource(
+        lane=RetrievalLane.RIPGREP,
+        label=f"{repository}/{rel} reviewed solution",
+        excerpt=(f"Question: {question_text} Reviewed solution: {answer_text}" if question_text else f"Reviewed solution: {answer_text}")[:4_000],
+        score=min(0.99, max(base_score + 0.18, 0.92)),
+        freshness=Freshness.CURRENT,
+        repository=repository,
+        path=str(path.resolve()),
+        line_start=answer_start,
+        line_end=max(answer_start, answer_start + len(answer_lines) - 1),
+        metadata={
+            "matched_terms": matched_terms,
+            "root": str(root),
+            "content_sha256": _file_sha256(path),
+            "topic_kind": "expected_interview_solution",
+            "answer_key_id": answer_key_id,
+            "canonical_question": question_text or None,
+            "expanded_answer_key": True,
+            "matched_line": fallback_line,
+        },
+    )
+
+
+def _drivewealth_answer_key_question_matches(root: Path, query: str) -> list[EvidenceSource]:
+    """Inject best authored DriveWealth answer-key matches by Q-line similarity."""
+
+    answer_dir = root / "knowledge" / "answer-key"
+    if not answer_dir.is_dir():
+        return []
+    query_tokens = _semantic_tokens(query)
+    if len(query_tokens) < 4:
+        return []
+    candidates: list[tuple[float, Path, list[str]]] = []
+    for path in sorted(answer_dir.glob("dw-ai-*.md")):
+        question = _drivewealth_answer_key_question(path)
+        if not question:
+            continue
+        question_tokens = _semantic_tokens(question)
+        overlap = query_tokens & question_tokens
+        ratio = len(overlap) / max(1, min(len(query_tokens), len(question_tokens)))
+        if len(overlap) < 4 and ratio < 0.32:
+            continue
+        score = min(0.995, 0.90 + min(0.08, len(overlap) * 0.01) + min(0.015, ratio * 0.03))
+        candidates.append((score, path, sorted(overlap)))
+    repository = root.name
+    sources: list[EvidenceSource] = []
+    for score, path, matched_terms in sorted(candidates, reverse=True)[:2]:
+        try:
+            relative = path.resolve().relative_to(root.resolve())
+        except ValueError:
+            continue
+        source = _drivewealth_answer_key_source(
+            path,
+            repository=repository,
+            relative=relative,
+            matched_terms=matched_terms,
+            root=root,
+            fallback_line=1,
+            base_score=score,
+        )
+        if source is not None:
+            sources.append(source)
+    return sources
+
+
+def _drivewealth_answer_key_question(path: Path) -> str:
+    try:
+        for raw_line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            stripped = raw_line.strip()
+            if stripped.startswith("Q:"):
+                return stripped[2:].lstrip()
+    except OSError:
+        return ""
+    return ""
+
+
+def _semantic_tokens(text: str) -> set[str]:
+    return {
+        token.casefold()
+        for token in tokenize(text)
+        if len(token) >= 4 and token.casefold() not in STOPWORDS and token.casefold() not in QUESTION_LEADS
+    }
 
 
 def _path_match_sources(root: Path, terms: list[str]) -> list[EvidenceSource]:

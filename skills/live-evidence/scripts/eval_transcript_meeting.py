@@ -80,25 +80,65 @@ def judge_similarity(question: str, expected: str, answer: str, evidence: str,
         headers={"Authorization": f"Bearer {key}",
                  "X-Caller-Skill": "live-evidence",
                  "Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(request, timeout=90) as response:
-        body = json.loads(response.read().decode("utf-8"))
-    content = (body.get("choices") or [{}])[0].get("message", {}).get("content") or ""
-    start, end = content.find("{"), content.rfind("}")
-    if start == -1 or end == -1:
-        return {"similar": False, "reason": f"unparseable judge reply: {content[:120]}"}
-    return json.loads(content[start:end + 1])
+    try:
+        with urllib.request.urlopen(request, timeout=90) as response:
+            body = json.loads(response.read().decode("utf-8"))
+        content = (body.get("choices") or [{}])[0].get("message", {}).get("content") or ""
+        start, end = content.find("{"), content.rfind("}")
+        if start == -1 or end == -1:
+            return {"similar": False, "reason": f"unparseable judge reply: {content[:120]}"}
+        return json.loads(content[start:end + 1])
+    except Exception as exc:  # noqa: BLE001 - eval must write a receipt on judge degradation
+        return {
+            "similar": False,
+            "reason": f"judge_error:{type(exc).__name__}: {str(exc)[:160]}",
+        }
 
 
-def _card_for(cards: list[dict[str, Any]], tokens: list[str]) -> dict[str, Any] | None:
-    """Best card whose query/question carries >=2 of the oracle match tokens."""
+def _card_for(
+    cards: list[dict[str, Any]],
+    tokens: list[str],
+    expected_key: str | None = None,
+) -> dict[str, Any] | None:
+    """Best/latest answer-bearing card for this oracle question.
 
-    best, best_score = None, 1
-    for card in cards:
+    Prefer an exact DriveWealth answer-key source match over generic token
+    overlap so one coding prompt is not judged against another coding card.
+    Within the same key/token bucket, prefer later answer-bearing cards so the
+    streamed fast-solver final answer beats the initial extractive draft.
+    """
+
+    best, best_key = None, (-1, 1, -1, -1)
+    for index, card in enumerate(cards):
         blob = (str(card.get("query") or "") + " " + str(card.get("question") or "")).lower()
-        score = sum(1 for t in tokens if t.lower() in blob)
-        if score > best_score:
-            best, best_score = card, score
+        score = sum(1 for token in tokens if token.lower() in blob)
+        answer = " ".join(str(card.get(field) or "") for field in ("answer", "evidence", "proof"))
+        answer_words = len(answer.split())
+        stale_echo_penalty = 1 if answer.lstrip().startswith(("Q:", "Answer key:")) else 0
+        exact_key = 1 if expected_key and _card_has_answer_key(card, expected_key) else 0
+        key = (exact_key, score, min(answer_words, 80) - stale_echo_penalty * 40, index)
+        if key > best_key:
+            best, best_key = card, key
     return best
+
+
+def _card_has_answer_key(card: dict[str, Any], expected_key: str) -> bool:
+    expected = expected_key.replace("_", "-").casefold()
+    for source in card.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        meta = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
+        raw = " ".join(
+            str(part or "")
+            for part in (
+                meta.get("answer_key_id"),
+                source.get("label"),
+                source.get("path"),
+            )
+        ).replace("_", "-").casefold()
+        if expected in raw:
+            return True
+    return False
 
 
 def score_meeting(meeting: dict[str, Any], rows: list[dict[str, Any]],
@@ -138,7 +178,7 @@ def score_meeting(meeting: dict[str, Any], rows: list[dict[str, Any]],
                 else "no research proposal",
             })
             continue
-        card = _card_for(cards, tokens)
+        card = _card_for(cards, tokens, str(item.get("source_turn_id") or item.get("id") or ""))
         if card is None:
             results.append({"id": item["id"], "family": item["family"],
                             "detected": detected, "card_matched": False,

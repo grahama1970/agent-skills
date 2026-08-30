@@ -1,0 +1,23 @@
+{
+  "schema": "live_evidence.visible_demo_script.v1",
+  "source": "bad local demo produced in session; retained to prevent repetition",
+  "meeting_id": "bad-clean-question-list-demo",
+  "turns": [
+    {
+      "speaker": "Interviewer",
+      "text": "Thanks for joining the DriveWealth Principal AI Engineer technical interview. We will talk through brokerage operations, KYC events, and how your agent architecture stays evidence grounded."
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "First question. Design a small agent system that answers an operations analyst asking why a customer account is blocked. It may use account APIs, KYC status events, and curated policy evidence. Give me the graph, node responsibilities, state fields, edge conditions, and terminal outcomes."
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Second question. DriveWealth partner updates can arrive through SQS out of order. Your agent sees an older KYC approved event after a newer restricted event. How does it determine current state, preserve the conflicting evidence, and explain the result without inventing an event order?"
+    },
+    {
+      "speaker": "Interviewer",
+      "text": "Final question. If a CoderPad problem asks you to stream account events and produce an audit safe current status, what data structure and verification receipts would you use?"
+    }
+  ]
+}

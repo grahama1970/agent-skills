@@ -75,6 +75,87 @@ def test_ripgrep_bounds_high_frequency_matches(tmp_path: Path) -> None:
     assert 1 <= len(result.sources) <= 12
 
 
+def test_ripgrep_injects_best_drivewealth_question_line_match(tmp_path: Path) -> None:
+    repo = tmp_path / "dw-openapi"
+    answer_dir = repo / "knowledge" / "answer-key"
+    answer_dir.mkdir(parents=True)
+    (answer_dir / "dw-ai-02-t04.md").write_text(
+        "# Answer key: DW-AI-02-T04\n\n"
+        "Q: Add retries to your design without writing more code. Which failures are retryable, where does the idempotency key live, and why is the policy different for get order status versus submit order?\n\n"
+        "A: Retry connection reset and throttling only when the operation is idempotent; keep the idempotency key with the command record.\n",
+        encoding="utf-8",
+    )
+    (answer_dir / "dw-ai-06-t03.md").write_text(
+        "# Answer key: DW-AI-06-T03\n\n"
+        "Q: Extend that design with durable session state keyed by partner, launch, environment, and tenant.\n\n"
+        "A: Key durable state by tenant_id, partner_id, launch_id, and environment.\n",
+        encoding="utf-8",
+    )
+    profile_path = tmp_path / "profile.yaml"
+    profile_path.write_text("name: drivewealth\n", encoding="utf-8")
+    settings = AppSettings(
+        skill_root=tmp_path,
+        data_dir=tmp_path / "data",
+        profile_path=profile_path,
+        repo_roots=[repo],
+        memory_url="http://127.0.0.1:9",
+        subprocess_timeout_s=3.0,
+    )
+    profile = InterviewProfile(name="drivewealth")
+
+    result = asyncio.run(
+        RipgrepEvidenceClient(settings, profile).retrieve(
+            "Add retries to the design: which failures retry, where does the idempotency key live, and why are get order status and submit order different?"
+        )
+    )
+
+    assert result.ok is True
+    assert result.sources[0].metadata["answer_key_id"] == "DW-AI-02-T04"
+    assert "Reviewed solution: Retry connection reset" in result.sources[0].excerpt
+
+
+def test_ripgrep_expands_drivewealth_answer_key_match_to_answer_block(tmp_path: Path) -> None:
+    repo = tmp_path / "dw-openapi"
+    answer_dir = repo / "knowledge" / "answer-key"
+    answer_dir.mkdir(parents=True)
+    source = answer_dir / "dw-ai-02-t01.md"
+    source.write_text(
+        "# Answer key: DW-AI-02-T01\n\n"
+        "Q: Design an internal agent platform with version negotiation.\n\n"
+        "A: Separate the graph contract from the tool transport contract, pin a resolved version into the run receipt, and refuse incompatible combinations before model behavior can discover them.\n\n"
+        "Source: fixture\n",
+        encoding="utf-8",
+    )
+    profile_path = tmp_path / "profile.yaml"
+    profile_path.write_text("name: drivewealth\n", encoding="utf-8")
+    settings = AppSettings(
+        skill_root=tmp_path,
+        data_dir=tmp_path / "data",
+        profile_path=profile_path,
+        repo_roots=[repo],
+        memory_url="http://127.0.0.1:9",
+        subprocess_timeout_s=3.0,
+    )
+    profile = InterviewProfile(
+        name="drivewealth",
+        project_aliases={"dw-openapi": ["version negotiation"]},
+    )
+
+    result = asyncio.run(
+        RipgrepEvidenceClient(settings, profile).retrieve(
+            "How should an internal agent platform handle version negotiation?"
+        )
+    )
+
+    assert result.ok is True
+    assert result.sources[0].excerpt.startswith("Question: Design an internal agent platform")
+    assert "Reviewed solution: Separate the graph contract" in result.sources[0].excerpt
+    assert "Q: Design" not in result.sources[0].excerpt
+    assert result.sources[0].metadata["topic_kind"] == "expected_interview_solution"
+    assert result.sources[0].metadata["answer_key_id"] == "DW-AI-02-T01"
+    assert result.sources[0].line_start == 5
+
+
 def test_ripgrep_prefers_implementation_for_acronym_code_location(tmp_path: Path) -> None:
     repo = tmp_path / "sparta"
     repo.mkdir()

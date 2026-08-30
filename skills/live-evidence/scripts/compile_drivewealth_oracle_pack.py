@@ -340,8 +340,10 @@ def compile_pack(root: Path, *, limit: int) -> dict[str, Any]:
                     f"{LIVE_EVIDENCE_COLLECTIONS['skill_chains']}/{chain_key}",
                 ],
                 "retrieval_text": (
-                    f"{turn['text']} Reviewed solution: {solution}. "
-                    f"Skill chain: {' -> '.join(chain)}. Review gates: {', '.join(publication_gates(chain))}."
+                    f"Reviewed solution: {solution}. "
+                    f"Skill chain: {' -> '.join(chain)}. "
+                    f"Question: {turn['text']} "
+                    f"Review gates: {', '.join(publication_gates(chain))}."
                 ),
                 "scope": LIVE_EVIDENCE_SCOPE,
                 "tags": ["live-evidence", "drivewealth", "expected-answer", "reviewed-answer", f"question:{question_key}"],

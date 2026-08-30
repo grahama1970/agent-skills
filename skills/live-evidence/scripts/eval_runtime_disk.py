@@ -6,7 +6,7 @@ start and spawns sibling-skill runners per question, so the interpreter and
 venv live on the hot path.
 
 Measured on this machine 2026-08-17:
-    /home/graham       -> /dev/nvme0n1p2  rotational=0  1.2T free
+    $HOME              -> /dev/nvme0n1p2  rotational=0  1.2T free
     /mnt/storage12tb   -> /dev/sda1       rotational=1  87% full
 
 `run.sh` and `sanity.sh` both defaulted `UV_PROJECT_ENVIRONMENT` to
