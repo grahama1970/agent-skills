@@ -1,0 +1,257 @@
+{
+  "version": 2,
+  "skill": "lazy-report-shame-shame-shame-pi-extension",
+  "trials": 2,
+  "proof_scope": "Pi extension feature coverage for lazy-report-shame-shame-shame: strict footer checking, empty tool-turn skip, collaborative rejection notice, pending review packet, /shame show recovery, /shame review fallback, direct label JSONL capture, and one-retry behavior.",
+  "claims": {
+    "proves": "The installed-style Pi extension hooks and commands behave as the $shame contract requires under deterministic simulation.",
+    "does_not_prove": "Every already-running Pi session has reloaded the extension, human label quality, or future classifier performance."
+  },
+  "capability_claims": [
+    {
+      "id": "lrsss.empty_tool_turn_skip",
+      "description": "Tool-call-only assistant messages with no text are ignored and do not create pending review packets or retries.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "lrsss.rejection_notice_retry_packet",
+      "description": "Bad final status reports are replaced with a collaborative correction packet, write a pending review packet, and queue one retry.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "lrsss.pending_review_commands",
+      "description": "/shame show and /shame review recover or explain the pending rejected candidate after reload/headless fallback.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "lrsss.direct_label_capture",
+      "description": "The extension /shame command labels the raw rejected candidate as v2 JSONL training data.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "lrsss.strict_checker_contract",
+      "description": "The deterministic checker rejects missing footer, missing agentic-evals receipt, uncommitted relevant work, obvious next step, and active-goal non-status patterns.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "message-end-empty-turn",
+      "seam_type": "hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "message-end-rejection",
+      "seam_type": "hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "pending-review-packet",
+      "seam_type": "filesystem",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "shame-command-show-review",
+      "seam_type": "command",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "shame-command-label-jsonl",
+      "seam_type": "command",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "report-check-policy",
+      "seam_type": "checker",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "extension-empty-tool-turn-is-ignored",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.empty_tool_turn_skip"
+      ],
+      "seams": [
+        "message-end-empty-turn"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-empty-tool-packet.json skills/shame/scripts/probe-shame-extension.sh empty-tool-turn"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"emptyAssistantIgnored\":true",
+          "\"retryMessages\":0"
+        ]
+      }
+    },
+    {
+      "name": "extension-bad-status-writes-pending-packet-and-one-retry",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.rejection_notice_retry_packet"
+      ],
+      "seams": [
+        "message-end-rejection",
+        "pending-review-packet"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-pending-packet.json skills/shame/scripts/probe-shame-extension.sh rejection-pending-retry"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"retryMessages\":1",
+          "lazy_report_shame.review_packet.v1"
+        ]
+      }
+    },
+    {
+      "name": "extension-show-recovers-pending-packet",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.pending_review_commands"
+      ],
+      "seams": [
+        "pending-review-packet",
+        "shame-command-show-review"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-show-packet.json skills/shame/scripts/probe-shame-extension.sh show-recovers-pending"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"mode\":\"show-recovers-pending\""
+        ]
+      }
+    },
+    {
+      "name": "extension-review-headless-fallback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.pending_review_commands"
+      ],
+      "seams": [
+        "shame-command-show-review"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-review-packet.json skills/shame/scripts/probe-shame-extension.sh review-fallback"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"mode\":\"review-fallback\""
+        ]
+      }
+    },
+    {
+      "name": "extension-direct-label-writes-jsonl",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.direct_label_capture"
+      ],
+      "seams": [
+        "shame-command-label-jsonl"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_TRAINING_JSONL=/tmp/lrsss-training.jsonl LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-label-packet.json skills/shame/scripts/probe-shame-extension.sh direct-label-jsonl"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"rows\":1"
+        ]
+      }
+    },
+    {
+      "name": "strict-checker-policy-guards",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.strict_checker_contract"
+      ],
+      "seams": [
+        "report-check-policy"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && for text in 'Recorded.' 'Done.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: Not verified: agentic-evals were not run.\\n- Proof: Missing: no receipt.\\n- Not done: run agentic-evals next.' 'Done.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: eval passed.\\n- Proof: receipt exists.\\n- Not done: commit and push relevant files next.'; do if printf '%b\\n' \"$text\" | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/lrsss-checker-policy.json; then echo 'checker accepted bad text' >&2; exit 1; fi; done && echo STRICT_CHECKER_POLICY_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "STRICT_CHECKER_POLICY_OK"
+        ]
+      }
+    }
+  ]
+}
