@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "skill": "tau-scillm-provider",
+  "trials": 2,
+  "live": true,
+  "proof_scope": "Pi provider extension evaluation for tau-scillm registration, request routing, auth-source precedence, failure behavior, and live receipt emission.",
+  "claims": {
+    "proves": "The repo extension can be loaded by Pi, registers provider tau-scillm, routes OpenAI chat completions to the local SciLLM endpoint with provider/caller headers, records live receipts for successful provider calls, prefers the running SciLLM container key over stale shell fallback keys, and fails closed when an explicit PI_SCILLM_API_KEY is invalid.",
+    "does_not_prove": "Full Tau DAG execution, remote Anthropic/Claude success, every SciLLM model group, long-running streaming stability, or making tau-scillm the default provider. The request-contract case intercepts fetch and is deterministic; only live-receipt-e2e crosses the running SciLLM service boundary."
+  },
+  "capability_claims": [
+    {
+      "id": "pi_provider_registered",
+      "description": "Pi loads the extension and lists tau-scillm/local-text as a usable model.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "request_contract",
+      "description": "Pi provider calls target /v1/chat/completions with the requested model plus X-Caller-Skill and X-Pi-Provider headers.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "receipt_backed_live_call",
+      "description": "A real Pi prompt can complete through tau-scillm/local-text and write a status=200 live receipt read back from disk.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "container_key_precedence",
+      "description": "A stale shell SCILLM_PROXY_KEY does not override the running docker-scillm-proxy-1 key when PI_SCILLM_API_KEY is absent.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "bad_explicit_key_fails_closed",
+      "description": "An explicit invalid PI_SCILLM_API_KEY is used as the auth source and produces a 401 failure instead of silently falling through to another key.",
+      "criticality": "critical",
+      "evidence_required": {"fault_injected_deterministic": true}
+    }
+  ],
+  "seams": [
+    {"seam_id": "pi.extension.load", "seam_type": "extension_registration", "criticality": "critical", "required_evidence": ["deterministic"]},
+    {"seam_id": "provider.http.contract", "seam_type": "provider_transport", "criticality": "critical", "required_evidence": ["deterministic"]},
+    {"seam_id": "provider.receipts", "seam_type": "receipt_readback", "criticality": "critical", "required_evidence": ["live_e2e"]},
+    {"seam_id": "provider.auth", "seam_type": "auth_resolution", "criticality": "critical", "required_evidence": ["live_e2e", "fault_injected_deterministic"]}
+  ],
+  "cases": [
+    {
+      "name": "provider-registered",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": ["pi_provider_registered"],
+      "seams": ["pi.extension.load"],
+      "command": ["node", "../scripts/eval_e2e.mjs", "provider-registered"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["provider-registered: PASS"],
+        "artifacts": [
+          {"path": "/tmp/tau-scillm-provider-eval/provider-registered.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/tmp/tau-scillm-provider-eval/provider-registered.json", "json_pointer": "/provider_id", "equals": "tau-scillm"},
+          {"path": "/tmp/tau-scillm-provider-eval/provider-registered.json", "json_pointer": "/model_id", "equals": "local-text"}
+        ]
+      }
+    },
+    {
+      "name": "request-contract",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "mocked": true,
+      "supports_claims": ["request_contract"],
+      "seams": ["provider.http.contract"],
+      "command": ["node", "../scripts/eval_e2e.mjs", "request-contract"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["request-contract: PASS"],
+        "artifacts": [
+          {"path": "/tmp/tau-scillm-provider-eval/request-contract.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/tmp/tau-scillm-provider-eval/request-contract.json", "json_pointer": "/url", "equals": "http://127.0.0.1:4001/v1/chat/completions"},
+          {"path": "/tmp/tau-scillm-provider-eval/request-contract.json", "json_pointer": "/provider_header", "equals": "tau-scillm"},
+          {"path": "/tmp/tau-scillm-provider-eval/request-contract.json", "json_pointer": "/caller_header", "equals": "pi-scillm-provider"},
+          {"path": "/tmp/tau-scillm-provider-eval/request-contract.json", "json_pointer": "/model", "equals": "local-text"},
+          {"path": "/tmp/tau-scillm-provider-eval/request-contract.json", "json_pointer": "/stream", "equals": true}
+        ]
+      }
+    },
+    {
+      "name": "live-receipt-e2e",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["receipt_backed_live_call", "container_key_precedence"],
+      "seams": ["provider.receipts", "provider.auth"],
+      "command": ["node", "../scripts/eval_e2e.mjs", "live-receipt-e2e"],
+      "timeout_seconds": 180,
+      "infra_blocked_when": ["docker-scillm-proxy-1", "ECONNREFUSED", "ETIMEDOUT", "model_timeout", "rate_limit_error"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["live-receipt-e2e: PASS"],
+        "artifacts": [
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/provider_id", "equals": "tau-scillm"},
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/model_id", "equals": "local-text"},
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/status", "equals": 200},
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/live", "equals": true},
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/mocked", "equals": false},
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/key_source", "equals": "docker:docker-scillm-proxy-1:LITELLM_MASTER_KEY"},
+          {"path": "/tmp/tau-scillm-provider-eval/live-receipt-e2e.json", "json_pointer": "/assistant_stop_reason", "equals": "stop"}
+        ]
+      }
+    },
+    {
+      "name": "bad-explicit-key-fails-closed",
+      "type": "negative",
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": ["bad_explicit_key_fails_closed"],
+      "seams": ["provider.auth"],
+      "command": ["node", "../scripts/eval_e2e.mjs", "bad-explicit-key-fails-closed"],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["bad-explicit-key-fails-closed: PASS"],
+        "artifacts": [
+          {"path": "/tmp/tau-scillm-provider-eval/bad-explicit-key-fails-closed.json", "json_pointer": "/ok", "equals": true},
+          {"path": "/tmp/tau-scillm-provider-eval/bad-explicit-key-fails-closed.json", "json_pointer": "/saw401", "equals": true},
+          {"path": "/tmp/tau-scillm-provider-eval/bad-explicit-key-fails-closed.json", "json_pointer": "/key_source", "equals": "env:PI_SCILLM_API_KEY"},
+          {"path": "/tmp/tau-scillm-provider-eval/bad-explicit-key-fails-closed.json", "json_pointer": "/phase", "equals": "before_provider_request"}
+        ]
+      }
+    }
+  ]
+}
