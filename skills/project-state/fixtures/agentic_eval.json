@@ -1,144 +1,518 @@
 {
- "version": 2,
- "skill": "project-state",
- "trials": 2,
- "proof_scope": "Report scoping AND phase honesty through the real ./run.sh entrypoint: a report about target X describes X's own tests, never borrows the global skills count, produces all six phases target-scoped under --full, and never claims a composed service is available when nothing answered.",
- "claims": {
-  "proves": "Quick reports are target-scoped (own tests, no borrowed skills count); full reports produce all six phases with memory-recall and research queries naming the target; and phase_2 availability is consistent with the number of recalls that actually answered.",
-  "does_not_prove": "That recall/research RESULTS are relevant or correct, that doc-drift findings are true positives, that the best-practices audit is complete, or that a passing report means the target project is healthy. Paths are pinned to this machine."
- },
- "cases": [
-  {
-   "name": "skill-target-scope-tests-and-no-global-skills",
-   "type": "positive",
-   "real_world": true,
-   "timeout_seconds": 900,
-   "command": [
-    "bash",
-    "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 50 --expect-skills-not-applicable"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "SKILLS_APPLICABLE=False",
-     "SCOPE_OK"
-    ],
-    "stderr_contains": []
-   }
+  "version": 2,
+  "skill": "project-state",
+  "trials": 2,
+  "proof_scope": "Report scoping, phase boundaries, phase honesty, target-derived research, gap synthesis, and cleanup-tail safety through the real ./run.sh/project_state.py entrypoints. Each load-bearing project-state pipeline step has an explicit capability claim, seam, and live readback case.",
+  "claims": {
+    "proves": "Quick, standard, full, and cleanup-tail project-state paths emit the expected phase structure for a real target; Phase 1 reports target-owned tests/skills without global fallback; Phase 2/5 availability reflects successful recall/search answers; Phase 3/4/6 emit doc-drift, best-practices, and gap-analysis sections; and cleanup-tail writes a readiness bundle without delete/move authority.",
+    "does_not_prove": "That recall/research results are semantically relevant, that doc-drift findings are all true positives, that best-practices findings are exhaustive, that external services are always available, or that a passing state report means the target project is healthy. Paths are pinned to this workstation."
   },
-  {
-   "name": "repo-root-still-counts-its-own-skills",
-   "type": "positive",
-   "real_world": true,
-   "timeout_seconds": 900,
-   "command": [
-    "bash",
-    "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills --min-skills 100"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "SCOPE_OK"
-    ],
-    "stderr_contains": []
-   }
-  },
-  {
-   "name": "global-skills-count-for-skill-target-is-refused",
-   "type": "adversarial",
-   "real_world": true,
-   "timeout_seconds": 900,
-   "command": [
-    "bash",
-    "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-skills 100"
-   ],
-   "expected": {
-    "exit_code": 1,
-    "stdout_contains": [
-     "SKILLS_TOTAL=0"
-    ],
-    "stderr_contains": [
-     "SCOPE_FAIL"
-    ]
-   }
-  },
-  {
-   "name": "silent-zero-tests-for-a-real-suite-is-refused",
-   "type": "adversarial",
-   "real_world": true,
-   "timeout_seconds": 900,
-   "command": [
-    "bash",
-    "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 500"
-   ],
-   "expected": {
-    "exit_code": 1,
-    "stdout_contains": [
-     "TESTS_TOTAL=132"
-    ],
-    "stderr_contains": [
-     "SCOPE_FAIL"
-    ]
-   }
-  },
-  {
-   "name": "full-report-all-phases-target-scoped",
-   "type": "positive",
-   "real_world": true,
-   "timeout_seconds": 1500,
-   "command": [
-    "bash",
-    "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py full-phases --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --require-memory-available"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "PHASES_PRESENT=6/6",
-     "PHASES_OK"
-    ],
-    "stderr_contains": []
-   }
-  },
-  {
-   "name": "phase-availability-must-match-successful-recalls",
-   "type": "adversarial",
-   "real_world": true,
-   "timeout_seconds": 1500,
-   "command": [
-    "bash",
-    "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python -c \"import json,sys; sys.path.insert(0,'.'); from memory_recall import collect_memory; m=collect_memory(); ok = bool(m['available']) == (m.get('successful_recalls',0) > 0) and 'successful_recalls' in m; print('AVAILABLE=%s SUCCESSFUL=%s' % (m['available'], m.get('successful_recalls'))); sys.exit(0 if ok else 1)\""
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "SUCCESSFUL="
-    ],
-    "stderr_contains": []
-   }
-  },
-  {
-   "name": "research-queries-derive-from-target-not-template",
-   "type": "adversarial",
-   "real_world": true,
-   "timeout_seconds": 600,
-   "command": [
-    "bash",
-    "-c",
-    "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck uv run python -c \"import sys; sys.path.insert(0,'.'); from research import _build_research_queries; qs=[q['query'] for q in _build_research_queries({'applicable': False, 'tier_status': {}}, {}, {}, full=True)]; print('QUERIES=%d' % len(qs)); bad=[q for q in qs if 'extraction pipeline' in q or 'layout parsing' in q]; print('TEMPLATED=%d' % len(bad)); sys.exit(0 if not bad else 1)\""
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "TEMPLATED=0"
-    ],
-    "stderr_contains": []
-   }
-  }
- ]
+  "capability_claims": [
+    {
+      "id": "project_state.phase1.infrastructure_target_scope",
+      "description": "Phase 1 infrastructure describes the selected PROJECT_STATE_ROOT: target-owned tests are collected and skill inventory is not borrowed from the global skill tree for a single-skill target.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "project_state.phase2.memory_recall_honesty",
+      "description": "Phase 2 memory availability is derived from parseable successful recall responses, not from the mere presence of the memory skill file.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "project_state.phase3.doc_drift_emitted",
+      "description": "Phase 3 doc-code drift emits a machine-readable drift section in non-quick reports for the target project.",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "project_state.phase4.best_practices_emitted",
+      "description": "Phase 4 best-practices scanning emits a machine-readable findings section in non-quick reports for the target project.",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "project_state.phase5.research_target_scope",
+      "description": "Phase 5 full-mode research builds queries from the target project instead of template terms and reports availability only when at least one search lane answers.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "project_state.phase6.gap_analysis_emitted",
+      "description": "Phase 6 gap analysis emits a structured gaps/improvements object synthesized from the collected phases.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "project_state.modes.quick_standard_full_boundaries",
+      "description": "Quick mode remains Phase 1 plus Phase 6 only, while standard/full expose the broader phase set without disguising skipped external research as success.",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "project_state.cleanup_tail_readiness_receipt",
+      "description": "cleanup-tail writes the readiness bundle and preserves the safety boundary that project-state never authorizes deletion or cleanup mutation.",
+      "criticality": "important",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "target_root_resolution",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "project_state.phase1.infrastructure_target_scope",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "test_collection_scope",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "project_state.phase1.infrastructure_target_scope",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "skill_inventory_scope",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "project_state.phase1.infrastructure_target_scope",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "memory_recall_availability",
+      "seam_type": "persistent state/database/index",
+      "criticality": "critical",
+      "claim_id": "project_state.phase2.memory_recall_honesty",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "doc_drift_collection",
+      "seam_type": "filesystem/process",
+      "criticality": "important",
+      "claim_id": "project_state.phase3.doc_drift_emitted",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "best_practices_collection",
+      "seam_type": "filesystem/process",
+      "criticality": "important",
+      "claim_id": "project_state.phase4.best_practices_emitted",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "research_query_derivation",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "claim_id": "project_state.phase5.research_target_scope",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "research_availability_honesty",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "claim_id": "project_state.phase5.research_target_scope",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "gap_analysis_synthesis",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "claim_id": "project_state.phase6.gap_analysis_emitted",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "mode_phase_boundaries",
+      "seam_type": "pure deterministic transform",
+      "criticality": "important",
+      "claim_id": "project_state.modes.quick_standard_full_boundaries",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "cleanup_tail_readiness_bundle",
+      "seam_type": "filesystem/process",
+      "criticality": "important",
+      "claim_id": "project_state.cleanup_tail_readiness_receipt",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "cleanup_tail_delete_authority_boundary",
+      "seam_type": "mutation/destructive effect",
+      "criticality": "critical",
+      "claim_id": "project_state.cleanup_tail_readiness_receipt",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "phase1-skill-target-scope-tests-and-no-global-skills",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase1.infrastructure_target_scope"
+      ],
+      "seams": [
+        "target_root_resolution",
+        "test_collection_scope",
+        "skill_inventory_scope"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 50 --expect-skills-not-applicable"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SKILLS_APPLICABLE=False",
+          "SCOPE_OK"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "phase1-repo-root-still-counts-its-own-skills",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase1.infrastructure_target_scope"
+      ],
+      "seams": [
+        "target_root_resolution",
+        "skill_inventory_scope"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills --min-skills 100"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SCOPE_OK"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "phase1-global-skills-count-for-skill-target-is-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase1.infrastructure_target_scope"
+      ],
+      "seams": [
+        "target_root_resolution",
+        "skill_inventory_scope"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-skills 100"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "SKILLS_TOTAL=0"
+        ],
+        "stderr_contains": [
+          "SCOPE_FAIL"
+        ]
+      }
+    },
+    {
+      "name": "phase1-silent-zero-tests-for-a-real-suite-is-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase1.infrastructure_target_scope"
+      ],
+      "seams": [
+        "target_root_resolution",
+        "test_collection_scope"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py check --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --min-tests 500"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "TESTS_TOTAL=132"
+        ],
+        "stderr_contains": [
+          "SCOPE_FAIL"
+        ]
+      }
+    },
+    {
+      "name": "phase2-memory-availability-must-match-successful-recalls",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase2.memory_recall_honesty"
+      ],
+      "seams": [
+        "memory_recall_availability"
+      ],
+      "timeout_seconds": 1500,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --json --output \"$tmp/report.json\" >/dev/null; python - \"$tmp/report.json\" <<'PY2'\nimport json, sys\nr=json.loads(open(sys.argv[1]).read())\nm=r.get('phase_2_memory', {})\nok = bool(m.get('available')) == (m.get('successful_recalls',0) > 0) and 'successful_recalls' in m\nprint('AVAILABLE=%s SUCCESSFUL=%s ATTEMPTED=%s' % (m.get('available'), m.get('successful_recalls'), m.get('attempted_recalls')))\nsys.exit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SUCCESSFUL="
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "phase3-doc-drift-section-emitted",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase3.doc_drift_emitted"
+      ],
+      "seams": [
+        "doc_drift_collection"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --json --output \"$tmp/report.json\" >/dev/null; python - \"$tmp/report.json\" <<'PY2'\nimport json, sys\nr=json.loads(open(sys.argv[1]).read())\nd=r.get('phase_3_doc_drift')\nok=isinstance(d, dict) and 'drift_count' in d and 'drift_items' in d and d.get('docs_found') is not None\nprint('DOC_DRIFT_OK=%s DRIFT_COUNT=%s DOCS_FOUND=%s' % (ok, d.get('drift_count') if isinstance(d,dict) else None, d.get('docs_found') if isinstance(d,dict) else None))\nsys.exit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DOC_DRIFT_OK=True"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "phase4-best-practices-section-emitted",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase4.best_practices_emitted"
+      ],
+      "seams": [
+        "best_practices_collection"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --json --output \"$tmp/report.json\" >/dev/null; python - \"$tmp/report.json\" <<'PY2'\nimport json, sys\nr=json.loads(open(sys.argv[1]).read())\nb=r.get('phase_4_best_practices')\nok=isinstance(b, dict) and 'total_findings' in b and 'findings' in b and 'by_severity' in b\nprint('BEST_PRACTICES_OK=%s FINDINGS=%s' % (ok, b.get('total_findings') if isinstance(b,dict) else None))\nsys.exit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BEST_PRACTICES_OK=True"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "phase5-full-report-target-scoped-and-availability-honest",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase5.research_target_scope"
+      ],
+      "seams": [
+        "target_root_resolution",
+        "research_query_derivation",
+        "research_availability_honesty"
+      ],
+      "timeout_seconds": 1500,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && uv run python scripts/assert_report_scope.py full-phases --target /home/graham/workspace/experiments/agent-skills/skills/pitchdeck --require-memory-available"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PHASES_PRESENT=6/6",
+          "PHASES_OK"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "phase5-research-queries-derive-from-target-not-template",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase5.research_target_scope"
+      ],
+      "seams": [
+        "research_query_derivation"
+      ],
+      "timeout_seconds": 600,
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/project-state && PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck uv run python -c \"import sys; sys.path.insert(0,'.'); from research import _build_research_queries; qs=[q['query'] for q in _build_research_queries({'applicable': False, 'tier_status': {}}, {}, {}, full=True)]; print('QUERIES=%d' % len(qs)); bad=[q for q in qs if 'extraction pipeline' in q or 'layout parsing' in q]; print('TEMPLATED=%d' % len(bad)); sys.exit(0 if not bad else 1)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TEMPLATED=0"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "phase6-gap-analysis-section-emitted",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.phase6.gap_analysis_emitted"
+      ],
+      "seams": [
+        "gap_analysis_synthesis"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --json --output \"$tmp/report.json\" >/dev/null; python - \"$tmp/report.json\" <<'PY2'\nimport json, sys\nr=json.loads(open(sys.argv[1]).read())\ng=r.get('phase_6_gaps')\nok=isinstance(g, dict) and isinstance(g.get('gaps'), list) and isinstance(g.get('improvements'), list)\nprint('GAPS_OK=%s GAP_COUNT=%s IMPROVEMENTS=%s' % (ok, len(g.get('gaps',[])) if isinstance(g,dict) else None, len(g.get('improvements',[])) if isinstance(g,dict) else None))\nsys.exit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "GAPS_OK=True"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "mode-boundary-quick-and-standard-phase-matrix",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.modes.quick_standard_full_boundaries"
+      ],
+      "seams": [
+        "mode_phase_boundaries"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --quick --json --output \"$tmp/quick.json\" >/dev/null; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --json --output \"$tmp/standard.json\" >/dev/null; python - \"$tmp/quick.json\" \"$tmp/standard.json\" <<'PY2'\nimport json, sys\nq=json.loads(open(sys.argv[1]).read())\ns=json.loads(open(sys.argv[2]).read())\nq_ok=all(k in q for k in ['phase_1_infrastructure','phase_6_gaps']) and not any(k in q for k in ['phase_2_memory','phase_3_doc_drift','phase_4_best_practices','phase_5_research'])\nsr=s.get('phase_5_research',{})\ns_ok=all(k in s for k in ['phase_1_infrastructure','phase_2_memory','phase_3_doc_drift','phase_4_best_practices','phase_5_research','phase_6_gaps']) and sr.get('skipped') is True\nprint('QUICK_BOUNDARY_OK=%s STANDARD_BOUNDARY_OK=%s STANDARD_RESEARCH_SKIPPED=%s' % (q_ok, s_ok, sr.get('skipped')))\nsys.exit(0 if q_ok and s_ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "QUICK_BOUNDARY_OK=True",
+          "STANDARD_BOUNDARY_OK=True",
+          "STANDARD_RESEARCH_SKIPPED=True"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "cleanup-tail-readiness-bundle-and-no-delete-authority",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.cleanup_tail_readiness_receipt"
+      ],
+      "seams": [
+        "cleanup_tail_readiness_bundle",
+        "cleanup_tail_delete_authority_boundary"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); mkdir -p \"$tmp/project\"; git -C \"$tmp/project\" init -q; printf '{\"moved\":[],\"kept\":[],\"review_required\":[],\"project_knowledge_sync\":\"not_established\",\"memory_sync\":\"not_established\"}\n' > \"$tmp/receipt.json\"; cd /home/graham/workspace/experiments/agent-skills/skills/project-state; uv run python project_state.py cleanup-tail --cleanup-receipt \"$tmp/receipt.json\" --project-root \"$tmp/project\" --output-dir \"$tmp/out\" --json > \"$tmp/stdout.json\"; python - \"$tmp/out/report.json\" <<'PY'\nimport json, sys\nfrom pathlib import Path\np = Path(sys.argv[1])\nr = json.loads(p.read_text())\nfeatures = {f['id']: f for f in r.get('features', [])}\nok = (r.get('schema') == 'skill.readiness_report.v1' and r.get('release_readiness') == 'NOT_ESTABLISHED' and p.exists() and (p.parent / 'report.md').exists() and (p.parent / 'index.html').exists() and features.get('cleanup-delete-authority', {}).get('readiness') == 'safe_failure_only')\nprint('CLEANUP_TAIL_OK=%s FEATURES=%s RELEASE=%s DELETE_AUTHORITY=%s' % (ok, len(features), r.get('release_readiness'), features.get('cleanup-delete-authority', {}).get('readiness')))\nsys.exit(0 if ok else 1)\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLEANUP_TAIL_OK=True",
+          "RELEASE=NOT_ESTABLISHED",
+          "DELETE_AUTHORITY=safe_failure_only"
+        ],
+        "stderr_contains": []
+      }
+    }
+  ]
 }
