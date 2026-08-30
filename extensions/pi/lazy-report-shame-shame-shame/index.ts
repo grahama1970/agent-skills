@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { beginGuardTurn, claimGuardFollowUp } from "../guard-pipeline-shared.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 const REPORT_CHECK = join(EXTENSION_DIR, "report-check.mjs");
@@ -584,6 +585,7 @@ export default function lazyReportShameShameShame(pi: any) {
 
   pi.on("input", async (event: any) => {
     const text = String(event.text || "");
+    beginGuardTurn(text, event.source);
     currentUserText = text;
     mutatingTurn = false;
     if (event.source !== "extension") retryInProgress = false;
@@ -639,7 +641,15 @@ export default function lazyReportShameShameShame(pi: any) {
       if (check.decision !== "reject") return;
 
       const turnId = lastCandidate.turn_id;
-      const alreadyRetried = retryInProgress || retriedTurnIds.has(turnId);
+      const pipelineClaim = claimGuardFollowUp({
+        guard: "shame",
+        messageId: String(event.message.id || event.id || turnId),
+        assistantText: text,
+        userText: currentUserText,
+        reason: [...check.reason_codes, ...check.footer_failures].join(","),
+        maxRetries: 1,
+      });
+      const alreadyRetried = retryInProgress || retriedTurnIds.has(turnId) || !pipelineClaim.ok;
       if (!alreadyRetried) retriedTurnIds.add(turnId);
 
       let reviewPacketPath = PENDING_REVIEW_PACKET;

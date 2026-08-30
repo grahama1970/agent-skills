@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "obvious-next-step-guard",
   "trials": 2,
-  "proof_scope": "deterministic checker coverage through the extension run.sh entrypoint for completion reports that mention zero invalid outputs/fail_count 0, invalid creator output sent to reviewer 0, sealed failure-family counts, zero diagnostic leaks, or hook-thrash status without forcing stale repair loops, while still following up on real failed eval reports and explicit unacted next steps, and completed typed failure repair reports that mention historical failure names, and research-routing triage completion reports that mention triage-error and broad-error as gate names, and reload_runtime tool-conflict startup regression.",
+  "proof_scope": "deterministic checker coverage through the extension run.sh entrypoint for completion reports that mention zero invalid outputs/fail_count 0, invalid creator output sent to reviewer 0, sealed failure-family counts, zero diagnostic leaks, or hook-thrash status without forcing stale repair loops, while still following up on real failed eval reports and explicit unacted next steps, and completed typed failure repair reports that mention historical failure names, and research-routing triage completion reports that mention triage-error and broad-error as gate names, and reload_runtime tool-conflict startup regression, and shared guard-pipeline retry ledger.",
   "claims": {
     "proves": "The obvious-next-step checker allows verified complete reports containing zero invalid output, fail_count 0, invalid creator-output-to-reviewer 0, seeded QRA count boundaries, sealed known-failure-family counts, zero diagnostic-leak statements, and hook-thrash-not-target-work language, still follows up on real nonzero failure reports, and still follows up when Not done names an unblocked action.",
     "does_not_prove": "A live already-running Pi TUI has reloaded the updated extension or that arbitrary prose cannot produce future false positives."
@@ -27,6 +27,14 @@
     {
       "id": "obvious_next_step.no_reload_runtime_tool_conflict",
       "description": "The obvious-next-step extension does not register a reload_runtime tool that conflicts with Pi native tools or other extensions during startup.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "obvious_next_step.shared_guard_pipeline_retry_ledger",
+      "description": "Ralph, shame, research-routing, and obvious-next-step share one guard pipeline retry ledger so one root answer cannot trigger multiple independent follow-ups.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -319,6 +327,34 @@
           "PI_STARTUP_NO_RELOAD_RUNTIME_CONFLICT_OK"
         ]
       }
+    },
+    {
+      "name": "shared-guard-pipeline-one-retry-ledger",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "obvious_next_step.shared_guard_pipeline_retry_ledger"
+      ],
+      "seams": [
+        "guard-pipeline-shared-ledger"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && node extensions/pi/obvious-next-step-guard/scripts/probe-guard-pipeline.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"mode\":\"guard-pipeline-shared-ledger\"",
+          "\"same_message_suppression\":\"message_already_claimed\"",
+          "\"same_root_budget\":\"retry_budget_exhausted\"",
+          "\"new_root_claim\":\"claimed\""
+        ]
+      },
+      "readback": true
     }
   ],
   "live": true,
@@ -334,6 +370,14 @@
     {
       "seam_id": "reload-runtime-tool-name",
       "seam_type": "tool-registry",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "guard-pipeline-shared-ledger",
+      "seam_type": "extension-coordination",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"

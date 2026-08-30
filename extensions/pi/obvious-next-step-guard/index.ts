@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { beginGuardTurn, claimGuardFollowUp } from "../guard-pipeline-shared.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 const CHECKER = join(EXTENSION_DIR, "obvious-next-step-check.mjs");
@@ -181,6 +182,7 @@ export default function obviousNextStepGuard(pi: any) {
       return { action: "continue" };
     }
     rootUserText = String(event.text || "");
+    beginGuardTurn(rootUserText, event.source);
     recentFailure = null;
     extensionControlTurn = false;
     return { action: "continue" };
@@ -214,7 +216,19 @@ export default function obviousNextStepGuard(pi: any) {
       ctx?.ui?.notify?.(`obvious-next-step-guard follow-up budget exhausted (${used}/${maxFollowups})`, "warning");
       return;
     }
-    const nextUsed = used + 1;
+    const pipelineClaim = claimGuardFollowUp({
+      guard: "obvious-next-step",
+      messageId: String(event.message.id || event.id || rootKey),
+      assistantText: text,
+      userText: rootUserText,
+      reason: check.reason_codes.join(","),
+      maxRetries: maxFollowups,
+    });
+    if (!pipelineClaim.ok) {
+      ctx?.ui?.notify?.(`obvious-next-step-guard skipped follow-up: ${pipelineClaim.reason}`, "warning");
+      return;
+    }
+    const nextUsed = pipelineClaim.used;
     followupsByRoot.set(rootKey, nextUsed);
 
     try {
