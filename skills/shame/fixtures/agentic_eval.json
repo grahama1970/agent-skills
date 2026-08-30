@@ -1,0 +1,249 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "deterministic JSONL capture, live Memory structured/store read-back, searchable Memory recall, strict $shame self-correction checking, and one-word Chatterbox shame audio install",
+  "claims": {
+    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, live Memory write/read-back records, searchable Memory recall records for classifier training, strict $shame self-correction rejection of answers without a Status Report footer or with unacted obvious next steps, and one short Chatterbox shame-word audio install with no bell/loop",
+    "does_not_prove": "classifier training quality, automatic transcript discovery in every Pi session shape, future model promotion, or that every already-running Pi TUI has reloaded the updated extension"
+  },
+  "capability_claims": [
+    {
+      "id": "shame.capture_training_example",
+      "description": "Capture a labeled assistant response as reusable classifier training data.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.memory_persistence",
+      "description": "Persist shame examples to the Memory daemon and independently read them back.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "shame.searchable_memory_recall",
+      "description": "Persist a searchable shadow document so $memory recall can find related shame examples by BM25 and semantic score.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "shame.one_word_audio",
+      "description": "Install one short Chatterbox shame word without a bell or repeated loop.",
+      "criticality": "optional",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.self_correct_status_footer",
+      "description": "$shame self-correction mode rejects terse or meta answers unless they end with a plain Status Report footer.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "local-jsonl-capture-contract",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.capture_training_example"
+      ],
+      "seams": [
+        "session-selection",
+        "jsonl-schema"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && session=$(mktemp) && out=$(mktemp) && printf '%s\\n' '{\"type\":\"message\",\"id\":\"u1\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"what is your actual status\"}]}}' '{\"type\":\"message\",\"id\":\"a1\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Committed and pushed. Done.\"}]}}' > $session && ./run.sh capture --session $session --entry-id a1 --out $out --verdict reject --reason commit_laundering --note 'missing actual status' --no-memory >/tmp/shame_local_eval_receipt.json && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); if(row.classifier_label!=='bullshit_update') throw new Error('bad classifier'); if(!row.user_text.includes('actual status')) throw new Error('missing user text'); console.log('LOCAL_JSONL_CAPTURE_OK')\" $out"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LOCAL_JSONL_CAPTURE_OK"
+        ]
+      }
+    },
+    {
+      "name": "legacy-label-no-memory-contract",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.capture_training_example"
+      ],
+      "seams": [
+        "legacy-label-mapping"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && out=$(mktemp) && ./run.sh capture --text 'Committed and pushed.' --label commit_laundering --no-memory --out $out | tee /tmp/shame_legacy_eval.out && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); console.log('LEGACY_LABEL_OK')\" $out"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LEGACY_LABEL_OK"
+        ]
+      }
+    },
+    {
+      "name": "live-memory-store-readback-and-recall",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.memory_persistence",
+        "shame.searchable_memory_recall"
+      ],
+      "seams": [
+        "memory-store",
+        "memory-readback",
+        "memory-recall"
+      ],
+      "timeout_seconds": 90,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && out=$(mktemp) && receipt=$(./run.sh capture --text 'Committed and pushed.' --verdict reject --reason vague_git_update --reason synthetic_fixture --note 'agentic eval live memory write' --out $out --memory-collection shame_training_examples --search-collection project_knowledge) && printf '%s\\n' \"$receipt\" > /tmp/shame_live_memory_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_live_memory_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.memory.collection!=='shame_training_examples') throw new Error('wrong collection'); if(d.memory.read_back_count!==1) throw new Error('no structured readback'); if(d.memory.search_collection!=='project_knowledge') throw new Error('wrong search collection'); if(d.memory.search_read_back_count!==1) throw new Error('no search readback'); if(d.memory.recall_found!==true) throw new Error('not recallable'); console.log('LIVE_MEMORY_READBACK_RECALL_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LIVE_MEMORY_READBACK_RECALL_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/shame_live_memory_receipt.json",
+            "json_pointer": "/memory/read_back_count",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/shame_live_memory_receipt.json",
+            "json_pointer": "/memory/recall_found",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "strict-shame-self-correction-footer-required",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_correct_status_footer"
+      ],
+      "seams": [
+        "report-check",
+        "strict-status-mode"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Recorded.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_strict_bad.json 2>/tmp/shame_strict_bad.err; then echo 'strict checker accepted terse answer' >&2; exit 1; fi && printf 'Corrected.\\n\\nStatus Report\\n- Changed: Answer is now plain.\\n- Verified: Not verified: no command was run.\\n- Proof: Missing: no artifact exists.\\n- Not done: none.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_strict_good.json && node -e \"const fs=require('fs');const bad=JSON.parse(fs.readFileSync('/tmp/shame_strict_bad.json','utf8'));const good=JSON.parse(fs.readFileSync('/tmp/shame_strict_good.json','utf8')); if(bad.decision!=='reject') throw new Error('bad did not reject'); if(!bad.footer_failures.includes('missing_trailing_report_title')) throw new Error('missing footer failure'); if(good.decision!=='pass') throw new Error('good did not pass'); console.log('STRICT_SHAME_SELF_CORRECT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "STRICT_SHAME_SELF_CORRECT_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/shame_strict_good.json",
+            "json_pointer": "/decision",
+            "equals": "pass"
+          }
+        ]
+      }
+    },
+    {
+      "name": "strict-obvious-next-step-not-enacted-rejected",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_correct_status_footer"
+      ],
+      "seams": [
+        "report-check",
+        "strict-status-mode"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Done.\\n\\nStatus Report\\n- Changed: Added the feature.\\n- Verified: Not verified: agentic-evals were not run.\\n- Proof: Missing: no receipt.\\n- Not done: run agentic-evals next.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_obvious_next_step_bad.json 2>/tmp/shame_obvious_next_step_bad.err; then echo 'strict checker accepted unacted obvious next step' >&2; exit 1; fi && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_obvious_next_step_bad.json','utf8')); if(d.decision!=='reject') throw new Error('did not reject'); if(!d.footer_failures.includes('obvious_next_step_not_enacted')) throw new Error('missing obvious-next-step failure'); console.log('OBVIOUS_NEXT_STEP_REJECT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OBVIOUS_NEXT_STEP_REJECT_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/shame_obvious_next_step_bad.json",
+            "json_pointer": "/decision",
+            "equals": "reject"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unsafe-memory-collection-rejected-before-write",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.capture_training_example"
+      ],
+      "seams": [
+        "input-validation"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh capture --text 'bad update' --verdict reject --reason vague_git_update --memory-collection _system"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "memory collection must not be a system collection"
+        ]
+      }
+    },
+    {
+      "name": "one-word-chatterbox-audio-install",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.one_word_audio"
+      ],
+      "seams": [
+        "audio-install",
+        "duration-gate"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && dir=$(mktemp -d) && ./run.sh audio install --source /tmp/lrsss-chatterbox-lower-female-shame-single.wav --extension-dir $dir >/tmp/shame_audio_eval_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_audio_eval_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.installed.duration_sec>2.5) throw new Error('too long'); if(d.installed.sha256!=='a3596aff349c98732f3c2c4b797a451fcf6a858d138c0b497d5df3642a5497dc') throw new Error('wrong audio'); console.log('ONE_WORD_AUDIO_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ONE_WORD_AUDIO_OK"
+        ]
+      }
+    }
+  ]
+}
