@@ -249,7 +249,7 @@ function lacksClearNextStep(value) {
     && !/\b(?:next|run|rerun|execute|ask|decide|approve|provide|fix|patch|verify|validate|inspect|review|file|choose|open|resume)\b/i.test(value);
 }
 
-const CONTROL_PLANE_STATUS_TERMS = /\b(?:hook|guard|routing|research[- ]routing|retry|reload|sloth|shame|obvious-next-step|CONTINUE_OBVIOUS_NEXT_STEP|UNLAZY_FORCED_RETRY|RESEARCH_ROUTING_GATE_RETRY)\b/i;
+const CONTROL_PLANE_STATUS_TERMS = /\b(?:hook|guard|routing|research[- ]routing|retry|reload|sloth|shame\s+guard|shame\s+checker|lazy-report-shame-shame-shame|obvious-next-step|CONTINUE_OBVIOUS_NEXT_STEP|UNLAZY_FORCED_RETRY|RESEARCH_ROUTING_GATE_RETRY)\b/i;
 const GOAL_PROGRESS_TERMS = /\b(?:immutable goal|goal|objective|requested work|actual task|root task|user-visible|project-visible|progress|QRA|ledger-auditor|eval|create-movie|Sparta|Horus)\b/i;
 
 function hasGoalProgressOrNextStep(bullets) {

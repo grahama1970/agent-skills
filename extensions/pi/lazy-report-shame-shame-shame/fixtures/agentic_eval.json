@@ -270,6 +270,30 @@
       }
     },
     {
+      "name": "strict-checker-allows-shame-skill-ticket-status",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.strict_checker_contract"
+      ],
+      "seams": [
+        "report-check-policy"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && printf '%s\\n' 'Status Report' '- Changed: no repository files changed; the $shame ticket proposals were checked against open GitHub issues before treating them as new drafts.' '- Verified: jq returned matching_shame_issue_count: 0 and summary_ticket_count: 7.' '- Proof: /tmp/shame-assigned-ticket-check.json and /tmp/shame-review-ask/ticket-previews-summary.json.' '- Not done: none.' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/lrsss-shame-ticket-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-ticket-status-allowed.json >/dev/null && echo SHAME_SKILL_TICKET_STATUS_ALLOWED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SHAME_SKILL_TICKET_STATUS_ALLOWED"
+        ]
+      }
+    },
+    {
       "name": "extension-continuation-open-ticket-rejects-final",
       "type": "adversarial",
       "real_world": true,
