@@ -180,6 +180,14 @@ def _normalize_tau_for_chart(dag: dict[str, Any]) -> dict[str, Any]:
             "agent": str(raw_node.get("agent") or ""),
             "executor": str(raw_node.get("executor") or ""),
         }
+        model = raw_node.get("model") or raw_node.get("handler")
+        if model:
+            node_input["model"] = str(model)
+        skills = raw_node.get("skills")
+        if isinstance(skills, list):
+            node_input["skills"] = [str(item) for item in skills]
+        elif skills:
+            node_input["skills"] = [str(skills)]
         command_spec = raw_node.get("command_spec")
         if command_spec:
             node_input["command_spec"] = str(command_spec)
@@ -219,7 +227,7 @@ def _normalize_tau_for_chart(dag: dict[str, Any]) -> dict[str, Any]:
                 "depends_on": [],
                 "max_attempts": 1,
                 "allow_failure": False,
-                "input": {"skill": "human", "executor": "human"},
+                "input": {"skill": "human", "agent": "human", "executor": "human"},
             })
             seen.add(child)
             edge_dependencies[child] = []

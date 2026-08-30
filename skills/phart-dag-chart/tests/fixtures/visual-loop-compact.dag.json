@@ -1,0 +1,121 @@
+{
+  "schema": "tau.dag_contract.v1",
+  "dag_id": "visual-loop-compact",
+  "goal": {
+    "goal_id": "visual-loop",
+    "goal_version": 1,
+    "goal_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "immutable_goal": "An SVG passes only after target screenshot review says it represents the goal and is attractive."
+  },
+  "target": {
+    "repo": "local/agent-skills",
+    "target": "docs/assets/project-cards/tau-dag-ledger-card.svg"
+  },
+  "entry_node": "compile-ask-tau-dag",
+  "terminal_nodes": ["human"],
+  "limits": {
+    "resume": true,
+    "default_timeout_seconds": 900,
+    "max_total_attempts": 3,
+    "max_concurrency": 2
+  },
+  "nodes": [
+    {
+      "id": "compile-ask-tau-dag",
+      "agent": "ask-runtime",
+      "executor": "local",
+      "skills": ["ask", "tau"],
+      "max_attempts": 1
+    },
+    {
+      "id": "open-tau-viewer",
+      "agent": "tau-viewer",
+      "executor": "local",
+      "skills": ["tau"],
+      "max_attempts": 1
+    },
+    {
+      "id": "project-state-context",
+      "agent": "project-agent-script",
+      "executor": "local",
+      "skills": ["project-state", "best-practices-svg-design"],
+      "max_attempts": 1
+    },
+    {
+      "id": "creator-attempt-1",
+      "agent": "svg-creator",
+      "model": "gpt-5.5-high",
+      "executor": "local",
+      "skills": ["create-svg", "best-practices-svg-design"],
+      "max_attempts": 1
+    },
+    {"id": "surf-screenshot-1", "agent": "surf", "executor": "local", "skills": ["surf"], "max_attempts": 1},
+    {
+      "id": "reviewer-visual-gate-1",
+      "agent": "visual-reviewer",
+      "model": "claude-fable-low",
+      "executor": "local",
+      "skills": ["surf", "best-practices-svg-design"],
+      "max_attempts": 1
+    },
+    {
+      "id": "creator-attempt-2",
+      "agent": "svg-creator",
+      "model": "gpt-5.5-high",
+      "executor": "local",
+      "skills": ["create-svg", "best-practices-svg-design"],
+      "max_attempts": 1
+    },
+    {"id": "surf-screenshot-2", "agent": "surf", "executor": "local", "skills": ["surf"], "max_attempts": 1},
+    {
+      "id": "reviewer-visual-gate-2",
+      "agent": "visual-reviewer",
+      "model": "claude-fable-low",
+      "executor": "local",
+      "skills": ["surf", "best-practices-svg-design"],
+      "max_attempts": 1
+    },
+    {
+      "id": "creator-attempt-3",
+      "agent": "svg-creator",
+      "model": "gpt-5.5-high",
+      "executor": "local",
+      "skills": ["create-svg", "best-practices-svg-design"],
+      "max_attempts": 1
+    },
+    {"id": "surf-screenshot-3", "agent": "surf", "executor": "local", "skills": ["surf"], "max_attempts": 1},
+    {
+      "id": "reviewer-visual-gate-3",
+      "agent": "visual-reviewer",
+      "model": "claude-fable-low",
+      "executor": "local",
+      "skills": ["surf", "best-practices-svg-design"],
+      "max_attempts": 1
+    },
+    {"id": "finalize-local-proof", "agent": "project-agent-script", "executor": "local", "max_attempts": 1},
+    {"id": "triage-error", "agent": "triage-error", "executor": "local", "skills": ["triage-error"], "max_attempts": 1},
+    {"id": "ticket-and-eval", "agent": "ticket-project-watchdog", "executor": "local", "skills": ["ticket", "project-watchdog", "agentic-evals"], "max_attempts": 1},
+    {"id": "human", "agent": "human", "executor": "human", "max_attempts": 1}
+  ],
+  "edges": [
+    {"from": "compile-ask-tau-dag", "to": "open-tau-viewer"},
+    {"from": "compile-ask-tau-dag", "to": "project-state-context"},
+    {"from": "open-tau-viewer", "to": "creator-attempt-1"},
+    {"from": "project-state-context", "to": "creator-attempt-1"},
+    {"from": "creator-attempt-1", "to": "surf-screenshot-1"},
+    {"from": "surf-screenshot-1", "to": "reviewer-visual-gate-1"},
+    {"from": "reviewer-visual-gate-1", "to": "finalize-local-proof", "condition": "visual_gate_pass"},
+    {"from": "reviewer-visual-gate-1", "to": "creator-attempt-2", "condition": "not_ready_and_attempts_remain"},
+    {"from": "creator-attempt-2", "to": "surf-screenshot-2"},
+    {"from": "surf-screenshot-2", "to": "reviewer-visual-gate-2"},
+    {"from": "reviewer-visual-gate-2", "to": "finalize-local-proof", "condition": "visual_gate_pass"},
+    {"from": "reviewer-visual-gate-2", "to": "creator-attempt-3", "condition": "not_ready_and_attempts_remain"},
+    {"from": "creator-attempt-3", "to": "surf-screenshot-3"},
+    {"from": "surf-screenshot-3", "to": "reviewer-visual-gate-3"},
+    {"from": "reviewer-visual-gate-3", "to": "finalize-local-proof", "condition": "visual_gate_pass"},
+    {"from": "reviewer-visual-gate-3", "to": "triage-error", "condition": "not_ready_or_runtime_error_after_max_attempts"},
+    {"from": "triage-error", "to": "ticket-and-eval"},
+    {"from": "ticket-and-eval", "to": "human"},
+    {"from": "finalize-local-proof", "to": "human"}
+  ]
+}

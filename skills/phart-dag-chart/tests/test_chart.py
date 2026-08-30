@@ -86,6 +86,30 @@ def test_tau_contract_chart_renders_source_schema_and_escalation_nodes():
     assert "human" in result.stdout
 
 
+def test_compact_loop_chart_shows_models_skills_agents_and_iteration_count():
+    result = runner.invoke(
+        app,
+        [
+            "chart",
+            str(FIXTURES / "visual-loop-compact.dag.json"),
+            "--plain",
+            "--show-meta",
+            "--compact-loops",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "[visual loop x3 max]" in result.stdout
+    assert "agents: 2 (creator + reviewer)" in result.stdout
+    assert "model:gpt-5.5-high" in result.stdout
+    assert "model:claude-fable-low" in result.stdout
+    assert "skills:create-svg,best-practices-svg-design" in result.stdout
+    assert "skills:surf,best-practices-svg-design" in result.stdout
+    assert "visual-loop-x3" in result.stdout
+    assert "tries:3" in result.stdout
+    assert "creator-attempt-2" not in result.stdout
+    assert "reviewer-visual-gate-3" not in result.stdout
+
+
 def test_validate_json_error_no_traceback(tmp_path: Path):
     bad = {
         "schema_version": "ask.dag.v1",

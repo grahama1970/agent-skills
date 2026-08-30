@@ -51,6 +51,7 @@ No raw Python tracebacks for expected failures.
 ./run.sh validate plans/my.dag.json
 ./run.sh validate plans/my.dag.json --json
 ./run.sh chart plans/my.dag.json
+./run.sh chart plans/my.dag.json --show-meta --compact-loops
 ./run.sh watch plans/my.dag.json --progress /tmp/tau-run/dag-progress.json
 ./run.sh watch plans/my.dag.json --run-dir /tmp/tau-run --once --no-chart
 ```
@@ -62,6 +63,8 @@ No raw Python tracebacks for expected failures.
 ## Validation messages
 
 Aligned with `$ask` `validate_ask_dag` for structure (schema, node ids, types, depends_on, cycles). Chart mode skips skill registry checks; warns on empty `skill.run` or join nodes without `depends_on`.
+
+`chart --show-meta` includes available node metadata in labels: `agent`, `model`, `skills`, executor, and retry count. `chart --compact-loops` collapses repeated `*-1`, `*-2`, `*-3` attempt chains into a bounded loop node while preserving the max iteration count and creator/reviewer model and skill metadata.
 
 ## Requirements
 

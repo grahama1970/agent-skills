@@ -77,13 +77,15 @@ def cmd_chart(
     dag_file: Annotated[Path, typer.Argument(help="Path to DAG JSON file")],
     no_validate: Annotated[bool, typer.Option("--no-validate", help="Skip validation (not recommended)")] = False,
     plain: Annotated[bool, typer.Option("--plain", help="Raw ASCII without markdown fences")] = False,
+    show_meta: Annotated[bool, typer.Option("--show-meta", help="Show agent/model/skill/attempt metadata in node labels")] = False,
+    compact_loops: Annotated[bool, typer.Option("--compact-loops", help="Summarize repeated attempt-N chains as bounded loops")] = False,
 ) -> None:
     """Render DAG as PHART ASCII decision tree (stdout)."""
     try:
         raw = load_dag_file(dag_file)
         if not no_validate:
             validate_dag(raw, chart_only=True)
-        typer.echo(render_chart(raw, validate=not no_validate, plain=plain))
+        typer.echo(render_chart(raw, validate=not no_validate, plain=plain, show_meta=show_meta, compact_loops=compact_loops))
         raise typer.Exit(code=EXIT_OK)
     except DagChartError as exc:
         _emit_error(exc)
