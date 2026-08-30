@@ -160,10 +160,12 @@ def _compact_loop_dag(dag: dict[str, Any]) -> dict[str, Any]:
         return dag
     attempts, bases, creator_nodes, reviewer_nodes = parts
     loop_ids = {f"{base}-{attempt}" for base in bases for attempt in attempts}
+    failure_node_ids = {"triage-error", "ticket", "ticket-and-eval", "project-watchdog", "agentic-evals"}
+    present_failure_ids = {str(node["id"]) for node in dag["nodes"] if str(node["id"]) in failure_node_ids}
     loop_id = f"visual-loop-x{len(attempts)}"
     compact_nodes: list[dict[str, Any]] = []
     for node in dag["nodes"]:
-        if node["id"] not in loop_ids:
+        if node["id"] not in loop_ids and node["id"] not in present_failure_ids:
             compact_nodes.append({**node, "depends_on": []})
     creator = creator_nodes[0] if creator_nodes else {}
     reviewer = reviewer_nodes[0] if reviewer_nodes else {}
@@ -185,14 +187,38 @@ def _compact_loop_dag(dag: dict[str, Any]) -> dict[str, Any]:
         },
     }
     compact_nodes.append(loop_node)
+    if present_failure_ids:
+        compact_nodes.append({
+            "id": "global-error-sidecar",
+            "type": "skill.run",
+            "display_type": "tau.on-error",
+            "depends_on": [],
+            "max_attempts": 1,
+            "input": {
+                "skill": "runtime/contract on_error",
+                "agent": "error-router",
+                "executor": "concurrent-monitor",
+                "skills": ["triage-error", "ticket", "project-watchdog", "agentic-evals"],
+            },
+        })
     by_id = {node["id"]: node for node in compact_nodes}
     edges: set[tuple[str, str]] = set()
     for node in dag["nodes"]:
-        child = loop_id if node["id"] in loop_ids else node["id"]
+        if node["id"] in present_failure_ids:
+            child = "global-error-sidecar"
+        else:
+            child = loop_id if node["id"] in loop_ids else node["id"]
         for parent in node.get("depends_on", []):
-            compact_parent = loop_id if parent in loop_ids else parent
+            if parent in present_failure_ids:
+                compact_parent = "global-error-sidecar"
+            else:
+                compact_parent = loop_id if parent in loop_ids else parent
             if compact_parent != child and compact_parent in by_id and child in by_id:
+                if child == "global-error-sidecar":
+                    continue
                 edges.add((compact_parent, child))
+    if "human" in by_id and "global-error-sidecar" in by_id:
+        edges.add(("global-error-sidecar", "human"))
     for parent, child in sorted(edges):
         by_id[child].setdefault("depends_on", []).append(parent)
     return {**dag, "nodes": list(by_id.values())}
@@ -201,6 +227,7 @@ def _compact_loop_dag(dag: dict[str, Any]) -> dict[str, Any]:
 def render_chart(
     dag: dict[str, Any], *, validate: bool = True, plain: bool = False, show_meta: bool = False, compact_loops: bool = False
 ) -> str:
+    source_dag = dag
     if validate:
         dag, _warnings = validate_dag(dag, chart_only=True)
     if not dag.get("nodes"):
@@ -245,6 +272,15 @@ def render_chart(
     if loop:
         header.append(loop)
         header.append("")
+    on_error = source_dag.get("on_error") if isinstance(source_dag.get("on_error"), dict) else None
+    if on_error:
+        route = on_error.get("route") if isinstance(on_error.get("route"), list) else []
+        header.extend([
+            "on_error: " + str(on_error.get("scope") or "any_node_runtime_or_contract_failure"),
+            "error route: " + " -> ".join(str(item) for item in route),
+            "not error: " + str(on_error.get("not_for") or "visual_gate_not_ready"),
+            "",
+        ])
     footer = ["", "renderer: phart@github.com/scottvr/phart · layout=layered · bboxes"]
     lines = header + [body] + footer
     if plain:

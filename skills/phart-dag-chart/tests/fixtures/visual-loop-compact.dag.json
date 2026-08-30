@@ -11,6 +11,11 @@
     "repo": "local/agent-skills",
     "target": "docs/assets/project-cards/tau-dag-ledger-card.svg"
   },
+  "on_error": {
+    "scope": "any_node_runtime_or_contract_failure",
+    "route": ["triage-error", "ticket", "project-watchdog", "agentic-evals"],
+    "not_for": "visual_gate_not_ready"
+  },
   "entry_node": "compile-ask-tau-dag",
   "terminal_nodes": ["human"],
   "limits": {
@@ -93,8 +98,11 @@
       "max_attempts": 1
     },
     {"id": "finalize-local-proof", "agent": "project-agent-script", "executor": "local", "max_attempts": 1},
-    {"id": "triage-error", "agent": "triage-error", "executor": "local", "skills": ["triage-error"], "max_attempts": 1},
-    {"id": "ticket-and-eval", "agent": "ticket-project-watchdog", "executor": "local", "skills": ["ticket", "project-watchdog", "agentic-evals"], "max_attempts": 1},
+    {"id": "visual-not-ready-after-max", "agent": "visual-reviewer", "executor": "tau", "skills": ["surf", "best-practices-svg-design"], "max_attempts": 1},
+    {"id": "triage-error", "agent": "triage-error", "executor": "on-error", "skills": ["triage-error"], "max_attempts": 1},
+    {"id": "ticket", "agent": "ticket", "executor": "on-error", "skills": ["ticket"], "max_attempts": 1},
+    {"id": "project-watchdog", "agent": "project-watchdog", "executor": "on-error", "skills": ["project-watchdog"], "max_attempts": 1},
+    {"id": "agentic-evals", "agent": "agentic-evals", "executor": "on-error", "skills": ["agentic-evals"], "max_attempts": 1},
     {"id": "human", "agent": "human", "executor": "human", "max_attempts": 1}
   ],
   "edges": [
@@ -105,17 +113,20 @@
     {"from": "creator-attempt-1", "to": "surf-screenshot-1"},
     {"from": "surf-screenshot-1", "to": "reviewer-visual-gate-1"},
     {"from": "reviewer-visual-gate-1", "to": "finalize-local-proof", "condition": "visual_gate_pass"},
-    {"from": "reviewer-visual-gate-1", "to": "creator-attempt-2", "condition": "not_ready_and_attempts_remain"},
+    {"from": "reviewer-visual-gate-1", "to": "creator-attempt-2", "condition": "visual_gate_not_ready_and_attempts_remain"},
     {"from": "creator-attempt-2", "to": "surf-screenshot-2"},
     {"from": "surf-screenshot-2", "to": "reviewer-visual-gate-2"},
     {"from": "reviewer-visual-gate-2", "to": "finalize-local-proof", "condition": "visual_gate_pass"},
-    {"from": "reviewer-visual-gate-2", "to": "creator-attempt-3", "condition": "not_ready_and_attempts_remain"},
+    {"from": "reviewer-visual-gate-2", "to": "creator-attempt-3", "condition": "visual_gate_not_ready_and_attempts_remain"},
     {"from": "creator-attempt-3", "to": "surf-screenshot-3"},
     {"from": "surf-screenshot-3", "to": "reviewer-visual-gate-3"},
     {"from": "reviewer-visual-gate-3", "to": "finalize-local-proof", "condition": "visual_gate_pass"},
-    {"from": "reviewer-visual-gate-3", "to": "triage-error", "condition": "not_ready_or_runtime_error_after_max_attempts"},
-    {"from": "triage-error", "to": "ticket-and-eval"},
-    {"from": "ticket-and-eval", "to": "human"},
-    {"from": "finalize-local-proof", "to": "human"}
+    {"from": "reviewer-visual-gate-3", "to": "visual-not-ready-after-max", "condition": "visual_gate_not_ready_after_max_attempts"},
+    {"from": "visual-not-ready-after-max", "to": "human"},
+    {"from": "finalize-local-proof", "to": "human"},
+    {"from": "triage-error", "to": "ticket", "condition": "runtime_or_contract_failure_is_durable_defect"},
+    {"from": "ticket", "to": "project-watchdog"},
+    {"from": "project-watchdog", "to": "agentic-evals"},
+    {"from": "agentic-evals", "to": "human", "condition": "recovered_or_needs_operator"}
   ]
 }

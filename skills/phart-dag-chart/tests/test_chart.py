@@ -106,8 +106,16 @@ def test_compact_loop_chart_shows_models_skills_agents_and_iteration_count():
     assert "skills:surf,best-practices-svg-design" in result.stdout
     assert "visual-loop-x3" in result.stdout
     assert "tries:3" in result.stdout
+    assert "visual-not-ready-after-max" in result.stdout
+    assert "on_error: any_node_runtime_or_contract_failure" in result.stdout
+    assert "error route: triage-error -> ticket -> project-watchdog -> agentic-evals" in result.stdout
+    assert "not error: visual_gate_not_ready" in result.stdout
+    assert "global-error-sidecar" in result.stdout
+    assert "skill:runtime/contract on_error" in result.stdout
+    assert "skills:triage-error,ticket,project-watchdog,agentic-evals" in result.stdout
     assert "creator-attempt-2" not in result.stdout
     assert "reviewer-visual-gate-3" not in result.stdout
+    assert "not_ready_or_runtime_error_after_max_attempts" not in result.stdout
 
 
 def test_validate_json_error_no_traceback(tmp_path: Path):

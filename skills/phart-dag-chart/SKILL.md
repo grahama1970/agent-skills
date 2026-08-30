@@ -66,6 +66,8 @@ Aligned with `$ask` `validate_ask_dag` for structure (schema, node ids, types, d
 
 `chart --show-meta` includes available node metadata in labels: `agent`, `model`, `skills`, executor, and retry count. `chart --compact-loops` collapses repeated `*-1`, `*-2`, `*-3` attempt chains into a bounded loop node while preserving the max iteration count and creator/reviewer model and skill metadata.
 
+For Tau visual loops, distinguish product-quality control flow from app/tool failures. A reviewer verdict such as `visual_gate_not_ready` stays inside the bounded visual loop and may end at `visual-not-ready-after-max`. Runtime or contract failures from any node belong in top-level `on_error` metadata and render as a concurrent `global-error-sidecar` with the route `triage-error -> ticket -> project-watchdog -> agentic-evals`.
+
 ## Requirements
 
 - **Python ≥3.14** (PHART 1.5 git rev pinned in `pyproject.toml` / `uv.lock`)
