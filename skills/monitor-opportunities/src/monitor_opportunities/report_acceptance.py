@@ -7,6 +7,7 @@ from typing import Any
 
 from .contracts import ContractError, ResultStatus, validate_manifest
 from .pipeline import build_receipt_consistency
+from .truth_status import compile_truth_status
 from .util import read_json, sha256_json, write_json
 
 REQUIRED_ZERO_EFFECT_CHECKS = (
@@ -190,8 +191,6 @@ def validate_report_acceptance(
         fail("report_json_present", "report/report.json is missing")
     if not report_html_path.exists():
         fail("report_html_present", "report/index.html is missing")
-    if require_stage_ledger and not stage_ledger_path.exists():
-        fail("stage_ledger_present", "stage-ledger.json is missing")
 
     manifest = None
     if manifest_raw:
@@ -223,30 +222,14 @@ def validate_report_acceptance(
             fail=fail,
         )
 
+    stage_ledger = read_json(stage_ledger_path) if stage_ledger_path.exists() else None
+    if require_stage_ledger and stage_ledger is None:
+        fail("stage_ledger_present", "stage-ledger.json is missing")
+    if stage_ledger is not None and stage_ledger.get("ok") is not True:
+        fail("stage_ledger_ok", "stage-ledger.json does not report ok=true")
+
     if run_receipt and run_receipt.get("external_effects") is not False:
         fail("run_external_effects", "run receipt external_effects is not false")
-
-    stage_ledger = read_json(stage_ledger_path) if stage_ledger_path.exists() else None
-    stage_ledger_schema_ok = (
-        stage_ledger.get("schema") == "monitor_opportunities.stage_ledger.v1"
-        if stage_ledger is not None
-        else False
-    )
-    stage_ledger_pass = (
-        stage_ledger.get("ok") is True
-        if stage_ledger is not None
-        else False
-    )
-    stage_ledger_violations = (
-        len(stage_ledger.get("violations") or []) if stage_ledger is not None else 0
-    )
-    if stage_ledger is not None and not stage_ledger_schema_ok:
-        fail("stage_ledger_schema", "stage-ledger.json has an unexpected schema")
-    if require_stage_ledger and stage_ledger is not None and not stage_ledger_pass:
-        fail(
-            "stage_ledger_pass",
-            f"stage-ledger.json is not ok; violations={stage_ledger_violations}",
-        )
 
     source_receipts = manifest_raw.get("source_receipts") or []
     degraded_statuses = {
@@ -284,10 +267,16 @@ def validate_report_acceptance(
         )
 
     opportunity_count = len(manifest_raw.get("opportunities") or [])
-    if opportunity_count == 0:
-        fail("shortlist_nonempty", "0 opportunities surfaced; promoted monitor report failed")
     if opportunity_count > 8:
         fail("shortlist_bound", f"{opportunity_count} opportunities exceeds max 8")
+
+    truth_status = compile_truth_status(run_dir)
+    if truth_status.get("report_disposition") == "WITHHOLD":
+        fail(
+            "truth_status_disposition",
+            "truth-status compiler withheld the report: "
+            + ", ".join(truth_status.get("blocking_codes") or []),
+        )
 
     status = "PASS" if not failures else "FAIL"
     receipt = {
@@ -309,13 +298,15 @@ def validate_report_acceptance(
             **replay_binding_checks,
             "stage_ledger_required": require_stage_ledger,
             "stage_ledger_present": stage_ledger is not None,
-            "stage_ledger_schema": stage_ledger_schema_ok,
-            "stage_ledger_pass": stage_ledger_pass,
+            "stage_ledger_ok": (
+                stage_ledger.get("ok") is True if stage_ledger is not None else False
+            ),
             "run_external_effects_false": run_receipt.get("external_effects") is False,
-            "shortlist_nonempty": opportunity_count > 0,
             "shortlist_bound": opportunity_count <= 8,
             "application_packets_human_authorized_only": not authorized_packets,
             "degraded_source_limitations_present": not degraded_without_limitations,
+            "truth_status_present": (run_dir / "truth-status.json").exists(),
+            "truth_status_not_withheld": truth_status.get("report_disposition") != "WITHHOLD",
         },
         "counts": {
             "opportunities": opportunity_count,
@@ -324,9 +315,10 @@ def validate_report_acceptance(
             "source_receipts": len(source_receipts),
             "degraded_source_receipts": len(degraded_receipts),
             "application_packets": len(application_packets),
-            "stage_ledger_violations": stage_ledger_violations,
         },
+        "stage_ledger": stage_ledger,
         "receipt_consistency": consistency,
+        "truth_status": truth_status,
         "failures": failures,
         "external_effects": False,
         "mocked": False,

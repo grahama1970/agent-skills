@@ -1,0 +1,212 @@
+"""Truth-status compiler tests for human-facing status claims."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from monitor_opportunities.truth_status import compile_truth_status
+
+
+def _write_json(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _base_run(tmp_path: Path) -> Path:
+    run_dir = tmp_path / "run"
+    opportunity = {
+        "opportunity_id": "candidate:a:moog-ai",
+        "organization": "Moog",
+        "title": "AI Systems Analyst",
+        "opportunity_type": "employment_posting",
+        "source_receipt_ids": ["src:linkedin"],
+    }
+    source_receipt = {
+        "receipt_id": "src:linkedin",
+        "provider": "linkedin",
+        "result_status": "MATCHES",
+        "evidence_refs": ["https://linkedin.example/job"],
+        "limitations": ["read-only evidence"],
+    }
+    manifest = {
+        "schema": "monitor_opportunities.report_manifest.v1",
+        "run_id": "run-test",
+        "generated_at": "2026-08-30T00:00:00Z",
+        "opportunities": [opportunity],
+        "source_receipts": [source_receipt],
+        "relationship_signals": [],
+    }
+    _write_json(
+        run_dir / "run-receipt.json",
+        {
+            "schema": "monitor_opportunities.run_receipt.v1",
+            "run_id": "run-test",
+            "live": True,
+            "mocked": False,
+            "external_effects": False,
+            "exit_code": 0,
+        },
+    )
+    _write_json(run_dir / "report-manifest.json", manifest)
+    _write_json(run_dir / "report" / "report.json", manifest)
+    _write_json(
+        run_dir / "stage-ledger.json",
+        {
+            "schema": "monitor_opportunities.stage_ledger.v1",
+            "ok": True,
+            "counts": {
+                "discovered": 1,
+                "accepted": 1,
+                "deduplicated": 0,
+                "eligible_not_shortlisted": 0,
+                "rejected": 0,
+                "unaccounted": 0,
+            },
+            "violations": [],
+        },
+    )
+    _write_json(
+        run_dir / "zero-effect-replay-receipt.json",
+        {
+            "schema": "monitor_opportunities.zero_effect_replay_receipt.v1",
+            "status": "PASS",
+            "external_effects": False,
+        },
+    )
+    return run_dir
+
+
+def test_truth_status_accepts_tau_provider_live_when_prepare_is_local(tmp_path: Path) -> None:
+    run_dir = _base_run(tmp_path)
+    _write_json(
+        run_dir / "tau-semantic" / "tau-semantic-prepare-receipt.json",
+        {
+            "schema": "monitor_opportunities.tau_semantic_prepare_receipt.v1",
+            "status": "PASS",
+            "run_id": "run-test",
+            "selected_count": 1,
+            "provider_live": False,
+        },
+    )
+    _write_json(
+        run_dir / "tau-semantic" / "providers" / "01-candidate" / "tau-semantic-provider-receipt.json",
+        {
+            "schema": "monitor_opportunities.tau_semantic_provider_receipt.v1",
+            "status": "PASS",
+            "run_id": "run-test",
+            "provider_live": True,
+            "live": True,
+            "mocked": False,
+        },
+    )
+
+    receipt = compile_truth_status(run_dir)
+
+    assert receipt["schema"] == "monitor_opportunities.truth_status.v1"
+    assert receipt["report_disposition"] == "EMIT_DEGRADED"
+    assert receipt["overall_status"] == "DEGRADED"
+    assert "TAU_PROVIDER_LIVE_CONFLICT" not in receipt["degradation_codes"]
+    assert "TAU_PROVIDER_LIVE_UNPROVEN" not in receipt["blocking_codes"]
+    assert receipt["tau"]["policy"] == "EVIDENCE_GATE"
+    assert receipt["tau"]["status"] == "LIVE"
+    assert receipt["tau"]["provider_live"] is True
+    assert receipt["tau"]["consistency"] == "PASS"
+    assert receipt["claims"] == [
+        {
+            "claim_id": "tau.provider.live",
+            "status": "VERIFIED",
+            "reason_code": "TAU_PROVIDER_RECEIPT_BOUND",
+            "evidence_refs": [
+                "tau-semantic/providers/01-candidate/tau-semantic-provider-receipt.json",
+            ],
+        }
+    ]
+    assert (run_dir / "truth-status.json").is_file()
+
+
+def test_truth_status_withholds_unbacked_tau_provider_live_claim(tmp_path: Path) -> None:
+    run_dir = _base_run(tmp_path)
+    _write_json(
+        run_dir / "nightly-receipt.json",
+        {
+            "schema": "monitor_opportunities.nightly_receipt.v1",
+            "status": "PASS",
+            "mode": "PROMOTED_STAGE_0",
+            "run_id": "run-test",
+            "steps": {
+                "tau_semantic": {
+                    "status": "PASS",
+                    "provider_live": True,
+                    "installed_addenda": 1,
+                }
+            },
+        },
+    )
+
+    receipt = compile_truth_status(run_dir)
+
+    assert receipt["report_disposition"] == "WITHHOLD"
+    assert receipt["overall_status"] == "FAILED"
+    assert "TAU_PROVIDER_LIVE_UNPROVEN" in receipt["blocking_codes"]
+    assert receipt["tau"]["policy"] == "EVIDENCE_GATE"
+    assert receipt["tau"]["status"] == "CONFLICT"
+    assert receipt["tau"]["provider_live"] is None
+    assert receipt["claims"] == [
+        {
+            "claim_id": "tau.provider.live",
+            "status": "SUPPRESSED",
+            "reason_code": "TAU_PROVIDER_LIVE_UNPROVEN",
+            "evidence_refs": ["nightly-receipt.json"],
+        }
+    ]
+
+
+def test_truth_status_separates_discord_delivery_from_discord_discovery(tmp_path: Path) -> None:
+    run_dir = _base_run(tmp_path)
+    manifest_path = run_dir / "report-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["source_receipts"].append(
+        {
+            "receipt_id": "src:discord",
+            "provider": "discord",
+            "result_status": "FEED_DOWN",
+            "evidence_refs": ["discord-channel"],
+            "limitations": ["Discord discovery adapter not wired"],
+        }
+    )
+    _write_json(manifest_path, manifest)
+    _write_json(run_dir / "report" / "report.json", manifest)
+    _write_json(
+        run_dir / "discord-handoff" / "morning-discord-receipt.json",
+        {
+            "schema": "monitor_opportunities.morning_discord_handoff_receipt.v1",
+            "status": "PASS",
+            "ops_discord_status": "SENT",
+            "message_url": "https://discord.example/message",
+            "ops_discord_receipt": {
+                "http_status": 200,
+                "message_id": "123",
+            },
+        },
+    )
+
+    receipt = compile_truth_status(run_dir)
+
+    assert receipt["sources"]["discord"]["discovery_status"] == "FEED_DOWN"
+    assert receipt["delivery"]["discord_handoff"]["status"] == "SENT"
+    assert "SOURCE_COVERAGE_DEGRADED" in receipt["degradation_codes"]
+
+
+def test_truth_status_withholds_on_report_count_mismatch(tmp_path: Path) -> None:
+    run_dir = _base_run(tmp_path)
+    report_path = run_dir / "report" / "report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["opportunities"] = []
+    _write_json(report_path, report)
+
+    receipt = compile_truth_status(run_dir)
+
+    assert receipt["report_disposition"] == "WITHHOLD"
+    assert receipt["overall_status"] == "FAILED"
+    assert "REPORT_COUNT_MISMATCH" in receipt["blocking_codes"]
