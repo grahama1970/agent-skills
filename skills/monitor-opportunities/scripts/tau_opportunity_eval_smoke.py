@@ -462,7 +462,11 @@ def main() -> None:
     run_parser = subparsers.add_parser("run")
     run_parser.add_argument("--report", type=Path, required=True)
     run_parser.add_argument("--out", type=Path, required=True)
-    run_parser.add_argument("--tau-root", type=Path, default=Path("/home/graham/workspace/experiments/tau"))
+    run_parser.add_argument(
+        "--tau-root",
+        type=Path,
+        default=Path(os.environ.get("TAU_ROOT", "~/workspace/experiments/tau")).expanduser(),
+    )
     run_parser.add_argument("--timeout-seconds", type=float, default=240.0)
     run_parser.set_defaults(func=run)
 

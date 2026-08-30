@@ -98,7 +98,6 @@ IMPLEMENTED = [
     "github-intelligence",
     "nightly",
     "apply",
-    "commit-workday",
     "tau-semantic-prepare",
     "tau-semantic-provider-eval",
     "tau-semantic-install",
@@ -151,40 +150,6 @@ def _resolve_cli_path(path: Path | None) -> Path | None:
     if path is None:
         return None
     return path.expanduser().resolve()
-
-
-def _resolve_evidence_path(
-    explicit: Path | None,
-    *,
-    env_var: str,
-    steps: dict[str, object] | None = None,
-) -> Path | None:
-    if explicit is not None:
-        path = explicit.expanduser().resolve()
-        if steps is not None:
-            steps.setdefault("social_mail_evidence", {})[env_var] = {
-                "source": "cli",
-                "path": str(path),
-                "exists": path.is_file(),
-            }
-        return path
-    configured = os.getenv(env_var)
-    if not configured:
-        if steps is not None:
-            steps.setdefault("social_mail_evidence", {})[env_var] = {
-                "source": "env",
-                "path": None,
-                "exists": False,
-            }
-        return None
-    path = Path(configured).expanduser().resolve()
-    if steps is not None:
-        steps.setdefault("social_mail_evidence", {})[env_var] = {
-            "source": "env",
-            "path": str(path),
-            "exists": path.is_file(),
-        }
-    return path if path.is_file() else None
 
 
 def _nightly_subprocess_env(skill_dir: Path, steps: dict[str, object]) -> dict[str, str]:
@@ -861,21 +826,7 @@ def _scheduler_self_repair_notify_enabled() -> bool:
         return explicit.strip().lower() in {"1", "true", "yes", "on"}
     return bool(
         os.environ.get("SLACK_WEBHOOK_URL") or os.environ.get("DISCORD_WEBHOOK_URL")
-        or os.environ.get("OPS_DISCORD_WEBHOOK_DISCORD_URL")
-        or _scheduler_self_repair_should_use_bot()
     )
-
-
-def _scheduler_self_repair_should_use_bot() -> bool:
-    explicit = os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_DISCORD_BOT")
-    if explicit is not None:
-        return explicit.strip().lower() in {"1", "true", "yes", "on"}
-    if os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_WEBHOOK"):
-        return False
-    inherited = os.getenv("MONITOR_OPPORTUNITIES_MORNING_DISCORD_BOT")
-    if inherited is not None:
-        return inherited.strip().lower() in {"1", "true", "yes", "on"}
-    return False
 
 
 def _scheduler_self_repair_webhook_name() -> str:
@@ -929,7 +880,6 @@ def _notify_scheduler_self_repair(
         return notification
 
     webhook_name = _scheduler_self_repair_webhook_name()
-    use_discord_bot = _scheduler_self_repair_should_use_bot()
     notify_dry_run = dry_run or _truthy_env("MONITOR_OPPORTUNITIES_SELF_REPAIR_NOTIFY_DRY_RUN")
     content = (
         f"monitor-opportunities required step failed and entered self-repair.\n"
@@ -941,26 +891,14 @@ def _notify_scheduler_self_repair(
     cmd = [
         str(runner),
         "notify",
+        "--webhook",
+        webhook_name,
         "--title",
         "monitor-opportunities self-repair",
         "--content",
         content,
         "--json",
     ]
-    if use_discord_bot:
-        cmd.append("--discord-bot")
-        channel_id = os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_DISCORD_CHANNEL_ID") or os.getenv(
-            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL_ID"
-        )
-        channel_name = os.getenv("MONITOR_OPPORTUNITIES_SELF_REPAIR_DISCORD_CHANNEL") or os.getenv(
-            "MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL"
-        )
-        if channel_id:
-            cmd.extend(["--channel-id", channel_id])
-        elif channel_name:
-            cmd.extend(["--channel-name", channel_name])
-    else:
-        cmd.extend(["--webhook", webhook_name])
     if notify_dry_run:
         cmd.append("--dry-run")
 
@@ -1662,7 +1600,7 @@ def sweep(
         exists=True,
         dir_okay=False,
         readable=True,
-        help="Local read-only Slack opportunity-channel evidence; no send, reply, or apply.",
+        help="Retained read-only Slack channel capture; no Slack post, DM, reaction, or mutation.",
     ),
     discord_evidence: Path | None = typer.Option(
         None,
@@ -1670,7 +1608,7 @@ def sweep(
         exists=True,
         dir_okay=False,
         readable=True,
-        help="Local read-only Discord opportunity-channel evidence; no send, reply, or apply.",
+        help="Retained read-only Discord channel capture; no Discord post, DM, reaction, or mutation.",
     ),
     gmail_evidence: Path | None = typer.Option(
         None,
@@ -1678,7 +1616,7 @@ def sweep(
         exists=True,
         dir_okay=False,
         readable=True,
-        help="Local read-only Gmail opportunity evidence; Gmail send remains forbidden.",
+        help="Retained mailbox-mining/Gmail readback artifact; Gmail send remains forbidden.",
     ),
 ) -> None:
     """Run read-only source discovery and write local receipts."""
@@ -1695,9 +1633,9 @@ def sweep(
         github_evidence=github_evidence,
         indeed_evidence=indeed_evidence,
         hiddenjobs_evidence=hiddenjobs_evidence,
-        slack_evidence=_resolve_cli_path(slack_evidence),
-        discord_evidence=_resolve_cli_path(discord_evidence),
-        gmail_evidence=_resolve_cli_path(gmail_evidence),
+        slack_evidence=slack_evidence,
+        discord_evidence=discord_evidence,
+        gmail_evidence=gmail_evidence,
     )
     typer.echo(json.dumps({"status": "PASS", **receipt}, indent=2, sort_keys=True))
 
@@ -1965,7 +1903,7 @@ def run_command(
         exists=True,
         dir_okay=False,
         readable=True,
-        help="Local read-only Slack opportunity-channel evidence; no send, reply, or apply.",
+        help="Retained read-only Slack channel capture; no Slack post, DM, reaction, or mutation.",
     ),
     discord_evidence: Path | None = typer.Option(
         None,
@@ -1973,7 +1911,7 @@ def run_command(
         exists=True,
         dir_okay=False,
         readable=True,
-        help="Local read-only Discord opportunity-channel evidence; no send, reply, or apply.",
+        help="Retained read-only Discord channel capture; no Discord post, DM, reaction, or mutation.",
     ),
     gmail_evidence: Path | None = typer.Option(
         None,
@@ -1981,7 +1919,7 @@ def run_command(
         exists=True,
         dir_okay=False,
         readable=True,
-        help="Local read-only Gmail opportunity evidence; Gmail send remains forbidden.",
+        help="Retained mailbox-mining/Gmail readback artifact; Gmail send remains forbidden.",
     ),
     outreach_effects: Path | None = typer.Option(
         None,
@@ -2510,79 +2448,6 @@ def commit_linkedin_command(
     typer.echo(json.dumps({"status": receipt["state"], **receipt}, indent=2, sort_keys=True))
 
 
-@app.command("commit-workday")
-def commit_workday_command(
-    candidate_id: str = typer.Option(..., "--candidate-id"),
-    posting_url: str = typer.Option(..., "--posting-url"),
-    apply_url: str = typer.Option(..., "--apply-url"),
-    payload_digest: str = typer.Option(..., "--payload-digest"),
-    form_schema: Path = typer.Option(
-        ...,
-        "--form-schema",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help="Captured Workday ATS schema from ats-inspect/capture_ats_form.",
-    ),
-    approved_answers: Path = typer.Option(
-        ...,
-        "--approved-answers",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help="Approved answer bank; only schema-bound exact approved answers may be filled.",
-    ),
-    promotion: Path = typer.Option(
-        ...,
-        "--promotion",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help="Scoped human promotion receipt: ats_form_submit:workday:<site>, exact candidate/site.",
-    ),
-    authorization: Path = typer.Option(
-        ...,
-        "--authorization",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help="Exact post-report human authorization for candidate/posting/apply URL/payload digest.",
-    ),
-    out: Path = typer.Option(..., "--out", file_okay=False, help="Directory for refusal/commit receipt and browser evidence."),
-    tab_id: str | None = typer.Option(None, "--tab-id", help="surf tab id already on the authorized Workday application page."),
-    submit: bool = typer.Option(False, "--submit", help="Attempt Workday submit after every gate passes."),
-    allow_duplicate: bool = typer.Option(False, "--allow-duplicate"),
-) -> None:
-    """Gated Workday application commit path.
-
-    The command refuses unless the Workday site promotion and post-report human
-    authorization match this exact candidate, posting URL, apply URL, and
-    payload digest. Captcha/login/2FA and unresolved required fields produce a
-    human-handoff receipt, not silent success.
-    """
-    _configure_logging()
-    from .ats.workday_apply import SurfWorkdayAdapter, commit_workday_application
-
-    adapter = SurfWorkdayAdapter(tab_id=tab_id) if tab_id else None
-    receipt = commit_workday_application(
-        candidate_id=candidate_id,
-        posting_url=posting_url,
-        apply_url=apply_url,
-        payload_digest=payload_digest,
-        form_schema=read_json(form_schema),
-        approved_answers=read_json(approved_answers),
-        promotion=read_json(promotion),
-        authorization=read_json(authorization),
-        out_dir=out,
-        submit=submit,
-        adapter=adapter,
-        allow_duplicate=allow_duplicate,
-    )
-    typer.echo(json.dumps({"status": receipt["state"], **receipt}, indent=2, sort_keys=True))
-    if receipt["state"] != "COMMITTED":
-        raise typer.Exit(code=2)
-
-
 @app.command("memory-sync")
 def memory_sync(
     run: Path = typer.Option(..., "--run", exists=True, file_okay=False, readable=True),
@@ -2650,30 +2515,6 @@ def nightly(
     tau_semantic_handler: str = typer.Option("webgpt", "--tau-semantic-handler"),
     tau_semantic_timeout_seconds: int = typer.Option(3600, "--tau-semantic-timeout-seconds", min=60),
     tau_semantic_browser_lock_timeout: int = typer.Option(1800, "--tau-semantic-browser-lock-timeout", min=60),
-    slack_evidence: Path | None = typer.Option(
-        None,
-        "--slack-evidence",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help="Local read-only Slack opportunity-channel evidence; no send, reply, or apply.",
-    ),
-    discord_evidence: Path | None = typer.Option(
-        None,
-        "--discord-evidence",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help="Local read-only Discord opportunity-channel evidence; no send, reply, or apply.",
-    ),
-    gmail_evidence: Path | None = typer.Option(
-        None,
-        "--gmail-evidence",
-        exists=True,
-        dir_okay=False,
-        readable=True,
-        help="Local read-only Gmail opportunity evidence; Gmail send remains forbidden.",
-    ),
 ) -> None:
     """One nightly transaction: run, publish shortlist to memory, post Discord handoff.
 
@@ -2816,10 +2657,7 @@ def nightly(
     # satisfies the API-website-fallback rule autonomously. Requires Chrome open.
     from .browser_capture import (
         browser_control_summary,
-        capture_discord_opportunity_channel,
-        capture_gmail_opportunity_search,
         capture_hiddenjobs,
-        capture_g2i_slack_jobs,
         capture_indeed_jobs,
         capture_linkedin_advanced_search,
         capture_linkedin_actively_hiring,
@@ -2946,60 +2784,6 @@ def nightly(
         "captured": hiddenjobs_receipt.get("records_captured"),
     }
     hiddenjobs_evidence = hiddenjobs_receipt.get("evidence_path")
-    g2i_slack_receipt = capture_g2i_slack_jobs(capture_dir)
-    steps["browser_capture_g2i_slack_jobs"] = {
-        "status": g2i_slack_receipt.get("status"),
-        "captured": g2i_slack_receipt.get("records_captured"),
-        "evidence_path": g2i_slack_receipt.get("evidence_path"),
-    }
-    slack_evidence = _resolve_evidence_path(
-        slack_evidence,
-        env_var="MONITOR_SLACK_EVIDENCE",
-        steps=steps,
-    )
-    if slack_evidence is None and g2i_slack_receipt.get("evidence_path"):
-        slack_evidence = Path(str(g2i_slack_receipt["evidence_path"]))
-        steps.setdefault("social_mail_evidence", {})["MONITOR_SLACK_EVIDENCE"]["selected_path"] = str(slack_evidence)
-        steps["social_mail_evidence"]["MONITOR_SLACK_EVIDENCE"]["source"] = "g2i_slack_browser_capture"
-    discord_capture_receipt = capture_discord_opportunity_channel(capture_dir)
-    steps["browser_capture_discord_opportunity_channel"] = {
-        "status": discord_capture_receipt.get("status"),
-        "captured": discord_capture_receipt.get("records_captured"),
-        "evidence_path": discord_capture_receipt.get("evidence_path"),
-    }
-    discord_evidence = _resolve_evidence_path(
-        discord_evidence,
-        env_var="MONITOR_DISCORD_EVIDENCE",
-        steps=steps,
-    )
-    if discord_evidence is None and discord_capture_receipt.get("evidence_path"):
-        discord_evidence = Path(str(discord_capture_receipt["evidence_path"]))
-        steps.setdefault("social_mail_evidence", {})["MONITOR_DISCORD_EVIDENCE"][
-            "selected_path"
-        ] = str(discord_evidence)
-        steps["social_mail_evidence"]["MONITOR_DISCORD_EVIDENCE"][
-            "source"
-        ] = "discord_browser_capture"
-    gmail_evidence = _resolve_evidence_path(
-        gmail_evidence,
-        env_var="MONITOR_GMAIL_EVIDENCE",
-        steps=steps,
-    )
-    gmail_capture_receipt = capture_gmail_opportunity_search(capture_dir)
-    steps["browser_capture_gmail_opportunity_search"] = {
-        "status": gmail_capture_receipt.get("status"),
-        "captured": gmail_capture_receipt.get("records_captured"),
-        "rows_seen": gmail_capture_receipt.get("rows_seen"),
-        "evidence_path": gmail_capture_receipt.get("evidence_path"),
-    }
-    if gmail_evidence is None and gmail_capture_receipt.get("evidence_path"):
-        gmail_evidence = Path(str(gmail_capture_receipt["evidence_path"]))
-        steps.setdefault("social_mail_evidence", {})["MONITOR_GMAIL_EVIDENCE"][
-            "selected_path"
-        ] = str(gmail_evidence)
-        steps["social_mail_evidence"]["MONITOR_GMAIL_EVIDENCE"][
-            "source"
-        ] = "gmail_browser_search_capture"
 
     # Client-prospecting engine (separate from jobs): Sales Navigator saved leads,
     # strictly read-only. Best-effort; captured to its own evidence, not fed to the
@@ -3109,12 +2893,6 @@ def nightly(
         run_cmd += ["--indeed-evidence", str(indeed_evidence)]
     if hiddenjobs_evidence:
         run_cmd += ["--hiddenjobs-evidence", str(hiddenjobs_evidence)]
-    if slack_evidence:
-        run_cmd += ["--slack-evidence", str(slack_evidence)]
-    if discord_evidence:
-        run_cmd += ["--discord-evidence", str(discord_evidence)]
-    if gmail_evidence:
-        run_cmd += ["--gmail-evidence", str(gmail_evidence)]
     run_proc = subprocess.run(run_cmd, capture_output=True, text=True, timeout=3600, env=run_env)
     steps["run"] = {"exit_code": run_proc.returncode}
     if run_proc.returncode != 0:
@@ -3499,12 +3277,21 @@ def nightly(
         require_stage_ledger=promoted_stage0,
     )
     report_acceptance_sha256 = sha256_json(report_acceptance_receipt)
+    truth_status_path = out / "truth-status.json"
+    truth_status_sha256 = _json_hash_file(truth_status_path)
     steps["report_acceptance"] = {
         "status": report_acceptance_receipt.get("status"),
         "receipt": str(report_acceptance_path),
         "sha256": report_acceptance_sha256,
         "external_effects": report_acceptance_receipt.get("external_effects"),
         "failure_count": len(report_acceptance_receipt.get("failures") or []),
+    }
+    steps["truth_status"] = {
+        "status": (report_acceptance_receipt.get("truth_status") or {}).get("overall_status"),
+        "disposition": (report_acceptance_receipt.get("truth_status") or {}).get("report_disposition"),
+        "receipt": str(truth_status_path),
+        "sha256": truth_status_sha256,
+        "external_effects": False,
     }
     if promoted_stage0 and report_acceptance_receipt.get("status") != "PASS":
         _fail(
@@ -3548,12 +3335,14 @@ def nightly(
             "receipt_consistency": str(consistency_path) if consistency_path.exists() else None,
             "zero_effect_replay": str(replay_receipt_path),
             "report_acceptance": str(report_acceptance_path),
+            "truth_status": str(truth_status_path) if truth_status_path.exists() else None,
             "stage_ledger": str(out / "stage-ledger.json")
             if (out / "stage-ledger.json").exists()
             else None,
         },
         "artifact_hashes": {
             "report_acceptance": report_acceptance_sha256,
+            "truth_status": truth_status_sha256,
             "stage_ledger": _json_hash_file(out / "stage-ledger.json"),
         },
         "receipt_consistency_status": consistency.get("status") if consistency else "MISSING",
@@ -3626,12 +3415,20 @@ def nightly(
                 require_stage_ledger=promoted_stage0,
             )
             report_acceptance_sha256 = sha256_json(report_acceptance_receipt)
+            truth_status_sha256 = _json_hash_file(truth_status_path)
             steps["report_acceptance"] = {
                 "status": report_acceptance_receipt.get("status"),
                 "receipt": str(report_acceptance_path),
                 "sha256": report_acceptance_sha256,
                 "external_effects": report_acceptance_receipt.get("external_effects"),
                 "failure_count": len(report_acceptance_receipt.get("failures") or []),
+            }
+            steps["truth_status"] = {
+                "status": (report_acceptance_receipt.get("truth_status") or {}).get("overall_status"),
+                "disposition": (report_acceptance_receipt.get("truth_status") or {}).get("report_disposition"),
+                "receipt": str(truth_status_path),
+                "sha256": truth_status_sha256,
+                "external_effects": False,
             }
             if promoted_stage0 and consistency.get("status") != "PASS":
                 nightly_receipt["status"] = "ERROR"
@@ -3656,6 +3453,10 @@ def nightly(
                     )
                 )
             nightly_receipt["artifact_hashes"]["report_acceptance"] = report_acceptance_sha256
+            nightly_receipt["artifact_hashes"]["truth_status"] = truth_status_sha256
+            nightly_receipt["artifacts"]["truth_status"] = (
+                str(truth_status_path) if truth_status_path.exists() else None
+            )
             nightly_receipt["receipt_consistency_status"] = consistency.get("status")
             nightly_receipt["report_acceptance_status"] = report_acceptance_receipt.get("status")
         nightly_receipt["steps"] = steps

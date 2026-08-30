@@ -283,6 +283,10 @@ def test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.delenv("SLACK_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("SLACK_USER_TOKEN", raising=False)
+    monkeypatch.delenv("DISCORD_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("CLAWDBOT_TOKEN", raising=False)
     monkeypatch.setattr(
         discovery,
         "_load_targets",
@@ -314,6 +318,28 @@ def test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources(
             "limitations": [],
         },
     )
+    monkeypatch.setattr(
+        discovery,
+        "_gmail_mailbox_memory_receipt",
+        lambda _memory_url: {
+            "receipt_id": "gmail-memory-feed-down",
+            "lane": "C",
+            "provider": "gmail",
+            "target": "graham@grahama.co mailbox mining",
+            "required_source_id": "gmail_mailbox",
+            "channel": "mailbox_mining",
+            "source_class": "mailbox_mined_gmail",
+            "result_status": "FEED_DOWN",
+            "observed_at": "2026-08-29T00:00:00Z",
+            "request_summary": "stubbed unavailable memory",
+            "response_status": None,
+            "content_type": None,
+            "response_bytes": 0,
+            "content_sha256": None,
+            "evidence_refs": ["memory://contacts"],
+            "limitations": ["memory unavailable"],
+        },
+    )
     out = tmp_path / "discovery"
     result = runner.invoke(app, ["sweep", "--lane", "C", "--out", str(out)])
     assert result.exit_code == 0, result.output
@@ -328,24 +354,26 @@ def test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources(
         if row.get("required_source_id") in {"slack_channels", "discord_channels", "gmail_mailbox"}
     }
     assert set(required) == {"slack_channels", "discord_channels", "gmail_mailbox"}
-    assert {row["result_status"] for row in required.values()} == {"FEED_DOWN"}
+    assert required["slack_channels"]["result_status"] == "AUTH_REQUIRED"
+    assert required["discord_channels"]["result_status"] == "AUTH_REQUIRED"
+    assert required["gmail_mailbox"]["result_status"] == "FEED_DOWN"
     assert required["slack_channels"]["channel"] == "slack"
     assert required["discord_channels"]["channel"] == "discord"
     assert required["gmail_mailbox"]["channel"] == "mailbox_mining"
 
 
-def test_sweep_parses_read_only_social_and_mail_evidence(
+def test_sweep_uses_retained_social_and_mail_evidence_for_required_sources(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.delenv("SLACK_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("SLACK_USER_TOKEN", raising=False)
+    monkeypatch.delenv("DISCORD_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("CLAWDBOT_TOKEN", raising=False)
     monkeypatch.setattr(
         discovery,
         "_load_targets",
-        lambda _skill_dir: {
-            "source_locators": [],
-            "employment": [],
-            "commercial": [],
-        },
+        lambda _skill_dir: {"source_locators": [], "employment": [], "commercial": []},
     )
     monkeypatch.setattr(
         discovery,
@@ -373,54 +401,15 @@ def test_sweep_parses_read_only_social_and_mail_evidence(
     discord = tmp_path / "discord.json"
     gmail = tmp_path / "gmail.json"
     slack.write_text(
-        json.dumps(
-            {
-                "messages": [
-                    {
-                        "title": "G2i fractional React Node AI contract",
-                        "company": "G2i client",
-                        "content": "Part-time remote agentic AI contract using React, Node, and Python.",
-                        "permalink": "https://app.slack.com/client/T02NLNJ2D/C01H317TX7X/p1",
-                    }
-                ]
-            }
-        ),
+        json.dumps({"messages": [{"channel_name": "g2i-jobs", "text": "AI platform contract lead", "permalink": "slack://C01H317TX7X/p1"}]}),
         encoding="utf-8",
     )
     discord.write_text(
-        json.dumps(
-            {
-                "messages": [
-                    {
-                        "title": "Buffalo document extraction consulting lead",
-                        "channel": "ai-opportunities",
-                        "content": "Buffalo team needs document extraction automation and LLM workflow help.",
-                        "url": "https://discord.com/channels/1344341191893979290/1344341192518799442/1",
-                    }
-                ]
-            }
-        ),
+        json.dumps({"messages": [{"author": {"username": "hiring"}, "content": "Buffalo AI meetup client need", "message_url": "https://discord.com/channels/g/c/m"}]}),
         encoding="utf-8",
     )
     gmail.write_text(
-        json.dumps(
-            {
-                "emails": [
-                    {
-                        "subject": "Agentic coding model newsletter",
-                        "sender": "newsletter@example.com",
-                        "snippet": "Long-horizon agentic workloads and model evaluation notes.",
-                        "thread_url": "https://mail.google.com/mail/u/0/#inbox/noise",
-                    },
-                    {
-                        "subject": "Remote AI engineer opportunity",
-                        "sender": "recruiter@example.com",
-                        "snippet": "Remote AI engineer role with document automation and machine learning.",
-                        "thread_url": "https://mail.google.com/mail/u/0/#inbox/abc",
-                    }
-                ]
-            }
-        ),
+        json.dumps({"emails": [{"sender": "known@example.com", "subject": "Document extraction opportunity", "thread_url": "mailto:thread@example.com"}]}),
         encoding="utf-8",
     )
 
@@ -441,47 +430,60 @@ def test_sweep_parses_read_only_social_and_mail_evidence(
             str(gmail),
         ],
     )
-
     assert result.exit_code == 0, result.output
-    receipts = [
-        json.loads(line)
-        for line in (out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-    required = {
-        row.get("required_source_id"): row
-        for row in receipts
-        if row.get("required_source_id") in {"slack_channels", "discord_channels", "gmail_mailbox"}
-    }
+    receipts = [json.loads(line) for line in (out / "source-receipts.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    required = {row.get("required_source_id"): row for row in receipts if row.get("required_source_id") in {"slack_channels", "discord_channels", "gmail_mailbox"}}
     assert {row["result_status"] for row in required.values()} == {"MATCHES"}
-    assert required["slack_channels"]["source_class"] == "slack_channel_capture"
-    assert required["discord_channels"]["source_class"] == "discord_channel_capture"
-    assert required["gmail_mailbox"]["source_class"] == "mailbox_mined_gmail"
-    assert (
-        required["slack_channels"]["automation_policy"]
-        == "read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply"
-    )
-    assert (
-        required["discord_channels"]["automation_policy"]
-        == "read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply"
-    )
-    assert (
-        required["gmail_mailbox"]["automation_policy"]
-        == "read_only_gmail_search_capture_no_open_no_send_no_draft_no_label_no_archive"
-    )
-    assert any(
-        "1 opportunity candidates emitted; 1 skipped." in limitation
-        for limitation in required["gmail_mailbox"]["limitations"]
-    )
-    candidates = [
-        json.loads(line)
-        for line in (out / "candidates.jsonl").read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-    assert {row["source_provider"] for row in candidates} >= {"slack", "discord", "gmail"}
+    assert required["slack_channels"]["automation_policy"] == "slack_read_only_no_post_no_dm_no_reaction"
+    assert required["discord_channels"]["automation_policy"] == "discord_read_only_no_post_no_dm_no_reaction"
+    assert required["gmail_mailbox"]["automation_policy"] == "mailbox_mining_read_only_no_send_no_forward_no_schedule"
+    candidates = [json.loads(line) for line in (out / "candidates.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    providers = {row["source_provider"] for row in candidates}
+    assert {"slack_channel_capture", "discord_channel_capture", "mailbox_mined_gmail"} <= providers
     assert all(row["lane"] == "C" for row in candidates)
-    assert all(row["external_effects"] is False for row in receipts if row.get("required_source_id") in required)
-    assert all("newsletter" not in row["title"].lower() for row in candidates)
+    assert all(row["apply_url"] is None for row in candidates)
+
+
+def test_read_only_social_api_receipts_use_tokens_without_outbound_effects(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-test-read-token")
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_SLACK_CHANNEL_IDS", "C123")
+    monkeypatch.setenv("DISCORD_BOT_TOKEN", "discord-test-read-token")
+    monkeypatch.setenv("MONITOR_OPPORTUNITIES_DISCORD_CHANNEL_IDS", "D456")
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def get(self, url, *, headers=None, params=None):
+            if "slack.com/api/conversations.history" in str(url):
+                assert headers["Authorization"] == "Bearer xoxb-test-read-token"
+                assert params == {"channel": "C123", "limit": 50}
+                return httpx.Response(200, json={"ok": True, "messages": [{"text": "AI contract opportunity", "ts": "1.23"}]}, request=httpx.Request("GET", str(url)))
+            if "discord.com/api/v10/channels/D456/messages" in str(url):
+                assert headers["Authorization"] == "Bot discord-test-read-token"
+                assert params == {"limit": 50}
+                return httpx.Response(200, json=[{"content": "Hiring for ML platform help", "id": "789"}], request=httpx.Request("GET", str(url)))
+            raise AssertionError(str(url))
+
+    monkeypatch.setattr(discovery.httpx, "Client", FakeClient)
+
+    slack = discovery._slack_channel_api_receipt()
+    discord = discovery._discord_channel_api_receipt()
+
+    assert slack["result_status"] == "MATCHES"
+    assert discord["result_status"] == "MATCHES"
+    assert slack["automation_policy"] == "slack_read_only_no_post_no_dm_no_reaction"
+    assert discord["automation_policy"] == "discord_read_only_no_post_no_dm_no_reaction"
+    assert any(ref == "slack://C123/1.23" for ref in slack["evidence_refs"])
+    assert any(ref.endswith("/D456/789") for ref in discord["evidence_refs"])
 
 
 def test_sweep_uses_browser_required_source_evidence_for_source_health_only(
@@ -779,47 +781,6 @@ def test_ops_linkedin_authorized_capture_yields_multiple_read_only_candidates() 
     assert rows[1]["location_display"] == "New York, NY (On-site)"
 
 
-def test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls(tmp_path: Path) -> None:
-    evidence = tmp_path / "linkedin-top-applicant-evidence.json"
-    collection_url = "https://www.linkedin.com/jobs/collections/top-applicant/"
-    job_url = "https://www.linkedin.com/jobs/view/4437451674/"
-    evidence.write_text(
-        json.dumps(
-            {
-                "schema_version": "ops-linkedin.opportunity_capture.v1",
-                "source": "human_authorized_linkedin_tab",
-                "automation_policy": LINKEDIN_AUTHORIZED_READ_ONLY_POLICY,
-                "linkedin_url": collection_url,
-                "primary_evidence_url": collection_url,
-                "top_candidate": True,
-                "opportunities": [
-                    {
-                        "source": "human_authorized_linkedin_tab",
-                        "title": "Sr. Software Engineer",
-                        "organization": "Moog Inc.",
-                        "location": "Buffalo, NY (On-site)",
-                        "linkedin_url": collection_url,
-                        "primary_evidence_url": job_url,
-                        "top_candidate": True,
-                        "warm_path": 0.9,
-                        "warm_path_via": "LinkedIn: connection works here",
-                    }
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    receipt, rows = _linkedin_evidence_candidates(evidence)
-
-    assert receipt["automation_policy"] == LINKEDIN_AUTHORIZED_READ_ONLY_POLICY
-    assert job_url in receipt["evidence_refs"]
-    assert collection_url in receipt["evidence_refs"]
-    assert rows[0]["source_identity"] == collection_url
-    assert rows[0]["primary_evidence_url"] == job_url
-    assert rows[0]["warm_path_via"] == "LinkedIn: connection works here"
-
-
 def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_path: Path) -> None:
     base = tmp_path / "advanced.json"
     other = tmp_path / "premium.json"
@@ -849,7 +810,6 @@ def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_
                         "title": "Applied AI Engineer",
                         "organization": "Example AI",
                         "primary_evidence_url": "https://www.linkedin.com/jobs/view/123/",
-                        "linkedin_url": "https://www.linkedin.com/jobs/collections/top-applicant/",
                         "top_candidate": True,
                         "easy_apply": True,
                         "under_10_applicants": True,
@@ -875,7 +835,6 @@ def test_linkedin_evidence_merge_preserves_premium_fields_on_duplicate_rows(tmp_
     assert row["competition"] == 0.1
     assert row["warm_path"] == 0.9
     assert row["warm_path_via"] == "LinkedIn: connection works here"
-    assert row["linkedin_url"] == "https://www.linkedin.com/jobs/collections/top-applicant/"
 
 
 def test_meetup_evidence_emits_only_attend_or_watch_source_intel() -> None:

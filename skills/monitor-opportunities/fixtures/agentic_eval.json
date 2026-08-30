@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "monitor-opportunities",
   "trials": 2,
-  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold, makes Discord the primary morning handoff while Buzz remains legacy/manual",
+  "proof_scope": "real-world end-to-end behavior: the LIVE nightly runs, browser-captures the real SAM.gov site, sweeps the real Greenhouse/Ashby/DARPA boards, writes real memory, keeps only recent (<=2wk) jobs, tailors a custom resume per top job (human-submit-gated), captures live ATS form schemas, prints a terminal opportunity table for human review, emits honest Slack/Discord/Gmail source coverage receipts, makes Discord the primary morning handoff while Buzz remains legacy/manual, requires grahama.co public-surface test-interactions gating, and the enforcement gates + fabrication guard hold",
   "claims": {
-    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim, uses Discord as the morning discussion handoff and skips Buzz in promoted Stage 0",
+    "proves": "a live nightly produces a real recent-only shortlist from real live boards + a real SAM website capture, tailors multiple custom resumes bound to approved claims (all submit-gated), captures live ATS application-form schemas read-only, writes recallable memory, prints the opportunity table in terminal output, emits visible Slack/Discord/Gmail source receipts instead of omitting those lanes, uses Discord as the morning discussion handoff and skips Buzz in promoted Stage 0, refuses to silently skip a dead-API source, enforces the 2-week recency window, exposes a live grahama.co public-surface interaction gate through monitor-opportunities, and carries no fabricated 'God of War' claim",
     "does_not_prove": "real successful application submissions (deliberately human-gated), long-run scheduler reliability, or semantic quality of tailored resumes"
   },
   "cases": [
@@ -91,34 +91,151 @@
       "proves": "The required-source contract accepts a valid current-run receipt even with supplemental locator noise, accepts sam.gov API receipts under browser_or_api, and emits honest auth-required browser receipts for Indeed/HiddenJobs instead of fabricated source coverage."
     },
     {
-      "name": "readiness-causes-schema-roundtrip-regression",
+      "name": "relationship-edge-evidence-ref-binding-regression",
       "type": "adversarial",
-      "evidence_class": "deterministic",
       "real_world": false,
+      "evidence_class": "deterministic",
       "timeout_seconds": 120,
+      "seams": [
+        "report_manifest.validation",
+        "relationship_signals.source_backing"
+      ],
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_pipeline.py::test_degraded_readiness_requires_machine_readable_causes skills/monitor-opportunities/tests/test_report_schema_runtime.py::test_runtime_manifest_validates_against_committed_schema skills/monitor-opportunities/tests/test_report_schema_runtime.py::test_meetup_runtime_manifest_validates_schema_without_opportunity_leak -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_source_admission.py::test_relationship_edge_refs_are_bound_to_cited_receipts -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "3 passed"
+          "1 passed"
         ],
         "stderr_excludes": [
-          "READINESS_CAUSES_REQUIRED",
-          "readiness_causes",
-          "REPORT_MANIFEST_READBACK_FAILED"
+          "RELATIONSHIP_EDGE_EVIDENCE_REF_UNRESOLVED",
+          "AssertionError"
         ]
       },
-      "proves": "A DEGRADED fixture run keeps machine-readable readiness_causes through ReportManifest validation, committed JSON Schema validation, and report JSON rendering.",
-      "does_not_prove": "That a fresh live nightly source is reachable or that the listed next_step has repaired the upstream provider.",
+      "proves": "Relationship signal edge evidence refs are normalized to refs present in the cited source receipts, preventing unbacked LinkedIn collection URLs from killing the nightly report after source capture.",
+      "does_not_prove": "That a fresh live nightly passed all browser, memory, Tau, or Discord stages."
+    },
+    {
+      "name": "social-and-mail-no-evidence-degrades-honestly",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
       "seams": [
-        "pipeline.readiness_causes",
-        "contracts.ReportManifest",
-        "schemas.report"
-      ]
+        "discovery.required_source_receipts",
+        "discovery.slack_channel_coverage",
+        "discovery.discord_channel_coverage",
+        "discovery.gmail_mailbox_coverage"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "KeyError",
+          "AssertionError"
+        ]
+      },
+      "proves": "Slack and Discord required source IDs emit honest AUTH_REQUIRED receipts when no retained capture or read token is supplied, and Gmail mailbox-mining degrades honestly when the memory readback is unavailable.",
+      "does_not_prove": "That Slack, Discord, or Gmail messages were live-searched, or that any opportunity from those channels was semantically relevant."
+    },
+    {
+      "name": "social-and-mail-retained-evidence-adapters",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "discovery.slack_channel_capture",
+        "discovery.discord_channel_capture",
+        "discovery.gmail_mailbox_mining_capture",
+        "stage0.external_effect_policy"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_uses_retained_social_and_mail_evidence_for_required_sources -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "FEED_DOWN",
+          "Gmail send",
+          "AssertionError"
+        ]
+      },
+      "proves": "Retained read-only Slack, Discord, and Gmail/mailbox-mining captures produce MATCHES source receipts and source-intel candidates without apply URLs or outbound effects.",
+      "does_not_prove": "Live Slack, Discord, or Gmail credential availability in the nightly environment."
+    },
+    {
+      "name": "social-read-token-api-adapters",
+      "type": "positive",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "discovery.slack_api_read",
+        "discovery.discord_api_read",
+        "stage0.no_social_writes"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_read_only_social_api_receipts_use_tokens_without_outbound_effects -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "AssertionError",
+          "FEED_DOWN"
+        ]
+      },
+      "proves": "When explicit read tokens are present, the Slack and Discord required-source adapters use read endpoints and emit MATCHES receipts with no post/DM/reaction policy.",
+      "does_not_prove": "That production Slack or Discord tokens are currently configured in the scheduler environment."
+    },
+    {
+      "name": "social-and-mail-report-schema-regression",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "schemas.report.source_receipts.source_class",
+        "discovery.required_source_receipts",
+        "report_manifest.validation"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_schema_runtime.py::test_report_schema_allows_mandatory_social_and_mail_source_receipts -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "REPORT_SCHEMA_INVALID",
+          "is not one of"
+        ]
+      },
+      "proves": "The committed report schema accepts the mandatory Slack, Discord, and Gmail source receipt classes emitted by discovery, preventing the 2026-08-29 REPORT_SCHEMA_INVALID nightly stop.",
+      "does_not_prove": "That Slack, Discord, or Gmail live adapters found messages or that a full live nightly passed unrelated browser gates."
     },
     {
       "name": "employer-ats-parser-limit-accounting",
@@ -230,6 +347,93 @@
       "does_not_prove": "That a fresh LinkedIn authenticated browser session exposes Top Applicant or Easy Apply rows."
     },
     {
+      "name": "mandate-relevance-memory-backed-no-subprocess-loop",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "relevance.memory_vocabulary_loader",
+        "relevance.flashtext_matcher_cache",
+        "relevance.no_per_title_extract_entities_subprocess"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_relevance.py::test_memory_unavailable_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_mandate_hits_uses_memory_list_once_for_repeated_batch skills/monitor-opportunities/tests/test_relevance.py::test_relevance_module_no_longer_shells_out_per_title skills/monitor-opportunities/tests/test_relevance.py::test_monitor_source_does_not_shell_out_to_extract_entities -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "4 passed"
+        ],
+        "stderr_excludes": [
+          "extract_entities.py",
+          "TimeoutExpired"
+        ]
+      },
+      "proves": "Mandate relevance loads opportunity_vocabulary through Memory /list, reuses one FlashText matcher across repeated title checks, fails soft when Memory is unavailable, and does not shell out to extract-entities per title.",
+      "does_not_prove": "A fresh full nightly reaches nightly-receipt.json or that the live Memory service returns non-empty opportunity_vocabulary during cron."
+    },
+    {
+      "name": "morning-discord-handoff-scheduled-8am",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "discord_handoff.morning_message",
+        "ops_discord.notify_invocation",
+        "scheduler.morning_discord_cron"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discord_handoff.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3 passed"
+        ],
+        "stderr_excludes": [
+          "SEND_FAILED",
+          "NO_WEBHOOK"
+        ]
+      },
+      "proves": "The morning handoff message is built from real run/digest receipt shapes, states the Easy Apply authorization boundary, invokes ops-discord notify in dry-run without external effects, and registers a scheduler job at 8am.",
+      "does_not_prove": "That a live Discord bot/webhook post succeeded or that Graham authorized any application submission."
+    },
+    {
+      "name": "terminal-opportunity-table-regression",
+      "type": "adversarial",
+      "real_world": false,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "seams": [
+        "cli.run_stdout_json_contract",
+        "cli.terminal_opportunity_table",
+        "report.human_review_surface"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_cli.py::test_run_prints_terminal_opportunity_table_without_breaking_json_stdout -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "json.decoder.JSONDecodeError",
+          "AssertionError"
+        ]
+      },
+      "proves": "The run command emits a human-readable opportunity table for terminal logs while preserving machine-readable JSON on stdout.",
+      "does_not_prove": "A fresh live nightly passed browser capture, that every opportunity is worth applying to, or that Graham authorized any application submission."
+    },
+    {
       "name": "moog-workday-source-discovery",
       "type": "negative",
       "real_world": true,
@@ -270,42 +474,11 @@
         ]
       },
       "proves": "Moog-style Workday application URLs are parsed, public Workday JobPosting JSON-LD is captured as apply-page location authority, East Aurora is classified as WNY_ONSITE, and a Workday page with no anonymous form fields records an OK read-only metadata capture instead of ATS_DOM_CAPTURE_EMPTY.",
-      "does_not_prove": "A fresh live Workday network request is reachable tonight, a live Workday submit succeeded, or that Graham has authorized a Moog application submission.",
+      "does_not_prove": "A fresh live Workday network request is reachable tonight, that Workday submit is implemented, or that Graham has authorized a Moog application submission.",
       "seams": [
         "browser_capture._ats_provider_from_url",
         "browser_capture._workday_application_metadata_from_html",
         "browser_capture.capture_ats_form"
-      ]
-    },
-    {
-      "name": "workday-commit-gate-regression-1549",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "real_world": true,
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-opportunities\" && uv run --project . python scripts/eval_workday_commit_gate.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "WORKDAY_COMMIT_GATE_OK",
-          "command=commit-workday",
-          "mismatches_refused=4",
-          "submitted=False"
-        ],
-        "stderr_excludes": [
-          "WORKDAY_COMMIT_COMMAND_MISSING",
-          "AUTHORIZATION_ACCEPTED_BAD"
-        ]
-      },
-      "proves": "A shortlisted Moog-style Workday role can no longer be stranded behind only the generic Stage 0 apply gate: the command surface exposes commit-workday, and exact post-report authorization refuses mismatched candidate id, posting URL, apply URL, and payload digest.",
-      "does_not_prove": "A live Workday application was submitted; the retained proof deliberately keeps submission blocked and records the human-handoff boundary.",
-      "seams": [
-        "ats.workday_commit",
-        "applications.authorization_ledger"
       ]
     },
     {
@@ -1461,6 +1634,34 @@
       "does_not_prove": "That project-watchdog dispatched a live repair, that a GitHub issue was created, or that the failed nightly step was subsequently rerun from checkpoint."
     },
     {
+      "name": "scheduler-exec-check-routes-failed-linkedin-top-applicant-capture",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "linkedin.source_accounting",
+        "failure.pipeline_self_repair"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_records_self_repair_when_top_applicant_capture_failed -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "pipeline-self-repair runner missing",
+          "SCHEDULER_EXEC_CHECK_FAILED"
+        ]
+      },
+      "proves": "A zero-exit nightly that records browser_capture_linkedin.status=FAILED cannot pass scheduler-exec-check; the receipt marks LinkedIn Top Applicant accounting false and enters pipeline-self-repair.",
+      "does_not_prove": "That LinkedIn returned live Top Applicant jobs, that Easy Apply was available, or that a live Discord/Slack webhook accepted a notification."
+    },
+    {
       "name": "scheduler-self-repair-notifies-ops-discord-when-enabled",
       "type": "adversarial",
       "real_world": false,
@@ -1468,18 +1669,17 @@
       "seams": [
         "scheduler.execution_equivalence",
         "failure.pipeline_self_repair",
-        "ops_discord.bot_notification",
         "ops_discord.failure_notification"
       ],
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_when_enabled skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_bot_when_configured -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_when_enabled -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "1 passed"
         ],
         "stderr_excludes": [
           "Webhook not found",
@@ -1488,6 +1688,34 @@
       },
       "proves": "When monitor-opportunities self-repair notification is explicitly enabled, the scheduler failure receipt invokes skills/ops-discord/run.sh notify, binds the ops-discord source/status back into the receipt, and can run dry-run with external_effects=false.",
       "does_not_prove": "A live Discord/Slack webhook accepted a real network post, or that project-watchdog repaired and reran the failed checkpoint."
+    },
+    {
+      "name": "scheduler-self-repair-notifies-ops-discord-from-webhook-env",
+      "type": "adversarial",
+      "real_world": false,
+      "timeout_seconds": 120,
+      "seams": [
+        "scheduler.execution_equivalence",
+        "failure.pipeline_self_repair",
+        "ops_discord.failure_notification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_when_webhook_env_exists -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ],
+        "stderr_excludes": [
+          "Webhook not found",
+          "SCHEDULER_EXEC_CHECK_FAILED"
+        ]
+      },
+      "proves": "When SLACK_WEBHOOK_URL or DISCORD_WEBHOOK_URL is already exported, monitor-opportunities self-repair notification invokes skills/ops-discord/run.sh notify without requiring a second monitor-specific enable flag.",
+      "does_not_prove": "A live Discord/Slack webhook accepted a real network post, because the retained regression uses ops-discord dry-run to avoid external mutation."
     },
     {
       "name": "tau-dag-visualizes-nightly-self-repair-orchestration",
@@ -1591,207 +1819,36 @@
       "does_not_prove": "A fresh nightly passed, a live project-watchdog dispatch ran, a GitHub issue was created, or any LinkedIn/ATS/Gmail action was authorized or performed."
     },
     {
-      "name": "social-and-mail-source-coverage-regression",
+      "name": "truth-status-overclaim-regression",
       "type": "adversarial",
       "real_world": false,
       "evidence_class": "deterministic",
       "timeout_seconds": 120,
       "seams": [
-        "discovery.required_source_receipts",
-        "discovery.linkedin_top_applicant_evidence_refs",
-        "discovery.slack_channel_coverage",
-        "discovery.discord_channel_coverage",
-        "discovery.gmail_mailbox_coverage"
+        "status.truth_status",
+        "report_acceptance.truth_status_disposition",
+        "tau.provider_live_claims",
+        "delivery.discord_handoff_vs_discovery"
       ],
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discovery.py::test_sweep_emits_honest_receipts_for_unwired_social_and_mail_sources skills/monitor-opportunities/tests/test_discovery.py::test_sweep_parses_read_only_social_and_mail_evidence skills/monitor-opportunities/tests/test_discovery.py::test_ops_linkedin_top_applicant_receipt_keeps_collection_and_job_urls skills/monitor-opportunities/tests/test_ats_form_capture.py::test_g2i_slack_records_from_text_keeps_job_posts_and_skips_chat skills/monitor-opportunities/tests/test_ats_form_capture.py::test_discord_records_from_text_keeps_hiring_posts_and_skips_chatter skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_records_from_rows_keeps_search_result_opportunities_and_skips_noise skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_capture_continues_after_navigation_timeout skills/monitor-opportunities/tests/test_ats_form_capture.py::test_gmail_capture_retries_fast_dom_after_extraction_timeout -q"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_truth_status.py skills/monitor-opportunities/tests/test_report_acceptance.py::test_report_acceptance_passes_for_receipt_backed_run -q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "8 passed"
+          "5 passed"
         ],
         "stderr_excludes": [
-          "KeyError",
-          "AssertionError"
+          "TAU_PROVIDER_LIVE_CONFLICT",
+          "truth_status_disposition",
+          "REPORT_COUNT_MISMATCH",
+          "Traceback"
         ]
       },
-      "proves": "Slack, Discord, and Gmail required source IDs are emitted by discovery with honest FEED_DOWN receipts when evidence is absent, supplied read-only Slack/Discord/Gmail evidence is parsed into MATCHES receipts and lane C candidates instead of staying hard-coded as unwired, G2i Slack job-alert text is split into concrete job posts while ordinary chat is skipped, Discord channel text emits hiring posts without admitting generic AI chatter, Gmail search-result rows emit opportunity/interview signals without admitting newsletter noise, and Gmail capture still writes evidence when a slow navigation command times out but the authenticated tab is readable.",
-      "does_not_prove": "That Slack, Discord, or Gmail connector APIs were called live from cron, or that any parsed opportunity is semantically relevant enough to submit."
-    },
-    {
-      "name": "social-and-mail-report-schema-regression",
-      "type": "adversarial",
-      "real_world": false,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "seams": [
-        "schemas.report.source_receipts.source_class",
-        "discovery.required_source_receipts",
-        "report_manifest.validation"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_report_schema_runtime.py::test_report_schema_allows_mandatory_social_and_mail_source_receipts -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ],
-        "stderr_excludes": [
-          "REPORT_SCHEMA_INVALID",
-          "is not one of"
-        ]
-      },
-      "proves": "The committed report schema accepts the mandatory Slack, Discord, and Gmail source receipt classes emitted by discovery, preventing the 2026-08-29 REPORT_SCHEMA_INVALID nightly stop.",
-      "does_not_prove": "That Slack, Discord, or Gmail live adapters found messages or that a full live nightly passed unrelated browser gates."
-    },
-    {
-      "name": "mandate-relevance-memory-backed-no-subprocess-loop",
-      "type": "adversarial",
-      "real_world": false,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "seams": [
-        "relevance.memory_extract_entities_endpoint",
-        "relevance.endpoint_fail_soft",
-        "relevance.no_per_title_extract_entities_subprocess"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_relevance.py::test_memory_extract_entities_endpoint_returns_labels skills/monitor-opportunities/tests/test_relevance.py::test_memory_unavailable_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_memory_timeout_backoff_avoids_repeated_endpoint_calls skills/monitor-opportunities/tests/test_relevance.py::test_memory_response_for_wrong_collection_fails_soft skills/monitor-opportunities/tests/test_relevance.py::test_relevance_module_no_longer_shells_out_per_title skills/monitor-opportunities/tests/test_relevance.py::test_monitor_source_does_not_shell_out_to_extract_entities -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "6 passed"
-        ],
-        "stderr_excludes": [
-          "extract_entities.py",
-          "TimeoutExpired"
-        ]
-      },
-      "proves": "Mandate relevance calls Memory /extract-entities with the opportunity_vocabulary payload, backs off after timeout, disables non-authoritative collection responses, and does not shell out to extract-entities per title unless explicitly opted in.",
-      "does_not_prove": "A fresh full nightly reaches nightly-receipt.json or that the live Memory service returns opportunity_vocabulary-specific labels during cron."
-    },
-    {
-      "name": "morning-discord-handoff-scheduled-8am",
-      "type": "adversarial",
-      "real_world": false,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "seams": [
-        "discord_handoff.morning_message",
-        "ops_discord.notify_invocation",
-        "scheduler.morning_discord_cron"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_discord_handoff.py -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "3 passed"
-        ],
-        "stderr_excludes": [
-          "SEND_FAILED",
-          "NO_WEBHOOK"
-        ]
-      },
-      "proves": "The morning handoff message is built from real run/digest receipt shapes, states the Easy Apply authorization boundary, invokes ops-discord notify in dry-run without external effects, and registers a scheduler job at 8am.",
-      "does_not_prove": "That a live Discord bot/webhook post succeeded or that Graham authorized any application submission."
-    },
-    {
-      "name": "terminal-opportunity-table-regression",
-      "type": "adversarial",
-      "real_world": false,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 120,
-      "seams": [
-        "cli.run_stdout_json_contract",
-        "cli.terminal_opportunity_table",
-        "report.human_review_surface"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_cli.py::test_run_prints_terminal_opportunity_table_without_breaking_json_stdout -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ],
-        "stderr_excludes": [
-          "json.decoder.JSONDecodeError",
-          "AssertionError"
-        ]
-      },
-      "proves": "The run command emits a human-readable opportunity table for terminal logs while preserving machine-readable JSON on stdout.",
-      "does_not_prove": "A fresh live nightly passed browser capture, that every opportunity is worth applying to, or that Graham authorized any application submission."
-    },
-    {
-      "name": "scheduler-exec-check-routes-failed-linkedin-top-applicant-capture",
-      "type": "adversarial",
-      "real_world": false,
-      "timeout_seconds": 120,
-      "seams": [
-        "scheduler.execution_equivalence",
-        "linkedin.source_accounting",
-        "failure.pipeline_self_repair"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_records_self_repair_when_top_applicant_capture_failed -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ],
-        "stderr_excludes": [
-          "pipeline-self-repair runner missing",
-          "SCHEDULER_EXEC_CHECK_FAILED"
-        ]
-      },
-      "proves": "A zero-exit nightly that records browser_capture_linkedin.status=FAILED cannot pass scheduler-exec-check; the receipt marks LinkedIn Top Applicant accounting false and enters pipeline-self-repair.",
-      "does_not_prove": "That LinkedIn returned live Top Applicant jobs, that Easy Apply was available, or that a live Discord/Slack webhook accepted a notification."
-    },
-    {
-      "name": "scheduler-self-repair-notifies-ops-discord-from-webhook-env",
-      "type": "adversarial",
-      "real_world": false,
-      "timeout_seconds": 120,
-      "seams": [
-        "scheduler.execution_equivalence",
-        "failure.pipeline_self_repair",
-        "ops_discord.failure_notification"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/monitor-opportunities --extra test pytest skills/monitor-opportunities/tests/test_scheduler.py::test_scheduler_exec_check_notifies_ops_discord_when_webhook_env_exists -q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ],
-        "stderr_excludes": [
-          "Webhook not found",
-          "SCHEDULER_EXEC_CHECK_FAILED"
-        ]
-      },
-      "proves": "When SLACK_WEBHOOK_URL or DISCORD_WEBHOOK_URL is already exported, monitor-opportunities self-repair notification invokes skills/ops-discord/run.sh notify without requiring a second monitor-specific enable flag.",
-      "does_not_prove": "A live Discord/Slack webhook accepted a real network post, because the retained regression uses ops-discord dry-run to avoid external mutation."
+      "proves": "The retained deterministic truth-status slice treats Tau provider receipts as an evidence gate, accepts provider-live only when bound to provider receipts, withholds unbacked Tau-live claims, separates Discord handoff delivery from Discord discovery coverage, withholds report acceptance on report-count mismatch, and still accepts a receipt-backed run.",
+      "does_not_prove": "That a fresh live nightly produced truth-status.json, that cron triggered reliably, that source discovery was healthy, or that any LinkedIn/ATS/Gmail effect was authorized or performed."
     }
   ]
 }

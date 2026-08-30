@@ -21,7 +21,7 @@ from .required_source_receipts import (
     linkedin_required_receipt as _linkedin_required_receipt,
     unavailable_required_source_receipt as _unavailable_required_source_receipt,
 )
-from .util import read_json, sha256_bytes, stable_id, utc_now, write_json, write_jsonl
+from .util import read_json, sha256_bytes, sha256_json, stable_id, utc_now, write_json, write_jsonl
 
 from dotenv import load_dotenv
 
@@ -127,22 +127,38 @@ def _text_evidence_record(raw: str) -> dict[str, Any]:
     return record
 
 
-def _load_linkedin_records(path: Path) -> list[dict[str, Any]]:
-    raw = path.read_text(encoding="utf-8")
+def _load_structured_records(path: Path) -> tuple[bytes, Any, list[dict[str, Any]]]:
+    raw_bytes = path.read_bytes()
+    raw = raw_bytes.decode("utf-8", errors="replace")
     try:
-        payload = read_json(path)
+        payload = json.loads(raw)
     except Exception:
         record = _text_evidence_record(raw)
-        return [record] if record else []
+        return raw_bytes, {"text": raw}, [record] if record else []
     if isinstance(payload, list):
-        return [row for row in payload if isinstance(row, dict)]
+        return raw_bytes, payload, [row for row in payload if isinstance(row, dict)]
     if isinstance(payload, dict):
-        for key in ("opportunities", "evidence", "records", "items"):
+        for key in (
+            "opportunities",
+            "evidence",
+            "records",
+            "items",
+            "messages",
+            "threads",
+            "emails",
+            "contacts",
+            "results",
+        ):
             rows = payload.get(key)
             if isinstance(rows, list):
-                return [row for row in rows if isinstance(row, dict)]
-        return [payload]
-    return []
+                return raw_bytes, payload, [row for row in rows if isinstance(row, dict)]
+        return raw_bytes, payload, [payload]
+    return raw_bytes, payload, []
+
+
+def _load_linkedin_records(path: Path) -> list[dict[str, Any]]:
+    _raw_bytes, _payload, records = _load_structured_records(path)
+    return records
 
 
 def _linkedin_record_url(record: dict[str, Any]) -> str | None:
@@ -156,13 +172,368 @@ def _linkedin_record_url(record: dict[str, Any]) -> str | None:
     return url or None
 
 
-def _linkedin_record_urls(record: dict[str, Any]) -> list[str]:
-    urls: list[str] = []
-    for key in ("primary_evidence_url", "posting_url", "job_url", "linkedin_url"):
-        url = str(record.get(key) or "").strip()
-        if url:
-            urls.append(url)
-    return list(dict.fromkeys(urls))
+def _record_evidence_url(record: dict[str, Any]) -> str | None:
+    url = str(
+        record.get("primary_evidence_url")
+        or record.get("posting_url")
+        or record.get("job_url")
+        or record.get("url")
+        or record.get("permalink")
+        or record.get("message_url")
+        or record.get("thread_url")
+        or record.get("link")
+        or ""
+    ).strip()
+    return url or None
+
+
+def _record_title(record: dict[str, Any], fallback: str) -> str:
+    for key in ("title", "subject", "summary", "headline", "content", "text", "body", "snippet"):
+        value = str(record.get(key) or "").strip()
+        if value:
+            return value.replace("\n", " ")[:120]
+    return fallback
+
+
+def _record_organization(record: dict[str, Any], fallback: str) -> str:
+    for key in ("organization", "org", "company", "employer", "sender", "author", "channel_name"):
+        value = record.get(key)
+        if isinstance(value, dict):
+            value = value.get("name") or value.get("username")
+        text = str(value or "").strip()
+        if text:
+            return text[:120]
+    return fallback
+
+
+def _required_channel_evidence_candidates(
+    evidence_path: Path,
+    *,
+    provider: str,
+    required_source_id: str,
+    target: str,
+    source_class: str,
+    channel: str,
+    automation_policy: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Parse a retained read-only social/mail capture into a source receipt.
+
+    The capture is a local artifact produced by a human-approved connector or
+    browser/API read. The parser only reads the file and emits source-intel rows;
+    it never sends, posts, replies, applies, RSVP's, or mutates accounts.
+    """
+
+    receipt = _base_receipt("C", provider, target, source_class)
+    receipt["required_source_id"] = required_source_id
+    receipt["channel"] = channel
+    receipt["automation_policy"] = automation_policy
+    receipt["request_summary"] = f"Read retained {target} capture from {evidence_path}"
+    try:
+        raw_bytes, payload, records = _load_structured_records(evidence_path)
+    except OSError as exc:
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Local evidence unreadable: {type(exc).__name__}")
+        return _finalize_receipt(receipt), []
+    receipt["response_status"] = 200
+    receipt["content_type"] = "application/json" if isinstance(payload, (dict, list)) else "text/plain"
+    receipt["response_bytes"] = len(raw_bytes)
+    receipt["content_sha256"] = sha256_bytes(raw_bytes)
+    file_ref = _local_file_ref(evidence_path)
+    evidence_refs = [file_ref]
+    candidates: list[dict[str, Any]] = []
+    receipt["result_status"] = "MATCHES" if records else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt["limitations"].append(
+        "Read-only source-intel only; no outbound message, RSVP, LinkedIn action, Gmail send, or application action is authorized."
+    )
+    finalized = _finalize_receipt(receipt)
+    for index, record in enumerate(records[:40], start=1):
+        evidence_url = _record_evidence_url(record)
+        if evidence_url:
+            evidence_refs.append(evidence_url)
+        title = _record_title(record, f"{target} item {index}")
+        organization = _record_organization(record, provider)
+        source_identity = evidence_url or f"{file_ref}#record-{index}"
+        candidate = {
+            "lane": "C",
+            "source_receipt_id": finalized["receipt_id"],
+            "source_provider": source_class,
+            "source_identity": source_identity,
+            "organization": organization,
+            "title": title,
+            "location_display": "Source-intel signal; delivery model not established",
+            "workplace_type": "NOT_APPLICABLE",
+            "relocation_required": False,
+            "posting_url": evidence_url,
+            "apply_url": None,
+            "primary_evidence_url": evidence_url or file_ref,
+            "published_at": record.get("published_at") or record.get("timestamp") or record.get("date"),
+            "updated_at": record.get("updated_at"),
+            "content_hash": sha256_json(record),
+            "posting_text": str(
+                record.get("content")
+                or record.get("text")
+                or record.get("body")
+                or record.get("snippet")
+                or title
+            )[:2000],
+            "fit_score": float(record.get("fit_score") or 0.55),
+            "source_evidence_refs": [evidence_url or file_ref],
+        }
+        candidate["candidate_id"] = _candidate_id("candidate:c:source-intel", candidate)
+        candidates.append(candidate)
+    receipt["evidence_refs"] = list(dict.fromkeys(evidence_refs))
+    finalized.update(
+        {
+            "evidence_refs": receipt["evidence_refs"],
+        }
+    )
+    return finalized, candidates
+
+
+def _env_evidence_path(name: str) -> Path | None:
+    value = os.environ.get(name)
+    if not value:
+        return None
+    path = Path(value).expanduser()
+    return path if path.is_file() else None
+
+
+def _split_env_csv(name: str, default: str = "") -> list[str]:
+    value = os.environ.get(name, default)
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _opportunity_signal_text(text: str) -> bool:
+    low = f" {text.lower()} "
+    terms = (
+        " job ",
+        " jobs ",
+        " hiring",
+        " role",
+        " roles",
+        " opportunity",
+        " contract",
+        " consulting",
+        " referral",
+        " recruiter",
+        " opening",
+        " client need",
+        " ai ",
+        " ml ",
+        " llm",
+        " machine learning",
+        " document extraction",
+    )
+    return any(term in low for term in terms)
+
+
+def _slack_channel_api_receipt() -> dict[str, Any]:
+    """Read Slack channel history when a read token is explicitly available."""
+
+    receipt = _base_receipt("C", "slack", "Slack opportunity channels", "slack_channel_capture")
+    receipt["required_source_id"] = "slack_channels"
+    receipt["channel"] = "slack"
+    receipt["automation_policy"] = "slack_read_only_no_post_no_dm_no_reaction"
+    receipt["request_summary"] = "Slack conversations.history read for configured opportunity channels; no write scopes used"
+    token = os.environ.get("SLACK_BOT_TOKEN") or os.environ.get("SLACK_USER_TOKEN")
+    channel_ids = _split_env_csv("MONITOR_OPPORTUNITIES_SLACK_CHANNEL_IDS", "C01H317TX7X")
+    receipt["evidence_refs"] = [f"slack://{channel_id}" for channel_id in channel_ids]
+    if not token:
+        receipt["result_status"] = "AUTH_REQUIRED"
+        receipt["parser_result"] = "BLOCKED"
+        receipt["limitations"].append("No SLACK_BOT_TOKEN/SLACK_USER_TOKEN read token is present; SLACK_WEBHOOK_URL is write-only and is not used for discovery.")
+        return _finalize_receipt(receipt)
+    messages: list[dict[str, Any]] = []
+    errors: list[str] = []
+    try:
+        with httpx.Client(timeout=httpx.Timeout(connect=3.0, read=10.0, write=3.0, pool=3.0)) as client:
+            for channel_id in channel_ids:
+                response = client.get(
+                    "https://slack.com/api/conversations.history",
+                    headers={"Authorization": f"Bearer {token}"},
+                    params={"channel": channel_id, "limit": 50},
+                )
+                body = response.content[:MAX_RESPONSE_BYTES]
+                receipt["response_status"] = response.status_code
+                receipt["content_type"] = response.headers.get("content-type")
+                receipt["response_bytes"] += len(response.content)
+                receipt["content_sha256"] = sha256_bytes(body)
+                if response.status_code == 429:
+                    receipt["result_status"] = "RATE_LIMITED"
+                    receipt["parser_result"] = "ERROR"
+                    return _finalize_receipt(receipt)
+                response.raise_for_status()
+                data = response.json()
+                if data.get("ok") is not True:
+                    errors.append(str(data.get("error") or "slack_not_ok"))
+                    continue
+                for msg in data.get("messages") or []:
+                    if isinstance(msg, dict):
+                        msg["channel_id"] = channel_id
+                        messages.append(msg)
+    except Exception as exc:  # noqa: BLE001 - required source must report a receipt
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Slack read failed: {type(exc).__name__}")
+        return _finalize_receipt(receipt)
+    if errors and not messages:
+        error_text = ", ".join(sorted(set(errors)))[:160]
+        receipt["result_status"] = "AUTH_FAILED" if any(e in error_text for e in ("invalid_auth", "not_authed")) else "POLICY_BLOCKED"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Slack API refused read: {error_text}")
+        return _finalize_receipt(receipt)
+    matches = [msg for msg in messages if _opportunity_signal_text(str(msg.get("text") or ""))]
+    receipt["result_status"] = "MATCHES" if matches else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt["evidence_refs"] = list(
+        dict.fromkeys(
+            [*receipt["evidence_refs"], *[f"slack://{msg.get('channel_id')}/{msg.get('ts')}" for msg in matches[:10] if msg.get("ts")]]
+        )
+    )
+    receipt["limitations"].append("Slack capture is read-only source coverage; no Slack post, DM, reaction, or external effect was attempted.")
+    return _finalize_receipt(receipt)
+
+
+def _discord_channel_api_receipt() -> dict[str, Any]:
+    """Read Discord channel messages when a bot token is explicitly available."""
+
+    receipt = _base_receipt("C", "discord", "Discord opportunity channels", "discord_channel_capture")
+    receipt["required_source_id"] = "discord_channels"
+    receipt["channel"] = "discord"
+    receipt["automation_policy"] = "discord_read_only_no_post_no_dm_no_reaction"
+    receipt["request_summary"] = "Discord channel messages read for configured opportunity channels; no send endpoint used"
+    token = os.environ.get("DISCORD_BOT_TOKEN") or os.environ.get("CLAWDBOT_TOKEN")
+    guild_id = os.environ.get("DISCORD_SERVER_ID") or "1344341191893979290"
+    channel_ids = _split_env_csv("MONITOR_OPPORTUNITIES_DISCORD_CHANNEL_IDS")
+    channel_id = os.environ.get("MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL_ID")
+    if channel_id:
+        channel_ids.append(channel_id)
+    channel_name = os.environ.get("MONITOR_OPPORTUNITIES_MORNING_DISCORD_CHANNEL", "horus")
+    receipt["evidence_refs"] = [
+        f"https://discord.com/channels/{guild_id}/{cid}" for cid in channel_ids
+    ] or [f"https://discord.com/channels/{guild_id}/name:{channel_name}"]
+    if not token:
+        receipt["result_status"] = "AUTH_REQUIRED"
+        receipt["parser_result"] = "BLOCKED"
+        receipt["limitations"].append("No DISCORD_BOT_TOKEN/CLAWDBOT_TOKEN read token is present; webhook credentials are not used for discovery reads.")
+        return _finalize_receipt(receipt)
+    messages: list[dict[str, Any]] = []
+    try:
+        with httpx.Client(timeout=httpx.Timeout(connect=3.0, read=10.0, write=3.0, pool=3.0)) as client:
+            if not channel_ids:
+                channels_response = client.get(
+                    f"https://discord.com/api/v10/guilds/{guild_id}/channels",
+                    headers={"Authorization": f"Bot {token}"},
+                )
+                receipt["response_status"] = channels_response.status_code
+                receipt["content_type"] = channels_response.headers.get("content-type")
+                receipt["response_bytes"] += len(channels_response.content)
+                receipt["content_sha256"] = sha256_bytes(channels_response.content[:MAX_RESPONSE_BYTES])
+                if channels_response.status_code in {401, 403}:
+                    receipt["result_status"] = "AUTH_FAILED"
+                    receipt["parser_result"] = "ERROR"
+                    receipt["limitations"].append("Discord bot could not list guild channels for source discovery.")
+                    return _finalize_receipt(receipt)
+                channels_response.raise_for_status()
+                for row in channels_response.json():
+                    if not isinstance(row, dict):
+                        continue
+                    if str(row.get("name") or "").strip().lower() == channel_name.strip().lower():
+                        channel_ids.append(str(row.get("id")))
+                if not channel_ids:
+                    receipt["result_status"] = "INVALID_RESPONSE"
+                    receipt["parser_result"] = "ERROR"
+                    receipt["limitations"].append(f"Discord channel named {channel_name!r} was not found in the configured guild.")
+                    return _finalize_receipt(receipt)
+                receipt["evidence_refs"] = [
+                    f"https://discord.com/channels/{guild_id}/{cid}" for cid in channel_ids
+                ]
+            for channel_id in channel_ids:
+                response = client.get(
+                    f"https://discord.com/api/v10/channels/{channel_id}/messages",
+                    headers={"Authorization": f"Bot {token}"},
+                    params={"limit": 50},
+                )
+                body = response.content[:MAX_RESPONSE_BYTES]
+                receipt["response_status"] = response.status_code
+                receipt["content_type"] = response.headers.get("content-type")
+                receipt["response_bytes"] += len(response.content)
+                receipt["content_sha256"] = sha256_bytes(body)
+                if response.status_code == 429:
+                    receipt["result_status"] = "RATE_LIMITED"
+                    receipt["parser_result"] = "ERROR"
+                    return _finalize_receipt(receipt)
+                if response.status_code in {401, 403}:
+                    receipt["result_status"] = "AUTH_FAILED"
+                    receipt["parser_result"] = "ERROR"
+                    return _finalize_receipt(receipt)
+                response.raise_for_status()
+                data = response.json()
+                if isinstance(data, list):
+                    for msg in data:
+                        if isinstance(msg, dict):
+                            msg["channel_id"] = channel_id
+                            messages.append(msg)
+    except Exception as exc:  # noqa: BLE001 - required source must report a receipt
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["limitations"].append(f"Discord read failed: {type(exc).__name__}")
+        return _finalize_receipt(receipt)
+    matches = [msg for msg in messages if _opportunity_signal_text(str(msg.get("content") or ""))]
+    receipt["result_status"] = "MATCHES" if matches else "NO_MATCHES"
+    receipt["parser_result"] = "PARSED"
+    receipt["evidence_refs"] = list(
+        dict.fromkeys(
+            [
+                *receipt["evidence_refs"],
+                *[
+                    f"https://discord.com/channels/{guild_id}/{msg.get('channel_id')}/{msg.get('id')}"
+                    for msg in matches[:10]
+                    if msg.get("id")
+                ],
+            ]
+        )
+    )
+    receipt["limitations"].append("Discord capture is read-only source coverage; no Discord post, DM, reaction, or external effect was attempted.")
+    return _finalize_receipt(receipt)
+
+
+def _gmail_mailbox_memory_receipt(memory_url: str) -> dict[str, Any]:
+    """Read mailbox-mining contact output through /memory; never Gmail itself."""
+
+    receipt = _base_receipt("C", "gmail", "graham@grahama.co mailbox mining", "mailbox_mined_gmail")
+    receipt["required_source_id"] = "gmail_mailbox"
+    receipt["channel"] = "mailbox_mining"
+    receipt["automation_policy"] = "mailbox_mining_memory_read_only_no_gmail_send_no_forward_no_schedule"
+    receipt["request_summary"] = "Read /memory contacts written by mailbox-mining; no Gmail API write or send path"
+    payload = {"query": "gmail mailbox opportunity referral hiring contact", "limit": 50, "collections": ["contacts"]}
+    try:
+        with httpx.Client(timeout=httpx.Timeout(connect=2.0, read=8.0, write=2.0, pool=2.0)) as client:
+            response = client.post(f"{memory_url.rstrip('/')}/recall", json=payload)
+        body = response.content[:MAX_RESPONSE_BYTES]
+        receipt["response_status"] = response.status_code
+        receipt["content_type"] = response.headers.get("content-type")
+        receipt["response_bytes"] = len(response.content)
+        receipt["content_sha256"] = sha256_bytes(body)
+        response.raise_for_status()
+        data = response.json()
+        rows = data.get("results") or data.get("items") or []
+        result_count = len(rows) if isinstance(rows, list) else 0
+        receipt["result_status"] = "MATCHES" if result_count else "NO_MATCHES"
+        receipt["parser_result"] = "PARSED"
+        receipt["evidence_refs"] = ["memory://contacts", f"memory://contacts?matched={result_count}"]
+        receipt["limitations"].append(
+            "Mailbox evidence is limited to redacted records already written by mailbox-mining; Gmail send remains forbidden."
+        )
+    except Exception as exc:  # noqa: BLE001 - required source must degrade honestly, not kill discovery
+        receipt["result_status"] = "FEED_DOWN"
+        receipt["parser_result"] = "ERROR"
+        receipt["evidence_refs"] = ["memory://contacts", "mailto:graham@grahama.co"]
+        receipt["limitations"].append(f"Mailbox-mining memory read unavailable: {type(exc).__name__}")
+        receipt["limitations"].append("Gmail send remains forbidden.")
+    return _finalize_receipt(receipt)
 
 
 # LinkedIn's top-applicant collection renders each row as
@@ -347,11 +718,7 @@ def _linkedin_evidence_candidates(path: Path) -> tuple[dict[str, Any], list[dict
         dict.fromkeys(
             [
                 *receipt["evidence_refs"],
-                *[
-                    url
-                    for record in records
-                    for url in _linkedin_record_urls(record)
-                ],
+                *[url for record in records if (url := _linkedin_record_url(record))],
             ]
         )
     )
@@ -482,242 +849,6 @@ def _required_browser_evidence_receipt(
         f"{len(records)} browser records observed; 0 candidates admitted from {provider} without primary-source readback."
     )
     return _finalize_receipt(receipt), []
-
-
-SOCIAL_SKILL_TERMS = (
-    "agentic",
-    "ai engineer",
-    "artificial intelligence",
-    "machine learning",
-    "llm",
-    "automation",
-    "document extraction",
-    "data extraction",
-    "contract",
-    "consulting",
-    "part-time",
-    "fractional",
-    "buffalo",
-    "remote",
-    "python",
-    "react",
-    "node",
-)
-SOCIAL_OPPORTUNITY_INTENT_TERMS = (
-    "apply",
-    "contract",
-    "consulting",
-    "fractional",
-    "freelance",
-    "hiring",
-    "job alert",
-    "job opening",
-    "job opportunity",
-    "job post",
-    "job posting",
-    "jobs",
-    "opening",
-    "opportunity",
-    "part-time",
-    "position",
-    "proposal",
-    "recruiter",
-    "rfp",
-    "role",
-    "seeking",
-)
-SOCIAL_OPPORTUNITY_INTENT_PATTERNS = (
-    re.compile(
-        r"(?<![a-z0-9])(?:team|company|client|customer|organization|agency|firm|office|group|shop)"
-        r"\s+need(?:s|ed|ing)?(?![a-z0-9])"
-    ),
-    re.compile(
-        r"(?<![a-z0-9])need(?:s|ed|ing)?\s+"
-        r"(?:ai|automation|document extraction|data extraction|workflow|python|react|node|engineer|consultant|developer)"
-    ),
-    re.compile(r"(?<![a-z0-9])look(?:ing)? for(?![a-z0-9])"),
-)
-SOCIAL_POLICY = "read_only_message_evidence_no_send_no_reply_no_apply"
-
-
-def _load_message_records(path: Path) -> list[dict[str, Any]]:
-    raw = path.read_text(encoding="utf-8")
-    try:
-        payload = json.loads(raw)
-    except ValueError:
-        record = _text_evidence_record(raw)
-        return [record] if record else []
-    if isinstance(payload, list):
-        return [row for row in payload if isinstance(row, dict)]
-    if isinstance(payload, dict):
-        for key in ("messages", "emails", "threads", "records", "items", "opportunities"):
-            rows = payload.get(key)
-            if isinstance(rows, list):
-                return [row for row in rows if isinstance(row, dict)]
-        return [payload]
-    return []
-
-
-def _message_text(record: dict[str, Any]) -> str:
-    parts = [
-        record.get("title"),
-        record.get("subject"),
-        record.get("role"),
-        record.get("company"),
-        record.get("organization"),
-        record.get("channel"),
-        record.get("sender"),
-        record.get("author"),
-        record.get("body"),
-        record.get("content"),
-        record.get("text"),
-        record.get("snippet"),
-        record.get("raw_text_excerpt"),
-    ]
-    return "\n".join(str(part) for part in parts if part)
-
-
-def _message_url(record: dict[str, Any]) -> str | None:
-    for key in ("url", "permalink", "message_url", "thread_url", "job_url", "posting_url", "apply_url"):
-        value = str(record.get(key) or "").strip()
-        if value:
-            return value
-    return None
-
-
-def _message_hits(record: dict[str, Any]) -> list[str]:
-    low = f" {_message_text(record).lower()} "
-    hits = []
-    for term in SOCIAL_SKILL_TERMS:
-        if term in {"llm"}:
-            matched = re.search(r"(?<![a-z0-9])llms?(?![a-z0-9])", low) is not None
-        elif term == "python":
-            matched = re.search(r"(?<![a-z0-9])python(?![a-z0-9])", low) is not None
-        elif term == "react":
-            matched = re.search(r"(?<![a-z0-9])react(?![a-z0-9])", low) is not None
-        elif term == "node":
-            matched = re.search(r"(?<![a-z0-9])node(?:\\.js)?(?![a-z0-9])", low) is not None
-        else:
-            matched = term in low
-        if matched:
-            hits.append(term)
-    return hits
-
-
-def _message_opportunity_intent_hits(record: dict[str, Any]) -> list[str]:
-    low = f" {_message_text(record).lower()} "
-    hits = [term for term in SOCIAL_OPPORTUNITY_INTENT_TERMS if term in low]
-    hits.extend(pattern.pattern for pattern in SOCIAL_OPPORTUNITY_INTENT_PATTERNS if pattern.search(low))
-    return hits
-
-
-def _message_evidence_candidates(
-    path: Path,
-    *,
-    provider: str,
-    required_source_id: str,
-    target: str,
-    source_class: str,
-    channel: str,
-    automation_policy: str = SOCIAL_POLICY,
-) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    raw = path.read_bytes()
-    receipt = _base_receipt("C", provider, target, source_class)
-    receipt["required_source_id"] = required_source_id
-    receipt["channel"] = channel
-    receipt["automation_policy"] = automation_policy
-    receipt["external_effects"] = False
-    receipt["request_summary"] = (
-        f"Read local {provider} opportunity evidence artifact {path.name}; "
-        "no send, reply, DM, apply, archive, label, or platform mutation"
-    )
-    receipt["response_status"] = None
-    receipt["content_type"] = "application/json" if path.suffix.lower() == ".json" else "text/plain"
-    receipt["response_bytes"] = len(raw)
-    receipt["content_sha256"] = sha256_bytes(raw)
-    receipt["evidence_refs"] = [_local_file_ref(path)]
-    receipt["limitations"].extend(
-        [
-            f"{provider} evidence is a read-only opportunity signal.",
-            "Rows are admitted only when the captured message text contains explicit opportunity terms.",
-            f"Automation policy: {automation_policy}.",
-        ]
-    )
-    try:
-        records = _load_message_records(path)
-    except (OSError, UnicodeDecodeError, ValueError) as exc:
-        receipt["result_status"] = "INVALID_RESPONSE"
-        receipt["parser_result"] = "ERROR"
-        receipt["limitations"].append(f"Local {provider} artifact could not be parsed: {type(exc).__name__}")
-        return _finalize_receipt(receipt), []
-
-    candidates: list[dict[str, Any]] = []
-    skipped = 0
-    for index, record in enumerate(records, start=1):
-        hits = _message_hits(record)
-        intent_hits = _message_opportunity_intent_hits(record)
-        if not hits or not intent_hits:
-            skipped += 1
-            continue
-        text = _message_text(record)
-        title = str(record.get("title") or record.get("subject") or record.get("role") or "").strip()
-        if not title:
-            title = f"{provider.title()} opportunity signal #{index}"
-        organization = str(
-            record.get("organization")
-            or record.get("company")
-            or record.get("client")
-            or record.get("sender")
-            or record.get("author")
-            or record.get("channel")
-            or target
-        ).strip()
-        evidence_url = _message_url(record) or _local_file_ref(path)
-        location = str(record.get("location") or record.get("location_display") or "Opportunity channel; delivery model unknown").strip()
-        payload = {
-            "lane": "C",
-            "source_receipt_id": receipt["receipt_id"],
-            "source_provider": provider,
-            "source_class": source_class,
-            "source_identity": str(record.get("id") or record.get("message_id") or evidence_url),
-            "automation_policy": automation_policy,
-            "organization": organization,
-            "title": title,
-            "location_display": location,
-            "workplace_type": _workplace_type(location, text),
-            "relocation_required": False,
-            "clearance_required": False,
-            "posting_url": evidence_url,
-            "apply_url": str(record.get("apply_url") or record.get("job_url") or "") or None,
-            "primary_evidence_url": evidence_url,
-            "published_at": record.get("published_at") or record.get("sent_at") or record.get("timestamp") or record.get("observed_at"),
-            "updated_at": record.get("updated_at") or record.get("observed_at"),
-            "content_hash": sha256_bytes(json.dumps(record, sort_keys=True).encode("utf-8")),
-            "posting_text": text[:14000],
-            "fit_score": float(record.get("fit_score") or min(0.72, 0.36 + 0.04 * len(hits))),
-            "contact_state": "CONTACT_PRESENT"
-            if (record.get("sender") or record.get("author") or record.get("contact"))
-            else "CONTACT_UNKNOWN",
-            "unresolved_assumptions": [
-                "Message evidence is a lead; primary-source opportunity details must be checked before any application or outreach.",
-                "No Slack, Discord, Gmail, LinkedIn, ATS, or Meetup external action is authorized by this evidence.",
-            ],
-            "matched_skill_terms": hits,
-            "matched_opportunity_terms": intent_hits,
-        }
-        payload["candidate_id"] = _candidate_id(f"candidate:c:{provider}", payload)
-        candidates.append(payload)
-        receipt["evidence_refs"].append(evidence_url)
-    receipt["result_status"] = "MATCHES" if candidates else "NO_MATCHES"
-    receipt["parser_result"] = "PARSED"
-    receipt["evidence_refs"] = list(dict.fromkeys(receipt["evidence_refs"]))
-    receipt["limitations"].append(
-        f"{len(records)} {provider} records inspected; {len(candidates)} opportunity candidates emitted; {skipped} skipped."
-    )
-    finalized = _finalize_receipt(receipt)
-    for candidate in candidates:
-        candidate["source_receipt_id"] = finalized["receipt_id"]
-    return finalized, candidates
 
 
 def _as_str_list(value: Any) -> list[str]:
@@ -2255,6 +2386,7 @@ def sweep(
     slack_evidence: Path | None = None,
     discord_evidence: Path | None = None,
     gmail_evidence: Path | None = None,
+    memory_url: str = "http://127.0.0.1:8601",
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     if fixture_dir is not None:
@@ -2341,87 +2473,51 @@ def sweep(
                 candidates.extend(rows)
         if "C" in lanes:
             receipts.append(_client_research_receipt(skill_dir))
+            slack_evidence = slack_evidence or _env_evidence_path("MONITOR_OPPORTUNITIES_SLACK_EVIDENCE")
+            discord_evidence = discord_evidence or _env_evidence_path("MONITOR_OPPORTUNITIES_DISCORD_EVIDENCE")
+            gmail_evidence = gmail_evidence or _env_evidence_path("MONITOR_OPPORTUNITIES_GMAIL_EVIDENCE")
             if slack_evidence is not None:
-                receipt, rows = _message_evidence_candidates(
+                receipt, rows = _required_channel_evidence_candidates(
                     slack_evidence,
                     provider="slack",
                     required_source_id="slack_channels",
                     target="Slack opportunity channels",
                     source_class="slack_channel_capture",
                     channel="slack",
-                    automation_policy="read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply",
+                    automation_policy="slack_read_only_no_post_no_dm_no_reaction",
                 )
                 receipts.append(receipt)
                 candidates.extend(rows)
             else:
-                receipts.append(
-                    _unavailable_required_source_receipt(
-                        provider="slack",
-                        required_source_id="slack_channels",
-                        target="Slack opportunity channels",
-                        source_class="slack_channel_capture",
-                        channel="slack",
-                        limitation=(
-                            "Slack channel evidence was not supplied; provide --slack-evidence "
-                            "from the Slack connector or a read-only channel export for G2i/job-alert mining."
-                        ),
-                        evidence_refs=["slack://C01H317TX7X"],
-                    )
-                )
+                receipts.append(_slack_channel_api_receipt())
             if discord_evidence is not None:
-                receipt, rows = _message_evidence_candidates(
+                receipt, rows = _required_channel_evidence_candidates(
                     discord_evidence,
                     provider="discord",
                     required_source_id="discord_channels",
                     target="Discord opportunity channels",
                     source_class="discord_channel_capture",
                     channel="discord",
-                    automation_policy="read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply",
+                    automation_policy="discord_read_only_no_post_no_dm_no_reaction",
                 )
                 receipts.append(receipt)
                 candidates.extend(rows)
             else:
-                receipts.append(
-                    _unavailable_required_source_receipt(
-                        provider="discord",
-                        required_source_id="discord_channels",
-                        target="Discord opportunity channels",
-                        source_class="discord_channel_capture",
-                        channel="discord",
-                        limitation=(
-                            "Discord channel evidence was not supplied; provide --discord-evidence "
-                            "from ops-discord, a read-only channel export, or a surf capture."
-                        ),
-                        evidence_refs=["https://discord.com/channels/1344341191893979290/1344341192518799442"],
-                    )
-                )
+                receipts.append(_discord_channel_api_receipt())
             if gmail_evidence is not None:
-                receipt, rows = _message_evidence_candidates(
+                receipt, rows = _required_channel_evidence_candidates(
                     gmail_evidence,
                     provider="gmail",
                     required_source_id="gmail_mailbox",
                     target="graham@grahama.co mailbox mining",
                     source_class="mailbox_mined_gmail",
                     channel="mailbox_mining",
-                    automation_policy="read_only_gmail_search_capture_no_open_no_send_no_draft_no_label_no_archive",
+                    automation_policy="mailbox_mining_read_only_no_send_no_forward_no_schedule",
                 )
                 receipts.append(receipt)
                 candidates.extend(rows)
             else:
-                receipts.append(
-                    _unavailable_required_source_receipt(
-                        provider="gmail",
-                        required_source_id="gmail_mailbox",
-                        target="graham@grahama.co mailbox mining",
-                        source_class="mailbox_mined_gmail",
-                        channel="mailbox_mining",
-                        limitation=(
-                            "Gmail mailbox evidence was not supplied; provide --gmail-evidence "
-                            "from a read-only mailbox-mining export. Gmail send remains forbidden."
-                        ),
-                        evidence_refs=["mailto:graham@grahama.co"],
-                    )
-                )
+                receipts.append(_gmail_mailbox_memory_receipt(memory_url))
             for target in targets.get("commercial", []):
                 receipt, rows = _commercial_receipt(target)
                 receipts.append(receipt)
@@ -2483,13 +2579,7 @@ def _merge_linkedin_priority_fields(existing: dict[str, Any], row: dict[str, Any
         if row.get(field) and not existing.get(field):
             existing[field] = row[field]
             changed = True
-    for field in (
-        "top_candidate_text",
-        "evidence_text",
-        "matched_query",
-        "warm_path_via",
-        "linkedin_url",
-    ):
+    for field in ("top_candidate_text", "evidence_text", "matched_query", "warm_path_via"):
         if row.get(field) not in (None, "", [], {}) and existing.get(field) in (None, "", [], {}):
             existing[field] = row[field]
             changed = True

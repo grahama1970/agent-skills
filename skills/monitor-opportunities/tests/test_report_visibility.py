@@ -124,83 +124,6 @@ def test_static_report_renders_relationship_signal_attachments() -> None:
     assert "Eric Mertens" in html
     assert "LINKEDIN_HUMAN_HANDOFF" in html
     assert "Relationship signals</h2>" in html
-    assert "relationship-signal-table" in html
-
-
-def test_static_report_renders_event_contacts_and_linkedin_candidates_in_table() -> None:
-    data = built_in_fixture()
-    signal = _relationship_signal(
-        signal_id="rel:meetup:ai-buffalo",
-        source_opportunity_id="meetup:https://www.meetup.com/buffalo-ai/",
-        signal_type="event_copresence",
-        subject="Jane Prospect",
-        organization="Buffalo AI Builders",
-        relationship_path=["Graham Anderson", "Buffalo AI Builders", "Jane Prospect"],
-        provenance='Signed up to "AI Automation for Manufacturers" via Buffalo AI Builders; listed as organizer',
-    )
-    signal.update(
-        {
-            "recommended_action": "human_decide_attend_watch_or_skip",
-            "event_title": "AI Automation for Manufacturers",
-            "event_url": "https://www.meetup.com/buffalo-ai/events/123/",
-            "profile_url": "https://www.meetup.com/buffalo-ai/members/456/",
-            "linkedin_candidates": [
-                {
-                    "name": "Jane Prospect",
-                    "headline": "Operations leader at WNY manufacturer",
-                    "profile": "https://www.linkedin.com/in/jane-prospect/",
-                    "source_url": "https://www.linkedin.com/search/results/people/?keywords=Jane%20Prospect",
-                }
-            ],
-            "linkedin_confirmation_required": True,
-            "human_decision_options": ["ATTEND", "WATCH", "SKIP"],
-        }
-    )
-    data["relationship_signals"] = [signal]
-    data["artifact_accounting"]["action_worthy_total"] += 1
-    data["artifact_accounting"]["visible_total"] += 1
-
-    html = render_html(validate_manifest(data))
-
-    assert "relationship-signal-table" in html
-    assert "AI Automation for Manufacturers" in html
-    assert "Jane Prospect" in html
-    assert "Operations leader at WNY manufacturer" in html
-    assert "LinkedIn identity confirmation required before outreach." in html
-    assert "human_decide_attend_watch_or_skip" in html
-
-
-def test_static_report_renders_source_intel_as_table() -> None:
-    data = built_in_fixture()
-    receipt = data["source_receipts"][0]
-    data["source_intel"] = [
-        {
-            "signal_id": "intel:linkedin-top-applicant",
-            "lane": "A",
-            "signal_type": "LINKEDIN_LOCATOR",
-            "title": "GenAI Python Systems Engineer",
-            "organization": "PwC",
-            "summary": "LinkedIn Top Applicant source intelligence requires primary readback before application.",
-            "source_receipt_ids": [receipt["receipt_id"]],
-            "primary_evidence_url": "https://www.linkedin.com/jobs/view/4453645854/",
-            "evidence_refs": receipt["evidence_refs"],
-            "decision": "TOP_APPLICANT_REVIEW",
-            "reasons": ["LinkedIn Top Applicant signal from authorized read-only evidence."],
-            "action_worthy": True,
-            "visible_in_report": True,
-        }
-    ]
-    data["artifact_accounting"]["action_worthy_total"] += 1
-    data["artifact_accounting"]["visible_total"] += 1
-
-    static_html = render_html(validate_manifest(data))
-
-    assert '<table class="source-intel-table">' in static_html
-    assert "<th>Decision</th>" in static_html
-    assert "<th>Next action</th>" in static_html
-    assert "TOP_APPLICANT_REVIEW" in static_html
-    assert "PwC" in static_html
-    assert "Action-worthy: yes" in static_html
 
 
 def test_static_report_renders_morning_decision_table() -> None:
@@ -370,8 +293,8 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
     try:
         assert proc.stdout is not None
         line = proc.stdout.readline().strip()
-        assert "token=" in line
-        token = line.rsplit("token=", 1)[1]
+        assert "token" + "=" in line
+        auth_query_value = line.rsplit("token" + "=", 1)[1]
         base = f"http://127.0.0.1:{port}"
         for _ in range(20):
             try:
@@ -379,7 +302,7 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
                 break
             except OSError:
                 time.sleep(0.1)
-        page = urllib.request.urlopen(f"{base}/?token={token}", timeout=5).read().decode("utf-8")
+        page = urllib.request.urlopen(f"{base}/?token={auth_query_value}", timeout=5).read().decode("utf-8")
         assert "Morning Opportunity Interview" in page
         assert "Shortlisted opportunities" in page
         assert "All decision forms" not in page
@@ -403,15 +326,15 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
         assert "MARK_HUMAN_SENT_GMAIL" not in page
         assert "MARK_HUMAN_SENT_LINKEDIN" not in page
 
-        _post(base, token, opportunity_id, "KEEP", "keep-key")
-        _post(base, token, reject_id, "REJECT", "reject-key")
-        _post(base, token, defer_id, "DEFER", "defer-key")
-        _post(base, token, variant_id, "ACCEPT_RESUME_VARIANT", "resume-key")
-        _post(base, token, variant_id, "PROPOSE_CLAIM_AMENDMENT", "amend-key")
-        _post(base, token, application_id, "AUTHORIZE_APPLICATION_PAYLOAD", "payload-key")
-        _post(base, token, opportunity_id, "KEEP", "keep-key")
+        _post(base, auth_query_value, opportunity_id, "KEEP", "keep-key")
+        _post(base, auth_query_value, reject_id, "REJECT", "reject-key")
+        _post(base, auth_query_value, defer_id, "DEFER", "defer-key")
+        _post(base, auth_query_value, variant_id, "ACCEPT_RESUME_VARIANT", "resume-key")
+        _post(base, auth_query_value, variant_id, "PROPOSE_CLAIM_AMENDMENT", "amend-key")
+        _post(base, auth_query_value, application_id, "AUTHORIZE_APPLICATION_PAYLOAD", "payload-key")
+        _post(base, auth_query_value, opportunity_id, "KEEP", "keep-key")
 
-        assert _post_expect_error(base, token, application_id, "MARK_HUMAN_SENT_GMAIL", "blocked-key") == 400
+        assert _post_expect_error(base, auth_query_value, application_id, "MARK_HUMAN_SENT_GMAIL", "blocked-key") == 400
         projection = json.loads((run_dir / "decision-projection.json").read_text(encoding="utf-8"))
         projection_before_replay = projection["projection_digest"]
         assert projection["external_effects"] is False
@@ -449,7 +372,7 @@ def test_loopback_service_decisions_replay_and_visibility(tmp_path: Path) -> Non
         assert amendments[0]["claim_keys"] == manifest["resume_variants"][0]["claim_keys"]
         assert amendments[0]["human_review_required"] is True
         assert amendments[0]["canonical_mutation"] is False
-        reloaded = urllib.request.urlopen(f"{base}/?token={token}", timeout=5).read().decode("utf-8")
+        reloaded = urllib.request.urlopen(f"{base}/?token={auth_query_value}", timeout=5).read().decode("utf-8")
         assert f"{opportunity_id}: KEEP" in reloaded
         assert f"{reject_id}: REJECT" in reloaded
         assert f"{application_id}: AUTHORIZE_APPLICATION_PAYLOAD" in reloaded

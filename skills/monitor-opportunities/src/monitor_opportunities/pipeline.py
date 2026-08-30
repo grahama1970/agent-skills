@@ -24,7 +24,7 @@ from .discovery import sweep
 from .memory_sync import attach_memory_recall_provenance, governed_memory_recall
 from .outreach import build_outreach_packets
 from .ranking import rank
-from .report import canonical_json_bytes, load_manifest, render_report
+from .report import load_manifest, render_report
 from .tailoring import tailor_candidate
 from .util import read_json, read_jsonl, sha256_json, stable_id, utc_now, write_json
 
@@ -258,6 +258,14 @@ def _is_github_intelligence(candidate: dict[str, Any]) -> bool:
     return candidate.get("source_provider") == "github_repo_intelligence"
 
 
+def _is_required_channel_intel(candidate: dict[str, Any]) -> bool:
+    return candidate.get("source_provider") in {
+        "slack_channel_capture",
+        "discord_channel_capture",
+        "mailbox_mined_gmail",
+    }
+
+
 def _brave_workday_search(query: str) -> list[str]:
     """Return result URLs for a query via the brave-search skill, for Workday
     coordinate resolution. Best-effort and bounded: any failure returns []."""
@@ -282,6 +290,7 @@ def _is_report_opportunity(candidate: dict[str, Any]) -> bool:
         not _is_linkedin_locator(candidate)
         and not _is_networking_signal(candidate)
         and not _is_github_intelligence(candidate)
+        and not _is_required_channel_intel(candidate)
     )
 
 
@@ -323,21 +332,6 @@ def _source_intel_summary(candidate: dict[str, Any], *, contacts: list[Any] | No
         decision = str(candidate.get("networking_decision") or "WATCH").upper()
         return f"{title} at {organization} is Meetup source intelligence with recommended decision {decision}."
     if _is_linkedin_locator(candidate):
-        if candidate.get("easy_apply"):
-            if candidate.get("top_candidate_evidence"):
-                return (
-                    f"{title} at {organization} is LinkedIn Top Applicant plus Easy Apply source intelligence; "
-                    "standing authorization applies, so prepare the exact LinkedIn Easy Apply commit path."
-                )
-            return (
-                f"{title} at {organization} is LinkedIn Easy Apply source intelligence; "
-                "human authorization and exact payload review are required before any platform action."
-            )
-        if candidate.get("top_candidate_evidence"):
-            return (
-                f"{title} at {organization} is LinkedIn Top Applicant source intelligence; "
-                "primary employer readback or human review is required before application action."
-            )
         return (
             f"{title} at {organization} is LinkedIn locator source intelligence; "
             "primary employer or client readback is still required before opportunity admission."
@@ -368,6 +362,49 @@ def _bind_source_intel_evidence(
         item["evidence_refs"] = receipt_backed_refs
 
 
+def _bind_relationship_evidence(
+    relationship_signals: list[dict[str, Any]],
+    source_receipts: list[dict[str, Any]],
+) -> None:
+    refs_by_receipt = {
+        str(receipt.get("receipt_id")): _string_list(receipt.get("evidence_refs"))
+        for receipt in source_receipts
+    }
+    for signal in relationship_signals:
+        signal_receipt_ids = _string_list(signal.get("source_receipt_ids"))
+        signal_accepted_refs = list(
+            dict.fromkeys(
+                ref
+                for receipt_id in signal_receipt_ids
+                for ref in refs_by_receipt.get(str(receipt_id), [])
+            )
+        )
+        retained_signal_refs = [
+            ref for ref in _string_list(signal.get("evidence_refs")) if ref in signal_accepted_refs
+        ]
+        retained_edge_refs: list[str] = []
+        for edge in signal.get("contact_path") or []:
+            if not isinstance(edge, dict):
+                continue
+            edge_receipt_ids = _string_list(edge.get("source_receipt_ids"))
+            edge_accepted_refs = list(
+                dict.fromkeys(
+                    ref
+                    for receipt_id in edge_receipt_ids
+                    for ref in refs_by_receipt.get(str(receipt_id), [])
+                )
+            )
+            edge_refs = [ref for ref in _string_list(edge.get("evidence_refs")) if ref in edge_accepted_refs]
+            if not edge_refs and edge_accepted_refs:
+                edge_refs = edge_accepted_refs[:1]
+            edge["evidence_refs"] = edge_refs
+            retained_edge_refs.extend(edge_refs)
+        combined_signal_refs = list(dict.fromkeys([*retained_signal_refs, *retained_edge_refs]))
+        if not combined_signal_refs and signal_accepted_refs:
+            combined_signal_refs = signal_accepted_refs[:1]
+        signal["evidence_refs"] = combined_signal_refs
+
+
 def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
     source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
     evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
@@ -393,46 +430,10 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
         }
     if _is_linkedin_locator(candidate):
         # A WNY-priority locator that primary-source readback could not confirm
-        # this run remains visible. Top Applicant and Easy Apply rows are also
-        # action-worthy items, but they are not submission authority. The gated
-        # LinkedIn Easy Apply commit path requires Graham's exact post-report
-        # authorization for one candidate/payload.
+        # this run is surfaced as pending verification rather than buried. It is
+        # still not action-worthy until a primary source and Graham's exact
+        # post-report authorization are both present.
         pending = bool(candidate.get("pending_primary_verification"))
-        top_applicant = bool(candidate.get("top_candidate_evidence"))
-        easy_apply = bool(candidate.get("easy_apply"))
-        if pending:
-            decision = "PENDING_PRIMARY_VERIFICATION"
-        elif easy_apply:
-            decision = "EASY_APPLY_REVIEW"
-        elif top_applicant:
-            decision = "TOP_APPLICANT_REVIEW"
-        else:
-            decision = "LOCATOR_ONLY"
-        reasons = [
-            "LinkedIn row is profile/recommendation source intelligence only.",
-        ]
-        if easy_apply:
-            if top_applicant:
-                reasons.append(
-                    "Top Applicant plus Easy Apply is high-priority review evidence, not standing submission authorization."
-                )
-                reasons.append(
-                    "Require Graham's exact post-report authorization before commit-linkedin or any LinkedIn platform action."
-                )
-            else:
-                reasons.append(
-                    "LinkedIn Easy Apply signal: prepare an exact human-authorized payload before any platform action."
-                )
-        if top_applicant:
-            reasons.append(
-                "LinkedIn Top Applicant signal: surface for Graham review even when primary-source readback is pending."
-            )
-        if pending:
-            reasons.append(
-                "WNY priority: no primary ATS source corroborated this run; verify the employer posting and require Graham's exact post-report authorization before any application."
-            )
-        if decision == "LOCATOR_ONLY":
-            reasons.append("Primary employer/client source readback is required before opportunity admission.")
         return {
             "signal_id": stable_id("source-intel", candidate["candidate_id"]),
             "lane": candidate["lane"],
@@ -443,9 +444,39 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
             "source_receipt_ids": [source_id],
             "primary_evidence_url": evidence_url,
             "evidence_refs": _source_intel_refs(candidate, evidence_url),
-            "decision": decision,
-            "reasons": reasons,
-            "action_worthy": decision != "LOCATOR_ONLY",
+            "decision": "PENDING_PRIMARY_VERIFICATION" if pending else "LOCATOR_ONLY",
+            "reasons": [
+                "LinkedIn row is profile/recommendation source intelligence only.",
+                "Primary employer/client source readback is required before opportunity admission."
+                if not pending else
+                "WNY priority: no primary ATS source corroborated this run; verify the employer posting and require Graham's exact post-report authorization before any application.",
+            ],
+            "action_worthy": False,
+            "visible_in_report": True,
+        }
+    if _is_required_channel_intel(candidate):
+        provider = str(candidate.get("source_provider") or "source_intel")
+        label = {
+            "slack_channel_capture": "SLACK_CHANNEL_SIGNAL",
+            "discord_channel_capture": "DISCORD_CHANNEL_SIGNAL",
+            "mailbox_mined_gmail": "MAILBOX_MINING_SIGNAL",
+        }.get(provider, "CHANNEL_SIGNAL")
+        return {
+            "signal_id": stable_id("source-intel", candidate["candidate_id"]),
+            "lane": candidate["lane"],
+            "signal_type": label,
+            "title": candidate["title"],
+            "organization": candidate["organization"],
+            "summary": _source_intel_summary(candidate),
+            "source_receipt_ids": [source_id],
+            "primary_evidence_url": evidence_url,
+            "evidence_refs": _source_intel_refs(candidate, evidence_url),
+            "decision": "SOURCE_INTEL_ONLY",
+            "reasons": [
+                "Required social/mail capture is source-intel only.",
+                "No Slack, Discord, Gmail, LinkedIn, ATS, application, RSVP, or outreach effect is authorized.",
+            ],
+            "action_worthy": False,
             "visible_in_report": True,
         }
     if _is_github_intelligence(candidate):
@@ -492,7 +523,7 @@ def _source_intel(candidate: dict[str, Any]) -> dict[str, Any] | None:
 def _opportunity(candidate: dict[str, Any]) -> dict[str, Any]:
     source_id = candidate.get("source_receipt_id") or candidate.get("source_receipt_ids", ["unknown"])[0]
     evidence_url = candidate.get("primary_evidence_url") or candidate.get("posting_url")
-    if _is_linkedin_locator(candidate) or _is_networking_signal(candidate):
+    if _is_linkedin_locator(candidate) or _is_networking_signal(candidate) or _is_required_channel_intel(candidate):
         raise ContractError(
             "SOURCE_INTEL_NOT_OPPORTUNITY",
             f"{candidate['candidate_id']} must be rendered as source_intel, not opportunity",
@@ -642,118 +673,6 @@ def _operational_readiness(
     if opportunities and len(resume_variants) != len(opportunities):
         return "DEGRADED"
     return "STAGE_0_READY"
-
-
-_SOURCE_READINESS_NEXT_STEPS = {
-    ResultStatus.FEED_DOWN.value: "Retry the source and retain a read-only website fallback receipt before treating coverage as complete.",
-    ResultStatus.AUTH_REQUIRED.value: "Provide an authorized read-only browser capture for this source, then rerun the nightly diagnostic.",
-    ResultStatus.AUTH_FAILED.value: "Reauthenticate the read-only source session and rerun the capture without enabling external actions.",
-    ResultStatus.RATE_LIMITED.value: "Retry after the provider rate-limit window or supply a retained read-only website capture.",
-    ResultStatus.POLICY_BLOCKED.value: "Provide policy-permitted human-supplied read-only evidence or leave this source explicitly blocked.",
-    ResultStatus.STALE_DATA.value: "Refresh the source capture from the current primary source and rerun the nightly diagnostic.",
-    ResultStatus.INVALID_REQUEST.value: "Correct the source request or registry configuration and rerun the source capture.",
-    ResultStatus.INVALID_RESPONSE.value: "Inspect the retained response, repair or bypass the parser with a read-only website capture, and rerun.",
-    ResultStatus.NOT_SEARCHED.value: "Run the required source search and retain its terminal source receipt before claiming readiness.",
-}
-
-
-def _readiness_causes(
-    *,
-    discovery_dir: Path,
-    tailoring_dir: Path,
-    source_receipts: list[dict[str, Any]],
-    opportunities: list[dict[str, Any]],
-    resume_variants: list[dict[str, Any]],
-    degraded_contracts: list[dict[str, str]],
-) -> list[dict[str, Any]]:
-    """Return actionable, artifact-bound causes for degraded readiness inputs."""
-
-    causes: list[dict[str, Any]] = []
-    receipt_artifact = str(discovery_dir / "source-receipts.jsonl")
-    for receipt in source_receipts:
-        status = str(receipt.get("result_status") or "")
-        next_step = _SOURCE_READINESS_NEXT_STEPS.get(status)
-        if next_step is None:
-            continue
-        source_artifact_paths = [receipt_artifact]
-        for evidence_ref in receipt.get("evidence_refs") or []:
-            evidence_path = str(evidence_ref)
-            if evidence_path and evidence_path not in source_artifact_paths:
-                source_artifact_paths.append(evidence_path)
-        causes.append(
-            {
-                "code": f"SOURCE_{status}",
-                "source_artifact_paths": source_artifact_paths,
-                "next_step": next_step,
-                "source_receipt_id": str(receipt.get("receipt_id") or "unknown"),
-            }
-        )
-
-    for contract in degraded_contracts:
-        code = str(contract.get("code") or "DEGRADED_CONTRACT")
-        if code == "API_BREAK_REQUIRES_WEBSITE":
-            next_step = "Capture the failed API source through its read-only website fallback with evidence and rerun."
-        elif code == "REQUIRED_SOURCE_CONTRACT_VIOLATION":
-            next_step = "Capture every missing or invalid mandated source with its required id, channel, class, and terminal status, then rerun."
-        else:
-            next_step = "Inspect the degraded contract message and discovery receipt, repair the named contract, and rerun the nightly diagnostic."
-        causes.append(
-            {
-                "code": code,
-                "source_artifact_paths": [receipt_artifact],
-                "next_step": next_step,
-            }
-        )
-
-    if opportunities and len(resume_variants) != len(opportunities):
-        missing = sorted(
-            {row["opportunity_id"] for row in opportunities}
-            - {row["opportunity_id"] for row in resume_variants}
-        )
-        causes.append(
-            {
-                "code": "RESUME_VARIANT_COVERAGE_INCOMPLETE",
-                "source_artifact_paths": [str(tailoring_dir), str(tailoring_dir / "apply-prep.json")],
-                "next_step": f"Generate and validate a claim-bound resume variant for each missing opportunity, then rerun: {missing}",
-            }
-        )
-    return causes
-
-
-def _validate_readiness_causes(
-    operational_readiness: str | None,
-    readiness_causes: list[dict[str, Any]],
-) -> None:
-    """Fail closed when DEGRADED readiness lacks actionable machine-readable causes."""
-
-    if operational_readiness != "DEGRADED":
-        if readiness_causes:
-            raise ContractError(
-                "READINESS_CAUSES_WITHOUT_DEGRADATION",
-                "readiness_causes are only valid when operational_readiness is DEGRADED",
-            )
-        return
-    if not readiness_causes:
-        raise ContractError(
-            "READINESS_CAUSES_REQUIRED",
-            "DEGRADED operational_readiness requires at least one readiness cause",
-        )
-    for index, cause in enumerate(readiness_causes):
-        code = cause.get("code")
-        paths = cause.get("source_artifact_paths")
-        next_step = cause.get("next_step")
-        if not isinstance(code, str) or not code.strip():
-            raise ContractError("READINESS_CAUSE_INVALID", f"readiness_causes[{index}].code is required")
-        if not isinstance(paths, list) or not paths or not all(isinstance(path, str) and path.strip() for path in paths):
-            raise ContractError(
-                "READINESS_CAUSE_INVALID",
-                f"readiness_causes[{index}].source_artifact_paths must be a non-empty string list",
-            )
-        if not isinstance(next_step, str) or not next_step.strip():
-            raise ContractError(
-                "READINESS_CAUSE_INVALID",
-                f"readiness_causes[{index}].next_step is required",
-            )
 
 
 def _memory_recall_source_receipt(
@@ -959,6 +878,7 @@ def _report_from_run(
         )
         source_receipts.append(memory_source_receipt)
     _bind_source_intel_evidence(source_intel, source_receipts)
+    _bind_relationship_evidence(relationship_signals, source_receipts)
     relationship_binding_diagnostics = bind_relationship_signals_to_opportunities(
         opportunities, relationship_signals
     )
@@ -1042,32 +962,19 @@ def _report_from_run(
         non_claims[0] = "This report consumed a promoted Gmail draft readback receipt for this invocation only."
         non_claims[2] = "Gmail draft creation remains draft-only; THE HUMAN TRANSMITS and the skill never sends Gmail."
 
-    operational_readiness = _operational_readiness(
-        source_receipts,
-        opportunities,
-        resume_variants,
-        degraded_contracts,
-    )
-    readiness_causes = _readiness_causes(
-        discovery_dir=discovery_dir,
-        tailoring_dir=tailoring_dir,
-        source_receipts=source_receipts,
-        opportunities=opportunities,
-        resume_variants=resume_variants,
-        degraded_contracts=degraded_contracts or [],
-    )
-    if readiness_causes:
-        operational_readiness = "DEGRADED"
-    _validate_readiness_causes(operational_readiness, readiness_causes)
-
-    report = {
+    return {
         "schema": "monitor_opportunities.report.v1",
         "run_id": run_id,
         "generated_at": utc_now(),
         "contract_version": CONTRACT_VERSION,
         "immutable_goal": {"text": IMMUTABLE_GOAL, "goal_hash": sha256_json(IMMUTABLE_GOAL)},
         "stage": STAGE,
-        "operational_readiness": operational_readiness,
+        "operational_readiness": _operational_readiness(
+            source_receipts,
+            opportunities,
+            resume_variants,
+            degraded_contracts,
+        ),
         "capability_authority": _capability_authority(),
         "lane_coverage": _lane_coverage(discovery_dir, [*shortlist, *source_intel_shortlist]),
         "source_receipts": source_receipts,
@@ -1135,9 +1042,6 @@ def _report_from_run(
         },
         "non_claims": non_claims,
     }
-    if readiness_causes:
-        report["readiness_causes"] = readiness_causes
-    return report
 
 
 def _enforce_required_sources(skill_dir: Path, discovery_dir: Path) -> dict[str, Any]:
@@ -1258,15 +1162,15 @@ def run_stage0(
     linkedin_evidence: Path | None = None,
     indeed_evidence: Path | None = None,
     hiddenjobs_evidence: Path | None = None,
-    slack_evidence: Path | None = None,
-    discord_evidence: Path | None = None,
-    gmail_evidence: Path | None = None,
     roundtable_receipts_path: Path | None = None,
     outreach_effects_path: Path | None = None,
     federal_evidence: Path | None = None,
     meetup_evidence: Path | None = None,
     github_evidence: Path | None = None,
     linkedin_contact_evidence: Path | None = None,
+    slack_evidence: Path | None = None,
+    discord_evidence: Path | None = None,
+    gmail_evidence: Path | None = None,
     degrade_required_source_failures: bool = False,
     memory_url: str = "http://127.0.0.1:8601",
 ) -> dict[str, Any]:
@@ -1286,12 +1190,13 @@ def run_stage0(
         linkedin_evidence=linkedin_evidence,
         indeed_evidence=indeed_evidence,
         hiddenjobs_evidence=hiddenjobs_evidence,
-        slack_evidence=slack_evidence,
-        discord_evidence=discord_evidence,
-        gmail_evidence=gmail_evidence,
         federal_evidence=federal_evidence,
         meetup_evidence=meetup_evidence,
         github_evidence=github_evidence,
+        slack_evidence=slack_evidence,
+        discord_evidence=discord_evidence,
+        gmail_evidence=gmail_evidence,
+        memory_url=memory_url,
     )
     phases.append({"phase": "DISCOVERY_COMPLETE", "artifact": str(discovery_dir / "run-manifest.json")})
     degraded_contracts: list[dict[str, str]] = []
@@ -1411,16 +1316,9 @@ def run_stage0(
         memory_url if fixture_dir is None else "",
         degraded_contracts,
     )
-    readiness_causes = report_manifest.get("readiness_causes") or []
-    _validate_readiness_causes(report_manifest.get("operational_readiness"), readiness_causes)
     write_json(manifest_path, report_manifest)
     manifest = load_manifest(manifest_path)
     render_artifacts = render_report(manifest, report_dir)
-    if hasattr(manifest, "model_dump") and Path(render_artifacts["report_json"]).read_bytes() != canonical_json_bytes(manifest):
-        raise ContractError(
-            "REPORT_MANIFEST_READBACK_FAILED",
-            "Rendered report JSON diverged from the normalized manifest readback",
-        )
     phases.append({"phase": "REPORT_READY", "artifact": render_artifacts["report_html"]})
     receipt = {
         "schema": "monitor_opportunities.run_receipt.v1",
@@ -1435,7 +1333,6 @@ def run_stage0(
         "budget": {"currency": "USD", "max": 10.0, "estimated": 0.0, "actual": 0.0},
         "phase_artifacts": phases,
         "degraded_contracts": degraded_contracts,
-        "readiness_causes": readiness_causes,
         "discovery_receipt": discovery_receipt,
         "ranking_receipt": ranking_receipt,
         "tailoring_receipt": tailoring_receipt,

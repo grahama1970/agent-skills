@@ -74,12 +74,6 @@
         "STAGE_0_READY"
       ]
     },
-    "readiness_causes": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/readinessCause"
-      }
-    },
     "capability_authority": {
       "type": "object",
       "additionalProperties": false,
@@ -276,40 +270,6 @@
         "INVALID_RESPONSE",
         "NOT_SEARCHED"
       ]
-    },
-    "readinessCause": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "code",
-        "source_artifact_paths",
-        "next_step"
-      ],
-      "properties": {
-        "code": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source_artifact_paths": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "next_step": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source_receipt_id": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "minLength": 1
-        }
-      }
     },
     "laneCoverage": {
       "type": "object",
@@ -530,10 +490,10 @@
             "github_read_only_no_mutation_no_outreach",
             "READ_ONLY_RECALL_NO_OUTREACH",
             "read_only_browser_capture_no_apply_no_message",
-            "read_only_gmail_search_capture_no_open_no_send_no_draft_no_label_no_archive",
-            "read_only_message_evidence_no_send_no_reply_no_apply",
-            "read_only_discord_channel_capture_no_send_no_reply_no_react_no_apply",
-            "read_only_slack_channel_capture_no_send_no_reply_no_react_no_apply"
+            "slack_read_only_no_post_no_dm_no_reaction",
+            "discord_read_only_no_post_no_dm_no_reaction",
+            "mailbox_mining_read_only_no_send_no_forward_no_schedule",
+            "mailbox_mining_memory_read_only_no_gmail_send_no_forward_no_schedule"
           ]
         },
         "required_source_id": {
@@ -1506,9 +1466,6 @@
           "enum": [
             "LOCATOR_ONLY",
             "PENDING_PRIMARY_VERIFICATION",
-            "TOP_APPLICANT_REVIEW",
-            "EASY_APPLY_REVIEW",
-            "EASY_APPLY_AUTHORIZED",
             "ATTEND_MEETUP",
             "WATCH_MEETUP",
             "SKIP_MEETUP",
@@ -1947,33 +1904,6 @@
             "type": "string",
             "minLength": 1
           }
-        },
-        "event_title": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "event_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "profile_url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "linkedin_candidates": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        },
-        "linkedin_confirmation_required": {
-          "type": "boolean"
         },
         "human_decision_options": {
           "type": "array",
