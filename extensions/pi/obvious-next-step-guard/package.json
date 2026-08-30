@@ -1,0 +1,7 @@
+{
+  "name": "obvious-next-step-guard",
+  "version": "0.2.0",
+  "type": "module",
+  "private": true,
+  "extensions": ["./index.ts"]
+}

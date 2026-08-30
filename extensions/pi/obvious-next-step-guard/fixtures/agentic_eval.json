@@ -1,0 +1,121 @@
+{
+  "version": 2,
+  "skill": "obvious-next-step-guard",
+  "trials": 2,
+  "proof_scope": "deterministic checker coverage through the extension run.sh entrypoint for completion reports that mention zero invalid outputs/fail_count 0 without forcing stale failure repair loops, while still following up on real failed eval reports and explicit unacted next steps.",
+  "claims": {
+    "proves": "The obvious-next-step checker allows verified complete reports containing zero invalid output and fail_count 0 language, still follows up on real nonzero failure reports, and still follows up when Not done names an unblocked action.",
+    "does_not_prove": "A live already-running Pi TUI has reloaded the updated extension or that arbitrary prose cannot produce future false positives."
+  },
+  "capability_claims": [
+    {
+      "id": "obvious_next_step.false_positive_zero_invalid_suppression",
+      "description": "Completion reports mentioning zero invalid outputs or fail_count 0 are not treated as failure reports.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "obvious_next_step.real_failure_followup",
+      "description": "Nonzero failed eval reports still force a follow-up repair action.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "completed-report-zero-invalid-pass",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "obvious_next_step.false_positive_zero_invalid_suppression"
+      ],
+      "seams": [
+        "checker.failure-line-filter",
+        "actual-checker-entrypoint"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh eval-zero-invalid-pass"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ZERO_INVALID_COMPLETION_PASS_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/onsg_zero_invalid_pass.json",
+            "json_pointer": "/decision",
+            "equals": "pass"
+          }
+        ]
+      },
+      "real_world": true,
+      "readback": true
+    },
+    {
+      "name": "real-failed-eval-followup",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "obvious_next_step.real_failure_followup"
+      ],
+      "seams": [
+        "checker.failure-line-filter"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh eval-real-failure-followup"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REAL_FAILURE_FOLLOWUP_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/onsg_real_failure_followup.json",
+            "json_pointer": "/decision",
+            "equals": "follow_up"
+          }
+        ]
+      }
+    },
+    {
+      "name": "explicit-next-action-followup",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "obvious_next_step.real_failure_followup"
+      ],
+      "seams": [
+        "checker.labeled-actions"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh eval-unacted-next-followup"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "UNACTED_NEXT_FOLLOWUP_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/onsg_unacted_next_followup.json",
+            "json_pointer": "/decision",
+            "equals": "follow_up"
+          }
+        ]
+      }
+    }
+  ],
+  "live": true
+}
