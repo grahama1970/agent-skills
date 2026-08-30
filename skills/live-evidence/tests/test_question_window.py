@@ -4,6 +4,7 @@
 from live_evidence.config import InterviewProfile
 from live_evidence.models import Speaker, TranscriptEvent, TranscriptKind
 from live_evidence.question_window import QuestionWindowBuilder
+from live_evidence.state import normalize_spoken_role_prefix
 
 
 PROFILE = InterviewProfile(
@@ -169,6 +170,24 @@ def test_single_turn_imperative_code_task_is_its_own_candidate() -> None:
     )
 
 
+def test_spoken_interviewer_live_coding_prompt_is_candidate() -> None:
+    builder = QuestionWindowBuilder(PROFILE, duplicate_ttl_s=60)
+    raw = turn(
+        1,
+        "Interviewer live coding implement a typed SupportResolution builder in Python.",
+        speaker=Speaker.INTERVIEWER,
+    )
+
+    normalized = normalize_spoken_role_prefix(raw)
+    outcome = builder.ingest(normalized)
+
+    assert normalized.speaker is Speaker.INTERVIEWER
+    assert normalized.text.startswith("Live coding implement")
+    assert outcome.candidate is not None
+    assert outcome.candidate.normalized_question.startswith("Live coding implement")
+
+
+
 def test_short_fragment_does_not_trigger() -> None:
     builder = QuestionWindowBuilder(PROFILE)
 
@@ -176,3 +195,85 @@ def test_short_fragment_does_not_trigger() -> None:
 
     assert outcome.candidate is None
     assert outcome.reason == "not_question"
+
+
+def test_spoken_candidate_thanks_prefix_becomes_speaker_boundary() -> None:
+    builder = QuestionWindowBuilder(PROFILE)
+    raw = turn(
+        1,
+        "Candidate thanks Ajit. That is exactly the kind of evidence first platform work I have been building.",
+        speaker=Speaker.INTERVIEWER,
+    )
+
+    normalized = normalize_spoken_role_prefix(raw)
+    outcome = builder.ingest(normalized)
+
+    assert normalized.speaker is Speaker.CANDIDATE
+    assert normalized.text.startswith("thanks Ajit")
+    assert outcome.candidate is None
+    assert outcome.reason == "speaker_boundary"
+
+
+def test_drivewealth_watch_term_statement_is_not_question() -> None:
+    profile = InterviewProfile(name="DriveWealth", watch_terms=["DriveWealth", "AI reliability"])
+    builder = QuestionWindowBuilder(profile)
+
+    outcome = builder.ingest(
+        turn(
+            1,
+            "Hi Graham, thanks for joining. We will focus on DriveWealth core platform, brokerage operations, and AI reliability.",
+        )
+    )
+
+    assert outcome.candidate is None
+    assert outcome.reason == "not_question"
+
+
+def test_drivewealth_watch_term_multi_event_greeting_is_not_question() -> None:
+    profile = InterviewProfile(name="DriveWealth", watch_terms=["DriveWealth", "AI reliability"])
+    builder = QuestionWindowBuilder(profile)
+
+    assert builder.ingest(turn(1, "Hi Graham, thanks for joining.")).candidate is None
+    outcome = builder.ingest(
+        turn(
+            2,
+            "We will focus on DriveWealth core platform, brokerage operations, and AI reliability Candidate",
+        )
+    )
+
+    assert outcome.candidate is None
+    assert outcome.reason == "not_question"
+
+
+def test_spoken_candidate_prefix_becomes_speaker_boundary() -> None:
+    builder = QuestionWindowBuilder(PROFILE)
+    raw = turn(
+        1,
+        "Candidate I begin with an intake node that normalizes the analyst question and creates a goal digest.",
+        speaker=Speaker.INTERVIEWER,
+    )
+
+    normalized = normalize_spoken_role_prefix(raw)
+    outcome = builder.ingest(normalized)
+
+    assert normalized.speaker is Speaker.CANDIDATE
+    assert normalized.text.startswith("I begin with an intake node")
+    assert outcome.candidate is None
+    assert outcome.reason == "speaker_boundary"
+
+
+def test_spoken_interviewer_prefix_is_removed_before_question_text() -> None:
+    builder = QuestionWindowBuilder(PROFILE)
+    raw = turn(
+        1,
+        "Interviewer and operations analyst asks why a customer account is blocked. What graph would you build?",
+        speaker=Speaker.INTERVIEWER,
+    )
+
+    normalized = normalize_spoken_role_prefix(raw)
+    outcome = builder.ingest(normalized)
+
+    assert normalized.speaker is Speaker.INTERVIEWER
+    assert normalized.text.startswith("Operations analyst asks why")
+    assert outcome.candidate is not None
+    assert "Interviewer" not in outcome.candidate.normalized_question

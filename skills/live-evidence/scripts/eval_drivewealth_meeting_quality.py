@@ -343,9 +343,14 @@ def _extract_rows(meeting_dir: Path) -> list[dict[str, Any]]:
 
 
 def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_dir: Path,
-             min_meeting_pass_rate: float, min_question_pass_rate: float, max_failures: int) -> dict[str, Any]:
+             min_meeting_pass_rate: float, min_question_pass_rate: float, max_failures: int,
+             only_meeting_id: str | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     meetings = build_meetings(root, meeting_count=meeting_count, questions_per_meeting=questions_per_meeting)
+    if only_meeting_id:
+        meetings = [meeting for meeting in meetings if meeting.get("meeting_id") == only_meeting_id]
+        if not meetings:
+            raise ValueError(f"unknown DriveWealth meeting id: {only_meeting_id}")
     generated_path = out_dir / "generated-drivewealth-meetings.json"
     generated_path.write_text(json.dumps({
         "schema": "live_evidence.drivewealth_meeting_quality_campaign.v1",
@@ -355,6 +360,7 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
         "meetings": meetings,
     }, indent=2) + "\n", encoding="utf-8")
 
+    expected_meetings = len(meetings)
     prep = _run_oracle_memory_prep(root, out_dir)
     reports = []
     failures = []
@@ -375,6 +381,7 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
                     "type": "synthetic",
                     "repos": meeting.get("repos") or [],
                     "prep_pack": meeting.get("prep_pack"),
+                    "profile": "drivewealth",
                     "script": [{"text": turn["text"]} for turn in meeting["transcript"]],
                 }
                 try:
@@ -416,7 +423,7 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
     meeting_pass_rate = round(meeting_pass / attempted, 3) if attempted else 0.0
     status = "PASS" if (
         prep["ok"]
-        and attempted == meeting_count
+        and attempted == expected_meetings
         and meeting_pass_rate >= min_meeting_pass_rate
         and question_pass_rate >= min_question_pass_rate
     ) else "FAIL"
@@ -429,7 +436,7 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
         "proof_boundary": "Chatterbox TTS -> PipeWire monitor -> Docker RealtimeSTT -> Live Evidence server/cards; SciLLM semantic judge compares dynamic card answers to pre-run complete-transcript oracles.",
         "interview_context": INTERVIEW_CONTEXT,
         "generated_meetings_path": str(generated_path),
-        "requested_meetings": meeting_count,
+        "requested_meetings": expected_meetings,
         "attempted_meetings": attempted,
         "questions_per_meeting": questions_per_meeting,
         "meeting_pass_count": meeting_pass,
@@ -462,6 +469,7 @@ def main() -> int:
     parser.add_argument("--min-meeting-pass-rate", type=float, default=0.8)
     parser.add_argument("--min-question-pass-rate", type=float, default=0.75)
     parser.add_argument("--max-failures", type=int, default=4)
+    parser.add_argument("--only-meeting-id", default=None)
     args = parser.parse_args()
     root = Path(args.root).resolve()
     out_dir = args.out_dir or DEFAULT_OUT / datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
@@ -473,6 +481,7 @@ def main() -> int:
         min_meeting_pass_rate=args.min_meeting_pass_rate,
         min_question_pass_rate=args.min_question_pass_rate,
         max_failures=args.max_failures,
+        only_meeting_id=args.only_meeting_id,
     )
     return 0 if receipt["status"] == "PASS" else 1
 

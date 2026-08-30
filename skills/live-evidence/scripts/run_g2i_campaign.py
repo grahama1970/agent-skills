@@ -108,7 +108,7 @@ cat $D/response.json
 class Server:
     def __init__(self, work: Path, purpose: str = "meeting", *, live_resolver: bool = True,
                  policy: dict | None = None, memory_url: str = "http://127.0.0.1:9",
-                 repos: str | None = None):
+                 repos: str | None = None, profile: str | Path | None = None):
         self.work = work
         work.mkdir(parents=True, exist_ok=True)
         self.port = free_port()
@@ -128,7 +128,10 @@ class Server:
             "MEMORY_SERVICE_URL": memory_url,
             "LIVE_EVIDENCE_SCILLM_KEY": (scillm_key() or "") if live_resolver else "",
         }
-        env.pop("LIVE_EVIDENCE_PROFILE", None)
+        if profile is not None:
+            env["LIVE_EVIDENCE_PROFILE"] = str(profile)
+        else:
+            env.pop("LIVE_EVIDENCE_PROFILE", None)
         # Module resolution must not depend on the ephemeral venv's
         # site-packages contents (observed live: 'No module named
         # live_evidence' from a venv that demonstrably had it earlier).

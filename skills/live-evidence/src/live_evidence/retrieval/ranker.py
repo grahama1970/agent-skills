@@ -66,6 +66,7 @@ def rank_sources(
             + _project_affinity(source, scope)
             + _hard_rules_affinity(query, source)
             + _oracle_answer_affinity(source)
+            + _canonical_question_affinity(query, source)
             + _client_interview_qa_affinity(profile, source)
             + (_code_location_affinity(source) if code_location else 0.0)
         )
@@ -203,6 +204,38 @@ def _oracle_answer_affinity(source: EvidenceSource) -> float:
         return -0.12
     if "answer key: dw-ai" in blob and " q:" in blob:
         return -0.08
+    return 0.0
+
+
+def _canonical_question_affinity(query: str, source: EvidenceSource) -> float:
+    """Keep exact reviewed answer keys ahead of adjacent interview questions.
+
+    The live DriveWealth audio campaign exposed a regression where the card for
+    `DW-AI-07-T03` was scored against the preceding state-machine answer because
+    both questions share words like `pending`, `source`, and `conflicting`. When
+    Memory expands a reviewed answer key, it carries the original canonical
+    question; an exact or near-exact heard question should outrank generic client
+    prep answers and adjacent lesson cards.
+    """
+
+    if source.lane not in {RetrievalLane.MEMORY, RetrievalLane.RIPGREP}:
+        return 0.0
+    meta = source.metadata or {}
+    canonical = str(meta.get("canonical_question") or "")
+    if not canonical:
+        return 0.0
+    intent_blob = f"{query} {canonical}".casefold()
+    if not any(term in intent_blob for term in ("live coding", "implement", "python", "typed")):
+        return 0.0
+    query_tokens = _tokens(query)
+    canonical_tokens = _tokens(canonical)
+    if not query_tokens or not canonical_tokens:
+        return 0.0
+    ratio = len(query_tokens & canonical_tokens) / max(1, len(query_tokens))
+    if ratio >= 0.55:
+        return 0.75
+    if ratio >= 0.35 and meta.get("answer_key_id"):
+        return 0.35
     return 0.0
 
 

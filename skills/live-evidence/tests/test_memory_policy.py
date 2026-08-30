@@ -258,6 +258,40 @@ def test_client_interview_qa_beats_lessons_for_client_profile() -> None:
     assert ranked[0] is client_answer
 
 
+def test_exact_answer_key_beats_generic_client_qa_for_same_question() -> None:
+    query = "Live coding: implement a typed SupportResolution builder in Python. Inputs are authenticated account facts, funding facts, tax facts, source timestamps, and tool errors."
+    adjacent_client_answer = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DriveWealth curated answer",
+        excerpt="I would preserve each source as a separate claim with its authority and timestamp.",
+        score=0.94,
+        freshness=Freshness.UNKNOWN,
+        repository="client_interview_qa",
+        path="client_interview_qa/drivewealth_dw_int_024",
+        metadata={"source": "client_interview_qa", "topic_kind": "client_interview_qa"},
+    )
+    exact_answer_key = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-07-T03 reviewed solution",
+        excerpt="Reviewed solution: define immutable input models and a SupportResolution builder.",
+        score=0.86,
+        freshness=Freshness.UNKNOWN,
+        repository="lessons",
+        path="lessons/7711081c31daef045844a4dd126cf7cb79f92850",
+        metadata={
+            "source": "lessons",
+            "topic_kind": "expected_interview_solution",
+            "answer_key_id": "DW-AI-07-T03",
+            "canonical_question": query,
+        },
+    )
+
+    ranked = rank_sources([adjacent_client_answer, exact_answer_key], query, client_profile())
+
+    assert ranked[0] is exact_answer_key
+
+
+
 def test_reviewed_oracle_answer_is_preserved_after_selector_reorder() -> None:
     question_echo = EvidenceSource(
         lane=RetrievalLane.MEMORY,

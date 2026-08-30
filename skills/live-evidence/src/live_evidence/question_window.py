@@ -48,6 +48,8 @@ PROBLEM_STATEMENT_MARKERS = (
 IMPERATIVE_PROBLEM_PREFIXES = (
     "write a function",
     "implement ",
+    "live coding",
+    "coderpad",
 )
 
 # Senior interviewers assign work imperatively, often after a declarative
@@ -71,6 +73,22 @@ def _has_imperative_clause(lower_text: str) -> bool:
         if first_word in IMPERATIVE_CLAUSE_LEADS:
             return True
     return False
+
+
+def _has_request_signal(lower_text: str) -> bool:
+    """Allow broad multi-event fallback only for work/question-like utterances."""
+
+    padded = f" {lower_text} "
+    return any(
+        signal in padded
+        for signal in (
+            " ask", " asks", " question", " what ", " why ", " how ",
+            " can ", " could ", " would ", " should ", " need ", " design ",
+            " build ", " define ", " describe ", " explain ", " compare ",
+            " propose ", " trace ", " map ", " show ", " tell ",
+            " implement ", " live coding ", " coderpad ",
+        )
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,22 +228,16 @@ class QuestionWindowBuilder:
         if len(tokens) < 4:
             return None
         first = tokens[0].casefold()
+        lower_text = text.casefold()
+        is_question = "?" in text or first in QUESTION_LEADS
         if len(self._buffer) == 1 and text[:1].islower() and first not in QUESTION_LEADS:
             return None
-        lower_text = text.casefold()
+        if len(tokens) >= 2 and first == "can" and tokens[1].casefold() in {"today", "now"}:
+            return None
         matched_alias = next((alias for alias in self._aliases if alias in lower_text), None)
         matched_term = next((term for term in self._watch_terms if term in lower_text), None)
-        is_question = "?" in text or first in QUESTION_LEADS
-        if matched_alias:
-            return f"project:{self._aliases[matched_alias]}"
-        if matched_term:
-            return f"watch-term:{matched_term}"
-        if is_question:
-            return "question"
-        if any(lower_text.startswith(prefix) for prefix in IMPERATIVE_PROBLEM_PREFIXES):
-            return "problem_statement"
-        if _has_imperative_clause(lower_text):
-            return "problem_statement"
+        has_imperative_prefix = any(lower_text.startswith(prefix) for prefix in IMPERATIVE_PROBLEM_PREFIXES)
+        has_imperative_clause = _has_imperative_clause(lower_text)
         # Declarative problem statements: a code walkthrough or task briefing
         # states its question without interrogative form ("we're given an
         # input array ... we want to find the two values ... return the
@@ -233,6 +245,17 @@ class QuestionWindowBuilder:
         # resolver stays the authority on whether anything is answerable, so
         # this only widens what it gets to judge.
         markers = sum(1 for marker in PROBLEM_STATEMENT_MARKERS if marker in lower_text)
+        request_like = is_question or has_imperative_prefix or has_imperative_clause or markers >= 2
+        if matched_alias and request_like:
+            return f"project:{self._aliases[matched_alias]}"
+        if matched_term and request_like:
+            return f"watch-term:{matched_term}"
+        if is_question:
+            return "question"
+        if has_imperative_prefix:
+            return "problem_statement"
+        if has_imperative_clause:
+            return "problem_statement"
         if markers >= 2:
             return "problem_statement"
         # Interviewer-channel fallthrough (2026-08-26, batch-2 forensics):
@@ -241,7 +264,7 @@ class QuestionWindowBuilder:
         # "Extend that design...", "Now bound execution."). A substantive
         # interviewer turn goes to stage-1, which is the answerability
         # authority and returns not_a_question when it is one.
-        if len(tokens) >= 8:
+        if len(tokens) >= 8 and len(self._buffer) > 1 and _has_request_signal(lower_text):
             return "interviewer_statement"
         return None
 

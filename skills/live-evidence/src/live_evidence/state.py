@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from uuid import uuid4
 from collections.abc import AsyncIterator
 from datetime import timezone
@@ -15,9 +16,12 @@ from .models import (
     EvidenceCard,
     LaneActivity,
     LaneState,
+    ModelCallTrace,
+    PipelineTraceEvent,
     RetrievalLane,
     SessionInfo,
     SessionStatus,
+    Speaker,
     TranscriptEvent,
     utc_now,
     ActorRole,
@@ -34,6 +38,20 @@ from .publication import reduce_card_publication
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 
 
+ROLE_PREFIX_RE = re.compile(
+    r"^\s*(?P<role>interviewer|candidate|graham)(?P<sep>\s*(?:[:\-–—,.]|\band\b)?\s+|[.:]\s*$)",
+    re.IGNORECASE,
+)
+
+ROLE_PREFIX_PRONOUNS = {
+    "i", "i'm", "im", "we", "we're", "were", "you", "you're", "youre",
+    "what", "how", "why", "when", "where", "can", "could", "would", "should",
+    "the", "an", "a", "let", "let's", "lets", "thanks", "thank",
+    "right", "good", "sure", "absolutely", "yes", "yeah",
+    "live", "implement", "write", "design", "define", "build", "use", "give",
+}
+
+
 NEW_QUESTION_MARKERS = (
     "second question",
     "third question",
@@ -45,6 +63,43 @@ NEW_QUESTION_MARKERS = (
     "last thing",
     "next thing",
 )
+
+
+def normalize_spoken_role_prefix(event: TranscriptEvent) -> TranscriptEvent:
+    """Move spoken role labels out of transcript text and into speaker metadata.
+
+    Synthetic meeting audio often says ``Interviewer:`` / ``Candidate:`` before
+    each turn. RealtimeSTT may hear the separator as punctuation, whitespace, or
+    the word ``and``. Leaving that prefix in text polluted the transcript and,
+    worse, let candidate answers arrive as interviewer questions when the
+    listener was a single PipeWire channel labeled interviewer.
+    """
+
+    match = ROLE_PREFIX_RE.match(event.text)
+    if not match:
+        return event
+    role = match.group("role").casefold()
+    remainder = event.text[match.end():].strip(" ,:;.-–—")
+    if not remainder:
+        return event
+    first = remainder.split(maxsplit=1)[0].casefold().strip(".,:;!?\"'()[]{}")
+    sep = match.group("sep") or ""
+    explicit_separator = bool(sep.strip() and (sep.strip().casefold() == "and" or any(char in sep for char in ":-–—,.")))
+    if not explicit_separator and first not in ROLE_PREFIX_PRONOUNS:
+        return event
+    speaker = {
+        "interviewer": Speaker.INTERVIEWER,
+        "candidate": Speaker.CANDIDATE,
+        "graham": Speaker.GRAHAM,
+    }[role]
+    if role == "interviewer" and remainder[:1].islower():
+        remainder = remainder[:1].upper() + remainder[1:]
+    return event.model_copy(update={
+        "speaker": speaker,
+        "text": remainder,
+        "attribution_source": "transport",
+        "attribution_confidence": 0.95,
+    })
 
 
 def _explicit_new_question_marker(text: str) -> bool:
@@ -106,6 +161,8 @@ class RuntimeState:
         self._thread = "Waiting for the conversation"
         self._transcript: list[TranscriptEvent] = []
         self._cards: list[EvidenceCard] = []
+        self._model_calls: list[ModelCallTrace] = []
+        self._trace_events: list[PipelineTraceEvent] = []
         self._lanes = self._initial_lanes()
         # Single active question. Retrieval plus a solver call runs for tens of
         # seconds, which is long enough for speech to change the question
@@ -179,6 +236,8 @@ class RuntimeState:
                 self._thread = "Waiting for the conversation"
                 self._transcript = []
                 self._cards = []
+                self._model_calls = []
+                self._trace_events = []
                 self._lanes = self._initial_lanes()
                 self._active_question_id = None
                 self._active_question_revision = 0
@@ -245,6 +304,7 @@ class RuntimeState:
     async def append_transcript(self, event: TranscriptEvent) -> AppSnapshot:
         """Append or replace one interim event and broadcast state."""
 
+        event = normalize_spoken_role_prefix(event)
         async with self._lock:
             if event.kind.value == "interim":
                 self._transcript = [
@@ -337,6 +397,25 @@ class RuntimeState:
                 result_count=result_count,
                 updated_at=utc_now(),
             )
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+
+    async def upsert_model_call(self, trace: ModelCallTrace) -> None:
+        """Expose live model-call state to REST/SSE clients."""
+
+        async with self._lock:
+            self._model_calls = [item for item in self._model_calls if item.call_id != trace.call_id]
+            self._model_calls.append(trace.model_copy(update={"updated_at": utc_now()}))
+            self._model_calls = self._model_calls[-100:]
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+
+    async def append_trace_event(self, event: PipelineTraceEvent) -> None:
+        """Expose a bounded pipeline event to REST/SSE clients."""
+
+        async with self._lock:
+            self._trace_events.append(event.model_copy(update={"updated_at": utc_now()}))
+            self._trace_events = self._trace_events[-200:]
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
 
@@ -627,6 +706,8 @@ class RuntimeState:
             transcript=[item.model_copy(deep=True) for item in self._transcript],
             cards=[item.model_copy(deep=True) for item in self._cards],
             lanes=[self._lanes[lane].model_copy(deep=True) for lane in RetrievalLane],
+            model_calls=[item.model_copy(deep=True) for item in self._model_calls],
+            trace_events=[item.model_copy(deep=True) for item in self._trace_events],
             external_search_enabled=bool(
                 self._settings.brave_runner or self._settings.dogpile_runner
             ),

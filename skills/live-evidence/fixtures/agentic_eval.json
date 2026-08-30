@@ -705,6 +705,68 @@
       "notes": "DriveWealth answer-quality gate requested by Graham: generate 15 plausible ~10-minute Principal AI Engineer/Core Platform technical interview meetings from curate-client DriveWealth context plus the recruiter email, extract complete-transcript expected Q/A oracles before playback, run Chatterbox -> PipeWire monitor -> Docker RealtimeSTT -> Live Evidence cards, then judge dynamic answers semantically against the pre-run oracles. This is intentionally expensive and live."
     },
     {
+      "name": "drivewealth-meeting07-livecoding-audio-regression",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-meeting07-livecoding-current\"; rm -rf \"$O\"; mkdir -p \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-drivewealth-meeting-quality --meeting-count 7 --questions-per-meeting 4 --only-meeting-id dw-principal-core-07 --out-dir \"$O\" --min-meeting-pass-rate 1.0 --min-question-pass-rate 1.0 --max-failures 1"
+      ],
+      "timeout_seconds": 900,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "DriveWealth meeting 1/1: dw-principal-core-07",
+          "drivewealth meeting quality: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/requested_meetings",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/attempted_meetings",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/question_total",
+            "equals": 4
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/question_pass_count",
+            "equals": 4
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/family_pass/code",
+            "equals": 1
+          }
+        ]
+      }
+    },
+    {
       "name": "live-youtube-pipewire-audio-to-card",
       "type": "positive",
       "real_world": true,

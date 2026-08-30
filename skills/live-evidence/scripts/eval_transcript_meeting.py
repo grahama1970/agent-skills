@@ -124,21 +124,25 @@ def _card_for(
 
 def _card_has_answer_key(card: dict[str, Any], expected_key: str) -> bool:
     expected = expected_key.replace("_", "-").casefold()
-    for source in card.get("sources") or []:
-        if not isinstance(source, dict):
-            continue
-        meta = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
-        raw = " ".join(
-            str(part or "")
-            for part in (
-                meta.get("answer_key_id"),
-                source.get("label"),
-                source.get("path"),
-            )
-        ).replace("_", "-").casefold()
-        if expected in raw:
-            return True
-    return False
+    # Only the primary source should bind a card to an oracle answer key. Lower
+    # ranked adjacent answer keys are useful supporting evidence, but treating
+    # any supporting source as an exact match made the DW-AI-07-T02 oracle match
+    # a later DW-AI-07-T03 live-coding card because DW-AI-07-T02 was merely the
+    # fourth source on that card.
+    sources = card.get("sources") or []
+    source = sources[0] if sources and isinstance(sources[0], dict) else None
+    if not source:
+        return False
+    meta = source.get("metadata") if isinstance(source.get("metadata"), dict) else {}
+    raw = " ".join(
+        str(part or "")
+        for part in (
+            meta.get("answer_key_id"),
+            source.get("label"),
+            source.get("path"),
+        )
+    ).replace("_", "-").casefold()
+    return expected in raw
 
 
 def score_meeting(meeting: dict[str, Any], rows: list[dict[str, Any]],

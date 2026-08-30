@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -47,6 +48,8 @@ from load_prep_pack import load_prep_pack  # full client prep-pack loader
 CHATTERBOX = "http://127.0.0.1:8018"
 CHATTERBOX_LOGS = Path.home() / "workspace" / "experiments" / "chatterbox" / "logs"
 OUT_ROOT = Path("/mnt/storage12tb/skills/live-evidence/meeting-campaign")
+DEFAULT_INTERVIEWER_REF_AUDIO = "/data/embry_ref.wav"
+DEFAULT_CANDIDATE_REF_AUDIO = "/voices/horus_ref.wav"
 
 
 def require_precomputed_oracles(root: Path = SKILL) -> bool:
@@ -67,16 +70,44 @@ def require_precomputed_oracles(root: Path = SKILL) -> bool:
     return True
 
 
+def _line_speaker(line: dict[str, Any]) -> str:
+    return str(line.get("speaker") or "interviewer").strip().casefold()
+
+
+def _speaker_ref_audio(speaker: str) -> str:
+    if speaker == "candidate":
+        return os.getenv("LIVE_EVIDENCE_CANDIDATE_REF_AUDIO", DEFAULT_CANDIDATE_REF_AUDIO)
+    return os.getenv("LIVE_EVIDENCE_INTERVIEWER_REF_AUDIO", DEFAULT_INTERVIEWER_REF_AUDIO)
+
+
+def _speakable_line(line: dict[str, Any]) -> str:
+    speaker = _line_speaker(line)
+    text = " ".join(str(line["text"]).split())
+    if speaker in {"interviewer", "candidate"} and not text.casefold().startswith(f"{speaker} "):
+        return f"{speaker.title()}: {text}"
+    return text
+
+
 def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
     """Render each line with the LIVE chatterbox server; concat with sox."""
 
     pieces: list[Path] = []
     silence = work / "sil.wav"
     for index, line in enumerate(lines):
-        label = f"campaign-{hashlib.sha256(line['text'].encode()).hexdigest()[:10]}"
+        speaker = _line_speaker(line)
+        text = _speakable_line(line)
+        label = f"campaign-{speaker}-{hashlib.sha256(text.encode()).hexdigest()[:10]}"
+        payload = {
+            "text": text,
+            "label": label,
+            "ref_audio": _speaker_ref_audio(speaker),
+            "voice_delivery": {"speaker": speaker},
+            "tone": "curious" if speaker == "interviewer" else "careful",
+            "pace": "neutral" if speaker == "interviewer" else "measured",
+        }
         request = urllib.request.Request(
             f"{CHATTERBOX}/synthesize",
-            data=json.dumps({"text": line["text"], "label": label}).encode(),
+            data=json.dumps(payload).encode(),
             headers={"Content-Type": "application/json"}, method="POST",
         )
         with urllib.request.urlopen(request, timeout=180) as response:
@@ -87,7 +118,19 @@ def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
         if not wav.is_file():
             raise RuntimeError(f"chatterbox produced no wav for line {index}")
         pieces.append(wav)
-    # 2.5s silence between lines, matching the first piece's format. Real
+    # Keep the demo human-audible and mechanically distinguishable: interviewer
+    # turns are panned left, candidate turns are panned right. RealtimeSTT still
+    # receives the mixed speaker monitor, while the HUD uses the spoken role
+    # prefix as a deterministic attribution fallback.
+    stereo_pieces: list[Path] = []
+    for index, piece in enumerate(pieces):
+        speaker = _line_speaker(lines[index])
+        stereo = work / f"turn-{index:03d}-{speaker}.stereo.wav"
+        remix = ["1", "0"] if speaker == "interviewer" else ["0", "1"]
+        subprocess.run(["sox", str(piece), str(stereo), "remix", *remix],
+                       check=True, capture_output=True)
+        stereo_pieces.append(stereo)
+    # 2.5s silence between lines, matching the first stereo piece's format. Real
     # agenda questions ("Next question ...", "Last one for the code side ...")
     # carry natural pauses; chatterbox renders each line tightly, and 0.8s
     # sits below RealtimeSTT's VAD finalization threshold, so three questions
@@ -95,11 +138,11 @@ def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
     # merged canonical question (observed live: version+QRA merged, QRA lost).
     # 2.5s reliably exceeds any reasonable post-speech silence and forces a
     # clean final between questions -- more realistic, not a looser oracle.
-    subprocess.run(["sox", str(pieces[0]), str(silence), "trim", "0", "2.5", "vol", "0"],
+    subprocess.run(["sox", str(stereo_pieces[0]), str(silence), "trim", "0", "2.5", "vol", "0"],
                    check=True, capture_output=True)
     out = work / "session.wav"
     interleaved: list[str] = []
-    for piece in pieces:
+    for piece in stereo_pieces:
         interleaved.extend([str(piece), str(silence)])
     subprocess.run(["sox", *interleaved, str(out)], check=True, capture_output=True)
     return out
@@ -143,10 +186,13 @@ def capture_live_session(
             oracle_mod.write_repo(fixture_repo)
         repo_paths.append(str(fixture_repo))
     repos = ":".join(repo_paths)
+    profile = session.get("profile")
+    if profile == "drivewealth" or (not profile and session.get("prep_pack") == "prep_pack_drivewealth.json"):
+        profile = SKILL / "config" / "drivewealth.yaml"
     server_work = campaign.import_tmp(f"campaign-{session['session_id'][:12]}")
     server = campaign.Server(server_work / "server", live_resolver=True,
                              memory_url="http://127.0.0.1:8601",
-                             repos=repos or None)
+                             repos=repos or None, profile=profile)
 
     # A client-meeting / leading-a-presentation scenario loads a briefing pack
     # so talking points surface as the other side opens a door -- a different
