@@ -1,0 +1,111 @@
+{
+  "version": 2,
+  "skill": "oai-degradation",
+  "trials": 2,
+  "proof_scope": "Retained degraded-model operating procedure coverage: the skill exposes a no-denial recovery protocol, mandatory blocker table, external ledger, human-help table, and non-OAI transition policy; the checker rejects evasive degraded-session answers.",
+  "claims": {
+    "proves": "The oai-degradation skill file and CLI contain the required degraded-session procedure, and the check-answer command rejects evasive status text while accepting the required blocker-table shape.",
+    "does_not_prove": "That OAI is internally quantized, that any provider will be reliable tomorrow, or that a future agent will follow the procedure without the skill/hook/eval being invoked."
+  },
+  "capability_claims": [
+    {
+      "id": "oai_degradation.protocol_contract",
+      "description": "The skill requires treating suspected OAI quantization/context-rate limiting as degraded without debating the internal cause.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "oai_degradation.status_table",
+      "description": "The skill requires a Goal/Blocked/Failing/Confused/Human needed/Next command/Switch trigger table.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "oai_degradation.model_switch",
+      "description": "The skill names GLM/Kimi/DeepSeek/non-OAI handoff as the required workaround when degraded-session triggers fire.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "oai_degradation.answer_checker",
+      "description": "The skill CLI rejects evasive degraded-session answers and accepts the required table with proof labels and model-switch option.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    }
+  ],
+  "cases": [
+    {
+      "name": "skill-contract-required-procedures",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "oai_degradation.protocol_contract",
+        "oai_degradation.status_table",
+        "oai_degradation.model_switch"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh check-skill"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["OAI_DEGRADATION_SKILL_CONTRACT_OK"]
+      }
+    },
+    {
+      "name": "answer-contract-accepts-blocker-table",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": ["oai_degradation.answer_checker"],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && tmp=$(mktemp) && cat > $tmp <<'EOF'\n| Field | Entry |\n|---|---|\n| Goal | VERIFIED: recover the named task. |\n| Blocked | none verified |\n| Failing | VERIFIED: prior answer missed a named browser tab. |\n| Confused | INFERENCE: OAI context handling is degraded. |\n| Human needed | none verified |\n| Next command | inspect the named URL |\n| Switch trigger | Move to Kimi or DeepSeek if this check misses. |\nEOF\n./run.sh check-answer $tmp"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["OAI_DEGRADATION_ANSWER_CONTRACT_OK"]
+      }
+    },
+    {
+      "name": "answer-contract-rejects-evasive-denial",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": ["oai_degradation.answer_checker"],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && printf '%s\n' 'I cannot verify quantization, but I will try harder. Everything is fine.' | ./run.sh check-answer -"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": ["OAI_DEGRADATION_ANSWER_CONTRACT_FAIL", "evasive_pattern", "missing_table_field:Goal"]
+      }
+    },
+    {
+      "name": "sanity-runs-positive-and-negative-guards",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "oai_degradation.protocol_contract",
+        "oai_degradation.answer_checker"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["OAI_DEGRADATION_SANITY_OK"]
+      }
+    }
+  ]
+}
