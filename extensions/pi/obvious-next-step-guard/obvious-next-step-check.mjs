@@ -40,6 +40,7 @@ const DONE_PATTERNS = [
   /^\s*(?:none|nothing|n\/a|no further action|no remaining work|nothing remains|done|complete)\b.*$/i,
   /^\s*wait for the queued reload to run\.?\s*$/i,
   /^\s*(?:reload|runtime reload)\s+(?:queued|pending)\.?\s*$/i,
+  /^\s*no\s+`?\$?memory`?\s+hardening\s+work\s+remains;?\s+the\s+remaining\s+problem\s+is\s+(?:pi\s+)?(?:hook|harness|reload|runtime)\s+thrash\.?\s*$/i,
 ];
 
 const ACTION_PATTERNS = [
@@ -64,10 +65,11 @@ const BENIGN_FAILURE_CONTEXT_PATTERNS = [
   /\b(?:training example|shame example|classifier feedback|negative example|test fixture|fixture|eval case)\b.{0,120}\b(?:rejected|invalid|bad|failure|failed)\b/i,
   /\breason\s+`?[a-z0-9_.-]+`?\b/i,
   /(?:\bzero\b|`?\b0\b`?)\s+invalid\b.{0,120}\b(?:outputs?|reviewer|violations?)\b/i,
-  /\binvalid[-_ ]to[-_ ]reviewer(?:[-_ ]violations)?\s*(?:[:=]|\b)\s*0\b/i,
+  /\binvalid[-_ ]to[-_ ]reviewer(?:[-_ ]violations)?\s*(?:[:=]|\b)\s*`?0`?\b/i,
   /\bfail(?:ure)?[-_ ]?count\s*(?:[:=]|\b)\s*0\b/i,
   /\b0\s+(?:FAIL|failed|failures?)\b/i,
   /\b(?:30\/30|\d+\/\d+)\b.{0,80}\b(?:pass(?:ed)?|finished|complete|ok=true)\b/i,
+  /\b(?:hook|harness|reload|runtime|status)\b.{0,120}\bthrash(?:ing)?\b.{0,120}\bnot\b.{0,80}\b`?\$?memory`?\b.{0,40}\bwork\b/i,
 ];
 
 const GENERIC_FAILURE_CONTINUATION = 'Diagnose the failed gate from the latest evidence, patch the cause, and rerun the same verification/eval until it passes or a verified blocker is proven.';

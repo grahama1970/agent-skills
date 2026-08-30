@@ -17,6 +17,25 @@ EOF
     node "$CHECK" < /tmp/onsg_zero_invalid_candidate.txt > /tmp/onsg_zero_invalid_pass.json
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_zero_invalid_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('ZERO_INVALID_COMPLETION_PASS_OK')"
     ;;
+  eval-hook-thrash-status-pass)
+    cat > /tmp/onsg_hook_thrash_candidate.txt <<'EOF'
+You’re right: this is thrashing.
+
+The actual useful state is:
+
+- `$memory` hardening: done — `12/12` sealed, `120/120` passed.
+- QRA ledger-auditor eval: done — `30/30`, invalid-to-reviewer `0`.
+- Current failure: Pi hooks are looping on status/reload text. That is harness thrash, not `$memory` work.
+
+Status Report
+- Changed: named the state plainly as thrashing.
+- Verified: prior scorecard readback showed `$memory` hardening `12/12` and `120/120`; prior QRA r8 readback showed `30/30` and invalid-to-reviewer `0`.
+- Proof: `/tmp/memory-hardening-scorecard-current.txt`; QRA r8 result path `/mnt/storage12tb/skills/ask/outputs/eval-reports/qra-ledger-auditor-v4-course-correcting-jsonmode-r8-20260830T1631Z/results.course_correcting.json`.
+- Not done: no `$memory` hardening work remains; the remaining problem is Pi hook thrash.
+EOF
+    node "$CHECK" < /tmp/onsg_hook_thrash_candidate.txt > /tmp/onsg_hook_thrash_pass.json
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_hook_thrash_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('HOOK_THRASH_STATUS_PASS_OK')"
+    ;;
   eval-real-failure-followup)
     cat > /tmp/onsg_real_failure_candidate.txt <<'EOF'
 Status Report
@@ -42,7 +61,7 @@ EOF
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_unacted_next_followup.json','utf8')); if(d.decision!=='follow_up') throw new Error(JSON.stringify(d)); console.log('UNACTED_NEXT_FOLLOWUP_OK')"
     ;;
   help|--help|-h)
-    echo "Usage: run.sh eval-zero-invalid-pass|eval-real-failure-followup|eval-unacted-next-followup"
+    echo "Usage: run.sh eval-zero-invalid-pass|eval-hook-thrash-status-pass|eval-real-failure-followup|eval-unacted-next-followup"
     ;;
   *) echo "unknown command: $cmd" >&2; exit 2;;
 esac
