@@ -4,7 +4,7 @@
 // reject only report-like delivery/status answers that lack a final titled,
 // plain-English bullet summary with an honest evidence boundary.
 
-const CHECKER_VERSION = '2026-08-30.agentic-eval-and-push-v6';
+const CHECKER_VERSION = '2026-08-30.agentic-eval-and-push-v7';
 const FORCE_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_FORCE_STATUS || '');
 const STRICT_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_STRICT_STATUS || '');
 const MUTATING_TURN = /^(1|true|yes)$/i.test(process.env.LRSSS_MUTATING_TURN || '');
@@ -212,9 +212,18 @@ function isLegitimateBlockerBullet(value) {
   return /\b(?:blocked|needs_attention|need(?:s)? human|waiting for|requires (?:human|operator|user) (?:approval|decision|authorization)|missing credential|external authorization|no safe next action)\b/i.test(value);
 }
 
+function isActiveGoalNextStepBullet(value) {
+  return /^\s*(?:not done|remaining|remains|todo|unfinished)\s*:/i.test(value)
+    && /\b(?:continue|next|resume|run|rerun|execute|inspect|patch|fix|verify|validate|review)\b/i.test(value)
+    && /\b(?:QRA|ledger-auditor|Tau|create-movie|Sparta|Horus|original goal|current goal|immutable goal|requested work|root task)\b/i.test(value)
+    && !isLegitimateBlockerBullet(value)
+    && !isNoRemainingWorkBullet(value);
+}
+
 function hasAgentOwnedObviousAction(value) {
   return /\b(?:not done|remaining|remains|not run|did not run|unfinished|todo)\b/i.test(value)
     && /\b(?:run|rerun|execute|test|verify|validate|agentic-evals|evals?|project-knowledge|brave-search|ask webgpt|webgpt|triage-error|commit|push|read back|inspect|patch|fix)\b/i.test(value)
+    && !isActiveGoalNextStepBullet(value)
     && !isLegitimateBlockerBullet(value)
     && !isNoRemainingWorkBullet(value);
 }
@@ -240,6 +249,22 @@ function lacksClearNextStep(value) {
     && !/\b(?:next|run|rerun|execute|ask|decide|approve|provide|fix|patch|verify|validate|inspect|review|file|choose|open|resume)\b/i.test(value);
 }
 
+const CONTROL_PLANE_STATUS_TERMS = /\b(?:hook|guard|routing|research[- ]routing|retry|reload|sloth|shame|obvious-next-step|CONTINUE_OBVIOUS_NEXT_STEP|UNLAZY_FORCED_RETRY|RESEARCH_ROUTING_GATE_RETRY)\b/i;
+const GOAL_PROGRESS_TERMS = /\b(?:immutable goal|goal|objective|requested work|actual task|root task|user-visible|project-visible|progress|QRA|ledger-auditor|eval|create-movie|Sparta|Horus)\b/i;
+
+function hasGoalProgressOrNextStep(bullets) {
+  return bullets.some((bullet) => GOAL_PROGRESS_TERMS.test(bullet)
+    || hasAgentOwnedObviousAction(bullet)
+    || (/\b(?:not done|remaining|remains)\b/i.test(bullet) && /\b(?:next step|next|continue|run|rerun|execute|patch|fix|verify|validate|inspect|review)\b/i.test(bullet) && !isNoRemainingWorkBullet(bullet) && !isLegitimateBlockerBullet(bullet)));
+}
+
+function controlPlaneStatusWithoutGoalProgress(bullets) {
+  const joined = bullets.join('\n');
+  return STRICT_STATUS
+    && (CONTROL_PLANE_STATUS_TERMS.test(classifiedText) || /(?:hook|guard|routing|research-routing|retry|reload|sloth|obvious-next-step)/i.test(joined))
+    && !hasGoalProgressOrNextStep(bullets);
+}
+
 function parseStatusSection() {
   const section = trailingReportSection();
   if (!section) {
@@ -256,6 +281,7 @@ function parseStatusSection() {
   if (section.bullets.some(missingCommitOrPushForRelevantWork)) failures.push('missing_commit_or_push_for_relevant_work');
   if (section.bullets.some(hasAgentOwnedObviousAction)) failures.push('obvious_next_step_not_enacted');
   if (section.bullets.some(lacksClearNextStep)) failures.push('missing_clear_next_step_for_unfinished_work');
+  if (controlPlaneStatusWithoutGoalProgress(section.bullets)) failures.push('non_status_update_no_goal_progress_or_next_step');
   return { ok: failures.length === 0, failures, section };
 }
 

@@ -63,6 +63,8 @@ Use `/shame review` for an interactive label picker when the TUI/RPC UI is avail
 
 The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, pending packet path, machine decision, checker version, excerpt, and copyable label commands before deciding. Use `/shame review` to choose the label without remembering the exact command syntax.
 
+For active goal-driven work, the footer must say either what changed against the immutable/current goal or the exact next step toward that goal. A hook-only, guard-only, reload-only, or routing-only update with `Not done: none` is a non-status update when the original goal still has obvious work.
+
 For inline `$shame`, the self-corrected answer must be short and must end exactly in this shape:
 
 ```text
@@ -174,6 +176,7 @@ The fixture must prove:
 - legacy labels still map to verdict/reason pairs;
 - strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
+- strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
 - extension rejection notices are correction packets with a final `Status Report` footer rather than bare gate JSON;
 - rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.

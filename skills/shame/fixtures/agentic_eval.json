@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "deterministic JSONL capture, live Memory structured/store read-back, searchable Memory recall, strict $shame self-correction checking for missing status/footer, missing per-feature $agentic-evals, uncommitted/unpushed relevant work, collaborative correction-packet rejection notices, pending review packet recovery, and one-word Chatterbox shame audio install",
   "claims": {
-    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, live Memory write/read-back records, searchable Memory recall records for classifier training, strict $shame self-correction rejection of answers without a Status Report footer, unacted obvious next steps, missing $agentic-evals for newly implemented features, uncommitted/unpushed relevant files/skills/projects, rejection notices that include human labeling guidance and a valid Status Report footer, pending review-packet source wiring for candidate-hash recovery through /shame show, and one short Chatterbox shame-word audio install with no bell/loop",
+    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, live Memory write/read-back records, searchable Memory recall records for classifier training, strict $shame self-correction rejection of answers without a Status Report footer, unacted obvious next steps, control-plane non-status updates with no immutable-goal progress or next step, missing $agentic-evals for newly implemented features, uncommitted/unpushed relevant files/skills/projects, rejection notices that include human labeling guidance and a valid Status Report footer, pending review-packet source wiring for candidate-hash recovery through /shame show, and one short Chatterbox shame-word audio install with no bell/loop",
     "does_not_prove": "classifier training quality, automatic transcript discovery in every Pi session shape, future model promotion, or that every already-running Pi TUI has reloaded the updated extension"
   },
   "capability_claims": [
@@ -42,7 +42,7 @@
     },
     {
       "id": "shame.self_correct_status_footer",
-      "description": "$shame self-correction mode rejects terse/meta answers, missing per-feature $agentic-evals, and uncommitted/unpushed relevant work unless the missing action is a legitimate blocker; extension rejection notices are collaborative correction packets with a valid Status Report footer and pending review packet recovery.",
+      "description": "$shame self-correction mode rejects terse/meta answers, control-plane non-status updates with no immutable-goal progress or next step, missing per-feature $agentic-evals, and uncommitted/unpushed relevant work unless the missing action is a legitimate blocker; extension rejection notices are collaborative correction packets with a valid Status Report footer and pending review packet recovery.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -352,6 +352,43 @@
         "exit_code": 0,
         "stdout_contains": [
           "ONE_WORD_AUDIO_OK"
+        ]
+      }
+    },
+    {
+      "name": "strict-control-plane-non-status-update-rejected",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_correct_status_footer"
+      ],
+      "seams": [
+        "report-check",
+        "strict-status-mode",
+        "goal-progress-boundary"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Fixed the hook confusion loop.\\n\\nStatus Report\\n- Changed: research-routing now treats obvious-next-step/retry-hook questions as status/control questions, not as new research tasks.\\n- Verified: node research-gate-check.mjs returned decision pass.\\n- Proof: /tmp/research-gate-obvious-next-question.json\\n- Not done: none for this hook-routing fix.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_non_status_no_goal_progress.json 2>/tmp/shame_non_status_no_goal_progress.err; then echo 'strict checker accepted control-plane status with no goal progress or next step' >&2; exit 1; fi && printf 'The hook fix is done; the QRA ledger-auditor acceptance work still needs the next eval repair loop.\\n\\nStatus Report\\n- Changed: research-routing hook handling no longer blocks status/control questions.\\n- Verified: node research-gate-check.mjs returned decision pass.\\n- Proof: /tmp/research-gate-obvious-next-question.json\\n- Not done: blocked until the QRA ledger-auditor eval reaches 30/30; next step is inspect failing cases, patch the prompt/schema, and rerun the Tau course-correcting eval.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_non_status_corrected.json && node -e \"const fs=require('fs');const bad=JSON.parse(fs.readFileSync('/tmp/shame_non_status_no_goal_progress.json','utf8'));const good=JSON.parse(fs.readFileSync('/tmp/shame_non_status_corrected.json','utf8')); if(bad.decision!=='reject') throw new Error('bad did not reject'); if(!bad.footer_failures.includes('non_status_update_no_goal_progress_or_next_step')) throw new Error('missing non-status failure'); if(good.decision!=='pass') throw new Error('corrected did not pass: '+JSON.stringify(good.footer_failures)); console.log('NON_STATUS_UPDATE_REJECT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "NON_STATUS_UPDATE_REJECT_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/shame_non_status_no_goal_progress.json",
+            "json_pointer": "/footer_failures/0",
+            "equals": "non_status_update_no_goal_progress_or_next_step"
+          },
+          {
+            "path": "/tmp/shame_non_status_corrected.json",
+            "json_pointer": "/decision",
+            "equals": "pass"
+          }
         ]
       }
     }
