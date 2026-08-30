@@ -46,8 +46,8 @@ export function TauCase({ project }: TauCaseProps) {
         title={`Open ${project.name} source artifact`}
       >
         <img
-          src="/artifacts/tau-sanity-receipt.svg"
-          alt="Tau sanity receipt excerpt showing exit code 0, 45 passed, and explicit proof boundaries."
+          src="/artifacts/tau-dag-ledger-card.svg"
+          alt="Animated Tau DAG card showing ask routed through Tau, a Tau-owned scillm adapter, receipt admission, and an inspectable ledger."
         />
         <span>{project.name}</span>
         <b>{project.blurb}</b>

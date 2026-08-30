@@ -351,6 +351,24 @@ assets:
     owner: Graham Anderson
     license: all-rights-reserved
     third_party_basis: null
+- id: tau-dag-ledger-card
+  path: site/public/artifacts/tau-dag-ledger-card.svg
+  kind: svg
+  source: docs/assets/project-cards/tau-dag-ledger-card.svg
+  creation_method: ask_webgpt_svg_design_reviewed_and_installed
+  sha256: 98b51280967a49b2e79e99311480872adaf53d1be78b53c14df98c07bafe0617
+  project_ids:
+  - tau
+  public_approval: true
+  role: explanation
+  caption: Tau dominant-case SVG showing Ask routed through a Tau DAG, Tau-owned scillm adapter, receipt admission, and inspectable ledger.
+  alt_text: Tau DAG card showing ask routed through Tau, a Tau-owned scillm adapter, receipt admission, and an inspectable ledger.
+  crop: full
+  does_not_establish: Live provider correctness, semantic truth of model output, or closure of Tau project gaps.
+  rights:
+    owner: Graham Anderson
+    license: all-rights-reserved
+    third_party_basis: null
 - id: dream-research-loop
   path: site/public/dream/research-loop.webp
   kind: image

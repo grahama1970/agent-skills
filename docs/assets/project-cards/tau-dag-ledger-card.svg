@@ -1,0 +1,221 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-labelledby="tau-card-title tau-card-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="tau-card-title">Tau: no receipt, no proof</title>
+  <desc id="tau-card-desc">A request enters through dollar ask, crosses the Tau trust boundary into a bounded DAG, reaches the Tau-owned dollar scillm adapter, exits only through a receipt gate, and becomes an inspectable ledger record. A direct agent-to-model bypass is visibly rejected before entering Tau.</desc>
+
+  <defs>
+    <radialGradient id="bg-glow" cx="58%" cy="49%" r="72%">
+      <stop offset="0" stop-color="#2b2119" stop-opacity="0.78"/>
+      <stop offset="0.46" stop-color="#17120f" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#0b0908" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="boundary-stroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e4ae63" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#9c6b39" stop-opacity="0.72"/>
+    </linearGradient>
+
+    <linearGradient id="receipt-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e7b66f" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#9aa88f" stop-opacity="0.10"/>
+    </linearGradient>
+
+    <linearGradient id="ledger-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9aa88f" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#e4ae63" stop-opacity="0.07"/>
+    </linearGradient>
+
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#eee2d2" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+
+    <filter id="soft-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M1 1.5 8 5 1 8.5Z" fill="#c6b7a5"/>
+    </marker>
+
+    <marker id="blocked-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M1 1.5 8 5 1 8.5Z" fill="#d27042"/>
+    </marker>
+
+    <style>
+      .sans {
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      }
+
+      .headline {
+        fill: #f5eee3;
+        font-size: 78px;
+        font-weight: 760;
+        letter-spacing: -2px;
+      }
+
+      .stage {
+        fill: #eee4d7;
+        font-size: 42px;
+        font-weight: 720;
+        letter-spacing: -0.7px;
+      }
+
+      .panel {
+        fill: #11100e;
+        stroke: #eee2d2;
+        stroke-opacity: 0.18;
+        stroke-width: 2.5;
+      }
+
+      .thin {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .base-route {
+        fill: none;
+        stroke: #c6b7a5;
+        stroke-opacity: 0.34;
+        stroke-width: 5;
+        stroke-linecap: round;
+        marker-end: url(#arrow);
+      }
+
+      .flow-run {
+        fill: none;
+        stroke: #e4ae63;
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-dasharray: 5 95;
+        filter: url(#soft-glow);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .flow-run {
+          animation: none !important;
+          stroke-dasharray: 100 0;
+          opacity: 0.42;
+        }
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        @keyframes tau-flow {
+          from {
+            stroke-dashoffset: 0;
+          }
+
+          to {
+            stroke-dashoffset: -100;
+          }
+        }
+
+        .flow-run {
+          animation: tau-flow 5.8s linear infinite;
+        }
+      }
+    </style>
+  </defs>
+
+  <g data-component="background">
+    <rect width="1200" height="750" rx="38" fill="#0b0908"/>
+    <rect width="1200" height="750" rx="38" fill="url(#bg-glow)"/>
+    <rect x="24" y="24" width="1152" height="702" rx="28" fill="url(#grid)" opacity="0.72"/>
+    <rect x="24" y="24" width="1152" height="702" rx="28" fill="none" stroke="#eee2d2" stroke-opacity="0.08" stroke-width="2"/>
+  </g>
+
+  <g data-component="headline">
+    <path d="M64 154H184" class="thin" stroke="#e4ae63" stroke-width="6"/>
+    <path d="M64 171H128" class="thin" stroke="#d27042" stroke-width="4" opacity="0.74"/>
+    <text x="62" y="116" class="sans headline">No <tspan fill="#e4ae63">receipt</tspan>, no proof.</text>
+  </g>
+
+  <g data-component="primary-flow">
+    <g data-component="connections">
+      <path d="M157 406H1090" pathLength="100" class="base-route"/>
+      <path d="M157 406H1090" pathLength="100" class="flow-run"/>
+      <path d="M264 394 278 406 264 418" class="thin" stroke="#c6b7a5" stroke-opacity="0.62" stroke-width="4"/>
+      <path d="M555 394 569 406 555 418" class="thin" stroke="#c6b7a5" stroke-opacity="0.62" stroke-width="4"/>
+      <path d="M789 394 803 406 789 418" class="thin" stroke="#e4ae63" stroke-opacity="0.72" stroke-width="4"/>
+      <path d="M956 394 970 406 956 418" class="thin" stroke="#9aa88f" stroke-opacity="0.74" stroke-width="4"/>
+    </g>
+
+    <g data-component="ask-stage">
+      <rect x="52" y="282" width="194" height="274" rx="36" class="panel"/>
+      <rect x="66" y="296" width="166" height="246" rx="27" fill="none" stroke="#e4ae63" stroke-opacity="0.16" stroke-width="2"/>
+      <path d="M99 349 121 369 99 389M136 390H178" class="thin" stroke="#e4ae63" stroke-width="7"/>
+      <circle cx="188" cy="349" r="6" fill="#9aa88f"/>
+      <text x="94" y="516" class="mono stage">$ask</text>
+    </g>
+
+    <g data-component="tau-trust-boundary">
+      <rect x="300" y="235" width="520" height="336" rx="46" fill="#11100e" fill-opacity="0.72" stroke="url(#boundary-stroke)" stroke-width="5"/>
+      <rect x="314" y="249" width="492" height="308" rx="36" fill="none" stroke="#e4ae63" stroke-opacity="0.18" stroke-width="2"/>
+      <path d="M300 368h16v76h-16M820 368h-16v76h16" class="thin" stroke="#e4ae63" stroke-width="7"/>
+      <path d="M337 274 353 281v17c0 15-9 27-16 31-7-4-16-16-16-31v-17Z" class="thin" stroke="#e4ae63" stroke-width="3.5"/>
+      <path d="m330 299 6 6 10-13" class="thin" stroke="#9aa88f" stroke-width="3.5"/>
+
+      <g data-component="tau-dag-stage">
+        <path d="M387 365 449 330 511 365 449 444ZM387 365l62 79m62-79-62 79m0-114v114" class="thin" stroke="#b8915d" stroke-opacity="0.58" stroke-width="3"/>
+        <circle cx="387" cy="365" r="15" fill="#11100e" stroke="#e4ae63" stroke-width="4"/>
+        <circle cx="449" cy="330" r="15" fill="#11100e" stroke="#e4ae63" stroke-width="4"/>
+        <circle cx="511" cy="365" r="15" fill="#11100e" stroke="#e4ae63" stroke-width="4"/>
+        <circle cx="449" cy="444" r="17" fill="#19140f" stroke="#9aa88f" stroke-width="4"/>
+        <path d="m441 444 6 6 11-14" class="thin" stroke="#9aa88f" stroke-width="4"/>
+        <text x="356" y="526" class="sans stage">Tau DAG</text>
+      </g>
+
+      <g data-component="scillm-adapter">
+        <rect x="594" y="323" width="182" height="132" rx="26" fill="#0c0b0a" stroke="#eee2d2" stroke-opacity="0.24" stroke-width="3"/>
+        <rect x="608" y="337" width="154" height="104" rx="18" fill="#e4ae63" fill-opacity="0.035" stroke="#d27042" stroke-opacity="0.36" stroke-width="2"/>
+        <path d="M617 312v18m32-18v18m32-18v18m32-18v18m32-18v18M617 449v18m32-18v18m32-18v18m32-18v18m32-18v18" class="thin" stroke="#857566" stroke-width="3"/>
+        <path d="M584 351h18m-18 32h18m-18 32h18m166-64h18m-18 32h18m-18 32h18" class="thin" stroke="#857566" stroke-width="3"/>
+        <path d="M676 367v-8a13 13 0 0 1 26 0v8m-32 0h38v31h-38Z" class="thin" stroke="#9aa88f" stroke-width="3.5"/>
+        <circle cx="689" cy="383" r="3.5" fill="#9aa88f"/>
+        <path d="M689 386v6" class="thin" stroke="#9aa88f" stroke-width="3"/>
+        <text x="590" y="526" class="mono stage">$scillm</text>
+      </g>
+    </g>
+
+    <g data-component="receipt-gate">
+      <path d="M820 282v248M944 282v248" class="thin" stroke="#e4ae63" stroke-opacity="0.34" stroke-width="3"/>
+      <path d="M831 305h84l19 20v143l-11-8-11 8-11-8-11 8-11-8-11 8-11-8-11 8-15-10Z" fill="url(#receipt-fill)" stroke="#e4ae63" stroke-width="5" stroke-linejoin="round" filter="url(#soft-glow)"/>
+      <path d="M915 305v22h19" class="thin" stroke="#e4ae63" stroke-width="4"/>
+      <path d="M854 354h55M854 378h42M854 402h34" class="thin" stroke="#eee4d7" stroke-opacity="0.72" stroke-width="6"/>
+      <circle cx="902" cy="422" r="24" fill="#11100e" stroke="#9aa88f" stroke-width="5"/>
+      <path d="m891 422 8 8 15-19" class="thin" stroke="#9aa88f" stroke-width="6"/>
+      <text x="816" y="526" class="sans stage">Receipt</text>
+    </g>
+
+    <g data-component="inspectable-ledger">
+      <rect x="1002" y="330" width="144" height="150" rx="25" fill="#11100e" stroke="#7c886f" stroke-opacity="0.52" stroke-width="4" transform="rotate(5 1074 405)"/>
+      <rect x="988" y="316" width="148" height="154" rx="25" fill="#11100e" stroke="#b0824e" stroke-opacity="0.64" stroke-width="4" transform="rotate(-4 1062 393)"/>
+      <rect x="978" y="300" width="152" height="160" rx="26" fill="url(#ledger-fill)" stroke="#9aa88f" stroke-width="5" filter="url(#soft-glow)"/>
+      <path d="M1004 341h58M1004 374h73M1004 407h50" class="thin" stroke="#eee4d7" stroke-opacity="0.72" stroke-width="7"/>
+      <circle cx="1093" cy="343" r="11" fill="none" stroke="#e4ae63" stroke-width="4"/>
+      <path d="m1088 343 4 4 8-10" class="thin" stroke="#e4ae63" stroke-width="4"/>
+      <circle cx="1093" cy="407" r="11" fill="none" stroke="#9aa88f" stroke-width="4"/>
+      <path d="m1088 407 4 4 8-10" class="thin" stroke="#9aa88f" stroke-width="4"/>
+      <circle cx="1120" cy="455" r="24" fill="#0b0908" stroke="#e4ae63" stroke-width="5"/>
+      <circle cx="1112" cy="447" r="10" fill="none" stroke="#e4ae63" stroke-width="4"/>
+      <path d="m1119 454 11 11" class="thin" stroke="#e4ae63" stroke-width="5"/>
+      <text x="988" y="526" class="sans stage">Ledger</text>
+    </g>
+  </g>
+
+  <g data-component="blocked-bypass">
+    <circle cx="202" cy="648" r="34" fill="#11100e" stroke="#8f8073" stroke-opacity="0.62" stroke-width="3"/>
+    <path d="M188 651v-18l14-10 14 10v18l-14 10Zm6-17h16m-16 10h16M202 623v-8m-5 0h10" class="thin" stroke="#b9aa9b" stroke-width="3.5"/>
+    <path d="M238 640C284 631 314 606 343 566" class="thin" stroke="#d27042" stroke-opacity="0.72" stroke-width="4" stroke-dasharray="8 10" marker-end="url(#blocked-arrow)"/>
+    <path d="M365 552C431 503 518 480 642 444" class="thin" stroke="#d27042" stroke-opacity="0.10" stroke-width="4" stroke-dasharray="8 12"/>
+    <circle cx="351" cy="561" r="23" fill="#0b0908" stroke="#d27042" stroke-width="5"/>
+    <path d="m340 550 22 22m0-22-22 22" class="thin" stroke="#d27042" stroke-width="5"/>
+  </g>
+</svg>
