@@ -39,6 +39,8 @@ This is a recording skill, not a scolding skill. Do not generate essays about ag
 
 `$shame` is also a self-correction trigger for the installed Pi extension. A `$shame` turn must produce a concise corrected answer in plain spoken English and end with the exact `Status Report` footer. The extension rejects answers that skip that footer and queues one forced retry.
 
+Missing per-feature `$agentic-evals` coverage is shame. For every new feature, add or update a retained `$agentic-evals` fixture, run it, and cite the receipt before reporting the feature done. Leaving relevant files, skills, or project changes uncommitted or unpushed when no external blocker exists is also shame.
+
 It also owns the installed shame audio policy: one short Chatterbox word, `shame`, with no bell and no repeated shame loop.
 
 Preferred human UX is the Pi extension command:
@@ -156,6 +158,8 @@ The fixture must prove:
 - live Memory capture writes to `shame_training_examples` and reads the same `_key` back;
 - related examples are recallable through `$memory recall` from `retrieval_text` and tags;
 - legacy labels still map to verdict/reason pairs;
+- strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
+- strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 
 The skill records examples only. It does not train or promote a classifier.

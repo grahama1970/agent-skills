@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "shame",
   "trials": 2,
-  "proof_scope": "deterministic JSONL capture, live Memory structured/store read-back, searchable Memory recall, strict $shame self-correction checking, and one-word Chatterbox shame audio install",
+  "proof_scope": "deterministic JSONL capture, live Memory structured/store read-back, searchable Memory recall, strict $shame self-correction checking for missing status/footer, missing per-feature $agentic-evals, uncommitted/unpushed relevant work, and one-word Chatterbox shame audio install",
   "claims": {
-    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, live Memory write/read-back records, searchable Memory recall records for classifier training, strict $shame self-correction rejection of answers without a Status Report footer or with unacted obvious next steps, and one short Chatterbox shame-word audio install with no bell/loop",
+    "proves": "the shame CLI captures assistant text, prior user text, labels, hashes, JSONL rows, legacy label mappings, live Memory write/read-back records, searchable Memory recall records for classifier training, strict $shame self-correction rejection of answers without a Status Report footer, unacted obvious next steps, missing $agentic-evals for newly implemented features, uncommitted/unpushed relevant files/skills/projects, and one short Chatterbox shame-word audio install with no bell/loop",
     "does_not_prove": "classifier training quality, automatic transcript discovery in every Pi session shape, future model promotion, or that every already-running Pi TUI has reloaded the updated extension"
   },
   "capability_claims": [
@@ -42,7 +42,7 @@
     },
     {
       "id": "shame.self_correct_status_footer",
-      "description": "$shame self-correction mode rejects terse or meta answers unless they end with a plain Status Report footer.",
+      "description": "$shame self-correction mode rejects terse/meta answers, missing per-feature $agentic-evals, and uncommitted/unpushed relevant work unless the missing action is a legitimate blocker.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -194,6 +194,78 @@
             "path": "/tmp/shame_obvious_next_step_bad.json",
             "json_pointer": "/decision",
             "equals": "reject"
+          }
+        ]
+      }
+    },
+    {
+      "name": "strict-new-feature-missing-agentic-eval-rejected",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_correct_status_footer"
+      ],
+      "seams": [
+        "report-check",
+        "strict-status-mode"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-../../extensions/pi/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Built provider.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: Not verified: $agentic-evals was not run.\\n- Proof: Missing: no eval receipt.\\n- Not done: run $agentic-evals next.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_new_feature_missing_eval.json 2>/tmp/shame_new_feature_missing_eval.err; then echo 'strict checker accepted missing per-feature agentic eval' >&2; exit 1; fi && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_new_feature_missing_eval.json','utf8')); if(d.decision!=='reject') throw new Error('did not reject'); if(!d.footer_failures.includes('missing_agentic_eval_for_new_feature')) throw new Error('missing_agentic_eval_for_new_feature absent'); console.log('MISSING_AGENTIC_EVAL_REJECT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MISSING_AGENTIC_EVAL_REJECT_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/shame_new_feature_missing_eval.json",
+            "json_pointer": "/decision",
+            "equals": "reject"
+          },
+          {
+            "path": "/tmp/shame_new_feature_missing_eval.json",
+            "json_pointer": "/footer_failures/0",
+            "equals": "missing_agentic_eval_for_new_feature"
+          }
+        ]
+      }
+    },
+    {
+      "name": "strict-uncommitted-relevant-work-rejected",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_correct_status_footer"
+      ],
+      "seams": [
+        "report-check",
+        "strict-status-mode"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-../../extensions/pi/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Built provider.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: eval passed.\\n- Proof: receipt exists.\\n- Not done: commit and push relevant files next.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_uncommitted_relevant_work.json 2>/tmp/shame_uncommitted_relevant_work.err; then echo 'strict checker accepted uncommitted relevant work' >&2; exit 1; fi && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_uncommitted_relevant_work.json','utf8')); if(d.decision!=='reject') throw new Error('did not reject'); if(!d.footer_failures.includes('missing_commit_or_push_for_relevant_work')) throw new Error('missing_commit_or_push_for_relevant_work absent'); console.log('MISSING_COMMIT_PUSH_REJECT_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MISSING_COMMIT_PUSH_REJECT_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/shame_uncommitted_relevant_work.json",
+            "json_pointer": "/decision",
+            "equals": "reject"
+          },
+          {
+            "path": "/tmp/shame_uncommitted_relevant_work.json",
+            "json_pointer": "/footer_failures/0",
+            "equals": "missing_commit_or_push_for_relevant_work"
           }
         ]
       }

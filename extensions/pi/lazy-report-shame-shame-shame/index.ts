@@ -1,0 +1,552 @@
+// Humorous final-report guard for lazy failure reporting disguised as progress.
+// Global Pi extension. Reload Pi with /reload after editing.
+
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
+const REPORT_CHECK = join(EXTENSION_DIR, "report-check.mjs");
+const SHAME_AUDIO = process.env.LAZY_REPORT_SHAME_AUDIO || join(EXTENSION_DIR, "shame.wav");
+const TRAINING_JSONL = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || "/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl";
+const CONFIGURED_MEMORY_URL = process.env.MEMORY_SERVICE_URL || process.env.MEMORY_API_URL || "";
+const MEMORY_URL = (CONFIGURED_MEMORY_URL.startsWith("unix://") ? "http://127.0.0.1:8601" : (CONFIGURED_MEMORY_URL || "http://127.0.0.1:8601")).replace(/\/+$/, "");
+const MEMORY_COLLECTION = process.env.SHAME_MEMORY_COLLECTION || "shame_training_examples";
+const MEMORY_SEARCH_COLLECTION = process.env.SHAME_MEMORY_SEARCH_COLLECTION || "project_knowledge";
+const MEMORY_ENABLED = !/^(0|false|off|no)$/i.test(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
+const AUDIO_COOLDOWN_MS = 10_000;
+const MAX_REJECTED_EXCERPT_CHARS = 8_000;
+
+type CheckDecision = "pass" | "reject" | "error";
+type HumanVerdict = "allow" | "reject" | "warn" | "needs_review";
+
+const LEGACY_LABELS: Record<string, { verdict: HumanVerdict; reasons: string[] }> = {
+  false_positive: { verdict: "allow", reasons: ["false_positive"] },
+  false_negative: { verdict: "reject", reasons: ["false_negative"] },
+  good_status_report: { verdict: "allow", reasons: ["good_status_report"] },
+  commit_laundering: { verdict: "reject", reasons: ["commit_laundering"] },
+  jargon_no_status: { verdict: "reject", reasons: ["jargon_no_status"] },
+};
+
+type CheckResult = {
+  schema: "lazy_report_shame.report_check.v2";
+  checker_version: string;
+  decision: CheckDecision;
+  reason_codes: string[];
+  features: Record<string, unknown>;
+  footer_failures: string[];
+  diagnostics: string;
+};
+
+type Candidate = {
+  user_text: string;
+  assistant_entry_id: string;
+  assistant_text: string;
+  response_sha256: string;
+  machine_decision: CheckDecision;
+  machine_reason_codes: string[];
+  checker_version: string;
+  force_status: boolean;
+  session_file?: string;
+  session_id?: string;
+  turn_id: string;
+};
+
+function contentToText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((part: any) => {
+      if (!part) return "";
+      if (part.type === "text" && typeof part.text === "string") return part.text;
+      if (typeof part.content === "string") return part.content;
+      return "";
+    })
+    .join("\n");
+}
+
+function appendText(content: unknown, text: string): unknown {
+  if (typeof content === "string") return `${content.trimEnd()}\n\n${text}`;
+  if (!Array.isArray(content)) return text;
+  return [...content, { type: "text", text: `\n\n${text}` }];
+}
+
+function activatesGuard(text: string): boolean {
+  return /\$unlazy\b|\/unlazy\b|\$shame\b|\/shame\b|\bacceptance ledger\b/i.test(text);
+}
+
+function activatesShameSelfCorrection(text: string): boolean {
+  return /\$shame\b|\/shame\b/i.test(text);
+}
+
+function sha256(value: string): string {
+  return "sha256:" + createHash("sha256").update(value).digest("hex");
+}
+
+function truncateForRetry(text: string): string {
+  if (text.length <= MAX_REJECTED_EXCERPT_CHARS) return text;
+  return text.slice(0, MAX_REJECTED_EXCERPT_CHARS) + `\n\n[truncated by lazy-report-shame-shame-shame at ${MAX_REJECTED_EXCERPT_CHARS} chars]`;
+}
+
+function parseCheckerPayload(stdout: string, stderr: string, status: number | null): CheckResult {
+  let payload: any = null;
+  try { payload = JSON.parse(String(stdout || "{}")); } catch { payload = null; }
+  if (payload?.schema === "lazy_report_shame.report_check.v2") {
+    return {
+      schema: payload.schema,
+      checker_version: String(payload.checker_version || "unknown"),
+      decision: ["pass", "reject", "error"].includes(payload.decision) ? payload.decision : "error",
+      reason_codes: Array.isArray(payload.reason_codes) ? payload.reason_codes.map(String) : [],
+      features: payload.features && typeof payload.features === "object" ? payload.features : {},
+      footer_failures: Array.isArray(payload.footer_failures) ? payload.footer_failures.map(String) : [],
+      diagnostics: String(stderr || stdout || "").trim(),
+    };
+  }
+  return {
+    schema: "lazy_report_shame.report_check.v2",
+    checker_version: "unknown",
+    decision: "error",
+    reason_codes: ["checker_output_unparseable"],
+    features: { exit_status: status },
+    footer_failures: [],
+    diagnostics: String(stderr || stdout || "report-check failed without diagnostics").trim(),
+  };
+}
+
+function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, strictStatus = false): CheckResult {
+  const result = spawnSync("node", [REPORT_CHECK], {
+    input: text,
+    encoding: "utf8",
+    timeout: 5000,
+    env: {
+      ...process.env,
+      LRSSS_FORCE_STATUS: forceStatus ? "1" : "0",
+      LRSSS_STRICT_STATUS: strictStatus ? "1" : "0",
+      LRSSS_MUTATING_TURN: mutatingTurn ? "1" : "0",
+    },
+  });
+  if (result.error) {
+    return {
+      schema: "lazy_report_shame.report_check.v2",
+      checker_version: "unknown",
+      decision: "error",
+      reason_codes: ["checker_spawn_error"],
+      features: {},
+      footer_failures: [],
+      diagnostics: String(result.error.message || result.error),
+    };
+  }
+  return parseCheckerPayload(String(result.stdout || ""), String(result.stderr || ""), result.status);
+}
+
+function playShameAudio(lastPlayedAt: { value: number }): void {
+  if (/^(0|false|off|no)$/i.test(process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED || "1")) return;
+  const now = Date.now();
+  if (now - lastPlayedAt.value < AUDIO_COOLDOWN_MS) return;
+  lastPlayedAt.value = now;
+  if (existsSync(SHAME_AUDIO)) {
+    spawnSync("sh", ["-c", "(command -v pw-play >/dev/null && nohup pw-play \"$1\" >/dev/null 2>&1 &) || (command -v ffplay >/dev/null && nohup ffplay -nodisp -autoexit \"$1\" >/dev/null 2>&1 &) || (command -v aplay >/dev/null && nohup aplay \"$1\" >/dev/null 2>&1 &)", "sh", SHAME_AUDIO], { timeout: 1000 });
+    return;
+  }
+  spawnSync("sh", ["-c", "(command -v canberra-gtk-play >/dev/null && nohup canberra-gtk-play -i bell >/dev/null 2>&1 &) || printf '\\a'"] , { timeout: 1000 });
+}
+
+function rejectionNotice(original: string, check: CheckResult, retried: boolean): string {
+  const excerpt = original.replace(/\s+/g, " ").trim().slice(0, 320);
+  const disposition = retried
+    ? "The answer was replaced. One automatic retry was already used for this originating turn, so no further retry was queued."
+    : "The answer was replaced and one forced retry was queued.";
+  return `🦥 REJECTED_BY_SLOTH_COURT
+
+Shame. Shame. Shame.
+
+The assistant reported delivery/status in report-like prose without a clear final title and plain-English bullet summary.
+
+Checker version: ${check.checker_version}
+Reason codes: ${check.reason_codes.join(", ") || "none"}
+Footer failures:
+${check.footer_failures.length ? check.footer_failures.map((failure) => `- ${failure}`).join("\n") : "- none"}
+
+Offending excerpt:
+${excerpt ? `> ${excerpt}` : "> (no text extracted)"}
+
+Disposition: ${disposition}
+
+Required ending: a clear report title plus plain-spoken bullets. Include what changed, what was verified or not verified, where the proof is or why it is missing, and what remains if anything remains.
+
+No progress confetti over a pothole. The bell is still ringing.`;
+}
+
+function retryPrompt(original: string, check: CheckResult): string {
+  const excerpt = truncateForRetry(original.trim());
+  return `UNLAZY_FORCED_RETRY
+
+Your previous answer was rejected by lazy-report-shame-shame-shame because it looked like a delivery/status report but did not end with a clear report title and plain-English bullet summary.
+
+Checker version: ${check.checker_version}
+Reason codes: ${check.reason_codes.join(", ") || "none"}
+Footer failures:
+${check.footer_failures.length ? check.footer_failures.map((failure) => `- ${failure}`).join("\n") : "- none"}
+
+Rejected response:
+${excerpt ? `> ${excerpt.replace(/\n/g, "\n> ")}` : "> (no text extracted)"}
+
+Rewrite the answer. Preserve all supported facts. Do not invent commands, results, receipts, or proof. Use “Not verified” or “Missing” when evidence does not exist. Keep the main answer concise, then end with a clearly titled bullet summary.
+
+Preferred shape:
+Status Report
+- Changed: plain-English user-visible/project-visible change, not a commit/SHA/branch by itself.
+- Verified: exact command/readback and observed result, or Not verified: exact reason.
+- Proof: concrete path, URL, issue/PR number, commit, or Missing: exact reason.
+- Not done: none, or exact unfinished item and next concrete step.
+
+Equivalent clear labels are acceptable. Do not present Git metadata, a commit, a push, a branch, a SHA, or unit tests as the user-visible result.`;
+}
+
+function parseShameArgs(args: string): { action: "capture" | "show" | "undo"; verdict: HumanVerdict; reasons: string[]; note: string; error?: string } {
+  const trimmed = String(args || "").trim();
+  if (!trimmed) return { action: "capture", verdict: "needs_review", reasons: [], note: "" };
+  if (/^show\b/i.test(trimmed)) return { action: "show", verdict: "needs_review", reasons: [], note: "" };
+  if (/^undo\b/i.test(trimmed)) return { action: "undo", verdict: "needs_review", reasons: [], note: trimmed.replace(/^undo\s*/i, "") };
+
+  const [beforeNote, ...afterNote] = trimmed.split(/\s+--\s+/);
+  const tokens = beforeNote.trim().split(/\s+/).filter(Boolean);
+  const rawHead = (tokens.shift() || "needs_review").toLowerCase().replace(/-/g, "_");
+  const allowedVerdicts = new Set<HumanVerdict>(["allow", "reject", "warn", "needs_review"]);
+  if (rawHead in LEGACY_LABELS) {
+    const mapped = LEGACY_LABELS[rawHead];
+    return {
+      action: "capture",
+      verdict: mapped.verdict,
+      reasons: mapped.reasons,
+      note: afterNote.join(" -- ").trim() || tokens.join(" "),
+    };
+  }
+  const verdict = rawHead as HumanVerdict;
+  if (!allowedVerdicts.has(verdict)) {
+    return { action: "capture", verdict: "needs_review", reasons: [], note: "", error: `unknown verdict '${verdict}'. Use: allow, reject, warn, needs_review, or a legacy label such as false_positive` };
+  }
+  const reasons = tokens.map((token) => token.toLowerCase().replace(/-/g, "_")).filter(Boolean);
+  return { action: "capture", verdict, reasons, note: afterNote.join(" -- ").trim() };
+}
+
+function getLastAssistantEntry(ctx: any): { id: string; text: string } | null {
+  const sessionManager = ctx?.sessionManager;
+  const entries = typeof sessionManager?.getBranch === "function"
+    ? sessionManager.getBranch()
+    : (typeof sessionManager?.getEntries === "function" ? sessionManager.getEntries() : []);
+  for (let i = entries.length - 1; i >= 0; i -= 1) {
+    const entry = entries[i];
+    const message = entry?.message;
+    if (entry?.type === "message" && message?.role === "assistant") {
+      const text = contentToText(message.content);
+      if (text.trim()) return { id: String(entry.id || message.id || "unknown"), text };
+    }
+  }
+  return null;
+}
+
+function appendTrainingExample(example: Record<string, unknown>, outPath: string): void {
+  mkdirSync(dirname(outPath), { recursive: true });
+  appendFileSync(outPath, JSON.stringify(example) + "\n", "utf8");
+}
+
+async function postMemoryJson(path: string, body: Record<string, unknown>): Promise<any> {
+  const response = await fetch(`${MEMORY_URL}${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-caller-skill": "shame" },
+    body: JSON.stringify(body),
+  });
+  const text = await response.text();
+  let data: any = {};
+  try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+  if (!response.ok) throw new Error(`${path} returned HTTP ${response.status}: ${text.slice(0, 500)}`);
+  return data;
+}
+
+async function storeTrainingExampleInMemory(example: Record<string, unknown>): Promise<{ collection: string; key: string; read_back_count: number; search_collection: string; search_key: string; search_read_back_count: number; recall_found: boolean }> {
+  const key = String(example._key || "");
+  if (!key) throw new Error("training example is missing _key");
+  await postMemoryJson("/store", { collection: MEMORY_COLLECTION, document: example });
+  const readBack = await postMemoryJson("/recall/by-keys", {
+    collection: MEMORY_COLLECTION,
+    keys: [key],
+    key_field: "_key",
+    return_fields: ["_key", "schema", "human_verdict", "human_reasons", "response_sha256", "retrieval_text"],
+  });
+  const count = Array.isArray(readBack?.documents) ? readBack.documents.length : 0;
+  if (count !== 1) throw new Error(`memory read-back failed for ${MEMORY_COLLECTION}/${key}`);
+
+  const searchKey = `shame_search_${key.replace(/^shame_/, "").slice(0, 64)}`.slice(0, 254);
+  const searchDoc = {
+    _key: searchKey,
+    doc_type: "shame_training_example",
+    kind: "agent_status_shame_training_search_doc",
+    problem: `Human-labeled agent status example: ${example.human_verdict} ${(((example.human_reasons as string[]) || []).join(", ") || "no_reason")}`,
+    solution: example.retrieval_text,
+    project: "agent-skills",
+    scope: "agent-skills",
+    section: "shame_training_examples",
+    source_collection: MEMORY_COLLECTION,
+    source_key: key,
+    response_sha256: example.response_sha256,
+    human_verdict: example.human_verdict,
+    human_reasons: example.human_reasons,
+    classifier_label: example.classifier_label,
+    tags: ["project_knowledge", "project:agent-skills", ...((example.tags as string[]) || [])],
+    retrieval_text: example.retrieval_text,
+  };
+  await postMemoryJson("/store", { collection: MEMORY_SEARCH_COLLECTION, document: searchDoc });
+  const searchReadBack = await postMemoryJson("/recall/by-keys", {
+    collection: MEMORY_SEARCH_COLLECTION,
+    keys: [searchKey],
+    key_field: "_key",
+    return_fields: ["_key", "kind", "source_collection", "source_key", "retrieval_text", "tags"],
+  });
+  const searchCount = Array.isArray(searchReadBack?.documents) ? searchReadBack.documents.length : 0;
+  if (searchCount !== 1) throw new Error(`memory search-doc read-back failed for ${MEMORY_SEARCH_COLLECTION}/${searchKey}`);
+  const recallBody = {
+    q: `${example.human_verdict} ${((example.human_reasons as string[]) || []).join(" ")} ${example.note || ""} ${example.assistant_text || ""}`.slice(0, 500),
+    scope: "agent-skills",
+    collections: [MEMORY_SEARCH_COLLECTION],
+    tags: ["shame"],
+    k: 10,
+    threshold: 0.0,
+  };
+  let recallFound = false;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const recall = await postMemoryJson("/recall", recallBody);
+    const items = Array.isArray(recall?.items) ? recall.items : [];
+    recallFound = items.some((item: any) => item?._key === searchKey);
+    if (recallFound) break;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  if (!recallFound) throw new Error(`memory recall did not return searchable shame doc ${MEMORY_SEARCH_COLLECTION}/${searchKey}`);
+  return { collection: MEMORY_COLLECTION, key, read_back_count: count, search_collection: MEMORY_SEARCH_COLLECTION, search_key: searchKey, search_read_back_count: searchCount, recall_found: recallFound };
+}
+
+function removeTrainingExample(exampleId: string, outPath: string): boolean {
+  if (!existsSync(outPath)) return false;
+  const lines = readFileSync(outPath, "utf8").split(/\n/);
+  const kept = lines.filter((line) => {
+    if (!line.trim()) return false;
+    try { return JSON.parse(line).example_id !== exampleId; } catch { return true; }
+  });
+  const removed = kept.length !== lines.filter((line) => line.trim()).length;
+  if (removed) writeFileSync(outPath, kept.join("\n") + (kept.length ? "\n" : ""), "utf8");
+  return removed;
+}
+
+function makeCandidate(ctx: any, userText: string, assistantEntryId: string, assistantText: string, check: CheckResult, forceStatus: boolean): Candidate {
+  return {
+    user_text: userText,
+    assistant_entry_id: assistantEntryId,
+    assistant_text: assistantText,
+    response_sha256: sha256(assistantText),
+    machine_decision: check.decision,
+    machine_reason_codes: check.reason_codes,
+    checker_version: check.checker_version,
+    force_status: forceStatus,
+    session_file: typeof ctx?.sessionManager?.getSessionFile === "function" ? ctx.sessionManager.getSessionFile() : undefined,
+    session_id: typeof ctx?.sessionManager?.getSessionId === "function" ? ctx.sessionManager.getSessionId() : undefined,
+    turn_id: sha256(`${userText}\n---\n${assistantText}`),
+  };
+}
+
+export default function lazyReportShameShameShame(pi: any) {
+  let sessionGuardActive = false;
+  let turnGuardActive = false;
+  let shameSelfCorrectTurn = false;
+  let mutatingTurn = false;
+  let currentUserText = "";
+  let retryInProgress = false;
+  let lastCandidate: Candidate | null = null;
+  let lastWrittenExampleId: string | null = null;
+  const retriedTurnIds = new Set<string>();
+  const lastAudioPlayedAt = { value: 0 };
+
+  pi.on("input", async (event: any) => {
+    const text = String(event.text || "");
+    currentUserText = text;
+    mutatingTurn = false;
+    if (event.source !== "extension") retryInProgress = false;
+    if (activatesGuard(text)) turnGuardActive = true;
+    if (activatesShameSelfCorrection(text)) shameSelfCorrectTurn = true;
+    return { action: "continue" };
+  });
+
+  pi.on("tool_call", async (event: any) => {
+    const tool = String(event.toolName || "");
+    const input = event.input || {};
+    const command = String(input.command || "");
+    if (["edit", "write"].includes(tool)) mutatingTurn = true;
+    if (tool === "bash" && /\b(git\s+(?:commit|push|merge)|gh\s+(?:issue|pr)\s+(?:close|comment|edit|create)|npm\s+publish|pnpm\s+publish)\b/i.test(command)) {
+      mutatingTurn = true;
+    }
+  });
+
+  pi.on("before_agent_start", async (event: any) => {
+    const prompt = String(event.prompt || "");
+    const systemPrompt = String(event.systemPrompt || "");
+    if (!sessionGuardActive && !turnGuardActive && !activatesGuard(prompt)) return;
+    turnGuardActive = true;
+    const shameSelfCorrection = shameSelfCorrectTurn
+      ? "\n\n[Lazy Report Shame Self-Correction]\nThe user invoked $shame. Do not answer with meta-commentary about shame. Give a concise corrected answer in plain spoken English. End with the exact titled footer below. If the previous answer lacked proof, say Not verified or Missing instead of pretending it was proven.\n\nStatus Report\n- Changed: ...\n- Verified: ...\n- Proof: ...\n- Not done: ..."
+      : "";
+    return {
+      systemPrompt:
+        systemPrompt +
+        "\n\n[Lazy Report Shame Guard]\nIf you report delivery, GitHub work, commits, pushes, branches, SHAs, issue closure, or implementation status, end with a clear title and plain-spoken bullets. Include the user-visible change, verification/readback or Not verified, proof location or Missing, and remaining work if any. Git metadata and unit tests are supporting evidence, not the user-visible result. Do not invent proof." +
+        shameSelfCorrection,
+    };
+  });
+
+  pi.on("message_end", async (event: any, ctx: any) => {
+    if (event.message?.role !== "assistant") return;
+    const text = contentToText(event.message.content);
+    const forceStatus = sessionGuardActive || turnGuardActive;
+    const strictStatus = shameSelfCorrectTurn;
+    const check = checkReport(text, forceStatus, mutatingTurn, strictStatus);
+    let keepGuardForRetry = false;
+
+    try {
+      lastCandidate = makeCandidate(ctx, currentUserText, String(event.message.id || event.id || "unknown"), text, check, forceStatus);
+
+      if (check.decision === "error") {
+        ctx?.ui?.notify?.(`lazy-report-shame-shame-shame checker error: ${check.diagnostics || check.reason_codes.join(", ")}`, "warning");
+        return;
+      }
+      if (check.decision !== "reject") return;
+
+      const turnId = lastCandidate.turn_id;
+      const alreadyRetried = retryInProgress || retriedTurnIds.has(turnId);
+      if (!alreadyRetried) retriedTurnIds.add(turnId);
+
+      const notice = rejectionNotice(text, check, alreadyRetried);
+      playShameAudio(lastAudioPlayedAt);
+      if (!alreadyRetried) {
+        retryInProgress = true;
+        keepGuardForRetry = strictStatus;
+        try {
+          pi.sendUserMessage(retryPrompt(text, check), { deliverAs: "followUp", expandPromptTemplates: false });
+        } catch (_error) {
+          try {
+            pi.sendUserMessage(retryPrompt(text, check), { expandPromptTemplates: false });
+          } catch {
+            // Replacement still prevents the lazy answer from standing as the final visible answer.
+          }
+        }
+      }
+
+      return {
+        message: {
+          ...event.message,
+          content: appendText(event.message.content, notice),
+        },
+      };
+    } finally {
+      if (!sessionGuardActive && !keepGuardForRetry) turnGuardActive = false;
+      if (!keepGuardForRetry) shameSelfCorrectTurn = false;
+      mutatingTurn = false;
+      if (check.decision !== "reject") retryInProgress = false;
+    }
+  });
+
+  pi.registerCommand("lazy-report-shame-shame-shame", {
+    description: "Activate session-wide status footer reminders for delivery/status reports",
+    handler: async (_args: string, ctx: any) => {
+      sessionGuardActive = true;
+      ctx.ui.notify(
+        "🦥 Shame guard active. Delivery/status reports must end with Status Report bullets: Changed, Verified, Proof, Not done.",
+        "warning",
+      );
+    },
+  });
+
+  pi.registerCommand("shame", {
+    description: "Add the previous assistant response to the shame classifier training JSONL",
+    handler: async (args: string, ctx: any) => {
+      const parsed = parseShameArgs(args);
+      if (parsed.error) {
+        ctx.ui.notify(`/shame error: ${parsed.error}`, "error");
+        return;
+      }
+      if (parsed.action === "show") {
+        const candidate = lastCandidate;
+        const excerpt = candidate?.assistant_text.replace(/\s+/g, " ").slice(0, 240) || "No candidate captured yet.";
+        ctx.ui.notify(`Last shame candidate: ${candidate?.response_sha256 || "none"} ${excerpt}`, "info");
+        return;
+      }
+      if (parsed.action === "undo") {
+        if (!lastWrittenExampleId) {
+          ctx.ui.notify("No /shame training example from this session to undo.", "warning");
+          return;
+        }
+        const removed = removeTrainingExample(lastWrittenExampleId, TRAINING_JSONL);
+        ctx.ui.notify(removed ? `Removed /shame training example ${lastWrittenExampleId}` : `No matching /shame example found for ${lastWrittenExampleId}`, removed ? "info" : "warning");
+        if (removed) lastWrittenExampleId = null;
+        return;
+      }
+
+      let candidate = lastCandidate;
+      if (!candidate) {
+        const last = getLastAssistantEntry(ctx);
+        if (!last) {
+          ctx.ui.notify("No previous assistant response found to add to shame training data.", "error");
+          return;
+        }
+        const check = checkReport(last.text, false, false);
+        candidate = makeCandidate(ctx, currentUserText, last.id, last.text, check, false);
+      }
+
+      const exampleId = sha256(`${candidate.response_sha256}\n${parsed.verdict}\n${parsed.reasons.join(",")}\n${parsed.note}`);
+      const exampleKey = exampleId.replace("sha256:", "shame_").slice(0, 254);
+      const example = {
+        _key: exampleKey,
+        schema: "lazy_report_shame.training_example.v2",
+        kind: "agent_status_shame_training_example",
+        example_id: exampleId,
+        created_at: new Date().toISOString(),
+        source: "pi-extension-command:/shame",
+        source_skill: "shame",
+        human_verdict: parsed.verdict,
+        human_reasons: parsed.reasons,
+        classifier_label: parsed.verdict === "allow" ? "acceptable_update" : "bullshit_update",
+        note: parsed.note,
+        machine_decision: candidate.machine_decision,
+        machine_reason_codes: candidate.machine_reason_codes,
+        checker_version: candidate.checker_version,
+        force_status: candidate.force_status,
+        user_text: candidate.user_text,
+        assistant_text: candidate.assistant_text,
+        assistant_entry_id: candidate.assistant_entry_id,
+        session_file: candidate.session_file,
+        session_id: candidate.session_id,
+        turn_id: candidate.turn_id,
+        response_sha256: candidate.response_sha256,
+        tags: ["shame", "classifier-training", `verdict:${parsed.verdict}`, ...parsed.reasons.map((reason) => `reason:${reason}`)],
+        retrieval_text: [
+          `verdict: ${parsed.verdict}`,
+          `reasons: ${parsed.reasons.join(", ") || "none"}`,
+          parsed.note ? `note: ${parsed.note}` : "",
+          candidate.user_text ? `user: ${candidate.user_text}` : "",
+          `assistant: ${candidate.assistant_text}`,
+        ].filter(Boolean).join("\n"),
+      };
+      appendTrainingExample(example, TRAINING_JSONL);
+      lastWrittenExampleId = exampleId;
+      if (MEMORY_ENABLED) {
+        try {
+          const memory = await storeTrainingExampleInMemory(example);
+          ctx.ui.notify(`Saved /shame example ${exampleId.slice(0, 19)} (${parsed.verdict}${parsed.reasons.length ? ":" + parsed.reasons.join(",") : ""}) to ${TRAINING_JSONL}, memory ${memory.collection}/${memory.key}, and searchable ${memory.search_collection}/${memory.search_key}`, "info");
+        } catch (error) {
+          ctx.ui.notify(`Saved /shame JSONL example ${exampleId.slice(0, 19)}, but memory write/read-back failed: ${error instanceof Error ? error.message : String(error)}`, "warning");
+        }
+      } else {
+        ctx.ui.notify(`Saved /shame JSONL example ${exampleId.slice(0, 19)} (${parsed.verdict}${parsed.reasons.length ? ":" + parsed.reasons.join(",") : ""}); memory disabled`, "info");
+      }
+    },
+  });
+}
