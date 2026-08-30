@@ -155,7 +155,7 @@ function parseCheckerPayload(stdout: string, stderr: string, status: number | nu
   };
 }
 
-function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, strictStatus = false): CheckResult {
+function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, strictStatus = false, userText = ""): CheckResult {
   const result = spawnSync("node", [REPORT_CHECK], {
     input: text,
     encoding: "utf8",
@@ -165,6 +165,7 @@ function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, 
       LRSSS_FORCE_STATUS: forceStatus ? "1" : "0",
       LRSSS_STRICT_STATUS: strictStatus ? "1" : "0",
       LRSSS_MUTATING_TURN: mutatingTurn ? "1" : "0",
+      LRSSS_USER_TEXT: userText,
     },
   });
   if (result.error) {
@@ -623,7 +624,7 @@ export default function lazyReportShameShameShame(pi: any) {
     if (!text.trim()) return;
     const forceStatus = sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
-    let check = checkReport(text, forceStatus, mutatingTurn, strictStatus);
+    let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
     const continuationCheck = evaluateContinuationGuard(text);
     if (continuationCheck && check.decision !== "reject") check = continuationCheck;
     let keepGuardForRetry = false;

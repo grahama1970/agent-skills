@@ -4,10 +4,11 @@
 // reject only report-like delivery/status answers that lack a final titled,
 // plain-English bullet summary with an honest evidence boundary.
 
-const CHECKER_VERSION = '2026-08-30.agentic-eval-and-push-v7';
+const CHECKER_VERSION = '2026-08-30.agentic-eval-and-push-v8';
 const FORCE_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_FORCE_STATUS || '');
 const STRICT_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_STRICT_STATUS || '');
 const MUTATING_TURN = /^(1|true|yes)$/i.test(process.env.LRSSS_MUTATING_TURN || '');
+const USER_TEXT = String(process.env.LRSSS_USER_TEXT || '');
 
 const text = await new Promise((resolve) => {
   let data = '';
@@ -258,9 +259,16 @@ function hasGoalProgressOrNextStep(bullets) {
     || (/\b(?:not done|remaining|remains)\b/i.test(bullet) && /\b(?:next step|next|continue|run|rerun|execute|patch|fix|verify|validate|inspect|review)\b/i.test(bullet) && !isNoRemainingWorkBullet(bullet) && !isLegitimateBlockerBullet(bullet)));
 }
 
+function currentRequestIsControlPlaneDebug() {
+  return /(?:\$shame|\/shame)\b/i.test(USER_TEXT)
+    && /\b(?:feedback loop|retry loop|looping|diagnose|debug|fix|repair)\b/i.test(USER_TEXT)
+    && /\b(?:pi extension|extension|guard|routing|research-routing|lazy-report-shame-shame-shame|shame)\b/i.test(USER_TEXT);
+}
+
 function controlPlaneStatusWithoutGoalProgress(bullets) {
   const joined = bullets.join('\n');
   return STRICT_STATUS
+    && !currentRequestIsControlPlaneDebug()
     && (CONTROL_PLANE_STATUS_TERMS.test(classifiedText) || /(?:hook|guard|routing|research-routing|retry|reload|sloth|obvious-next-step)/i.test(joined))
     && !hasGoalProgressOrNextStep(bullets);
 }
