@@ -2,13 +2,13 @@
 
 A serious Pi extension wearing a joke hat, for agentic engineers who have personally suffered through “committed and pushed, done” while the actual product still does not work.
 
-When an assistant tries to turn commit-heavy or GitHub-heavy delivery prose into progress without ending in a plain status footer, the extension rejects the answer, plays one Chatterbox “shame”, and forces the next model turn to try again.
+When an assistant tries to turn commit-heavy or GitHub-heavy delivery prose into progress without ending in a plain status footer, the extension rejects the answer, plays one Chatterbox “shame”, and starts a short correction workflow: the agent rewrites the status report, then the human labels the raw rejected candidate for training.
 
 It is meant to be funny because the failure mode is otherwise exhausting. The humor is restorative; the enforcement is not optional.
 
 > Shame.
 
-Every agentic engineer knows the feeling: the model confidently writes a status update where a proof should be. This extension turns that moment into one short spoken word, a rejection, and another attempt.
+Every agentic engineer knows the feeling: the model confidently writes a status update where a proof should be. This extension turns that moment into one short spoken word, a plain correction packet, and a human-labeling step.
 
 The installed `shame.wav` policy is deliberately small: one Chatterbox-generated word, “shame”, and no bell. Replace it only with another short single-word local file.
 
@@ -21,11 +21,24 @@ On assistant `message_end`, it:
 1. extracts the assistant’s final text;
 2. runs `report-check.mjs` as a deterministic checker;
 3. rejects only likely delivery/status reports that are commit-heavy, GitHub-heavy, or jargon-heavy and lack a final `Status Report` footer;
-4. replaces rejected output with `REJECTED_BY_SLOTH_COURT`;
+4. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a final `Status Report` footer so the replacement itself is plain-spoken;
 5. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
-6. refuses to queue a second automatic retry for the same originating turn.
+6. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
+7. refuses to queue a second automatic retry for the same originating turn.
 
 The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `Status Report` footer. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly.
+
+## Collaborative correction loop
+
+The intended human-agent flow is:
+
+1. The extension rejects the bad status answer and shows the machine reason, raw candidate hash, excerpt, and required footer.
+2. The agent rewrites the answer in plain English with `Status Report` bullets.
+3. The human approves or corrects the classification with `/shame allow|reject|warn <reason> -- <note>`.
+4. `/shame show` displays the raw candidate, machine decision, checker version, excerpt, and copyable human-labeling commands.
+5. The captured label goes to JSONL and Memory for the future classifier loop.
+
+The extension should never leave the human staring at only gate JSON. A rejection notice is a correction packet, not the final product.
 
 ## Rejected patterns
 

@@ -37,13 +37,17 @@ Capture bad agent status updates into a JSONL training set, the structured `sham
 
 This is a recording skill, not a scolding skill. Do not generate essays about agent behavior. Store the labeled example and return the receipt.
 
-`$shame` is also a self-correction trigger for the installed Pi extension. A `$shame` turn must produce a concise corrected answer in plain spoken English and end with the exact `Status Report` footer. The extension rejects answers that skip that footer and queues one forced retry.
+`$shame` is also a self-correction trigger for the installed Pi extension. A `$shame` turn must produce a concise corrected answer in plain spoken English and end with the exact `Status Report` footer. The extension rejects answers that skip that footer, shows a plain correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate.
 
 Missing per-feature `$agentic-evals` coverage is shame. For every new feature, add or update a retained `$agentic-evals` fixture, run it, and cite the receipt before reporting the feature done. Leaving relevant files, skills, or project changes uncommitted or unpushed when no external blocker exists is also shame.
 
 It also owns the installed shame audio policy: one short Chatterbox word, `shame`, with no bell and no repeated shame loop.
 
-Preferred human UX is the Pi extension command:
+Preferred human UX is collaborative, not punitive:
+
+1. Extension rejects the bad answer and shows the raw candidate hash, machine reason, excerpt, and correction target.
+2. Agent rewrites the answer with the required `Status Report` footer.
+3. Human labels the raw candidate with the Pi extension command:
 
 ```text
 /shame reject commit_laundering -- no final Status Report
@@ -53,7 +57,7 @@ Preferred human UX is the Pi extension command:
 /shame undo
 ```
 
-The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice.
+The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, machine decision, checker version, excerpt, and copyable label commands before deciding.
 
 For inline `$shame`, the self-corrected answer must be short and must end exactly in this shape:
 
@@ -160,6 +164,7 @@ The fixture must prove:
 - legacy labels still map to verdict/reason pairs;
 - strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
+- extension rejection notices are correction packets with a final `Status Report` footer rather than bare gate JSON;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 
 The skill records examples only. It does not train or promote a classifier.

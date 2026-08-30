@@ -156,53 +156,61 @@ function playShameAudio(lastPlayedAt: { value: number }): void {
 function rejectionNotice(original: string, check: CheckResult, retried: boolean): string {
   const excerpt = original.replace(/\s+/g, " ").trim().slice(0, 320);
   const disposition = retried
-    ? "The answer was replaced. One automatic retry was already used for this originating turn, so no further retry was queued."
-    : "The answer was replaced and one forced retry was queued.";
+    ? "The bad answer was hidden. One automatic retry was already used for this turn, so no second automatic retry was queued."
+    : "The bad answer was hidden and one rewrite request was queued.";
+  const footerFailures = check.footer_failures.length ? check.footer_failures.join(", ") : "none";
   return `🦥 REJECTED_BY_SLOTH_COURT
 
-Shame. Shame. Shame.
+The last answer was rejected because it did not give a plain status report.
 
-The assistant reported delivery/status in report-like prose without a clear final title and plain-English bullet summary.
+Machine check
+- Checker: ${check.checker_version}
+- Reasons: ${check.reason_codes.join(", ") || "none"}
+- Footer failures: ${footerFailures}
 
-Checker version: ${check.checker_version}
-Reason codes: ${check.reason_codes.join(", ") || "none"}
-Footer failures:
-${check.footer_failures.length ? check.footer_failures.map((failure) => `- ${failure}`).join("\n") : "- none"}
-
-Offending excerpt:
+Rejected excerpt:
 ${excerpt ? `> ${excerpt}` : "> (no text extracted)"}
 
-Disposition: ${disposition}
+Correction workflow
+- ${disposition}
+- The rewrite must give the corrected answer, not more gate JSON.
+- After the corrected answer, label the raw candidate with `/shame reject|allow|warn <reason> -- <note>`.
+- Use `/shame show` to inspect the raw candidate that will be labeled.
 
-Required ending: a clear report title plus plain-spoken bullets. Include what changed, what was verified or not verified, where the proof is or why it is missing, and what remains if anything remains.
-
-No progress confetti over a pothole. The bell is still ringing.`;
+Status Report
+- Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.
+- Verified: report-check.mjs returned ${check.decision}; checker ${check.checker_version}; footer failures: ${footerFailures}.
+- Proof: rejected candidate ${sha256(original)}; excerpt shown above.
+- Not done: Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer.`;
 }
 
 function retryPrompt(original: string, check: CheckResult): string {
   const excerpt = truncateForRetry(original.trim());
+  const footerFailures = check.footer_failures.length ? check.footer_failures.join(", ") : "none";
   return `UNLAZY_FORCED_RETRY
 
 Your previous answer was rejected by lazy-report-shame-shame-shame because it looked like a delivery/status report but did not end with a clear report title and plain-English bullet summary.
 
-Checker version: ${check.checker_version}
-Reason codes: ${check.reason_codes.join(", ") || "none"}
-Footer failures:
-${check.footer_failures.length ? check.footer_failures.map((failure) => `- ${failure}`).join("\n") : "- none"}
+Machine check
+- Checker: ${check.checker_version}
+- Reasons: ${check.reason_codes.join(", ") || "none"}
+- Footer failures: ${footerFailures}
 
 Rejected response:
 ${excerpt ? `> ${excerpt.replace(/\n/g, "\n> ")}` : "> (no text extracted)"}
 
-Rewrite the answer. Preserve all supported facts. Do not invent commands, results, receipts, or proof. Use “Not verified” or “Missing” when evidence does not exist. Keep the main answer concise, then end with a clearly titled bullet summary.
+Rewrite the answer now. Preserve only supported facts. Do not invent commands, results, receipts, or proof. Use “Not verified” or “Missing” when evidence does not exist. Do not answer with another gate failure unless a gate command actually failed and you have the receipt.
 
-Preferred shape:
+Collaborative correction flow:
+- Give the corrected answer first.
+- End with the exact Status Report footer below.
+- The human can then label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`.
+
 Status Report
 - Changed: plain-English user-visible/project-visible change, not a commit/SHA/branch by itself.
 - Verified: exact command/readback and observed result, or Not verified: exact reason.
 - Proof: concrete path, URL, issue/PR number, commit, or Missing: exact reason.
-- Not done: none, or exact unfinished item and next concrete step.
-
-Equivalent clear labels are acceptable. Do not present Git metadata, a commit, a push, a branch, a SHA, or unit tests as the user-visible result.`;
+- Not done: none, or exact unfinished item and next concrete step.`;
 }
 
 function parseShameArgs(args: string): { action: "capture" | "show" | "undo"; verdict: HumanVerdict; reasons: string[]; note: string; error?: string } {
@@ -393,7 +401,7 @@ export default function lazyReportShameShameShame(pi: any) {
     if (!sessionGuardActive && !turnGuardActive && !activatesGuard(prompt)) return;
     turnGuardActive = true;
     const shameSelfCorrection = shameSelfCorrectTurn
-      ? "\n\n[Lazy Report Shame Self-Correction]\nThe user invoked $shame. Do not answer with meta-commentary about shame. Give a concise corrected answer in plain spoken English. End with the exact titled footer below. If the previous answer lacked proof, say Not verified or Missing instead of pretending it was proven.\n\nStatus Report\n- Changed: ...\n- Verified: ...\n- Proof: ...\n- Not done: ..."
+      ? "\n\n[Lazy Report Shame Self-Correction]\nThe user invoked $shame. Do not answer with meta-commentary about shame. Give the corrected answer in plain spoken English for the human to approve or correct. If the previous answer lacked proof, say Not verified or Missing instead of pretending it was proven. End with the exact titled footer below; after that, the human can label the raw candidate with /shame allow|reject|warn.\n\nStatus Report\n- Changed: ...\n- Verified: ...\n- Proof: ...\n- Not done: ..."
       : "";
     return {
       systemPrompt:
@@ -475,8 +483,21 @@ export default function lazyReportShameShameShame(pi: any) {
       }
       if (parsed.action === "show") {
         const candidate = lastCandidate;
-        const excerpt = candidate?.assistant_text.replace(/\s+/g, " ").slice(0, 240) || "No candidate captured yet.";
-        ctx.ui.notify(`Last shame candidate: ${candidate?.response_sha256 || "none"} ${excerpt}`, "info");
+        if (!candidate) {
+          ctx.ui.notify("No candidate captured yet.", "info");
+          return;
+        }
+        const excerpt = candidate.assistant_text.replace(/\s+/g, " ").slice(0, 240) || "(no text extracted)";
+        const reasons = candidate.machine_reason_codes.length ? candidate.machine_reason_codes.join(", ") : "none";
+        ctx.ui.notify([
+          "Shame review packet",
+          `- Candidate: ${candidate.response_sha256}`,
+          `- Machine: ${candidate.machine_decision} (${reasons})`,
+          `- Checker: ${candidate.checker_version}`,
+          `- Excerpt: ${excerpt}`,
+          "- Human choices: /shame reject <reason> -- <note>; /shame allow normal_answer -- <note>; /shame warn <reason> -- <note>",
+          "- Correction target: the agent should answer plainly, then end with Status Report bullets: Changed, Verified, Proof, Not done.",
+        ].join("\n"), "info");
         return;
       }
       if (parsed.action === "undo") {
