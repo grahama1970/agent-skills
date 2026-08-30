@@ -10,7 +10,6 @@ from live_evidence.retrieval.memory import (
     _memory_items_to_sources,
     _memory_recall_queries,
 )
-from live_evidence.retrieval.memory import _memory_items_to_sources
 from live_evidence.retrieval.ranker import prefer_reviewed_oracle_answers, rank_sources
 
 
@@ -18,6 +17,14 @@ def profile() -> InterviewProfile:
     return InterviewProfile(
         name="policy-test",
         repo_priorities=["tau", "agent-skills", "sparta"],
+    )
+
+
+def client_profile() -> InterviewProfile:
+    return InterviewProfile(
+        name="drivewealth",
+        memory_scope="client:drivewealth",
+        memory_collections=["client_interview_qa", "lessons_v2"],
     )
 
 
@@ -221,6 +228,34 @@ def test_drivewealth_oracle_answer_ranks_above_question_echo() -> None:
     ranked = rank_sources([question_echo, reviewed_answer], query, profile())
 
     assert ranked[0] is reviewed_answer
+
+
+def test_client_interview_qa_beats_lessons_for_client_profile() -> None:
+    query = "An operations analyst asks why a customer account is blocked. What graph would you build?"
+    lesson_answer = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DW-AI-01-T01 reviewed solution",
+        excerpt="Reviewed solution: bounded graph with account state and KYC events.",
+        score=0.94,
+        freshness=Freshness.UNKNOWN,
+        repository="lessons",
+        path="lessons/a013b003e53299717cfe759d3461418bf657bf54",
+        metadata={"source": "lessons", "topic_kind": "expected_interview_solution"},
+    )
+    client_answer = EvidenceSource(
+        lane=RetrievalLane.MEMORY,
+        label="DriveWealth curated answer",
+        excerpt="I would separate interpretation from authority and use typed policy gates.",
+        score=0.91,
+        freshness=Freshness.UNKNOWN,
+        repository="client_interview_qa",
+        path="client_interview_qa/drivewealth_dw_int_001",
+        metadata={"source": "client_interview_qa", "topic_kind": "client_interview_qa"},
+    )
+
+    ranked = rank_sources([lesson_answer, client_answer], query, client_profile())
+
+    assert ranked[0] is client_answer
 
 
 def test_reviewed_oracle_answer_is_preserved_after_selector_reorder() -> None:

@@ -66,6 +66,7 @@ def rank_sources(
             + _project_affinity(source, scope)
             + _hard_rules_affinity(query, source)
             + _oracle_answer_affinity(source)
+            + _client_interview_qa_affinity(profile, source)
             + (_code_location_affinity(source) if code_location else 0.0)
         )
         return total, source.label.casefold()
@@ -202,6 +203,36 @@ def _oracle_answer_affinity(source: EvidenceSource) -> float:
         return -0.12
     if "answer key: dw-ai" in blob and " q:" in blob:
         return -0.08
+    return 0.0
+
+
+def _client_interview_qa_affinity(profile: InterviewProfile, source: EvidenceSource) -> float:
+    """Prefer curated client answer-bank assets for client prep profiles.
+
+    DriveWealth 8799 readback showed a bad live state: older `lessons` answer
+    keys outranked `client_interview_qa` rows even when the active profile was
+    `client:drivewealth`. The public answer keys are useful fallback evidence,
+    but the prep-pack contract says client interview answers are the live HUD
+    prior for researched client prep.
+    """
+
+    if source.lane is not RetrievalLane.MEMORY:
+        return 0.0
+    if not profile.memory_scope.casefold().startswith("client:"):
+        return 0.0
+    meta = source.metadata or {}
+    identity = " ".join(
+        str(part or "")
+        for part in (
+            source.repository,
+            source.path,
+            meta.get("source"),
+            meta.get("topic_kind"),
+            meta.get("_key"),
+        )
+    ).casefold()
+    if "client_interview_qa" in identity:
+        return 0.55
     return 0.0
 
 

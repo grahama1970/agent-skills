@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "live-evidence",
   "trials": 2,
-  "proof_scope": "non-mocked local HTTP, current-source retrieval, real Memory recall for promoted project-memory problem records, React instrumentation, Ask command/card plumbing, and fail-closed contract smoke",
+  "proof_scope": "non-mocked local HTTP, current-source retrieval, real Memory recall for promoted project-memory problem records, React instrumentation, Ask command/card plumbing, and fail-closed contract smoke, and DriveWealth client_interview_qa ranking against live Memory recall.",
   "claims": {
     "proves": "the Live Evidence entrypoints repeatedly pass local HTTP/ripgrep sanity, retrieve promoted project-memory problem records through real Memory recall, route code-related interview questions through the Ask lane when configured, reject consentless listener startup, and fail closed on malformed skill contracts",
     "does_not_prove": "live microphone capture, PipeWire capture, GPU STT inference, Graph Memory availability, live Ask provider/model/browser execution, Brave/Dogpile search, deployment readiness, or interview semantic correctness"
@@ -1975,6 +1975,35 @@
         ]
       },
       "notes": "Proves accepted transcript hash mismatches block playback after validation."
+    },
+    {
+      "name": "drivewealth-client-interview-qa-ranks-above-lessons",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; R=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-client-qa-ranking-agentic.json\"; UV_PROJECT_ENVIRONMENT=\"$E\" LIVE_EVIDENCE_DRIVEWEALTH_RANKING_RECEIPT=\"$R\" uv run --project .. --extra dev python ../scripts/eval_drivewealth_client_qa_ranking.py"
+      ],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CLIENT_INTERVIEW_QA_TOP: PASS",
+          "\"repository\": \"client_interview_qa\"",
+          "\"source\": \"client_interview_qa\""
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-client-qa-ranking-agentic.json",
+            "json_pointer": "/top_source/source",
+            "equals": "client_interview_qa"
+          }
+        ]
+      },
+      "notes": "Regression for DriveWealth 8799 failure: older lessons rows must not outrank client_interview_qa answer-bank rows for client-scoped HUD searches."
     }
   ]
 }
