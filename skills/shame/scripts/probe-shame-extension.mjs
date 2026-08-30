@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const mode = process.argv[2] || 'all';
@@ -106,6 +106,57 @@ async function runReviewFallback() {
   console.log(JSON.stringify({ ok: true, mode: 'review-fallback', notifications: c.notifications.length }));
 }
 
+async function runContinuationGuardOpenTicket() {
+  const guardFile = `/tmp/shame-probe-continuation-${process.pid}.json`;
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-continuation-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE = guardFile;
+  writeFileSync(guardFile, JSON.stringify({
+    schema: 'lazy_report_shame.continuation_guard.v1',
+    active: true,
+    target: 'extensions/pi/continuation-guard',
+    tickets: [{ ref: 'grahama1970/agent-skills#1554', state: 'OPEN', labels: ['agent-work', 'type:feature'], next_command: 'Run the continuation guard implementation task.' }],
+    gates: [{ id: 'live-replay', status: 'pending', next_command: 'Run live-replay and read back followup_injected=true.' }],
+    obvious_next_steps: ['Extend lazy-report-shame-shame-shame instead of stopping.'],
+  }), 'utf8');
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'please finish the ticketed goal', source: 'user' });
+  const goodLookingFinal = 'The continuation guard is handled.\n\nStatus Report\n- Changed: The guard is ready.\n- Verified: Not verified: this is a probe.\n- Proof: Missing: no live replay.\n- Not done: none.';
+  const result = await handlers.message_end[0]({ id: 'assistant-premature', message: { id: 'assistant-premature', role: 'assistant', content: [{ type: 'text', text: goodLookingFinal }] } }, c);
+  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(notice.includes('continuation_guard_unresolved_work'), 'continuation guard did not reject premature final', { notice });
+  assert(notice.includes('open_relevant_agent_work_ticket'), 'continuation guard did not name open ticket failure', { notice });
+  assert(sent.length === 1, 'continuation guard did not queue one follow-up', { sentCount: sent.length, sent });
+  assert(sent[0].text.includes('Run the continuation guard implementation task'), 'follow-up did not include next ticket action', { sent });
+  const saved = JSON.parse(readFileSync(packet, 'utf8'));
+  assert(saved.machine?.reason_codes?.includes('continuation_guard_unresolved_work'), 'pending packet omitted continuation reason', saved);
+  rmSync(guardFile, { force: true });
+  console.log(JSON.stringify({ ok: true, mode: 'continuation-open-ticket', followup_injected: true, ticket_gate: 'blocked_open_agent_work', retryMessages: sent.length }));
+}
+
+async function runContinuationGuardClosedTicketAllowsFinal() {
+  const guardFile = `/tmp/shame-probe-continuation-closed-${process.pid}.json`;
+  process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE = guardFile;
+  writeFileSync(guardFile, JSON.stringify({
+    schema: 'lazy_report_shame.continuation_guard.v1',
+    active: true,
+    target: 'extensions/pi/continuation-guard',
+    tickets: [{ ref: 'grahama1970/agent-skills#1554', state: 'CLOSED', labels: ['agent-work', 'type:feature'] }],
+    gates: [{ id: 'live-replay', status: 'PASS', proof: '/tmp/proof.json' }],
+    obvious_next_steps: [],
+  }), 'utf8');
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'report final', source: 'user' });
+  const finalText = 'Done.\n\nStatus Report\n- Changed: The continuation guard is enabled for ticketed goals.\n- Verified: live-replay returned PASS.\n- Proof: /tmp/proof.json.\n- Not done: none.';
+  const result = await handlers.message_end[0]({ id: 'assistant-ok', message: { id: 'assistant-ok', role: 'assistant', content: [{ type: 'text', text: finalText }] } }, c);
+  assert(result === undefined, 'closed ticket / passed gates should allow final answer', { result });
+  assert(sent.length === 0, 'allowed final should not queue follow-up', { sent });
+  rmSync(guardFile, { force: true });
+  console.log(JSON.stringify({ ok: true, mode: 'continuation-closed-ticket-allows-final', followup_injected: false, ticket_gate: 'closed_or_passed' }));
+}
+
 async function runDirectLabelJsonl() {
   const out = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || '/tmp/shame-probe-training.jsonl';
   const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-label-packet.json';
@@ -133,6 +184,8 @@ const modes = {
   'show-recovers-pending': runShowRecoversPending,
   'review-fallback': runReviewFallback,
   'direct-label-jsonl': runDirectLabelJsonl,
+  'continuation-open-ticket': runContinuationGuardOpenTicket,
+  'continuation-closed-ticket-allows-final': runContinuationGuardClosedTicketAllowsFinal,
 };
 
 if (mode === 'all') {

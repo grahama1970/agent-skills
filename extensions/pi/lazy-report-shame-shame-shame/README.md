@@ -22,12 +22,55 @@ On assistant `message_end`, it:
 2. ignores tool-call-only assistant messages with no text, so intermediate tool use is not rejected as a missing report;
 3. runs `report-check.mjs` as a deterministic checker;
 4. rejects only likely delivery/status reports that are commit-heavy, GitHub-heavy, or jargon-heavy and lack a final `Status Report` footer;
-5. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a final `Status Report` footer so the replacement itself is plain-spoken;
-6. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
-7. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
-8. refuses to queue a second automatic retry for the same originating turn.
+5. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final report that claims completion while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
+6. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a final `Status Report` footer so the replacement itself is plain-spoken;
+7. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
+8. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
+9. refuses to queue a second automatic retry for the same originating turn.
 
-The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `Status Report` footer. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly.
+The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `Status Report` footer. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
+
+## Continuation guard file
+
+Write the active ledger to `/mnt/storage12tb/skills/shame/continuation-guard/current.json`, or override that path with `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE`, when a session has an active goal, ticket, or watchdog lease. The extension reads the file on each assistant `message_end`; no raw GitHub, ArangoDB, or Qdrant calls happen inside the hook.
+
+```json
+{
+  "schema": "lazy_report_shame.continuation_guard.v1",
+  "active": true,
+  "target": "extensions/pi/continuation-guard",
+  "tickets": [
+    {
+      "ref": "grahama1970/agent-skills#1554",
+      "state": "OPEN",
+      "labels": ["agent-work", "type:feature"],
+      "next_command": "Run the continuation guard implementation task."
+    }
+  ],
+  "gates": [
+    {
+      "id": "live-replay",
+      "status": "pending",
+      "next_command": "Run live-replay and read back followup_injected=true."
+    }
+  ],
+  "obvious_next_steps": ["Extend lazy-report-shame-shame-shame instead of stopping."]
+}
+```
+
+A final/status answer is rejected when any listed `agent-work` ticket is still open and not held by `agent-active`, `agent-blocked`, `maintainer-active`, `maintainer-blocked`, `needs-human`, `next:human`, or `status:deferred`; when any gate is not `PASS`/`complete`/`closed`; or when `obvious_next_steps` is non-empty. Closed tickets, passed gates, and explicit human/blocked holds allow a final answer.
+
+To seed the ledger from a live GitHub ticket readback:
+
+```bash
+cd /home/graham/workspace/experiments/agent-skills
+skills/shame/scripts/write-continuation-guard.mjs \
+  --repo grahama1970/agent-skills \
+  --issue 1554 \
+  --target extensions/pi/lazy-report-shame-shame-shame \
+  --next-command 'Finish the ticketed goal, verify retained evals and installed extension replay, then close the ticket with readback.' \
+  --json
+```
 
 ## Collaborative correction loop
 

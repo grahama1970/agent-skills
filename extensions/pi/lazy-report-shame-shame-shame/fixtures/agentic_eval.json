@@ -47,6 +47,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "lrsss.continuation_ticket_gate",
+      "description": "An active continuation guard file with an open relevant agent-work ticket or unresolved gate rejects a premature final report and queues a follow-up; closed tickets and passed gates allow final.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -93,6 +101,14 @@
     {
       "seam_id": "report-check-policy",
       "seam_type": "checker",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "continuation-ticket-gate",
+      "seam_type": "hook",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
@@ -250,6 +266,59 @@
         "exit_code": 0,
         "stdout_contains": [
           "STRICT_CHECKER_POLICY_OK"
+        ]
+      }
+    },
+    {
+      "name": "extension-continuation-open-ticket-rejects-final",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.continuation_ticket_gate"
+      ],
+      "seams": [
+        "continuation-ticket-gate",
+        "message-end-rejection"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-continuation-open-packet.json skills/shame/scripts/probe-shame-extension.sh continuation-open-ticket"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"followup_injected\":true",
+          "\"ticket_gate\":\"blocked_open_agent_work\""
+        ]
+      }
+    },
+    {
+      "name": "extension-continuation-closed-ticket-allows-final",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.continuation_ticket_gate"
+      ],
+      "seams": [
+        "continuation-ticket-gate"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-continuation-closed-packet.json skills/shame/scripts/probe-shame-extension.sh continuation-closed-ticket-allows-final"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"followup_injected\":false",
+          "\"ticket_gate\":\"closed_or_passed\""
         ]
       }
     }

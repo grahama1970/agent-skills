@@ -19,9 +19,48 @@ const MEMORY_SEARCH_COLLECTION = process.env.SHAME_MEMORY_SEARCH_COLLECTION || "
 const MEMORY_ENABLED = !/^(0|false|off|no)$/i.test(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
 const AUDIO_COOLDOWN_MS = 10_000;
 const MAX_REJECTED_EXCERPT_CHARS = 8_000;
+const CONTINUATION_GUARD_FILE = process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE || "/mnt/storage12tb/skills/shame/continuation-guard/current.json";
+
+const HOLD_LABELS = new Set([
+  "agent-active",
+  "agent-blocked",
+  "maintainer-active",
+  "maintainer-blocked",
+  "needs-human",
+  "next:human",
+  "status:deferred",
+]);
 
 type CheckDecision = "pass" | "reject" | "error" | "unknown";
 type HumanVerdict = "allow" | "reject" | "warn" | "needs_review";
+
+type ContinuationTicket = {
+  ref?: string;
+  url?: string;
+  number?: number | string;
+  state?: string;
+  labels?: Array<string | { name?: string }>;
+  target?: string;
+  next_command?: string;
+  blocked_by?: string;
+};
+
+type ContinuationGate = {
+  id?: string;
+  status?: string;
+  next_command?: string;
+  proof?: string;
+};
+
+type ContinuationState = {
+  schema?: string;
+  active?: boolean;
+  target?: string;
+  tickets?: ContinuationTicket[];
+  gates?: ContinuationGate[];
+  obvious_next_steps?: string[];
+  next_command?: string;
+};
 
 const LEGACY_LABELS: Record<string, { verdict: HumanVerdict; reasons: string[] }> = {
   false_positive: { verdict: "allow", reasons: ["false_positive"] },
@@ -142,6 +181,101 @@ function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, 
   return parseCheckerPayload(String(result.stdout || ""), String(result.stderr || ""), result.status);
 }
 
+function loadContinuationState(): ContinuationState | null {
+  if (!CONTINUATION_GUARD_FILE) return null;
+  if (!existsSync(CONTINUATION_GUARD_FILE)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(CONTINUATION_GUARD_FILE, "utf8"));
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as ContinuationState;
+  } catch {
+    return null;
+  }
+}
+
+function activeContinuationState(): ContinuationState | null {
+  const state = loadContinuationState();
+  if (!state || state.active === false) return null;
+  return state;
+}
+
+function labelNames(ticket: ContinuationTicket): Set<string> {
+  const result = new Set<string>();
+  for (const raw of ticket.labels || []) {
+    const value = typeof raw === "string" ? raw : raw?.name;
+    if (value) result.add(String(value).toLowerCase());
+  }
+  return result;
+}
+
+function ticketRef(ticket: ContinuationTicket): string {
+  if (ticket.ref) return ticket.ref;
+  if (ticket.url) return ticket.url;
+  if (ticket.number !== undefined) return `#${ticket.number}`;
+  return ticket.target || "unknown-ticket";
+}
+
+function isClosedState(value: unknown): boolean {
+  return /^(closed|done|complete|completed|merged)$/i.test(String(value || ""));
+}
+
+function actionableOpenTickets(state: ContinuationState): ContinuationTicket[] {
+  return (state.tickets || []).filter((ticket) => {
+    if (isClosedState(ticket.state)) return false;
+    const labels = labelNames(ticket);
+    if (!labels.has("agent-work")) return false;
+    if ([...labels].some((label) => HOLD_LABELS.has(label))) return false;
+    if (ticket.blocked_by) return false;
+    return true;
+  });
+}
+
+function unresolvedGates(state: ContinuationState): ContinuationGate[] {
+  return (state.gates || []).filter((gate) => !/^(pass|passed|ok|complete|completed|closed)$/i.test(String(gate.status || "")));
+}
+
+function completionClaim(text: string): boolean {
+  return /\b(?:done|complete|completed|finished|fixed|resolved|closed|implemented|landed|shipped|published)\b/i.test(text)
+    || /^\s*(?:not done|remaining|remains|todo|unfinished)\s*:\s*(?:none|nothing|n\/a|no|zero)\b/im.test(text)
+    || /\b(?:no remaining work|nothing remains)\b/i.test(text)
+    || /\bstatus report\b/i.test(text);
+}
+
+function evaluateContinuationGuard(text: string): CheckResult | null {
+  const state = activeContinuationState();
+  if (!state) return null;
+  const tickets = actionableOpenTickets(state);
+  const gates = unresolvedGates(state);
+  const steps = Array.isArray(state.obvious_next_steps) ? state.obvious_next_steps.filter(Boolean) : [];
+  if (!tickets.length && !gates.length && !steps.length && !state.next_command) return null;
+  if (!completionClaim(text)) return null;
+
+  const nextAction = state.next_command
+    || tickets.find((ticket) => ticket.next_command)?.next_command
+    || gates.find((gate) => gate.next_command)?.next_command
+    || steps[0]
+    || "Continue the active goal until the unresolved ticket/gate is closed or explicitly blocked.";
+  const failures = [];
+  if (tickets.length) failures.push("open_relevant_agent_work_ticket");
+  if (gates.length) failures.push("unresolved_acceptance_gate");
+  if (steps.length || state.next_command) failures.push("obvious_next_step_not_enacted");
+  return {
+    schema: "lazy_report_shame.report_check.v2",
+    checker_version: "continuation-guard-v1",
+    decision: "reject",
+    reason_codes: ["continuation_guard_unresolved_work"],
+    features: {
+      continuation_guard_file: CONTINUATION_GUARD_FILE,
+      target: state.target || null,
+      open_ticket_refs: tickets.map(ticketRef),
+      unresolved_gates: gates.map((gate) => gate.id || "unnamed-gate"),
+      next_action: nextAction,
+    },
+    footer_failures: failures,
+    diagnostics: `Continuation guard blocked final answer. Next action: ${nextAction}`,
+  };
+}
+
 function playShameAudio(lastPlayedAt: { value: number }): void {
   if (/^(0|false|off|no)$/i.test(process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED || "1")) return;
   const now = Date.now();
@@ -234,7 +368,7 @@ Machine check
 - Checker: ${check.checker_version}
 - Reasons: ${check.reason_codes.join(", ") || "none"}
 - Footer failures: ${footerFailures}
-
+${check.diagnostics ? `- Diagnostics: ${check.diagnostics}\n` : ""}
 Rejected excerpt:
 ${excerpt ? `> ${excerpt}` : "> (no text extracted)"}
 
@@ -249,7 +383,7 @@ Status Report
 - Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.
 - Verified: report-check.mjs returned ${check.decision}; checker ${check.checker_version}; footer failures: ${footerFailures}.
 - Proof: ${reviewPacketPath}; rejected candidate ${candidate.response_sha256}; excerpt shown above.
-- Not done: Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer.`;
+- Not done: ${check.reason_codes.includes("continuation_guard_unresolved_work") ? (String(check.features?.next_action || "Continue the active goal until unresolved work is closed or blocked.")) : "Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer."}`;
 }
 
 function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string): string {
@@ -264,7 +398,7 @@ Machine check
 - Checker: ${check.checker_version}
 - Reasons: ${check.reason_codes.join(", ") || "none"}
 - Footer failures: ${footerFailures}
-- Review packet: ${reviewPacketPath}
+${check.diagnostics ? `- Diagnostics: ${check.diagnostics}\n` : ""}- Review packet: ${reviewPacketPath}
 
 Rejected response:
 ${excerpt ? `> ${excerpt.replace(/\n/g, "\n> ")}` : "> (no text extracted)"}
@@ -487,9 +621,11 @@ export default function lazyReportShameShameShame(pi: any) {
     if (event.message?.role !== "assistant") return;
     const text = contentToText(event.message.content);
     if (!text.trim()) return;
-    const forceStatus = sessionGuardActive || turnGuardActive;
+    const forceStatus = sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
-    const check = checkReport(text, forceStatus, mutatingTurn, strictStatus);
+    let check = checkReport(text, forceStatus, mutatingTurn, strictStatus);
+    const continuationCheck = evaluateContinuationGuard(text);
+    if (continuationCheck && check.decision !== "reject") check = continuationCheck;
     let keepGuardForRetry = false;
 
     try {
