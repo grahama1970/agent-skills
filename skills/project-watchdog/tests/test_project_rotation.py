@@ -1293,6 +1293,25 @@ def test_an_answered_attestation_holds_for_the_full_interval(tmp_path, monkeypat
         "an answered attestation is not re-asked an hour later"
 
 
+
+def test_agent_actionable_attention_does_not_make_the_tick_a_human_blocker():
+    from watchdog import commands  # noqa: PLC0415
+
+    result = {
+        "ok": False,
+        "status": "NEEDS_ATTENTION",
+        "requires_human_input": False,
+        "authorized_agent_next_steps": [{"kind": "inspect_artifact"}],
+    }
+    receipt = {}
+
+    assert commands._handled_result_allows_agent_followup(result) is True
+    assert commands._handled_tick_status(result, preview=False) == "COMPLETED"
+    commands._record_agent_authorization(receipt, result)
+    assert receipt["requires_human_input"] is False
+    assert receipt["agent_action_required"] is True
+    assert receipt["authorized_agent_next_steps"] == [{"kind": "inspect_artifact"}]
+
 def test_a_bare_timestamp_from_older_state_still_works(tmp_path, monkeypatch):
     state = {"projects": {"p": {"state": "active"}}, "completion_attested_at": {"p": 0.0}}
     assert _attest_state(tmp_path, monkeypatch, {"verdict": "PASS"}, state) is not None

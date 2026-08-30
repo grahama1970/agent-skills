@@ -70,6 +70,38 @@ _SELF_CLEARING_SKIPS = frozenset(
 )
 
 
+def _handled_result_allows_agent_followup(result: dict[str, Any]) -> bool:
+    """Return true when a failed lane is still an agent-owned next step.
+
+    ``NEEDS_ATTENTION`` used to mean "stop and ask the human" even for errors
+    that named an obvious machine next step, such as a completion attestor that
+    ran but emitted no parseable verdict. That trained supervising agents to
+    bury the real next action in a final status report. A lane may now mark
+    ``requires_human_input: false`` to say: do not claim success, but the next
+    action is authorized for the agent and the tick should not fail as a human
+    blocker.
+    """
+    return result.get("ok") is True or result.get("requires_human_input") is False
+
+
+def _handled_tick_status(result: dict[str, Any], *, preview: bool) -> str:
+    if preview:
+        return "DRY_RUN"
+    if result.get("ok") is True:
+        return "COMPLETED"
+    if result.get("requires_human_input") is False:
+        return "COMPLETED"
+    return "NEEDS_ATTENTION"
+
+
+def _record_agent_authorization(receipt: dict[str, Any], result: dict[str, Any]) -> None:
+    if result.get("ok") is True or result.get("requires_human_input") is not False:
+        return
+    receipt["requires_human_input"] = False
+    receipt["authorized_agent_next_steps"] = result.get("authorized_agent_next_steps") or []
+    receipt["agent_action_required"] = True
+
+
 def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) -> None:
     """Mark a tick that serviced no project, and say whether it can recover.
 
@@ -634,13 +666,12 @@ def _tick_locked(
         if audited is not None:
             receipt["handled_issues"].append(audited)
             receipt["handled_count"] = 1
-            receipt["ok"] = bool(audited.get("ok"))
             # A previewed audit is not an event. Persisting a receipt for one
             # would put a directory on disk every minute for work not done.
             preview = audited.get("status") == "DRY_RUN"
-            receipt["status"] = (
-                "DRY_RUN" if preview else ("COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION")
-            )
+            receipt["ok"] = _handled_result_allows_agent_followup(audited)
+            _record_agent_authorization(receipt, audited)
+            receipt["status"] = _handled_tick_status(audited, preview=preview)
             streaks.clear_idle(str(audited.get("project_id") or project_id))
             return finish(
                 run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=not preview
@@ -655,11 +686,10 @@ def _tick_locked(
         if attested is not None:
             receipt["handled_issues"].append(attested)
             receipt["handled_count"] = 1
-            receipt["ok"] = bool(attested.get("ok"))
             preview = attested.get("status") == "DRY_RUN"
-            receipt["status"] = (
-                "DRY_RUN" if preview else ("COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION")
-            )
+            receipt["ok"] = _handled_result_allows_agent_followup(attested)
+            _record_agent_authorization(receipt, attested)
+            receipt["status"] = _handled_tick_status(attested, preview=preview)
             return finish(
                 run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=not preview
             )

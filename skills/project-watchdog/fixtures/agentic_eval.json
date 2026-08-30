@@ -337,6 +337,31 @@
       }
     },
     {
+      "name": "agent-actionable-attention-is-not-human-blocker",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_a_failed_attestor_run_does_not_attest_but_authorizes_agent_followup",
+        "../tests/test_project_rotation.py::test_agent_actionable_attention_does_not_make_the_tick_a_human_blocker",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "proves": "A completion-attestation transport/parser failure remains unproven but is marked requires_human_input=false with authorized_agent_next_steps, and the top-level tick can complete without training supervising agents to stop for a fake human blocker.",
+      "does_not_prove": "A live completion attestation succeeds; this is a deterministic regression over watchdog control flow and handler metadata."
+    },
+    {
       "name": "unknown-project-fails-closed-and-names-it",
       "type": "negative",
       "command": [

@@ -151,8 +151,14 @@ The runtime is deliberately narrow:
 7. Exit or move to the next project within the configured ticket limit.
 
 The watchdog must not perform unbounded repair, invent missing routing, or make
-global completion claims. If routing is missing or unauthorized, it should label
-the issue for `next:human` or the project equivalent and stop.
+global completion claims. It should stop for the human only when the receipt says
+`requires_human_input: true` or the next step is a real operator decision. A
+machine-actionable `NEEDS_ATTENTION` result must instead include
+`requires_human_input: false` plus `authorized_agent_next_steps`; supervising
+agents are authorized to keep working from those commands instead of burying the
+next action in `Not done`. If routing is missing or unauthorized and no safe
+machine repair exists, it should label the issue for `next:human` or the project
+equivalent and stop.
 
 ## Registry
 
@@ -467,6 +473,13 @@ different transport from the models that did and reviewed the work) judges
 whether the project is genuinely finished. On FAIL it names tickets on a
 `REOPEN: #123, #456` line and those are reopened, so the cycle repeats. The list
 is intersected with the tickets it was shown. Rate-limited per project.
+
+An attestor transport failure, parser failure, or no-verdict response is not a
+human-input blocker by itself. The receipt must preserve the failed attestation,
+set `requires_human_input: false`, and give the supervising agent the next
+commands needed to inspect and repair the attestation path. Ask the human only
+when the receipt names an operator decision, credential, label-removal policy, or
+other action an agent is not allowed to take.
 
 ## cron needs a login environment
 

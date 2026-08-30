@@ -2299,9 +2299,27 @@ def handle_completion_attestation(
             {
                 "ok": False,
                 "status": "NEEDS_ATTENTION",
+                "requires_human_input": False,
+                "authorized_agent_next_steps": [
+                    {
+                        "kind": "inspect_and_repair_watchdog_attestation",
+                        "reason": (
+                            "The attestor transport or verdict parser failed before a "
+                            "human decision was needed. The supervising agent is "
+                            "authorized to inspect the retained artifacts, fix the "
+                            "watchdog/attestation path, and rerun this tick."
+                        ),
+                        "commands": [
+                            f"python -m json.tool {receipt_dir / 'receipt.json'}",
+                            f"sed -n '1,220p' {task_path}",
+                            f"find {run_dir} -maxdepth 3 -type f | sort | head -80",
+                        ],
+                    }
+                ],
                 "summary": (
                     f"completion attestation for {repo} produced no verdict "
-                    f"(exit {attest.get('exit_code')}). Not attested."
+                    f"(exit {attest.get('exit_code')}). Not attested; this is "
+                    "agent-actionable, not a human-input blocker."
                 ),
             }
         )

@@ -1752,10 +1752,13 @@ def test_the_attestor_cannot_reopen_a_ticket_it_was_not_shown() -> None:
     assert picked == [1]
 
 
-def test_a_failed_attestor_run_does_not_attest(tmp_path) -> None:
-    """A browser seat that could not run is not agreement that work is done."""
+def test_a_failed_attestor_run_does_not_attest_but_authorizes_agent_followup(tmp_path) -> None:
+    """A browser seat failure is not proof, but it is not automatically human work."""
     result = _run_attestation(tmp_path, "VERDICT: PASS", exit_code=1)
     assert result["ok"] is False and result["status"] == "NEEDS_ATTENTION"
+    assert result["requires_human_input"] is False
+    assert result["authorized_agent_next_steps"]
+    assert "agent-actionable" in result["summary"]
 
 
 def test_the_attestation_task_names_the_empty_queue_trap(tmp_path) -> None:
