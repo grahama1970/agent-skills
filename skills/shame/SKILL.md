@@ -51,6 +51,7 @@ Preferred human UX is collaborative, not punitive:
 4. Human labels the raw candidate with the Pi extension command:
 
 ```text
+/shame review
 /shame reject commit_laundering -- no final Status Report
 /shame allow normal_answer -- this was an explanatory Git answer
 /shame warn jargon_no_status
@@ -58,7 +59,9 @@ Preferred human UX is collaborative, not punitive:
 /shame undo
 ```
 
-The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, pending packet path, machine decision, checker version, excerpt, and copyable label commands before deciding.
+Use `/shame review` for an interactive label picker when the TUI/RPC UI is available. Use the direct commands above in print/headless mode.
+
+The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, pending packet path, machine decision, checker version, excerpt, and copyable label commands before deciding. Use `/shame review` to choose the label without remembering the exact command syntax.
 
 For inline `$shame`, the self-corrected answer must be short and must end exactly in this shape:
 
@@ -172,7 +175,7 @@ The fixture must prove:
 - strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - extension rejection notices are correction packets with a final `Status Report` footer rather than bare gate JSON;
-- rejected candidates are written to a pending review packet that `/shame show` can read back after reload;
+- rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 
 The skill records examples only. It does not train or promote a classifier.

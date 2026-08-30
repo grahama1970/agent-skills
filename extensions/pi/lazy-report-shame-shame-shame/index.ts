@@ -242,7 +242,7 @@ Correction workflow
 - ${disposition}
 - The review packet was saved for human approval and survives extension reloads.
 - The rewrite must give the corrected answer, not more gate JSON.
-- After the corrected answer, label the raw candidate with \`/shame reject|allow|warn <reason> -- <note>\`.
+- After the corrected answer, use \`/shame review\` for an interactive label picker or label directly with \`/shame reject|allow|warn <reason> -- <note>\`.
 - Use \`/shame show\` to inspect the raw candidate that will be labeled.
 
 Status Report
@@ -275,7 +275,7 @@ Collaborative correction flow:
 - Give the corrected answer first.
 - End with the exact Status Report footer below.
 - The human can inspect the raw rejected candidate with \`/shame show\`.
-- The human can then label that candidate with \`/shame reject|allow|warn <reason> -- <note>\`.
+- The human can label that candidate with \`/shame review\` or \`/shame reject|allow|warn <reason> -- <note>\`.
 
 Status Report
 - Changed: plain-English user-visible/project-visible change, not a commit/SHA/branch by itself.
@@ -284,10 +284,11 @@ Status Report
 - Not done: none, or exact unfinished item and next concrete step.`;
 }
 
-function parseShameArgs(args: string): { action: "capture" | "show" | "undo"; verdict: HumanVerdict; reasons: string[]; note: string; error?: string } {
+function parseShameArgs(args: string): { action: "capture" | "show" | "undo" | "review"; verdict: HumanVerdict; reasons: string[]; note: string; error?: string } {
   const trimmed = String(args || "").trim();
   if (!trimmed) return { action: "capture", verdict: "needs_review", reasons: [], note: "" };
   if (/^show\b/i.test(trimmed)) return { action: "show", verdict: "needs_review", reasons: [], note: "" };
+  if (/^review\b/i.test(trimmed)) return { action: "review", verdict: "needs_review", reasons: [], note: trimmed.replace(/^review\s*/i, "") };
   if (/^undo\b/i.test(trimmed)) return { action: "undo", verdict: "needs_review", reasons: [], note: trimmed.replace(/^undo\s*/i, "") };
 
   const [beforeNote, ...afterNote] = trimmed.split(/\s+--\s+/);
@@ -554,7 +555,7 @@ export default function lazyReportShameShameShame(pi: any) {
   pi.registerCommand("shame", {
     description: "Add the previous assistant response to the shame classifier training JSONL",
     handler: async (args: string, ctx: any) => {
-      const parsed = parseShameArgs(args);
+      let parsed = parseShameArgs(args);
       if (parsed.error) {
         ctx.ui.notify(`/shame error: ${parsed.error}`, "error");
         return;
@@ -574,7 +575,7 @@ export default function lazyReportShameShameShame(pi: any) {
           `- Machine: ${candidate.machine_decision} (${reasons})`,
           `- Checker: ${candidate.checker_version}`,
           `- Excerpt: ${excerpt}`,
-          "- Human choices: /shame reject <reason> -- <note>; /shame allow normal_answer -- <note>; /shame warn <reason> -- <note>",
+          "- Human choices: /shame review; /shame reject <reason> -- <note>; /shame allow normal_answer -- <note>; /shame warn <reason> -- <note>",
           "- Correction target: the agent should answer plainly, then end with Status Report bullets: Changed, Verified, Proof, Not done.",
         ].join("\n"), "info");
         return;
@@ -599,6 +600,34 @@ export default function lazyReportShameShameShame(pi: any) {
         }
         const check = checkReport(last.text, false, false);
         candidate = makeCandidate(ctx, currentUserText, last.id, last.text, check, false);
+      }
+
+      if (parsed.action === "review") {
+        if (!ctx.hasUI || typeof ctx.ui?.select !== "function" || typeof ctx.ui?.input !== "function") {
+          ctx.ui.notify("Interactive /shame review is unavailable here. Use /shame show, then /shame reject|allow|warn <reason> -- <note>.", "warning");
+          return;
+        }
+        const choice = await ctx.ui.select("Label shame candidate", [
+          "reject commit_laundering",
+          "reject no_final_status_report",
+          "reject missing_proof",
+          "reject obvious_next_step_not_enacted",
+          "warn jargon_no_status",
+          "allow normal_answer",
+          "needs_review unsure",
+        ]);
+        if (!choice) {
+          ctx.ui.notify("/shame review cancelled; no training example written.", "info");
+          return;
+        }
+        const [rawVerdict, ...rawReasons] = String(choice).split(/\s+/).filter(Boolean);
+        const note = await ctx.ui.input("Why?", parsed.note || "");
+        parsed = {
+          action: "capture",
+          verdict: rawVerdict as HumanVerdict,
+          reasons: rawReasons.map((reason) => reason.toLowerCase().replace(/-/g, "_")),
+          note: typeof note === "string" ? note : parsed.note,
+        };
       }
 
       const exampleId = sha256(`${candidate.response_sha256}\n${parsed.verdict}\n${parsed.reasons.join(",")}\n${parsed.note}`);
