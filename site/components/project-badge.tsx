@@ -1,12 +1,17 @@
 import { CheckCircle2, FileText, ExternalLink, Lock } from 'lucide-react';
 
-export type BadgeType = 'sanity-checked' | 'contract-only' | 'external-repo' | 'private-evidence';
+export type BadgeType = 'check-script' | 'contract-only' | 'external-repo' | 'private-evidence';
 
 const BADGE_MAP: Record<
   BadgeType,
   { label: string; Icon: typeof CheckCircle2; className: string; title?: string }
 > = {
-  'sanity-checked': { label: 'sanity-checked', Icon: CheckCircle2, className: 'chip' },
+  'check-script': {
+    label: 'check script present',
+    Icon: CheckCircle2,
+    className: 'chip',
+    title: 'A tracked sanity.sh exists in the public source. This badge alone does not prove the latest deployment executed it.',
+  },
   'contract-only': { label: 'contract only', Icon: FileText, className: 'chip' },
   'external-repo': { label: 'external repo', Icon: ExternalLink, className: 'chip ext' },
   'private-evidence': {

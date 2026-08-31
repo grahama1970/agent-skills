@@ -42,6 +42,7 @@ const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string;
 const SKILL_CONTRACT_HREFS: Record<string, string> = {
   tau: `${REPO}/blob/main/skills/tau/README.md`,
   extractor: `${REPO}/blob/main/skills/extractor/README.md`,
+  memory: `${REPO}/blob/main/skills/memory/SKILL.md`,
 };
 
 function githubShort(href: string): string {
@@ -244,7 +245,7 @@ export default function Home() {
                           ({Math.round((stats.sanity / stats.skills) * 100)}%)
                         </small>
                       </span>
-                      <span className="l">with sanity checks</span>
+                      <span className="l">with check scripts</span>
                     </a>
                     <a
                       className="fig"
@@ -342,7 +343,7 @@ export default function Home() {
             <ProofLegend />
             <div className="private-boundary" aria-label="Public and private work boundary">
               <p className="private-boundary__lead">
-                Most current work is export-controlled or sensitive. The public
+                Some current work is export-controlled or sensitive. The public
                 pattern here is deliberately narrower: problem class, public
                 artifact, what it proves, and what it does not prove. Private
                 systems stay private.
@@ -418,7 +419,7 @@ export default function Home() {
                       <p className="q">{p.question}</p>
                       <p className="d">{p.blurb}</p>
                       <p className="why">{p.why}</p>
-                      <ProjectBadge type={external ? 'external-repo' : skillFlags.get(p.slug) ? 'sanity-checked' : 'contract-only'} />
+                      <ProjectBadge type={external ? 'external-repo' : skillFlags.get(p.slug) ? 'check-script' : 'contract-only'} />
                       {evidencePrivate && <ProjectBadge type="private-evidence" />}
                       <div className="project-actions">
                         <a
@@ -488,7 +489,7 @@ export default function Home() {
                   <b>Ledger</b> agent-skills source map
                 </p>
                 <h2 className="h2">
-                  {stats.skills} public contracts; {stats.sanity} with sanity checks.
+                  {stats.skills} public contracts; {stats.sanity} with check scripts present.
                 </h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
                   The full inventory is still public, including contract-only
@@ -723,7 +724,7 @@ export default function Home() {
                 <p className="prov" style={{ marginTop: 0 }}>
                   {stats.skills} skill contracts
                   <br />
-                  {stats.sanity} with sanity checks (
+                  {stats.sanity} with check scripts (
                   {Math.round((stats.sanity / stats.skills) * 100)}%)
                   <br />
                   {stats.agents} bounded agents

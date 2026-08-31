@@ -84,8 +84,8 @@ export function SkillMosaic() {
       href={`${GH}/${s.n}/SKILL.md`}
       data-qid={`ledger:cell:${s.n}`}
       data-qs-action="LEDGER_OPEN_SKILL"
-      title={`${s.n} · ${s.c}${s.s ? ' · sanity-checked' : ' · contract only'}`}
-      data-tip={`${s.n} · ${s.c} · ${s.s ? '✓ sanity-checked' : '○ contract only'}`}
+      title={`${s.n} · ${s.c}${s.s ? ' · check script present' : ' · contract only'}`}
+      data-tip={`${s.n} · ${s.c} · ${s.s ? '✓ check script present' : '○ contract only'}`}
       className={`cell${s.s ? '' : ' out'}`}
       style={{
         ['--i' as string]: i,
@@ -102,7 +102,7 @@ export function SkillMosaic() {
   const legend = (
     <div className="legend">
       <span>
-        <i className="swatch" /> <b>{checked}</b> sanity-checked
+        <i className="swatch" /> <b>{checked}</b> check scripts present
       </span>
       <span>
         <i className="swatch out" /> <b>{skills.length - checked}</b>{' '}
@@ -183,13 +183,13 @@ export function SkillMosaic() {
                 href={`${GH}/${s.n}/SKILL.md`}
                 data-qid={`ledger:row:${s.n}`}
                 data-qs-action="LEDGER_OPEN_SKILL"
-                title={`Open ${s.n} SKILL.md — ${s.c}${s.s ? ', sanity-checked' : ', contract only'}`}
+                title={`Open ${s.n} SKILL.md — ${s.c}${s.s ? ', check script present' : ', contract only'}`}
               >
                 <span className={`lr-dot${s.s ? '' : ' out'}`} aria-hidden="true" />
                 <span className="lr-name">{s.n}</span>
                 <span className="lr-cat">{s.c}</span>
                 <span className="sr-only">
-                  {s.s ? 'sanity-checked' : 'contract only'}
+                  {s.s ? 'check script present' : 'contract only'}
                 </span>
               </a>
             </li>

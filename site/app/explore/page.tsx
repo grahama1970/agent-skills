@@ -24,6 +24,7 @@ const REPO = 'https://github.com/grahama1970/agent-skills';
 const SKILL_CONTRACT_HREFS: Record<string, string> = {
   tau: `${REPO}/blob/main/skills/tau/README.md`,
   extractor: `${REPO}/blob/main/skills/extractor/README.md`,
+  memory: `${REPO}/blob/main/skills/memory/SKILL.md`,
 };
 
 type ContentProject = (typeof content.projects)[number];
@@ -83,7 +84,7 @@ export default function ExplorePage() {
               <p className="kicker">
                 <b>Explore</b> Public project index
               </p>
-              <h2 className="h2">All public systems, source links, and evidence states.</h2>
+              <h2 className="h2">Public systems with source links and evidence states.</h2>
             </div>
             <p className="count">graph click → target card → source</p>
           </div>
@@ -128,7 +129,7 @@ export default function ExplorePage() {
                     </h3>
                     <p className="q">{p.question}</p>
                     <p className="d">{p.blurb}</p>
-                    <ProjectBadge type={external ? 'external-repo' : skillFlags.get(p.slug) ? 'sanity-checked' : 'contract-only'} />
+                    <ProjectBadge type={external ? 'external-repo' : skillFlags.get(p.slug) ? 'check-script' : 'contract-only'} />
                     {evidencePrivate && <ProjectBadge type="private-evidence" />}
                     <div className="project-actions">
                       <a

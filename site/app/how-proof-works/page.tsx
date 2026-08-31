@@ -4,7 +4,7 @@ import { ProofExplainer } from '@/components/proof-explainer';
 import { ReceiptTicket } from '@/components/receipt-ticket';
 
 type ReceiptArtifact = {
-  id: 'roundtable-receipt' | 'live-audit' | 'inventory-provenance';
+  id: string;
   title: string;
   capture_status: 'captured' | 'unavailable';
   judgment: string;
@@ -12,6 +12,7 @@ type ReceiptArtifact = {
   does_not_prove: string;
   body: string;
   caption: string;
+  unavailable_reason?: string;
 };
 
 export default function HowProofWorksPage() {
@@ -62,20 +63,18 @@ export default function HowProofWorksPage() {
       </section>
       <section>
         <div className="wrap receipt-depth-grid">
-          {receipts
-            .filter((receipt) => receipt.capture_status === 'captured')
-            .map((receipt) => (
-              <ReceiptTicket
-                key={receipt.id}
-                id={receipt.id}
-                title={receipt.title}
-                callout={receipt.judgment}
-                proves={receipt.proves}
-                doesNotProve={receipt.does_not_prove}
-                body={receipt.body}
-                caption={receipt.caption}
-              />
-            ))}
+          {receipts.map((receipt) => (
+            <ReceiptTicket
+              key={receipt.id}
+              id={receipt.id}
+              title={receipt.title}
+              callout={receipt.judgment}
+              proves={receipt.proves}
+              doesNotProve={receipt.does_not_prove}
+              body={receipt.body || receipt.unavailable_reason || receipt.caption}
+              caption={receipt.caption}
+            />
+          ))}
         </div>
       </section>
     </main>

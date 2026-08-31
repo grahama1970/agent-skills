@@ -1,15 +1,15 @@
 /** How proof works (webgpt review, point 8): a first-time visitor sees badges
- *  like "sanity-checked", "contract only", and "evidence private" on the cards
- *  below and in search. This legend decodes each one honestly — every state is
- *  a factual access level, not a quality grade. It invents no claim: it only
- *  names what the badges already on this page mean. */
+ *  like "check script present", "contract only", and "evidence private" on the
+ *  cards below and in search. This legend decodes each one honestly — every
+ *  state is a factual access level, not a quality grade. It invents no claim:
+ *  it only names what the badges already on this page mean. */
 
 const STATES: { label: string; cls: string; means: string }[] = [
   {
-    label: 'sanity-checked',
+    label: 'check script present',
     cls: 'checked',
     means:
-      'the skill ships with an executable check that runs in CI — a failing check blocks the change.',
+      'the public source contains a tracked sanity.sh for this skill. That means a checker exists; it is not proof that the latest deployment ran every check.',
   },
   {
     label: 'contract only',
@@ -47,7 +47,7 @@ export function ProofLegend() {
         ))}
       </ul>
       <p className="proof-legend__foot">
-        A public overview never borrows the evidence status of a checked repo,
+        A public overview never borrows the evidence status of another source,
         and a null or blocked result is publishable on the same footing as a
         passing one.
       </p>

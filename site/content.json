@@ -83,7 +83,7 @@
       "blurb": "BM25 + Qdrant candidates + ArangoDB graph recall for agents.",
       "href": "https://github.com/grahama1970/memory-public",
       "question": "What should an agent remember before it touches the code?",
-      "why": "Memory asks what is already known before scanning: semantic candidates, canonical records, source paths, receipts, and skill chains. The public shape is architecture only; the operator repo and memory records stay private."
+      "why": "Memory asks what is already known before scanning: semantic candidates, canonical records, source paths, receipts, and skill chains. The linked public repo is architecture only; use the secondary skill-contract link for the public agent-facing contract. The operator repo and memory records stay private."
     },
     {
       "slug": "sparta-explorer",
