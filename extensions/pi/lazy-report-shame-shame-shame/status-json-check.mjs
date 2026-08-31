@@ -12,7 +12,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-01.status-json-first.v1';
+const CHECKER_VERSION = '2026-09-01.status-report-json.v2';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
@@ -36,14 +36,54 @@ function mentionsBannedWhatRemains(input) {
   return String(input || '').toLowerCase().includes(BANNED_SECTION_PHRASE);
 }
 
-function statusStateFromJson(raw) {
+function parseStatus(raw) {
   if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw);
-    return typeof parsed?.state === 'string' ? parsed.state : null;
+    return JSON.parse(raw);
   } catch {
     return null;
   }
+}
+
+function statusStateFromJson(raw) {
+  const parsed = parseStatus(raw);
+  return typeof parsed?.state === 'string' ? parsed.state : null;
+}
+
+function normalizedStatusHeading(line) {
+  let value = String(line || '').replaceAll('\r', '').trim();
+  while (value.startsWith('#')) value = value.slice(1).trim();
+  if (value.endsWith(':')) value = value.slice(0, -1).trim();
+  return value;
+}
+
+function extractStatusReportSection(input, extracted) {
+  if (!extracted) return null;
+  const beforeJson = input.slice(0, extracted.start);
+  const lines = beforeJson.split('\n');
+  let headingIndex = -1;
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    if (normalizedStatusHeading(lines[i]) === 'Status Report') {
+      headingIndex = i;
+      break;
+    }
+  }
+  if (headingIndex === -1) return null;
+  const body = lines.slice(headingIndex + 1).join('\n').trim();
+  return { body, headingIndex };
+}
+
+function statusReportFailures(input, extracted, status) {
+  const section = extractStatusReportSection(input, extracted);
+  if (!section) return ['missing_status_report_section'];
+  const failures = [];
+  if (!section.body.includes(`Goal: ${status.goal}`)) {
+    failures.push('status_report_goal_mismatch');
+  }
+  if (!section.body.includes(`State: ${status.state}`)) {
+    failures.push('status_report_state_mismatch');
+  }
+  return failures;
 }
 
 // Extract the LAST fenced json block whose parsed object declares the schema.
@@ -79,12 +119,7 @@ function extractStatusJson(input) {
   return null;
 }
 
-function outsideStatusText(input, extracted) {
-  if (!extracted) return input.trim();
-  return `${input.slice(0, extracted.start)}${input.slice(extracted.end)}`.trim();
-}
-
-function emit(decision, reasonCodes, extra = {}) {
+function emit(decision, reasonCodes, extra = {}, footerFailures = []) {
   const result = {
     schema: 'lazy_report_shame.report_check.v2',
     checker_version: CHECKER_VERSION,
@@ -96,7 +131,7 @@ function emit(decision, reasonCodes, extra = {}) {
       strict_status: STRICT_STATUS,
       ...extra,
     },
-    footer_failures: [],
+    footer_failures: footerFailures,
   };
   console.log(JSON.stringify(result, null, 2));
   process.exit(decision === 'reject' ? 1 : 0);
@@ -115,19 +150,13 @@ if (mentionsBannedWhatRemains(text) && statusState !== 'needs_human') {
 if (!statusJson) {
   if (MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) {
     emit('reject', ['missing_agent_status_json'], {
-      correction: 'End the answer with a fenced ```json block containing a valid pi.agent_status.v1 object.',
+      correction: (
+        'End the answer with a Status Report section followed by a fenced '
+        + '```json block containing a valid pi.agent_status.v1 object.'
+      ),
     });
   }
   emit('pass', ['no_status_required_non_mutating_turn']);
-}
-
-if (STRICT_STATUS) {
-  const extraText = outsideStatusText(text, extractedStatus);
-  if (extraText) {
-    emit('reject', ['prose_outside_agent_status_json'], {
-      correction: 'For $shame strict status turns, return only the fenced pi.agent_status.v1 JSON object. Put the immutable goal in goal.',
-    });
-  }
 }
 
 if (!existsSync(VALIDATOR)) {
@@ -160,11 +189,29 @@ if (!verdict || typeof verdict.valid !== 'boolean') {
 }
 
 if (verdict.valid !== true) {
-  emit('reject', ['invalid_agent_status_json'], { pydantic_error: String(verdict.error || '').slice(0, 800) });
+  emit('reject', ['invalid_agent_status_json'], {
+    pydantic_error: String(verdict.error || '').slice(0, 800),
+  });
 }
 
-emit('pass', ['valid_agent_status_json'], {
+const parsedStatus = parseStatus(statusJson);
+const reportFailures = statusReportFailures(text, extractedStatus, parsedStatus);
+if (reportFailures.length) {
+  emit(
+    'reject',
+    reportFailures,
+    {
+      correction: (
+        'Add a prose section named Status Report before the JSON, with Goal '
+        + 'and State lines copied from pi.agent_status.v1.'
+      ),
+    },
+    reportFailures,
+  );
+}
+
+emit('pass', ['valid_agent_status_json', 'valid_status_report_section'], {
   state: verdict.state,
-  status: JSON.parse(statusJson),
+  status: parsedStatus,
 });
 

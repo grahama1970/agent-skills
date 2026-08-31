@@ -37,7 +37,7 @@ Capture bad agent status updates into a JSONL training set, the structured `sham
 
 This is a recording skill, not a scolding skill. Do not generate essays about agent behavior. Store the labeled example and return the receipt.
 
-`$shame` is also a self-correction trigger for the installed Pi extension. The extension is JSON-first: it never classifies prose and never uses regex over user/assistant text. A mutating or guard-forced turn must end with a fenced ```json block containing a valid `pi.agent_status.v1` object; the extension validates it with the pydantic model in `scripts/agent_status_schema.py` and rejects answers whose object is missing or invalid, shows a correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate.
+`$shame` is also a self-correction trigger for the installed Pi extension. The extension is JSON-first with a mandatory prose rendering: it never classifies prose and never uses LLM judgment over user/assistant text. A mutating or guard-forced turn must include a prose section named `Status Report` derived from the final `pi.agent_status.v1` object, then end with a fenced ```json block containing that valid object. The extension validates the JSON with the pydantic model in `scripts/agent_status_schema.py`, checks that the prose `Status Report` copies the JSON `goal` and `state`, and rejects answers whose object or rendering is missing or invalid. A rejection shows a correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate.
 
 Missing per-feature `$agentic-evals` coverage is shame. For every new feature, add or update a retained `$agentic-evals` fixture, run it, and cite the receipt before reporting the feature done. Leaving relevant files, skills, or project changes uncommitted or unpushed when no external blocker exists is also shame.
 
@@ -47,7 +47,7 @@ Preferred human UX is collaborative, not punitive:
 
 1. Extension rejects the bad answer and shows the raw candidate hash, machine reason, excerpt, and correction target.
 2. Extension writes `/mnt/storage12tb/skills/shame/training/pending-review-packet.json` so `/shame show` can recover the candidate after a reload.
-3. Agent rewrites the answer ending with a valid `pi.agent_status.v1` JSON block.
+3. Agent rewrites the answer with a prose `Status Report` section derived from the final `pi.agent_status.v1` JSON block, then ends with that JSON block.
 4. Human labels the raw candidate with the Pi extension command:
 
 ```text
@@ -81,7 +81,7 @@ One JSON object per report-like turn, validated by `scripts/agent_status_schema.
 
 `compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension queues the compiled command as a follow-up on `message_end`.
 
-A human-readable `Status Report` footer may accompany the JSON as a rendering, but the JSON object is the contract the checker enforces.
+A human-readable `Status Report` section is required before the JSON. It is a deterministic rendering of the JSON contract, not a substitute for it. At minimum it must contain `Goal: <json.goal>` and `State: <json.state>` copied from the final `pi.agent_status.v1` object; the JSON remains the typed contract the checker enforces.
 
 The pending review packet is overwritten on each new rejected candidate:
 
@@ -185,7 +185,9 @@ The fixture must prove:
 - strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
-- extension rejection notices are correction packets naming the pydantic reason rather than bare gate JSON;
+- every `pi.agent_status.v1` report includes a prose `Status Report` section whose Goal and State match the JSON;
+- JSON-only reports and mismatched `Status Report` renderings are rejected;
+- extension rejection notices are correction packets naming the pydantic/checker reason rather than bare gate JSON;
 - rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 

@@ -49,6 +49,18 @@ function ctx(branch = []) {
   };
 }
 
+async function markShameSkillRead(handlers, c) {
+  await handlers.tool_result[0]({
+    toolName: 'read',
+    input: { path: '/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md' },
+    isError: false,
+    content: readFileSync(
+      '/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md',
+      'utf8',
+    ),
+  }, c);
+}
+
 async function runEmptyToolTurn() {
   const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-empty-packet.json';
   if (existsSync(packet)) rmSync(packet);
@@ -136,7 +148,11 @@ async function runContinuationGuardOpenTicket() {
     verified: [{ command: 'probe', result: 'probe' }],
     proof: ['/tmp/probe'],
   });
-  const goodLookingFinal = 'The continuation guard is handled.\n\n```json\n' + doneStatus + '\n```';
+  const goodLookingFinal = (
+    'The continuation guard is handled.\n\n'
+    + 'Status Report:\n- Goal: continuation guard probe\n- State: done\n\n'
+    + '```json\n' + doneStatus + '\n```'
+  );
   const result = await handlers.message_end[0]({ id: 'assistant-premature', message: { id: 'assistant-premature', role: 'assistant', content: [{ type: 'text', text: goodLookingFinal }] } }, c);
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   assert(notice.includes('continuation_guard_unresolved_work'), 'continuation guard did not reject premature final', { notice });
@@ -170,7 +186,11 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
     verified: [{ command: 'live-replay', result: 'PASS' }],
     proof: ['/tmp/proof.json'],
   });
-  const finalText = 'Done.\n\n```json\n' + okStatus + '\n```';
+  const finalText = (
+    'Done.\n\n'
+    + 'Status Report:\n- Goal: continuation guard probe\n- State: done\n\n'
+    + '```json\n' + okStatus + '\n```'
+  );
   const result = await handlers.message_end[0]({ id: 'assistant-ok', message: { id: 'assistant-ok', role: 'assistant', content: [{ type: 'text', text: finalText }] } }, c);
   assert(result === undefined, 'closed ticket / passed gates should allow final answer', { result });
   assert(sent.length === 0, 'allowed final should not queue follow-up', { sent });
@@ -190,7 +210,12 @@ async function runWhatRemainsRejectedWithoutNeedsHuman() {
     state: 'continuing',
     not_done: [{ item: 'continue work', next_command: 'run the next deterministic command' }],
   });
-  const badText = 'Result text.\n\nWhat remains:\n- keep working\n\n```json\n' + continuingStatus + '\n```';
+  const badText = (
+    'Result text.\n\n'
+    + 'Status Report:\n- Goal: what remains ban probe\n- State: continuing\n\n'
+    + 'What remains:\n- keep working\n\n'
+    + '```json\n' + continuingStatus + '\n```'
+  );
   const result = await handlers.message_end[0]({ id: 'assistant-what-remains', message: { id: 'assistant-what-remains', role: 'assistant', content: [{ type: 'text', text: badText }] } }, c);
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   assert(notice.includes('banned_what_remains_without_needs_human'), 'What remains was not rejected when state was not needs_human', { notice });
@@ -209,13 +234,92 @@ async function runWhatRemainsAllowedWithNeedsHuman() {
     schema: 'pi.agent_status.v1',
     goal: 'what remains ban probe',
     state: 'needs_human',
-    needs_human: { action: 'choose the next target', reason: 'the next action requires a human decision' },
+    needs_human: {
+      action: 'choose the next target',
+      reason: 'the next action requires a human decision',
+    },
   });
-  const okText = 'Result text.\n\nWhat remains:\n- human decision required\n\n```json\n' + needsHumanStatus + '\n```';
+  const okText = (
+    'Result text.\n\n'
+    + 'Status Report:\n- Goal: what remains ban probe\n- State: needs_human\n\n'
+    + 'What remains:\n- human decision required\n\n'
+    + '```json\n' + needsHumanStatus + '\n```'
+  );
   const result = await handlers.message_end[0]({ id: 'assistant-needs-human', message: { id: 'assistant-needs-human', role: 'assistant', content: [{ type: 'text', text: okText }] } }, c);
   assert(result === undefined, 'What remains should be allowed only with state=needs_human', { result });
   assert(sent.length === 0, 'allowed needs_human status should not queue retry', { sent });
   console.log(JSON.stringify({ ok: true, mode: 'what-remains-allowed-with-needs-human', retryMessages: sent.length }));
+}
+
+async function runStatusReportRequiredWithJson() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-status-report-required-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame report this', source: 'user' }, c);
+  await markShameSkillRead(handlers, c);
+  const doneStatus = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'status report required probe',
+    state: 'done',
+    verified: [{ command: 'probe', result: 'PASS' }],
+    proof: ['/tmp/proof.json'],
+  });
+  const result = await handlers.message_end[0]({ id: 'assistant-json-only', message: { id: 'assistant-json-only', role: 'assistant', content: [{ type: 'text', text: 'Done.\n\n```json\n' + doneStatus + '\n```' }] } }, c);
+  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(notice.includes('missing_status_report_section'), 'JSON-only status was not rejected for missing Status Report section', { notice });
+  assert(sent.length === 1, 'missing Status Report rejection did not queue one retry', { sentCount: sent.length, sent });
+  assert(existsSync(packet), 'missing Status Report rejection did not write pending packet', { packet });
+  const saved = JSON.parse(readFileSync(packet, 'utf8'));
+  assert(saved.machine?.reason_codes?.includes('missing_status_report_section'), 'pending packet omitted missing Status Report reason', saved);
+  console.log(JSON.stringify({ ok: true, mode: 'status-report-required-with-json', retryMessages: sent.length, reason: 'missing_status_report_section' }));
+}
+
+async function runStatusReportMismatchRejected() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-status-report-mismatch-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame report this', source: 'user' }, c);
+  await markShameSkillRead(handlers, c);
+  const doneStatus = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'status report mismatch probe',
+    state: 'done',
+    verified: [{ command: 'probe', result: 'PASS' }],
+    proof: ['/tmp/proof.json'],
+  });
+  const text = (
+    'Status Report:\n- Goal: status report mismatch probe\n- State: continuing\n\n'
+    + '```json\n' + doneStatus + '\n```'
+  );
+  const result = await handlers.message_end[0]({ id: 'assistant-mismatch', message: { id: 'assistant-mismatch', role: 'assistant', content: [{ type: 'text', text }] } }, c);
+  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(notice.includes('status_report_state_mismatch'), 'mismatched Status Report was not rejected', { notice });
+  assert(sent.length === 1, 'mismatched Status Report rejection did not queue one retry', { sentCount: sent.length, sent });
+  console.log(JSON.stringify({ ok: true, mode: 'status-report-mismatch-rejected', retryMessages: sent.length, reason: 'status_report_state_mismatch' }));
+}
+
+async function runStatusReportMatchesJsonAllowed() {
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame report this', source: 'user' }, c);
+  await markShameSkillRead(handlers, c);
+  const doneStatus = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'status report derived from json probe',
+    state: 'done',
+    verified: [{ command: 'probe', result: 'PASS' }],
+    proof: ['/tmp/proof.json'],
+  });
+  const text = (
+    'Status Report:\n- Goal: status report derived from json probe\n- State: done\n\n'
+    + '```json\n' + doneStatus + '\n```'
+  );
+  const result = await handlers.message_end[0]({ id: 'assistant-status-report-ok', message: { id: 'assistant-status-report-ok', role: 'assistant', content: [{ type: 'text', text }] } }, c);
+  assert(result === undefined, 'matching Status Report and JSON should pass', { result });
+  assert(sent.length === 0, 'matching Status Report should not queue retry', { sent });
+  console.log(JSON.stringify({ ok: true, mode: 'status-report-matches-json-allowed', retryMessages: sent.length }));
 }
 
 async function runSkillReadGuardBlocksActionBeforeRead() {
@@ -289,6 +393,9 @@ const modes = {
   'continuation-closed-ticket-allows-final': runContinuationGuardClosedTicketAllowsFinal,
   'what-remains-rejected-without-needs-human': runWhatRemainsRejectedWithoutNeedsHuman,
   'what-remains-allowed-with-needs-human': runWhatRemainsAllowedWithNeedsHuman,
+  'status-report-required-with-json': runStatusReportRequiredWithJson,
+  'status-report-mismatch-rejected': runStatusReportMismatchRejected,
+  'status-report-matches-json-allowed': runStatusReportMatchesJsonAllowed,
 };
 
 if (mode === 'all') {
