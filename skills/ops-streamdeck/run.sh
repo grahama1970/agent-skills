@@ -119,7 +119,7 @@ EOF
 }
 
 # Daemon management — uses systemd user services (the actual running infrastructure)
-STREAMDECK_SERVICES="streamdeck streamdeck-clock streamdeck-weather streamdeck-monitor streamdeck-plant-monitor streamdeck-living-room-monitor"
+STREAMDECK_SERVICES="streamdeck streamdeck-clock streamdeck-weather streamdeck-monitor streamdeck-widgets streamdeck-plant-monitor streamdeck-living-room-monitor"
 
 daemon_start() {
     log "Starting streamdeck services..."
@@ -655,7 +655,8 @@ from pathlib import Path
 result = {"services": {}, "hardware": False, "buttons": 0}
 
 services = ["streamdeck", "streamdeck-clock", "streamdeck-weather",
-            "streamdeck-monitor", "streamdeck-plant-monitor", "streamdeck-living-room-monitor"]
+            "streamdeck-monitor", "streamdeck-widgets", "streamdeck-plant-monitor",
+            "streamdeck-living-room-monitor"]
 
 for svc in services:
     r = subprocess.run(["systemctl", "--user", "is-active", f"{svc}.service"],
@@ -818,6 +819,7 @@ services = {
     'streamdeck-clock': 'Clock Widget',
     'streamdeck-weather': 'Weather Widget',
     'streamdeck-monitor': 'System Monitor',
+    'streamdeck-widgets': 'Widget Renderer',
     'streamdeck-plant-monitor': 'Plant Light Monitor',
     'streamdeck-living-room-monitor': 'Living Room Monitor'
 }
@@ -909,7 +911,7 @@ fix_buttons() {
     # CRITICAL: The streamdeck service writes its in-memory state to disk on shutdown!
     # We must stop ALL services, wait for them to fully stop, then edit config.
     log "Step 1: Stopping ALL streamdeck services..."
-    systemctl --user stop streamdeck-clock.service streamdeck-weather.service 2>/dev/null
+    systemctl --user stop streamdeck-clock.service streamdeck-weather.service streamdeck-widgets.service 2>/dev/null
     sleep 1
     systemctl --user stop streamdeck.service
     sleep 2  # Wait for service to fully stop and write state
@@ -970,7 +972,7 @@ FIX_EOF
     sleep 3  # Longer wait for full initialization
 
     log "Step 4: Restarting dynamic icon services..."
-    systemctl --user restart streamdeck-clock.service streamdeck-weather.service
+    systemctl --user restart streamdeck-clock.service streamdeck-weather.service streamdeck-widgets.service
     sleep 2
 
     log "Step 5: Verifying fix..."
