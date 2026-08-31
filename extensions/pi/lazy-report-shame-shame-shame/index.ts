@@ -640,7 +640,35 @@ export default function lazyReportShameShameShame(pi: any) {
         ctx?.ui?.notify?.(`lazy-report-shame-shame-shame checker error: ${check.diagnostics || check.reason_codes.join(", ")}`, "warning");
         return;
       }
-      if (check.decision !== "reject") return;
+      if (check.decision !== "reject") {
+        // JSON-first keep-going: a validated status with state="continuing"
+        // queues its own declared next_command as a follow-up. No prose regex.
+        if (statusState === "continuing") {
+          const status = (check as any)?.features?.status;
+          const nextCommand = Array.isArray(status?.not_done)
+            ? status.not_done.map((item: any) => String(item?.next_command || "")).find((cmd: string) => cmd.trim())
+            : undefined;
+          if (nextCommand) {
+            const claim = claimGuardFollowUp({
+              guard: "shame-continuing",
+              messageId: String(event.message.id || event.id || "unknown"),
+              assistantText: text,
+              userText: currentUserText,
+              reason: "agent_status_continuing",
+              maxRetries: 3,
+            });
+            if (claim.ok) {
+              try {
+                pi.sendUserMessage(
+                  `CONTINUE_FROM_AGENT_STATUS\nThe last pi.agent_status.v1 object declared state="continuing". Execute the declared next command now:\n${nextCommand}`,
+                  { deliverAs: "followUp", expandPromptTemplates: false },
+                );
+              } catch { /* follow-up delivery is best-effort */ }
+            }
+          }
+        }
+        return;
+      }
 
       const turnId = lastCandidate.turn_id;
       const pipelineClaim = claimGuardFollowUp({
