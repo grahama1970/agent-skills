@@ -139,6 +139,17 @@ async function probeEmptyAssistantExempt() {
   console.log(JSON.stringify({ ok: true, mode: 'extension_hook_empty_assistant_exempt', retryMessages: getRetryMessages() }));
 }
 
+async function probeToolResultWithoutInputUsesCallClassification() {
+  const { handlers, getRetryMessages } = await loadExtension();
+  await handlers.input[0]({ text: 'why did this fail', source: 'interactive' });
+  await handlers.tool_call[0]({ toolName: 'functions.bash', toolCallId: 'mem-no-input', input: { command: 'cd /home/graham/workspace/experiments/agent-skills && skills/memory/run.sh recall --q "why did this fail" --brief' } });
+  await handlers.tool_result[0]({ toolName: 'functions.bash', toolCallId: 'mem-no-input', isError: false });
+  const result = await handlers.message_end[0]({ message: { role: 'assistant', content: [{ type: 'text', text: 'The memory receipt returned meta.memory_first true, so the memory gate is satisfied.' }] } });
+  requireCond(result === undefined, 'extension hook rejected a successful memory tool result when the result event omitted input', { result, retryMessages: getRetryMessages() });
+  requireCond(getRetryMessages() === 0, 'extension hook queued a retry despite a successful memory result correlated by toolCallId', { retryMessages: getRetryMessages() });
+  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_tool_result_without_input_uses_call_classification', retryMessages: getRetryMessages(), evidence: ['memory'] }));
+}
+
 function failBeforeFixRawGuardJsonLeak() {
   const oldVisibleText = `REJECTED_BY_RESEARCH_ROUTING_GATE
 
@@ -333,6 +344,7 @@ const cases = {
   extension_hook_multi_tool_evidence: probeMultiToolEvidence,
   extension_hook_guard_notice_exempt: probeGuardNoticeExempt,
   extension_hook_empty_assistant_exempt: probeEmptyAssistantExempt,
+  extension_hook_tool_result_without_input_uses_call_classification: probeToolResultWithoutInputUsesCallClassification,
   extension_hook_retry_resets_stale_observations: probeRetryResetsStaleObservations,
   extension_hook_guard_marker_resets_stale_observations: probeGuardMarkerResetsStaleObservations,
 };

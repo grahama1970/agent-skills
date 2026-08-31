@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "research-routing-gates-pi-extension",
   "trials": 2,
-  "proof_scope": "Runner-real-world Pi extension scenarios: commands invoke the extension checker script and load the Pi extension hook module, with readback artifacts for each route decision including MVP-first and fast broad-error gates, local ops completion wording that mentions current/today without external-research intent, and guard interlock exemptions for shame notices, continuation prompts, and empty assistant tool turns, and typo status questions, including the exact cross-project status-updates wording that triggered the live retry loop.",
+  "proof_scope": "Runner-real-world Pi extension scenarios: commands invoke the extension checker script and load the Pi extension hook module, with readback artifacts for each route decision including MVP-first and fast broad-error gates, local ops completion wording that mentions current/today without external-research intent, and guard interlock exemptions for shame notices, continuation prompts, and empty assistant tool turns, and typo status questions, including the exact cross-project status-updates wording that triggered the live retry loop, and tool_result events without input are correlated by toolCallId to preserve successful gate evidence.",
   "claims": {
     "proves": "The fixture runs real command scenarios against the research-routing-gates extension code path: production checker decisions, broad-error fast single-call routing, MVP-first mvp/ artifact gating, local ops completion wording that should not require web research, and a Pi message_end hook simulation with artifact readback, plus guard interlock exemptions that prevent generated shame/research/continuation text and empty tool-call turns from becoming new gate targets.",
     "does_not_prove": "A live Pi /reload has loaded the extension, real browser/provider Ask transport, or semantic quality of model advice."
@@ -111,6 +111,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "research_routing.tool_result_input_correlation",
+      "description": "When Pi tool_result events omit the original input, the extension correlates the result to the classified tool_call by toolCallId so successful Memory/Triage/Ask evidence is not lost.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -172,6 +180,14 @@
     },
     {
       "seam_id": "retry-prompt-receipt",
+      "seam_type": "extension-hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "tool-result-call-correlation",
       "seam_type": "extension-hook",
       "criticality": "critical",
       "required_evidence": [
@@ -1076,6 +1092,38 @@
         "stdout_contains": [
           "\"ok\":true",
           "\"mode\":\"checker_typo_status_exempt\""
+        ]
+      }
+    },
+    {
+      "name": "real-world-tool-result-without-input-still-satisfies-memory-gate",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.tool_result_input_correlation"
+      ],
+      "seams": [
+        "pi-message-end-hook",
+        "tool-result-call-correlation"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_tool_result_without_input_uses_call_classification | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/tool-result-no-input-correlation.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"evidence\":[\"memory\"]"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/tool-result-no-input-correlation.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
         ]
       }
     }

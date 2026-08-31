@@ -244,6 +244,7 @@ export default function researchRoutingGates(pi: any) {
   let enabled = !/^(0|false|off|no)$/i.test(process.env.PI_RESEARCH_GATES_ENABLED || "1");
   let userText = "";
   let observations: Observation[] = [];
+  const callsById = new Map<string, Array<{ kind: ObservationKind; command: string }>>();
   let retrying = false;
 
   pi.on("input", async (event: any) => {
@@ -256,12 +257,14 @@ export default function researchRoutingGates(pi: any) {
       // Memory. Some harness paths deliver guard follow-ups without source ===
       // "extension", so also key off the explicit guard marker.
       observations = [];
+      callsById.clear();
       retrying = true;
       return { action: "continue" };
     }
     userText = incomingText;
     beginGuardTurn(userText, event.source);
     observations = [];
+    callsById.clear();
     retrying = false;
     return { action: "continue" };
   });
@@ -274,14 +277,24 @@ export default function researchRoutingGates(pi: any) {
   });
 
   pi.on("tool_call", async (event: any) => {
-    for (const classified of classifyCommands(String(event.toolName || ""), event.input || {})) {
-      observations.push({ phase: "call", kind: classified.kind, toolName: String(event.toolName || ""), toolCallId: String(event.toolCallId || ""), command: classified.command });
+    const toolName = String(event.toolName || "");
+    const toolCallId = String(event.toolCallId || "");
+    const classifiedCommands = classifyCommands(toolName, event.input || {});
+    if (toolCallId) callsById.set(toolCallId, classifiedCommands);
+    for (const classified of classifiedCommands) {
+      observations.push({ phase: "call", kind: classified.kind, toolName, toolCallId, command: classified.command });
     }
   });
 
   pi.on("tool_result", async (event: any) => {
-    for (const classified of classifyCommands(String(event.toolName || ""), event.input || {})) {
-      observations.push({ phase: "result", kind: classified.kind, toolName: String(event.toolName || ""), toolCallId: String(event.toolCallId || ""), command: classified.command, ok: event.isError !== true });
+    const toolName = String(event.toolName || "");
+    const toolCallId = String(event.toolCallId || "");
+    const resultInputText = commandText(event.input || {});
+    const classifiedCommands = resultInputText.trim()
+      ? classifyCommands(toolName, event.input || {})
+      : (callsById.get(toolCallId) || classifyCommands(toolName, event.input || {}));
+    for (const classified of classifiedCommands) {
+      observations.push({ phase: "result", kind: classified.kind, toolName, toolCallId, command: classified.command, ok: event.isError !== true });
     }
   });
 
