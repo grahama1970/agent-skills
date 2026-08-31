@@ -58,6 +58,12 @@ capabilities:
   design-engineering-guidance:
     providers:
       - emil-design-eng
+  svg-design-guardrails:
+    providers:
+      - best-practices-svg-design
+  card-legibility-contract:
+    providers:
+      - best-practices-svg-design
   ui-polish-guidance:
     providers:
       - emil-design-eng
@@ -97,6 +103,15 @@ capabilities:
   trajectory-validation-pattern:
     providers:
       - agentic-evals
+  verbosity-review:
+    providers:
+      - verbosity-cleaner
+  verbosity-cleanup:
+    providers:
+      - verbosity-cleaner
+  test-economy-review:
+    providers:
+      - verbosity-cleaner
   competitive-selection:
     providers:
       - battle
@@ -122,18 +137,6 @@ capabilities:
   progress-tracking:
     providers:
       - task-monitor
-  calendly-readiness:
-    providers:
-      - ops-calendly
-  calendly-site-metadata:
-    providers:
-      - ops-calendly
-  calendly-secret-management:
-    providers:
-      - ops-calendly
-  scheduling-capacity-planning:
-    providers:
-      - ops-calendly
   ops-herdr-orchestration:
     providers:
       - ops-herdr

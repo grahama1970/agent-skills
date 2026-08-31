@@ -1,0 +1,87 @@
+{
+  "version": 2,
+  "skill": "verbosity-cleaner",
+  "trials": 3,
+  "proof_scope": "Instruction-only skill contract for focused verbosity cleanup, review-only behavior under ambiguous write access, test-economy discipline, and concise final response endings.",
+  "claims": {
+    "proves": "The skill declares routing/composition frontmatter, preserves review-only defaults unless write access is explicit, protects behavior and cleanup/error semantics from over-aggressive shortening, requires the smallest useful test coverage for distinct behavior, and gives concise final response endings for changed and no-change reviews.",
+    "does_not_prove": "A model will always identify every verbose construct, semantic correctness of a future cleanup, or project-specific tests outside this instruction file."
+  },
+  "cases": [
+    {
+      "name": "frontmatter-declares-routing-and-eval-contract",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh verify"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["VERBOSITY_CLEANER_VERIFY_OK"]
+      }
+    },
+    {
+      "name": "ambiguous-write-access-defaults-to-review-only",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "python3 - <<'PY'\nfrom pathlib import Path\ntext=Path('../SKILL.md').read_text()\nassert 'operate in review-only mode. Do not edit files.' in text\nassert 'If write access is ambiguous, default to review-only.' in text\nassert 'You have exclusive write access' in text\nprint('WRITE_MODE_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["WRITE_MODE_OK"]
+      }
+    },
+    {
+      "name": "preserves-behavior-and-error-semantics",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "python3 - <<'PY'\nfrom pathlib import Path\ntext=Path('../SKILL.md').read_text()\nfor phrase in ('preserves behavior, error signals, cleanup semantics', 'error context and `cause` chains', 'cleanup and cancellation semantics', 'no swallowing errors to make a branch shorter'):\n    assert phrase in text, phrase\nprint('PRESERVATION_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PRESERVATION_OK"]
+      }
+    },
+    {
+      "name": "test-economy-keeps-distinct-behavior-coverage",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "python3 - <<'PY'\nfrom pathlib import Path\ntext=Path('../SKILL.md').read_text()\nfor phrase in ('Keep one test per distinct behavior or risk', 'Prefer the cheapest layer that catches the bug', 'Before deleting a test, name the behavior claim it protects', 'run the narrowed test file and the relevant suite'):\n    assert phrase in text, phrase\nprint('TEST_ECONOMY_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["TEST_ECONOMY_OK"]
+      }
+    },
+    {
+      "name": "final-response-endings-are-explicit",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "grep -F 'Fixed [N] issue(s). Ready for another review.' ../SKILL.md && grep -F 'No issues found.' ../SKILL.md"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Fixed [N] issue(s). Ready for another review.",
+          "No issues found."
+        ]
+      }
+    }
+  ]
+}
