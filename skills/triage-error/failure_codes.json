@@ -691,6 +691,168 @@
         "missing human acceptance",
         "reviewer artifact hash mismatch"
       ]
+    },
+    {
+      "code": "tau_dag_verification_contract_incomplete",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_dag_verification_contract_incomplete",
+        "verification contract is incomplete",
+        "route to $interview",
+        "requires_human_acceptance"
+      ],
+      "cause": "A Tau DAG declares human verification or acceptance but omits an executable tau.verification_contract.v1 with verifier_nodes and required_receipts.",
+      "next_command": "Run $interview to collect the missing verifier contract, then regenerate the DAG with verifier_nodes and required_receipts before execution.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_dag_self_verification_forbidden",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_dag_self_verification_forbidden",
+        "self verification",
+        "verify its own output",
+        "verifies_node"
+      ],
+      "cause": "A Tau DAG verifier node attempts to verify its own output, which would let the same untrusted agent certify itself.",
+      "next_command": "Regenerate the DAG so every verifier node verifies a different producer node, then rerun Tau before accepting any PASS.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_model_claim_without_receipt",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_model_claim_without_receipt",
+        "claim without receipt",
+        "prose completion claim",
+        "machine-readable receipt"
+      ],
+      "cause": "A model made a completion or proof claim without a machine-readable receipt that Tau can validate independently.",
+      "next_command": "Require the node to emit the relevant receipt evidence, then rerun the same DAG node; do not accept prose as proof.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_model_artifact_path_missing",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_model_artifact_path_missing",
+        "artifact path could not be read",
+        "without a path-backed artifact",
+        "missing artifact path"
+      ],
+      "cause": "A model claimed an artifact but omitted a readable path, or the path could not be read back from disk.",
+      "next_command": "Read the node response, make it emit a path-backed artifact evidence object, verify the file exists, and rerun the DAG.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_model_artifact_hash_mismatch",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_model_artifact_hash_mismatch",
+        "artifact hash did not match",
+        "actual_sha256",
+        "observed_sha256"
+      ],
+      "cause": "A model artifact receipt supplied a sha256 that does not match the artifact bytes read back from disk.",
+      "next_command": "Recompute sha256 over the artifact bytes, fix or regenerate the artifact receipt, and rerun the DAG.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_model_proof_command_unverified",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_model_proof_command_unverified",
+        "proof command receipt",
+        "exit_code 0",
+        "stdout hash"
+      ],
+      "cause": "A model claimed a proof command passed, but the proof command receipt was missing, malformed, non-PASS, nonzero exit, or lacked a stdout hash.",
+      "next_command": "Run the proof command through the verifier path so it emits tau.proof_command_receipt.v1 with status=PASS, exit_code=0, command, and stdout_sha256, then rerun Tau.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_join_unadmitted_evidence",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_join_unadmitted_evidence",
+        "unadmitted evidence",
+        "admitted_nodes",
+        "join node cited evidence"
+      ],
+      "cause": "A join node cited evidence from a node not admitted by the DAG join contract.",
+      "next_command": "Remove unadmitted evidence from the join output or update the DAG join contract with explicit admitted_nodes, then rerun the join.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_recovery_without_failed_path_rerun",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_recovery_without_failed_path_rerun",
+        "failed path was rerun",
+        "recovery receipt",
+        "rerun_node_ids"
+      ],
+      "cause": "A recovery node claimed repair progress without proving that the failed path was rerun.",
+      "next_command": "Rerun the failed path and emit recovery_receipt.rerun_node_ids including the failed_node_id before continuing.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
+    },
+    {
+      "code": "tau_human_acceptance_receipt_missing",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_human_acceptance_receipt_missing",
+        "human acceptance receipt",
+        "Needs Human",
+        "accepted_by"
+      ],
+      "cause": "A DAG reached a human acceptance/signature gate without a first-class tau.human_acceptance_receipt.v1 signer receipt.",
+      "next_command": "Route to $interview or the configured human acceptance UI, capture tau.human_acceptance_receipt.v1 with accepted_by, then rerun/verify.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser transport failure",
+        "semantic reviewer disagreement"
+      ]
     }
   ]
 }

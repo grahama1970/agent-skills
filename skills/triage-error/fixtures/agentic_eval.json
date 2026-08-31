@@ -35,7 +35,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "16 passed",
+          "17 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
           "monitor_opportunities_linkedin_source_accounting_failed",
@@ -131,6 +131,35 @@
           "create_svg_required_payload_missing_OK",
           "create_svg_candidate_receipt_invalid_OK",
           "create_svg_artifact_origin_invalid_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "triage_error.classifier"
+      ]
+    },
+    {
+      "name": "tau-model-response-lie-codes-classify-stably",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "for code in tau_dag_verification_contract_incomplete tau_dag_self_verification_forbidden tau_model_claim_without_receipt tau_model_artifact_path_missing tau_model_artifact_hash_mismatch tau_model_proof_command_unverified tau_join_unadmitted_evidence tau_recovery_without_failed_path_rerun tau_human_acceptance_receipt_missing; do ../run.sh classify --text '{\"failure_code\":\"'\"$code\"'\"}' --layer tau.project_dag | EXPECTED_CODE=$code python3 -c 'import json,os,sys;d=json.load(sys.stdin);expected=os.environ[\"EXPECTED_CODE\"];assert d[\"code\"]==expected and d[\"ambiguous\"] is False and d[\"recoverable\"] is True;print(expected+\"_OK\")' || exit 1; done"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "tau_dag_verification_contract_incomplete_OK",
+          "tau_dag_self_verification_forbidden_OK",
+          "tau_model_claim_without_receipt_OK",
+          "tau_model_artifact_path_missing_OK",
+          "tau_model_artifact_hash_mismatch_OK",
+          "tau_model_proof_command_unverified_OK",
+          "tau_join_unadmitted_evidence_OK",
+          "tau_recovery_without_failed_path_rerun_OK",
+          "tau_human_acceptance_receipt_missing_OK"
         ]
       },
       "readback": true,

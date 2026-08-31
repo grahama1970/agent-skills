@@ -1,10 +1,10 @@
 {
   "schema": "agentic_evals.report.v2",
   "source": "fixtures/agentic_eval.json",
-  "run_id": "5a626e034305",
-  "fixture_sha256": "sha256:446693cc6a4fcd15fac2f8d175101ee6fdc3b89409dda4ee4eabd505a09f0b23",
+  "run_id": "af8042cf0a09",
+  "fixture_sha256": "sha256:c9ac858f6d8e9f130c26b2b2c2718378d5097f90c0c59a53f35d82d2f297c322",
   "repo": {
-    "sha": "7e1cc11674aaf5d00912b2de959fdbd040873edf",
+    "sha": "ddc07c2a0265147a48cb49f41ff16786d8b5a5a5",
     "ref": "main"
   },
   "mocked": false,
@@ -47,30 +47,31 @@
         "unqualified_live_cases": [],
         "supporting_cases": [
           "classifier-canonical-and-ambiguous-and-no-cross-layer",
-          "tau-create-svg-origin-gate-codes-classify-stably"
+          "tau-create-svg-origin-gate-codes-classify-stably",
+          "tau-model-response-lie-codes-classify-stably"
         ]
       }
     ]
   },
   "claims_coverage": "manifest-spanning",
   "focused_cases": [],
-  "generated_at": "2026-08-31T15:56:00.297529+00:00",
-  "case_count": 6,
-  "required_case_count": 6,
+  "generated_at": "2026-08-31T18:14:44.732116+00:00",
+  "case_count": 7,
+  "required_case_count": 7,
   "outcome_counts": {
-    "PASS": 6,
+    "PASS": 7,
     "FAIL": 0,
     "BLOCKED": 0,
     "NOT_TESTED": 0
   },
-  "trial_count": 12,
+  "trial_count": 14,
   "cases": [
     {
       "infra_blocked_trials": 0,
       "flaky": false,
       "name": "classifier-canonical-and-ambiguous-and-no-cross-layer",
       "type": "adversarial",
-      "case_id": "5a626e034305-c000",
+      "case_id": "af8042cf0a09-c000",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -90,27 +91,27 @@
       "passed_trials": 2,
       "total_trials": 2,
       "pass_rate": 1.0,
-      "avg_latency_ms": 864.827,
+      "avg_latency_ms": 867.18,
       "trials": [
         {
           "exit_code": 0,
-          "stdout": "................                                                         [100%]\n16 passed in 0.20s\n{\n  \"code\": \"webgpt_attachment_bundle_rejected\",\n  \"layer\": \"surf\",\n  \"cause\": \"The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).\",\n  \"next_command\": \"Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"tab binding\",\n    \"open-bind\",\n    \"rebind\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"maximum is\",\n    \"zip contains\"\n  ]\n}\n{\n  \"code\": \"scillm_empty_response_200\",\n  \"layer\": \"ask\",\n  \"cause\": \"Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.\",\n  \"next_command\": \"Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"provider authentication\",\n    \"model not found\",\n    \"browser submit failure\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"\\\"submit_meta_status\\\":200\"\n  ]\n}\n{\n  \"code\": \"monitor_opportunities_linkedin_source_accounting_failed\",\n  \"layer\": \"monitor-opportunities\",\n  \"cause\": \"A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.\",\n  \"next_command\": \"Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"nightly revision mismatch\",\n    \"no opportunities found after a successful source count\",\n    \"human declined LinkedIn authorization\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"linkedin_top_applicant_status_accounted\",\n    \"linkedin_premium_status_accounted\",\n    \"source_accounting\"\n  ]\n}\n{\n  \"code\": \"pi_research_gate_retry_command_mismatch\",\n  \"layer\": \"pi\",\n  \"cause\": \"The research-routing retry receipt prescribed an exact next_commands entry, but the agent ran a different or paraphrased command before final-answering, so the retry did not satisfy the deterministic gate contract.\",\n  \"next_command\": \"Run the exact command from the RESEARCH_ROUTING_GATE_RETRY next_commands array, preserve its JSON receipt, then answer from that receipt; if the gate still rejects, classify pi_research_gate_tool_result_input_missing with the retry receipt attached.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"memory service outage\",\n    \"research-routing false negative after exact command\",\n    \"provider cooldown\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"failure_code:pi_research_gate_retry_command_mismatch\"\n  ]\n}\n",
+          "stdout": ".................                                                        [100%]\n17 passed in 0.22s\n{\n  \"code\": \"webgpt_attachment_bundle_rejected\",\n  \"layer\": \"surf\",\n  \"cause\": \"The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).\",\n  \"next_command\": \"Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"tab binding\",\n    \"open-bind\",\n    \"rebind\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"maximum is\",\n    \"zip contains\"\n  ]\n}\n{\n  \"code\": \"scillm_empty_response_200\",\n  \"layer\": \"ask\",\n  \"cause\": \"Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.\",\n  \"next_command\": \"Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"provider authentication\",\n    \"model not found\",\n    \"browser submit failure\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"\\\"submit_meta_status\\\":200\"\n  ]\n}\n{\n  \"code\": \"monitor_opportunities_linkedin_source_accounting_failed\",\n  \"layer\": \"monitor-opportunities\",\n  \"cause\": \"A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.\",\n  \"next_command\": \"Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"nightly revision mismatch\",\n    \"no opportunities found after a successful source count\",\n    \"human declined LinkedIn authorization\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"linkedin_top_applicant_status_accounted\",\n    \"linkedin_premium_status_accounted\",\n    \"source_accounting\"\n  ]\n}\n{\n  \"code\": \"pi_research_gate_retry_command_mismatch\",\n  \"layer\": \"pi\",\n  \"cause\": \"The research-routing retry receipt prescribed an exact next_commands entry, but the agent ran a different or paraphrased command before final-answering, so the retry did not satisfy the deterministic gate contract.\",\n  \"next_command\": \"Run the exact command from the RESEARCH_ROUTING_GATE_RETRY next_commands array, preserve its JSON receipt, then answer from that receipt; if the gate still rejects, classify pi_research_gate_tool_result_input_missing with the retry receipt attached.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"memory service outage\",\n    \"research-routing false negative after exact command\",\n    \"provider cooldown\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"failure_code:pi_research_gate_retry_command_mismatch\"\n  ]\n}\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 859.626,
+          "duration_ms": 886.11,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c000-t00",
+          "trial_id": "af8042cf0a09-c000-t00",
           "outcome": "PASS",
           "problems": []
         },
         {
           "exit_code": 0,
-          "stdout": "................                                                         [100%]\n16 passed in 0.19s\n{\n  \"code\": \"webgpt_attachment_bundle_rejected\",\n  \"layer\": \"surf\",\n  \"cause\": \"The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).\",\n  \"next_command\": \"Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"tab binding\",\n    \"open-bind\",\n    \"rebind\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"maximum is\",\n    \"zip contains\"\n  ]\n}\n{\n  \"code\": \"scillm_empty_response_200\",\n  \"layer\": \"ask\",\n  \"cause\": \"Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.\",\n  \"next_command\": \"Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"provider authentication\",\n    \"model not found\",\n    \"browser submit failure\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"\\\"submit_meta_status\\\":200\"\n  ]\n}\n{\n  \"code\": \"monitor_opportunities_linkedin_source_accounting_failed\",\n  \"layer\": \"monitor-opportunities\",\n  \"cause\": \"A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.\",\n  \"next_command\": \"Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"nightly revision mismatch\",\n    \"no opportunities found after a successful source count\",\n    \"human declined LinkedIn authorization\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"linkedin_top_applicant_status_accounted\",\n    \"linkedin_premium_status_accounted\",\n    \"source_accounting\"\n  ]\n}\n{\n  \"code\": \"pi_research_gate_retry_command_mismatch\",\n  \"layer\": \"pi\",\n  \"cause\": \"The research-routing retry receipt prescribed an exact next_commands entry, but the agent ran a different or paraphrased command before final-answering, so the retry did not satisfy the deterministic gate contract.\",\n  \"next_command\": \"Run the exact command from the RESEARCH_ROUTING_GATE_RETRY next_commands array, preserve its JSON receipt, then answer from that receipt; if the gate still rejects, classify pi_research_gate_tool_result_input_missing with the retry receipt attached.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"memory service outage\",\n    \"research-routing false negative after exact command\",\n    \"provider cooldown\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"failure_code:pi_research_gate_retry_command_mismatch\"\n  ]\n}\n",
+          "stdout": ".................                                                        [100%]\n17 passed in 0.18s\n{\n  \"code\": \"webgpt_attachment_bundle_rejected\",\n  \"layer\": \"surf\",\n  \"cause\": \"The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).\",\n  \"next_command\": \"Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"tab binding\",\n    \"open-bind\",\n    \"rebind\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"maximum is\",\n    \"zip contains\"\n  ]\n}\n{\n  \"code\": \"scillm_empty_response_200\",\n  \"layer\": \"ask\",\n  \"cause\": \"Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.\",\n  \"next_command\": \"Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"provider authentication\",\n    \"model not found\",\n    \"browser submit failure\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"\\\"submit_meta_status\\\":200\"\n  ]\n}\n{\n  \"code\": \"monitor_opportunities_linkedin_source_accounting_failed\",\n  \"layer\": \"monitor-opportunities\",\n  \"cause\": \"A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.\",\n  \"next_command\": \"Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"nightly revision mismatch\",\n    \"no opportunities found after a successful source count\",\n    \"human declined LinkedIn authorization\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"linkedin_top_applicant_status_accounted\",\n    \"linkedin_premium_status_accounted\",\n    \"source_accounting\"\n  ]\n}\n{\n  \"code\": \"pi_research_gate_retry_command_mismatch\",\n  \"layer\": \"pi\",\n  \"cause\": \"The research-routing retry receipt prescribed an exact next_commands entry, but the agent ran a different or paraphrased command before final-answering, so the retry did not satisfy the deterministic gate contract.\",\n  \"next_command\": \"Run the exact command from the RESEARCH_ROUTING_GATE_RETRY next_commands array, preserve its JSON receipt, then answer from that receipt; if the gate still rejects, classify pi_research_gate_tool_result_input_missing with the retry receipt attached.\",\n  \"recoverable\": true,\n  \"not_this\": [\n    \"memory service outage\",\n    \"research-routing false negative after exact command\",\n    \"provider cooldown\"\n  ],\n  \"ambiguous\": false,\n  \"matched_tokens\": [\n    \"failure_code:pi_research_gate_retry_command_mismatch\"\n  ]\n}\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 870.029,
+          "duration_ms": 848.251,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c000-t01",
+          "trial_id": "af8042cf0a09-c000-t01",
           "outcome": "PASS",
           "problems": []
         }
@@ -121,7 +122,7 @@
       "flaky": false,
       "name": "create-svg-launch-receipt-active-code-beats-embedded-catalog",
       "type": "positive",
-      "case_id": "5a626e034305-c001",
+      "case_id": "af8042cf0a09-c001",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -139,16 +140,16 @@
       "passed_trials": 2,
       "total_trials": 2,
       "pass_rate": 1.0,
-      "avg_latency_ms": 121.304,
+      "avg_latency_ms": 119.45,
       "trials": [
         {
           "exit_code": 0,
           "stdout": "CREATE_SVG_ACTIVE_CODE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 121.795,
+          "duration_ms": 119.189,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c001-t00",
+          "trial_id": "af8042cf0a09-c001-t00",
           "outcome": "PASS",
           "problems": []
         },
@@ -156,10 +157,10 @@
           "exit_code": 0,
           "stdout": "CREATE_SVG_ACTIVE_CODE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 120.813,
+          "duration_ms": 119.71,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c001-t01",
+          "trial_id": "af8042cf0a09-c001-t01",
           "outcome": "PASS",
           "problems": []
         }
@@ -170,7 +171,7 @@
       "flaky": false,
       "name": "create-svg-browser-submit-failure-triages-to-recovery-packet",
       "type": "positive",
-      "case_id": "5a626e034305-c002",
+      "case_id": "af8042cf0a09-c002",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -188,16 +189,16 @@
       "passed_trials": 2,
       "total_trials": 2,
       "pass_rate": 1.0,
-      "avg_latency_ms": 113.704,
+      "avg_latency_ms": 114.416,
       "trials": [
         {
           "exit_code": 0,
           "stdout": "CREATE_SVG_BROWSER_SUBMIT_TRIAGE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 113.825,
+          "duration_ms": 113.532,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c002-t00",
+          "trial_id": "af8042cf0a09-c002-t00",
           "outcome": "PASS",
           "problems": []
         },
@@ -205,10 +206,10 @@
           "exit_code": 0,
           "stdout": "CREATE_SVG_BROWSER_SUBMIT_TRIAGE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 113.583,
+          "duration_ms": 115.299,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c002-t01",
+          "trial_id": "af8042cf0a09-c002-t01",
           "outcome": "PASS",
           "problems": []
         }
@@ -219,7 +220,7 @@
       "flaky": false,
       "name": "tau-node-sanity-codes-classify-stably",
       "type": "positive",
-      "case_id": "5a626e034305-c003",
+      "case_id": "af8042cf0a09-c003",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -237,16 +238,16 @@
       "passed_trials": 2,
       "total_trials": 2,
       "pass_rate": 1.0,
-      "avg_latency_ms": 120.567,
+      "avg_latency_ms": 121.311,
       "trials": [
         {
           "exit_code": 0,
           "stdout": "TAU_NODE_SANITY_TRIAGE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 115.159,
+          "duration_ms": 122.709,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c003-t00",
+          "trial_id": "af8042cf0a09-c003-t00",
           "outcome": "PASS",
           "problems": []
         },
@@ -254,10 +255,10 @@
           "exit_code": 0,
           "stdout": "TAU_NODE_SANITY_TRIAGE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 125.976,
+          "duration_ms": 119.912,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c003-t01",
+          "trial_id": "af8042cf0a09-c003-t01",
           "outcome": "PASS",
           "problems": []
         }
@@ -268,7 +269,7 @@
       "flaky": false,
       "name": "create-svg-tau-provenance-code-classifies-stably",
       "type": "positive",
-      "case_id": "5a626e034305-c004",
+      "case_id": "af8042cf0a09-c004",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -286,16 +287,16 @@
       "passed_trials": 2,
       "total_trials": 2,
       "pass_rate": 1.0,
-      "avg_latency_ms": 124.906,
+      "avg_latency_ms": 116.757,
       "trials": [
         {
           "exit_code": 0,
           "stdout": "CREATE_SVG_TAU_PROVENANCE_TRIAGE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 124.645,
+          "duration_ms": 117.151,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c004-t00",
+          "trial_id": "af8042cf0a09-c004-t00",
           "outcome": "PASS",
           "problems": []
         },
@@ -303,10 +304,10 @@
           "exit_code": 0,
           "stdout": "CREATE_SVG_TAU_PROVENANCE_TRIAGE_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 125.168,
+          "duration_ms": 116.363,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c004-t01",
+          "trial_id": "af8042cf0a09-c004-t01",
           "outcome": "PASS",
           "problems": []
         }
@@ -317,7 +318,7 @@
       "flaky": false,
       "name": "tau-create-svg-origin-gate-codes-classify-stably",
       "type": "positive",
-      "case_id": "5a626e034305-c005",
+      "case_id": "af8042cf0a09-c005",
       "required": true,
       "outcome": "PASS",
       "problems": [],
@@ -337,16 +338,16 @@
       "passed_trials": 2,
       "total_trials": 2,
       "pass_rate": 1.0,
-      "avg_latency_ms": 481.397,
+      "avg_latency_ms": 468.228,
       "trials": [
         {
           "exit_code": 0,
           "stdout": "tau_dag_requested_handler_substituted_OK\ncreate_svg_required_payload_missing_OK\ncreate_svg_candidate_receipt_invalid_OK\ncreate_svg_artifact_origin_invalid_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 478.772,
+          "duration_ms": 461.152,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c005-t00",
+          "trial_id": "af8042cf0a09-c005-t00",
           "outcome": "PASS",
           "problems": []
         },
@@ -354,10 +355,61 @@
           "exit_code": 0,
           "stdout": "tau_dag_requested_handler_substituted_OK\ncreate_svg_required_payload_missing_OK\ncreate_svg_candidate_receipt_invalid_OK\ncreate_svg_artifact_origin_invalid_OK\n",
           "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
-          "duration_ms": 484.022,
+          "duration_ms": 475.304,
           "timed_out": false,
           "orphan_pids_after_teardown": [],
-          "trial_id": "5a626e034305-c005-t01",
+          "trial_id": "af8042cf0a09-c005-t01",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "tau-model-response-lie-codes-classify-stably",
+      "type": "positive",
+      "case_id": "af8042cf0a09-c006",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "for code in tau_dag_verification_contract_incomplete tau_dag_self_verification_forbidden tau_model_claim_without_receipt tau_model_artifact_path_missing tau_model_artifact_hash_mismatch tau_model_proof_command_unverified tau_join_unadmitted_evidence tau_recovery_without_failed_path_rerun tau_human_acceptance_receipt_missing; do ../run.sh classify --text '{\"failure_code\":\"'\"$code\"'\"}' --layer tau.project_dag | EXPECTED_CODE=$code python3 -c 'import json,os,sys;d=json.load(sys.stdin);expected=os.environ[\"EXPECTED_CODE\"];assert d[\"code\"]==expected and d[\"ambiguous\"] is False and d[\"recoverable\"] is True;print(expected+\"_OK\")' || exit 1; done"
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "triage_error.classifier"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1056.269,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "tau_dag_verification_contract_incomplete_OK\ntau_dag_self_verification_forbidden_OK\ntau_model_claim_without_receipt_OK\ntau_model_artifact_path_missing_OK\ntau_model_artifact_hash_mismatch_OK\ntau_model_proof_command_unverified_OK\ntau_join_unadmitted_evidence_OK\ntau_recovery_without_failed_path_rerun_OK\ntau_human_acceptance_receipt_missing_OK\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 1070.314,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "af8042cf0a09-c006-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "tau_dag_verification_contract_incomplete_OK\ntau_dag_self_verification_forbidden_OK\ntau_model_claim_without_receipt_OK\ntau_model_artifact_path_missing_OK\ntau_model_artifact_hash_mismatch_OK\ntau_model_proof_command_unverified_OK\ntau_join_unadmitted_evidence_OK\ntau_recovery_without_failed_path_rerun_OK\ntau_human_acceptance_receipt_missing_OK\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\nwarning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 1042.224,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "af8042cf0a09-c006-t01",
           "outcome": "PASS",
           "problems": []
         }

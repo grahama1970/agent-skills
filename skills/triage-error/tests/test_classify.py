@@ -185,6 +185,26 @@ def test_tau_create_svg_origin_gate_codes_are_stable_and_actionable() -> None:
         assert expected_text in r["next_command"] or expected_text in r["cause"]
 
 
+def test_tau_model_response_lie_codes_are_stable_and_actionable() -> None:
+    samples = {
+        "tau_dag_verification_contract_incomplete": "$interview",
+        "tau_dag_self_verification_forbidden": "different producer node",
+        "tau_model_claim_without_receipt": "do not accept prose",
+        "tau_model_artifact_path_missing": "path-backed artifact",
+        "tau_model_artifact_hash_mismatch": "Recompute sha256",
+        "tau_model_proof_command_unverified": "tau.proof_command_receipt.v1",
+        "tau_join_unadmitted_evidence": "admitted_nodes",
+        "tau_recovery_without_failed_path_rerun": "rerun_node_ids",
+        "tau_human_acceptance_receipt_missing": "$interview",
+    }
+    for raw, expected_text in samples.items():
+        r = t.classify(f'{{"failure_code":"{raw}"}}', "tau.project_dag")
+        assert r["code"] == raw
+        assert r["ambiguous"] is False
+        assert r["recoverable"] is True
+        assert expected_text in r["next_command"] or expected_text in r["cause"]
+
+
 def test_pi_research_gate_retry_command_mismatch_has_stable_code() -> None:
     r = t.classify(
         '{"schema":"pi_research_gate.retry_misuse.v1","failure_code":"pi_research_gate_retry_command_mismatch","observed":"agent ran paraphrased memory query instead of the exact next_command"}',
