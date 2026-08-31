@@ -25,6 +25,7 @@ provides:
   - lgtv-sound-control
 composes:
   - ops-wiim
+  - brave-search
   - agentic-evals
 complies:
   - best-practices-skills

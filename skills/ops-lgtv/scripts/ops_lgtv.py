@@ -184,6 +184,56 @@ def power_off(ip: str = typer.Option(None, "--ip"),
         _down(ip, exc)
 
 
+@app.command("power-on")
+def power_on(ip: str = typer.Option(None, "--ip"),
+            execute: bool = typer.Option(False, "--execute")) -> None:
+    """Wake the TV (gated behind --execute; requires 'Mobile TV On'/WoWLAN enabled)."""
+    ip = _lg_ip(ip)
+    if not execute:
+        typer.echo(json.dumps({"refused": True, "reason": "power-on is a mutation; pass --execute"}), err=True)
+        raise typer.Exit(3)
+
+    async def go():
+        client = await _client(ip)
+        await client.power_on()
+        await asyncio.sleep(4)
+        try:
+            state = await client.get_power_state()
+        except Exception:  # noqa: BLE001
+            state = "unanswered_after_wake"
+        return {"requested": "on", "power_state": state}
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
+@app.command("audio-settings")
+def audio_settings(ip: str = typer.Option(None, "--ip"), json_out: bool = typer.Option(False, "--json")) -> None:
+    """Enumerate the TV's sound settings via SSAP/luna (read-only, raw key dump)."""
+    ip = _lg_ip(ip)
+
+    async def go():
+        client = await _client(ip)
+        out = {"schema": "ops_lgtv.audio_settings.v1", "ip": ip,
+               "audio_status": await client.get_audio_status()}
+        for cat in ("sound", "option"):
+            try:
+                res = await client.luna_request(
+                    "ssap://com.webos.service.settings/getSettings", {"category": cat})
+                out[f"settings_{cat}"] = res
+            except Exception as exc:  # noqa: BLE001 - keep enumerating other categories
+                out[f"settings_{cat}"] = {"error": str(exc)}
+        await client.disconnect()
+        return out
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), indent=2, default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
 @app.command("gain-staging")
 def gain_staging(ip: str = typer.Option(None, "--ip"),
                  wiim_ip: str = typer.Option(None, "--wiim-ip"),
