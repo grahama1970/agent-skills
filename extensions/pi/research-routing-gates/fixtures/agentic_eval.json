@@ -103,6 +103,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "research_routing.guard_purpose_complaints_skip_memory_first",
+      "description": "Complaints about the obvious-next-step guard purpose are classified as status/control questions, so stale scans cannot force a Memory-first retry loop.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -875,6 +883,39 @@
         "artifacts": [
           {
             "path": "../eval-output/continue-prompt-no-loop.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-obvious-continue-purpose-complaint-with-stale-scan-does-not-fail-memory-first",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.guard_purpose_complaints_skip_memory_first"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_obvious_continue_purpose_complaint_exempt_with_stale_scan | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/obvious-continue-purpose-stale-scan.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "checker_obvious_continue_purpose_complaint_exempt_with_stale_scan",
+          "\"memory_required\":false",
+          "\"status_question\":true"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/obvious-continue-purpose-stale-scan.json",
             "json_pointer": "/ok",
             "equals": true
           }

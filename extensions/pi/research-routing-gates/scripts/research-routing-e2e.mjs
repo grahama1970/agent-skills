@@ -236,6 +236,18 @@ const cases = {
     requireCond(out.status === 0 && out.parsed.decision === 'pass' && out.parsed.route.memory_required === false, 'research-routing naming meta question should not fail Memory-first due stale scans', out);
     console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
   },
+  checker_obvious_continue_purpose_complaint_exempt_with_stale_scan() {
+    const out = runChecker({
+      user_text: "do you NOT understand the whole point of forcing the agent to continue when its obvious it doesn't need a human",
+      assistant_text: 'Yes. The whole point is to force continuation when the next action is local and no human decision is needed.',
+      observations: [
+        { phase: 'call', kind: 'scan', toolName: 'read', command: 'extensions/pi/obvious-next-step-guard/obvious-next-step-check.mjs' },
+        { phase: 'result', kind: 'scan', toolName: 'read', command: 'extensions/pi/obvious-next-step-guard/obvious-next-step-check.mjs', ok: true },
+      ],
+    });
+    requireCond(out.status === 0 && out.parsed.decision === 'pass' && out.parsed.route.memory_required === false && out.parsed.signals.status_question === true, 'obvious-next-step purpose complaint should be status/control and not fail Memory-first due stale scans', out);
+    console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
+  },
   checker_sidequest_thrashing_requires_roundtable() {
     const out = runChecker({ user_text: 'The agent is violating the immutable goal with side quests and self-serving unit tests.', assistant_text: 'Continue.', observations: memoryObs() });
     requireCond(out.status === 1 && out.parsed.reason_codes.includes('missing_ask_roundtable_gate'), 'side-quest/self-serving-test signal should require roundtable advice when no candidates exist', out);
