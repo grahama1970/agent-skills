@@ -648,11 +648,34 @@ class SessionInfo(BaseModel):
     practice_only: bool = False
 
 
+class ModelCallTrace(BaseModel):
+    """Bounded model-call status exposed to HUD clients."""
+    model_config = ConfigDict(extra="forbid")
+    call_id: str = Field(min_length=1, max_length=120)
+    lane: RetrievalLane | None = None
+    model: str = Field(default="", max_length=200)
+    status: str = Field(default="running", max_length=80)
+    detail: str = Field(default="", max_length=500)
+    latency_ms: int | None = Field(default=None, ge=0)
+    payload: dict[str, Any] = Field(default_factory=dict)
+    started_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+
+class PipelineTraceEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    stage: str = Field(min_length=1, max_length=120)
+    status: str = Field(min_length=1, max_length=80)
+    detail: str = Field(default="", max_length=500)
+    transcript_event_id: str | None = Field(default=None, max_length=120)
+    question_id: str | None = Field(default=None, max_length=120)
+    question_revision: int | None = Field(default=None, ge=0)
+    speaker: Speaker | None = None
+    lane: RetrievalLane | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+    updated_at: datetime = Field(default_factory=utc_now)
+
 class AppSnapshot(BaseModel):
-    """Complete state projected to the React client over REST and SSE."""
-
     model_config = ConfigDict(extra="forbid", populate_by_name=True, serialize_by_alias=True)
-
     schema_id: Literal["live_evidence.app_snapshot.v1"] = Field(
         default="live_evidence.app_snapshot.v1",
         validation_alias="schema",
@@ -663,6 +686,8 @@ class AppSnapshot(BaseModel):
     transcript: list[TranscriptEvent] = Field(default_factory=list, max_length=300)
     cards: list[EvidenceCard] = Field(default_factory=list, max_length=100)
     lanes: list[LaneActivity] = Field(default_factory=list)
+    model_calls: list[ModelCallTrace] = Field(default_factory=list, max_length=100)
+    trace_events: list[PipelineTraceEvent] = Field(default_factory=list, max_length=200)
     external_search_enabled: bool = False
     updated_at: datetime = Field(default_factory=utc_now)
 
