@@ -3,6 +3,92 @@
   "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
   "codes": [
     {
+      "code": "tau_node_sanity_check_contract_invalid",
+      "layer": "tau.project_dag",
+      "match": [
+        "node_sanity_check_contract_invalid",
+        "tau.node_sanity_check.v1",
+        "sanity_checks"
+      ],
+      "cause": "A Tau project DAG node_sanity_check declaration is malformed, uses an unsupported check_type, or includes unknown keys such as regex/prose gates.",
+      "next_command": "Read the dag_error evidence for the invalid nodes[*].sanity_checks entry, replace it with a schema=tau.node_sanity_check.v1 object using a supported check_type, then rerun the tau_node_sanity_checks_agentic_eval fixture.",
+      "recoverable": true,
+      "not_this": [
+        "reviewer semantic disagreement",
+        "provider timeout",
+        "visual reviewer rejection"
+      ]
+    },
+    {
+      "code": "tau_node_sanity_check_failed",
+      "layer": "tau.project_dag",
+      "match": [
+        "node_sanity_check_failed",
+        "mocked proof evidence",
+        "rejected mocked proof"
+      ],
+      "cause": "A Tau project DAG node response violated a declared node sanity check, such as using mocked proof where live/path-backed evidence was required.",
+      "next_command": "Read the node receipt named in the Tau dag_error, replace mocked or malformed evidence with path-backed live evidence for the same goal_hash, then rerun the same DAG and the tau_node_sanity_checks_agentic_eval fixture.",
+      "recoverable": true,
+      "not_this": [
+        "contract declaration syntax",
+        "provider authentication",
+        "human acceptance"
+      ]
+    },
+    {
+      "code": "tau_reviewer_artifact_binding_missing",
+      "layer": "tau.project_dag",
+      "match": [
+        "reviewer_artifact_binding_missing",
+        "did not bind to the reviewed node artifact",
+        "reviewed_artifact"
+      ],
+      "cause": "A reviewer PASS did not bind itself to the reviewed creator artifact path and sha256, so Tau cannot prove which artifact was reviewed.",
+      "next_command": "Regenerate the reviewer_verdict with reviewed_artifact.path and reviewed_artifact.sha256 matching the creator_artifact evidence from the reviewed node receipt; rerun the DAG and preserve the dag-receipt.json.",
+      "recoverable": true,
+      "not_this": [
+        "reviewer FAIL verdict",
+        "missing screenshot",
+        "join topology bypass"
+      ]
+    },
+    {
+      "code": "tau_reviewer_artifact_hash_mismatch",
+      "layer": "tau.project_dag",
+      "match": [
+        "reviewer_artifact_hash_mismatch",
+        "artifact binding did not match",
+        "expected_sha256",
+        "observed_sha256"
+      ],
+      "cause": "A reviewer verdict cited an artifact path or sha256 that does not match the reviewed creator node artifact bytes.",
+      "next_command": "Read the creator_artifact path from the reviewed node receipt, recompute sha256 over the file bytes, update the reviewer_verdict reviewed_artifact binding to that exact path/hash, and rerun the DAG.",
+      "recoverable": true,
+      "not_this": [
+        "missing reviewer verdict",
+        "visual gate NOT_READY",
+        "provider cooldown"
+      ]
+    },
+    {
+      "code": "tau_reviewer_attempt_binding_mismatch",
+      "layer": "tau.project_dag",
+      "match": [
+        "reviewer_attempt_binding_mismatch",
+        "did not bind to the reviewed node attempt",
+        "reviewed_attempt_id"
+      ],
+      "cause": "A reviewer verdict omitted or mismatched the reviewed creator attempt id, so Tau cannot prove the review applies to the accepted attempt rather than a stale attempt.",
+      "next_command": "Read the creator_artifact attempt_id from the reviewed node receipt, set reviewer_verdict.reviewed_attempt_id to the same value, then rerun the DAG and tau_node_sanity_checks_agentic_eval fixture.",
+      "recoverable": true,
+      "not_this": [
+        "artifact hash mismatch",
+        "reviewer identity mismatch",
+        "human handoff"
+      ]
+    },
+    {
       "code": "tau_project_dag_missing_required_evidence",
       "layer": "tau.project_dag",
       "match": [

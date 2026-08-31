@@ -35,7 +35,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "13 passed",
+          "14 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
           "monitor_opportunities_linkedin_source_accounting_failed",
@@ -74,6 +74,24 @@
         "exit_code": 0,
         "stdout_contains": [
           "CREATE_SVG_BROWSER_SUBMIT_TRIAGE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "tau-node-sanity-codes-classify-stably",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh classify --text '{\"failure_code\":\"reviewer_artifact_hash_mismatch\"}' --layer tau.project_dag | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='tau_reviewer_artifact_hash_mismatch' and d['ambiguous'] is False and 'sha256' in d['cause'];print('TAU_NODE_SANITY_TRIAGE_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TAU_NODE_SANITY_TRIAGE_OK"
         ]
       },
       "readback": true,

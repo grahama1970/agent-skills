@@ -143,6 +143,22 @@ def test_create_svg_browser_submit_failure_maps_to_lane_recovery() -> None:
     assert "local preview SVGs" in r["next_command"]
 
 
+def test_tau_node_sanity_codes_are_stable_and_actionable() -> None:
+    samples = {
+        "node_sanity_check_contract_invalid": "tau_node_sanity_check_contract_invalid",
+        "node_sanity_check_failed": "tau_node_sanity_check_failed",
+        "reviewer_artifact_binding_missing": "tau_reviewer_artifact_binding_missing",
+        "reviewer_artifact_hash_mismatch": "tau_reviewer_artifact_hash_mismatch",
+        "reviewer_attempt_binding_mismatch": "tau_reviewer_attempt_binding_mismatch",
+    }
+    for raw, expected in samples.items():
+        r = t.classify(f'{{"failure_code":"{raw}"}}', "tau.project_dag")
+        assert r["code"] == expected
+        assert r["ambiguous"] is False
+        assert r["recoverable"] is True
+        assert r["next_command"]
+
+
 def test_pi_research_gate_retry_command_mismatch_has_stable_code() -> None:
     r = t.classify(
         '{"schema":"pi_research_gate.retry_misuse.v1","failure_code":"pi_research_gate_retry_command_mismatch","observed":"agent ran paraphrased memory query instead of the exact next_command"}',
