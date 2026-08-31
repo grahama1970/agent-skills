@@ -3746,6 +3746,9 @@ a:hover .c-plabel { fill: var(--brass); }
 /* Explicit GitHub action bar on work cards. */
 .project-actions {
   grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 1.1rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--line-2);

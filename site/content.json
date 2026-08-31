@@ -33,7 +33,7 @@
       "slug": "tau",
       "name": "t'au",
       "blurb": "Memory-first zero-trust harness: every agent turn gets a goal, evidence, receipt, and a stop condition.",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "href": "https://github.com/grahama1970/tau",
       "question": "How do you build an agent harness that doesn't trust agents?",
       "why": "Tau's answer: a contract around every turn — memory-first context before action, bounded subagents, goal-locked handoffs, explicit mocked/live proof boundaries. No receipt, no action."
     },
@@ -41,7 +41,7 @@
       "slug": "extractor",
       "name": "extractor",
       "blurb": "Zero-choice document extraction: one file in, one truthful result envelope out.",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
+      "href": "https://github.com/grahama1970/extractor",
       "question": "What if extraction had no knobs to mislead you with?",
       "why": "One file in, the route chosen for you, one truthful result envelope out — including a truthful “blocked” when it can't."
     },

@@ -31,7 +31,7 @@
       "name": "t'au",
       "visibility": "public",
       "evidence_access": "source",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md",
+      "href": "https://github.com/grahama1970/tau",
       "abstract": null
     },
     {
@@ -39,7 +39,7 @@
       "name": "extractor",
       "visibility": "public",
       "evidence_access": "source",
-      "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md",
+      "href": "https://github.com/grahama1970/extractor",
       "abstract": null
     },
     {

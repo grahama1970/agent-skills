@@ -39,6 +39,27 @@ const PROJECT_VISUALS: Record<string, { cls: string; tint: string; img?: string;
   memory: { cls: 'c11', tint: 'rgba(147,162,137,.45)', asset: 'memory-recall-card.svg', decode: 'memory-first graph recall' },
 };
 
+const SKILL_CONTRACT_HREFS: Record<string, string> = {
+  tau: `${REPO}/blob/main/skills/tau/README.md`,
+  extractor: `${REPO}/blob/main/skills/extractor/README.md`,
+};
+
+function githubShort(href: string): string {
+  return href
+    .replace('https://github.com/', 'github.com/')
+    .replace('/blob/main/skills/', '/…/')
+    .replace('/README.md', '');
+}
+
+function projectPreviewAlt(
+  project: ContentProject,
+  meta: { decode?: string },
+): string {
+  return meta.decode
+    ? `${project.name} — ${meta.decode} project preview.`
+    : `${project.name} — ${project.question}`;
+}
+
 const TRACK = [
   { t: 'Composer', d: 'Commercial work for Adidas, Pepsi, X-Games.' },
   { t: 'Executive producer, Sony', d: 'God of War: Ascension campaign — Webby-recognized, 80-person productions.' },
@@ -83,9 +104,10 @@ export default function Home() {
   const receiptArtifacts = Object.fromEntries(
     (artifacts.artifacts as ReceiptArtifact[]).map((a) => [a.id, a]),
   ) as Record<ReceiptArtifact['id'], ReceiptArtifact>;
-  const capturedReceiptCount = (artifacts.artifacts as ReceiptArtifact[]).filter(
+  const capturedReceipts = (artifacts.artifacts as ReceiptArtifact[]).filter(
     (a) => a.capture_status === 'captured',
-  ).length;
+  );
+  const capturedReceiptCount = capturedReceipts.length;
   const projectBySlug = new Map(content.projects.map((p) => [p.slug, p]));
   const visibilityBySlug = new Map(
     (visibility.projects as VisibilityProject[]).map((v) => [v.slug, v]),
@@ -353,10 +375,8 @@ export default function Home() {
                 const vis = visibilityBySlug.get(p.slug);
                 const linkHref = vis?.href ?? p.href;
                 const evidencePrivate = !!vis && vis.visibility !== 'public';
-                const ghShort = linkHref
-                  .replace('https://github.com/', 'github.com/')
-                  .replace('/blob/main/skills/', '/…/')
-                  .replace('/README.md', '');
+                const ghShort = githubShort(linkHref);
+                const skillContractHref = SKILL_CONTRACT_HREFS[p.slug];
                 return (
                   <article
                     key={p.slug}
@@ -381,10 +401,9 @@ export default function Home() {
                         <img
                           className="shot-img"
                           src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}?v=${inventory.commit}`}
-                          alt=""
+                          alt={projectPreviewAlt(p, meta)}
                           loading="eager"
                           decoding="async"
-                          aria-hidden="true"
                         />
                       </div>
                     </a>
@@ -416,6 +435,21 @@ export default function Home() {
                           <span className="gh-path">{ghShort}</span>
                           <span className="gh-arrow" aria-hidden="true">↗</span>
                         </a>
+                        {skillContractHref && skillContractHref !== linkHref && (
+                          <a
+                            href={skillContractHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-qid={`work:skill-contract:${p.slug}`}
+                            data-qs-action="WORK_OPEN_SKILL_CONTRACT"
+                            title={`Open ${p.name} agent-facing skill contract on github.com`}
+                            aria-label={`${githubShort(skillContractHref)} — ${p.name} agent-facing skill contract (opens in a new tab)`}
+                            className="github-repo-link github-repo-link--secondary"
+                          >
+                            <span className="gh-path">Skill contract</span>
+                            <span className="gh-arrow" aria-hidden="true">↗</span>
+                          </a>
+                        )}
                       </div>
                     </div>
                   </article>
@@ -521,37 +555,29 @@ export default function Home() {
                 </p>
                 <h2 className="h2">No claim ships without one.</h2>
                 <p className="lede" style={{ marginTop: '1.1rem' }}>
-                  {capturedReceiptCount === 3 ? 'Three excerpts' : `${capturedReceiptCount} captured excerpts`},
+                  {capturedReceiptCount === 1 ? 'One captured excerpt' : `${capturedReceiptCount} captured excerpts`},
                   printed as they came out of
-                  <span className="machine"> gen_artifacts.py</span>: a node
-                  receipt from the roundtable run that designed this page, a
-                  captured audit, and the provenance of the numbers above.
-                  Missing sources stay visible as boundaries, not status widgets.
+                  <span className="machine"> gen_artifacts.py</span>. Uncaptured
+                  audit attempts stay off the homepage instead of becoming proof
+                  theater.
                 </p>
               </div>
               <div className="tickets">
-                {RECEIPT_IDS.map((id) => {
-                  const receipt = receiptArtifacts[id];
-                  return receipt.capture_status === 'captured' ? (
-                      <DeferredReceiptTicket
-                        key={id}
-                        id={id}
-                        title={receipt.title}
-                        callout={receipt.judgment}
-                        proves={receipt.proves}
-                        doesNotProve={receipt.does_not_prove}
-                        body={receipt.body}
-                        caption={receipt.caption}
-                      />
-                    ) : (
-                      <article className="receipt-boundary" key={id}>
-                        <h3>{receipt.title}</h3>
-                        <p className="callout">{receipt.judgment}</p>
-                        <p>{receipt.unavailable_reason ?? receipt.caption}</p>
-                        <p className="does-not-prove">{receipt.does_not_prove}</p>
-                      </article>
-                    );
-                })}
+                {RECEIPT_IDS
+                  .map((id) => receiptArtifacts[id])
+                  .filter((receipt) => receipt.capture_status === 'captured')
+                  .map((receipt) => (
+                    <DeferredReceiptTicket
+                      key={receipt.id}
+                      id={receipt.id}
+                      title={receipt.title}
+                      callout={receipt.judgment}
+                      proves={receipt.proves}
+                      doesNotProve={receipt.does_not_prove}
+                      body={receipt.body}
+                      caption={receipt.caption}
+                    />
+                  ))}
               </div>
             </div>
           </div>

@@ -30,7 +30,7 @@
         {
           "slug": "tau",
           "name": "t'au",
-          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/tau/README.md"
+          "href": "https://github.com/grahama1970/tau"
         },
         {
           "slug": "scillm",
@@ -101,7 +101,7 @@
         {
           "slug": "extractor",
           "name": "extractor",
-          "href": "https://github.com/grahama1970/agent-skills/blob/main/skills/extractor/README.md"
+          "href": "https://github.com/grahama1970/extractor"
         },
         {
           "slug": "dogpile",

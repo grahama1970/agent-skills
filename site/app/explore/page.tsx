@@ -20,6 +20,30 @@ const PROJECT_VISUALS: Record<string, { tint: string; img?: string; asset?: stri
   memory: { tint: 'rgba(147,162,137,.45)', asset: 'memory-recall-card.svg', decode: 'memory-first graph recall' },
 };
 
+const REPO = 'https://github.com/grahama1970/agent-skills';
+const SKILL_CONTRACT_HREFS: Record<string, string> = {
+  tau: `${REPO}/blob/main/skills/tau/README.md`,
+  extractor: `${REPO}/blob/main/skills/extractor/README.md`,
+};
+
+type ContentProject = (typeof content.projects)[number];
+
+function githubShort(href: string): string {
+  return href
+    .replace('https://github.com/', 'github.com/')
+    .replace('/blob/main/skills/', '/…/')
+    .replace('/README.md', '');
+}
+
+function projectPreviewAlt(
+  project: ContentProject,
+  meta: { decode?: string },
+): string {
+  return meta.decode
+    ? `${project.name} — ${meta.decode} project preview.`
+    : `${project.name} — ${project.question}`;
+}
+
 const skillFlags = new Map(
   (inventory.skills as { n: string; s: boolean }[]).map((s) => [s.n, s.s]),
 );
@@ -70,10 +94,8 @@ export default function ExplorePage() {
               const vis = visibilityBySlug.get(p.slug);
               const linkHref = vis?.href ?? p.href;
               const evidencePrivate = !!vis && vis.visibility !== 'public';
-              const ghShort = linkHref
-                .replace('https://github.com/', 'github.com/')
-                .replace('/blob/main/skills/', '/…/')
-                .replace('/README.md', '');
+              const ghShort = githubShort(linkHref);
+              const skillContractHref = SKILL_CONTRACT_HREFS[p.slug];
               return (
                 <article key={p.slug} className="card secondary" id={`project-${p.slug}`}>
                   <a
@@ -92,10 +114,9 @@ export default function ExplorePage() {
                       <img
                         className="shot-img"
                         src={`/projects/${meta.asset ?? `${meta.img ?? p.slug}.webp`}?v=${inventory.commit}`}
-                        alt=""
+                        alt={projectPreviewAlt(p, meta)}
                         loading="eager"
                         decoding="async"
-                        aria-hidden="true"
                       />
                     </div>
                   </a>
@@ -124,6 +145,21 @@ export default function ExplorePage() {
                         <span className="gh-path">{ghShort}</span>
                         <span className="gh-arrow" aria-hidden="true">↗</span>
                       </a>
+                      {skillContractHref && skillContractHref !== linkHref && (
+                        <a
+                          href={skillContractHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          data-qid={`explore:skill-contract:${p.slug}`}
+                          data-qs-action="EXPLORE_OPEN_SKILL_CONTRACT"
+                          title={`Open ${p.name} agent-facing skill contract on github.com`}
+                          aria-label={`${githubShort(skillContractHref)} — ${p.name} agent-facing skill contract (opens in a new tab)`}
+                          className="github-repo-link github-repo-link--secondary"
+                        >
+                          <span className="gh-path">Skill contract</span>
+                          <span className="gh-arrow" aria-hidden="true">↗</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </article>
