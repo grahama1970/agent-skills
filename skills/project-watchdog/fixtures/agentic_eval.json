@@ -133,6 +133,31 @@
       "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog's own handler and cooldown path."
     },
     {
+      "name": "closure-audit-nonzero-fail-reopens",
+      "category": "closure-audit-nonzero-fail-reopens",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "mocked": true,
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_nonzero_audit_with_fail_verdict_is_reopened",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "A closure audit whose Ask/Tau wrapper exits nonzero because receipt evidence records VERDICT: FAIL still reaches the FAIL/reopen path instead of being downgraded to no usable panel verdict and retried forever.",
+      "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog handler path observed from issue #1519 receipts."
+    },
+    {
       "name": "targeted-issue-does-not-lose-target-to-earlier-issue",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

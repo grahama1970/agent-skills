@@ -1948,9 +1948,12 @@ def handle_closure_audit(
         f"### {node}\n{text.strip()}" for node, text in sorted(by_node.items())
     )
 
-    if (audit.get("exit_code") != 0 and verdict != "NEEDS_ATTENTION") or verdict is None:
-        # No verdict is not a pass. Leave the ticket closed and say so, rather
-        # than reopening on a failed reviewer or silently accepting.
+    if verdict is None or (audit.get("exit_code") != 0 and verdict == "PASS"):
+        # No verdict is not a pass. A PASS from a nonzero Ask/Tau wrapper is
+        # also not durable evidence. A semantic FAIL is different: Tau returns
+        # nonzero when receipt evidence records a non-PASS verdict, and that
+        # FAIL must still reach the reopen path or the same closure is audited
+        # again after every cooldown window.
         result.update(
             {
                 "ok": False,

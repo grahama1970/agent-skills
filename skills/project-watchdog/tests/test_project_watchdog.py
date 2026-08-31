@@ -1485,6 +1485,21 @@ def test_a_closure_that_fails_review_is_reopened(tmp_path) -> None:
     assert any(e.get("add") == [config.READY_LABEL] for e in calls["edits"]), "routable again"
 
 
+def test_nonzero_audit_with_fail_verdict_is_reopened(tmp_path) -> None:
+    """Tau exits nonzero when receipt evidence records a semantic FAIL."""
+    result, calls = _run_audit(
+        tmp_path,
+        {
+            "handler-a": "The named proof was not shown.\nVERDICT: FAIL",
+            "handler-b": "I cannot tell from the shown artifacts.\nVERDICT: NEEDS_ATTENTION",
+        },
+        exit_code=4,
+    )
+    assert result["verdict"] == "FAIL" and result["status"] == "COMPLETED"
+    assert calls["reopened"] == [9]
+    assert any(e.get("add") == [config.READY_LABEL] for e in calls["edits"]), "routable again"
+
+
 def test_an_unreadable_audit_is_not_treated_as_a_pass(tmp_path) -> None:
     """A reviewer that produced no verdict leaves the closure unreviewed."""
     result, calls = _run_audit(tmp_path, "the model rambled and never answered")
