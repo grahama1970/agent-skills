@@ -330,6 +330,25 @@
       ]
     },
     {
+      "code": "create_svg_browser_submit_not_accepted",
+      "layer": "create-svg",
+      "match": [
+        "browser_submit_not_accepted",
+        "Kimi prompt composer did not receive inserted text",
+        "composer did not receive inserted text",
+        "transport_blocker:browser_submit_not_accepted",
+        "PRIOR_HANDLER_RECEIPTS_NOT_READY"
+      ],
+      "cause": "A Tau SVG creator lane could not submit its prompt to the browser-backed provider, so no live candidate artifact or screenshot-bound review exists for that lane.",
+      "next_command": "Read node-artifacts/<handler>/browser-recovery-packet.json and run its next_command to rebind/recover the browser provider, then rerun skills/create-svg/run.sh tau-variant-loop --execute; do not use local preview SVGs as substitutes for Tau node artifacts.",
+      "recoverable": true,
+      "not_this": [
+        "variant spec validation",
+        "visual gate NOT_READY",
+        "successful Tau candidate artifact"
+      ]
+    },
+    {
       "code": "create_svg_tau_compile_or_execute_failed",
       "layer": "create-svg",
       "match": [

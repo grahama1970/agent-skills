@@ -35,13 +35,49 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "11 passed",
+          "13 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
           "monitor_opportunities_linkedin_source_accounting_failed",
           "pi_research_gate_retry_command_mismatch"
         ]
       }
+    },
+    {
+      "name": "create-svg-launch-receipt-active-code-beats-embedded-catalog",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp) && cat > $T <<'JSON'\n{\n  \"active_failure_code\": \"create_svg_tau_compile_or_execute_failed\",\n  \"failure_codes\": [\n    {\"code\": \"create_svg_variant_count_invalid\"},\n    {\"code\": \"create_svg_tau_compile_or_execute_failed\"}\n  ]\n}\nJSON\n../run.sh classify --receipt $T --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_tau_compile_or_execute_failed' and d['ambiguous'] is False;print('CREATE_SVG_ACTIVE_CODE_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CREATE_SVG_ACTIVE_CODE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "create-svg-browser-submit-failure-triages-to-recovery-packet",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh classify --text '{\"failure_code\":\"browser_submit_not_accepted\",\"failure\":\"Kimi prompt composer did not receive inserted text after 4 attempt(s)\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_browser_submit_not_accepted' and d['ambiguous'] is False and 'browser-recovery-packet.json' in d['next_command'];print('CREATE_SVG_BROWSER_SUBMIT_TRIAGE_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CREATE_SVG_BROWSER_SUBMIT_TRIAGE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
     }
   ]
 }

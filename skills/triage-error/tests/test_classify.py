@@ -113,6 +113,36 @@ def test_create_svg_visual_gate_not_ready_has_loop_control_code() -> None:
     assert r["ambiguous"] is False
     assert "next_edit" in r["next_command"]
 
+
+def test_create_svg_active_failure_code_beats_embedded_catalog_codes() -> None:
+    r = t.classify(
+        """
+        {
+          "active_failure_code": "create_svg_tau_compile_or_execute_failed",
+          "failure_codes": [
+            {"code": "create_svg_variant_count_invalid"},
+            {"code": "create_svg_tau_compile_or_execute_failed"}
+          ]
+        }
+        """,
+        "create-svg",
+    )
+    assert r["code"] == "create_svg_tau_compile_or_execute_failed"
+    assert r["ambiguous"] is False
+    assert "active_failure_code:create_svg_tau_compile_or_execute_failed" in r["matched_tokens"]
+
+
+def test_create_svg_browser_submit_failure_maps_to_lane_recovery() -> None:
+    r = t.classify(
+        '{"failure_code":"browser_submit_not_accepted","failure":"Kimi prompt composer did not receive inserted text"}',
+        "create-svg",
+    )
+    assert r["code"] == "create_svg_browser_submit_not_accepted"
+    assert r["ambiguous"] is False
+    assert "browser-recovery-packet.json" in r["next_command"]
+    assert "local preview SVGs" in r["next_command"]
+
+
 def test_pi_research_gate_retry_command_mismatch_has_stable_code() -> None:
     r = t.classify(
         '{"schema":"pi_research_gate.retry_misuse.v1","failure_code":"pi_research_gate_retry_command_mismatch","observed":"agent ran paraphrased memory query instead of the exact next_command"}',

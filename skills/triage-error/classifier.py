@@ -38,24 +38,72 @@ def _first_error_line(text: str) -> str:
     return str(text or "").strip()[:300]
 
 
+def _result_from_entry(entry: dict[str, Any], matched_tokens: list[str]) -> dict[str, Any]:
+    return {
+        "code": entry["code"],
+        "layer": entry.get("layer"),
+        "cause": entry.get("cause"),
+        "next_command": entry.get("next_command"),
+        "recoverable": entry.get("recoverable"),
+        "not_this": entry.get("not_this", []),
+        "ambiguous": False,
+        "matched_tokens": matched_tokens,
+    }
+
+
+def _catalog_entry_for_code(catalog: list[dict[str, Any]], code: str, layer: str | None) -> dict[str, Any] | None:
+    for entry in catalog:
+        if entry.get("code") != code:
+            continue
+        if layer and entry.get("layer") and entry["layer"] != layer:
+            continue
+        return entry
+    return None
+
+
+def _explicit_failure_code(text: str) -> tuple[str, str] | None:
+    """Return the authoritative code field from a JSON receipt, if present.
+
+    Receipts can include an embedded catalog such as ``failure_codes``. Those
+    catalog entries are documentation, not the active failure. Prefer typed
+    top-level outcome fields before falling back to substring matching.
+    """
+
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    for field in ("active_failure_code", "failure_code", "code"):
+        value = payload.get(field)
+        if isinstance(value, str) and value.strip():
+            return field, value.strip()
+    report = payload.get("report")
+    if isinstance(report, dict):
+        value = report.get("code")
+        if isinstance(value, str) and value.strip():
+            return "report.code", value.strip()
+    return None
+
+
 def classify(text: str, layer: str | None = None) -> dict[str, Any]:
     """Map raw error text to a canonical catalog code, or mint an ambiguous one."""
+    catalog = load_catalog()
+    explicit = _explicit_failure_code(text)
+    if explicit:
+        field, code = explicit
+        entry = _catalog_entry_for_code(catalog, code, layer)
+        if entry:
+            return _result_from_entry(entry, [f"{field}:{code}"])
+
     norm = _normalize(text)
-    for entry in load_catalog():
+    for entry in catalog:
         if layer and entry.get("layer") and entry["layer"] != layer:
             continue
         tokens = [t.lower() for t in entry.get("match", []) if t]
         if any(tok in norm for tok in tokens):
-            return {
-                "code": entry["code"],
-                "layer": entry.get("layer"),
-                "cause": entry.get("cause"),
-                "next_command": entry.get("next_command"),
-                "recoverable": entry.get("recoverable"),
-                "not_this": entry.get("not_this", []),
-                "ambiguous": False,
-                "matched_tokens": [tok for tok in tokens if tok in norm],
-            }
+            return _result_from_entry(entry, [tok for tok in tokens if tok in norm])
     return {
         "code": _mint_code(text, layer),
         "layer": layer,
