@@ -1,0 +1,38 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "version": 1,
+  "skill": "research-routing-gates",
+  "regressions": [
+    {
+      "regression_id": "2026-08-30-pi-guard-raw-retry-status-loop",
+      "incident": "Research-routing generated RESEARCH_ROUTING_GATE_RETRY / REJECTED_BY_RESEARCH_ROUTING_GATE control text with raw Gate JSON for ordinary status/update answers. Already-running Pi sessions then treated that control text as a new substantive user task, causing repeated missing_memory_recall_gate retries and hobbling status updates across projects.",
+      "retained_case": "real-world-cross-project-status-updates-does-not-self-reject",
+      "retained_fixture": "agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "node",
+          "scripts/research-routing-e2e.mjs",
+          "fail_before_fix_raw_guard_json_leak"
+        ],
+        "proof_note": "Runs the retained raw-leak oracle against the pre-fix visible text shape containing REJECTED_BY_RESEARCH_ROUTING_GATE and Gate JSON. The command must exit non-zero; if it exits zero, the guard is vacuous.",
+        "expected_fail": true,
+        "proven": true
+      },
+      "fixed_by": "9be108791d",
+      "detected": "2026-08-30 live Pi session; user pasted repeated RESEARCH_ROUTING_GATE_RETRY prompts and reported status updates hobbled across all projects.",
+      "status": "ACTIVE",
+      "claim_ids": [
+        "research_routing.status_plain_spoken_exemption",
+        "research_routing.guard_interlock_exemption",
+        "research_routing.retry_evidence_window"
+      ],
+      "seam_ids": [
+        "checker-route-classification",
+        "pi-message-end-hook",
+        "guard-interlock-exemption",
+        "retry-evidence-window"
+      ],
+      "last_proven": "2026-08-30T22:05:20+00:00"
+    }
+  ]
+}

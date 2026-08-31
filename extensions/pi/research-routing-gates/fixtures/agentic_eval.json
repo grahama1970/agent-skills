@@ -1,0 +1,866 @@
+{
+  "version": 2,
+  "skill": "research-routing-gates-pi-extension",
+  "trials": 2,
+  "proof_scope": "Runner-real-world Pi extension scenarios: commands invoke the extension checker script and load the Pi extension hook module, with readback artifacts for each route decision including MVP-first and fast broad-error gates, local ops completion wording that mentions current/today without external-research intent, and guard interlock exemptions for shame notices, continuation prompts, and empty assistant tool turns, and typo status questions, including the exact cross-project status-updates wording that triggered the live retry loop.",
+  "claims": {
+    "proves": "The fixture runs real command scenarios against the research-routing-gates extension code path: production checker decisions, broad-error fast single-call routing, MVP-first mvp/ artifact gating, local ops completion wording that should not require web research, and a Pi message_end hook simulation with artifact readback, plus guard interlock exemptions that prevent generated shame/research/continuation text and empty tool-call turns from becoming new gate targets.",
+    "does_not_prove": "A live Pi /reload has loaded the extension, real browser/provider Ask transport, or semantic quality of model advice."
+  },
+  "capability_claims": [
+    {
+      "id": "research_routing.status_plain_spoken_exemption",
+      "description": "Plain status questions are not converted into self-rejecting Memory/Ask gate notices.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.skill_selection",
+      "description": "The checker distinguishes Brave for narrow current research, Dogpile for comprehensive research, Ask roundtable for side-quest thrash, and Ask compete for isolated MVP candidate choices.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.pi_hook_rejection",
+      "description": "The Pi extension hook emits a deterministic rejection and one retry prompt when a required Ask compete gate is missing.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.mvp_first_gate",
+      "description": "MVP-first or unproven integration-seam requests require project mvp/ proof artifacts before broad implementation.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.fast_single_before_slow_panel",
+      "description": "Broad/generic/ambiguous error escalation requires a fast non-browser low-reasoning Ask/Tau single-call before slow WebGPT or roundtable escalation.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.combined_bash_evidence",
+      "description": "A single bash tool call containing Memory, Brave, and triage-error commands records each evidence kind instead of only the first match.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.multi_tool_evidence",
+      "description": "A multi_tool_use.parallel wrapper containing nested bash commands records each evidence kind instead of hiding Memory, Brave, or Ask/Tau evidence from the guard.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.guard_interlock_exemption",
+      "description": "Generated guard notices, forced retries, continuation prompts, and tool-call-only empty assistant turns are not converted into new research-routing gate failures.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "research_routing.retry_evidence_window",
+      "description": "A generated research-routing retry starts a fresh evidence window while preserving the original user task for route classification.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "checker-route-classification",
+      "seam_type": "routing",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "pi-message-end-hook",
+      "seam_type": "extension-hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "mvp-first-artifact-gate",
+      "seam_type": "routing",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "fast-single-broad-error-gate",
+      "seam_type": "routing",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "guard-interlock-exemption",
+      "seam_type": "extension-hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "pi-input-hook",
+      "seam_type": "extension-hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "retry-evidence-window",
+      "seam_type": "extension-hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "real-world-status-question-does-not-self-reject",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.status_plain_spoken_exemption"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_status_exempt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/status-question.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"status_question\":true"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/status-question.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-failure-reporting-status-question-does-not-self-reject",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.status_plain_spoken_exemption"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_failure_reporting_status_exempt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/failure-reporting-status.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"status_question\":true",
+          "\"memory_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/failure-reporting-status.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-cross-project-status-updates-does-not-self-reject",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.status_plain_spoken_exemption"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_cross_project_status_updates_exempt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/cross-project-status-updates.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"status_question\":true",
+          "\"memory_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/cross-project-status-updates.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-meta-routing-question-does-not-trigger-expensive-skills",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.skill_selection"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_meta_routing_exempt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/meta-routing.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"meta_routing_question\":true"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/meta-routing.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-sidequest-self-serving-test-thrash-requires-roundtable",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.skill_selection"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_sidequest_thrashing_requires_roundtable | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/sidequest-thrash.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "missing_ask_roundtable_gate"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/sidequest-thrash.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-mvp-candidate-selection-requires-compete",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.skill_selection"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_mvp_candidates_require_compete | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/mvp-compete.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "missing_ask_compete_gate"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/mvp-compete.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-brave-vs-dogpile-research-selection",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.skill_selection"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_brave_vs_dogpile | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/brave-vs-dogpile.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "missing_brave_search_gate",
+          "missing_dogpile_gate"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/brave-vs-dogpile.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-local-ops-completion-today-current-does-not-require-brave",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.skill_selection"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_local_ops_completion_today_current_does_not_require_brave | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/local-ops-current-today.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"pass\"",
+          "\"brave_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/local-ops-current-today.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-pi-hook-missing-compete-rejection-and-single-retry",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.pi_hook_rejection"
+      ],
+      "seams": [
+        "pi-message-end-hook"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_compete_rejection | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/pi-hook.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "missing_ask_compete_gate",
+          "\"retryMessages\":1"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/pi-hook.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-combined-bash-memory-brave-triage-satisfies-gates",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.combined_bash_evidence"
+      ],
+      "seams": [
+        "pi-message-end-hook"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_combined_bash_evidence | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/combined-bash-evidence.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"memory\"",
+          "\"brave\"",
+          "\"triage_error\""
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/combined-bash-evidence.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-multi-tool-wrapper-memory-brave-roundtable-satisfies-gates",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.multi_tool_evidence"
+      ],
+      "seams": [
+        "pi-message-end-hook"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_multi_tool_evidence | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/multi-tool-evidence.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"memory\"",
+          "\"brave\"",
+          "\"ask_roundtable\""
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/multi-tool-evidence.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-mvp-first-requires-mvp-directory-proof",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.mvp_first_gate"
+      ],
+      "seams": [
+        "mvp-first-artifact-gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_mvp_first_requires_mvp_artifact | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/mvp-required.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "missing_mvp_isolated_challenge_gate"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/mvp-required.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-mvp-directory-proof-satisfies-mvp-gate",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.mvp_first_gate"
+      ],
+      "seams": [
+        "mvp-first-artifact-gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_mvp_artifact_satisfies_gate | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/mvp-satisfied.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"mvp\":true"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/mvp-satisfied.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-generated-retry-prompt-does-not-self-loop",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.status_plain_spoken_exemption"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_retry_prompt_does_not_self_loop | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/retry-no-loop.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"memory_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/retry-no-loop.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-broad-error-prefers-fast-single-before-webgpt",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.fast_single_before_slow_panel"
+      ],
+      "seams": [
+        "fast-single-broad-error-gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_broad_error_prefers_fast_single_before_webgpt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/fast-single-required.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "missing_ask_fast_single_gate",
+          "\"ask_webgpt_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/fast-single-required.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-fast-single-satisfies-broad-error-gate",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.fast_single_before_slow_panel"
+      ],
+      "seams": [
+        "fast-single-broad-error-gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_fast_single_satisfies_broad_error_gate | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/fast-single-satisfied.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"ask_fast_single\":true"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/fast-single-satisfied.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-triage-satisfies-broad-error-gate",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.fast_single_before_slow_panel"
+      ],
+      "seams": [
+        "fast-single-broad-error-gate"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_triage_satisfies_broad_error_gate | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/triage-satisfies-broad-error.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"triage_error\":true",
+          "\"ask_fast_single_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/triage-satisfies-broad-error.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-shame-notice-does-not-self-loop",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.guard_interlock_exemption"
+      ],
+      "seams": [
+        "guard-interlock-exemption"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_shame_notice_does_not_self_loop | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/shame-notice-no-loop.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"memory_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/shame-notice-no-loop.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-continuation-prompt-does-not-self-loop",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.guard_interlock_exemption"
+      ],
+      "seams": [
+        "guard-interlock-exemption"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_continue_prompt_does_not_self_loop | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/continue-prompt-no-loop.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"memory_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/continue-prompt-no-loop.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-extension-hook-ignores-shame-notice",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.guard_interlock_exemption"
+      ],
+      "seams": [
+        "pi-message-end-hook",
+        "guard-interlock-exemption"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_guard_notice_exempt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/hook-shame-notice-no-loop.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"retryMessages\":0"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/hook-shame-notice-no-loop.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-extension-hook-retry-resets-stale-observation-window",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.retry_evidence_window"
+      ],
+      "seams": [
+        "pi-input-hook",
+        "pi-message-end-hook",
+        "retry-evidence-window"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_retry_resets_stale_observations | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/retry-resets-stale-observations.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"retryMessages\":1"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/retry-resets-stale-observations.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-extension-hook-ignores-empty-assistant-turn",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.guard_interlock_exemption"
+      ],
+      "seams": [
+        "pi-message-end-hook",
+        "guard-interlock-exemption"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_empty_assistant_exempt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/hook-empty-assistant-no-loop.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"retryMessages\":0"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/hook-empty-assistant-no-loop.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "typo-status-question-exempt",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.status_plain_spoken_exemption"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_typo_status_exempt"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"mode\":\"checker_typo_status_exempt\""
+        ]
+      }
+    }
+  ]
+}
