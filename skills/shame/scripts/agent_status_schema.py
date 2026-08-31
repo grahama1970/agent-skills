@@ -63,6 +63,43 @@ class NeedsHuman(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class NeedsBraveSearch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    queries: list[str] = Field(min_length=1)
+
+
+class NeedsAgent(BaseModel):
+    """Cross-provider-family fast single-call when the project agent is spiraling."""
+    model_config = ConfigDict(extra="forbid")
+    handler: str = Field(min_length=1, description="Cross-family handler, e.g. claude-fable-low")
+    question: str = Field(min_length=1)
+
+
+class NeedsWebgpt(BaseModel):
+    """Only legal after brave-search and cross-family agent rungs failed to unblock."""
+    model_config = ConfigDict(extra="forbid")
+    question: str = Field(min_length=1)
+    brave_search_receipt: str = Field(min_length=1, description="Path to the rung-0 receipt")
+    agent_receipt: str = Field(min_length=1, description="Path to the rung-1 receipt")
+
+
+class NeedsRoundtable(BaseModel):
+    """Between-milestone deliberation via $ask tau-dag roundtable."""
+    model_config = ConfigDict(extra="forbid")
+    immutable_goal: str = Field(min_length=1)
+    question: str = Field(min_length=1)
+    handlers: list[str] = Field(min_length=3, description="Roundtable quorum floor is 3 answering seats")
+
+
+class NeedsCompetition(BaseModel):
+    """Isolated candidates via $ask compete."""
+    model_config = ConfigDict(extra="forbid")
+    immutable_goal: str = Field(min_length=1)
+    task: str = Field(min_length=1)
+    handlers: list[str] = Field(min_length=2)
+    criteria: list[str] = Field(min_length=1)
+
+
 class Failure(BaseModel):
     model_config = ConfigDict(extra="forbid")
     triage: Triage
@@ -73,13 +110,22 @@ class AgentStatus(BaseModel):
     model_config = ConfigDict(extra="forbid")
     schema_: Literal["pi.agent_status.v1"] = Field(alias="schema")
     goal: str = Field(min_length=1)
-    state: Literal["done", "continuing", "needs_human", "failed"]
+    state: Literal[
+        "done", "continuing", "needs_human", "failed",
+        "needs_brave_search", "needs_agent", "needs_webgpt",
+        "needs_roundtable", "needs_competition",
+    ]
     changed: list[str] = []
     verified: list[VerifiedItem] = []
     proof: list[str] = []
     not_done: list[NotDoneItem] = []
     failure: Failure | None = None
     needs_human: NeedsHuman | None = None
+    needs_brave_search: NeedsBraveSearch | None = None
+    needs_agent: NeedsAgent | None = None
+    needs_webgpt: NeedsWebgpt | None = None
+    needs_roundtable: NeedsRoundtable | None = None
+    needs_competition: NeedsCompetition | None = None
 
     @model_validator(mode="after")
     def state_legality(self) -> "AgentStatus":
@@ -89,10 +135,20 @@ class AgentStatus(BaseModel):
             raise ValueError("failure is only legal with state=failed")
         if self.state == "continuing" and not self.not_done:
             raise ValueError("state=continuing requires not_done[].next_command")
-        if self.state == "needs_human" and self.needs_human is None:
-            raise ValueError("state=needs_human requires needs_human.action")
-        if self.state != "needs_human" and self.needs_human is not None:
-            raise ValueError("needs_human is only legal with state=needs_human")
+        payload_states = {
+            "needs_human": "needs_human",
+            "needs_brave_search": "needs_brave_search",
+            "needs_agent": "needs_agent",
+            "needs_webgpt": "needs_webgpt",
+            "needs_roundtable": "needs_roundtable",
+            "needs_competition": "needs_competition",
+        }
+        for state_name, field_name in payload_states.items():
+            value = getattr(self, field_name)
+            if self.state == state_name and value is None:
+                raise ValueError(f"state={state_name} requires the {field_name} payload")
+            if self.state != state_name and value is not None:
+                raise ValueError(f"{field_name} is only legal with state={state_name}")
         if self.state == "done":
             if not self.verified:
                 raise ValueError("state=done requires non-empty verified")

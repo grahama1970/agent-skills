@@ -23,6 +23,14 @@ check 1 illegal_done_without_proof '{"schema":"pi.agent_status.v1","goal":"g","s
 check 0 valid_needs_human '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_human","needs_human":{"action":"run /reload","reason":"stale resident extensions"}}'
 check 1 illegal_needs_human_without_action '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_human"}'
 check 1 illegal_legacy_blocked_state '{"schema":"pi.agent_status.v1","goal":"g","state":"blocked"}'
+check 0 valid_needs_brave_search '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_brave_search","needs_brave_search":{"queries":["q1"]}}'
+check 0 valid_needs_agent '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_agent","needs_agent":{"handler":"claude-fable-low","question":"q"}}'
+check 0 valid_needs_webgpt_with_rung_receipts '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_webgpt","needs_webgpt":{"question":"q","brave_search_receipt":"/tmp/r0.json","agent_receipt":"/tmp/r1.json"}}'
+check 0 valid_needs_roundtable_quorum3 '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_roundtable","needs_roundtable":{"immutable_goal":"ig","question":"q","handlers":["webgpt","webkimi","claude-fable-low"]}}'
+check 0 valid_needs_competition '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_competition","needs_competition":{"immutable_goal":"ig","task":"t","handlers":["webgpt","webkimi"],"criteria":["correctness"]}}'
+check 1 illegal_webgpt_without_rung_receipts '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_webgpt","needs_webgpt":{"question":"q"}}'
+check 1 illegal_roundtable_below_quorum '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_roundtable","needs_roundtable":{"immutable_goal":"ig","question":"q","handlers":["webgpt","webkimi"]}}'
+check 1 illegal_competition_single_handler '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_competition","needs_competition":{"immutable_goal":"ig","task":"t","handlers":["webgpt"],"criteria":["c"]}}'
 check 1 illegal_extra_field '{"schema":"pi.agent_status.v1","goal":"g","state":"done","verified":[{"command":"c","result":"r"}],"proof":["p"],"vibes":"good"}'
 
 echo "pass=$pass fail=$fail"
