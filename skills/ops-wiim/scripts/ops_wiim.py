@@ -224,6 +224,14 @@ def set_volume(level: int = typer.Argument(..., min=0, max=100),
     _mutate(ip, f"setPlayerCmd:vol:{level}", execute, "set-volume")
 
 
+@app.command("play-url")
+def play_url(url: str = typer.Argument(..., help="http(s) audio URL the amp will fetch"),
+             ip: str = typer.Option(None, "--ip"),
+             execute: bool = typer.Option(False, "--execute")) -> None:
+    """Play an audio URL on the amp for reference/tone tests (gated behind --execute)."""
+    _mutate(ip, f"setPlayerCmd:play:{url}", execute, "play-url")
+
+
 @app.command("set-eq-off")
 def set_eq_off(ip: str = typer.Option(None, "--ip"),
                execute: bool = typer.Option(False, "--execute")) -> None:

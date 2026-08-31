@@ -12,31 +12,71 @@
       "name": "live-diagnose-real-amp",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "../run.sh diagnose --json --ip \"${WIIM_IP:-192.168.86.111}\""],
-      "blocked_when_stdout_contains": ["\"status\": \"down\""],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh diagnose --json --ip \"${WIIM_IP:-192.168.86.111}\""
+      ],
+      "blocked_when_stdout_contains": [
+        "\"status\": \"down\""
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["ops_wiim.diagnosis.v1", "\"status\": \"up\"", "findings", "not_observable"]
+        "stdout_contains": [
+          "ops_wiim.diagnosis.v1",
+          "\"status\": \"up\"",
+          "findings",
+          "not_observable"
+        ]
       }
     },
     {
       "name": "unreachable-amp-fails-closed",
       "type": "negative",
       "real_world": true,
-      "command": ["bash", "-c", "../run.sh diagnose --json --ip 127.0.0.1"],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh diagnose --json --ip 127.0.0.1"
+      ],
       "expected": {
         "exit_code": 2,
-        "stdout_contains": ["ops_wiim.diagnosis.v1", "\"status\": \"down\""]
+        "stdout_contains": [
+          "ops_wiim.diagnosis.v1",
+          "\"status\": \"down\""
+        ]
       }
     },
     {
       "name": "mutation-refused-without-execute",
       "type": "adversarial",
       "real_world": true,
-      "command": ["bash", "-c", "../run.sh set-volume 100 --ip 127.0.0.1"],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh set-volume 100 --ip 127.0.0.1"
+      ],
       "expected": {
         "exit_code": 3,
-        "stderr_contains": ["--execute"]
+        "stderr_contains": [
+          "--execute"
+        ]
+      }
+    },
+    {
+      "name": "play-url-refused-without-execute",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh play-url http://example.com/t.mp3 --ip 127.0.0.1"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": [
+          "--execute"
+        ]
       }
     }
   ]
