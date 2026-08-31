@@ -4,7 +4,7 @@
 // reject only report-like delivery/status answers that lack a final titled,
 // plain-English bullet summary with an honest evidence boundary.
 
-const CHECKER_VERSION = '2026-08-30.agentic-eval-and-push-v9';
+const CHECKER_VERSION = '2026-08-31.needs-human-footer-v10';
 const FORCE_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_FORCE_STATUS || '');
 const STRICT_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_STRICT_STATUS || '');
 const MUTATING_TURN = /^(1|true|yes)$/i.test(process.env.LRSSS_MUTATING_TURN || '');
@@ -201,7 +201,7 @@ function responseSignalsIncomplete() {
 }
 
 function hasRemainingBoundary(bullets) {
-  return bullets.some((bullet) => /\b(?:not done|remaining|remains|nothing remains|none|n\/a|blocked|next|todo|unfinished)\b/i.test(bullet));
+  return bullets.some((bullet) => /\b(?:not done|needs human|human needed|waiting for human|remaining|remains|nothing remains|none|n\/a|blocked|next|todo|unfinished)\b/i.test(bullet));
 }
 
 function isNoRemainingWorkBullet(value) {
@@ -273,6 +273,7 @@ function controlPlaneStatusWithoutGoalProgress(bullets) {
   return STRICT_STATUS
     && !currentRequestIsControlPlaneDebug()
     && (CONTROL_PLANE_STATUS_TERMS.test(classifiedText) || /(?:hook|guard|routing|research-routing|retry|reload|sloth|obvious-next-step)/i.test(joined))
+    && !bullets.some(isLegitimateBlockerBullet)
     && !hasGoalProgressOrNextStep(bullets);
 }
 
