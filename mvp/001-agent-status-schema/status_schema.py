@@ -51,13 +51,19 @@ class Triage(BaseModel):
         if value in catalog_codes() or MINTED_CODE_RE.fullmatch(value):
             return value
         raise ValueError(
-            f"ambiguous blocker label {value!r}: not in triage-error catalog and "
+            f"ambiguous failure label {value!r}: not in triage-error catalog and "
             "not a minted *_unclassified_<8hex> code; run "
             "skills/triage-error/run.sh classify first"
         )
 
 
-class Blocker(BaseModel):
+class NeedsHuman(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: str = Field(min_length=1, description="Exact human action required, e.g. 'run /reload'")
+    reason: str = Field(min_length=1)
+
+
+class Failure(BaseModel):
     model_config = ConfigDict(extra="forbid")
     triage: Triage
     escalation_rung: int = Field(ge=0, le=2, default=0)
@@ -67,21 +73,26 @@ class AgentStatus(BaseModel):
     model_config = ConfigDict(extra="forbid")
     schema_: Literal["pi.agent_status.v1"] = Field(alias="schema")
     goal: str = Field(min_length=1)
-    state: Literal["done", "continuing", "blocked"]
+    state: Literal["done", "continuing", "needs_human", "failed"]
     changed: list[str] = []
     verified: list[VerifiedItem] = []
     proof: list[str] = []
     not_done: list[NotDoneItem] = []
-    blocker: Blocker | None = None
+    failure: Failure | None = None
+    needs_human: NeedsHuman | None = None
 
     @model_validator(mode="after")
     def state_legality(self) -> "AgentStatus":
-        if self.state == "blocked" and self.blocker is None:
-            raise ValueError("state=blocked requires blocker.triage with a canonical code")
-        if self.state != "blocked" and self.blocker is not None:
-            raise ValueError("blocker is only legal with state=blocked")
+        if self.state == "failed" and self.failure is None:
+            raise ValueError("state=failed requires failure.triage with a canonical code")
+        if self.state != "failed" and self.failure is not None:
+            raise ValueError("failure is only legal with state=failed")
         if self.state == "continuing" and not self.not_done:
             raise ValueError("state=continuing requires not_done[].next_command")
+        if self.state == "needs_human" and self.needs_human is None:
+            raise ValueError("state=needs_human requires needs_human.action")
+        if self.state != "needs_human" and self.needs_human is not None:
+            raise ValueError("needs_human is only legal with state=needs_human")
         if self.state == "done":
             if not self.verified:
                 raise ValueError("state=done requires non-empty verified")

@@ -63,7 +63,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"blocked\",\"blocker\":{\"triage\":{\"code\":\"stuff broke\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q invalid_agent_status_json"
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"stuff broke\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q invalid_agent_status_json"
       ],
       "expected": {
         "exit_code": 0
@@ -85,7 +85,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"blocked\",\"blocker\":{\"triage\":{\"code\":\"tau_project_dag_missing_required_evidence\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"decision\": \"pass\"'"
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"tau_project_dag_missing_required_evidence\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"decision\": \"pass\"'"
       ],
       "expected": {
         "exit_code": 0
