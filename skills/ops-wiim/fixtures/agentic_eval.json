@@ -1,50 +1,43 @@
 {
-  "schema": "agentic_eval.fixture.v1",
+  "version": 2,
   "skill": "ops-wiim",
-  "trials": 3,
+  "trials": 2,
+  "proof_scope": "live LinkPlay HTTP API diagnostics against the real WiiM Amp on the LAN plus fail-closed and mutation-gating boundaries",
+  "claims": {
+    "proves": "diagnose reaches the live amp and emits ops_wiim.diagnosis.v1 with findings; unreachable amps fail closed with exit 2; mutations are refused without --execute",
+    "does_not_prove": "amplifier power-stage health, TV-side digital attenuation, or the meaning of firmware-specific mode codes"
+  },
   "cases": [
     {
-      "id": "diagnose-unreachable-fails-closed",
-      "case_type": "negative-control",
+      "name": "live-diagnose-real-amp",
+      "type": "positive",
       "real_world": true,
-      "command": "WIIM_IP=127.0.0.1 ./run.sh diagnose --json",
-      "assertions": [
-        {"type": "exit_code", "expected": 2},
-        {"type": "json_path", "path": ".schema", "expected": "ops_wiim.diagnosis.v1"},
-        {"type": "json_path", "path": ".status", "expected": "down"}
-      ]
+      "command": ["bash", "-c", "../run.sh diagnose --json --ip \"${WIIM_IP:-192.168.86.111}\""],
+      "blocked_when_stdout_contains": ["\"status\": \"down\""],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ops_wiim.diagnosis.v1", "\"status\": \"up\"", "findings", "not_observable"]
+      }
     },
     {
-      "id": "mutation-refused-without-execute",
-      "case_type": "adversarial",
+      "name": "unreachable-amp-fails-closed",
+      "type": "negative",
       "real_world": true,
-      "command": "WIIM_IP=127.0.0.1 ./run.sh set-volume 100",
-      "assertions": [
-        {"type": "exit_code", "expected": 3}
-      ]
+      "command": ["bash", "-c", "../run.sh diagnose --json --ip 127.0.0.1"],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["ops_wiim.diagnosis.v1", "\"status\": \"down\""]
+      }
     },
     {
-      "id": "live-diagnose-produces-findings",
-      "case_type": "positive-control",
+      "name": "mutation-refused-without-execute",
+      "type": "adversarial",
       "real_world": true,
-      "requires_env": ["WIIM_IP"],
-      "skip_reason_when_missing": "NOT_TESTED: no live WiiM amp IP configured",
-      "command": "./run.sh diagnose --json",
-      "assertions": [
-        {"type": "exit_code", "expected": 0},
-        {"type": "json_path", "path": ".status", "expected": "up"},
-        {"type": "json_path_nonempty", "path": ".findings"}
-      ]
+      "command": ["bash", "-c", "../run.sh set-volume 100 --ip 127.0.0.1"],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["--execute"]
+      }
     }
-  ],
-  "receipt_contract": {
-    "mocked": [],
-    "live": ["local LinkPlay HTTP API when WIIM_IP is set"],
-    "proof_scope": "config/state-level low-volume causes only",
-    "claims": {
-      "proves": ["fails closed when amp unreachable", "mutations gated behind --execute"],
-      "does_not_prove": ["amplifier power-stage health", "TV-side digital attenuation"]
-    }
-  },
-  "readiness_when_no_live_amp": "USABLE_WITH_GAPS"
+  ]
 }

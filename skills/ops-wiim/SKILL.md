@@ -84,6 +84,13 @@ events, or TV-side digital attenuation — the report says so explicitly.
 - `2` amp unreachable (fails closed with `status: "down"`)
 - `3` mutation attempted without `--execute`
 
+## Reporting bugs upstream
+
+WiiM has no official GitHub issue tracker; firmware/app/hardware issues go to
+the WiiM Community Forum. Third-party layer trackers (mjcumming/wiim,
+Home Assistant Core, Music Assistant, pywiim) and the high-signal report
+recipe are in `references/support-channels.md`.
+
 ## Proof boundary
 
 Command surface (`getStatusEx`, `getPlayerStatus`, `EQGetStat`, `EQOn/Off`,
