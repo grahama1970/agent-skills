@@ -33,13 +33,14 @@ async function loadExtension() {
   const mod = jiti(join(root, 'index.ts'));
   const handlers = {};
   let retryMessages = 0;
+  const sentMessages = [];
   const pi = {
     on(name, fn) { (handlers[name] ||= []).push(fn); },
     registerCommand() {},
-    sendUserMessage() { retryMessages += 1; },
+    sendUserMessage(message, options) { retryMessages += 1; sentMessages.push({ message: String(message || ''), options }); },
   };
   (mod.default || mod)(pi);
-  return { handlers, getRetryMessages: () => retryMessages };
+  return { handlers, getRetryMessages: () => retryMessages, getSentMessages: () => sentMessages };
 }
 
 async function probeExtensionHook() {
@@ -54,6 +55,30 @@ async function probeExtensionHook() {
   requireCond(!text.includes('Gate JSON') && !text.includes('REJECTED_BY_RESEARCH_ROUTING_GATE'), 'extension hook leaked raw guard rejection JSON', { text });
   requireCond(getRetryMessages() === 1, 'extension hook did not issue exactly one retry prompt', { retryMessages: getRetryMessages() });
   console.log(JSON.stringify({ ok: true, mode: 'extension_hook_compete_rejection', retryMessages: getRetryMessages(), reason: 'missing_ask_compete_gate', visible: 'plain_status' }));
+}
+
+async function probeConciseRetryReceipt() {
+  const { handlers, getRetryMessages, getSentMessages } = await loadExtension();
+  await handlers.input[0]({ text: 'Choose between two competing implementations', source: 'interactive' });
+  await handlers.tool_call[0]({ toolName: 'bash', toolCallId: 'm1', input: { command: 'skills/memory/run.sh recall --q x --brief' } });
+  await handlers.tool_result[0]({ toolName: 'bash', toolCallId: 'm1', input: { command: 'skills/memory/run.sh recall --q x --brief' }, isError: false });
+  const result = await handlers.message_end[0]({ message: { role: 'assistant', id: 'concise-retry-message', content: [{ type: 'text', text: 'Pick option A.' }] } });
+  const visible = result?.message?.content?.[0]?.text || '';
+  const sent = getSentMessages()[0]?.message || '';
+  const receiptMatch = sent.match(/^Receipt:\s*(.*)$/m);
+  const receiptPath = receiptMatch?.[1] || '';
+  requireCond(visible.includes('PI_GUARD_STATUS'), 'extension hook did not return the plain guard status notice', { visible });
+  requireCond(getRetryMessages() === 1, 'extension hook did not issue exactly one retry prompt', { retryMessages: getRetryMessages() });
+  requireCond(sent.startsWith('RESEARCH_ROUTING_GATE_RETRY'), 'retry prompt missing marker', { sent });
+  requireCond(sent.includes('Missing gates: missing_ask_compete_gate'), 'retry prompt did not name missing gate compactly', { sent });
+  requireCond(sent.includes('Next command:'), 'retry prompt did not include one next command', { sent });
+  requireCond(sent.includes('Full gate JSON is in the receipt, not in chat.'), 'retry prompt did not state JSON was moved to receipt', { sent });
+  requireCond(!sent.includes('Gate JSON') && !sent.includes('"route"') && !sent.includes('"evidence"'), 'retry prompt leaked raw gate JSON', { sent });
+  requireCond(receiptPath.startsWith('/tmp/pi-research-routing/') && receiptPath.endsWith('.json'), 'retry receipt path was not under /tmp/pi-research-routing', { receiptPath, sent });
+  const receipt = JSON.parse(await import('node:fs').then((fs) => fs.readFileSync(receiptPath, 'utf8')));
+  requireCond(receipt.schema === 'pi_research_gate.retry_receipt.v1', 'retry receipt schema mismatch', { receipt });
+  requireCond(Array.isArray(receipt.next_commands) && receipt.next_commands.some((entry) => entry.reason === 'missing_ask_compete_gate'), 'retry receipt missing next command details', { receipt });
+  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_concise_retry_receipt', retryMessages: getRetryMessages(), receiptPath, visible: 'plain_status' }));
 }
 
 async function probeCombinedBashEvidence() {
@@ -252,6 +277,7 @@ const cases = {
     console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
   },
   extension_hook_compete_rejection: probeExtensionHook,
+  extension_hook_concise_retry_receipt: probeConciseRetryReceipt,
   extension_hook_combined_bash_evidence: probeCombinedBashEvidence,
   extension_hook_multi_tool_evidence: probeMultiToolEvidence,
   extension_hook_guard_notice_exempt: probeGuardNoticeExempt,

@@ -79,6 +79,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "research_routing.concise_retry_receipt",
+      "description": "Research-routing follow-up prompts keep full gate JSON in a /tmp receipt and show only missing gates, one next command, and the receipt path in chat.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -132,6 +140,14 @@
     },
     {
       "seam_id": "retry-evidence-window",
+      "seam_type": "extension-hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "retry-prompt-receipt",
       "seam_type": "extension-hook",
       "criticality": "critical",
       "required_evidence": [
@@ -420,6 +436,49 @@
             "path": "../eval-output/pi-hook.json",
             "json_pointer": "/ok",
             "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-retry-prompt-writes-tmp-receipt-not-chat-json",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.concise_retry_receipt"
+      ],
+      "seams": [
+        "retry-prompt-receipt"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_concise_retry_receipt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/concise-retry-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "extension_hook_concise_retry_receipt",
+          "/tmp/pi-research-routing/",
+          "\"retryMessages\":1"
+        ],
+        "stdout_excludes": [
+          "Gate JSON",
+          "\"route\"",
+          "\"evidence\""
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/concise-retry-receipt.json",
+            "json_pointer": "/ok",
+            "equals": true
+          },
+          {
+            "path": "../eval-output/concise-retry-receipt.json",
+            "json_pointer": "/receiptPath",
+            "contains": "/tmp/pi-research-routing/"
           }
         ]
       }

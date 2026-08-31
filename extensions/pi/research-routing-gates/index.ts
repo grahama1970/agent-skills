@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beginGuardTurn, claimGuardFollowUp } from "../guard-pipeline-shared.ts";
@@ -167,36 +170,69 @@ Status Report
 - Not done: ${nextAction}`;
 }
 
+function legalCommandFor(reasonCode: string, userText: string): string {
+  if (reasonCode === "missing_memory_recall_gate" || reasonCode === "memory_recall_not_first_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/memory/run.sh recall --q ${JSON.stringify(userText)} --brief`;
+  }
+  if (reasonCode === "missing_brave_search_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/brave-search/run.sh web "<short focused query under 50 words>" --count 5`;
+  }
+  if (reasonCode === "missing_dogpile_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/dogpile/run.sh search ${JSON.stringify(userText)} --output-dir /tmp/pi-research-gate-dogpile`;
+  }
+  if (reasonCode === "missing_tau_or_triage_error_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/triage-error/run.sh classify --text "<exact blocker/error text>"`;
+  }
+  if (reasonCode === "missing_ask_webgpt_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh webgpt "<one bounded review question>"`;
+  }
+  if (reasonCode === "missing_ask_fast_single_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh tau-dag "<exact error + receipt excerpt + one narrow triage question>" --repo local/agent-skills --target broad-error-triage --immutable-goal "Return one likely cause, one next command, or NEEDS_ATTENTION." --handler claude-fable-low --execute --json`;
+  }
+  if (reasonCode === "missing_ask_roundtable_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh tau-dag "<shared context and decision question>" --repo local/agent-skills --target research-routing-gate --immutable-goal "A receipt-backed recommendation with dissent surfaced" --dag-template roundtable --handler webgpt --handler claude-fable-high --handler gpt-5.5-high --topology concurrent --execute --json`;
+  }
+  if (reasonCode === "missing_ask_compete_gate") {
+    return `cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh compete "<isolated candidate task>" --repo local/agent-skills --target research-routing-gate --immutable-goal "Select only a locally checkable winner or NO_WINNER" --handler webgpt --handler claude-fable-high --criterion deterministic-proof --execute --json`;
+  }
+  if (reasonCode === "missing_mvp_isolated_challenge_gate") {
+    return `mkdir -p mvp/001-<challenge> && write mvp/001-<challenge>/goal.md, mvp/001-<challenge>/run.sh, and mvp/001-<challenge>/receipt.json after running the proof`;
+  }
+  return "Read the receipt path, then run the named missing gate.";
+}
+
+function writeRetryReceipt(userText: string, checkResult: CheckResult): string {
+  const dir = join(tmpdir(), "pi-research-routing");
+  mkdirSync(dir, { recursive: true });
+  const hash = createHash("sha256").update(`${userText}\n${JSON.stringify(checkResult)}`).digest("hex").slice(0, 16);
+  const path = join(dir, `${Date.now()}-${hash}.json`);
+  const missing = missingGateNames(checkResult);
+  const commands = missing.map((reason) => ({ reason, command: legalCommandFor(reason, userText) }));
+  writeFileSync(path, JSON.stringify({
+    schema: "pi_research_gate.retry_receipt.v1",
+    created_at: new Date().toISOString(),
+    user_text: userText,
+    check_result: checkResult,
+    missing_reason_codes: missing,
+    next_commands: commands,
+  }, null, 2));
+  return path;
+}
+
 function retryPrompt(userText: string, checkResult: CheckResult): string {
+  const missing = missingGateNames(checkResult);
+  let receiptPath = "not_written";
+  try { receiptPath = writeRetryReceipt(userText, checkResult); } catch {}
+  const first = missing[0] || checkResult.reason_codes[0] || "unknown_gate";
   return `RESEARCH_ROUTING_GATE_RETRY
 
-Your previous answer failed deterministic route gates. Do not answer from prose. Run the missing gate commands below, then answer from the resulting evidence.
+Your previous answer failed deterministic route gates. Do not answer from prose.
 
-Missing reason codes: ${checkResult.reason_codes.join(", ")}
-Checker version: ${checkResult.checker_version}
-First relevant evidence kind: ${String(checkResult.evidence?.first_relevant_kind ?? "none")}
+Missing gates: ${missing.length ? missing.join(", ") : checkResult.reason_codes.join(", ")}
+Next command: ${legalCommandFor(first, userText)}
+Receipt: ${receiptPath}
 
-Minimum legal commands by missing reason:
-- missing_memory_recall_gate or memory_recall_not_first_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/memory/run.sh recall --q ${JSON.stringify(userText)} --brief
-- missing_brave_search_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/brave-search/run.sh web ${JSON.stringify(userText)} --count 5
-- missing_dogpile_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/dogpile/run.sh search ${JSON.stringify(userText)} --output-dir /tmp/pi-research-gate-dogpile
-- missing_tau_or_triage_error_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/triage-error/run.sh classify --text "<exact blocker/error text>"
-- missing_ask_webgpt_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh webgpt "<one bounded review question>"
-- missing_ask_fast_single_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh tau-dag "<exact error + receipt excerpt + one narrow triage question>" --repo local/agent-skills --target broad-error-triage --immutable-goal "Return one likely cause, one next command, or NEEDS_ATTENTION." --handler claude-fable-low --execute --json
-- missing_ask_roundtable_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh tau-dag "<shared context and decision question>" --repo local/agent-skills --target research-routing-gate --immutable-goal "A receipt-backed recommendation with dissent surfaced" --dag-template roundtable --handler webgpt --handler claude-fable-high --handler gpt-5.5-high --topology concurrent --execute --json
-- missing_ask_compete_gate:
-  cd /home/graham/workspace/experiments/agent-skills && skills/ask/run.sh compete "<isolated candidate task>" --repo local/agent-skills --target research-routing-gate --immutable-goal "Select only a locally checkable winner or NO_WINNER" --handler webgpt --handler claude-fable-high --criterion deterministic-proof --execute --json
-- missing_mvp_isolated_challenge_gate:
-  mkdir -p mvp/001-<challenge> && write mvp/001-<challenge>/goal.md, mvp/001-<challenge>/run.sh, and mvp/001-<challenge>/receipt.json after running the proof
-
-Agent prose claiming a gate passed is not accepted as a gate.`;
+Run the next command, read back the receipt/output, then answer from that evidence. Full gate JSON is in the receipt, not in chat.`;
 }
 
 export default function researchRoutingGates(pi: any) {
@@ -259,8 +295,9 @@ export default function researchRoutingGates(pi: any) {
       maxRetries: 1,
     });
     if (!alreadyRetrying && pipelineClaim.ok) {
-      try { pi.sendUserMessage(retryPrompt(userText, result), { deliverAs: "followUp", expandPromptTemplates: false }); }
-      catch { try { pi.sendUserMessage(retryPrompt(userText, result), { expandPromptTemplates: false }); } catch {} }
+      const prompt = retryPrompt(userText, result);
+      try { pi.sendUserMessage(prompt, { deliverAs: "followUp", expandPromptTemplates: false }); }
+      catch { try { pi.sendUserMessage(prompt, { expandPromptTemplates: false }); } catch {} }
     }
     if (!pipelineClaim.ok && pipelineClaim.reason === "message_already_claimed") return;
     return { message: { ...event.message, content: [{ type: "text", text: rejection(result, Boolean(!alreadyRetrying && pipelineClaim.ok), pipelineClaim.reason) }] } };
