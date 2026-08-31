@@ -119,6 +119,54 @@
           "--execute"
         ]
       }
+    },
+    {
+      "name": "open-youtube-refused-without-execute",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh open-youtube dQw4w9WgXcQ --ip 127.0.0.1"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": [
+          "--execute"
+        ]
+      }
+    },
+    {
+      "name": "press-refused-without-execute",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh press play --ip 127.0.0.1"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": [
+          "--execute"
+        ]
+      }
+    },
+    {
+      "name": "set-mute-refused-without-execute",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh set-mute on --ip 127.0.0.1"
+      ],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": [
+          "--execute"
+        ]
+      }
     }
   ]
 }

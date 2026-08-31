@@ -259,6 +259,84 @@ def set_volume(level: int = typer.Argument(..., min=0, max=100),
         _down(ip, exc)
 
 
+@app.command("open-youtube")
+def open_youtube(video_id: str = typer.Argument(..., help="YouTube video id, e.g. dQw4w9WgXcQ"),
+                 ip: str = typer.Option(None, "--ip"),
+                 execute: bool = typer.Option(False, "--execute")) -> None:
+    """Launch the YouTube app on the TV with a video (gated behind --execute)."""
+    ip = _lg_ip(ip)
+    if not execute:
+        typer.echo(json.dumps({"refused": True, "reason": "open-youtube is a mutation; pass --execute"}), err=True)
+        raise typer.Exit(3)
+
+    async def go():
+        client = await _client(ip)
+        await client.launch_app_with_content_id("youtube.leanback.v4", video_id)
+        await asyncio.sleep(5)
+        app = await client.get_current_app()
+        await client.disconnect()
+        return {"launched": video_id, "current_app": app}
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
+@app.command("press")
+def press(name: str = typer.Argument("play", help="TV remote key: play, pause, enter, up, down, left, right, back"),
+          ip: str = typer.Option(None, "--ip"),
+          execute: bool = typer.Option(False, "--execute")) -> None:
+    """Emulate a TV remote key press (gated behind --execute)."""
+    ip = _lg_ip(ip)
+    if not execute:
+        typer.echo(json.dumps({"refused": True, "reason": "press is a mutation; pass --execute"}), err=True)
+        raise typer.Exit(3)
+
+    async def go():
+        client = await _client(ip)
+        if name == "play":
+            await client.play()
+        else:
+            await client.button(name)
+        await asyncio.sleep(1)
+        app = await client.get_current_app()
+        await client.disconnect()
+        return {"pressed": name, "current_app": app}
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
+@app.command("set-mute")
+def set_mute(state: str = typer.Argument(..., help="on or off"),
+            ip: str = typer.Option(None, "--ip"),
+            execute: bool = typer.Option(False, "--execute")) -> None:
+    """Mute or unmute the TV (gated behind --execute; read back afterwards)."""
+    ip = _lg_ip(ip)
+    if not execute:
+        typer.echo(json.dumps({"refused": True, "reason": "set-mute is a mutation; pass --execute"}), err=True)
+        raise typer.Exit(3)
+    if state not in ("on", "off"):
+        typer.echo(json.dumps({"refused": True, "reason": "state must be on or off"}), err=True)
+        raise typer.Exit(3)
+
+    async def go():
+        client = await _client(ip)
+        await client.set_mute(state == "on")
+        await asyncio.sleep(1)
+        after = await client.get_muted()
+        await client.disconnect()
+        return {"requested": state, "readback_muted": after}
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
 @app.command("gain-staging")
 def gain_staging(ip: str = typer.Option(None, "--ip"),
                  wiim_ip: str = typer.Option(None, "--wiim-ip"),
