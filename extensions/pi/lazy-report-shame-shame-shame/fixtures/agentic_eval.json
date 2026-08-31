@@ -55,6 +55,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "lrsss.what_remains_gate",
+      "description": "The Pi shame extension rejects assistant messages that include a What remains section unless pi.agent_status.v1 state is needs_human.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -109,6 +117,14 @@
     {
       "seam_id": "continuation-ticket-gate",
       "seam_type": "hook",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "what-remains-needs-human-gate",
+      "seam_type": "checker",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
@@ -260,7 +276,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && for text in 'Recorded.' 'Done.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: Not verified: agentic-evals were not run.\\n- Proof: Missing: no receipt.\\n- Not done: run agentic-evals next.' 'Done.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: eval passed.\\n- Proof: receipt exists.\\n- Not done: commit and push relevant files next.'; do if printf '%b\\n' \"$text\" | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/lrsss-checker-policy.json; then echo 'checker accepted bad text' >&2; exit 1; fi; done && echo STRICT_CHECKER_POLICY_OK"
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs && for text in 'Recorded.' 'Done.\n\nStatus Report\n- Changed: Added new feature.\n- Verified: Not verified: agentic-evals were not run.\n- Proof: Missing: no receipt.\n- Not done: run agentic-evals next.' 'Done.\n\nStatus Report\n- Changed: Added new feature.\n- Verified: eval passed.\n- Proof: receipt exists.\n- Not done: commit and push relevant files next.'; do if printf '%b\n' \"$text\" | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/lrsss-checker-policy.json; then echo 'checker accepted bad text' >&2; exit 1; fi; done && echo STRICT_CHECKER_POLICY_OK"
       ],
       "expected": {
         "exit_code": 0,
@@ -284,7 +300,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && printf '%s\\n' 'Status Report' '- Changed: no repository files changed; the $shame ticket proposals were checked against open GitHub issues before treating them as new drafts.' '- Verified: jq returned matching_shame_issue_count: 0 and summary_ticket_count: 7.' '- Proof: /tmp/shame-assigned-ticket-check.json and /tmp/shame-review-ask/ticket-previews-summary.json.' '- Not done: none.' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/lrsss-shame-ticket-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-ticket-status-allowed.json >/dev/null && echo SHAME_SKILL_TICKET_STATUS_ALLOWED"
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs && cat > /tmp/lrsss-shame-ticket-status.txt <<'EOF'\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"check $shame ticket proposals\",\"state\":\"done\",\"verified\":[{\"command\":\"jq returned matching_shame_issue_count: 0 and summary_ticket_count: 7\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-assigned-ticket-check.json\",\"/tmp/shame-review-ask/ticket-previews-summary.json\"]}\n```\nEOF\nLRSSS_STRICT_STATUS=1 node $REPORT_CHECK </tmp/lrsss-shame-ticket-status.txt >/tmp/lrsss-shame-ticket-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-ticket-status-allowed.json >/dev/null && echo SHAME_SKILL_TICKET_STATUS_ALLOWED"
       ],
       "expected": {
         "exit_code": 0,
@@ -308,7 +324,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && cat > /tmp/lrsss-shame-extension-debug-status.txt <<'EOF'\nThe $shame loop is a cross-extension order problem.\n\nStatus Report\n- Changed: diagnosed the $shame / research-routing feedback loop in the Pi extension.\n- Verified: checker probes returned pass.\n- Proof: /tmp/probe.json.\n- Not done: none for the requested $shame feedback-loop diagnosis.\nEOF\nLRSSS_STRICT_STATUS=1 LRSSS_USER_TEXT='$shame is putting you into some kind of feedback loop with its pi extension. please diagnose and debug' node $REPORT_CHECK < /tmp/lrsss-shame-extension-debug-status.txt >/tmp/lrsss-shame-extension-debug-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-extension-debug-status-allowed.json >/dev/null && echo SHAME_EXTENSION_DEBUG_STATUS_ALLOWED"
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs && cat > /tmp/lrsss-shame-extension-debug-status.txt <<'EOF'\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"diagnose $shame feedback-loop\",\"state\":\"done\",\"verified\":[{\"command\":\"checker probes returned pass\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/probe.json\"]}\n```\nEOF\nLRSSS_STRICT_STATUS=1 LRSSS_USER_TEXT='$shame is putting you into some kind of feedback loop with its pi extension. please diagnose and debug' node $REPORT_CHECK < /tmp/lrsss-shame-extension-debug-status.txt >/tmp/lrsss-shame-extension-debug-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-extension-debug-status-allowed.json >/dev/null && echo SHAME_EXTENSION_DEBUG_STATUS_ALLOWED"
       ],
       "expected": {
         "exit_code": 0,
@@ -392,12 +408,64 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && cat > /tmp/lrsss-owner-reload-fixture.txt <<'EOF'\nThe retained eval verification is still clean, and the installed on-disk extension probe passes. Reloading the already-running target Pi TUI is not available from this API context, so loaded-runtime state for that TUI remains unverified.\n\nStatus Report\n- Changed: No source code changed in this step; I attempted the requested runtime reload, triaged the reload blocker, and re-ran the installed extension probe.\n- Verified: `reload_runtime` returned `Reload not available in this tool context; no follow-up was queued.`; `skills/triage-error/run.sh classify --text ...` wrote `/tmp/shame-loaded-runtime-reload-triage.json` with code `unknown_unclassified_696e5ccd`; `skills/shame/scripts/probe-shame-extension.sh all` with `LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts` produced 9/9 `ok:true` probe records.\n- Proof: `/tmp/shame-loaded-runtime-reload-triage.json`; `/tmp/shame-loaded-runtime-installed-extension-probe.jsonl`; eval receipts remain `/tmp/shame-agentic-eval-user-continue.json` and `/tmp/lrsss-agentic-eval-user-continue.json`.\n- Needs human: target Pi TUI owner must run `/reload` in that TUI because reload is not available from this API/tool context.\nEOF\nLRSSS_STRICT_STATUS=1 node extensions/pi/lazy-report-shame-shame-shame/report-check.mjs </tmp/lrsss-owner-reload-fixture.txt >/tmp/lrsss-owner-reload-fixture-report.json && node -e \"const fs=require('fs'); const d=JSON.parse(fs.readFileSync('/tmp/lrsss-owner-reload-fixture-report.json','utf8')); if (d.decision !== 'pass') throw new Error('expected pass'); if ((d.footer_failures||[]).length) throw new Error('unexpected footer failures '+d.footer_failures.join(',')); if (d.checker_version !== '2026-08-31.needs-human-footer-v10') throw new Error('wrong checker version '+d.checker_version); console.log('OWNER_RELOAD_BLOCKER_ALLOWED_OK')\""
+        "cd /home/graham/workspace/experiments/agent-skills && cat > /tmp/lrsss-owner-reload-fixture.txt <<'EOF'\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"reload target Pi TUI after $shame extension update\",\"state\":\"needs_human\",\"verified\":[{\"command\":\"reload_runtime returned Reload not available in this tool context; no follow-up was queued.\",\"result\":\"PASS\"},{\"command\":\"skills/triage-error/run.sh classify --text ... wrote /tmp/shame-loaded-runtime-reload-triage.json with code unknown_unclassified_696e5ccd\",\"result\":\"PASS\"},{\"command\":\"skills/shame/scripts/probe-shame-extension.sh all with LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts produced 9/9 ok:true probe records\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-loaded-runtime-reload-triage.json\",\"/tmp/shame-loaded-runtime-installed-extension-probe.jsonl\",\"/tmp/shame-agentic-eval-user-continue.json\",\"/tmp/lrsss-agentic-eval-user-continue.json\"],\"needs_human\":{\"action\":\"target Pi TUI owner must run /reload in that TUI\",\"reason\":\"reload is not available from this API/tool context\"}}\n```\nEOF\nLRSSS_STRICT_STATUS=1 node extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs </tmp/lrsss-owner-reload-fixture.txt >/tmp/lrsss-owner-reload-fixture-report.json && node -e \"const fs=require('fs'); const d=JSON.parse(fs.readFileSync('/tmp/lrsss-owner-reload-fixture-report.json','utf8')); if (d.decision !== 'pass') throw new Error('expected pass'); if ((d.footer_failures||[]).length) throw new Error('unexpected footer failures '+d.footer_failures.join(',')); if (d.checker_version !== '2026-09-01.status-json-first.v1') throw new Error('wrong checker version '+d.checker_version); console.log('OWNER_RELOAD_BLOCKER_ALLOWED_OK')\""
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "OWNER_RELOAD_BLOCKER_ALLOWED_OK"
+        ]
+      }
+    },
+    {
+      "name": "what-remains-rejected-without-needs-human",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.what_remains_gate"
+      ],
+      "seams": [
+        "what-remains-needs-human-gate"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-what-remains-packet.json skills/shame/scripts/probe-shame-extension.sh what-remains-rejected-without-needs-human"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"mode\":\"what-remains-rejected-without-needs-human\"",
+          "banned_what_remains_without_needs_human"
+        ]
+      }
+    },
+    {
+      "name": "what-remains-allowed-with-needs-human",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.what_remains_gate"
+      ],
+      "seams": [
+        "what-remains-needs-human-gate"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh what-remains-allowed-with-needs-human"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"mode\":\"what-remains-allowed-with-needs-human\"",
+          "\"retryMessages\":0"
         ]
       }
     }

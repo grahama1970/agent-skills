@@ -31,6 +31,21 @@ const text = await new Promise((resolve) => {
   process.stdin.on('end', () => resolve(data));
 });
 
+const BANNED_SECTION_PHRASE = 'what remains';
+function mentionsBannedWhatRemains(input) {
+  return String(input || '').toLowerCase().includes(BANNED_SECTION_PHRASE);
+}
+
+function statusStateFromJson(raw) {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed?.state === 'string' ? parsed.state : null;
+  } catch {
+    return null;
+  }
+}
+
 // Extract the LAST fenced json block whose parsed object declares the schema.
 // This is structural extraction (fence markers + JSON.parse), not prose classification.
 function extractStatusJson(input) {
@@ -43,12 +58,12 @@ function extractStatusJson(input) {
     if (bodyStart === -1) break;
     const end = input.indexOf('```', bodyStart);
     if (end === -1) break;
-    fences.push(input.slice(bodyStart + 1, end));
+    fences.push({ body: input.slice(bodyStart + 1, end), start, end: end + 3 });
     idx = end + 3;
   }
   for (let i = fences.length - 1; i >= 0; i -= 1) {
     try {
-      const parsed = JSON.parse(fences[i]);
+      const parsed = JSON.parse(fences[i].body);
       if (parsed && parsed.schema === 'pi.agent_status.v1') return fences[i];
     } catch { /* not JSON; skip */ }
   }
@@ -58,10 +73,15 @@ function extractStatusJson(input) {
     const candidate = input.slice(braceStart);
     try {
       JSON.parse(candidate);
-      return candidate;
+      return { body: candidate, start: braceStart, end: input.length };
     } catch { /* fallthrough */ }
   }
   return null;
+}
+
+function outsideStatusText(input, extracted) {
+  if (!extracted) return input.trim();
+  return `${input.slice(0, extracted.start)}${input.slice(extracted.end)}`.trim();
 }
 
 function emit(decision, reasonCodes, extra = {}) {
@@ -82,7 +102,15 @@ function emit(decision, reasonCodes, extra = {}) {
   process.exit(decision === 'reject' ? 1 : 0);
 }
 
-const statusJson = extractStatusJson(text);
+const extractedStatus = extractStatusJson(text);
+const statusJson = extractedStatus?.body || null;
+const statusState = statusStateFromJson(statusJson);
+if (mentionsBannedWhatRemains(text) && statusState !== 'needs_human') {
+  emit('reject', ['banned_what_remains_without_needs_human'], {
+    state: statusState,
+    correction: 'Do not use a "What remains" section unless pi.agent_status.v1 state is needs_human. Use continuing.not_done[].next_command for executable next work.',
+  });
+}
 
 if (!statusJson) {
   if (MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) {
@@ -91,6 +119,15 @@ if (!statusJson) {
     });
   }
   emit('pass', ['no_status_required_non_mutating_turn']);
+}
+
+if (STRICT_STATUS) {
+  const extraText = outsideStatusText(text, extractedStatus);
+  if (extraText) {
+    emit('reject', ['prose_outside_agent_status_json'], {
+      correction: 'For $shame strict status turns, return only the fenced pi.agent_status.v1 JSON object. Put the immutable goal in goal.',
+    });
+  }
 }
 
 if (!existsSync(VALIDATOR)) {

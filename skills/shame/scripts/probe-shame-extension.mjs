@@ -40,6 +40,7 @@ function ctx(branch = []) {
     hasUI: false,
     notifications,
     ui: { notify(message, level) { notifications.push({ message: String(message), level: String(level || '') }); } },
+    cwd: '/home/graham/workspace/experiments/agent-skills',
     sessionManager: {
       getBranch() { return branch; },
       getSessionFile() { return '/tmp/shame-probe-session.jsonl'; },
@@ -177,6 +178,83 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
   console.log(JSON.stringify({ ok: true, mode: 'continuation-closed-ticket-allows-final', followup_injected: false, ticket_gate: 'closed_or_passed' }));
 }
 
+async function runWhatRemainsRejectedWithoutNeedsHuman() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-what-remains-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'report status for this active goal', source: 'user' }, c);
+  const continuingStatus = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'what remains ban probe',
+    state: 'continuing',
+    not_done: [{ item: 'continue work', next_command: 'run the next deterministic command' }],
+  });
+  const badText = 'Result text.\n\nWhat remains:\n- keep working\n\n```json\n' + continuingStatus + '\n```';
+  const result = await handlers.message_end[0]({ id: 'assistant-what-remains', message: { id: 'assistant-what-remains', role: 'assistant', content: [{ type: 'text', text: badText }] } }, c);
+  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(notice.includes('banned_what_remains_without_needs_human'), 'What remains was not rejected when state was not needs_human', { notice });
+  assert(sent.length === 1, 'What remains rejection did not queue one retry', { sentCount: sent.length, sent });
+  assert(existsSync(packet), 'What remains rejection did not write pending packet', { packet });
+  const saved = JSON.parse(readFileSync(packet, 'utf8'));
+  assert(saved.machine?.reason_codes?.includes('banned_what_remains_without_needs_human'), 'pending packet omitted banned What remains reason', saved);
+  console.log(JSON.stringify({ ok: true, mode: 'what-remains-rejected-without-needs-human', retryMessages: sent.length, reason: 'banned_what_remains_without_needs_human' }));
+}
+
+async function runWhatRemainsAllowedWithNeedsHuman() {
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'report human-blocked status', source: 'user' }, c);
+  const needsHumanStatus = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'what remains ban probe',
+    state: 'needs_human',
+    needs_human: { action: 'choose the next target', reason: 'the next action requires a human decision' },
+  });
+  const okText = 'Result text.\n\nWhat remains:\n- human decision required\n\n```json\n' + needsHumanStatus + '\n```';
+  const result = await handlers.message_end[0]({ id: 'assistant-needs-human', message: { id: 'assistant-needs-human', role: 'assistant', content: [{ type: 'text', text: okText }] } }, c);
+  assert(result === undefined, 'What remains should be allowed only with state=needs_human', { result });
+  assert(sent.length === 0, 'allowed needs_human status should not queue retry', { sent });
+  console.log(JSON.stringify({ ok: true, mode: 'what-remains-allowed-with-needs-human', retryMessages: sent.length }));
+}
+
+async function runSkillReadGuardBlocksActionBeforeRead() {
+  const { handlers } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame update the guard', source: 'user' }, c);
+  const result = await handlers.tool_call[0]({ toolName: 'bash', input: { command: 'echo should-not-run' } }, c);
+  assert(result?.block === true, 'skill-read guard did not block bash before SKILL.md read', { result });
+  const reason = JSON.parse(result.reason);
+  assert(reason.code === 'skill_contract_unread', 'block reason code mismatch', reason);
+  assert(reason.skill === 'shame', 'block skill mismatch', reason);
+  assert(reason.next_steps?.[0]?.next_command?.includes('SKILL.md'), 'block reason omitted next read step', reason);
+  assert(typeof reason.next_steps?.[0]?.sha256 === 'string' && reason.next_steps[0].sha256.startsWith('sha256:'), 'block reason omitted skill hash', reason);
+  console.log(JSON.stringify({ ok: true, mode: 'skill-read-guard-blocks-action-before-read', code: reason.code, skill: reason.skill, hasHash: true }));
+}
+
+async function runSkillReadGuardBlocksSlashSkillBeforeRead() {
+  const { handlers } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '/shame update the guard', source: 'user' }, c);
+  const result = await handlers.tool_call[0]({ toolName: 'bash', input: { command: 'echo should-not-run' } }, c);
+  assert(result?.block === true, 'skill-read guard did not block slash skill before SKILL.md read', { result });
+  const reason = JSON.parse(result.reason);
+  assert(reason.code === 'skill_contract_unread', 'slash block reason code mismatch', reason);
+  assert(reason.skill === 'shame', 'slash block skill mismatch', reason);
+  assert(reason.next_steps?.[0]?.sha256?.startsWith('sha256:'), 'slash block omitted skill hash', reason);
+  console.log(JSON.stringify({ ok: true, mode: 'skill-read-guard-blocks-slash-skill-before-read', code: reason.code, skill: reason.skill, hasHash: true }));
+}
+
+async function runSkillReadGuardAllowsActionAfterFullRead() {
+  const { handlers } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame update the guard', source: 'user' }, c);
+  await handlers.tool_result[0]({ toolName: 'read', input: { path: '/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md' }, isError: false, content: readFileSync('/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md', 'utf8') }, c);
+  const result = await handlers.tool_call[0]({ toolName: 'bash', input: { command: 'echo allowed-after-read' } }, c);
+  assert(result === undefined, 'skill-read guard blocked after full SKILL.md read', { result });
+  console.log(JSON.stringify({ ok: true, mode: 'skill-read-guard-allows-action-after-full-read', allowed: true }));
+}
+
 async function runDirectLabelJsonl() {
   const out = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || '/tmp/shame-probe-training.jsonl';
   const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-label-packet.json';
@@ -204,8 +282,13 @@ const modes = {
   'show-recovers-pending': runShowRecoversPending,
   'review-fallback': runReviewFallback,
   'direct-label-jsonl': runDirectLabelJsonl,
+  'skill-read-guard-blocks-action-before-read': runSkillReadGuardBlocksActionBeforeRead,
+  'skill-read-guard-blocks-slash-skill-before-read': runSkillReadGuardBlocksSlashSkillBeforeRead,
+  'skill-read-guard-allows-action-after-full-read': runSkillReadGuardAllowsActionAfterFullRead,
   'continuation-open-ticket': runContinuationGuardOpenTicket,
   'continuation-closed-ticket-allows-final': runContinuationGuardClosedTicketAllowsFinal,
+  'what-remains-rejected-without-needs-human': runWhatRemainsRejectedWithoutNeedsHuman,
+  'what-remains-allowed-with-needs-human': runWhatRemainsAllowedWithNeedsHuman,
 };
 
 if (mode === 'all') {
