@@ -1,0 +1,13 @@
+[project]
+name = "ops-lgtv"
+version = "0.1.0"
+description = "LG webOS TV sound-path control and gain-staging diagnostics (LAN only)."
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "typer>=0.12.0",
+    "bscpylgtv>=0.4.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.uv]
+package = false

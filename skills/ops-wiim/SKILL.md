@@ -26,6 +26,7 @@ provides:
   - ops-wiim
   - wiim-diagnostics
 composes:
+  - ops-lgtv
   - agentic-evals
 complies:
   - best-practices-skills
@@ -70,6 +71,13 @@ events, or TV-side digital attenuation — the report says so explicitly.
 2. Play a known reference track via WiiM streaming; note perceived loudness at 40/60/80% (`set-volume` is gated).
 3. Switch to the suspect source (e.g. HDMI ARC) and re-run `diagnose`.
 4. Compare the two reports: if reported volume/EQ/output-mode are identical but loudness differs, the problem is upstream gain-staging (TV PCM output level, passthrough) — not amp config.
+
+## TV-side gain staging (composes ops-lgtv)
+
+When `diagnose` exonerates amp config (high volume, unmuted, EQ off) and the
+active source is the TV, the quiet half is usually the TV's output path. Hand
+off to the sibling skill: `../ops-lgtv/run.sh gain-staging --wiim-ip <amp-ip>`
+merges TV sound-route/volume with this skill's diagnose into one report.
 
 ## Gated mutations
 

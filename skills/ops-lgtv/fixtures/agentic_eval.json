@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "skill": "ops-lgtv",
+  "trials": 2,
+  "proof_scope": "fail-closed and mutation-gating boundaries plus ops-wiim composition wiring; live TV cases require human pairing",
+  "claims": {
+    "proves": "unreachable TVs fail closed with exit 2; sound-output mutation is refused without --execute; gain-staging composes the real ops-wiim entrypoint",
+    "does_not_prove": "paired live TV control, Digital Sound Out/Auto Volume state, or firmware-specific SSAP behavior"
+  },
+  "cases": [
+    {
+      "name": "unreachable-tv-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "command": ["bash", "-c", "../run.sh sound --ip 127.0.0.1"],
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": ["\"status\": \"down\""]
+      }
+    },
+    {
+      "name": "mutation-refused-without-execute",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["bash", "-c", "../run.sh set-sound-output external_arc --ip 127.0.0.1"],
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["--execute"]
+      }
+    },
+    {
+      "name": "gain-staging-composes-live-ops-wiim",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "../run.sh gain-staging --ip 127.0.0.1 --wiim-ip \"${WIIM_IP:-192.168.86.111}\" 2>&1; test $? -eq 2"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"status\": \"down\""]
+      }
+    }
+  ]
+}
