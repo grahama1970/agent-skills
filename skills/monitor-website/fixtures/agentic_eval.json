@@ -123,6 +123,63 @@
           "CALENDLY_SURFACE_OK"
         ]
       }
+    },
+    {
+      "name": "design-contract-current-site-docs-are-specific",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && skills/monitor-website/run.sh design-contract-check --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"schema\": \"monitor_website.design_contract_check.v1\"",
+          "\"status\": \"PASS\"",
+          "\"design_words\"",
+          "\"required_design_literals\": 34"
+        ]
+      }
+    },
+    {
+      "name": "design-contract-rejects-vague-design-doc",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && tmp=$(mktemp -d) && printf '# Design\\n\\nMake it bespoke and unique.\\n' > \"$tmp/DESIGN.md\" && skills/monitor-website/run.sh design-contract-check --design-doc \"$tmp/DESIGN.md\" --json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "DESIGN.md too thin",
+          "DESIGN.md missing heading: ## 3. Design tokens",
+          "DESIGN.md missing implementation literal: --ink: #0c0908"
+        ]
+      }
+    },
+    {
+      "name": "design-contract-rejects-vague-brand-doc",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && tmp=$(mktemp -d) && printf '# Brand\\n\\nBe unique.\\n' > \"$tmp/BRAND.md\" && skills/monitor-website/run.sh design-contract-check --brand-doc \"$tmp/BRAND.md\" --json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "\"status\": \"FAIL\"",
+          "BRAND.md too thin",
+          "BRAND.md missing heading: ## 1. Brand position",
+          "BRAND.md missing brand literal: proof boundary"
+        ]
+      }
     }
   ]
 }

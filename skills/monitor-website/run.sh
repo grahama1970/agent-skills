@@ -11,6 +11,14 @@ if [[ "${1:-}" == "memory" ]]; then
   exec python3 scripts/site_memory.py "$@"
 fi
 
+# `design-contract-check` rejects vague DESIGN.md/BRAND.md files that do not
+# document concrete tokens, typography, spacing, selectors, motion, accessibility,
+# anti-category rules, and validation commands.
+if [[ "${1:-}" == "design-contract-check" ]]; then
+  shift
+  exec python3 scripts/design_contract_check.py "$@"
+fi
+
 # `design-render-check` is the fast deterministic lane for local design work:
 # contract + source lock + typography boundary + rendered responsive/craft
 # receipts. It deliberately excludes the formal blind-rater G11 gate.

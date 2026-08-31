@@ -45,6 +45,10 @@ reads `site/content.json`. This skill keeps them honest.
 # Report-only: README vs content.json drift + live-site health. Exit 1 on drift.
 ./run.sh audit --json
 
+# Report-only: fail if BRAND.md / DESIGN.md are vague intent prose instead of
+# concrete brand + implementation design contracts.
+./run.sh design-contract-check --json
+
 # Skip the live https://grahama.co probes (offline / pre-DNS use)
 ./run.sh audit --no-live --json
 
@@ -155,6 +159,9 @@ Before proposing or applying grahama.co design or positioning changes, read:
 - `site/DESIGN.md`
 - `skills/monitor-website/local/docs/BRAND.md`
 - `skills/monitor-website/local/docs/DESIGN.md`
+
+Then run `skills/monitor-website/run.sh design-contract-check --json`. A thin
+or vibe-only `DESIGN.md` is a failed contract, not an acceptable first pass.
 
 The site is meant to be discovered, entertaining, honest, bespoke, and
 unmistakably Graham. Do not normalize it into an AI-services, defense-tech,
