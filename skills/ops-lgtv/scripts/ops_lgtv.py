@@ -35,11 +35,16 @@ def _lg_ip(ip: str | None) -> str:
     return ip
 
 
-async def _client(ip: str):
+async def _client(ip: str, timeout: float = TIMEOUT):
     from bscpylgtv import WebOsClient
 
     client = await WebOsClient.create(ip, ping_interval=None)
-    await asyncio.wait_for(client.connect(), timeout=TIMEOUT)
+    try:
+        await asyncio.wait_for(client.connect(), timeout=timeout)
+    except asyncio.TimeoutError:
+        raise RuntimeError(
+            f"timed out after {timeout}s waiting for the TV ({ip}) — accept the pairing prompt on the TV screen"
+        ) from None
     return client
 
 
@@ -54,7 +59,7 @@ def pair(ip: str = typer.Option(None, "--ip")) -> None:
     ip = _lg_ip(ip)
 
     async def go():
-        client = await _client(ip)  # first connect triggers the on-TV prompt
+        client = await _client(ip, timeout=90)  # first connect triggers the on-TV prompt; human accepts
         out = {"paired": True, "ip": ip, "sound_output": await client.get_sound_output()}
         await client.disconnect()
         return out
@@ -107,6 +112,50 @@ def set_sound_output(output: str = typer.Argument(..., help="e.g. external_arc, 
         readback = await client.get_sound_output()
         await client.disconnect()
         return {"requested": output, "readback": readback}
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
+@app.command("power-state")
+def power_state(ip: str = typer.Option(None, "--ip")) -> None:
+    """Read the TV's power state (read-only)."""
+    ip = _lg_ip(ip)
+
+    async def go():
+        client = await _client(ip)
+        out = {"schema": "ops_lgtv.power_state.v1", "ip": ip,
+               "power_state": await client.get_power_state()}
+        await client.disconnect()
+        return out
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
+@app.command("power-off")
+def power_off(ip: str = typer.Option(None, "--ip"),
+              execute: bool = typer.Option(False, "--execute")) -> None:
+    """Turn the TV off (gated behind --execute; power state read back afterwards)."""
+    ip = _lg_ip(ip)
+    if not execute:
+        typer.echo(json.dumps({"refused": True, "reason": "power-off is a mutation; pass --execute"}), err=True)
+        raise typer.Exit(3)
+
+    async def go():
+        client = await _client(ip)
+        before = await client.get_power_state()
+        await client.power_off()
+        await asyncio.sleep(2)
+        try:
+            after = await client.get_power_state()
+        except Exception:  # noqa: BLE001 - screen-off disconnects the WS session
+            after = "disconnected_after_power_off"
+        return {"before": before, "after": after}
 
     try:
         typer.echo(json.dumps(asyncio.run(go()), default=str))
