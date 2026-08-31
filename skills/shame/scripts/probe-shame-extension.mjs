@@ -150,7 +150,7 @@ async function runContinuationGuardOpenTicket() {
   });
   const goodLookingFinal = (
     'The continuation guard is handled.\n\n'
-    + 'Status Report:\n- Goal: continuation guard probe\n- State: done\n\n'
+    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-premature', message: { id: 'assistant-premature', role: 'assistant', content: [{ type: 'text', text: goodLookingFinal }] } }, c);
@@ -188,7 +188,7 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
   });
   const finalText = (
     'Done.\n\n'
-    + 'Status Report:\n- Goal: continuation guard probe\n- State: done\n\n'
+    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n\n'
     + '```json\n' + okStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-ok', message: { id: 'assistant-ok', role: 'assistant', content: [{ type: 'text', text: finalText }] } }, c);
@@ -212,7 +212,7 @@ async function runWhatRemainsRejectedWithoutNeedsHuman() {
   });
   const badText = (
     'Result text.\n\n'
-    + 'Status Report:\n- Goal: what remains ban probe\n- State: continuing\n\n'
+    + 'Status Report\n- Goal: what remains ban probe\n- State: continuing\n\n'
     + 'What remains:\n- keep working\n\n'
     + '```json\n' + continuingStatus + '\n```'
   );
@@ -241,7 +241,7 @@ async function runWhatRemainsAllowedWithNeedsHuman() {
   });
   const okText = (
     'Result text.\n\n'
-    + 'Status Report:\n- Goal: what remains ban probe\n- State: needs_human\n\n'
+    + 'Status Report\n- Goal: what remains ban probe\n- State: needs_human\n\n'
     + 'What remains:\n- human decision required\n\n'
     + '```json\n' + needsHumanStatus + '\n```'
   );
@@ -290,7 +290,7 @@ async function runStatusReportMismatchRejected() {
     proof: ['/tmp/proof.json'],
   });
   const text = (
-    'Status Report:\n- Goal: status report mismatch probe\n- State: continuing\n\n'
+    'Status Report\n- Goal: status report mismatch probe\n- State: continuing\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-mismatch', message: { id: 'assistant-mismatch', role: 'assistant', content: [{ type: 'text', text }] } }, c);
@@ -313,7 +313,7 @@ async function runStatusReportMatchesJsonAllowed() {
     proof: ['/tmp/proof.json'],
   });
   const text = (
-    'Status Report:\n- Goal: status report derived from json probe\n- State: done\n\n'
+    'Status Report\n- Goal: status report derived from json probe\n- State: done\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-status-report-ok', message: { id: 'assistant-status-report-ok', role: 'assistant', content: [{ type: 'text', text }] } }, c);

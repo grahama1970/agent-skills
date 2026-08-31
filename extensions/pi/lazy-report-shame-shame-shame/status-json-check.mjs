@@ -23,6 +23,9 @@ const VALIDATOR = join(
   homedir(),
   'workspace/experiments/agent-skills/skills/shame/scripts/agent_status_schema.py',
 );
+// Pinned interpreter: eval runners execute under uv venvs without pydantic,
+// and a bare `python3` there crashes the validator with ImportError.
+const PYTHON = existsSync('/usr/bin/python3') ? '/usr/bin/python3' : 'python3';
 
 const text = await new Promise((resolve) => {
   let data = '';
@@ -32,8 +35,19 @@ const text = await new Promise((resolve) => {
 });
 
 const BANNED_SECTION_PHRASE = 'what remains';
+const ZERO_WIDTH_CHARS = new Set(['\u200b', '\u200c', '\u200d', '\ufeff']);
+function normalizePolicyText(input) {
+  return String(input || '')
+    .normalize('NFKC')
+    .split('')
+    .filter((char) => !ZERO_WIDTH_CHARS.has(char))
+    .join('')
+    .replaceAll(/\s+/g, ' ')
+    .toLowerCase();
+}
+
 function mentionsBannedWhatRemains(input) {
-  return String(input || '').toLowerCase().includes(BANNED_SECTION_PHRASE);
+  return normalizePolicyText(input).includes(BANNED_SECTION_PHRASE);
 }
 
 function parseStatus(raw) {
@@ -50,37 +64,53 @@ function statusStateFromJson(raw) {
   return typeof parsed?.state === 'string' ? parsed.state : null;
 }
 
-function normalizedStatusHeading(line) {
-  let value = String(line || '').replaceAll('\r', '').trim();
-  while (value.startsWith('#')) value = value.slice(1).trim();
-  if (value.endsWith(':')) value = value.slice(0, -1).trim();
-  return value;
+function statusReportHeadingSignal(line) {
+  return normalizePolicyText(line).includes('status report');
 }
 
 function extractStatusReportSection(input, extracted) {
-  if (!extracted) return null;
+  if (!extracted) return { failure: 'missing_status_report_section' };
   const beforeJson = input.slice(0, extracted.start);
   const lines = beforeJson.split('\n');
+  let inFence = false;
   let headingIndex = -1;
-  for (let i = lines.length - 1; i >= 0; i -= 1) {
-    if (normalizedStatusHeading(lines[i]) === 'Status Report') {
+  let badHeadingFailure = null;
+  for (let i = 0; i < lines.length; i += 1) {
+    const trimmed = String(lines[i] || '').replaceAll('\r', '').trim();
+    if (trimmed.startsWith('```')) {
+      inFence = !inFence;
+      continue;
+    }
+    if (trimmed === 'Status Report' && !inFence) {
       headingIndex = i;
-      break;
+      continue;
+    }
+    if (statusReportHeadingSignal(trimmed)) {
+      if (inFence || trimmed.startsWith('>') || trimmed.startsWith('<!--')) {
+        badHeadingFailure ||= 'status_report_not_owned';
+      } else {
+        badHeadingFailure ||= 'status_report_heading_not_exact';
+      }
     }
   }
-  if (headingIndex === -1) return null;
+  if (headingIndex === -1) {
+    return { failure: badHeadingFailure || 'missing_status_report_section' };
+  }
   const body = lines.slice(headingIndex + 1).join('\n').trim();
   return { body, headingIndex };
 }
 
 function statusReportFailures(input, extracted, status) {
+  if (input.slice(extracted.end).trim()) return ['trailing_content_after_status_json'];
   const section = extractStatusReportSection(input, extracted);
-  if (!section) return ['missing_status_report_section'];
+  if (section.failure) return [section.failure];
   const failures = [];
-  if (!section.body.includes(`Goal: ${status.goal}`)) {
+  const bodyLines = section.body.split('\n').map((line) => line.trim());
+  const hasLine = (value) => bodyLines.includes(value) || bodyLines.includes(`- ${value}`);
+  if (!hasLine(`Goal: ${status.goal}`)) {
     failures.push('status_report_goal_mismatch');
   }
-  if (!section.body.includes(`State: ${status.state}`)) {
+  if (!hasLine(`State: ${status.state}`)) {
     failures.push('status_report_state_mismatch');
   }
   return failures;
@@ -163,9 +193,33 @@ if (!existsSync(VALIDATOR)) {
   emit('error', ['validator_script_missing'], { validator: VALIDATOR });
 }
 
-// Pinned interpreter: eval runners execute under uv venvs without pydantic,
-// and a bare `python3` there crashes the validator with ImportError.
-const PYTHON = existsSync('/usr/bin/python3') ? '/usr/bin/python3' : 'python3';
+const duplicateCheck = spawnSync(PYTHON, ['-c', `
+import json, sys
+seen_duplicates = []
+def hook(pairs):
+    seen = set()
+    for key, _value in pairs:
+        if key in seen:
+            seen_duplicates.append(key)
+        seen.add(key)
+    return dict(pairs)
+try:
+    json.loads(sys.stdin.read(), object_pairs_hook=hook)
+except Exception:
+    pass
+print(json.dumps(seen_duplicates))
+`], {
+  input: statusJson,
+  encoding: 'utf8',
+  timeout: 15000,
+});
+try {
+  const duplicates = JSON.parse(String(duplicateCheck.stdout || '[]'));
+  if (Array.isArray(duplicates) && duplicates.length) {
+    emit('reject', ['duplicate_agent_status_key'], { duplicates });
+  }
+} catch { /* duplicate detector failure falls through to validator */ }
+
 const run = spawnSync(PYTHON, [VALIDATOR, 'validate', '-'], {
   input: statusJson,
   encoding: 'utf8',
