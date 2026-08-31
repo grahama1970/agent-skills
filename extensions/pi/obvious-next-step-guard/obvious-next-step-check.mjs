@@ -77,6 +77,8 @@ const BENIGN_FAILURE_CONTEXT_PATTERNS = [
   /\b(?:did not|does not|no longer|no|without)\b.{0,80}\b(?:emit|emits|emitted|show|shows|showed|contain|contains|contained|reproduce|reproduces|reproduced)\b.{0,120}\b(?:old|prior|previous|startup|extension|factory)?\s*(?:error|failure)\b/i,
   /\b(?:emit|emits|emitted|show|shows|showed|contain|contains|contained|reproduce|reproduces|reproduced|return|returns|returned)\b.{0,80}\bno\b.{0,120}\b(?:old|prior|previous|startup|extension|factory|load)?\s*(?:error|failure)\b/i,
   /\b(?:startup_error_absent|error_absent|factory error is gone|factory error absent)\b/i,
+  /\b(?:absent[-_ ]old[-_ ]startup[-_ ]error|absent[-_ ]old[-_ ]error)\b.{0,120}\b(?:pass|passed|PASS|READY)\b/i,
+  /\b(?:READY|PASS|passed|pass)\b.{0,120}\b(?:absent[-_ ]old[-_ ]startup[-_ ]error|absent[-_ ]old[-_ ]error)\b/i,
   /^\s*(?:[-*+]\s*)?Proof\s*:/i,
   /\b(?:failure|failed|failing)\b.{0,100}\b(?:now|already|successfully)\b.{0,100}\b(?:typed|classified|mapped|recognized|handled|fixed|repaired|closed)\b/i,
   /\b(?:typed|classified|mapped|recognized)\s+as\s+`?[a-z0-9_.-]+`?\b/i,
