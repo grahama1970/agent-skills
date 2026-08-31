@@ -71,6 +71,22 @@
           "--execute"
         ]
       }
+    },
+    {
+      "name": "pair-refused-localhost-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh pair --ip 127.0.0.1 --attempts 1"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stderr_contains": [
+          "\"paired\": false"
+        ]
+      }
     }
   ]
 }

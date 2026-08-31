@@ -54,20 +54,41 @@ def _down(ip: str, exc: Exception) -> None:
 
 
 @app.command()
-def pair(ip: str = typer.Option(None, "--ip")) -> None:
-    """Pair with the TV. A permission prompt appears ON THE TV; accept it."""
+def pair(ip: str = typer.Option(None, "--ip"),
+         attempts: int = typer.Option(12, "--attempts", help="how many times to raise the on-TV prompt"),
+         wait: int = typer.Option(25, "--wait", help="seconds between prompt attempts")) -> None:
+    """Pair with the TV. Accept the prompt ON THE TV. Re-raises the prompt until accepted."""
     ip = _lg_ip(ip)
+    import time
 
-    async def go():
-        client = await _client(ip, timeout=90)  # first connect triggers the on-TV prompt; human accepts
-        out = {"paired": True, "ip": ip, "sound_output": await client.get_sound_output()}
-        await client.disconnect()
-        return out
+    last_err: Exception | None = None
+    for i in range(max(1, attempts)):
+        async def go():
+            client = await _client(ip, timeout=90)
+            out = {"paired": True, "ip": ip, "attempt": i + 1,
+                   "sound_output": await client.get_sound_output()}
+            await client.disconnect()
+            return out
 
-    try:
-        typer.echo(json.dumps(asyncio.run(go()), default=str))
-    except Exception as exc:  # noqa: BLE001 - network/pairing probe, fail closed
-        _down(ip, exc)
+        try:
+            typer.echo(json.dumps(asyncio.run(go()), default=str))
+            return
+        except Exception as exc:  # noqa: BLE001 - probe loop, classified below
+            last_err = exc
+            if "refused" in str(exc).lower() or "unreachable" in str(exc).lower():
+                break  # TV is off/unreachable; retrying will not help
+        if i < attempts - 1:
+            time.sleep(wait)
+
+    hint = ""
+    if last_err and "refused" in str(last_err).lower():
+        hint = "TV unreachable - power it on first"
+    else:
+        hint = ("no acceptance within the windows - if NO prompt appeared on the TV, "
+                "enable Settings > Network > LG Connect Apps and check network device restrictions")
+    typer.echo(json.dumps({"paired": False, "ip": ip, "attempts": attempts,
+                           "error": str(last_err) if last_err else "unknown", "hint": hint}), err=True)
+    raise typer.Exit(2)
 
 
 @app.command()
