@@ -147,6 +147,21 @@ ship disabled; enable only when the scheduler environment is ready).
 | resume surface | `RESUME.md` vs `site/resume.json` | stamped commit != HEAD, or recorded `sourceSha256` != the real RESUME.md digest |
 | live resume | /resume, /resume.pdf, /resume.docx, /resume.md | non-200, or the served file is not the expected page/PDF/DOCX/Markdown |
 
+## Brand/design intent — curiosity over category
+
+Before proposing or applying grahama.co design or positioning changes, read:
+
+- `site/BRAND.md`
+- `site/DESIGN.md`
+- `skills/monitor-website/local/docs/BRAND.md`
+- `skills/monitor-website/local/docs/DESIGN.md`
+
+The site is meant to be discovered, entertaining, honest, bespoke, and
+unmistakably Graham. Do not normalize it into an AI-services, defense-tech,
+Palantir-like, Straive-like, or generic R&D-tech value proposition. Treat
+unusualness as intentional unless current evidence shows a factual,
+accessibility, provenance, or broken-path defect.
+
 ## Design maintenance — bespoke visual-world contract (#1337)
 
 Design/visual-identity maintenance of grahama.co composes with
