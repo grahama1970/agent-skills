@@ -19,6 +19,43 @@ const CONFIGURED_MEMORY_URL = process.env.MEMORY_SERVICE_URL || process.env.MEMO
 const MEMORY_URL = (CONFIGURED_MEMORY_URL.startsWith("unix://") ? "http://127.0.0.1:8601" : (CONFIGURED_MEMORY_URL || "http://127.0.0.1:8601")).replace(/\/+$/, "");
 const MEMORY_COLLECTION = process.env.SHAME_MEMORY_COLLECTION || "shame_training_examples";
 const MEMORY_SEARCH_COLLECTION = process.env.SHAME_MEMORY_SEARCH_COLLECTION || "project_knowledge";
+// Exact-match helpers: the no-regex/no-prose-classification policy bans regex
+// even over control tokens. These use tokenization + set membership only.
+const FALSEY_FLAG_VALUES = new Set(["0", "false", "off", "no"]);
+function flagDisabled(value: unknown): boolean {
+  return FALSEY_FLAG_VALUES.has(String(value ?? "").trim().toLowerCase());
+}
+function tokenize(text: unknown): string[] {
+  const out: string[] = [];
+  let current = "";
+  for (const ch of String(text ?? "")) {
+    if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
+      if (current) { out.push(current); current = ""; }
+    } else {
+      current += ch.toLowerCase();
+    }
+  }
+  if (current) out.push(current);
+  return out;
+}
+function hasAnyToken(text: unknown, tokens: Set<string>): boolean {
+  return tokenize(text).some((token) => tokens.has(token));
+}
+const SHAME_TOKENS = new Set(["$shame", "/shame"]);
+const GUARD_TOKENS = new Set(["$shame", "/shame", "$unlazy", "/unlazy"]);
+const CLOSED_TICKET_STATUSES = new Set(["closed", "done", "complete", "completed", "merged"]);
+const PASSING_GATE_STATUSES = new Set(["pass", "passed", "ok", "complete", "completed", "closed"]);
+function isMutatingShellCommand(command: string): boolean {
+  const tokens = tokenize(command);
+  for (let i = 0; i < tokens.length; i += 1) {
+    const tok = tokens[i];
+    if (tok === "git" && ["commit", "push", "merge"].includes(tokens[i + 1] ?? "")) return true;
+    if (tok === "gh" && ["issue", "pr"].includes(tokens[i + 1] ?? "") && ["close", "comment", "edit", "create"].includes(tokens[i + 2] ?? "")) return true;
+    if ((tok === "npm" || tok === "pnpm") && (tokens[i + 1] ?? "") === "publish") return true;
+  }
+  return false;
+}
+
 const MEMORY_ENABLED = !flagDisabled(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
 const AUDIO_COOLDOWN_MS = 10_000;
 const MAX_REJECTED_EXCERPT_CHARS = 8_000;
@@ -114,43 +151,6 @@ function appendText(content: unknown, text: string): unknown {
   if (typeof content === "string") return `${content.trimEnd()}\n\n${text}`;
   if (!Array.isArray(content)) return text;
   return [...content, { type: "text", text: `\n\n${text}` }];
-}
-
-// Exact-match helpers: the no-regex/no-prose-classification policy bans regex
-// even over control tokens. These use tokenization + set membership only.
-const FALSEY_FLAG_VALUES = new Set(["0", "false", "off", "no"]);
-function flagDisabled(value: unknown): boolean {
-  return FALSEY_FLAG_VALUES.has(String(value ?? "").trim().toLowerCase());
-}
-function tokenize(text: unknown): string[] {
-  const out: string[] = [];
-  let current = "";
-  for (const ch of String(text ?? "")) {
-    if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
-      if (current) { out.push(current); current = ""; }
-    } else {
-      current += ch.toLowerCase();
-    }
-  }
-  if (current) out.push(current);
-  return out;
-}
-function hasAnyToken(text: unknown, tokens: Set<string>): boolean {
-  return tokenize(text).some((token) => tokens.has(token));
-}
-const SHAME_TOKENS = new Set(["$shame", "/shame"]);
-const GUARD_TOKENS = new Set(["$shame", "/shame", "$unlazy", "/unlazy"]);
-const CLOSED_TICKET_STATUSES = new Set(["closed", "done", "complete", "completed", "merged"]);
-const PASSING_GATE_STATUSES = new Set(["pass", "passed", "ok", "complete", "completed", "closed"]);
-function isMutatingShellCommand(command: string): boolean {
-  const tokens = tokenize(command);
-  for (let i = 0; i < tokens.length; i += 1) {
-    const tok = tokens[i];
-    if (tok === "git" && ["commit", "push", "merge"].includes(tokens[i + 1] ?? "")) return true;
-    if (tok === "gh" && ["issue", "pr"].includes(tokens[i + 1] ?? "") && ["close", "comment", "edit", "create"].includes(tokens[i + 2] ?? "")) return true;
-    if ((tok === "npm" || tok === "pnpm") && (tokens[i + 1] ?? "") === "publish") return true;
-  }
-  return false;
 }
 
 function activatesGuard(text: string): boolean {

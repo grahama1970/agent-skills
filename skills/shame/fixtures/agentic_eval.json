@@ -1,843 +1,509 @@
 {
-  "version": 2,
-  "skill": "shame",
-  "trials": 2,
-  "proof_scope": "Feature-mapped shame skill and Pi extension coverage: CLI JSONL capture, session/user extraction, legacy labels, unsafe collection validation, live Memory structured readback, searchable Memory shadow recall, strict self-correction footer checks, completion-without-agentic-eval rejection, uncommitted relevant work rejection, obvious-next-step rejection, active-goal status boundary, extension empty-tool-turn skip, rejection notice/retry/pending packet, /shame show recovery, /shame review fallback, extension direct label capture, research-routing guard interlock, and one-word Chatterbox audio install, and the installed extension all-mode fresh-import probe, and external-owner reload blockers.",
-  "claims": {
-    "proves": "Each declared $shame feature has at least one retained command case with a failing oracle: CLI capture, Memory persistence, searchable recall, strict report checker behavior, Pi extension rejection/retry/pending packet behavior, extension label/review commands, guard-loop interlock behavior, and one-word audio policy.",
-    "does_not_prove": "Future classifier quality, every possible Pi transcript shape, every active TUI already reloaded, or human approval of labels."
+ "version": 2,
+ "skill": "shame",
+ "trials": 2,
+ "proof_scope": "Feature-mapped shame skill and Pi extension coverage: CLI JSONL capture, session/user extraction, legacy labels, unsafe collection validation, live Memory structured readback, searchable Memory shadow recall, pending review packet, audio installer. JSON-first checker/compiler coverage lives in extensions/pi/lazy-report-shame-shame-shame/fixtures/status_json_eval.json.",
+ "claims": {
+  "proves": "Each declared $shame feature has at least one retained command case with a failing oracle: CLI capture, Memory persistence, searchable recall, strict report checker behavior, Pi extension rejection/retry/pending packet behavior, extension label/review commands, guard-loop interlock behavior, and one-word audio policy.",
+  "does_not_prove": "Future classifier quality, every possible Pi transcript shape, every active TUI already reloaded, or human approval of labels."
+ },
+ "capability_claims": [
+  {
+   "id": "shame.cli_capture_text",
+   "description": "CLI capture writes a labeled JSONL training row from direct text or a session entry.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
   },
-  "capability_claims": [
-    {
-      "id": "shame.cli_capture_text",
-      "description": "CLI capture writes a labeled JSONL training row from direct text or a session entry.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.cli_session_context",
-      "description": "CLI capture preserves prior user text and assistant entry identity from session JSONL.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.legacy_label_mapping",
-      "description": "Legacy labels map to the v2 verdict/reason contract.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.input_validation",
-      "description": "Unsafe Memory collection names are rejected before write.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.memory_structured_persistence",
-      "description": "Live Memory capture writes to shame_training_examples and independently reads the same key back.",
-      "criticality": "critical",
-      "evidence_required": {
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "shame.memory_searchable_shadow",
-      "description": "Live Memory capture writes a searchable project_knowledge shadow row and recalls it with tag shame.",
-      "criticality": "critical",
-      "evidence_required": {
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "shame.checker_footer_contract",
-      "description": "Strict self-correction rejects answers without the required Status Report footer and accepts the corrected shape.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.checker_completion_eval_receipt",
-      "description": "Strict self-correction rejects new-feature completion claims when no $agentic-evals receipt is cited.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.checker_uncommitted_work",
-      "description": "Strict self-correction rejects uncommitted/unpushed relevant work when no blocker is named.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.checker_obvious_next_step",
-      "description": "Strict self-correction rejects reports that name an obvious next step instead of doing it.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.checker_active_goal_boundary",
-      "description": "Strict self-correction rejects control-plane-only updates that do not mention current-goal progress or the exact next step.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.extension_empty_tool_skip",
-      "description": "The Pi extension ignores tool-call-only assistant messages with no text.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.extension_reject_retry_packet",
-      "description": "The Pi extension replaces a bad final report with a collaborative correction packet, writes the pending review packet, and queues one retry.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.extension_show_review_commands",
-      "description": "The Pi extension can recover pending rejected candidates through /shame show and gives usable /shame review or direct-label guidance.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.extension_direct_label_capture",
-      "description": "The Pi extension /shame command writes a v2 JSONL label for the raw rejected candidate.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.guard_interlock",
-      "description": "Generated shame/research/continuation guard text and empty tool turns do not trigger research-routing retry loops.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "shame.one_word_audio",
-      "description": "The audio installer accepts one short Chatterbox shame word and rejects loop/bell-length audio.",
-      "criticality": "optional",
-      "evidence_required": {
-        "deterministic": true
-      }
-    }
-  ],
-  "cases": [
-    {
-      "name": "local-jsonl-capture-contract",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.cli_capture_text",
-        "shame.cli_session_context"
-      ],
-      "seams": [
-        "cli-jsonl-write",
-        "cli-session-selection"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && session=$(mktemp) && out=$(mktemp) && printf '%s\\n' '{\"type\":\"message\",\"id\":\"u1\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"what is your actual status\"}]}}' '{\"type\":\"message\",\"id\":\"a1\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Committed and pushed. Done.\"}]}}' > $session && ./run.sh capture --session $session --entry-id a1 --out $out --verdict reject --reason commit_laundering --note 'missing actual status' --no-memory >/tmp/shame_local_eval_receipt.json && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); if(row.classifier_label!=='bullshit_update') throw new Error('bad classifier'); if(!row.user_text.includes('actual status')) throw new Error('missing user text'); console.log('LOCAL_JSONL_CAPTURE_OK')\" $out"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "LOCAL_JSONL_CAPTURE_OK"
-        ]
-      }
-    },
-    {
-      "name": "legacy-label-no-memory-contract",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.legacy_label_mapping"
-      ],
-      "seams": [
-        "legacy-label-mapping"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && out=$(mktemp) && ./run.sh capture --text 'Committed and pushed.' --label commit_laundering --no-memory --out $out | tee /tmp/shame_legacy_eval.out && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); console.log('LEGACY_LABEL_OK')\" $out"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "LEGACY_LABEL_OK"
-        ]
-      }
-    },
-    {
-      "name": "live-memory-store-readback-and-recall",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": [
-        "shame.memory_structured_persistence",
-        "shame.memory_searchable_shadow"
-      ],
-      "seams": [
-        "memory-store-readback",
-        "memory-search-recall"
-      ],
-      "timeout_seconds": 90,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && out=$(mktemp) && receipt=$(./run.sh capture --text 'Committed and pushed.' --verdict reject --reason vague_git_update --reason synthetic_fixture --note 'agentic eval live memory write' --out $out --memory-collection shame_training_examples --search-collection project_knowledge) && printf '%s\\n' \"$receipt\" > /tmp/shame_live_memory_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_live_memory_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.memory.collection!=='shame_training_examples') throw new Error('wrong collection'); if(d.memory.read_back_count!==1) throw new Error('no structured readback'); if(d.memory.search_collection!=='project_knowledge') throw new Error('wrong search collection'); if(d.memory.search_read_back_count!==1) throw new Error('no search readback'); if(d.memory.recall_found!==true) throw new Error('not recallable'); console.log('LIVE_MEMORY_READBACK_RECALL_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "LIVE_MEMORY_READBACK_RECALL_OK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/shame_live_memory_receipt.json",
-            "json_pointer": "/memory/read_back_count",
-            "equals": 1
-          },
-          {
-            "path": "/tmp/shame_live_memory_receipt.json",
-            "json_pointer": "/memory/recall_found",
-            "equals": true
-          }
-        ]
-      }
-    },
-    {
-      "name": "strict-shame-self-correction-footer-required",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.checker_footer_contract"
-      ],
-      "seams": [
-        "report-check-footer"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Recorded.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_strict_bad.json 2>/tmp/shame_strict_bad.err; then echo 'strict checker accepted terse answer' >&2; exit 1; fi && printf 'Corrected.\\n\\nStatus Report\\n- Changed: Answer is now plain.\\n- Verified: Not verified: no command was run.\\n- Proof: Missing: no artifact exists.\\n- Not done: none.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_strict_good.json && node -e \"const fs=require('fs');const bad=JSON.parse(fs.readFileSync('/tmp/shame_strict_bad.json','utf8'));const good=JSON.parse(fs.readFileSync('/tmp/shame_strict_good.json','utf8')); if(bad.decision!=='reject') throw new Error('bad did not reject'); if(!bad.footer_failures.includes('missing_trailing_report_title')) throw new Error('missing footer failure'); if(good.decision!=='pass') throw new Error('good did not pass'); console.log('STRICT_SHAME_SELF_CORRECT_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "STRICT_SHAME_SELF_CORRECT_OK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/shame_strict_good.json",
-            "json_pointer": "/decision",
-            "equals": "pass"
-          }
-        ]
-      }
-    },
-    {
-      "name": "strict-obvious-next-step-not-enacted-rejected",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.checker_obvious_next_step"
-      ],
-      "seams": [
-        "report-check-obvious-next-step"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Done.\\n\\nStatus Report\\n- Changed: Added the feature.\\n- Verified: Not verified: agentic-evals were not run.\\n- Proof: Missing: no receipt.\\n- Not done: run agentic-evals next.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_obvious_next_step_bad.json 2>/tmp/shame_obvious_next_step_bad.err; then echo 'strict checker accepted unacted obvious next step' >&2; exit 1; fi && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_obvious_next_step_bad.json','utf8')); if(d.decision!=='reject') throw new Error('did not reject'); if(!d.footer_failures.includes('obvious_next_step_not_enacted')) throw new Error('missing obvious-next-step failure'); console.log('OBVIOUS_NEXT_STEP_REJECT_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "OBVIOUS_NEXT_STEP_REJECT_OK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/shame_obvious_next_step_bad.json",
-            "json_pointer": "/decision",
-            "equals": "reject"
-          }
-        ]
-      }
-    },
-    {
-      "name": "strict-new-feature-missing-agentic-eval-rejected",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.checker_completion_eval_receipt"
-      ],
-      "seams": [
-        "report-check-completion-eval"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-../../extensions/pi/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Built provider.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: Not verified: $agentic-evals was not run.\\n- Proof: Missing: no eval receipt.\\n- Not done: run $agentic-evals next.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_new_feature_missing_eval.json 2>/tmp/shame_new_feature_missing_eval.err; then echo 'strict checker accepted missing per-feature agentic eval' >&2; exit 1; fi && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_new_feature_missing_eval.json','utf8')); if(d.decision!=='reject') throw new Error('did not reject'); if(!d.footer_failures.includes('missing_agentic_eval_for_new_feature')) throw new Error('missing_agentic_eval_for_new_feature absent'); console.log('MISSING_AGENTIC_EVAL_REJECT_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "MISSING_AGENTIC_EVAL_REJECT_OK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/shame_new_feature_missing_eval.json",
-            "json_pointer": "/decision",
-            "equals": "reject"
-          },
-          {
-            "path": "/tmp/shame_new_feature_missing_eval.json",
-            "json_pointer": "/footer_failures/0",
-            "equals": "missing_agentic_eval_for_new_feature"
-          }
-        ]
-      }
-    },
-    {
-      "name": "strict-uncommitted-relevant-work-rejected",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.checker_uncommitted_work"
-      ],
-      "seams": [
-        "report-check-worktree"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-../../extensions/pi/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Built provider.\\n\\nStatus Report\\n- Changed: Added new feature.\\n- Verified: eval passed.\\n- Proof: receipt exists.\\n- Not done: commit and push relevant files next.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_uncommitted_relevant_work.json 2>/tmp/shame_uncommitted_relevant_work.err; then echo 'strict checker accepted uncommitted relevant work' >&2; exit 1; fi && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_uncommitted_relevant_work.json','utf8')); if(d.decision!=='reject') throw new Error('did not reject'); if(!d.footer_failures.includes('missing_commit_or_push_for_relevant_work')) throw new Error('missing_commit_or_push_for_relevant_work absent'); console.log('MISSING_COMMIT_PUSH_REJECT_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "MISSING_COMMIT_PUSH_REJECT_OK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/shame_uncommitted_relevant_work.json",
-            "json_pointer": "/decision",
-            "equals": "reject"
-          },
-          {
-            "path": "/tmp/shame_uncommitted_relevant_work.json",
-            "json_pointer": "/footer_failures/0",
-            "equals": "missing_commit_or_push_for_relevant_work"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tool-call-empty-assistant-message-is-ignored",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.extension_empty_tool_skip"
-      ],
-      "seams": [
-        "extension-message-end"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-empty-tool-packet.json skills/shame/scripts/probe-shame-extension.sh empty-tool-turn"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\":true",
-          "\"emptyAssistantIgnored\":true",
-          "\"retryMessages\":0"
-        ]
-      }
-    },
-    {
-      "name": "collaborative-rejection-notice-has-status-footer",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.extension_reject_retry_packet",
-        "shame.checker_footer_contract"
-      ],
-      "seams": [
-        "extension-message-end",
-        "extension-pending-packet",
-        "report-check-footer"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && INDEX=extensions/pi/lazy-report-shame-shame-shame/index.ts && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/report-check.mjs && node -e \"const fs=require('fs');const src=fs.readFileSync(process.argv[1],'utf8'); for (const s of ['Correction workflow','/shame show','/shame review','/shame reject|allow|warn','Status Report','PENDING_REVIEW_PACKET','writePendingReviewPacket','loadPendingCandidate','candidate_hash','Pending packet','ctx.ui.select','ctx.ui.input']) { if(!src.includes(s)) throw new Error('missing '+s); } console.log('SOURCE_COLLABORATION_STRINGS_OK')\" $INDEX && printf '%b\\n' '\ud83e\udda5 REJECTED_BY_SLOTH_COURT\\n\\nThe last answer was rejected because it did not give a plain status report.\\n\\nMachine check\\n- Checker: 2026\\n- Reasons: delivery_report_missing_titled_bullet_summary\\n- Footer failures: missing_trailing_report_title\\n\\nCorrection workflow\\n- The bad answer was hidden and one rewrite request was queued.\\n- The rewrite must give the corrected answer, not more gate JSON.\\n- After the corrected answer, use `/shame review` for an interactive label picker or label directly with `/shame reject|allow|warn <reason> -- <note>`.\\n- Use `/shame show` to inspect the raw candidate that will be labeled.\\n\\nStatus Report\\n- Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.\\n- Verified: report-check.mjs returned reject; checker 2026; footer failures: missing_trailing_report_title.\\n- Proof: rejected candidate sha256:abc; excerpt shown above.\\n- Not done: Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer.' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_collaborative_notice.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_collaborative_notice.json','utf8')); if(d.decision!=='pass') throw new Error('notice did not pass'); if(!d.parsed_section || d.parsed_section.title!=='Status Report') throw new Error('missing parsed status report'); console.log('COLLABORATIVE_NOTICE_STATUS_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "SOURCE_COLLABORATION_STRINGS_OK",
-          "COLLABORATIVE_NOTICE_STATUS_OK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/shame_collaborative_notice.json",
-            "json_pointer": "/decision",
-            "equals": "pass"
-          },
-          {
-            "path": "/tmp/shame_collaborative_notice.json",
-            "json_pointer": "/parsed_section/title",
-            "equals": "Status Report"
-          }
-        ]
-      }
-    },
-    {
-      "name": "unsafe-memory-collection-rejected-before-write",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.input_validation"
-      ],
-      "seams": [
-        "input-validation"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && ./run.sh capture --text 'bad update' --verdict reject --reason vague_git_update --memory-collection _system"
-      ],
-      "expected": {
-        "exit_code": 1,
-        "stderr_contains": [
-          "memory collection must not be a system collection"
-        ]
-      }
-    },
-    {
-      "name": "one-word-chatterbox-audio-install",
-      "type": "positive",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.one_word_audio"
-      ],
-      "seams": [
-        "audio-install-duration"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && dir=$(mktemp -d) && ./run.sh audio install --source /tmp/lrsss-chatterbox-lower-female-shame-single.wav --extension-dir $dir >/tmp/shame_audio_eval_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_audio_eval_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.installed.duration_sec>2.5) throw new Error('too long'); if(d.installed.sha256!=='a3596aff349c98732f3c2c4b797a451fcf6a858d138c0b497d5df3642a5497dc') throw new Error('wrong audio'); console.log('ONE_WORD_AUDIO_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "ONE_WORD_AUDIO_OK"
-        ]
-      }
-    },
-    {
-      "name": "strict-control-plane-non-status-update-rejected",
-      "type": "adversarial",
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.checker_active_goal_boundary"
-      ],
-      "seams": [
-        "report-check-active-goal"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd .. && REPORT_CHECK=${LAZY_REPORT_SHAME_REPORT_CHECK:-/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs} && if printf 'Fixed the hook confusion loop.\\n\\nStatus Report\\n- Changed: research-routing now treats obvious-next-step/retry-hook questions as status/control questions, not as new research tasks.\\n- Verified: node research-gate-check.mjs returned decision pass.\\n- Proof: /tmp/research-gate-obvious-next-question.json\\n- Not done: none for this hook-routing fix.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_non_status_no_goal_progress.json 2>/tmp/shame_non_status_no_goal_progress.err; then echo 'strict checker accepted control-plane status with no goal progress or next step' >&2; exit 1; fi && printf 'The hook fix is done; the QRA ledger-auditor acceptance work still needs the next eval repair loop.\\n\\nStatus Report\\n- Changed: research-routing hook handling no longer blocks status/control questions.\\n- Verified: node research-gate-check.mjs returned decision pass.\\n- Proof: /tmp/research-gate-obvious-next-question.json\\n- Not done: blocked until the QRA ledger-auditor eval reaches 30/30; next step is inspect failing cases, patch the prompt/schema, and rerun the Tau course-correcting eval.\\n' | LRSSS_STRICT_STATUS=1 node $REPORT_CHECK >/tmp/shame_non_status_corrected.json && node -e \"const fs=require('fs');const bad=JSON.parse(fs.readFileSync('/tmp/shame_non_status_no_goal_progress.json','utf8'));const good=JSON.parse(fs.readFileSync('/tmp/shame_non_status_corrected.json','utf8')); if(bad.decision!=='reject') throw new Error('bad did not reject'); if(!bad.footer_failures.includes('non_status_update_no_goal_progress_or_next_step')) throw new Error('missing non-status failure'); if(good.decision!=='pass') throw new Error('corrected did not pass: '+JSON.stringify(good.footer_failures)); console.log('NON_STATUS_UPDATE_REJECT_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "NON_STATUS_UPDATE_REJECT_OK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/shame_non_status_no_goal_progress.json",
-            "json_pointer": "/footer_failures/0",
-            "equals": "non_status_update_no_goal_progress_or_next_step"
-          },
-          {
-            "path": "/tmp/shame_non_status_corrected.json",
-            "json_pointer": "/decision",
-            "equals": "pass"
-          }
-        ]
-      }
-    },
-    {
-      "name": "extension-rejection-writes-pending-packet-and-one-retry",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.extension_reject_retry_packet"
-      ],
-      "seams": [
-        "extension-message-end",
-        "extension-pending-packet"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-pending-packet.json skills/shame/scripts/probe-shame-extension.sh rejection-pending-retry"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\":true",
-          "\"retryMessages\":1",
-          "\"schema\":\"lazy_report_shame.review_packet.v1\""
-        ]
-      }
-    },
-    {
-      "name": "extension-shame-show-recovers-pending-packet",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.extension_show_review_commands"
-      ],
-      "seams": [
-        "extension-pending-packet",
-        "extension-human-commands"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-show-packet.json skills/shame/scripts/probe-shame-extension.sh show-recovers-pending"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\":true",
-          "\"mode\":\"show-recovers-pending\""
-        ]
-      }
-    },
-    {
-      "name": "extension-shame-review-headless-fallback",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.extension_show_review_commands"
-      ],
-      "seams": [
-        "extension-human-commands"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-review-packet.json skills/shame/scripts/probe-shame-extension.sh review-fallback"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\":true",
-          "\"mode\":\"review-fallback\""
-        ]
-      }
-    },
-    {
-      "name": "extension-direct-label-writes-jsonl-for-raw-candidate",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.extension_direct_label_capture"
-      ],
-      "seams": [
-        "extension-training-command",
-        "cli-jsonl-write"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_TRAINING_JSONL=/tmp/shame-probe-training.jsonl LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-label-packet.json skills/shame/scripts/probe-shame-extension.sh direct-label-jsonl"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\":true",
-          "\"mode\":\"direct-label-jsonl\"",
-          "\"rows\":1"
-        ]
-      }
-    },
-    {
-      "name": "research-routing-guard-interlock-does-not-self-loop",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.guard_interlock"
-      ],
-      "seams": [
-        "research-routing-interlock"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "node /home/graham/.pi/agent/extensions/research-routing-gates/scripts/research-routing-e2e.mjs checker_shame_notice_does_not_self_loop && node /home/graham/.pi/agent/extensions/research-routing-gates/scripts/research-routing-e2e.mjs checker_continue_prompt_does_not_self_loop && node /home/graham/.pi/agent/extensions/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_guard_notice_exempt && node /home/graham/.pi/agent/extensions/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_empty_assistant_exempt"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"ok\":true",
-          "\"mode\":\"checker_shame_notice_does_not_self_loop\"",
-          "\"mode\":\"extension_hook_empty_assistant_exempt\""
-        ]
-      }
-    },
-    {
-      "name": "extension-probe-all-fresh-import-installed",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.extension_reject_retry_packet",
-        "shame.extension_show_review_commands",
-        "shame.extension_direct_label_capture",
-        "shame.guard_interlock"
-      ],
-      "seams": [
-        "extension-message-end",
-        "extension-pending-packet",
-        "extension-human-commands",
-        "extension-training-command",
-        "research-routing-interlock"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh all"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"mode\":\"empty-tool-turn\"",
-          "\"mode\":\"rejection-pending-retry\"",
-          "\"mode\":\"show-recovers-pending\"",
-          "\"mode\":\"review-fallback\"",
-          "\"mode\":\"direct-label-jsonl\"",
-          "\"mode\":\"continuation-open-ticket\"",
-          "\"followup_injected\":true",
-          "\"mode\":\"continuation-closed-ticket-allows-final\"",
-          "\"followup_injected\":false"
-        ]
-      }
-    },
-    {
-      "name": "strict-checker-allows-external-owner-reload-blocker",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "shame.checker_footer_contract"
-      ],
-      "seams": [
-        "report-check-footer"
-      ],
-      "timeout_seconds": 60,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && cat > /tmp/lrsss-owner-reload-fixture.txt <<'EOF'\nThe retained eval verification is still clean, and the installed on-disk extension probe passes. Reloading the already-running target Pi TUI is not available from this API context, so loaded-runtime state for that TUI remains unverified.\n\nStatus Report\n- Changed: No source code changed in this step; I attempted the requested runtime reload, triaged the reload blocker, and re-ran the installed extension probe.\n- Verified: `reload_runtime` returned `Reload not available in this tool context; no follow-up was queued.`; `skills/triage-error/run.sh classify --text ...` wrote `/tmp/shame-loaded-runtime-reload-triage.json` with code `unknown_unclassified_696e5ccd`; `skills/shame/scripts/probe-shame-extension.sh all` with `LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts` produced 9/9 `ok:true` probe records.\n- Proof: `/tmp/shame-loaded-runtime-reload-triage.json`; `/tmp/shame-loaded-runtime-installed-extension-probe.jsonl`; eval receipts remain `/tmp/shame-agentic-eval-user-continue.json` and `/tmp/lrsss-agentic-eval-user-continue.json`.\n- Not done: Loaded-runtime proof for already-running Pi TUI sessions; next concrete step is for the target TUI owner to run `/reload` in that TUI, then re-run the installed extension probe or inspect loaded-extension evidence there.\nEOF\nLRSSS_STRICT_STATUS=1 node extensions/pi/lazy-report-shame-shame-shame/report-check.mjs </tmp/lrsss-owner-reload-fixture.txt >/tmp/lrsss-owner-reload-fixture-report.json && node -e \"const fs=require('fs'); const d=JSON.parse(fs.readFileSync('/tmp/lrsss-owner-reload-fixture-report.json','utf8')); if (d.decision !== 'pass') throw new Error('expected pass'); if ((d.footer_failures||[]).length) throw new Error('unexpected footer failures '+d.footer_failures.join(',')); if (d.checker_version !== '2026-08-30.agentic-eval-and-push-v9') throw new Error('wrong checker version '+d.checker_version); console.log('OWNER_RELOAD_BLOCKER_ALLOWED_OK')\""
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "OWNER_RELOAD_BLOCKER_ALLOWED_OK"
-        ]
-      }
-    }
-  ],
-  "seams": [
-    {
-      "seam_id": "cli-jsonl-write",
-      "seam_type": "cli",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "cli-session-selection",
-      "seam_type": "cli",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "legacy-label-mapping",
-      "seam_type": "cli",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "memory-store-readback",
-      "seam_type": "memory",
-      "criticality": "critical",
-      "required_evidence": [
-        "live_e2e"
-      ]
-    },
-    {
-      "seam_id": "memory-search-recall",
-      "seam_type": "memory",
-      "criticality": "critical",
-      "required_evidence": [
-        "live_e2e"
-      ]
-    },
-    {
-      "seam_id": "input-validation",
-      "seam_type": "cli",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "report-check-footer",
-      "seam_type": "checker",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "report-check-completion-eval",
-      "seam_type": "checker",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "report-check-worktree",
-      "seam_type": "checker",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "report-check-obvious-next-step",
-      "seam_type": "checker",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "report-check-active-goal",
-      "seam_type": "checker",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "extension-message-end",
-      "seam_type": "pi-extension",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "extension-pending-packet",
-      "seam_type": "pi-extension",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "extension-human-commands",
-      "seam_type": "pi-extension",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "extension-training-command",
-      "seam_type": "pi-extension",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "research-routing-interlock",
-      "seam_type": "pi-extension",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
-    },
-    {
-      "seam_id": "audio-install-duration",
-      "seam_type": "audio",
-      "criticality": "optional",
-      "required_evidence": [
-        "deterministic"
-      ]
-    }
-  ]
+  {
+   "id": "shame.cli_session_context",
+   "description": "CLI capture preserves prior user text and assistant entry identity from session JSONL.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.legacy_label_mapping",
+   "description": "Legacy labels map to the v2 verdict/reason contract.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.input_validation",
+   "description": "Unsafe Memory collection names are rejected before write.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.memory_structured_persistence",
+   "description": "Live Memory capture writes to shame_training_examples and independently reads the same key back.",
+   "criticality": "critical",
+   "evidence_required": {
+    "live_e2e": true
+   }
+  },
+  {
+   "id": "shame.memory_searchable_shadow",
+   "description": "Live Memory capture writes a searchable project_knowledge shadow row and recalls it with tag shame.",
+   "criticality": "critical",
+   "evidence_required": {
+    "live_e2e": true
+   }
+  },
+  {
+   "id": "shame.extension_empty_tool_skip",
+   "description": "The Pi extension ignores tool-call-only assistant messages with no text.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.extension_reject_retry_packet",
+   "description": "The Pi extension replaces a bad final report with a collaborative correction packet, writes the pending review packet, and queues one retry.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.extension_show_review_commands",
+   "description": "The Pi extension can recover pending rejected candidates through /shame show and gives usable /shame review or direct-label guidance.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.extension_direct_label_capture",
+   "description": "The Pi extension /shame command writes a v2 JSONL label for the raw rejected candidate.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.guard_interlock",
+   "description": "Generated shame/research/continuation guard text and empty tool turns do not trigger research-routing retry loops.",
+   "criticality": "critical",
+   "evidence_required": {
+    "deterministic": true
+   }
+  },
+  {
+   "id": "shame.one_word_audio",
+   "description": "The audio installer accepts one short Chatterbox shame word and rejects loop/bell-length audio.",
+   "criticality": "optional",
+   "evidence_required": {
+    "deterministic": true
+   }
+  }
+ ],
+ "cases": [
+  {
+   "name": "local-jsonl-capture-contract",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.cli_capture_text",
+    "shame.cli_session_context"
+   ],
+   "seams": [
+    "cli-jsonl-write",
+    "cli-session-selection"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd .. && session=$(mktemp) && out=$(mktemp) && printf '%s\\n' '{\"type\":\"message\",\"id\":\"u1\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"what is your actual status\"}]}}' '{\"type\":\"message\",\"id\":\"a1\",\"message\":{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Committed and pushed. Done.\"}]}}' > $session && ./run.sh capture --session $session --entry-id a1 --out $out --verdict reject --reason commit_laundering --note 'missing actual status' --no-memory >/tmp/shame_local_eval_receipt.json && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); if(row.classifier_label!=='bullshit_update') throw new Error('bad classifier'); if(!row.user_text.includes('actual status')) throw new Error('missing user text'); console.log('LOCAL_JSONL_CAPTURE_OK')\" $out"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "LOCAL_JSONL_CAPTURE_OK"
+    ]
+   }
+  },
+  {
+   "name": "legacy-label-no-memory-contract",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.legacy_label_mapping"
+   ],
+   "seams": [
+    "legacy-label-mapping"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd .. && out=$(mktemp) && ./run.sh capture --text 'Committed and pushed.' --label commit_laundering --no-memory --out $out | tee /tmp/shame_legacy_eval.out && node -e \"const fs=require('fs');const row=JSON.parse(fs.readFileSync(process.argv[1],'utf8').trim()); if(row.human_verdict!=='reject') throw new Error('bad verdict'); if(!row.human_reasons.includes('commit_laundering')) throw new Error('bad reason'); console.log('LEGACY_LABEL_OK')\" $out"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "LEGACY_LABEL_OK"
+    ]
+   }
+  },
+  {
+   "name": "live-memory-store-readback-and-recall",
+   "type": "positive",
+   "real_world": true,
+   "evidence_class": "live_e2e",
+   "supports_claims": [
+    "shame.memory_structured_persistence",
+    "shame.memory_searchable_shadow"
+   ],
+   "seams": [
+    "memory-store-readback",
+    "memory-search-recall"
+   ],
+   "timeout_seconds": 90,
+   "command": [
+    "bash",
+    "-lc",
+    "cd .. && out=$(mktemp) && receipt=$(./run.sh capture --text 'Committed and pushed.' --verdict reject --reason vague_git_update --reason synthetic_fixture --note 'agentic eval live memory write' --out $out --memory-collection shame_training_examples --search-collection project_knowledge) && printf '%s\\n' \"$receipt\" > /tmp/shame_live_memory_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_live_memory_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.memory.collection!=='shame_training_examples') throw new Error('wrong collection'); if(d.memory.read_back_count!==1) throw new Error('no structured readback'); if((!d.memory.search||d.memory.search.collection!=='project_knowledge')) throw new Error('wrong search collection'); if(d.memory.search.read_back_count!==1) throw new Error('no search readback'); if(d.memory.recall_found!==true) throw new Error('not recallable'); console.log('LIVE_MEMORY_READBACK_RECALL_OK')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "LIVE_MEMORY_READBACK_RECALL_OK"
+    ],
+    "artifacts": [
+     {
+      "path": "/tmp/shame_live_memory_receipt.json",
+      "json_pointer": "/memory/read_back_count",
+      "equals": 1
+     },
+     {
+      "path": "/tmp/shame_live_memory_receipt.json",
+      "json_pointer": "/memory/recall_found",
+      "equals": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "tool-call-empty-assistant-message-is-ignored",
+   "type": "adversarial",
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.extension_empty_tool_skip"
+   ],
+   "seams": [
+    "extension-message-end"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-empty-tool-packet.json skills/shame/scripts/probe-shame-extension.sh empty-tool-turn"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\":true",
+     "\"emptyAssistantIgnored\":true",
+     "\"retryMessages\":0"
+    ]
+   }
+  },
+  {
+   "name": "unsafe-memory-collection-rejected-before-write",
+   "type": "adversarial",
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.input_validation"
+   ],
+   "seams": [
+    "input-validation"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd .. && ./run.sh capture --text 'bad update' --verdict reject --reason vague_git_update --memory-collection _system"
+   ],
+   "expected": {
+    "exit_code": 1,
+    "stderr_contains": [
+     "memory collection must not be a system collection"
+    ]
+   }
+  },
+  {
+   "name": "one-word-chatterbox-audio-install",
+   "type": "positive",
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.one_word_audio"
+   ],
+   "seams": [
+    "audio-install-duration"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd .. && dir=$(mktemp -d) && ./run.sh audio install --source /tmp/lrsss-chatterbox-lower-female-shame-single.wav --extension-dir $dir >/tmp/shame_audio_eval_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_audio_eval_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.installed.duration_sec>2.5) throw new Error('too long'); if(d.installed.sha256!=='a3596aff349c98732f3c2c4b797a451fcf6a858d138c0b497d5df3642a5497dc') throw new Error('wrong audio'); console.log('ONE_WORD_AUDIO_OK')\""
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "ONE_WORD_AUDIO_OK"
+    ]
+   }
+  },
+  {
+   "name": "extension-rejection-writes-pending-packet-and-one-retry",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.extension_reject_retry_packet"
+   ],
+   "seams": [
+    "extension-message-end",
+    "extension-pending-packet"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-pending-packet.json skills/shame/scripts/probe-shame-extension.sh rejection-pending-retry"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\":true",
+     "\"retryMessages\":1",
+     "\"schema\":\"lazy_report_shame.review_packet.v1\""
+    ]
+   }
+  },
+  {
+   "name": "extension-shame-show-recovers-pending-packet",
+   "type": "positive",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.extension_show_review_commands"
+   ],
+   "seams": [
+    "extension-pending-packet",
+    "extension-human-commands"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-show-packet.json skills/shame/scripts/probe-shame-extension.sh show-recovers-pending"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\":true",
+     "\"mode\":\"show-recovers-pending\""
+    ]
+   }
+  },
+  {
+   "name": "extension-shame-review-headless-fallback",
+   "type": "positive",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.extension_show_review_commands"
+   ],
+   "seams": [
+    "extension-human-commands"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-review-packet.json skills/shame/scripts/probe-shame-extension.sh review-fallback"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\":true",
+     "\"mode\":\"review-fallback\""
+    ]
+   }
+  },
+  {
+   "name": "extension-direct-label-writes-jsonl-for-raw-candidate",
+   "type": "positive",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.extension_direct_label_capture"
+   ],
+   "seams": [
+    "extension-training-command",
+    "cli-jsonl-write"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_TRAINING_JSONL=/tmp/shame-probe-training.jsonl LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-probe-label-packet.json skills/shame/scripts/probe-shame-extension.sh direct-label-jsonl"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"ok\":true",
+     "\"mode\":\"direct-label-jsonl\"",
+     "\"rows\":1"
+    ]
+   }
+  },
+  {
+   "name": "extension-probe-all-fresh-import-installed",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "deterministic",
+   "supports_claims": [
+    "shame.extension_reject_retry_packet",
+    "shame.extension_show_review_commands",
+    "shame.extension_direct_label_capture",
+    "shame.guard_interlock"
+   ],
+   "seams": [
+    "extension-message-end",
+    "extension-pending-packet",
+    "extension-human-commands",
+    "extension-training-command",
+    "research-routing-interlock"
+   ],
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh all"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"mode\":\"empty-tool-turn\"",
+     "\"mode\":\"rejection-pending-retry\"",
+     "\"mode\":\"show-recovers-pending\"",
+     "\"mode\":\"review-fallback\"",
+     "\"mode\":\"direct-label-jsonl\"",
+     "\"mode\":\"continuation-open-ticket\"",
+     "\"followup_injected\":true",
+     "\"mode\":\"continuation-closed-ticket-allows-final\"",
+     "\"followup_injected\":false"
+    ]
+   }
+  }
+ ],
+ "seams": [
+  {
+   "seam_id": "cli-jsonl-write",
+   "seam_type": "cli",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "cli-session-selection",
+   "seam_type": "cli",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "legacy-label-mapping",
+   "seam_type": "cli",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "memory-store-readback",
+   "seam_type": "memory",
+   "criticality": "critical",
+   "required_evidence": [
+    "live_e2e"
+   ]
+  },
+  {
+   "seam_id": "memory-search-recall",
+   "seam_type": "memory",
+   "criticality": "critical",
+   "required_evidence": [
+    "live_e2e"
+   ]
+  },
+  {
+   "seam_id": "input-validation",
+   "seam_type": "cli",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "extension-message-end",
+   "seam_type": "pi-extension",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "extension-pending-packet",
+   "seam_type": "pi-extension",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "extension-human-commands",
+   "seam_type": "pi-extension",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "extension-training-command",
+   "seam_type": "pi-extension",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "research-routing-interlock",
+   "seam_type": "pi-extension",
+   "criticality": "critical",
+   "required_evidence": [
+    "deterministic"
+   ]
+  },
+  {
+   "seam_id": "audio-install-duration",
+   "seam_type": "audio",
+   "criticality": "optional",
+   "required_evidence": [
+    "deterministic"
+   ]
+  }
+ ]
 }

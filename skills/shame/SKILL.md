@@ -47,7 +47,7 @@ Preferred human UX is collaborative, not punitive:
 
 1. Extension rejects the bad answer and shows the raw candidate hash, machine reason, excerpt, and correction target.
 2. Extension writes `/mnt/storage12tb/skills/shame/training/pending-review-packet.json` so `/shame show` can recover the candidate after a reload.
-3. Agent rewrites the answer with the required `Status Report` footer.
+3. Agent rewrites the answer ending with a valid `pi.agent_status.v1` JSON block.
 4. Human labels the raw candidate with the Pi extension command:
 
 ```text
@@ -185,7 +185,7 @@ The fixture must prove:
 - strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
-- extension rejection notices are correction packets with a final `Status Report` footer rather than bare gate JSON;
+- extension rejection notices are correction packets naming the pydantic reason rather than bare gate JSON;
 - rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 

@@ -126,7 +126,16 @@ async function runContinuationGuardOpenTicket() {
   const { handlers, sent } = await loadExtension();
   const c = ctx();
   await handlers.input[0]({ text: 'please finish the ticketed goal', source: 'user' });
-  const goodLookingFinal = 'The continuation guard is handled.\n\nStatus Report\n- Changed: The guard is ready.\n- Verified: Not verified: this is a probe.\n- Proof: Missing: no live replay.\n- Not done: none.';
+  // JSON-first: a premature final is a valid done-status JSON claiming completion
+  // while the continuation guard state file still has open tickets.
+  const doneStatus = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'continuation guard probe',
+    state: 'done',
+    verified: [{ command: 'probe', result: 'probe' }],
+    proof: ['/tmp/probe'],
+  });
+  const goodLookingFinal = 'The continuation guard is handled.\n\n```json\n' + doneStatus + '\n```';
   const result = await handlers.message_end[0]({ id: 'assistant-premature', message: { id: 'assistant-premature', role: 'assistant', content: [{ type: 'text', text: goodLookingFinal }] } }, c);
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   assert(notice.includes('continuation_guard_unresolved_work'), 'continuation guard did not reject premature final', { notice });
@@ -153,7 +162,14 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
   const { handlers, sent } = await loadExtension();
   const c = ctx();
   await handlers.input[0]({ text: 'report final', source: 'user' });
-  const finalText = 'Done.\n\nStatus Report\n- Changed: The continuation guard is enabled for ticketed goals.\n- Verified: live-replay returned PASS.\n- Proof: /tmp/proof.json.\n- Not done: none.';
+  const okStatus = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'continuation guard probe',
+    state: 'done',
+    verified: [{ command: 'live-replay', result: 'PASS' }],
+    proof: ['/tmp/proof.json'],
+  });
+  const finalText = 'Done.\n\n```json\n' + okStatus + '\n```';
   const result = await handlers.message_end[0]({ id: 'assistant-ok', message: { id: 'assistant-ok', role: 'assistant', content: [{ type: 'text', text: finalText }] } }, c);
   assert(result === undefined, 'closed ticket / passed gates should allow final answer', { result });
   assert(sent.length === 0, 'allowed final should not queue follow-up', { sent });
