@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "triage-error",
   "trials": 2,
-  "proof_scope": "classifier maps known pipeline signals to canonical codes, mints deterministic codes for ambiguous signals, and refuses cross-layer false matches; run via the real skill entrypoint and test runner",
+  "proof_scope": "classifier maps known pipeline signals to canonical codes, mints deterministic codes for ambiguous signals, and refuses cross-layer false matches; run via the real skill entrypoint and test runner, including pi research gate retry command mismatch.",
   "claims": {
     "proves": "triage-error classify maps 'zip contains N; maximum is M' -> webgpt_attachment_bundle_rejected and '/v4/v1/chat/completions' -> scillm_api_base_double_version_segment, mints a stable *_unclassified_* code for novel signals, and does not false-match a surf signal asked as scillm",
     "does_not_prove": "repo-wide adoption by all skills (incremental rollout), or live ticket/agentic-eval/debugger composition"
@@ -30,15 +30,16 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/triage-eval-venv uv run --with pytest --project . python -m pytest -q tests/ && ./run.sh classify --text \"zip contains 9 files; maximum is 5\" --layer surf && ./run.sh classify --text '{\"failure_code\":\"handler_execution_failed\",\"evidence\":{\"response_chars\":0,\"submit_meta_status\":200}}' --layer ask && ./run.sh classify --text '{\"checks\":{\"linkedin_top_applicant_status_accounted\":false,\"linkedin_premium_status_accounted\":false},\"source_accounting\":{\"linkedin_top_applicant\":{\"status\":\"FAILED\"},\"linkedin_premium\":{\"status\":\"FAILED\"}},\"preflight\":{\"expected_revision\":\"abc123\"}}' --layer monitor-opportunities"
+        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/triage-eval-venv uv run --with pytest --project . python -m pytest -q tests/ && ./run.sh classify --text \"zip contains 9 files; maximum is 5\" --layer surf && ./run.sh classify --text '{\"failure_code\":\"handler_execution_failed\",\"evidence\":{\"response_chars\":0,\"submit_meta_status\":200}}' --layer ask && ./run.sh classify --text '{\"checks\":{\"linkedin_top_applicant_status_accounted\":false,\"linkedin_premium_status_accounted\":false},\"source_accounting\":{\"linkedin_top_applicant\":{\"status\":\"FAILED\"},\"linkedin_premium\":{\"status\":\"FAILED\"}},\"preflight\":{\"expected_revision\":\"abc123\"}}' --layer monitor-opportunities && ./run.sh classify --text '{\"schema\":\"pi_research_gate.retry_misuse.v1\",\"failure_code\":\"pi_research_gate_retry_command_mismatch\",\"observed\":\"agent ran paraphrased memory query instead of the exact next_command\"}' --layer pi"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "8 passed",
+          "11 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
-          "monitor_opportunities_linkedin_source_accounting_failed"
+          "monitor_opportunities_linkedin_source_accounting_failed",
+          "pi_research_gate_retry_command_mismatch"
         ]
       }
     }

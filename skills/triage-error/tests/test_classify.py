@@ -97,3 +97,29 @@ def test_project_watchdog_nonzero_needs_attention_has_actionable_code() -> None:
     assert r["recoverable"] is True
     assert "agentic-evals" in r["next_command"]
     assert "closure-audit-nonzero-needs-attention" in r["next_command"]
+
+
+def test_create_svg_variant_code_classifies_without_prose_regex() -> None:
+    r = t.classify('{"code":"create_svg_variant_handler_count_mismatch"}', "create-svg")
+    assert r["code"] == "create_svg_variant_handler_count_mismatch"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "--creator-handler" in r["next_command"]
+
+
+def test_create_svg_visual_gate_not_ready_has_loop_control_code() -> None:
+    r = t.classify('{"kind":"create_svg.visual_gate.v1","status":"NOT_READY"}', "create-svg")
+    assert r["code"] == "create_svg_visual_gate_not_ready"
+    assert r["ambiguous"] is False
+    assert "next_edit" in r["next_command"]
+
+def test_pi_research_gate_retry_command_mismatch_has_stable_code() -> None:
+    r = t.classify(
+        '{"schema":"pi_research_gate.retry_misuse.v1","failure_code":"pi_research_gate_retry_command_mismatch","observed":"agent ran paraphrased memory query instead of the exact next_command"}',
+        "pi",
+    )
+    assert r["code"] == "pi_research_gate_retry_command_mismatch"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "exact command" in r["next_command"]
+

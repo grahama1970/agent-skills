@@ -119,6 +119,24 @@
       ]
     },
     {
+      "code": "pi_research_gate_retry_command_mismatch",
+      "layer": "pi",
+      "match": [
+        "pi_research_gate_retry_command_mismatch",
+        "paraphrased memory query instead of the exact next_command",
+        "did not run exact next_command",
+        "retry command mismatch"
+      ],
+      "cause": "The research-routing retry receipt prescribed an exact next_commands entry, but the agent ran a different or paraphrased command before final-answering, so the retry did not satisfy the deterministic gate contract.",
+      "next_command": "Run the exact command from the RESEARCH_ROUTING_GATE_RETRY next_commands array, preserve its JSON receipt, then answer from that receipt; if the gate still rejects, classify pi_research_gate_tool_result_input_missing with the retry receipt attached.",
+      "recoverable": true,
+      "not_this": [
+        "memory service outage",
+        "research-routing false negative after exact command",
+        "provider cooldown"
+      ]
+    },
+    {
       "code": "webgpt_attachment_bundle_rejected",
       "layer": "surf",
       "match": [
