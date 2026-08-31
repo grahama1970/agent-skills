@@ -2,7 +2,7 @@
 import { createJiti } from 'jiti';
 
 const jiti = createJiti(import.meta.url, { interopDefault: true });
-const shared = jiti('../../guard-pipeline-shared.ts');
+const shared = jiti('../../_shared/guard-pipeline-shared.ts');
 
 function assert(condition, message, details = {}) {
   if (!condition) {
