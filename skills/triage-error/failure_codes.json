@@ -619,6 +619,78 @@
         "provider rate limit",
         "intercom broker outage"
       ]
+    },
+    {
+      "code": "tau_dag_requested_handler_substituted",
+      "layer": "tau.project_dag",
+      "match": [
+        "tau_dag_requested_handler_substituted",
+        "requested handler identities",
+        "fallback is not authorized",
+        "handler nodes do not match"
+      ],
+      "cause": "A Tau DAG requested exact browser/API handlers, but the compiled handler nodes used a different handler identity and no explicit fallback authorization was present.",
+      "next_command": "Read dag-receipt.json alerts for expected_handler_nodes and actual_handler_nodes, regenerate the DAG with exact requested handler node ids or set handler_fallback_authorized only after an explicit policy decision, then rerun the tau_create_svg_origin_gates_agentic_eval fixture.",
+      "recoverable": true,
+      "not_this": [
+        "provider timeout",
+        "browser submit failure",
+        "reviewer semantic disagreement"
+      ]
+    },
+    {
+      "code": "create_svg_required_payload_missing",
+      "layer": "tau.project_dag",
+      "match": [
+        "create_svg_required_payload_missing",
+        "path-backed SVG artifact",
+        "create_svg.variant_candidate.v1",
+        "prose without svg payload"
+      ],
+      "cause": "A create-svg Tau creator node reported progress without emitting a machine-readable create_svg.variant_candidate.v1 receipt containing a path-backed SVG artifact.",
+      "next_command": "Read the creator node receipt, require create_svg.variant_candidate.v1 evidence with svg_path and svg_sha256, and rerun the DAG plus tau_create_svg_origin_gates_agentic_eval before presenting visual progress.",
+      "recoverable": true,
+      "not_this": [
+        "human visual rejection",
+        "final acceptance signature missing",
+        "provider quota exhaustion"
+      ]
+    },
+    {
+      "code": "create_svg_candidate_receipt_invalid",
+      "layer": "tau.project_dag",
+      "match": [
+        "create_svg_candidate_receipt_invalid",
+        "variant_candidate receipt cannot be accepted",
+        "mocked",
+        "live"
+      ],
+      "cause": "A create-svg variant candidate receipt is malformed, mocked, non-live, carries a failure_code, or has an invalid SVG path/hash binding.",
+      "next_command": "Regenerate the create-svg candidate from a live Tau node, ensure mocked=false, live=true, no failure_code, and svg_sha256 matches the SVG bytes, then rerun the DAG and retained eval.",
+      "recoverable": true,
+      "not_this": [
+        "handler identity substitution",
+        "missing visual gate",
+        "browser submit not accepted"
+      ]
+    },
+    {
+      "code": "create_svg_artifact_origin_invalid",
+      "layer": "tau.project_dag",
+      "match": [
+        "create_svg_artifact_origin_invalid",
+        "Tau node artifact area",
+        "origin-bound",
+        "local-preview.svg"
+      ],
+      "cause": "A create-svg SVG artifact was outside Tau node artifact custody or lacked explicit origin_node_id/origin binding to the creator node.",
+      "next_command": "Do not surface the local preview as Tau progress. Re-run the Tau node so the SVG is written under the run ready-queue node artifact area or emit origin=tau_node_artifact with origin_node_id matching the creator node, then rerun the provenance eval.",
+      "recoverable": true,
+      "not_this": [
+        "SVG visual quality failure",
+        "missing human acceptance",
+        "reviewer artifact hash mismatch"
+      ]
     }
   ]
 }

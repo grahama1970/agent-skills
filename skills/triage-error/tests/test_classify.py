@@ -170,6 +170,21 @@ def test_tau_node_sanity_codes_are_stable_and_actionable() -> None:
         assert r["next_command"]
 
 
+def test_tau_create_svg_origin_gate_codes_are_stable_and_actionable() -> None:
+    samples = {
+        "tau_dag_requested_handler_substituted": "exact requested handler",
+        "create_svg_required_payload_missing": "create_svg.variant_candidate.v1",
+        "create_svg_candidate_receipt_invalid": "mocked=false",
+        "create_svg_artifact_origin_invalid": "local preview",
+    }
+    for raw, expected_text in samples.items():
+        r = t.classify(f'{{"failure_code":"{raw}"}}', "tau.project_dag")
+        assert r["code"] == raw
+        assert r["ambiguous"] is False
+        assert r["recoverable"] is True
+        assert expected_text in r["next_command"] or expected_text in r["cause"]
+
+
 def test_pi_research_gate_retry_command_mismatch_has_stable_code() -> None:
     r = t.classify(
         '{"schema":"pi_research_gate.retry_misuse.v1","failure_code":"pi_research_gate_retry_command_mismatch","observed":"agent ran paraphrased memory query instead of the exact next_command"}',
