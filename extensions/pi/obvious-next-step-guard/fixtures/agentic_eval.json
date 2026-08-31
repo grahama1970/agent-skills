@@ -39,6 +39,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "obvious_next_step.remaining_json_followup",
+      "description": "A non-empty actionable remaining/not_done JSON field forces a continuation follow-up, while remaining none passes.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -354,6 +362,99 @@
           "\"new_root_claim\":\"claimed\""
         ]
       },
+      "readback": true
+    },
+    {
+      "name": "json-remaining-action-followup",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "obvious_next_step.remaining_json_followup"
+      ],
+      "seams": [
+        "checker.json-remaining-field"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh eval-json-remaining-followup"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JSON_REMAINING_FOLLOWUP_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/onsg_json_remaining_followup.json",
+            "json_pointer": "/decision",
+            "equals": "follow_up"
+          }
+        ]
+      },
+      "real_world": true,
+      "readback": true
+    },
+    {
+      "name": "json-remaining-none-pass",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "obvious_next_step.remaining_json_followup"
+      ],
+      "seams": [
+        "checker.json-remaining-field"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh eval-json-remaining-none-pass"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "JSON_REMAINING_NONE_PASS_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/onsg_json_remaining_none_pass.json",
+            "json_pointer": "/decision",
+            "equals": "pass"
+          }
+        ]
+      },
+      "real_world": true,
+      "readback": true
+    },
+    {
+      "name": "text-remaining-rename-action-followup",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "obvious_next_step.remaining_json_followup"
+      ],
+      "seams": [
+        "checker.labeled-actions"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && ./run.sh eval-text-remaining-rename-followup"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TEXT_REMAINING_RENAME_FOLLOWUP_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/onsg_text_remaining_rename_followup.json",
+            "json_pointer": "/decision",
+            "equals": "follow_up"
+          }
+        ]
+      },
+      "real_world": true,
       "readback": true
     }
   ],

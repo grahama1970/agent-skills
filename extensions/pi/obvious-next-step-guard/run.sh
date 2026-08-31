@@ -131,8 +131,45 @@ EOF
     test "$rc" -eq 2
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_unacted_next_followup.json','utf8')); if(d.decision!=='follow_up') throw new Error(JSON.stringify(d)); console.log('UNACTED_NEXT_FOLLOWUP_OK')"
     ;;
+  eval-json-remaining-followup)
+    cat > /tmp/onsg_json_remaining_candidate.txt <<'EOF'
+{
+  "changed": ["research gate retry prompt"],
+  "verified": ["focused eval passed"],
+  "proof": ["/tmp/receipt.json"],
+  "remaining": "rename/migration was not performed"
+}
+EOF
+    set +e
+    node "$CHECK" < /tmp/onsg_json_remaining_candidate.txt > /tmp/onsg_json_remaining_followup.json 2>/tmp/onsg_json_remaining_followup.err
+    rc=$?
+    set -e
+    test "$rc" -eq 2
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_json_remaining_followup.json','utf8')); if(d.decision!=='follow_up'||!d.actionable_actions.some(a=>a.includes('rename/migration'))) throw new Error(JSON.stringify(d)); console.log('JSON_REMAINING_FOLLOWUP_OK')"
+    ;;
+  eval-json-remaining-none-pass)
+    cat > /tmp/onsg_json_remaining_none_candidate.txt <<'EOF'
+{
+  "changed": ["research gate retry prompt"],
+  "verified": ["focused eval passed"],
+  "proof": ["/tmp/receipt.json"],
+  "remaining": "none"
+}
+EOF
+    node "$CHECK" < /tmp/onsg_json_remaining_none_candidate.txt > /tmp/onsg_json_remaining_none_pass.json
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_json_remaining_none_pass.json','utf8')); if(d.decision!=='pass') throw new Error(JSON.stringify(d)); console.log('JSON_REMAINING_NONE_PASS_OK')"
+    ;;
+  eval-text-remaining-rename-followup)
+    printf 'Status Report\n- Changed: checker patched.\n- Verified: focused eval passed.\n- Proof: /tmp/receipt.json.\n- Remaining: rename/migration was not performed.\n' > /tmp/onsg_text_remaining_rename_candidate.txt
+    set +e
+    node "$CHECK" < /tmp/onsg_text_remaining_rename_candidate.txt > /tmp/onsg_text_remaining_rename_followup.json 2>/tmp/onsg_text_remaining_rename_followup.err
+    rc=$?
+    set -e
+    test "$rc" -eq 2
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_text_remaining_rename_followup.json','utf8')); if(d.decision!=='follow_up'||!d.actionable_actions.some(a=>a.includes('rename/migration'))) throw new Error(JSON.stringify(d)); console.log('TEXT_REMAINING_RENAME_FOLLOWUP_OK')"
+    ;;
   help|--help|-h)
-    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-completed-typed-failure-pass|eval-completed-research-routing-triage-pass|eval-real-failure-followup|eval-unacted-next-followup"
+    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-completed-typed-failure-pass|eval-completed-research-routing-triage-pass|eval-real-failure-followup|eval-unacted-next-followup|eval-json-remaining-followup|eval-json-remaining-none-pass|eval-text-remaining-rename-followup"
     ;;
   *) echo "unknown command: $cmd" >&2; exit 2;;
 esac

@@ -49,7 +49,7 @@ const ACTION_PATTERNS = [
   /(?:^|\s)(?:\.\/|\/home\/|~\/|skills\/|src\/|tests\/|docs\/|mvp\/|\.pi\/|\.github\/)\S+/i,
   /\b(?:issue|ticket|PR|pull request)\s+#?\d+\b/i,
   /#\d+\b/,
-  /\b(?:run|execute|implement|add|write|create|edit|fix|repair|rerun|verify|validate|close|open|file|update|reload|commit|push|attach|inspect|read|diagnose|triage)\b.{0,160}/i,
+  /\b(?:run|execute|implement|add|write|create|edit|fix|repair|rerun|verify|validate|close|open|file|update|reload|commit|push|attach|inspect|read|diagnose|triage|rename|migrate|migration|perform)\b.{0,160}/i,
 ];
 
 const FAILURE_REPORT_PATTERNS = [
@@ -111,6 +111,51 @@ function collectFailureLines(input) {
     .filter((line) => !hasAny(BENIGN_FAILURE_CONTEXT_PATTERNS, line));
 }
 
+function valueToActions(value) {
+  if (value === null || value === undefined || value === false) return [];
+  if (typeof value === 'string') return [value.trim()].filter(Boolean);
+  if (Array.isArray(value)) return value.flatMap((item) => valueToActions(item));
+  if (typeof value === 'object') return Object.entries(value).flatMap(([key, nested]) => {
+    if (/\b(done|complete|verified|proof|evidence)\b/i.test(key)) return [];
+    return valueToActions(nested).map((entry) => `${key}: ${entry}`);
+  });
+  return [String(value)];
+}
+
+const JSON_REMAINDER_KEYS = new Set([
+  'remaining', 'remains', 'what_remains', 'not_done', 'notDone', 'next', 'next_step', 'next_steps',
+  'todo', 'todos', 'to_do', 'unfinished', 'still_needed', 'still_needs', 'follow_up', 'followUp',
+]);
+
+function collectJsonRemainderActions(input) {
+  const chunks = [];
+  for (const match of input.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)) chunks.push(match[1]);
+  const trimmed = input.trim();
+  if (/^[\[{]/.test(trimmed)) chunks.push(trimmed);
+  const actions = [];
+  const walk = (value) => {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) {
+      value.forEach(walk);
+      return;
+    }
+    for (const [key, nested] of Object.entries(value)) {
+      if (JSON_REMAINDER_KEYS.has(key)) {
+        for (const action of valueToActions(nested)) {
+          if (!action || DONE_PATTERNS.some((pattern) => pattern.test(action))) continue;
+          actions.push(action);
+        }
+      } else {
+        walk(nested);
+      }
+    }
+  };
+  for (const chunk of chunks) {
+    try { walk(JSON.parse(chunk)); } catch {}
+  }
+  return actions;
+}
+
 function collectLabeledActions(input) {
   const lines = input.split(/\n/);
   const actions = [];
@@ -144,7 +189,10 @@ function collectLabeledActions(input) {
   return actions;
 }
 
-const actions = collectLabeledActions(classifiedText);
+const actions = [
+  ...collectLabeledActions(classifiedText),
+  ...collectJsonRemainderActions(text),
+];
 const failureLines = collectFailureLines(classifiedText);
 const failureReport = failureLines.length > 0;
 const actionable = actions.filter((action) => hasAny(ACTION_PATTERNS, action));
