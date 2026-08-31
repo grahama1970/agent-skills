@@ -16,7 +16,8 @@ APPLY=""
 [ "${WORKTREE_REAP_APPLY:-0}" = "1" ] && APPLY="--apply"
 
 RECEIPT="$(uv run --project "$SKILL_DIR" python "$SCRIPTS_DIR/worktree_lease.py" \
-  --repo "$REPO" $APPLY --json 2>/dev/null)"
+  --repo "$REPO" $APPLY --json \
+  --unregistered-grace-days "${WORKTREE_GRACE_DAYS:-14}" 2>/dev/null)"
 [ -n "$RECEIPT" ] || { echo "reap produced no receipt"; exit 1; }
 
 printf '%s\n' "$RECEIPT" >> "$LOG"
