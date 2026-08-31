@@ -142,7 +142,7 @@ Gate JSON:
   console.log(JSON.stringify({ ok: true, mode: 'fail_before_fix_raw_guard_json_leak' }));
 }
 
-async function probeRetryResetsStaleObservations() {
+async function runRetryResetScenario(source) {
   const { handlers, getRetryMessages } = await loadExtension();
   await handlers.input[0]({ text: 'Do a comprehensive multi-source audit UI comparison for full-page inspect route versus modal.', source: 'interactive' });
   await handlers.tool_call[0]({ toolName: 'bash', toolCallId: 'scan1', input: { command: 'rg -n inspect src' } });
@@ -152,15 +152,25 @@ async function probeRetryResetsStaleObservations() {
   requireCond(rejectedText.includes('memory_recall_not_first_gate'), 'first attempt should reject because scan preceded memory', { rejectedText });
   requireCond(getRetryMessages() === 1, 'first rejection should queue one retry prompt', { retryMessages: getRetryMessages() });
 
-  await handlers.input[0]({ text: 'RESEARCH_ROUTING_GATE_RETRY\nRun Memory then Dogpile.', source: 'extension' });
+  await handlers.input[0]({ text: 'RESEARCH_ROUTING_GATE_RETRY\nRun Memory then Dogpile.', source });
   await handlers.tool_call[0]({ toolName: 'bash', toolCallId: 'mem1', input: { command: 'skills/memory/run.sh recall --q x --brief' } });
   await handlers.tool_result[0]({ toolName: 'bash', toolCallId: 'mem1', input: { command: 'skills/memory/run.sh recall --q x --brief' }, isError: false });
   await handlers.tool_call[0]({ toolName: 'bash', toolCallId: 'dog1', input: { command: 'skills/dogpile/run.sh search x --output-dir /tmp/pi-research-gate-dogpile' } });
   await handlers.tool_result[0]({ toolName: 'bash', toolCallId: 'dog1', input: { command: 'skills/dogpile/run.sh search x --output-dir /tmp/pi-research-gate-dogpile' }, isError: false });
   const result = await handlers.message_end[0]({ message: { role: 'assistant', content: [{ type: 'text', text: 'Completion Report\n- Changed: full-page inspect route.\n\nStatus Report\n- Changed: full-page inspect route.\n- Verified: Memory and Dogpile ran after retry.\n- Proof: retry evidence window.\n- Not done: none.' }] } });
-  requireCond(result === undefined, 'retry evidence window still included stale pre-retry scan', { result, retryMessages: getRetryMessages() });
-  requireCond(getRetryMessages() === 1, 'retry pass should not queue another retry prompt', { retryMessages: getRetryMessages() });
-  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_retry_resets_stale_observations', retryMessages: getRetryMessages() }));
+  requireCond(result === undefined, 'retry evidence window still included stale pre-retry scan', { source, result, retryMessages: getRetryMessages() });
+  requireCond(getRetryMessages() === 1, 'retry pass should not queue another retry prompt', { source, retryMessages: getRetryMessages() });
+  return getRetryMessages();
+}
+
+async function probeRetryResetsStaleObservations() {
+  const retryMessages = await runRetryResetScenario('extension');
+  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_retry_resets_stale_observations', retryMessages }));
+}
+
+async function probeGuardMarkerResetsStaleObservations() {
+  const retryMessages = await runRetryResetScenario('interactive');
+  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_guard_marker_resets_stale_observations', retryMessages }));
 }
 
 const cases = {
@@ -293,6 +303,7 @@ const cases = {
   extension_hook_guard_notice_exempt: probeGuardNoticeExempt,
   extension_hook_empty_assistant_exempt: probeEmptyAssistantExempt,
   extension_hook_retry_resets_stale_observations: probeRetryResetsStaleObservations,
+  extension_hook_guard_marker_resets_stale_observations: probeGuardMarkerResetsStaleObservations,
 };
 
 if (mode === 'fail_before_fix_raw_guard_json_leak') {

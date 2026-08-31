@@ -906,6 +906,40 @@
       }
     },
     {
+      "name": "real-world-guard-marker-input-resets-stale-observation-window",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.retry_evidence_window"
+      ],
+      "seams": [
+        "pi-input-hook",
+        "pi-message-end-hook",
+        "retry-evidence-window"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_guard_marker_resets_stale_observations | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/guard-marker-resets-stale-observations.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "extension_hook_guard_marker_resets_stale_observations",
+          "\"retryMessages\":1"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/guard-marker-resets-stale-observations.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
       "name": "real-world-extension-hook-ignores-empty-assistant-turn",
       "type": "positive",
       "real_world": true,

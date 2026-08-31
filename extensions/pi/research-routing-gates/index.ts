@@ -242,15 +242,19 @@ export default function researchRoutingGates(pi: any) {
   let retrying = false;
 
   pi.on("input", async (event: any) => {
-    if (event.source === "extension") {
-      // A generated retry prompt starts a new evidence window. Keep the original
-      // userText so routing still targets the user's task, but drop observations
-      // from the failed attempt; otherwise a pre-retry scan keeps causing
-      // memory_recall_not_first_gate even after the retry starts with Memory.
+    const incomingText = String(event.text || "");
+    if (event.source === "extension" || isGuardGeneratedText(incomingText)) {
+      // A generated retry/continuation prompt starts a new evidence window. Keep
+      // the original userText so routing still targets the user's task, but drop
+      // observations from the failed attempt; otherwise a pre-retry scan keeps
+      // causing memory_recall_not_first_gate even after the retry starts with
+      // Memory. Some harness paths deliver guard follow-ups without source ===
+      // "extension", so also key off the explicit guard marker.
       observations = [];
+      retrying = true;
       return { action: "continue" };
     }
-    userText = String(event.text || "");
+    userText = incomingText;
     beginGuardTurn(userText, event.source);
     observations = [];
     retrying = false;
