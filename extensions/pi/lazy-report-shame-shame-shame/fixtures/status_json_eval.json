@@ -134,6 +134,69 @@
         "exit_code": 0
       },
       "real_world": true
+    },
+    {
+      "name": "compiler-brave-search-rung0",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": [
+        "shame.compiler_rung0_brave"
+      ],
+      "seams": [
+        "compile-status-command"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_brave_search\",\"needs_brave_search\":{\"queries\":[\"q1\"]}}' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/compile-status-command.mjs\" | grep -q 'brave-search/run.sh web'"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "compiler-webgpt-rung2",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": [
+        "shame.compiler_rung2_webgpt"
+      ],
+      "seams": [
+        "compile-status-command"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_webgpt\",\"needs_webgpt\":{\"question\":\"q\",\"brave_search_receipt\":\"/tmp/r0.json\",\"agent_receipt\":\"/tmp/r1.json\"}}' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/compile-status-command.mjs\" | grep -q \"handler 'webgpt'\""
+      ],
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "compiler-needs-human-no-command",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": [
+        "shame.compiler_human_state_no_command"
+      ],
+      "seams": [
+        "compile-status-command"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_human\",\"needs_human\":{\"action\":\"a\",\"reason\":\"r\"}}' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/compile-status-command.mjs\" | grep -q 'terminal_or_human_state_needs_human'"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
     }
   ],
   "claims": {
@@ -187,6 +250,30 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.compiler_rung0_brave",
+      "description": "compiler rung0 brave",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.compiler_rung2_webgpt",
+      "description": "compiler rung2 webgpt",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.compiler_human_state_no_command",
+      "description": "compiler human state no command",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -224,6 +311,14 @@
     },
     {
       "seam_id": "triage-error-catalog",
+      "seam_type": "cli",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "compile-status-command",
       "seam_type": "cli",
       "criticality": "critical",
       "required_evidence": [
