@@ -50,11 +50,13 @@ async function probeExtensionHook() {
   await handlers.tool_result[0]({ toolName: 'bash', toolCallId: 'm1', input: { command: 'skills/memory/run.sh recall --q x --brief' }, isError: false });
   const result = await handlers.message_end[0]({ message: { role: 'assistant', content: [{ type: 'text', text: 'Pick option A.' }] } });
   const text = result?.message?.content?.[0]?.text || '';
-  requireCond(text.includes('PI_GUARD_STATUS'), 'extension hook did not return the plain guard status notice', { text });
-  requireCond(text.includes('missing_ask_compete_gate'), 'extension hook did not report missing compete gate', { text });
-  requireCond(!text.includes('Gate JSON') && !text.includes('REJECTED_BY_RESEARCH_ROUTING_GATE'), 'extension hook leaked raw guard rejection JSON', { text });
+  requireCond(text.startsWith('PI_GUARD_STATUS\n'), 'extension hook did not return the machine guard status marker', { text });
+  const status = JSON.parse(text.slice('PI_GUARD_STATUS\n'.length));
+  requireCond(status.schema === 'pi_guard_status.v1' && status.guard === 'research-routing', 'guard status payload schema mismatch', { status });
+  requireCond((status.missing_reason_codes || []).includes('missing_ask_compete_gate'), 'extension hook did not report missing compete gate', { status });
+  requireCond(!text.includes('Gate JSON') && !text.includes('REJECTED_BY_RESEARCH_ROUTING_GATE') && !text.includes('Status Report'), 'extension hook leaked prose guard text', { text });
   requireCond(getRetryMessages() === 1, 'extension hook did not issue exactly one retry prompt', { retryMessages: getRetryMessages() });
-  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_compete_rejection', retryMessages: getRetryMessages(), reason: 'missing_ask_compete_gate', visible: 'plain_status' }));
+  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_compete_rejection', retryMessages: getRetryMessages(), reason: 'missing_ask_compete_gate', visible: 'json_status' }));
 }
 
 async function probeConciseRetryReceipt() {
@@ -65,20 +67,24 @@ async function probeConciseRetryReceipt() {
   const result = await handlers.message_end[0]({ message: { role: 'assistant', id: 'concise-retry-message', content: [{ type: 'text', text: 'Pick option A.' }] } });
   const visible = result?.message?.content?.[0]?.text || '';
   const sent = getSentMessages()[0]?.message || '';
-  const receiptMatch = sent.match(/^Receipt:\s*(.*)$/m);
-  const receiptPath = receiptMatch?.[1] || '';
-  requireCond(visible.includes('PI_GUARD_STATUS'), 'extension hook did not return the plain guard status notice', { visible });
+  requireCond(visible.startsWith('PI_GUARD_STATUS\n'), 'extension hook did not return the machine guard status marker', { visible });
   requireCond(getRetryMessages() === 1, 'extension hook did not issue exactly one retry prompt', { retryMessages: getRetryMessages() });
-  requireCond(sent.startsWith('RESEARCH_ROUTING_GATE_RETRY'), 'retry prompt missing marker', { sent });
-  requireCond(sent.includes('Missing gates: missing_ask_compete_gate'), 'retry prompt did not name missing gate compactly', { sent });
-  requireCond(sent.includes('Next command:'), 'retry prompt did not include one next command', { sent });
-  requireCond(sent.includes('Full gate JSON is in the receipt, not in chat.'), 'retry prompt did not state JSON was moved to receipt', { sent });
-  requireCond(!sent.includes('Gate JSON') && !sent.includes('"route"') && !sent.includes('"evidence"'), 'retry prompt leaked raw gate JSON', { sent });
+  requireCond(sent.startsWith('RESEARCH_ROUTING_GATE_RETRY\n'), 'retry prompt missing marker', { sent });
+  const promptPayload = JSON.parse(sent.slice('RESEARCH_ROUTING_GATE_RETRY\n'.length));
+  requireCond(promptPayload.schema === 'pi_research_gate.retry_prompt.v1', 'retry prompt schema mismatch', { promptPayload });
+  requireCond((promptPayload.missing_reason_codes || []).includes('missing_ask_compete_gate'), 'retry prompt did not name missing gate in JSON', { promptPayload });
+  requireCond(Array.isArray(promptPayload.next_commands) && promptPayload.next_commands.some((entry) => entry.reason === 'missing_ask_compete_gate'), 'retry prompt did not include machine command entries', { promptPayload });
+  requireCond(String(promptPayload.run_script || '').startsWith('/tmp/pi-research-routing/') && String(promptPayload.run_script || '').endsWith('.sh'), 'retry prompt did not include run_script', { promptPayload });
+  const receiptPath = String(promptPayload.receipt_path || '');
+  requireCond(!sent.includes('Gate JSON') && !sent.includes('Status Report') && !sent.includes('Your previous answer failed') && !sent.includes('Run the next command'), 'retry prompt leaked prose guard text', { sent });
   requireCond(receiptPath.startsWith('/tmp/pi-research-routing/') && receiptPath.endsWith('.json'), 'retry receipt path was not under /tmp/pi-research-routing', { receiptPath, sent });
-  const receipt = JSON.parse(await import('node:fs').then((fs) => fs.readFileSync(receiptPath, 'utf8')));
+  const fs = await import('node:fs');
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8'));
   requireCond(receipt.schema === 'pi_research_gate.retry_receipt.v1', 'retry receipt schema mismatch', { receipt });
+  requireCond(receipt.run_script === promptPayload.run_script, 'retry receipt run_script mismatch', { receipt, promptPayload });
+  requireCond(fs.statSync(promptPayload.run_script).mode & 0o100, 'retry run script is not executable', { run_script: promptPayload.run_script });
   requireCond(Array.isArray(receipt.next_commands) && receipt.next_commands.some((entry) => entry.reason === 'missing_ask_compete_gate'), 'retry receipt missing next command details', { receipt });
-  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_concise_retry_receipt', retryMessages: getRetryMessages(), receiptPath, visible: 'plain_status' }));
+  console.log(JSON.stringify({ ok: true, mode: 'extension_hook_machine_retry_receipt', retryMessages: getRetryMessages(), receiptPath, runScript: promptPayload.run_script, visible: 'json_status' }));
 }
 
 async function probeCombinedBashEvidence() {
@@ -322,7 +328,7 @@ const cases = {
     console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
   },
   extension_hook_compete_rejection: probeExtensionHook,
-  extension_hook_concise_retry_receipt: probeConciseRetryReceipt,
+  extension_hook_machine_retry_receipt: probeConciseRetryReceipt,
   extension_hook_combined_bash_evidence: probeCombinedBashEvidence,
   extension_hook_multi_tool_evidence: probeMultiToolEvidence,
   extension_hook_guard_notice_exempt: probeGuardNoticeExempt,

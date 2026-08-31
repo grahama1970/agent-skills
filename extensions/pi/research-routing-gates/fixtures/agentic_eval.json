@@ -81,8 +81,8 @@
       }
     },
     {
-      "id": "research_routing.concise_retry_receipt",
-      "description": "Research-routing follow-up prompts keep full gate JSON in a /tmp receipt and show only missing gates, one next command, and the receipt path in chat.",
+      "id": "research_routing.machine_retry_receipt",
+      "description": "Research-routing follow-up prompts are JSON-only machine contracts with a /tmp receipt, executable run_script, and next_commands; no instructional prose is required.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -531,12 +531,12 @@
       }
     },
     {
-      "name": "real-world-retry-prompt-writes-tmp-receipt-not-chat-json",
+      "name": "real-world-retry-prompt-is-json-only-with-run-script",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "deterministic",
       "supports_claims": [
-        "research_routing.concise_retry_receipt"
+        "research_routing.machine_retry_receipt"
       ],
       "seams": [
         "retry-prompt-receipt"
@@ -544,29 +544,30 @@
       "command": [
         "bash",
         "-c",
-        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_concise_retry_receipt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/concise-retry-receipt.json"
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs extension_hook_machine_retry_receipt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/machine-retry-receipt.json"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "\"ok\":true",
-          "extension_hook_concise_retry_receipt",
+          "extension_hook_machine_retry_receipt",
           "/tmp/pi-research-routing/",
           "\"retryMessages\":1"
         ],
         "stdout_excludes": [
           "Gate JSON",
-          "\"route\"",
-          "\"evidence\""
+          "Status Report",
+          "Your previous answer failed",
+          "Run the next command"
         ],
         "artifacts": [
           {
-            "path": "../eval-output/concise-retry-receipt.json",
+            "path": "../eval-output/machine-retry-receipt.json",
             "json_pointer": "/ok",
             "equals": true
           },
           {
-            "path": "../eval-output/concise-retry-receipt.json",
+            "path": "../eval-output/machine-retry-receipt.json",
             "json_pointer": "/receiptPath",
             "contains": "/tmp/pi-research-routing/"
           }

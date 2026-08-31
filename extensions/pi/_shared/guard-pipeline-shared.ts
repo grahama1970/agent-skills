@@ -19,6 +19,7 @@ type PipelineState = {
   retryCounts: Map<string, number>;
   claims: Map<string, GuardClaim>;
   order: GuardName[];
+  turnCounter: number;
 };
 
 const GLOBAL_KEY = Symbol.for("pi.guardPipeline.v1");
@@ -38,6 +39,7 @@ function state(): PipelineState {
       retryCounts: new Map<string, number>(),
       claims: new Map<string, GuardClaim>(),
       order: DEFAULT_ORDER,
+      turnCounter: 0,
     };
   }
   return globalObject[GLOBAL_KEY]!;
@@ -47,7 +49,8 @@ export function beginGuardTurn(userText: string, source?: string): void {
   if (source === "extension") return;
   const s = state();
   s.rootText = String(userText || "");
-  s.rootKey = sha256(s.rootText || String(Date.now()));
+  s.turnCounter += 1;
+  s.rootKey = `${sha256(s.rootText || String(Date.now()))}:turn:${s.turnCounter}`;
 }
 
 export function guardPipelineStatus(): { rootKey: string; retryCount: number; claims: GuardClaim[]; order: GuardName[] } {
@@ -73,7 +76,13 @@ export function claimGuardFollowUp(args: {
     s.rootText = String(args.userText || "");
     s.rootKey = sha256(s.rootText || String(args.assistantText || "").slice(0, 500));
   }
-  const messageKey = String(args.messageId || sha256(String(args.assistantText || "").slice(0, 2000)));
+  const assistantText = String(args.assistantText || "").slice(0, 2000);
+  // Coordinate guards by the visible assistant draft, not by each guard's
+  // private fallback id. message_end hooks often receive no stable message id
+  // in probes/headless sessions; if one guard falls back to "unknown" and
+  // another to "research-routing-message", both used to claim and rewrite the
+  // same draft. Text-hashing makes one visible draft have one owner.
+  const messageKey = assistantText ? `${s.rootKey}:${sha256(assistantText)}` : `${s.rootKey}:${String(args.messageId || sha256("empty-message"))}`;
   const claimedBy = s.claims.get(messageKey);
   const max = Number.isFinite(args.maxRetries) ? Math.max(0, Number(args.maxRetries)) : 1;
   const used = s.retryCounts.get(s.rootKey) || 0;
