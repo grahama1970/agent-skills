@@ -107,6 +107,18 @@ EOF
     node "$CHECK" < /tmp/onsg_research_routing_triage_candidate.txt > /tmp/onsg_research_routing_triage_pass.json
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_research_routing_triage_pass.json','utf8')); if(d.decision!=='pass'||d.features.failure_report!==false) throw new Error(JSON.stringify(d)); console.log('RESEARCH_ROUTING_TRIAGE_COMPLETION_PASS_OK')"
     ;;
+  eval-absent-old-startup-error-pass)
+    cat > /tmp/onsg_absent_old_startup_error_candidate.txt <<'EOF'
+Replied to the subagent.
+
+Verified:
+- `reload_runtime` was unavailable in this tool context.
+- Fresh `pi --help` startup check showed no `guard-pipeline-shared.ts` load error.
+- Helper is now under `~/.pi/agent/extensions/_shared/`, not as a root extension.
+EOF
+    node "$CHECK" < /tmp/onsg_absent_old_startup_error_candidate.txt > /tmp/onsg_absent_old_startup_error_pass.json
+    node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_absent_old_startup_error_pass.json','utf8')); if(d.decision!=='pass'||d.features.failure_report!==false) throw new Error(JSON.stringify(d)); console.log('ABSENT_OLD_STARTUP_ERROR_PASS_OK')"
+    ;;
   eval-real-failure-followup)
     cat > /tmp/onsg_real_failure_candidate.txt <<'EOF'
 Status Report
@@ -169,7 +181,7 @@ EOF
     node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/onsg_text_remaining_rename_followup.json','utf8')); if(d.decision!=='follow_up'||!d.actionable_actions.some(a=>a.includes('rename/migration'))) throw new Error(JSON.stringify(d)); console.log('TEXT_REMAINING_RENAME_FOLLOWUP_OK')"
     ;;
   help|--help|-h)
-    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-completed-typed-failure-pass|eval-completed-research-routing-triage-pass|eval-real-failure-followup|eval-unacted-next-followup|eval-json-remaining-followup|eval-json-remaining-none-pass|eval-text-remaining-rename-followup"
+    echo "Usage: run.sh eval-zero-invalid-pass|eval-qra-count-status-pass|eval-sensible-memory-status-pass|eval-hook-thrash-status-pass|eval-completed-typed-failure-pass|eval-completed-research-routing-triage-pass|eval-absent-old-startup-error-pass|eval-real-failure-followup|eval-unacted-next-followup|eval-json-remaining-followup|eval-json-remaining-none-pass|eval-text-remaining-rename-followup"
     ;;
   *) echo "unknown command: $cmd" >&2; exit 2;;
 esac
