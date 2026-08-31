@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { beginGuardTurn, claimGuardFollowUp } from "../guard-pipeline-shared.ts";
+import { beginGuardTurn, claimGuardFollowUp } from "../_shared/guard-pipeline-shared.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 const CHECKER = join(EXTENSION_DIR, "obvious-next-step-check.mjs");

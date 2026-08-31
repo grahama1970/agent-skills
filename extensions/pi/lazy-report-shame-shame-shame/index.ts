@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { beginGuardTurn, claimGuardFollowUp } from "../guard-pipeline-shared.ts";
+import { beginGuardTurn, claimGuardFollowUp } from "../_shared/guard-pipeline-shared.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 const REPORT_CHECK = join(EXTENSION_DIR, "report-check.mjs");
