@@ -87,6 +87,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "research_routing.status_json_first_meta_exemption",
+      "description": "JSON-first status report and research-routing gate design questions are treated as status/meta questions, not as requests for Brave/WebGPT gates because those words appear in the answer.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -181,6 +189,39 @@
         "artifacts": [
           {
             "path": "../eval-output/status-question.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-json-first-status-guard-design-does-not-trigger-brave-or-webgpt",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.status_json_first_meta_exemption"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_json_first_status_guard_design_exempt | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/json-first-status-guard-design.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "checker_json_first_status_guard_design_exempt",
+          "\"brave_required\":false",
+          "\"ask_webgpt_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/json-first-status-guard-design.json",
             "json_pointer": "/ok",
             "equals": true
           }

@@ -203,6 +203,16 @@ const cases = {
     requireCond(out.status === 0 && out.parsed.decision === 'pass', 'meta routing question should not require dogpile/ask just because names are mentioned', out);
     console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, signals: out.parsed.signals }));
   },
+  checker_json_first_status_guard_design_exempt() {
+    const out = runChecker({
+      user_text: "and isn't this simply a json first of the status report that be deterministically checked first",
+      assistant_text: 'Yes. The status object should be JSON-first, then deterministically checked, then rendered. That can mention research-routing-gates and WebGPT as gate names without requesting web research or WebGPT review.',
+      observations: memoryObs(),
+    });
+    requireCond(out.status === 0 && out.parsed.decision === 'pass' && out.parsed.route.brave_required === false && out.parsed.route.ask_webgpt_required === false, 'JSON-first status guard design question should not require Brave or WebGPT gates', out);
+    requireCond(out.parsed.signals.status_question === true || out.parsed.signals.meta_routing_question === true, 'JSON-first status guard design should be classified as status/meta routing', out);
+    console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
+  },
   checker_sidequest_thrashing_requires_roundtable() {
     const out = runChecker({ user_text: 'The agent is violating the immutable goal with side quests and self-serving unit tests.', assistant_text: 'Continue.', observations: memoryObs() });
     requireCond(out.status === 1 && out.parsed.reason_codes.includes('missing_ask_roundtable_gate'), 'side-quest/self-serving-test signal should require roundtable advice when no candidates exist', out);

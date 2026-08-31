@@ -34,9 +34,13 @@ const controlCommand = /^\s*\/(?:reload|model|help|clear|compact|tree|session|se
   || guardGeneratedAssistant;
 const statusQuestion = /\b(?:what(?:'s| is) your status|what(?:'s| is) you status|status updates?|did you run|have you run|did you fix|have you fixed|is (?:it|the bug|this) fixed|what have you done|are you blocked|are you stuck|what does this mean|are you failure[- ]reporting|are you just failure[- ]reporting|failure[- ]reporting|speak plainly|don't you already have obvious next steps|dont you already have obvious next steps)\b/i.test(user)
   || /\b(?:are you (?:not |noit )?able to give\s+(?:a\s+)?status|can you give\s+(?:a\s+)?status|why can't you give\s+(?:a\s+)?status|why cant you give\s+(?:a\s+)?status)\b/i.test(user)
+  || /\b(?:json[- ]first|structured\s+json|typed\s+status\s+object)\b[^\n]{0,160}\b(?:status\s+report|status\s+object|deterministic(?:ally)?\s+check(?:ed|er|ing)?)\b/i.test(user)
+  || /\b(?:status\s+report|status\s+object|deterministic(?:ally)?\s+check(?:ed|er|ing)?)\b[^\n]{0,160}\b(?:json[- ]first|structured\s+json|typed\s+status\s+object)\b/i.test(user)
   || /\b(?:rewrite\s+(?:the\s+)?(?:previously\s+)?rejected\s+answer|rewrite\s+(?:this|that)\s+answer|status\s+report\s+footer|exact\s+required\s+status\s+report|obvious-next-step-guard|follow-up budget exhausted|RESEARCH_ROUTING_GATE_RETRY|UNLAZY_FORCED_RETRY|CONTINUE_OBVIOUS_NEXT_STEP|CONTINUING_OBVIOUS_NEXT_STEP|REJECTED_BY_SLOTH_COURT|REJECTED_BY_RESEARCH_ROUTING_GATE)\b/i.test(user);
 const metaRoutingQuestion = /\b(?:logic|when|whether|should|decide|determine|router|routing|route)\b[^\n]{0,160}\b(?:brave-search|dogpile|\$ask|ask webgpt|roundtable|compete|agentic-evals|skill)\b/i.test(user)
-  || /\b(?:brave-search|dogpile|\$ask|ask webgpt|roundtable|compete|agentic-evals|skill)\b[^\n]{0,160}\b(?:logic|when|whether|should|decide|determine|router|routing|route)\b/i.test(user);
+  || /\b(?:brave-search|dogpile|\$ask|ask webgpt|roundtable|compete|agentic-evals|skill)\b[^\n]{0,160}\b(?:logic|when|whether|should|decide|determine|router|routing|route)\b/i.test(user)
+  || /\b(?:research-routing-gates|research routing gates|route gates?|routing gates?)\b[^\n]{0,160}\b(?:wrong\s+name|rename|named|name|json[- ]first|status\s+report|guard\s+design|deterministic(?:ally)?\s+check(?:ed|er|ing)?)\b/i.test(user)
+  || /\b(?:wrong\s+name|rename|named|name|json[- ]first|status\s+report|guard\s+design|deterministic(?:ally)?\s+check(?:ed|er|ing)?)\b[^\n]{0,160}\b(?:research-routing-gates|research routing gates|route gates?|routing gates?)\b/i.test(user);
 const trivial = user.trim().split(/\s+/).filter(Boolean).length <= 3 && !/[?]/.test(user) && !/\b(?:fix|debug|research|blocked|error|why|how|what|should|can|could|ask|review|decide|choose)\b/i.test(user);
 const substantive = enabled && !controlCommand && !statusQuestion && !trivial;
 
