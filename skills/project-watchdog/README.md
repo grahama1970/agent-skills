@@ -34,9 +34,10 @@ and the cycle repeats.
 
 ## Use
 
-    ./run.sh status                      # registry, state, lock, cron
-    ./run.sh tick --project <id>         # dry run, no mutation
-    ./run.sh tick --apply --project <id> # one bounded dispatch
+    ./run.sh status                         # registry, state, lock, cron
+    ./run.sh ui-data --receipt-limit 100    # read-only JSON for the UI
+    ./run.sh tick --project <id>            # dry run, no mutation
+    ./run.sh tick --apply --project <id>    # one bounded dispatch
     ./run.sh set-state project paused --project <id> --reason "..."
     ./run.sh install-cron --apply
     ./sanity.sh
@@ -54,10 +55,23 @@ Exit codes: `0` success or deliberate refusal, `1` operational failure,
 - Report a tick that serviced nothing as success when the reason will not clear
   on its own.
 
+## UI
+
+The React/Tailwind control-tower UI lives in `ui/`. Generate a live read-only
+snapshot before serving it:
+
+    ./run.sh ui-data --receipt-limit 100 --output ui/public/project-watchdog-snapshot.json
+    cd ui && npm install && npm run dev
+
+The UI is observational only. Rows link the operator to GitHub issues, local
+receipt paths, and Tau DAG artifacts when the watchdog recorded them; mutations
+still go through the receipt-backed CLI lanes.
+
 ## Evaluation
 
-    ./sanity.sh                                              # 45 behavioural gates
-    uv run pytest tests -q                                   # 154 unit tests
+    ./sanity.sh                                              # 49 behavioural gates
+    uv run pytest tests -q                                   # 222 unit tests
+    cd ui && npm run build && npm run check:contract
     ~/.claude/skills/agentic-evals/run.sh run fixtures/agentic_eval.json
 
 The eval fixture is regression-first: every adversarial case reproduces a defect

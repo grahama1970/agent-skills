@@ -73,7 +73,7 @@ echo "project-watchdog sanity — state root: $PROJECT_WATCHDOG_STATE_ROOT"
 # --------------------------------------------------------------------------- #
 gate 1 "CLI surface"
 HELP="$(watchdog --help 2>&1)"
-for cmd in tick install-cron set-state status; do
+for cmd in tick install-cron set-state status ui-data; do
   if grep -q -- "$cmd" <<<"$HELP"; then ok "command exposed: $cmd"; else bad "command missing: $cmd"; fi
 done
 
@@ -359,6 +359,26 @@ if jq -e '.marker_wins == "tau_handoff_dispatch"' <<<"$ROUTE_JSON" >/dev/null 2>
   ok "explicit body markers still take precedence"
 else
   bad "body marker route regressed"
+fi
+
+# --------------------------------------------------------------------------- #
+gate 13 "UI snapshot and React contract"
+UI_JSON="$(watchdog ui-data --receipt-limit 2 2>/dev/null)"
+if jq -e '.schema == "agent_skills.project_watchdog.ui_snapshot.v1"' <<<"$UI_JSON" >/dev/null 2>&1; then
+  ok "ui-data declares its schema"
+else
+  bad "ui-data schema missing or wrong"
+fi
+if jq -e 'has("items") and has("counts") and has("source")' <<<"$UI_JSON" >/dev/null 2>&1; then
+  ok "ui-data exposes items, counts, and source"
+else
+  bad "ui-data payload missing required keys"
+fi
+if node "$SCRIPT_DIR/ui/scripts/check-ui-contract.mjs" >"$WORK/ui-contract.json" 2>&1; then
+  ok "UI contract: $(jq -rc . "$WORK/ui-contract.json" 2>/dev/null || tail -1 "$WORK/ui-contract.json")"
+else
+  bad "UI contract failed"
+  cat "$WORK/ui-contract.json" | sed 's/^/        /'
 fi
 
 # --------------------------------------------------------------------------- #

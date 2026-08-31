@@ -2253,3 +2253,61 @@ def test_the_deadline_is_always_shorter_than_the_period(monkeypatch) -> None:
         monkeypatch.setattr(commands, "installed_cron_minute", lambda f=field: f)
         period = commands.minute_field_period_seconds(field)
         assert commands.tick_deadline_seconds() < period
+
+
+def test_ui_snapshot_projects_issue_receipts_with_gate_and_tau_links(tmp_path: Path) -> None:
+    from watchdog.ui_export import build_snapshot
+
+    receipt_root = tmp_path / "receipts"
+    receipt_dir = receipt_root / "project-watchdog-20260831T130000Z"
+    receipt_dir.mkdir(parents=True)
+    tau_dir = receipt_dir / "closure-audit-42" / "ask-tau-audit"
+    progress = tau_dir / "tau-receipts" / "dag-progress.json"
+    progress.parent.mkdir(parents=True)
+    progress.write_text('{"schema":"tau.dag_progress.v1"}', encoding="utf-8")
+    receipt = {
+        "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+        "run_id": "project-watchdog-20260831T130000Z",
+        "project_id": "agent-skills",
+        "status": "NEEDS_ATTENTION",
+        "ok": False,
+        "receipt_dir": str(receipt_dir),
+        "handled_issues": [
+            {
+                "action": "ticket_repair",
+                "repo": "grahama1970/agent-skills",
+                "issue_number": 42,
+                "issue_url": "https://github.com/grahama1970/agent-skills/issues/42",
+                "status": "FAIL",
+                "ok": False,
+                "targets": ["skills/project-watchdog"],
+                "summary": "semantic failure reached UI projection",
+                "ask_run_dir": str(tau_dir),
+                "triage": {
+                    "code": "closure_audit_failed",
+                    "cause": "VERDICT: FAIL",
+                    "next_command": "./run.sh tick --issue 42 --apply",
+                    "recoverable": True,
+                },
+            }
+        ],
+    }
+    (receipt_dir / "receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+    snapshot = build_snapshot(
+        {
+            "schema": "agent_skills.project_watchdog.status.v1",
+            "receipt_root": str(receipt_root),
+            "state": {"global": {"state": "active"}},
+            "project_count": 1,
+            "project_ids": ["agent-skills"],
+            "lock_held": False,
+        }
+    )
+
+    assert snapshot["schema"] == "agent_skills.project_watchdog.ui_snapshot.v1"
+    assert snapshot["counts"]["FAIL"] == 1
+    item = snapshot["items"][0]
+    assert item["gate_status"] == "FAIL"
+    assert item["triage"]["code"] == "closure_audit_failed"
+    assert item["tau_dag"]["available"] is True
+    assert item["tau_dag"]["progress_path"] == str(progress)

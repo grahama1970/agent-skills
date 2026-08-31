@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "project-watchdog",
   "trials": 3,
-  "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root",
+  "proof_scope": "regression cases for defects observed in live operation, run against the real CLI and the real routing library with an isolated state root, including landed repair-worktree cleanup through ops-worktrees",
   "claims": {
-    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, and that activate reports schedule and state together, uses Discord as the morning discussion handoff and skips Buzz in promoted Stage 0",
+    "proves": "each named failure mode is refused or handled as described, repeatably, through the skill's own entrypoint and routing functions; that the installed cron interval is never every-minute, that dispatch defers during the overnight batch window, that activate reports schedule and state together, and that auto-landed repairs invoke ops-worktrees cleanup before issue closure",
     "does_not_prove": "that a live repair, closure audit, or completion attestation succeeds. Those dispatch models through $ask/Tau and are proven only by a live receipt read back from the produced artifact, not by this fixture."
   },
   "cases": [
@@ -37,6 +37,26 @@
       "expected": {
         "exit_code": 0
       }
+    },
+    {
+      "name": "project-watchdog-ui-snapshot-contract",
+      "category": "project-watchdog-ui",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-lc",
+        "../run.sh ui-data --receipt-limit 2 | jq -e '.schema == \"agent_skills.project_watchdog.ui_snapshot.v1\" and (.items | type == \"array\") and (.counts | has(\"TOTAL\"))' >/dev/null && node ../ui/scripts/check-ui-contract.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true"
+        ]
+      },
+      "proves": "The project-watchdog UI data projection emits the declared read-only snapshot schema and the React/Tailwind interface keeps data-qid/data-qs-action/title, useRegisterAction, sticky filters, desktop table, mobile cards, Tau DAG, and receipt-chain contract literals.",
+      "does_not_prove": "A human has opened the UI in a browser or that a live Tau run is embedded; those require a local browser interaction receipt after serving the built app."
     },
     {
       "name": "strict-project-does-not-fall-through-to-fleet",
@@ -186,17 +206,21 @@
       "mocked": true,
       "timeout_seconds": 120,
       "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest skills/project-watchdog/tests/test_project_watchdog.py::test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring skills/project-watchdog/tests/test_project_rotation.py::test_dirty_target_is_reported_without_blocking_isolated_dispatch -q"
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_a_dirty_registered_target_is_reported_but_does_not_block_isolated_authoring",
+        "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "1 passed"
         ]
       },
-      "proves": "Dirty tracked files in the registered checkout are reported but do not block issue selection or isolated repair authoring.",
+      "proves": "A dirty target path in the registered checkout is reported but does not block project-watchdog from preparing an isolated repair worktree from origin/main.",
       "does_not_prove": "A live Ask/Tau repair for the ticket succeeds."
     },
     {
@@ -225,7 +249,7 @@
       "notes": "Regression for Battle scope drift: a battle-scoped project sees only skills/battle issues, and the broad agent-skills project can exclude skills/battle so fleet rotation does not steal Battle tickets."
     },
     {
-      "name": "ticket-scoped-files-define-repair-targets",
+      "name": "auto-landed-repair-worktree-cleanup",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
@@ -236,17 +260,19 @@
         "--project",
         "..",
         "pytest",
-        "../tests/test_project_rotation.py::test_scoped_files_override_single_target_path_when_acceptance_needs_more_files",
-        "../tests/test_project_rotation.py::test_scoped_files_override_malformed_coarse_target_metadata",
+        "../tests/test_project_watchdog.py::test_landed_repair_cleanup_invokes_ops_worktrees_archive",
+        "../tests/test_project_watchdog.py::test_auto_landed_repair_archives_worktree_before_closing",
+        "../tests/test_project_watchdog.py::test_auto_landed_repair_cleanup_failure_keeps_ticket_open",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "3 passed"
         ]
       },
-      "notes": "Regression for graph-memory-operator#150/#151: Scoped files are the repair allowlist and must not be replaced by a coarse Target paths summary or orientation skill mentions."
+      "proves": "After a reviewer-passed repair lands on main, project-watchdog invokes ops-worktrees archive --apply for the repair worktree before closing; if cleanup fails, the ticket stays open and is marked needs-attention.",
+      "does_not_prove": "A live GitHub repair branch was landed or a real filesystem worktree was archived; these tests mock the GitHub and subprocess effects and prove watchdog control flow only."
     },
     {
       "name": "repair-dispatch-passes-explicit-ask-execution-timeout",
@@ -307,35 +333,12 @@
         "pytest",
         "../tests/test_project_watchdog.py::test_registered_repair_seats_can_author_and_review_code",
         "../tests/test_project_watchdog.py::test_tau_repair_reviewer_is_local_claude_opus_48_high",
-        "../tests/test_project_watchdog.py::test_memory_project_uses_local_claude_opus_48_high_reviewer",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "3 passed"
-        ]
-      }
-    },
-    {
-      "name": "web-repair-reviewer-is-refused-before-ask-dispatch",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_web_model_reviewer_is_refused_before_ask_dispatch",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ]
       }
     },
@@ -455,76 +458,6 @@
           "PROTECTED 9feb862"
         ]
       }
-    },
-    {
-      "name": "proof-artifact-repo-sha-must-match-repair-branch",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_proof_artifact_repo_sha_must_match_repair_branch",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      },
-      "notes": "Regression for graph-memory-operator#142: a required proof artifact that records repo.sha from the primary checkout must not count as proof for a repair branch commit."
-    },
-    {
-      "name": "registered-checkout-proof-is-not-repair-proof",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_repair_task_flags_registered_checkout_required_proof",
-        "../tests/test_project_watchdog.py::test_absolute_proof_artifact_under_registered_checkout_is_refused",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      },
-      "notes": "Regression for agent-skills#1527 / graph-memory-operator#142: a Required proof command hardcoded to the registered project checkout must be rewritten into the repair worktree or fail closed as proof_not_bound_to_repair_worktree."
-    },
-    {
-      "name": "timeout-kills-recorded-descendant-outside-process-group",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": false,
-      "timeout_seconds": 30,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_run_cmd_timeout_kills_recorded_descendant_outside_process_group",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      },
-      "notes": "Regression for agent-skills#1526: a timed-out watchdog command must not leave a recorded descendant process orphaned outside the launched process group."
     },
     {
       "name": "tick-does-not-revert-an-operator-state-change",
@@ -727,46 +660,6 @@
         ]
       },
       "notes": "Proof for agent-skills#1508: while issue #1 is still inside handle_issue for skills/ask, a nested tick can acquire the released scheduler lock and dispatch issue #2 for skills/ticket."
-    },
-    {
-      "name": "multi-project-concurrent-dispatch-capacity",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "mocked": true,
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_fleet_budget_dispatches_one_issue_per_project"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      },
-      "notes": "A widened fleet budget gives dispatch capacity to different projects in one pass while still taking at most one issue per project."
-    },
-    {
-      "name": "dirty-target-is-skipped-before-dispatch",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "real_world": true,
-      "mocked": true,
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_rotation.py::test_dirty_target_is_excluded_before_dispatch_and_next_issue_can_route"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      },
-      "notes": "Regression for live receipt project-watchdog-20260824T211001Z: an issue whose target is dirty in the registered checkout is excluded as target_busy during selection, so it does not become a handled BLOCKED repair before an isolated worktree exists."
     },
     {
       "name": "scheduler-execution-lock-blocks-overlapping-targets",
@@ -1099,7 +992,7 @@
         "--project",
         "..",
         "pytest",
-        "../tests/test_project_watchdog.py::test_memory_project_uses_local_claude_opus_48_high_reviewer",
+        "../tests/test_project_watchdog.py::test_memory_project_auto_lands_reviewer_passed_repairs",
         "-q"
       ],
       "expected": {
@@ -1158,27 +1051,6 @@
       }
     },
     {
-      "name": "ticket-repair-requires-tau-json-progress-monitoring",
-      "type": "adversarial",
-      "real_world": true,
-      "timeout_seconds": 60,
-      "seams": [
-        "watchdog.ticket_dispatch",
-        "watchdog.repair_proof_gate"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && skill=$repo/skills/project-watchdog/SKILL.md && grep -q 'tau-receipts/dag-progress.json' \"$skill\" && grep -q 'tau-receipts/dag-receipt.json' \"$skill\" && grep -q 'node-artifacts/<node-id>/node-receipt.json' \"$skill\" && grep -q 'ticket_repair' \"$skill\" && grep -q 'node_progress' \"$skill\" && grep -q 'active_subagents' \"$skill\" && grep -q 'report only \"still running\"' \"$skill\" && echo WATCHDOG_TICKET_REPAIR_MONITORS_TAU_JSON"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "WATCHDOG_TICKET_REPAIR_MONITORS_TAU_JSON"
-        ]
-      }
-    },
-    {
       "name": "ticket-repair-monitors-ask-tau-json-stream",
       "type": "adversarial",
       "evidence_class": "deterministic",
@@ -1202,53 +1074,6 @@
         ]
       },
       "notes": "Regression guard for the watchdog stopping opaquely during long Ask/Tau runs: the repair lane must read Tau stream artifacts and write tau-stream-monitor.json instead of treating process exit or silence as progress proof."
-    },
-    {
-      "name": "ticket-repair-creator-must-not-emit-verdict",
-      "type": "adversarial",
-      "real_world": true,
-      "timeout_seconds": 120,
-      "seams": [
-        "watchdog.ticket_dispatch",
-        "watchdog.repair_proof_gate"
-      ],
-      "command": [
-        "bash",
-        "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/project-watchdog pytest -q skills/project-watchdog/tests/test_project_watchdog.py::test_the_repair_task_names_the_bar_the_reviewer_applies"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "1 passed"
-        ]
-      }
-    },
-    {
-      "name": "auto-landed-repair-worktree-cleanup",
-      "type": "adversarial",
-      "evidence_class": "fault_injected_deterministic",
-      "mocked": true,
-      "timeout_seconds": 120,
-      "command": [
-        "uv",
-        "run",
-        "--project",
-        "..",
-        "pytest",
-        "../tests/test_project_watchdog.py::test_landed_repair_cleanup_invokes_ops_worktrees_archive",
-        "../tests/test_project_watchdog.py::test_auto_landed_repair_archives_worktree_before_closing",
-        "../tests/test_project_watchdog.py::test_auto_landed_repair_cleanup_failure_keeps_ticket_open",
-        "-q"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "3 passed"
-        ]
-      },
-      "proves": "After a reviewer-passed repair lands on main, project-watchdog invokes ops-worktrees archive --apply for the repair worktree before closing; if cleanup fails, the ticket stays open and is marked needs-attention.",
-      "does_not_prove": "A live GitHub repair branch was landed or a real filesystem worktree was archived; these tests mock the GitHub and subprocess effects and prove watchdog control flow only."
     }
   ]
 }

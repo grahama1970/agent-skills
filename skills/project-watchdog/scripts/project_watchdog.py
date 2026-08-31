@@ -28,6 +28,7 @@ Usage
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -136,6 +137,33 @@ def status_command() -> None:
     """Print watchdog registry, state, log, lock, and cron status."""
     _startup()
     print(commands.status_json())
+
+
+@app.command("ui-data")
+def ui_data_command(
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Write the UI snapshot JSON to this path instead of stdout.",
+    ),
+    receipt_limit: int = typer.Option(
+        100,
+        "--receipt-limit",
+        min=0,
+        help="Maximum retained receipt directories to scan.",
+    ),
+) -> None:
+    """Print the read-only project-watchdog UI snapshot JSON."""
+    _startup()
+    payload = commands.ui_payload(receipt_limit=receipt_limit)
+    text = json.dumps(payload, indent=2, sort_keys=True)
+    if output is None:
+        print(text)
+        return
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(text + "\n", encoding="utf-8")
+    print(json.dumps({"schema": "agent_skills.project_watchdog.ui_data_write.v1", "output": str(output), "bytes": len(text) + 1}, sort_keys=True))
 
 
 def main() -> None:

@@ -2,8 +2,8 @@
 name: project-watchdog
 description: >
   Global cross-project watchdog registry and cron dispatcher that scans
-  registered GitHub repos for routable issues, takes bounded independent leases
-  across projects, runs each through its Tau or project-local harness, and
+  registered GitHub repos for routable issues, takes one lease at a time, runs
+  one bounded tick through each project's Tau or project-local harness, and
   requires a receipt before it mutates anything. Use when asked about the
   project watchdog, the GitHub issue cron, why the watchdog is idle or not
   picking up tickets, pausing or resuming automated issue dispatch, or
@@ -61,8 +61,9 @@ subagents so individual projects do not each invent their own cron loop.
 
 ```bash
 ./run.sh status                                    # registry, state, lock, cron
+./run.sh ui-data --receipt-limit 100               # read-only JSON snapshot for UI
 ./run.sh tick --project all                        # dry-run fleet scan, no mutation
-./run.sh tick --apply --project all --max-tickets 3  # up to three independent projects
+./run.sh tick --apply --project all --max-tickets 1  # one bounded fleet dispatch
 ./run.sh tick --project tau                        # strict scan of tau only
 ./run.sh set-state global paused --reason "..."    # fail-closed kill switch
 ./run.sh set-state project active --project tau --reason "..."
@@ -103,18 +104,10 @@ before it could dispatch. `$ask` compiles the DAG for any repo; a project needs
 only a worktree.
 
 Collision is a property of the **target**, not the repository. agent-skills
-holds 364 skills, and two tickets against different ones share no files. When a
-ticket has `Ticket type details` / `Scoped files`, that list is the concrete
-repair allowlist and wins over a coarse `target:` line or a short `## Target
-paths` summary. Tickets without scoped files use the `target:` line `/ticket`
-writes, then the `## Target paths` block, then legacy skill-path mentions. A
-leased ticket blocks its own targets and nothing else.
-
-Fleet capacity is cross-project. The installed cron uses `--max-tickets 3`, and
-a fleet tick may hand capacity to up to three different projects when each has a
-routable independent ticket. It still takes at most one issue from any one
-project per tick; a second issue in the same project waits for the next tick so
-local lane and target safety remain simple.
+holds 364 skills, and two tickets against different ones share no files. Each
+ticket names its target on the `target:` line `/ticket` writes; older tickets
+fall back to the skill paths their body mentions. A leased ticket blocks its own
+targets and nothing else.
 
 Registered projects may narrow a shared repository with `issue_target_prefixes`
 and may leave a subtree to a narrower project with
@@ -143,8 +136,7 @@ The runtime is deliberately narrow:
 
 1. Load `registry/projects.json`.
 2. Scan registered GitHub repos for routable issues.
-3. Acquire bounded leases for routable tickets, at most one per project in a
-   fleet tick.
+3. Acquire one lease for one project ticket.
 4. Invoke the project runner for one bounded tick.
 5. Require a receipt.
 6. Post the receipt or refusal back to GitHub.
@@ -194,7 +186,9 @@ scripts/watchdog/registry.py   project lookup and routable-issue selection
 scripts/watchdog/github.py     repo-parameterised gh wrappers
 scripts/watchdog/issue_fields.py  untrusted issue-body parsing and containment
 scripts/watchdog/handlers.py   bounded per-issue dispatch
-scripts/watchdog/commands.py   tick, install-cron, set-state, status
+scripts/watchdog/ui_export.py  read-only UI snapshot from status + receipts
+scripts/watchdog/commands.py   tick, install-cron, set-state, status, ui-data
+ui/                            React/Tailwind control-tower UI
 ```
 
 Environment overrides, all optional: `PROJECT_WATCHDOG_STATE_ROOT`,
@@ -352,25 +346,6 @@ allowed provider route for repair is:
 project-watchdog -> $ask tau-dag -> Tau-executed DAG/command_spec -> Tau-owned SciLLM adapter
 ```
 
-Once project-watchdog starts an Ask/Tau repair, the live status surface is the
-Ask run directory and Tau's JSON receipts, not the outer process. The watchdog
-operator or project agent must continuously read:
-
-```text
-<receipt-run>/ask/<ask-run>/tau-receipts/dag-progress.json
-<receipt-run>/ask/<ask-run>/tau-receipts/dag-receipt.json
-<receipt-run>/ask/<ask-run>/node-artifacts/<node-id>/node-receipt.json
-<receipt-run>/ask/<ask-run>/node-artifacts/<node-id>/response.md
-```
-
-Every repair status must include the exact Ask run directory plus
-`dag-progress.json` fields for `status`, `node_progress`,
-`active_subagents`, `completed_subagents`, `last_event`, `event_count`,
-`mocked`, and `live`. When a node blocks or completes, read the node receipt,
-handler receipt, recovery packet, and response before naming the cause. Do not
-report only "still running", "Ask failed", or a shell exit code while Tau JSON
-receipts exist.
-
 If a repair receipt reports `SCILLM_AUTH_INVALID_API_KEY` or
 `scillm_auth_invalid_api_key`, that is a Tau/SciLLM provider-adapter failure
 reported through the Tau receipt. project-watchdog may surface the exact failure
@@ -405,14 +380,6 @@ per dispatch under the state root. The registered checkout is a human's working
 tree; authoring there builds on whatever it happens to hold. It is still
 consulted for one thing: whether this ticket's targets are settled.
 
-The registered checkout is never repair proof. If a ticket's `Required proof`
-section hardcodes the registered checkout path, the repair task must flag it as
-a proof binding hazard. The creator must either rewrite the proof command to run
-from the isolated repair worktree and write/read artifacts under that repair
-worktree, or report `proof_not_bound_to_repair_worktree`. The reviewer must
-answer `VERDICT: NEEDS_ATTENTION` when the proof remains bound to the registered
-checkout.
-
 The creator commits to its branch and must not push — the immutable goal says
 so, and the lane records `origin/main` before and after, blocking the ticket if
 it moved. That detects the violation; preventing it belongs in branch
@@ -435,8 +402,6 @@ closes anything it checks four things and fails closed on any of them, writing
 - no seat declares `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION`;
 - if the ticket's `Required proof` section names artifacts, at least one exists,
   was written after this dispatch started, and reads as a completed pass;
-- no required proof artifact is under the registered checkout instead of the
-  isolated repair worktree;
 - the repair branch is at least one commit ahead of `origin/main`.
 
 Verdicts are read, not inferred: only a `VERDICT:` line or the first word of a

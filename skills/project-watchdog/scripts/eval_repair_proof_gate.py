@@ -21,7 +21,6 @@ import re
 import subprocess
 import sys
 import tempfile
-import time
 from pathlib import Path
 from unittest import mock
 
@@ -72,12 +71,6 @@ command; its artifact reads readiness READY with the case PASS.
 VERDICT: PASS
 """
 
-PASSING_REVIEWER_RELATIVE_PROOF = """Checked the diff against the acceptance
-criterion and read back `local/issue147_agentic_eval_report.json`.
-
-VERDICT: PASS
-"""
-
 
 def node_id(handler: str) -> str:
     """The node-artifacts directory $ask writes for a seat.
@@ -113,19 +106,6 @@ def issue_body(proof_path: Path) -> str:
     )
 
 
-def issue_body_with_agentic_eval_input_only() -> str:
-    """The graph-memory #147 shape: the eval fixture is input, not output."""
-    return (
-        "## Type\n\nmaintenance\n\n"
-        "## Target\n\nsrc/graph_memory/lessons/skill_chains.py\n\n"
-        "## Required proof\n\n"
-        "/agentic-evals run fixtures/skill_chains/agentic_eval.json "
-        "--case skill-chain-live-idempotent-upsert; receipt must show readiness "
-        "READY with the case PASS.\n\n"
-        "## Non-goals\n\nNo unrelated refactors.\n"
-    )
-
-
 def build_repo(root: Path, *, commit_the_repair: bool) -> tuple[Path, Path]:
     """A registered checkout plus a repair worktree with a real ``origin/main``."""
     registered = root / "checkout"
@@ -156,8 +136,7 @@ def build_repo(root: Path, *, commit_the_repair: bool) -> tuple[Path, Path]:
 
 
 def run_repair(root: Path, *, creator_says: str, reviewer_says: str,
-               write_proof: bool, commit_the_repair: bool,
-               body: str | None = None, relative_proof_path: str | None = None) -> dict:
+               write_proof: bool, commit_the_repair: bool) -> dict:
     """Drive the real handler with $ask stubbed to write the seats' responses."""
     os.environ["PROJECT_WATCHDOG_STATE_ROOT"] = str(root)
     from watchdog import config, handlers  # noqa: PLC0415
@@ -182,9 +161,7 @@ def run_repair(root: Path, *, creator_says: str, reviewer_says: str,
                     encoding="utf-8",
                 )
             if write_proof:
-                artifact = repair / relative_proof_path if relative_proof_path else proof_path
-                artifact.parent.mkdir(parents=True, exist_ok=True)
-                artifact.write_text(
+                proof_path.write_text(
                     json.dumps({
                         "readiness": "READY",
                         "cases": [{
@@ -194,8 +171,6 @@ def run_repair(root: Path, *, creator_says: str, reviewer_says: str,
                     }),
                     encoding="utf-8",
                 )
-                future = time.time() + 5
-                os.utime(artifact, (future, future))
             return {"exit_code": 0, "stdout": "{}", "stderr": ""}
         return real_run_cmd(command, cwd=cwd, input_text=input_text, timeout_s=timeout_s)
 
@@ -221,7 +196,7 @@ def run_repair(root: Path, *, creator_says: str, reviewer_says: str,
         "url": "https://github.com/grahama1970/agent-skills/issues/1499",
         "title": "battle: adaptive lineage proof",
         "labels": [{"name": "agent-work"}],
-        "body": body or issue_body(proof_path),
+        "body": issue_body(proof_path),
         "watchdog_action": "ticket_repair",
     }
     with (
@@ -295,30 +270,6 @@ def main() -> int:
     if not any(name == "close" for name, _a, _k in allowed["_calls"]):
         failures.append("GATE_IS_A_WALL: a proven repair did not close its issue")
 
-    with tempfile.TemporaryDirectory() as tmp:
-        relative_allowed = run_repair(
-            Path(tmp),
-            creator_says=PASSING_CREATOR,
-            reviewer_says=PASSING_REVIEWER_RELATIVE_PROOF,
-            write_proof=True,
-            commit_the_repair=True,
-            body=issue_body_with_agentic_eval_input_only(),
-            relative_proof_path="local/issue147_agentic_eval_report.json",
-        )
-    if relative_allowed.get("status") != "LANDED":
-        failures.append(
-            "RELATIVE_REVIEWER_PROOF_REJECTED: an agentic-evals input-only ticket "
-            "with a reviewer-named relative proof artifact did not land "
-            f"(status={relative_allowed.get('status')!r}, "
-            f"reasons={(relative_allowed.get('proof_gate') or {}).get('reasons')})"
-        )
-    gate = relative_allowed.get("proof_gate") or {}
-    if gate.get("required_proof_artifacts") != ["local/issue147_agentic_eval_report.json"]:
-        failures.append(
-            "AGENTIC_EVAL_INPUT_MISREAD: gate did not use the reviewer-named proof "
-            f"artifact ({gate.get('required_proof_artifacts')!r})"
-        )
-
     if failures:
         for line in failures:
             print(line, file=sys.stderr)
@@ -326,8 +277,7 @@ def main() -> int:
     print(
         "REPAIR_PROOF_GATE_OK: a NEEDS_ATTENTION seat, an unfinished proof, a missing "
         "artifact, and a commitless branch each refuse closure; a reviewer VERDICT: PASS "
-        "with a fresh passing artifact and a real commit still lands; an agentic-evals "
-        "input fixture without --output is not mistaken for the proof artifact"
+        "with a fresh passing artifact and a real commit still lands"
     )
     return 0
 

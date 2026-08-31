@@ -29,7 +29,6 @@ import os
 import shlex
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
@@ -57,6 +56,7 @@ from .handlers import (
     handle_issue,
 )
 from .registry import find_project, list_routable_issues
+from .ui_export import build_snapshot
 
 #: Skip reasons a later tick can clear without anyone intervening. A lease ends
 #: when its holder finishes, and an empty or fully-blocked queue refills as
@@ -449,22 +449,15 @@ def _tick_locked(
         rotation_mode = "strict"
         candidates = [requested_project]
 
-    # Fleet mode tries every active project, best candidate first. With a
-    # widened ticket budget it may take one issue from several different
-    # projects; it must not take multiple issues from one project in the same
-    # fleet tick because the project/lane still owns that local integration
-    # surface. Strict mode tries only the requested project.
+    # Fleet mode tries every active project, best candidate first, until one has
+    # work. Strict mode tries only the requested project; it must never dispatch
+    # another repository while the receipt says a specific project was requested.
     skipped: list[dict[str, Any]] = []
     project = None
     issues: list[dict[str, Any]] = []
-    selected_batches: list[dict[str, Any]] = []
     issue_scans: list[dict[str, Any]] = []
-    remaining_dispatches = max(1, int(max_tickets))
-    multi_project_fleet = project_id == "all" and max_tickets > 1 and only_issue is None
 
     for candidate in candidates:
-        if remaining_dispatches <= 0:
-            break
         cid = str(candidate.get("project_id"))
         cstate = _project_runtime_state(candidate, state)
         if cstate != "active":
@@ -576,26 +569,7 @@ def _tick_locked(
                 }
             )
             continue
-        batch_limit = 1 if multi_project_fleet else remaining_dispatches
-        batch_issues = found[:batch_limit]
-        selected_batches.append(
-            {
-                "project": candidate,
-                "issues": batch_issues,
-                "scan": scan,
-                "lease_staleness": candidate_staleness,
-                "reclaimed": reclaimed,
-                "stale": stale,
-                "in_flight": in_flight,
-                "busy": busy,
-            }
-        )
-        remaining_dispatches -= len(batch_issues)
-        if project is None:
-            project, issues = candidate, batch_issues
-        if multi_project_fleet and remaining_dispatches > 0:
-            continue
-        issues = batch_issues
+        project, issues = candidate, found
         receipt["issue_scans"] = issue_scans
         receipt["excluded_counts"] = scan["excluded"]
         receipt["excluded_issues"] = scan["excluded_issues"]
@@ -614,33 +588,10 @@ def _tick_locked(
         }
         break
 
-    if selected_batches:
-        first = selected_batches[0]
-        scan = first["scan"]
-        receipt.setdefault("issue_scans", issue_scans)
-        receipt["excluded_counts"] = scan["excluded"]
-        receipt["excluded_issues"] = scan["excluded_issues"]
-        receipt["excluded_issue_refs"] = {
-            reason: [f"{scan['repo']}#{number}" for number in numbers]
-            for reason, numbers in scan["excluded_issues"].items()
-        }
-        receipt["lease_staleness"] = first["lease_staleness"]
-        receipt["reclaimed_leases"] = first["reclaimed"]
-        if not apply and first["stale"]:
-            receipt["would_reclaim_leases"] = first["stale"]
-        receipt["in_flight"] = {
-            "issues": [int(i["number"]) for i in first["in_flight"]],
-            "targets": sorted(first["busy"]),
-            "leases": registry.LAST_LEASE_SCAN.get("active", []),
-        }
-
     receipt["rotation"] = {
         "mode": rotation_mode,
         "requested": project_id,
         "selected": None if project is None else str(project.get("project_id")),
-        "selected_projects": [
-            str(batch["project"].get("project_id")) for batch in selected_batches
-        ],
         "skipped": skipped,
     }
     receipt.setdefault("issue_scans", issue_scans)
@@ -721,24 +672,17 @@ def _tick_locked(
                       persist=streak.should_persist_receipt or not receipt["ok"])
 
     project_id = str(project.get("project_id"))
-    selected_project_ids = [
-        str(batch["project"].get("project_id")) for batch in selected_batches
-    ] or [project_id]
     receipt["project_id"] = project_id
-    receipt["selected_projects"] = selected_project_ids
     log_event(run_id, "project_selected", selected=project_id,
               requested=receipt["rotation"]["requested"], skipped=len(skipped))
 
     # Record who was served so the next tick starts after them, not at the head.
     state.setdefault("last_served_project", None)
-    state["last_served_project"] = selected_project_ids[-1]
+    state["last_served_project"] = project_id
     _persist_tick_state(state)
-    for served_project_id in selected_project_ids:
-        streaks.clear_idle(served_project_id)
+    streaks.clear_idle(project_id)
 
-    receipt["scanned_issues"] = [
-        issue for batch in selected_batches for issue in batch["issues"]
-    ] or issues
+    receipt["scanned_issues"] = issues
     if not issues and receipt.get("dependency_unblocks"):
         receipt["handled_issues"].extend(
             {
@@ -764,18 +708,9 @@ def _tick_locked(
     deadline = tick_deadline_seconds()
     started = time.monotonic()
     dispatch_plan: list[dict[str, Any]] = []
-    dispatch_candidates = [
-        {"project": batch["project"], "issue": issue}
-        for batch in selected_batches
-        for issue in batch["issues"]
-    ] or [{"project": project, "issue": issue} for issue in issues[:max_tickets]]
-    for index, candidate in enumerate(dispatch_candidates[:max_tickets]):
-        issue = candidate["issue"]
-        issue_project = candidate["project"]
+    for index, issue in enumerate(issues[:max_tickets]):
         if defer_for_deadline(index, time.monotonic() - started, deadline):
-            receipt["deadline_deferred"] = [
-                int(row["issue"]["number"]) for row in dispatch_candidates[index:max_tickets]
-            ]
+            receipt["deadline_deferred"] = [int(i["number"]) for i in issues[index:max_tickets]]
             receipt["stop_reason"] = "tick_deadline"
             log_event(
                 run_id, "tick_deadline_reached",
@@ -789,8 +724,7 @@ def _tick_locked(
                 {
                     "action": "ticket_repair",
                     "issue_number": int(issue["number"]),
-                    "repo": registry.project_repo(issue_project),
-                    "project_id": str(issue_project.get("project_id")),
+                    "repo": registry.project_repo(project),
                     "ok": True,
                     "status": "SKIPPED",
                     "stop_reason": "execution_lock_held",
@@ -798,43 +732,23 @@ def _tick_locked(
                 }
             )
             continue
-        dispatch_plan.append({
-            "project": issue_project,
-            "issue": issue,
-            "targets": sorted(targets),
-            "lock": execution_lock,
-        })
+        dispatch_plan.append({"issue": issue, "targets": sorted(targets), "lock": execution_lock})
 
     if dispatch_plan and release_scheduler_lock is not None:
         receipt["scheduler_lock_released_before_dispatch"] = True
         release_scheduler_lock()
 
-    def run_dispatch(entry: dict[str, Any]) -> dict[str, Any]:
+    for entry in dispatch_plan:
         issue = entry["issue"]
-        issue_project = entry["project"]
         execution_lock = entry.get("lock")
         try:
-            result = handle_issue(run_id, receipt_dir, issue_project, issue, apply=apply)
+            result = handle_issue(run_id, receipt_dir, project, issue, apply=apply)
             result.setdefault("execution_lock_targets", entry["targets"])
             if execution_lock is not None:
                 result.setdefault("execution_lock", str(execution_lock))
-            return result
+            receipt["handled_issues"].append(result)
         finally:
             release_execution_lock(execution_lock)
-
-    if len(dispatch_plan) > 1:
-        results: list[dict[str, Any] | None] = [None] * len(dispatch_plan)
-        with ThreadPoolExecutor(max_workers=len(dispatch_plan)) as executor:
-            futures = {
-                executor.submit(run_dispatch, entry): index
-                for index, entry in enumerate(dispatch_plan)
-            }
-            for future in as_completed(futures):
-                results[futures[future]] = future.result()
-        receipt["handled_issues"].extend(result for result in results if result is not None)
-    else:
-        for entry in dispatch_plan:
-            receipt["handled_issues"].append(run_dispatch(entry))
     receipt["handled_count"] = len(receipt["handled_issues"])
     receipt["ok"] = all(item.get("ok") for item in receipt["handled_issues"])
     receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
@@ -1060,7 +974,7 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
     inner = (
         f"cd {shlex.quote(str(config.SKILL_DIR))} && "
         f"{shlex.quote(str(config.SKILL_DIR / 'run.sh'))} tick --apply --project all "
-        f"--max-tickets 3"
+        f"--max-tickets 1"
     )
     init_file = config.shell_init_file()
     if init_file is not None:
@@ -1157,3 +1071,12 @@ def status_payload() -> dict[str, Any]:
 
 def status_json() -> str:
     return json.dumps(status_payload(), indent=2, sort_keys=True)
+
+
+def ui_payload(*, receipt_limit: int = 100) -> dict[str, Any]:
+    """Return the read-only React UI snapshot payload."""
+    return build_snapshot(status_payload(), receipt_limit=receipt_limit)
+
+
+def ui_json(*, receipt_limit: int = 100) -> str:
+    return json.dumps(ui_payload(receipt_limit=receipt_limit), indent=2, sort_keys=True)

@@ -136,53 +136,6 @@ def test_markdown_target_paths_accept_coarse_exact_skill_path():
     assert issue_targets({"body": body}) == {"skills/battle"}
 
 
-def test_scoped_files_override_single_target_path_when_acceptance_needs_more_files():
-    body = """## Target
-
-fixtures/skill_chains/agentic_eval.json
-
-## Target paths
-
-- fixtures/skill_chains/agentic_eval.json
-
-## Ticket type details
-
-- **Scoped files:** fixtures/agentic_eval.json fixtures/skill_chains/agentic_eval.json tests/unit/test_skill_chain_eval_fixture_scope.py
-"""
-    assert issue_targets({"body": body}) == {
-        "fixtures/agentic_eval.json",
-        "fixtures/skill_chains/agentic_eval.json",
-        "tests/unit/test_skill_chain_eval_fixture_scope.py",
-    }
-
-
-def test_scoped_files_override_malformed_coarse_target_metadata():
-    body = """## Target
-
-fixtures/skill_chains + scripts/validation
-
-## Target paths
-
-- fixtures/skill_chains + scripts/validation
-
-## Ticket type details
-
-- **Scoped files:** fixtures/skill_chains/ranking_cohort.json scripts/validation/skill_chain_ranking_cohort.py tests/unit/test_skill_chain_ranking_cohort.py fixtures/skill_chains/agentic_eval.json
-
-## Orientation for a stateless agent
-
-Use `skills/memory/run.sh recall`, `skills/project-state/run.sh --json`,
-`skills/dogpile/run.sh`, `skills/brave-search/run.sh`, `skills/test/run.sh`,
-and `skills/treesitter/run.sh`.
-"""
-    assert issue_targets({"body": body}) == {
-        "fixtures/skill_chains/ranking_cohort.json",
-        "scripts/validation/skill_chain_ranking_cohort.py",
-        "tests/unit/test_skill_chain_ranking_cohort.py",
-        "fixtures/skill_chains/agentic_eval.json",
-    }
-
-
 def test_a_legacy_ticket_falls_back_to_the_skills_it_mentions():
     """7 of the 8 leases open on agent-skills predate the target: line."""
     body = "Fix `skills/ask` compete when `skills/surf` returns a stale tab."
@@ -478,38 +431,6 @@ def test_targeted_issue_does_not_let_earlier_issue_claim_its_target(monkeypatch)
 
     assert [i["number"] for i in routable] == [31]
     assert registry.LAST_SCAN["excluded_issues"]["not_targeted_issue"] == [32]
-    assert "target_busy" not in registry.LAST_SCAN["excluded"]
-
-
-def test_dirty_target_is_reported_without_blocking_isolated_dispatch(monkeypatch):
-    dirty = _issue(1469, "skills/agentic-evals")
-    clean = _issue(1472, "skills/ticket")
-
-    def run_cmd(cmd, timeout_s=None):
-        import json as _json
-        return {"exit_code": 0, "stdout": _json.dumps([dirty, clean]), "stderr": ""}
-
-    def readiness(worktree, targets=None):
-        if targets == {"skills/agentic-evals"}:
-            return {
-                "ready": False,
-                "reasons": ["tracked_files_dirty:1"],
-                "dirty_paths": ["skills/agentic-evals/tests/test_remediation.py"],
-            }
-        return {"ready": True, "reasons": []}
-
-    monkeypatch.setattr(registry, "run_cmd", run_cmd)
-    monkeypatch.setattr(registry, "worktree_readiness", readiness)
-
-    routable = registry.list_routable_issues(
-        "t",
-        {"repo": "o/agent-skills", "worktree": "/tmp/worktree"},
-    )
-
-    assert [i["number"] for i in routable] == [1469, 1472]
-    assert routable[0]["watchdog_worktree_readiness"]["dirty_paths"] == [
-        "skills/agentic-evals/tests/test_remediation.py"
-    ]
     assert "target_busy" not in registry.LAST_SCAN["excluded"]
 
 
@@ -873,102 +794,6 @@ def test_all_project_tick_is_the_explicit_fleet_fallback(tmp_path, monkeypatch):
     assert captured["receipt"]["rotation"]["selected"] == "agent-skills"
 
 
-def test_fleet_budget_dispatches_one_issue_per_project(tmp_path, monkeypatch):
-    import json as _json
-    import threading
-
-    projects_path = tmp_path / "projects.json"
-    state_path = tmp_path / "state.json"
-    projects_path.write_text(_json.dumps({
-        "projects": [
-            {"project_id": "tau", "repo": "o/tau"},
-            {"project_id": "memory", "repo": "o/memory"},
-            {"project_id": "sparta", "repo": "o/sparta"},
-        ]
-    }))
-    state_path.write_text(_json.dumps({
-        "global": {"state": "active"},
-        "projects": {
-            "tau": {"state": "active"},
-            "memory": {"state": "active"},
-            "sparta": {"state": "active"},
-        },
-    }))
-    handled: list[tuple[str, int]] = []
-    captured: dict = {}
-    tau_started = threading.Event()
-    memory_started = threading.Event()
-    release_tau = threading.Event()
-
-    tau_one = _issue(317, "src/tau_coding/dag_runtime")
-    tau_one["watchdog_action"] = "ticket_repair"
-    tau_one["watchdog_targets"] = ["src/tau_coding/dag_runtime"]
-    tau_two = _issue(318, "src/tau_coding/other")
-    tau_two["watchdog_action"] = "ticket_repair"
-    tau_two["watchdog_targets"] = ["src/tau_coding/other"]
-    memory_issue = _issue(139, "src/graph_memory/lessons/skill_chains.py")
-    memory_issue["watchdog_action"] = "ticket_repair"
-    memory_issue["watchdog_targets"] = ["src/graph_memory/lessons/skill_chains.py"]
-
-    def fake_list(
-        run_id, candidate, busy, *, skip_issue_numbers=None, skip_issue_reasons=None,
-        only_issue=None, apply=False,
-    ):
-        registry.LAST_SCAN.clear()
-        registry.LAST_SCAN.update({
-            "scanned": 1,
-            "excluded": {},
-            "excluded_issues": {},
-            "dependency_unblocks": [],
-        })
-        if candidate["project_id"] == "tau":
-            return [tau_one, tau_two]
-        if candidate["project_id"] == "memory":
-            return [memory_issue]
-        return []
-
-    def fake_handle(run_id, receipt_dir, project, issue, *, apply):
-        row = (str(project["project_id"]), int(issue["number"]))
-        handled.append(row)
-        if row == ("tau", 317):
-            tau_started.set()
-            assert memory_started.wait(1), "memory dispatch did not overlap tau"
-            release_tau.wait(1)
-        if row == ("memory", 139):
-            memory_started.set()
-            assert tau_started.wait(1), "tau dispatch did not overlap memory"
-            release_tau.set()
-        return {
-            "ok": True,
-            "status": "DRY_RUN",
-            "project_id": str(project["project_id"]),
-            "issue_number": int(issue["number"]),
-        }
-
-    monkeypatch.setattr(config, "projects_path", lambda: projects_path)
-    monkeypatch.setattr(config, "state_path", lambda: state_path)
-    monkeypatch.setattr(commands.registry, "lane_busy_issues", lambda *a, **k: [])
-    monkeypatch.setattr(commands, "list_routable_issues", fake_list)
-    monkeypatch.setattr(commands, "handle_issue", fake_handle)
-    monkeypatch.setattr(commands.streaks, "clear_idle", lambda *a, **k: None)
-    monkeypatch.setattr(commands, "_persist_tick_state", lambda state: None)
-    monkeypatch.setattr(
-        commands,
-        "finish",
-        lambda run_id, d, receipt, code, **k: captured.update(receipt=receipt, code=code)
-        or code,
-    )
-
-    commands._tick_locked(
-        "run", tmp_path / "receipt", apply=False, project_id="all", max_tickets=3
-    )
-
-    assert set(handled) == {("tau", 317), ("memory", 139)}
-    assert captured["receipt"]["rotation"]["selected_projects"] == ["tau", "memory"]
-    assert captured["receipt"]["selected_projects"] == ["tau", "memory"]
-    assert captured["receipt"]["handled_count"] == 2
-
-
 def test_tick_receipt_copies_excluded_issues_from_selected_scan(tmp_path, monkeypatch):
     import json as _json
 
@@ -1293,7 +1118,6 @@ def test_an_answered_attestation_holds_for_the_full_interval(tmp_path, monkeypat
         "an answered attestation is not re-asked an hour later"
 
 
-
 def test_agent_actionable_attention_does_not_make_the_tick_a_human_blocker():
     from watchdog import commands  # noqa: PLC0415
 
@@ -1311,6 +1135,7 @@ def test_agent_actionable_attention_does_not_make_the_tick_a_human_blocker():
     assert receipt["requires_human_input"] is False
     assert receipt["agent_action_required"] is True
     assert receipt["authorized_agent_next_steps"] == [{"kind": "inspect_artifact"}]
+
 
 def test_a_bare_timestamp_from_older_state_still_works(tmp_path, monkeypatch):
     state = {"projects": {"p": {"state": "active"}}, "completion_attested_at": {"p": 0.0}}

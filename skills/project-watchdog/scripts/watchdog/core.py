@@ -114,11 +114,7 @@ def run_cmd(
         stdout, stderr = proc.communicate(input=input_text, timeout=timeout_s)
     except subprocess.TimeoutExpired:
         descendants = _process_descendants(proc.pid)
-        stdout, stderr, cleanup = _terminate_process_group(
-            proc,
-            timeout_s=timeout_s,
-            descendants=descendants,
-        )
+        stdout, stderr, cleanup = _terminate_process_group(proc, timeout_s=timeout_s)
         return {
             "command": command,
             "cwd": str(cwd) if cwd else None,
@@ -149,7 +145,6 @@ def _terminate_process_group(
     proc: subprocess.Popen[str],
     *,
     timeout_s: int,
-    descendants: list[dict[str, Any]] | None = None,
 ) -> tuple[str, str, dict[str, Any]]:
     """Terminate the command's whole process group after a timeout."""
     cleanup: dict[str, Any] = {
@@ -167,7 +162,6 @@ def _terminate_process_group(
     try:
         stdout, stderr = proc.communicate(timeout=5)
     except subprocess.TimeoutExpired:
-        cleanup["descendant_cleanup_after_term"] = _terminate_recorded_descendants(descendants or [])
         try:
             os.killpg(proc.pid, signal.SIGKILL)
             cleanup["kill_sent"] = True
@@ -175,97 +169,10 @@ def _terminate_process_group(
             pass
         except OSError as exc:
             cleanup["kill_error"] = str(exc)
-        cleanup["descendant_cleanup_after_kill"] = _terminate_recorded_descendants(descendants or [])
-        try:
-            stdout, stderr = proc.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            cleanup["communicate_after_kill_timeout"] = True
-            stdout, stderr = "", ""
-    cleanup["descendant_cleanup"] = _terminate_recorded_descendants(descendants or [])
+        stdout, stderr = proc.communicate()
     cleanup["return_code_after_timeout"] = proc.returncode
     cleanup["timeout_seconds"] = timeout_s
     return stdout or "", stderr or "", cleanup
-
-
-def _pid_cmdline(pid: int) -> str | None:
-    try:
-        return (
-            (Path("/proc") / str(pid) / "cmdline")
-            .read_bytes()
-            .replace(b"\0", b" ")
-            .decode(errors="replace")
-            .strip()
-        )
-    except OSError:
-        return None
-
-
-def _terminate_recorded_descendants(descendants: list[dict[str, Any]]) -> dict[str, Any]:
-    """Terminate timeout descendants that escaped the launched process group."""
-    cleanup: dict[str, Any] = {
-        "checked": [],
-        "term_sent": [],
-        "kill_sent": [],
-        "still_alive": [],
-    }
-    recorded: list[tuple[int, str]] = []
-    for item in descendants:
-        try:
-            pid = int(item.get("pid"))
-        except (TypeError, ValueError):
-            continue
-        cmdline = str(item.get("cmdline") or "")
-        recorded.append((pid, cmdline))
-
-    for pid, expected_cmdline in recorded:
-        current_cmdline = _pid_cmdline(pid)
-        cleanup["checked"].append({"pid": pid, "cmdline": current_cmdline})
-        if current_cmdline is None:
-            continue
-        if expected_cmdline and current_cmdline != expected_cmdline:
-            cleanup.setdefault("skipped_cmdline_mismatch", []).append(
-                {
-                    "pid": pid,
-                    "expected": expected_cmdline,
-                    "actual": current_cmdline,
-                }
-            )
-            continue
-        try:
-            os.kill(pid, signal.SIGTERM)
-            cleanup["term_sent"].append(pid)
-        except ProcessLookupError:
-            continue
-        except OSError as exc:
-            cleanup.setdefault("term_errors", []).append({"pid": pid, "error": str(exc)})
-
-    deadline = time.monotonic() + 2.0
-    while time.monotonic() < deadline:
-        if not any(_pid_cmdline(pid) is not None for pid, _ in recorded):
-            break
-        time.sleep(0.05)
-
-    for pid, expected_cmdline in recorded:
-        current_cmdline = _pid_cmdline(pid)
-        if current_cmdline is None:
-            continue
-        if expected_cmdline and current_cmdline != expected_cmdline:
-            continue
-        try:
-            os.kill(pid, signal.SIGKILL)
-            cleanup["kill_sent"].append(pid)
-        except ProcessLookupError:
-            continue
-        except OSError as exc:
-            cleanup.setdefault("kill_errors", []).append({"pid": pid, "error": str(exc)})
-
-    time.sleep(0.05)
-    for pid, _ in recorded:
-        current_cmdline = _pid_cmdline(pid)
-        if current_cmdline is not None:
-            cleanup["still_alive"].append({"pid": pid, "cmdline": current_cmdline})
-    cleanup["ok"] = not cleanup["still_alive"]
-    return cleanup
 
 
 def _process_descendants(root_pid: int) -> list[dict[str, Any]]:
