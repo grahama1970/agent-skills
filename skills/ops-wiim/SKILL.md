@@ -49,7 +49,7 @@ port-forward this interface.
 ```
 
 Or read the IP from WiiM Home → device settings → Network Status, then export
-`WIIM_IP=<ip>` (or repo-root `.env`).
+`WIIM_IP=<ip>` — the amp is wired at 192.168.86.50 (Ethernet since 2026-08-31; set a DHCP reservation) (or repo-root `.env`).
 
 ## Diagnose low volume
 

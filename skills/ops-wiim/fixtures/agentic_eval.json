@@ -15,7 +15,7 @@
       "command": [
         "bash",
         "-c",
-        "../run.sh diagnose --json --ip \"${WIIM_IP:-192.168.86.111}\""
+        "../run.sh diagnose --json --ip \"${WIIM_IP:-192.168.86.50}\""
       ],
       "blocked_when_stdout_contains": [
         "\"status\": \"down\""
