@@ -118,6 +118,11 @@ class AgentStatus(BaseModel):
     model_config = ConfigDict(extra="forbid")
     schema_: Literal["pi.agent_status.v1"] = Field(alias="schema")
     goal: str = Field(min_length=1)
+    goal_id: str | None = None
+    goal_hash: str | None = Field(
+        default=None,
+        description="Immutable goal hash from the Tau goal packet (sha256:<64hex>); enables turn-level drift detection",
+    )
     state: Literal[
         "done", "continuing", "needs_human", "failed",
         "needs_brave_search", "needs_agent", "needs_webgpt",
@@ -134,6 +139,19 @@ class AgentStatus(BaseModel):
     needs_webgpt: NeedsWebgpt | None = None
     needs_roundtable: NeedsRoundtable | None = None
     needs_competition: NeedsCompetition | None = None
+
+    @field_validator("goal_hash")
+    @classmethod
+    def goal_hash_shape(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        prefix = "sha256:"
+        if not value.startswith(prefix):
+            raise ValueError("goal_hash must start with sha256:")
+        digest = value[len(prefix):]
+        if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
+            raise ValueError("goal_hash digest must be 64 lowercase hex chars")
+        return value
 
     @model_validator(mode="after")
     def state_legality(self) -> "AgentStatus":

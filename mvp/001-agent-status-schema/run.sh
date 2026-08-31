@@ -31,6 +31,8 @@ check 0 valid_needs_competition '{"schema":"pi.agent_status.v1","goal":"g","stat
 check 1 illegal_webgpt_without_rung_receipts '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_webgpt","needs_webgpt":{"question":"q"}}'
 check 1 illegal_roundtable_below_quorum '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_roundtable","needs_roundtable":{"immutable_goal":"ig","question":"q","handlers":["webgpt","webkimi"]}}'
 check 1 illegal_competition_single_handler '{"schema":"pi.agent_status.v1","goal":"g","state":"needs_competition","needs_competition":{"immutable_goal":"ig","task":"t","handlers":["webgpt"],"criteria":["c"]}}'
+check 0 valid_goal_hash '{"schema":"pi.agent_status.v1","goal":"g","goal_id":"tau-x","goal_hash":"sha256:0000000000000000000000000000000000000000000000000000000000000000","state":"continuing","not_done":[{"item":"i","next_command":"c"}]}'
+check 1 illegal_goal_hash_shape '{"schema":"pi.agent_status.v1","goal":"g","goal_hash":"sha256:short","state":"continuing","not_done":[{"item":"i","next_command":"c"}]}'
 check 1 illegal_extra_field '{"schema":"pi.agent_status.v1","goal":"g","state":"done","verified":[{"command":"c","result":"r"}],"proof":["p"],"vibes":"good"}'
 
 echo "pass=$pass fail=$fail"

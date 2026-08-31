@@ -1,186 +1,274 @@
 {
-  "version": 2,
-  "skill": "ops-herdr",
-  "trials": 3,
-  "proof_scope": "live Herdr topology and grid contract plus fail-closed guards",
-  "claims": {
-    "proves": "against the Herdr running on this machine: workspace/tab creation return root topology ids, splits return new pane ids, a planned 2x2 and 3x3 grid materialize as real rectangles with non-zero cells, the layout reads back the panes we created, a cross-workspace pane move preserves the terminal and reports an old-to-new id map, and the invalid-grid / unknown-kind / empty-prompt / unsupported-protocol paths all fail closed",
-    "does_not_prove": "provider agent behaviour after attach, multi-pane whole-tab movement, monitor-herdr state reconciliation, or that a grid is ergonomic at a given terminal size"
+ "version": 2,
+ "skill": "ops-herdr",
+ "trials": 3,
+ "proof_scope": "live Herdr topology and grid contract plus fail-closed guards",
+ "claims": {
+  "proves": "against the Herdr running on this machine: workspace/tab creation return root topology ids, splits return new pane ids, a planned 2x2 and 3x3 grid materialize as real rectangles with non-zero cells, the layout reads back the panes we created, a cross-workspace pane move preserves the terminal and reports an old-to-new id map, and the invalid-grid / unknown-kind / empty-prompt / unsupported-protocol paths all fail closed; pi-herdr-bridge framing/roster/lane units pass, a live pi-intercom broker round trip delivers and reads back a message, and an unknown send target fails closed; the v1 envelope round-trips end-to-end through bridge-cli, the live broker, per-message ack/archive, dead-letter, and the real stop hook",
+  "does_not_prove": "provider agent behaviour after attach, multi-pane whole-tab movement, monitor-herdr state reconciliation, or that a grid is ergonomic at a given terminal size; live memory-daemon mirroring (daemon unhealthy on this host \u2014 mirror fail-soft path is what the e2e records)"
+ },
+ "cases": [
+  {
+   "name": "sanity",
+   "type": "positive",
+   "command": [
+    "bash",
+    "../sanity.sh"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "verify ok"
+    ]
+   },
+   "timeout_seconds": 240
   },
-  "cases": [
-    {
-      "name": "sanity",
-      "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "verify ok"
-        ]
-      },
-      "timeout_seconds": 240
-    },
-    {
-      "name": "live-herdr-topology-and-move",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python evals/live_space_e2e.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"status\": \"PASS\"",
-          "pane_move.terminal_preserved",
-          "pane_move.id_map",
-          "pane_layout.leaves",
-          "workspace_create.root_pane_id",
-          "grid_2x2.geometry",
-          "grid_3x3.geometry",
-          "no_zero_cells"
-        ]
-      },
-      "timeout_seconds": 240
-    },
-    {
-      "name": "live-doctor-reports-protocol",
-      "type": "positive",
-      "real_world": true,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh doctor --json"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"protocol\"",
-          "\"minimum\": 19"
-        ]
-      }
-    },
-    {
-      "name": "agent-start-rejects-kind-outside-herdr-enum",
-      "type": "negative",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh agent start /nonexistent-manifest --name probe --role probe --kind definitely-not-a-kind"
-      ],
-      "expected": {
-        "exit_code": 2
-      }
-    },
-    {
-      "name": "agent-send-refuses-empty-prompt",
-      "type": "adversarial",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh agent send probe-target --text ''"
-      ],
-      "expected": {
-        "exit_code": 2
-      }
-    },
-    {
-      "name": "protocol-gate-blocks-mutation-when-herdr-unusable",
-      "type": "adversarial",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh workstation create --repo . --label protocol-gate-probe --herdr-bin false"
-      ],
-      "expected": {
-        "exit_code": 1
-      }
-    },
-    {
-      "name": "grid-plan-is-deterministic-and-balanced",
-      "type": "positive",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh space plan --grid 3x3"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"cell_count\": 9",
-          "\"rows\": 3",
-          "\"columns\": 3"
-        ]
-      }
-    },
-    {
-      "name": "grid-plan-count-three-avoids-a-dead-cell",
-      "type": "positive",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh space plan --count 3"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "\"cell_count\": 3",
-          "\"rows\": 1",
-          "\"columns\": 3"
-        ]
-      }
-    },
-    {
-      "name": "grid-rejects-zero-dimension",
-      "type": "negative",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh space plan --grid 0x2"
-      ],
-      "expected": {
-        "exit_code": 2
-      }
-    },
-    {
-      "name": "grid-rejects-unreadable-rectangle",
-      "type": "negative",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh space plan --grid 9x9"
-      ],
-      "expected": {
-        "exit_code": 2
-      }
-    },
-    {
-      "name": "grid-rejects-both-count-and-grid",
-      "type": "adversarial",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh space plan --count 2 --grid 2x2"
-      ],
-      "expected": {
-        "exit_code": 2
-      }
-    },
-    {
-      "name": "launch-rejects-more-agents-than-cells",
-      "type": "adversarial",
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && ./run.sh space launch --repo . --label probe --grid 1x1 --agent a=codex --agent b=codex --dry-run"
-      ],
-      "expected": {
-        "exit_code": 2
-      }
-    }
-  ]
+  {
+   "name": "live-herdr-topology-and-move",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && uv run --project . python evals/live_space_e2e.py"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"status\": \"PASS\"",
+     "pane_move.terminal_preserved",
+     "pane_move.id_map",
+     "pane_layout.leaves",
+     "workspace_create.root_pane_id",
+     "grid_2x2.geometry",
+     "grid_3x3.geometry",
+     "no_zero_cells"
+    ]
+   },
+   "timeout_seconds": 240
+  },
+  {
+   "name": "live-doctor-reports-protocol",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh doctor --json"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"protocol\"",
+     "\"minimum\": 19"
+    ]
+   }
+  },
+  {
+   "name": "agent-start-rejects-kind-outside-herdr-enum",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh agent start /nonexistent-manifest --name probe --role probe --kind definitely-not-a-kind"
+   ],
+   "expected": {
+    "exit_code": 2
+   }
+  },
+  {
+   "name": "agent-send-refuses-empty-prompt",
+   "type": "adversarial",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh agent send probe-target --text ''"
+   ],
+   "expected": {
+    "exit_code": 2
+   }
+  },
+  {
+   "name": "protocol-gate-blocks-mutation-when-herdr-unusable",
+   "type": "adversarial",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh workstation create --repo . --label protocol-gate-probe --herdr-bin false"
+   ],
+   "expected": {
+    "exit_code": 1
+   }
+  },
+  {
+   "name": "grid-plan-is-deterministic-and-balanced",
+   "type": "positive",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh space plan --grid 3x3"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"cell_count\": 9",
+     "\"rows\": 3",
+     "\"columns\": 3"
+    ]
+   }
+  },
+  {
+   "name": "grid-plan-count-three-avoids-a-dead-cell",
+   "type": "positive",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh space plan --count 3"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"cell_count\": 3",
+     "\"rows\": 1",
+     "\"columns\": 3"
+    ]
+   }
+  },
+  {
+   "name": "grid-rejects-zero-dimension",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh space plan --grid 0x2"
+   ],
+   "expected": {
+    "exit_code": 2
+   }
+  },
+  {
+   "name": "grid-rejects-unreadable-rectangle",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh space plan --grid 9x9"
+   ],
+   "expected": {
+    "exit_code": 2
+   }
+  },
+  {
+   "name": "grid-rejects-both-count-and-grid",
+   "type": "adversarial",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh space plan --count 2 --grid 2x2"
+   ],
+   "expected": {
+    "exit_code": 2
+   }
+  },
+  {
+   "name": "launch-rejects-more-agents-than-cells",
+   "type": "adversarial",
+   "command": [
+    "bash",
+    "-c",
+    "cd .. && ./run.sh space launch --repo . --label probe --grid 1x1 --agent a=codex --agent b=codex --dry-run"
+   ],
+   "expected": {
+    "exit_code": 2
+   }
+  },
+  {
+   "name": "bridge-unit-tests",
+   "type": "positive",
+   "command": [
+    "bash",
+    "-c",
+    "cd ../pi-herdr-bridge && npm test"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "# pass 14",
+     "# fail 0"
+    ]
+   },
+   "timeout_seconds": 120
+  },
+  {
+   "name": "bridge-live-broker-roundtrip",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd ../pi-herdr-bridge && node evals/live_broker_roundtrip.mjs"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"status\": \"PASS\"",
+     "delivery_result",
+     "readback_text"
+    ]
+   },
+   "timeout_seconds": 60
+  },
+  {
+   "name": "bridge-send-fails-closed-on-unknown-target",
+   "type": "negative",
+   "command": [
+    "bash",
+    "-c",
+    "cd ../pi-herdr-bridge && node bridge-cli.mjs send --to no-such-session-xyz --text ping"
+   ],
+   "expected": {
+    "exit_code": 1,
+    "stdout_contains": [
+     "no session matches"
+    ]
+   },
+   "timeout_seconds": 60
+  },
+  {
+   "name": "bridge-live-envelope-e2e",
+   "type": "positive",
+   "real_world": true,
+   "command": [
+    "bash",
+    "-c",
+    "cd ../pi-herdr-bridge && node evals/live_envelope_e2e.mjs"
+   ],
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "\"status\": \"PASS\"",
+     "\"delivered_live\": true",
+     "\"hook_blocked_then_silent\": true",
+     "\"per_message_ack_and_archive\": true",
+     "\"listener_received\": true",
+     "memory_mirror_recorded"
+    ]
+   },
+   "timeout_seconds": 120
+  },
+  {
+   "name": "bridge-flush-dry-run-contract",
+   "type": "positive",
+   "real_world": true,
+   "timeout_seconds": 60,
+   "command": [
+    "bash",
+    "-lc",
+    "cd /home/graham/workspace/experiments/agent-skills/skills/ops-herdr && node pi-herdr-bridge/bridge-cli.mjs flush --dry-run | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['ok'] is True and isinstance(d['results'], list)\""
+   ],
+   "expected": {
+    "exit_code": 0
+   }
+  }
+ ]
 }

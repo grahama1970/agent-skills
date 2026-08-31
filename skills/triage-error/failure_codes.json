@@ -416,6 +416,141 @@
       ]
     },
     {
+      "code": "create_svg_tau_provenance_missing_candidate_receipt",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_missing_candidate_receipt"
+      ],
+      "cause": "A proposed Tau SVG output lacks a readable create_svg.variant_candidate.v1 receipt binding the SVG to a creator node and Tau run.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_missing_node_receipt",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_missing_node_receipt"
+      ],
+      "cause": "A proposed Tau SVG output lacks a PASS creator node receipt under the referenced Tau run directory.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_missing_judge_receipt",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_missing_judge_receipt"
+      ],
+      "cause": "A proposed Tau SVG output lacks a PASS judge/reviewer node receipt under the referenced Tau run directory.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_visual_gate_missing",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_visual_gate_missing"
+      ],
+      "cause": "A proposed Tau SVG output lacks a screenshot-bound create_svg.visual_gate.v1 receipt.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_visual_gate_not_pass",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_visual_gate_not_pass"
+      ],
+      "cause": "The create_svg.visual_gate.v1 receipt exists but is not PASS for goal representation and target-size attractiveness.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_hash_mismatch",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_hash_mismatch"
+      ],
+      "cause": "A proposed Tau SVG output has an SVG or screenshot sha256 that does not match the bytes on disk.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_binding_mismatch",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_binding_mismatch"
+      ],
+      "cause": "A proposed Tau SVG output has mismatched Tau run, creator node, candidate, visual gate, goal, target, or target-size bindings.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_missing_tau_receipt",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_missing_tau_receipt"
+      ],
+      "cause": "A proposed Tau SVG output lacks a PASS Tau dag-receipt.json/dag-progress.json under the launch receipt run_dir.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
+      "code": "create_svg_tau_provenance_missing_launch_receipt",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_provenance_missing_launch_receipt"
+      ],
+      "cause": "A proposed Tau SVG output lacks a readable create_svg.tau_variant_loop_plan.v1 launch receipt.",
+      "next_command": "Read the create_svg.tau_variant_provenance_gate.v1 receipt errors, regenerate the missing Tau/candidate/visual receipt binding from the real Tau run, then rerun skills/create-svg/run.sh tau-provenance-gate and the create-svg agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual design rejection",
+        "provider cooldown",
+        "ordinary SVG validation failure"
+      ]
+    },
+    {
       "code": "create_svg_browser_submit_not_accepted",
       "layer": "create-svg",
       "match": [
@@ -464,6 +599,25 @@
         "Tau compile failure",
         "provider authentication",
         "missing screenshot file"
+      ]
+    },
+    {
+      "code": "herdr_pane_unaddressable",
+      "layer": "ops-herdr.bridge",
+      "match": [
+        "pane_unreadable",
+        "target_not_in_roster_or_no_pane",
+        "deferred message exceeded TTL",
+        "none addressable",
+        "pane(s) named",
+        "but none addressable"
+      ],
+      "cause": "A Herdr bridge message targeted a pane that is dead, unreadable, or no longer in the roster; queued delivery expired to dead-letter.",
+      "next_command": "node skills/ops-herdr/pi-herdr-bridge/bridge-cli.mjs list  # confirm the live session, then resend to the current pane/session-ref",
+      "recoverable": true,
+      "not_this": [
+        "provider rate limit",
+        "intercom broker outage"
       ]
     }
   ]
