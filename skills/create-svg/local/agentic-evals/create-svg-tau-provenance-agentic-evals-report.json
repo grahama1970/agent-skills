@@ -1,0 +1,697 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "../create-svg/fixtures/agentic_eval.json",
+  "run_id": "950b5a2e9164",
+  "fixture_sha256": "sha256:334f10cdcca6f1c95e3a1ae625b310ec2c464d77e149d452fa3ec31f5ac0c169",
+  "repo": {
+    "sha": "f6c6a11e0f391ae909f8eb28b4a434b534d1c668",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "local deterministic SVG generation, structural validation, browser img-mode motion, unsafe-input rejection, component-output contract presence, and exported project-card consumer wiring, and Tau variant provenance gating against local preview laundering",
+  "claims": {
+    "proves": "the skill can generate and validate its bundled scenes, rejects a script-bearing SVG through its real CLI, documents component-group output for labels/nodes/pills/cards, and checks that an exported project-card SVG is wired into consuming site routes instead of being orphaned, and rejects Tau-variant SVG publication without Tau node receipts plus screenshot-bound visual-gate PASS",
+    "does_not_prove": "all arbitrary diagram layouts, every browser, future GitHub proxy behavior, or exact font availability on remote viewers"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-08-31T15:08:55.421233+00:00",
+  "case_count": 11,
+  "required_case_count": 11,
+  "outcome_counts": {
+    "PASS": 11,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 33,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "real-render-verify-browser",
+      "type": "positive",
+      "case_id": "950b5a2e9164-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "out=$(mktemp -d) && ../run.sh render ../assets/templates/fanout-anatomy.yml \"$out/scene.svg\" && ../run.sh verify ../assets/templates/fanout-anatomy.yml \"$out/scene.svg\" --receipt \"$out/scene.receipt.json\" --browser"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [
+        "no independent readback oracle (exit code / self-reported success only)"
+      ],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 3297.393,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "/tmp/tmp.tPIG52TZua/scene.svg\n/tmp/tmp.tPIG52TZua/scene.receipt.json\nPASS\n",
+          "stderr": "",
+          "duration_ms": 3181.338,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "/tmp/tmp.GgOStQNNIe/scene.svg\n/tmp/tmp.GgOStQNNIe/scene.receipt.json\nPASS\n",
+          "stderr": "",
+          "duration_ms": 3444.046,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "/tmp/tmp.FhKwCOiFHF/scene.svg\n/tmp/tmp.FhKwCOiFHF/scene.receipt.json\nPASS\n",
+          "stderr": "",
+          "duration_ms": 3266.795,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "real-sanity",
+      "type": "positive",
+      "case_id": "950b5a2e9164-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "../sanity.sh"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 7071.803,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "...............                                                          [100%]\n15 passed in 3.06s\nPASS: best-practices-skills and best-practices-python local contract\n/tmp/tmp.Djwmqee7r1/positive-negative.receipt.json\nPASS\n/tmp/tmp.Djwmqee7r1/positive-negative-preview.html\n/tmp/tmp.Djwmqee7r1/unsafe.receipt.json\nFAIL\n\nResult: PASS\nSANITY PASS: tests, real render, browser motion, unsafe-input rejection, and contract checks\n",
+          "stderr": "Resolved 29 packages in 0.88ms\nAudited 27 packages in 0.56ms\n",
+          "duration_ms": 7203.557,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c001-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "...............                                                          [100%]\n15 passed in 2.99s\nPASS: best-practices-skills and best-practices-python local contract\n/tmp/tmp.n0xViDdjg0/positive-negative.receipt.json\nPASS\n/tmp/tmp.n0xViDdjg0/positive-negative-preview.html\n/tmp/tmp.n0xViDdjg0/unsafe.receipt.json\nFAIL\n\nResult: PASS\nSANITY PASS: tests, real render, browser motion, unsafe-input rejection, and contract checks\n",
+          "stderr": "Resolved 29 packages in 0.97ms\nAudited 27 packages in 0.53ms\n",
+          "duration_ms": 7023.324,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c001-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "...............                                                          [100%]\n15 passed in 2.95s\nPASS: best-practices-skills and best-practices-python local contract\n/tmp/tmp.5SDyRDyp4d/positive-negative.receipt.json\nPASS\n/tmp/tmp.5SDyRDyp4d/positive-negative-preview.html\n/tmp/tmp.5SDyRDyp4d/unsafe.receipt.json\nFAIL\n\nResult: PASS\nSANITY PASS: tests, real render, browser motion, unsafe-input rejection, and contract checks\n",
+          "stderr": "Resolved 29 packages in 0.88ms\nAudited 27 packages in 0.51ms\n",
+          "duration_ms": 6988.527,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c001-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "unsafe-svg-fails-closed",
+      "type": "negative",
+      "case_id": "950b5a2e9164-c002",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "../run.sh",
+        "validate",
+        "../tests/fixtures/unsafe-script.svg"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 261.728,
+      "trials": [
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/home/graham/workspace/experiments/agent-skills/skills/create-svg/tests/fixtures/unsafe-script.svg\",\n  \"source_sha256\": \"7db328a02e0d179cc2a2ebc8cc8f561a6201c9b910aee50c3ef01da356de491a\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stderr": "",
+          "duration_ms": 276.948,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c002-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/home/graham/workspace/experiments/agent-skills/skills/create-svg/tests/fixtures/unsafe-script.svg\",\n  \"source_sha256\": \"7db328a02e0d179cc2a2ebc8cc8f561a6201c9b910aee50c3ef01da356de491a\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stderr": "",
+          "duration_ms": 250.285,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c002-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "{\n  \"browser\": {\n    \"animation_observed\": false,\n    \"changed_pixel_ratio\": 0.0,\n    \"details\": \"browser verification not requested\",\n    \"loaded\": false,\n    \"natural_height\": 0,\n    \"natural_width\": 0,\n    \"status\": \"NOT_RUN\"\n  },\n  \"deterministic_rebuild\": null,\n  \"does_not_prove\": \"pixel-perfect rendering on every browser, remote font availability, or future GitHub proxy behavior\",\n  \"findings\": [\n    {\n      \"code\": \"ACTIVE_TAG\",\n      \"message\": \"forbidden SVG element: script\",\n      \"severity\": \"error\"\n    }\n  ],\n  \"kind\": \"readme-svg-validation.v1\",\n  \"proof_scope\": \"XML safety, active-content rejection, references, accessibility, reduced motion, optional strict theme and Chromium img-mode motion\",\n  \"seam_validation\": {\n    \"kind\": \"svg-to-receipt\",\n    \"status\": \"FAIL\"\n  },\n  \"source_path\": \"/home/graham/workspace/experiments/agent-skills/skills/create-svg/tests/fixtures/unsafe-script.svg\",\n  \"source_sha256\": \"7db328a02e0d179cc2a2ebc8cc8f561a6201c9b910aee50c3ef01da356de491a\",\n  \"status\": \"FAIL\",\n  \"theme\": null,\n  \"tool_version\": \"0.1.0\"\n}\nFAIL\n",
+          "stderr": "",
+          "duration_ms": 257.951,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c002-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "component-output-and-centering-contract-documented",
+      "type": "positive",
+      "case_id": "950b5a2e9164-c003",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "grep -q 'data-component' ../SKILL.md && grep -q 'top visual' ../SKILL.md && grep -q 'Component output contract' ../references/schema.md && grep -q 'visual bounds' ../README.md && echo COMPONENT_CENTER_CONTRACT_OK"
+      ],
+      "declared_evidence_class": "deterministic",
+      "effective_evidence_class": "deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 11.047,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "COMPONENT_CENTER_CONTRACT_OK\n",
+          "stderr": "",
+          "duration_ms": 11.21,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c003-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "COMPONENT_CENTER_CONTRACT_OK\n",
+          "stderr": "",
+          "duration_ms": 11.381,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c003-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "COMPONENT_CENTER_CONTRACT_OK\n",
+          "stderr": "",
+          "duration_ms": 10.549,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c003-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "exported-project-card-consumer-wiring-checked",
+      "type": "positive",
+      "case_id": "950b5a2e9164-c004",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "cd ../../.. && python3 skills/best-practices-svg-design/scripts/check_project_card_feature.py --repo-root . --slug memory --asset memory-recall-card.svg --source docs/assets/project-cards/memory-recall-card.svg --site-asset site/public/projects/memory-recall-card.svg --site-asset site/public/projects/thumbs/memory-recall-card.svg --consumer site/app/page.tsx --consumer site/app/explore/page.tsx --consumer site/components/capability-constellation.tsx --require-transform 'translate(200 -48.5)' --registry site/visual-assets.yml"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 36.028,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "PROJECT_CARD_FEATURE_OK {'slug': 'memory', 'asset': 'memory-recall-card.svg', 'source_sha256': '4333fd674bc9a325b5424e31f8024200c79755bf2b8a19dc1717be1f707bf90a', 'site_assets': 2, 'consumers': 3, 'built_html': 0}\n",
+          "stderr": "",
+          "duration_ms": 35.29,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c004-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PROJECT_CARD_FEATURE_OK {'slug': 'memory', 'asset': 'memory-recall-card.svg', 'source_sha256': '4333fd674bc9a325b5424e31f8024200c79755bf2b8a19dc1717be1f707bf90a', 'site_assets': 2, 'consumers': 3, 'built_html': 0}\n",
+          "stderr": "",
+          "duration_ms": 35.794,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c004-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "PROJECT_CARD_FEATURE_OK {'slug': 'memory', 'asset': 'memory-recall-card.svg', 'source_sha256': '4333fd674bc9a325b5424e31f8024200c79755bf2b8a19dc1717be1f707bf90a', 'site_assets': 2, 'consumers': 3, 'built_html': 0}\n",
+          "stderr": "",
+          "duration_ms": 36.999,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c004-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "exported-project-card-check-rejects-orphaned-svg",
+      "type": "negative",
+      "case_id": "950b5a2e9164-c005",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.tsx); cp ../../../site/app/page.tsx \"$T\"; python3 - \"$T\" <<'PYCODE'\nimport pathlib,sys\np=pathlib.Path(sys.argv[1])\ns=p.read_text()\ns=s.replace('memory-recall-card.svg', 'memory.svg')\np.write_text(s)\nPYCODE\ncd ../../.. && python3 skills/best-practices-svg-design/scripts/check_project_card_feature.py --repo-root . --slug memory --asset memory-recall-card.svg --skip-assets --consumer \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 63.657,
+      "trials": [
+        {
+          "exit_code": 1,
+          "stdout": "PROJECT_CARD_FEATURE_FAIL\n- consumer legacy asset in /tmp/tmp.sy6aZHeuDF.tsx: expected memory-recall-card.svg, found memory.svg\n",
+          "stderr": "",
+          "duration_ms": 63.282,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c005-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "PROJECT_CARD_FEATURE_FAIL\n- consumer legacy asset in /tmp/tmp.fhRIMZFP2m.tsx: expected memory-recall-card.svg, found memory.svg\n",
+          "stderr": "",
+          "duration_ms": 64.849,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c005-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "PROJECT_CARD_FEATURE_FAIL\n- consumer legacy asset in /tmp/tmp.FOnqmPv1Pi.tsx: expected memory-recall-card.svg, found memory.svg\n",
+          "stderr": "",
+          "duration_ms": 62.839,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c005-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "exported-project-card-check-rejects-stale-registry",
+      "type": "negative",
+      "case_id": "950b5a2e9164-c006",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp --suffix=.yml); cp ../../../site/visual-assets.yml \"$T\"; python3 - \"$T\" <<'PYCODE'\nimport pathlib,sys\np=pathlib.Path(sys.argv[1])\ns=p.read_text().replace('memory-recall-card.svg', 'memory.svg')\np.write_text(s)\nPYCODE\ncd ../../.. && python3 skills/best-practices-svg-design/scripts/check_project_card_feature.py --repo-root . --slug memory --asset memory-recall-card.svg --skip-assets --registry \"$T\"; rc=$?; rm -f \"$T\"; exit $rc"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 62.312,
+      "trials": [
+        {
+          "exit_code": 1,
+          "stdout": "PROJECT_CARD_FEATURE_FAIL\n- asset registry missing memory-recall-card.svg in /tmp/tmp.w2ZoHqXvX2.yml\n",
+          "stderr": "",
+          "duration_ms": 62.457,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c006-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "PROJECT_CARD_FEATURE_FAIL\n- asset registry missing memory-recall-card.svg in /tmp/tmp.dC0zOQMvAc.yml\n",
+          "stderr": "",
+          "duration_ms": 62.018,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c006-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 1,
+          "stdout": "PROJECT_CARD_FEATURE_FAIL\n- asset registry missing memory-recall-card.svg in /tmp/tmp.32qtli4kLC.yml\n",
+          "stderr": "",
+          "duration_ms": 62.461,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c006-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "tau-variant-loop-compiles-concurrent-creators",
+      "type": "positive",
+      "case_id": "950b5a2e9164-c007",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && cat > $T/variants.yml <<'YAML'\nschema: create_svg.variant_pack.v1\nvariants:\n  - id: ledger-first\n    direction: Make signed receipts visually dominant.\n  - id: dag-first\n    direction: Make DAG nodes visually dominant.\nYAML\n../run.sh tau-variant-loop $T/variants.yml --goal 'Tau is a zero-trust DAG execution harness.' --target 'grahama.co Tau project card' --target-size '400x260' --screenshot-command 'skills/surf/run.sh screenshot --out <SCREENSHOT_PATH>' --receipt $T/plan.json --creator-handler gpt-5.5-high --creator-handler webkimi --judge-handler claude-fable-low --ask-id create-svg-variant-agentic-eval --run-output-root $T/runs >/dev/null && python3 - $T/plan.json <<'PYCODE'\nimport json,subprocess,sys\nd=json.load(open(sys.argv[1]))\nassert d['kind']=='create_svg.tau_variant_loop_plan.v1'\nassert d['creator_handlers']==['gpt-5.5-high','webkimi']\nassert d['ask_command'][1:3]==['tau-dag','compete']\nout=subprocess.check_output(d['ask_command'], text=True, stderr=subprocess.DEVNULL)\nobj=json.loads(out[out.find('{'):out.rfind('}')+1])\ndag=(obj.get('bundle') or obj)['dag']\nnodes=[str(n.get('node_id') or n.get('id')) for n in dag['nodes']]\nedges={(e.get('from'),e.get('to')) for e in dag['edges']}\nhandlers=[n for n in nodes if n.startswith('handler-')]\nassert len(handlers)==2, handlers\nassert not [e for e in edges if e[0] in handlers and e[1] in handlers], edges\nassert all((h,'join-gate') in edges for h in handlers), edges\nassert 'judge' in nodes, nodes\nprint('CREATE_SVG_VARIANT_CONCURRENT_CREATORS', len(handlers))\nPYCODE"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 1250.945,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "CREATE_SVG_VARIANT_CONCURRENT_CREATORS 2\n",
+          "stderr": "",
+          "duration_ms": 1240.383,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c007-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "CREATE_SVG_VARIANT_CONCURRENT_CREATORS 2\n",
+          "stderr": "",
+          "duration_ms": 1295.857,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c007-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "CREATE_SVG_VARIANT_CONCURRENT_CREATORS 2\n",
+          "stderr": "",
+          "duration_ms": 1216.594,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c007-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "triage-error-classifies-create-svg-codes-without-prose",
+      "type": "positive",
+      "case_id": "950b5a2e9164-c008",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "cd ../../.. && skills/triage-error/run.sh classify --text '{\"code\":\"create_svg_variant_handler_count_mismatch\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_variant_handler_count_mismatch' and d['ambiguous'] is False;print('CREATE_SVG_TRIAGE_CODE_OK')\""
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 120.387,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "CREATE_SVG_TRIAGE_CODE_OK\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 122.964,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c008-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "CREATE_SVG_TRIAGE_CODE_OK\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 119.502,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c008-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "CREATE_SVG_TRIAGE_CODE_OK\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 118.696,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c008-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "tau-provenance-gate-accepts-bound-winner",
+      "type": "positive",
+      "case_id": "950b5a2e9164-c009",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && ../scripts/agentic-eval-tau-provenance.py --case valid-bound-accepted --work $T/work --out $T/result.json"
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 300.958,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"case\": \"valid_bound_accepted\",\n  \"ok\": true,\n  \"receipt\": {\n    \"candidate_receipt_path\": \"/tmp/tmp.0aEBMfEyQq/work/candidate.json\",\n    \"creator_node_id\": \"handler-gpt-5-5-high\",\n    \"creator_node_receipt_path\": \"/tmp/tmp.0aEBMfEyQq/work/run/node-artifacts/handler-gpt-5-5-high/node-receipt.json\",\n    \"does_not_prove\": \"Deployment, README wiring, universal aesthetic approval, or provider semantic quality outside the cited receipts.\",\n    \"errors\": [],\n    \"failure_code\": null,\n    \"goal\": \"represent Tau\",\n    \"judge_node_id\": \"judge\",\n    \"judge_node_receipt_path\": \"/tmp/tmp.0aEBMfEyQq/work/run/node-artifacts/judge/node-receipt.json\",\n    \"kind\": \"create_svg.tau_variant_provenance_gate.v1\",\n    \"launch_receipt_path\": \"/tmp/tmp.0aEBMfEyQq/work/launch-receipt.json\",\n    \"live\": true,\n    \"mocked\": false,\n    \"proof_scope\": \"This receipt proves one SVG path is bound to a PASS Tau run receipt, PASS creator node receipt, PASS judge node receipt, create_svg.variant_candidate.v1 receipt, and screenshot-bound create_svg.visual_gate.v1 PASS receipt.\",\n    \"run_dir\": \"/tmp/tmp.0aEBMfEyQq/work/run\",\n    \"screenshot_path\": \"/tmp/tmp.0aEBMfEyQq/work/winner.png\",\n    \"screenshot_sha256\": \"62e5e46c87b51ebb4fc4340753fb197f05f50a3ce953554b3b9bb7f06aef9422\",\n    \"status\": \"PASS\",\n    \"svg_path\": \"/tmp/tmp.0aEBMfEyQq/work/winner.svg\",\n    \"svg_sha256\": \"sha256:9f59270a90576465eaf43d44d455ca4f2b74ac51b134666569d440471a672d49\",\n    \"target\": \"project-card\",\n    \"target_size\": \"400x260\",\n    \"tau_run_receipt_path\": \"/tmp/tmp.0aEBMfEyQq/work/run/tau-receipts/dag-receipt.json\",\n    \"visual_gate_receipt_path\": \"/tmp/tmp.0aEBMfEyQq/work/visual-gate.json\"\n  },\n  \"returncode\": 0,\n  \"status\": \"PASS\",\n  \"stderr\": \"\",\n  \"stdout\": \"/tmp/tmp.0aEBMfEyQq/work/provenance.json\\nPASS\\n\"\n}\n",
+          "stderr": "",
+          "duration_ms": 295.213,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c009-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"case\": \"valid_bound_accepted\",\n  \"ok\": true,\n  \"receipt\": {\n    \"candidate_receipt_path\": \"/tmp/tmp.xdbG62EXZz/work/candidate.json\",\n    \"creator_node_id\": \"handler-gpt-5-5-high\",\n    \"creator_node_receipt_path\": \"/tmp/tmp.xdbG62EXZz/work/run/node-artifacts/handler-gpt-5-5-high/node-receipt.json\",\n    \"does_not_prove\": \"Deployment, README wiring, universal aesthetic approval, or provider semantic quality outside the cited receipts.\",\n    \"errors\": [],\n    \"failure_code\": null,\n    \"goal\": \"represent Tau\",\n    \"judge_node_id\": \"judge\",\n    \"judge_node_receipt_path\": \"/tmp/tmp.xdbG62EXZz/work/run/node-artifacts/judge/node-receipt.json\",\n    \"kind\": \"create_svg.tau_variant_provenance_gate.v1\",\n    \"launch_receipt_path\": \"/tmp/tmp.xdbG62EXZz/work/launch-receipt.json\",\n    \"live\": true,\n    \"mocked\": false,\n    \"proof_scope\": \"This receipt proves one SVG path is bound to a PASS Tau run receipt, PASS creator node receipt, PASS judge node receipt, create_svg.variant_candidate.v1 receipt, and screenshot-bound create_svg.visual_gate.v1 PASS receipt.\",\n    \"run_dir\": \"/tmp/tmp.xdbG62EXZz/work/run\",\n    \"screenshot_path\": \"/tmp/tmp.xdbG62EXZz/work/winner.png\",\n    \"screenshot_sha256\": \"62e5e46c87b51ebb4fc4340753fb197f05f50a3ce953554b3b9bb7f06aef9422\",\n    \"status\": \"PASS\",\n    \"svg_path\": \"/tmp/tmp.xdbG62EXZz/work/winner.svg\",\n    \"svg_sha256\": \"sha256:9f59270a90576465eaf43d44d455ca4f2b74ac51b134666569d440471a672d49\",\n    \"target\": \"project-card\",\n    \"target_size\": \"400x260\",\n    \"tau_run_receipt_path\": \"/tmp/tmp.xdbG62EXZz/work/run/tau-receipts/dag-receipt.json\",\n    \"visual_gate_receipt_path\": \"/tmp/tmp.xdbG62EXZz/work/visual-gate.json\"\n  },\n  \"returncode\": 0,\n  \"status\": \"PASS\",\n  \"stderr\": \"\",\n  \"stdout\": \"/tmp/tmp.xdbG62EXZz/work/provenance.json\\nPASS\\n\"\n}\n",
+          "stderr": "",
+          "duration_ms": 304.495,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c009-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"case\": \"valid_bound_accepted\",\n  \"ok\": true,\n  \"receipt\": {\n    \"candidate_receipt_path\": \"/tmp/tmp.6y7MRITTfg/work/candidate.json\",\n    \"creator_node_id\": \"handler-gpt-5-5-high\",\n    \"creator_node_receipt_path\": \"/tmp/tmp.6y7MRITTfg/work/run/node-artifacts/handler-gpt-5-5-high/node-receipt.json\",\n    \"does_not_prove\": \"Deployment, README wiring, universal aesthetic approval, or provider semantic quality outside the cited receipts.\",\n    \"errors\": [],\n    \"failure_code\": null,\n    \"goal\": \"represent Tau\",\n    \"judge_node_id\": \"judge\",\n    \"judge_node_receipt_path\": \"/tmp/tmp.6y7MRITTfg/work/run/node-artifacts/judge/node-receipt.json\",\n    \"kind\": \"create_svg.tau_variant_provenance_gate.v1\",\n    \"launch_receipt_path\": \"/tmp/tmp.6y7MRITTfg/work/launch-receipt.json\",\n    \"live\": true,\n    \"mocked\": false,\n    \"proof_scope\": \"This receipt proves one SVG path is bound to a PASS Tau run receipt, PASS creator node receipt, PASS judge node receipt, create_svg.variant_candidate.v1 receipt, and screenshot-bound create_svg.visual_gate.v1 PASS receipt.\",\n    \"run_dir\": \"/tmp/tmp.6y7MRITTfg/work/run\",\n    \"screenshot_path\": \"/tmp/tmp.6y7MRITTfg/work/winner.png\",\n    \"screenshot_sha256\": \"62e5e46c87b51ebb4fc4340753fb197f05f50a3ce953554b3b9bb7f06aef9422\",\n    \"status\": \"PASS\",\n    \"svg_path\": \"/tmp/tmp.6y7MRITTfg/work/winner.svg\",\n    \"svg_sha256\": \"sha256:9f59270a90576465eaf43d44d455ca4f2b74ac51b134666569d440471a672d49\",\n    \"target\": \"project-card\",\n    \"target_size\": \"400x260\",\n    \"tau_run_receipt_path\": \"/tmp/tmp.6y7MRITTfg/work/run/tau-receipts/dag-receipt.json\",\n    \"visual_gate_receipt_path\": \"/tmp/tmp.6y7MRITTfg/work/visual-gate.json\"\n  },\n  \"returncode\": 0,\n  \"status\": \"PASS\",\n  \"stderr\": \"\",\n  \"stdout\": \"/tmp/tmp.6y7MRITTfg/work/provenance.json\\nPASS\\n\"\n}\n",
+          "stderr": "",
+          "duration_ms": 303.165,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c009-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "tau-provenance-gate-rejects-local-preview-laundering",
+      "type": "adversarial",
+      "case_id": "950b5a2e9164-c010",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && ../scripts/agentic-eval-tau-provenance.py --case local-preview-rejected --work $T/work --out $T/result.json"
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 300.589,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"case\": \"local_preview_rejected\",\n  \"ok\": true,\n  \"receipt\": {\n    \"candidate_receipt_path\": \"/tmp/tmp.0Usr4K0d96/work/missing-candidate.json\",\n    \"creator_node_id\": \"handler-gpt-5-5-high\",\n    \"creator_node_receipt_path\": null,\n    \"does_not_prove\": \"Deployment, README wiring, universal aesthetic approval, or provider semantic quality outside the cited receipts.\",\n    \"errors\": [\n      \"create_svg_tau_provenance_missing_tau_receipt: launch receipt does not name a readable run_dir: /tmp/tmp.0Usr4K0d96/work/missing-run\",\n      \"create_svg_tau_provenance_missing_candidate_receipt: missing file: /tmp/tmp.0Usr4K0d96/work/missing-candidate.json\",\n      \"create_svg_tau_provenance_visual_gate_missing: missing file: /tmp/tmp.0Usr4K0d96/work/missing-visual.json\"\n    ],\n    \"failure_code\": \"create_svg_tau_provenance_missing_candidate_receipt\",\n    \"goal\": \"represent Tau\",\n    \"judge_node_id\": \"judge\",\n    \"judge_node_receipt_path\": null,\n    \"kind\": \"create_svg.tau_variant_provenance_gate.v1\",\n    \"launch_receipt_path\": \"/tmp/tmp.0Usr4K0d96/work/launch-receipt.json\",\n    \"live\": true,\n    \"mocked\": false,\n    \"proof_scope\": \"This receipt proves one SVG path is bound to a PASS Tau run receipt, PASS creator node receipt, PASS judge node receipt, create_svg.variant_candidate.v1 receipt, and screenshot-bound create_svg.visual_gate.v1 PASS receipt.\",\n    \"run_dir\": null,\n    \"screenshot_path\": null,\n    \"screenshot_sha256\": null,\n    \"status\": \"BLOCKED\",\n    \"svg_path\": \"/tmp/tmp.0Usr4K0d96/work/ledger-first.svg\",\n    \"svg_sha256\": \"sha256:33ce50c2f2c3117f179ff59c5fca124cdec98aec76e24bbe7c253185efb1a729\",\n    \"target\": \"project-card\",\n    \"target_size\": \"400x260\",\n    \"tau_run_receipt_path\": null,\n    \"visual_gate_receipt_path\": \"/tmp/tmp.0Usr4K0d96/work/missing-visual.json\"\n  },\n  \"returncode\": 1,\n  \"status\": \"PASS\",\n  \"stderr\": \"\",\n  \"stdout\": \"/tmp/tmp.0Usr4K0d96/work/provenance.json\\nBLOCKED\\n\"\n}\n",
+          "stderr": "",
+          "duration_ms": 301.771,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c010-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"case\": \"local_preview_rejected\",\n  \"ok\": true,\n  \"receipt\": {\n    \"candidate_receipt_path\": \"/tmp/tmp.V3JJ2ADImp/work/missing-candidate.json\",\n    \"creator_node_id\": \"handler-gpt-5-5-high\",\n    \"creator_node_receipt_path\": null,\n    \"does_not_prove\": \"Deployment, README wiring, universal aesthetic approval, or provider semantic quality outside the cited receipts.\",\n    \"errors\": [\n      \"create_svg_tau_provenance_missing_tau_receipt: launch receipt does not name a readable run_dir: /tmp/tmp.V3JJ2ADImp/work/missing-run\",\n      \"create_svg_tau_provenance_missing_candidate_receipt: missing file: /tmp/tmp.V3JJ2ADImp/work/missing-candidate.json\",\n      \"create_svg_tau_provenance_visual_gate_missing: missing file: /tmp/tmp.V3JJ2ADImp/work/missing-visual.json\"\n    ],\n    \"failure_code\": \"create_svg_tau_provenance_missing_candidate_receipt\",\n    \"goal\": \"represent Tau\",\n    \"judge_node_id\": \"judge\",\n    \"judge_node_receipt_path\": null,\n    \"kind\": \"create_svg.tau_variant_provenance_gate.v1\",\n    \"launch_receipt_path\": \"/tmp/tmp.V3JJ2ADImp/work/launch-receipt.json\",\n    \"live\": true,\n    \"mocked\": false,\n    \"proof_scope\": \"This receipt proves one SVG path is bound to a PASS Tau run receipt, PASS creator node receipt, PASS judge node receipt, create_svg.variant_candidate.v1 receipt, and screenshot-bound create_svg.visual_gate.v1 PASS receipt.\",\n    \"run_dir\": null,\n    \"screenshot_path\": null,\n    \"screenshot_sha256\": null,\n    \"status\": \"BLOCKED\",\n    \"svg_path\": \"/tmp/tmp.V3JJ2ADImp/work/ledger-first.svg\",\n    \"svg_sha256\": \"sha256:33ce50c2f2c3117f179ff59c5fca124cdec98aec76e24bbe7c253185efb1a729\",\n    \"target\": \"project-card\",\n    \"target_size\": \"400x260\",\n    \"tau_run_receipt_path\": null,\n    \"visual_gate_receipt_path\": \"/tmp/tmp.V3JJ2ADImp/work/missing-visual.json\"\n  },\n  \"returncode\": 1,\n  \"status\": \"PASS\",\n  \"stderr\": \"\",\n  \"stdout\": \"/tmp/tmp.V3JJ2ADImp/work/provenance.json\\nBLOCKED\\n\"\n}\n",
+          "stderr": "",
+          "duration_ms": 300.414,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c010-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "{\n  \"case\": \"local_preview_rejected\",\n  \"ok\": true,\n  \"receipt\": {\n    \"candidate_receipt_path\": \"/tmp/tmp.Xo3z0tVRYl/work/missing-candidate.json\",\n    \"creator_node_id\": \"handler-gpt-5-5-high\",\n    \"creator_node_receipt_path\": null,\n    \"does_not_prove\": \"Deployment, README wiring, universal aesthetic approval, or provider semantic quality outside the cited receipts.\",\n    \"errors\": [\n      \"create_svg_tau_provenance_missing_tau_receipt: launch receipt does not name a readable run_dir: /tmp/tmp.Xo3z0tVRYl/work/missing-run\",\n      \"create_svg_tau_provenance_missing_candidate_receipt: missing file: /tmp/tmp.Xo3z0tVRYl/work/missing-candidate.json\",\n      \"create_svg_tau_provenance_visual_gate_missing: missing file: /tmp/tmp.Xo3z0tVRYl/work/missing-visual.json\"\n    ],\n    \"failure_code\": \"create_svg_tau_provenance_missing_candidate_receipt\",\n    \"goal\": \"represent Tau\",\n    \"judge_node_id\": \"judge\",\n    \"judge_node_receipt_path\": null,\n    \"kind\": \"create_svg.tau_variant_provenance_gate.v1\",\n    \"launch_receipt_path\": \"/tmp/tmp.Xo3z0tVRYl/work/launch-receipt.json\",\n    \"live\": true,\n    \"mocked\": false,\n    \"proof_scope\": \"This receipt proves one SVG path is bound to a PASS Tau run receipt, PASS creator node receipt, PASS judge node receipt, create_svg.variant_candidate.v1 receipt, and screenshot-bound create_svg.visual_gate.v1 PASS receipt.\",\n    \"run_dir\": null,\n    \"screenshot_path\": null,\n    \"screenshot_sha256\": null,\n    \"status\": \"BLOCKED\",\n    \"svg_path\": \"/tmp/tmp.Xo3z0tVRYl/work/ledger-first.svg\",\n    \"svg_sha256\": \"sha256:33ce50c2f2c3117f179ff59c5fca124cdec98aec76e24bbe7c253185efb1a729\",\n    \"target\": \"project-card\",\n    \"target_size\": \"400x260\",\n    \"tau_run_receipt_path\": null,\n    \"visual_gate_receipt_path\": \"/tmp/tmp.Xo3z0tVRYl/work/missing-visual.json\"\n  },\n  \"returncode\": 1,\n  \"status\": \"PASS\",\n  \"stderr\": \"\",\n  \"stdout\": \"/tmp/tmp.Xo3z0tVRYl/work/provenance.json\\nBLOCKED\\n\"\n}\n",
+          "stderr": "",
+          "duration_ms": 299.582,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "950b5a2e9164-c010-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

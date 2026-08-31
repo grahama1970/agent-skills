@@ -143,6 +143,17 @@ def test_create_svg_browser_submit_failure_maps_to_lane_recovery() -> None:
     assert "local preview SVGs" in r["next_command"]
 
 
+def test_create_svg_tau_provenance_codes_are_stable_and_actionable() -> None:
+    r = t.classify(
+        '{"failure_code":"create_svg_tau_provenance_missing_candidate_receipt"}',
+        "create-svg",
+    )
+    assert r["code"] == "create_svg_tau_provenance_missing_candidate_receipt"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "tau-provenance-gate" in r["next_command"]
+
+
 def test_tau_node_sanity_codes_are_stable_and_actionable() -> None:
     samples = {
         "node_sanity_check_contract_invalid": "tau_node_sanity_check_contract_invalid",

@@ -57,3 +57,10 @@ compiler adds multiple classes rather than overwriting one `animation` declarati
 - `target-card-0`, `target-card-1`, ...
 
 Unknown targets fail before SVG emission.
+
+## Component output contract
+
+Generated scenes may expose semantically meaningful groups using stable `id` and
+`data-component` attributes. Downstream checks should bind labels, nodes, pills,
+and cards to those component groups rather than inferring meaning from visual
+order alone.

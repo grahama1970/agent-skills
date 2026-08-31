@@ -35,7 +35,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "14 passed",
+          "15 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
           "monitor_opportunities_linkedin_source_accounting_failed",
@@ -92,6 +92,24 @@
         "exit_code": 0,
         "stdout_contains": [
           "TAU_NODE_SANITY_TRIAGE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "create-svg-tau-provenance-code-classifies-stably",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh classify --text '{\"failure_code\":\"create_svg_tau_provenance_missing_candidate_receipt\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_tau_provenance_missing_candidate_receipt' and d['ambiguous'] is False and 'tau-provenance-gate' in d['next_command'];print('CREATE_SVG_TAU_PROVENANCE_TRIAGE_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CREATE_SVG_TAU_PROVENANCE_TRIAGE_OK"
         ]
       },
       "readback": true,

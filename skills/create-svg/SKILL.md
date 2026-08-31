@@ -99,6 +99,37 @@ To inspect an existing SVG corpus:
 "$SKILL_DIR/run.sh" inspect ./upstream/images --output ./style-inspection.yml
 ```
 
+To explore several slightly different directions through Tau, create an explicit
+variant pack and compile a compete DAG. This creates N concurrent creator nodes,
+one per handler/variant, then routes their outputs to a judge/reviewer stage. It
+is not a local render batch and it must not close without screenshot-bound
+`visual-gate` proof.
+
+```yaml
+# variants.yml
+schema: create_svg.variant_pack.v1
+variants:
+  - id: ledger-first
+    direction: Make signed receipts and the append-only ledger visually dominant.
+  - id: dag-first
+    direction: Make DAG nodes and enforced edges visually dominant.
+  - id: reviewer-first
+    direction: Make creator/reviewer/human gate sequence visually dominant.
+```
+
+```bash
+"$SKILL_DIR/run.sh" tau-variant-loop variants.yml \
+  --goal "Tau is a zero-trust DAG execution harness" \
+  --target "grahama.co Tau project card" \
+  --target-size "400x260" \
+  --screenshot-command 'skills/surf/run.sh screenshot --out <SCREENSHOT_PATH>' \
+  --creator-handler gpt-5.5-high \
+  --creator-handler webkimi \
+  --creator-handler webgemini \
+  --judge-handler claude-fable-low \
+  --receipt /mnt/storage12tb/skills/create-svg/outputs/tau-variants/plan.json
+```
+
 ## Decision map
 
 | Need | Command | Read next |
@@ -109,6 +140,9 @@ To inspect an existing SVG corpus:
 | Prove an artifact is safe and deterministic | `verify` | receipt JSON |
 | Validate an existing SVG only | `validate` | finding codes in receipt |
 | See the animation locally | `preview` | generated HTML file |
+| Explore several directions concurrently | `tau-variant-loop` | Tau receipt + screenshots |
+| Gate screenshot-reviewed visual acceptance | `visual-gate` | `create_svg.visual_gate.v1` receipt |
+| Prove a Tau variant winner is publishable | `tau-provenance-gate` | `create_svg.tau_variant_provenance_gate.v1` receipt |
 
 ## Non-negotiable contracts
 
@@ -119,11 +153,16 @@ To inspect an existing SVG corpus:
   `@media (prefers-reduced-motion: no-preference)`.
 - Timeline offsets are millisecond values compiled into percentages of one cycle.
 - A producer emits either a validated PASS receipt or a non-zero failure.
+- Component-oriented outputs should mark meaningful grouped elements with stable `id`/`data-component` metadata so downstream checks can target the top visual group instead of loose decorative primitives.
 - Deterministic repairs are narrow and explicit; this MVP does not silently repair input.
 - Font family names are emitted, but font files are never included. Exact-font mode must
   receive a separately licensed local font from the operator in a future extension.
 - Generated previews, browser frames, and receipts should be written beneath
   `/mnt/storage12tb/skills/create-svg/` in the full agent-skills environment.
+- Tau variant-loop failures must surface exact `create_svg_*` failure codes in
+  receipts so `$triage-error classify --receipt <path> --layer create-svg` can
+  route the failure without regexing reviewer prose. `create_svg_visual_gate_not_ready`
+  is normal design-loop control, not a runtime defect.
 
 ## Verification posture
 

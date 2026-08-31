@@ -15,6 +15,10 @@ thousands of SVG coordinates and keyframe percentages.
 - Pydantic scene/theme validation, safe YAML loading, structured XML generation, and
   README-safe SVG validation.
 - Real Chromium `<img>`-mode motion verification when `--browser` is requested.
+- Screenshot-bound `visual-gate` receipts for target-size visual acceptance.
+- Tau-backed `tau-variant-loop` planning for N concurrent creator variants plus an independent judge.
+- `tau-provenance-gate` receipts that prevent local preview SVGs from being published as Tau winners without Tau node receipts and screenshot-bound visual-gate PASS.
+- Component grouping contracts for downstream consumers that need stable labels, cards, nodes, pills, and visual bounds.
 - A deterministic JSON receipt and an agentic-evals fixture.
 
 No upstream SVG artwork and no font binaries are included.
@@ -88,6 +92,44 @@ animates `stroke-dashoffset` from `1` to `0` without calculating physical path l
 | `inspect` | Extract colors, fonts, strokes, viewBoxes, and animation signatures. |
 | `preview` | Create a self-contained local HTML viewer. |
 | `snippet` | Print centered README `<img>` markup. |
+| `visual-gate` | Fail closed unless a reviewer inspected the exact screenshot path and SHA256. |
+| `tau-visual-loop` | Build or run a sequential Tau creator/reviewer SVG loop. |
+| `tau-variant-loop` | Build or run a Tau compete DAG with N concurrent creator variants. |
+| `tau-provenance-gate` | Fail closed unless a proposed Tau winner binds launch, run, node, candidate, screenshot, and visual-gate receipts. |
+| `failure-codes` | Print exact `create_svg_*` codes consumed by `$triage-error`. |
+
+## Tau variant exploration
+
+Use `tau-variant-loop` when the right visual direction is unknown. The variant
+pack is explicit and reproducible; each variant becomes one concurrent Tau
+creator node, and the judge cannot accept a winner without screenshot-bound
+`visual-gate` proof.
+
+```yaml
+schema: create_svg.variant_pack.v1
+variants:
+  - id: ledger-first
+    direction: Make signed receipts and the append-only ledger visually dominant.
+  - id: dag-first
+    direction: Make DAG nodes and enforced edges visually dominant.
+```
+
+```bash
+./run.sh tau-variant-loop variants.yml \
+  --goal "Tau is a zero-trust DAG execution harness" \
+  --target "grahama.co Tau project card" \
+  --target-size "400x260" \
+  --screenshot-command 'skills/surf/run.sh screenshot --out <SCREENSHOT_PATH>' \
+  --creator-handler gpt-5.5-high \
+  --creator-handler webkimi \
+  --judge-handler claude-fable-low \
+  --receipt /mnt/storage12tb/skills/create-svg/outputs/tau-variants/plan.json
+```
+
+If a receipt has `code: create_svg_visual_gate_not_ready`, treat it as design-loop
+feedback. Runtime or contract failures must carry another exact `create_svg_*`
+code so `$triage-error classify --receipt <path> --layer create-svg` does not
+need to parse prose.
 
 ## Development
 

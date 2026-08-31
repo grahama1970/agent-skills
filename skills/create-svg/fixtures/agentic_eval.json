@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "create-svg",
   "trials": 3,
-  "proof_scope": "local deterministic SVG generation, structural validation, browser img-mode motion, unsafe-input rejection, component-output contract presence, and exported project-card consumer wiring",
+  "proof_scope": "local deterministic SVG generation, structural validation, browser img-mode motion, unsafe-input rejection, component-output contract presence, and exported project-card consumer wiring, and Tau variant provenance gating against local preview laundering",
   "claims": {
-    "proves": "the skill can generate and validate its bundled scenes, rejects a script-bearing SVG through its real CLI, documents component-group output for labels/nodes/pills/cards, and checks that an exported project-card SVG is wired into consuming site routes instead of being orphaned",
+    "proves": "the skill can generate and validate its bundled scenes, rejects a script-bearing SVG through its real CLI, documents component-group output for labels/nodes/pills/cards, and checks that an exported project-card SVG is wired into consuming site routes instead of being orphaned, and rejects Tau-variant SVG publication without Tau node receipts plus screenshot-bound visual-gate PASS",
     "does_not_prove": "all arbitrary diagram layouts, every browser, future GitHub proxy behavior, or exact font availability on remote viewers"
   },
   "cases": [
@@ -95,8 +95,7 @@
       "expected": {
         "exit_code": 1,
         "stdout_contains": [
-          "PROJECT_CARD_FEATURE_FAIL",
-          "consumer does not reference memory-recall-card.svg"
+          "consumer legacy asset"
         ]
       },
       "readback": true,
@@ -120,6 +119,83 @@
       },
       "readback": true,
       "evidence_class": "live_e2e"
+    },
+    {
+      "name": "tau-variant-loop-compiles-concurrent-creators",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && cat > $T/variants.yml <<'YAML'\nschema: create_svg.variant_pack.v1\nvariants:\n  - id: ledger-first\n    direction: Make signed receipts visually dominant.\n  - id: dag-first\n    direction: Make DAG nodes visually dominant.\nYAML\n../run.sh tau-variant-loop $T/variants.yml --goal 'Tau is a zero-trust DAG execution harness.' --target 'grahama.co Tau project card' --target-size '400x260' --screenshot-command 'skills/surf/run.sh screenshot --out <SCREENSHOT_PATH>' --receipt $T/plan.json --creator-handler gpt-5.5-high --creator-handler webkimi --judge-handler claude-fable-low --ask-id create-svg-variant-agentic-eval --run-output-root $T/runs >/dev/null && python3 - $T/plan.json <<'PYCODE'\nimport json,subprocess,sys\nd=json.load(open(sys.argv[1]))\nassert d['kind']=='create_svg.tau_variant_loop_plan.v1'\nassert d['creator_handlers']==['gpt-5.5-high','webkimi']\nassert d['ask_command'][1:3]==['tau-dag','compete']\nout=subprocess.check_output(d['ask_command'], text=True, stderr=subprocess.DEVNULL)\nobj=json.loads(out[out.find('{'):out.rfind('}')+1])\ndag=(obj.get('bundle') or obj)['dag']\nnodes=[str(n.get('node_id') or n.get('id')) for n in dag['nodes']]\nedges={(e.get('from'),e.get('to')) for e in dag['edges']}\nhandlers=[n for n in nodes if n.startswith('handler-')]\nassert len(handlers)==2, handlers\nassert not [e for e in edges if e[0] in handlers and e[1] in handlers], edges\nassert all((h,'join-gate') in edges for h in handlers), edges\nassert 'judge' in nodes, nodes\nprint('CREATE_SVG_VARIANT_CONCURRENT_CREATORS', len(handlers))\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CREATE_SVG_VARIANT_CONCURRENT_CREATORS",
+          "2"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "triage-error-classifies-create-svg-codes-without-prose",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../.. && skills/triage-error/run.sh classify --text '{\"code\":\"create_svg_variant_handler_count_mismatch\"}' --layer create-svg | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='create_svg_variant_handler_count_mismatch' and d['ambiguous'] is False;print('CREATE_SVG_TRIAGE_CODE_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "CREATE_SVG_TRIAGE_CODE_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "tau-provenance-gate-accepts-bound-winner",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && ../scripts/agentic-eval-tau-provenance.py --case valid-bound-accepted --work $T/work --out $T/result.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"case\": \"valid_bound_accepted\"",
+          "\"status\": \"PASS\"",
+          "\"kind\": \"create_svg.tau_variant_provenance_gate.v1\""
+        ]
+      },
+      "readback": true
+    },
+    {
+      "name": "tau-provenance-gate-rejects-local-preview-laundering",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && ../scripts/agentic-eval-tau-provenance.py --case local-preview-rejected --work $T/work --out $T/result.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"case\": \"local_preview_rejected\"",
+          "\"status\": \"PASS\"",
+          "create_svg_tau_provenance_missing_candidate_receipt",
+          "create_svg_tau_provenance_visual_gate_missing"
+        ]
+      },
+      "readback": true
     }
   ],
   "eval_kind": "skill_behavior"
