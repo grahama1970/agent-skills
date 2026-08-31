@@ -78,6 +78,24 @@
           "--execute"
         ]
       }
+    },
+    {
+      "name": "mdns-resolve-finds-amp",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh resolve --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ops_wiim.resolve.v1",
+          "192.168.86.50",
+          "WiiM Amp-24AA"
+        ]
+      }
     }
   ]
 }

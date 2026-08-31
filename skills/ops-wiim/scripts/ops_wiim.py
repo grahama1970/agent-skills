@@ -30,10 +30,34 @@ TIMEOUT = 5.0
 
 def _resolve_ip(ip: str | None) -> str:
     ip = ip or os.environ.get("WIIM_IP", "")
-    if not ip:
-        typer.echo("error: no IP. Pass --ip, set WIIM_IP, or run `discover`.", err=True)
-        raise typer.Exit(2)
-    return ip
+    if ip:
+        return ip
+    # mDNS auto-discovery: prefer the Amp among advertised LinkPlay devices
+    try:
+        import subprocess
+
+        out = subprocess.run(
+            ["avahi-browse", "-artp", "-t"], capture_output=True, text=True, timeout=10
+        ).stdout
+        cands = []
+        for line in out.splitlines():
+            if not line.startswith("=") or "_linkplay._tcp" not in line:
+                continue
+            f = line.split(";")
+            name, addr = f[3].replace("\\032", " "), f[7]
+            if "wiim" in name.lower():
+                cands.append(("amp" in name.lower(), addr))
+        if cands:
+            cands.sort(reverse=True)
+            return cands[0][1]
+    except Exception:  # noqa: BLE001 - discovery is best-effort, fail closed below
+        pass
+    typer.echo(
+        "error: no IP. Pass --ip, set WIIM_IP, run `discover`, or make the amp "
+        "visible via mDNS (avahi-browse -art | grep -i linkplay).",
+        err=True,
+    )
+    raise typer.Exit(2)
 
 
 def _api(ip: str, command: str) -> tuple[bool, Any]:
@@ -81,6 +105,31 @@ def _emit(payload: dict, as_json: bool) -> None:
         typer.echo(json.dumps(payload, indent=2, default=str))
     else:
         typer.echo(json.dumps(payload, indent=2, default=str))
+
+
+@app.command("resolve")
+def resolve(json_out: bool = typer.Option(False, "--json")) -> None:
+    """Find LinkPlay/WiiM devices on the LAN via mDNS (no IP needed)."""
+    import subprocess
+
+    out = subprocess.run(
+        ["avahi-browse", "-artp", "-t"], capture_output=True, text=True, timeout=10
+    ).stdout
+    devices: dict[str, dict] = {}
+    for line in out.splitlines():
+        if not line.startswith("=") or "_linkplay._tcp" not in line:
+            continue
+        f = line.split(";")
+        if f[2] != "IPv4":
+            continue
+        name = f[3].replace("\\032", " ")
+        mac = ""
+        for part in f[8:]:
+            if part.startswith('"MAC='):
+                mac = part.strip('"').split("=", 1)[1]
+        devices[name] = {"name": name, "ip": f[7], "mac": mac}
+    result = {"schema": "ops_wiim.resolve.v1", "devices": sorted(devices.values(), key=lambda d: d["name"])}
+    _emit(result, json_out)
 
 
 @app.command()
