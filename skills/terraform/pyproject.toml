@@ -1,0 +1,12 @@
+[project]
+name = "terraform-skill"
+version = "0.1.0"
+description = "Terraform made easy: scaffold best-practice layouts, audit organization, validate, interview for deployment, and run gated init/plan/apply."
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.9.0",
+    "loguru>=0.7.0",
+]
+
+[tool.uv]
+package = false
