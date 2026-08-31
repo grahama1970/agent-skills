@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "triage-error",
   "trials": 2,
-  "proof_scope": "classifier maps known pipeline signals to canonical codes, mints deterministic codes for ambiguous signals, and refuses cross-layer false matches; run via the real skill entrypoint and test runner, including pi research gate retry command mismatch.",
+  "proof_scope": "classifier maps known pipeline signals to canonical codes, mints deterministic codes for ambiguous signals, and refuses cross-layer false matches; run via the real skill entrypoint and test runner, including pi research gate retry command mismatch. Includes Tau create-svg artifact-origin and handler-substitution failure codes.",
   "claims": {
     "proves": "triage-error classify maps 'zip contains N; maximum is M' -> webgpt_attachment_bundle_rejected and '/v4/v1/chat/completions' -> scillm_api_base_double_version_segment, mints a stable *_unclassified_* code for novel signals, and does not false-match a surf signal asked as scillm",
     "does_not_prove": "repo-wide adoption by all skills (incremental rollout), or live ticket/agentic-eval/debugger composition"
@@ -35,7 +35,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "15 passed",
+          "16 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
           "monitor_opportunities_linkedin_source_accounting_failed",
@@ -114,6 +114,30 @@
       },
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "tau-create-svg-origin-gate-codes-classify-stably",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "for code in tau_dag_requested_handler_substituted create_svg_required_payload_missing create_svg_candidate_receipt_invalid create_svg_artifact_origin_invalid; do ../run.sh classify --text '{\"failure_code\":\"'\"$code\"'\"}' --layer tau.project_dag | EXPECTED_CODE=$code python3 -c 'import json,os,sys;d=json.load(sys.stdin);expected=os.environ[\"EXPECTED_CODE\"];assert d[\"code\"]==expected and d[\"ambiguous\"] is False and d[\"recoverable\"] is True;print(expected+\"_OK\")' || exit 1; done"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "tau_dag_requested_handler_substituted_OK",
+          "create_svg_required_payload_missing_OK",
+          "create_svg_candidate_receipt_invalid_OK",
+          "create_svg_artifact_origin_invalid_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "triage_error.classifier"
+      ]
     }
   ]
 }
