@@ -7,9 +7,21 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 MODE="${1:-runs}"
 PORT="${DREAM_API_EVAL_PORT:-8797}"
 
-DREAM_API_PORT="$PORT" npx tsx scripts/dream-api-host.ts &
+setsid env DREAM_API_PORT="$PORT" npx tsx scripts/dream-api-host.ts &
 HOST_PID=$!
-trap 'kill "$HOST_PID" 2>/dev/null || true' EXIT
+cleanup() {
+  kill -TERM -"$HOST_PID" 2>/dev/null || kill "$HOST_PID" 2>/dev/null || true
+  for _ in $(seq 1 20); do
+    if ! kill -0 "$HOST_PID" 2>/dev/null; then
+      wait "$HOST_PID" 2>/dev/null || true
+      return 0
+    fi
+    sleep 0.1
+  done
+  kill -KILL -"$HOST_PID" 2>/dev/null || kill -KILL "$HOST_PID" 2>/dev/null || true
+  wait "$HOST_PID" 2>/dev/null || true
+}
+trap cleanup EXIT
 
 for _ in $(seq 1 30); do
   curl -sf -o /dev/null "http://127.0.0.1:$PORT/api/projects/dream/runs" && break

@@ -13,8 +13,9 @@ is the authority; the current-state block below is generated from it.
 - `#1127` did what it was built to do when it detected a stimulus confound; it
   was not a failed implementation.
 - Measurement validity is not a PCTOM benefit result.
-- The listener study's stimuli were rejected as technically confounded; the
-  study is not merely waiting for raters.
+- The earlier listener-study stimulus confound is resolved by #1179's shared
+  normalization rerender and frozen technical screen. The listener study is now
+  blocked on #1058 human response collection plus signed interpretation.
 - Read [Current Proof Boundary](#current-proof-boundary) before interpreting any
   reported number, and use [`CURRENT_STATUS.json`](CURRENT_STATUS.json) for the
   current checked state.
@@ -39,7 +40,7 @@ file drifts from it.
 | Joined live chain | One fresh cycle joins dream evidence through to recognition, 13/13 negative controls blocked | Perceived emotion; behavior beyond local receipts |
 | Session arc bias | Bounded deltas published under a hash-bound consumer contract, consumed live by SPARTA before turn 1 | Human-perceived emotion; deployed production behavior |
 | Reliability pilot | Five live cycles passed, zero duplicate accepted effects — a feasibility pilot | Production reliability (#1128); restart/recovery (#1129) |
-| Blinded listener study | V2 preregistration, counterbalanced raters, and a neutral-repeat technical screen | Stimuli rejected as technically confounded; #1179 must re-render before #1058 |
+| Blinded listener study | V2 preregistration, counterbalanced raters, current rater page, stimulus validation, and #1179 technical screen PASS | 20 valid human listener rows and signed interpretation (#1058) |
 | PCTOM-R | Measurement validity passes on a non-degenerate corpus; the treatment can lose | No held-out benefit result (#1008) |
 | Historical media loop | One accepted dream persistence path and provider return | Repeatability; previous-video causality |
 
@@ -55,9 +56,9 @@ run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
 - **Phase:** `P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN`
-- **Open claims:** #1008 (PCTOM-R held-out benefit), #1179 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
-- **Current blocker:** Listener-study stimuli are rejected as technically confounded (BLOCKED_STIMULUS_TECHNICAL_CONFOUND, #1127); #1179 must re-render all four conditions…
-- **Next step:** Re-render the four listener-study conditions under one identical normalization (#1179) and rerun the frozen technical screen unchanged.
+- **Open claims:** #1008 (PCTOM-R held-out benefit), #1058 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
+- **Current blocker:** #1058 is ready for human listener collection from the current v2 bundle: rater page, stimulus validation, and technical screen pass, but analysis rem…
+- **Next step:** Kling/Phase 11 and Phase 16 recall/behavior are no longer the active blocker. The remaining goal blockers are human listener collection/signature, PC…
 
 <!-- END GENERATED CURRENT RESEARCH STATE -->
 
@@ -78,7 +79,7 @@ vocabulary is deliberately narrow: **implemented** means code exists,
 | Phase 12, Watch observation | Live slice proven on historical return; packet degraded on successor | [`docs/verification.md`](docs/verification.md) |
 | Phases 13-15, interpretation to persistence | Live slice proven on the accepted return | [`docs/verification.md`](docs/verification.md) |
 | Phase 16, recall and later behavior | Machine-decidable slice live-proven | [`docs/verification.md`](docs/verification.md) |
-| Chatterbox voice expression | Blocked: stimuli rejected as technically confounded | [`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1179 |
+| Chatterbox voice expression | Technical screen passed for the current stimuli; human perception still unproven | `reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json`, #1058 |
 | Readable journal artifact | Implemented and hash-bound | `reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json` |
 | Spoken journal | Live slice proven | `reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json` |
 | Requested tone to measurable acoustic effect | **Disproven**: below the renderer's own stochastic spread | `reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json`, #1209 |

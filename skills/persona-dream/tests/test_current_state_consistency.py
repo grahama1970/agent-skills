@@ -224,7 +224,7 @@ def test_superseded_marker_exempts_the_historical_p24_section(tmp_path, monkeypa
     marked.write_text(
         "# Project Knowledge: persona-dream\n\n"
         "## CURRENT NEXT STEP\n\n"
-        "1. #1037 recognition gate; successors #1128, #1179, #1008, #1130.\n\n"
+        "1. #1037 recognition gate; successors #1128, #1058, #1008, #1130.\n\n"
         "## SUPERSEDED - P2.4 voice-recognition preflight blocks on missing backend\n\n"
         "> SUPERSEDED 2026-07-28. Retained as the record of the failed attempts.\n",
         encoding="utf-8",
@@ -485,7 +485,7 @@ def test_proof_claim_audit_blocks_a_receipt_that_contradicts_the_claim(monkeypat
     monkeypatch.setitem(
         audit.CLAIMS, "Chatterbox voice expression",
         ("reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-         "PASS_"),
+         "BLOCKED_"),
     )
     args = type("Args", (), {"readme": checker.README, "out": None})()
     got = audit.run(args)

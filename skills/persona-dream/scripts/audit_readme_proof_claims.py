@@ -64,7 +64,7 @@ CLAIMS: dict[str, tuple[str | None, str | None]] = {
         "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json", "PASS_"),
     "Chatterbox voice expression": (
         "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-        "BLOCKED_"),
+        "PASS_"),
     "PCTOM-R measurement validity": (
         "research/prospective-tom/receipts/measurement-validity-v2-pass/MEASUREMENT_VALIDITY_RECEIPT.json",
         "PASS_"),

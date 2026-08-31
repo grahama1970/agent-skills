@@ -167,6 +167,29 @@
       "supports_claims": [
         "triage_error.classifier"
       ]
+    },
+    {
+      "name": "persona-dream-status-surface-drift-classifies-stably",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "triage_error.classifier"
+      ],
+      "seams": [
+        "catalog.persona_dream.status_surface_drift"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh classify --text 'README generated block drifts from CURRENT_STATUS.json; receipt_status_does_not_support_claim:Chatterbox voice expression; handoff missing Research phase' --layer persona-dream | python3 -c \"import json,sys;d=json.load(sys.stdin);assert d['code']=='persona_dream_status_surface_drift' and d['ambiguous'] is False and d['recoverable'] is True and 'generate-readme-research-state' in d['next_command'];print('PERSONA_DREAM_STATUS_SURFACE_DRIFT_TRIAGE_OK')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PERSONA_DREAM_STATUS_SURFACE_DRIFT_TRIAGE_OK"
+        ]
+      }
     }
   ]
 }

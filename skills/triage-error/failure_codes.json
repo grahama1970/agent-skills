@@ -3,6 +3,28 @@
   "note": "Canonical failure-code catalog across the model-calling pipeline (/ask -> /tau -> {/surf | /scillm}). Each entry maps a raw signal from any layer to ONE unambiguous {code, cause, next_command}. The triage skill grows this catalog as it classifies real ambiguous errors.",
   "codes": [
     {
+      "code": "persona_dream_status_surface_drift",
+      "layer": "persona-dream",
+      "match": [
+        "README generated block drifts from CURRENT_STATUS.json",
+        "README current-research-state block drifts from CURRENT_STATUS.json",
+        "receipt_status_does_not_support_claim:Chatterbox voice expression",
+        "surface_missing_active_successor",
+        "local/HANDOFF.md missing expected",
+        "handoff missing Research phase",
+        "Research phase",
+        "PASS_STIMULUS_TECHNICAL_SCREEN"
+      ],
+      "cause": "Persona Dream status or proof-boundary prose drifted from CURRENT_STATUS.json and receipt-backed claim bindings after a related pipeline update.",
+      "next_command": "Run skills/persona-dream/run.sh generate-readme-research-state, repair docs/EVIDENCE.md and local/HANDOFF.md against CURRENT_STATUS.json, then rerun skills/persona-dream/sanity.sh and skills/persona-dream/run.sh check-current-state-consistency --strict.",
+      "recoverable": true,
+      "not_this": [
+        "Tau DAG runtime execution failure",
+        "provider authentication failure",
+        "human listener collection blocker"
+      ]
+    },
+    {
       "code": "tau_node_sanity_check_contract_invalid",
       "layer": "tau.project_dag",
       "match": [

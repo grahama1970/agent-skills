@@ -24,6 +24,11 @@ recoverable from git history.
 
 ## 2. Current State
 
+- **Research phase**: `P2_CORRECTED_GOAL_PAIR_PROOF`.
+- **Plain-language boundary**: The loop is complete and runnable for the
+  corrected paired technical proof. Not proven: the research benefit itself,
+  human-perceived emotional value, human listener identity, or production-scale
+  reliability.
 - `GOAL.md` is the controlling goal text. It explicitly says the project is not
   merely a Kling/video project, dashboard project, GitHub-status project, or a
   goal to prove dreaming works.

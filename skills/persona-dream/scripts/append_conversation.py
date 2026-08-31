@@ -107,9 +107,11 @@ def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any],
                 turn["audio"] = audio.name if audio.parent == run_dir else str(audio)
                 turn["audio_sha256"] = sha_file(audio)
     elif args.tone or args.audio:
-        # A human does not have a delivery tone. Silently dropping the flag
-        # would make the record claim less than the caller thinks it does.
-        failed.append(f"tone_and_audio_are_voiced_roles_only:role={args.role}")
+        # A human/agent turn does not have a delivery tone. Silently dropping
+        # the flag would make the record claim less than the caller thinks it
+        # does. Keep the historical embry_only token for the retained #1210
+        # contract while the allowed voiced-role set now includes Horus too.
+        failed.append(f"embry_only_delivery_tone_rejected_for_role:{args.role}")
 
     return turn, failed
 
