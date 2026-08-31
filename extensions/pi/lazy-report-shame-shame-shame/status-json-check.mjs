@@ -95,7 +95,10 @@ if (!existsSync(VALIDATOR)) {
   emit('error', ['validator_script_missing'], { validator: VALIDATOR });
 }
 
-const run = spawnSync('python3', [VALIDATOR, 'validate', '-'], {
+// Pinned interpreter: eval runners execute under uv venvs without pydantic,
+// and a bare `python3` there crashes the validator with ImportError.
+const PYTHON = existsSync('/usr/bin/python3') ? '/usr/bin/python3' : 'python3';
+const run = spawnSync(PYTHON, [VALIDATOR, 'validate', '-'], {
   input: statusJson,
   encoding: 'utf8',
   timeout: 15000,
@@ -105,11 +108,20 @@ if (run.error || run.status === 2) {
   emit('error', ['validator_invocation_failed'], { stderr: String(run.stderr || run.error || '').slice(0, 500) });
 }
 
-let verdict = {};
-try { verdict = JSON.parse(String(run.stdout || '{}').trim().split('\n').pop()); } catch { /* keep {} */ }
+let verdict = null;
+try { verdict = JSON.parse(String(run.stdout || '').trim().split('\n').pop()); } catch { verdict = null; }
 
-if (run.status !== 0 || verdict.valid !== true) {
-  emit('reject', ['invalid_agent_status_json'], { pydantic_error: String(verdict.error || run.stdout || '').slice(0, 800) });
+// A crash (no parseable verdict) is a checker error, never a rejection of the
+// agent's answer. Only a parsed {"valid": false} rejects.
+if (!verdict || typeof verdict.valid !== 'boolean') {
+  emit('error', ['validator_crashed'], {
+    exit_status: run.status,
+    stderr: String(run.stderr || '').slice(0, 500),
+  });
+}
+
+if (verdict.valid !== true) {
+  emit('reject', ['invalid_agent_status_json'], { pydantic_error: String(verdict.error || '').slice(0, 800) });
 }
 
 emit('pass', ['valid_agent_status_json'], {

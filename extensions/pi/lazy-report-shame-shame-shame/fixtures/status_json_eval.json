@@ -1,0 +1,234 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "JSON-first status checking for the lazy-report-shame-shame-shame extension: pi.agent_status.v1 blocks validated by the live pydantic model against the live triage-error catalog; no regex/prose classification. real_world: every case executes the live checker script and live validator.",
+  "cases": [
+    {
+      "name": "mutating-turn-missing-json-rejects",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.status_json_required_on_mutating_turn"
+      ],
+      "seams": [
+        "status-json-check",
+        "mutating-turn-env"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf 'I fixed it and pushed.' | LRSSS_MUTATING_TURN=1 node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" > /tmp/sj1.json; test $? -eq 1 && grep -q missing_agent_status_json /tmp/sj1.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "valid-done-status-passes",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.status_json_valid_done_passes"
+      ],
+      "seams": [
+        "status-json-check",
+        "pydantic-validator"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf 'done.\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"decision\": \"pass\"'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "ambiguous-blocker-label-rejects",
+      "type": "negative",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.ambiguous_blocker_label_unrepresentable"
+      ],
+      "seams": [
+        "pydantic-validator",
+        "triage-error-catalog"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"blocked\",\"blocker\":{\"triage\":{\"code\":\"stuff broke\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q invalid_agent_status_json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "catalog-triage-code-passes",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.catalog_triage_code_accepted"
+      ],
+      "seams": [
+        "pydantic-validator",
+        "triage-error-catalog"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"blocked\",\"blocker\":{\"triage\":{\"code\":\"tau_project_dag_missing_required_evidence\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"decision\": \"pass\"'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "non-mutating-chat-without-json-passes",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.non_mutating_chat_exempt"
+      ],
+      "seams": [
+        "status-json-check"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf 'yes, I understand.' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q no_status_required_non_mutating_turn"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "continuing-status-carries-next-command",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "shame.continuing_state_exposes_next_command"
+      ],
+      "seams": [
+        "status-json-check",
+        "continuing-follow-up"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"continuing\",\"not_done\":[{\"item\":\"x\",\"next_command\":\"./run.sh\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"state\": \"continuing\"'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    }
+  ],
+  "claims": {
+    "proves": "JSON-first status checking: pi.agent_status.v1 validated by pydantic against the triage-error catalog; ambiguous blocker labels rejected; no prose/regex classification."
+  },
+  "capability_claims": [
+    {
+      "id": "shame.ambiguous_blocker_label_unrepresentable",
+      "description": "ambiguous blocker label unrepresentable",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.catalog_triage_code_accepted",
+      "description": "catalog triage code accepted",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.continuing_state_exposes_next_command",
+      "description": "continuing state exposes next command",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.non_mutating_chat_exempt",
+      "description": "non mutating chat exempt",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.status_json_required_on_mutating_turn",
+      "description": "status json required on mutating turn",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.status_json_valid_done_passes",
+      "description": "status json valid done passes",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "continuing-follow-up",
+      "seam_type": "cli",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "mutating-turn-env",
+      "seam_type": "cli",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "pydantic-validator",
+      "seam_type": "cli",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "status-json-check",
+      "seam_type": "cli",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "triage-error-catalog",
+      "seam_type": "cli",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    }
+  ]
+}
