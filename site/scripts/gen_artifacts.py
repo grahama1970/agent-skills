@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Capture real evidence artifacts for the on-page Receipts section.
 
-Emits site/artifacts.json. Every entry is captured from a real source —
-a live audit run, an actual tau node receipt from the run that designed
-this site, and the inventory provenance — with SHA-256 of the source
-material so the excerpts are checkable. Nothing here is authored prose.
+Emits site/artifacts.json. Captured entries carry source material plus a
+SHA-256 digest. Failed capture attempts stay in the manifest as unavailable
+records with explicit diagnostics and no pretend digest or receipt body.
 """
 
 from __future__ import annotations
@@ -41,7 +40,7 @@ def unavailable(
         "judgment": "UNAVAILABLE",
         "proves": proves,
         "does_not_prove": does_not_prove,
-        "caption": reason,
+        "caption": f"capture unavailable · digest absent · {source}",
         "body": "",
         "unavailable_reason": reason,
     }

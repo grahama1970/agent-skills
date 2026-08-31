@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Audit/sync the public site content against the repo README.
+"""Audit/sync the public site content against generated site sources.
 
-README.md is the source of truth for the curated project cards ("Fun Stuff
-I'm Working On") and inventory counts ("At a Glance"). The site reads
-site/content.json. audit reports drift (exit 1); apply rewrites content.json.
+README.md is a friendly project-card seed and readback surface. Generated
+inventory counts come from site/inventory.json, and public project provenance
+may include both an overview href and an agent-facing skill-contract href.
+The site reads site/content.json. audit reports drift (exit 1); apply refreshes
+site/content.json without collapsing richer provenance back into README links.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 README = REPO / "README.md"
 CONTENT = REPO / "site" / "content.json"
+INVENTORY = REPO / "site" / "inventory.json"
 SITE_URL = "https://grahama.co"
 LINKEDIN_PROFILE_URL = "https://www.linkedin.com/in/grahamanderson/"
 
@@ -57,6 +60,59 @@ def parse_readme() -> dict:
     if not projects:
         raise SystemExit("README parse failure: no project cards found")
     return {"stats": stats, "projects": projects}
+
+
+def read_inventory_stats() -> dict:
+    return json.loads(INVENTORY.read_text(encoding="utf-8")).get("stats", {})
+
+
+def _agent_skills_skill_contract_href(slug: str) -> str | None:
+    skill_dir = REPO / "skills" / slug
+    if not skill_dir.exists():
+        return None
+    if (skill_dir / "README.md").exists():
+        return f"https://github.com/grahama1970/agent-skills/blob/main/skills/{slug}/README.md"
+    if (skill_dir / "SKILL.md").exists():
+        return f"https://github.com/grahama1970/agent-skills/blob/main/skills/{slug}/SKILL.md"
+    return None
+
+
+def _project_provenance(site_project: dict, readme_project: dict | None = None) -> dict:
+    overview_href = site_project.get("href")
+    readme_href = readme_project.get("href") if readme_project else None
+    skill_contract_href = None
+    if readme_href and "/agent-skills/blob/main/skills/" in readme_href:
+        skill_contract_href = readme_href
+    skill_contract_href = skill_contract_href or _agent_skills_skill_contract_href(site_project["slug"])
+    return {
+        "slug": site_project["slug"],
+        "overview_href": overview_href,
+        "skill_contract_href": skill_contract_href,
+        "readme_href": readme_href,
+    }
+
+
+def _project_provenance_drift(readme_projects: list[dict], site_projects: list[dict]) -> tuple[list[str], list[dict]]:
+    drift: list[str] = []
+    r_by_slug = {p["slug"]: p for p in readme_projects}
+    s_by_slug = {p["slug"]: p for p in site_projects}
+    provenance = [
+        _project_provenance(site_project, r_by_slug.get(slug))
+        for slug, site_project in sorted(s_by_slug.items())
+    ]
+    for slug in r_by_slug.keys() - s_by_slug.keys():
+        drift.append(f"project missing from site: {slug}")
+    for slug in r_by_slug.keys() & s_by_slug.keys():
+        readme_href = r_by_slug[slug].get("href")
+        site_href = s_by_slug[slug].get("href")
+        prov = _project_provenance(s_by_slug[slug], r_by_slug[slug])
+        allowed = {site_href, prov.get("skill_contract_href")}
+        if readme_href not in allowed:
+            drift.append(
+                f"href changed for {slug}: README={readme_href} "
+                f"site={site_href} skill_contract={prov.get('skill_contract_href')}"
+            )
+    return drift, provenance
 
 
 def check_live() -> dict:
@@ -143,7 +199,7 @@ def _surface_coherence_drift(ignore_surfaces: set[str] | None = None) -> list[st
         if recorded != actual:
             out.append("resume.json sourceSha256 != RESUME.md digest (stale — refresh)")
 
-    inv = json.loads((site_dir / "inventory.json").read_text()).get("stats", {})
+    inv = read_inventory_stats()
     site_stats = json.loads(CONTENT.read_text()).get("stats", {})
     if site_stats and inv and site_stats != inv:
         out.append(f"content.json stats {site_stats} != real inventory {inv}")
@@ -153,24 +209,20 @@ def _surface_coherence_drift(ignore_surfaces: set[str] | None = None) -> list[st
 def audit(live: bool, ignore_surfaces: set[str] | None = None) -> dict:
     readme = parse_readme()
     site = json.loads(CONTENT.read_text(encoding="utf-8"))
+    inventory_stats = read_inventory_stats()
     drift = []
-    for key, val in readme["stats"].items():
-        if site["stats"].get(key) != val:
-            drift.append(f"stats.{key}: README={val} site={site['stats'].get(key)}")
+    if site.get("stats") != inventory_stats:
+        drift.append(f"content.json stats {site.get('stats')} != inventory {inventory_stats}")
     drift.extend(_surface_coherence_drift(ignore_surfaces=ignore_surfaces))
-    r_by_slug = {p["slug"]: p for p in readme["projects"]}
-    s_by_slug = {p["slug"]: p for p in site["projects"]}
-    for slug in r_by_slug.keys() - s_by_slug.keys():
-        drift.append(f"project missing from site: {slug}")
-    for slug in s_by_slug.keys() - r_by_slug.keys():
-        drift.append(f"project no longer in README: {slug}")
-    for slug in r_by_slug.keys() & s_by_slug.keys():
-        if r_by_slug[slug]["href"] != s_by_slug[slug]["href"]:
-            drift.append(
-                f"href changed for {slug}: README={r_by_slug[slug]['href']} "
-                f"site={s_by_slug[slug]['href']}"
-            )
-    result = {"drift": drift, "readme": readme, "ok": not drift}
+    project_drift, provenance = _project_provenance_drift(readme["projects"], site["projects"])
+    drift.extend(project_drift)
+    result = {
+        "drift": drift,
+        "readme": readme,
+        "inventory_stats": inventory_stats,
+        "project_provenance": provenance,
+        "ok": not drift,
+    }
     if live:
         result["live"] = check_live()
         result["ok"] = result["ok"] and all(v.get("ok") for v in result["live"].values())
@@ -182,21 +234,25 @@ def apply_sync() -> dict:
     site = json.loads(CONTENT.read_text(encoding="utf-8"))
     s_by_slug = {p["slug"]: p for p in site["projects"]}
     merged = []
+    seen: set[str] = set()
     for p in readme["projects"]:
         existing = s_by_slug.get(p["slug"])
         if existing:
-            existing["href"] = p["href"]  # membership/href sync; keep site blurb
-            merged.append(existing)
+            merged.append(existing)  # preserve richer site prose and provenance hrefs
         else:
             merged.append(p)
-    new_content = {"stats": readme["stats"], "projects": merged}
+        seen.add(p["slug"])
+    for p in site["projects"]:
+        if p["slug"] not in seen:
+            merged.append(p)
+    new_content = {"stats": read_inventory_stats(), "projects": merged}
     changed = new_content != site
     if changed:
         CONTENT.write_text(
             json.dumps(new_content, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
-    return {"changed": changed, "stats": readme["stats"], "projects": len(merged)}
+    return {"changed": changed, "stats": new_content["stats"], "projects": len(merged)}
 
 
 def sync_content_stats_to_inventory() -> bool:
@@ -206,7 +262,7 @@ def sync_content_stats_to_inventory() -> bool:
     source-backed numeric stats that the site renders beside the inventory.
     """
     content = json.loads(CONTENT.read_text(encoding="utf-8"))
-    inventory = json.loads((REPO / "site/inventory.json").read_text(encoding="utf-8"))
+    inventory = json.loads(INVENTORY.read_text(encoding="utf-8"))
     stats = inventory.get("stats")
     if content.get("stats") == stats:
         return False
@@ -630,7 +686,7 @@ def _grahamaco_update_plan(
     if site:
         steps.extend(
             [
-                _update_step("site_content", "sync README.md project cards and stats into site/content.json", ["site/content.json"]),
+                _update_step("site_content", "refresh inventory stats and merge README project seeds without collapsing site provenance", ["site/content.json"]),
                 _update_step(
                     "site_generated_surfaces",
                     "refresh inventory, artifacts, catalog, graph, competence, resume.json, public resume assets, and llms.txt",
@@ -711,7 +767,7 @@ def grahamaco_update(
         "status": "UPDATE_PLAN" if plan_only else "UPDATED",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source": {
-            "website": "README.md",
+            "website": "site/content.json plus generated inventory surfaces; README.md is a project-card seed/readback surface",
             "resume": "RESUME.md",
             "linkedin": "RESUME.md via ops-linkedin.profile_entry.v1",
         },

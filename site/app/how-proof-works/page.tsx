@@ -71,8 +71,10 @@ export default function HowProofWorksPage() {
               callout={receipt.judgment}
               proves={receipt.proves}
               doesNotProve={receipt.does_not_prove}
-              body={receipt.body || receipt.unavailable_reason || receipt.caption}
+              body={receipt.body}
               caption={receipt.caption}
+              captureStatus={receipt.capture_status}
+              unavailableReason={receipt.unavailable_reason}
             />
           ))}
         </div>

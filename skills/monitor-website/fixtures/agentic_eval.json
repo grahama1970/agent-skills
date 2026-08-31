@@ -90,6 +90,26 @@
       }
     },
     {
+      "name": "inventory-and-project-provenance-authority-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/monitor-website\" && uv run pytest -vv tests/test_grahamaco_update.py::test_audit_uses_inventory_stats_not_stale_readme_counts tests/test_grahamaco_update.py::test_apply_sync_preserves_inventory_stats_and_extra_site_projects tests/test_grahamaco_update.py::test_project_provenance_accepts_intentional_dual_links"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "test_audit_uses_inventory_stats_not_stale_readme_counts",
+          "test_apply_sync_preserves_inventory_stats_and_extra_site_projects",
+          "test_project_provenance_accepts_intentional_dual_links",
+          "3 passed"
+        ]
+      }
+    },
+    {
       "name": "visibility-public-overview-fallback-readback",
       "type": "adversarial",
       "real_world": true,
