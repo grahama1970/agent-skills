@@ -234,6 +234,31 @@ def audio_settings(ip: str = typer.Option(None, "--ip"), json_out: bool = typer.
         _down(ip, exc)
 
 
+@app.command("set-volume")
+def set_volume(level: int = typer.Argument(..., min=0, max=100),
+              ip: str = typer.Option(None, "--ip"),
+              execute: bool = typer.Option(False, "--execute")) -> None:
+    """Set the TV's own volume 0-100 (gated behind --execute; read back afterwards)."""
+    ip = _lg_ip(ip)
+    if not execute:
+        typer.echo(json.dumps({"refused": True, "reason": "set-volume is a mutation; pass --execute"}), err=True)
+        raise typer.Exit(3)
+
+    async def go():
+        client = await _client(ip)
+        before = await client.get_volume()
+        await client.set_volume(level)
+        await asyncio.sleep(1)
+        after = await client.get_volume()
+        await client.disconnect()
+        return {"before": before, "requested": level, "readback": after}
+
+    try:
+        typer.echo(json.dumps(asyncio.run(go()), default=str))
+    except Exception as exc:  # noqa: BLE001
+        _down(ip, exc)
+
+
 @app.command("gain-staging")
 def gain_staging(ip: str = typer.Option(None, "--ip"),
                  wiim_ip: str = typer.Option(None, "--wiim-ip"),
