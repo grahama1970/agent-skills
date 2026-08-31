@@ -9,7 +9,9 @@ import { fileURLToPath } from "node:url";
 import { beginGuardTurn, claimGuardFollowUp } from "../_shared/guard-pipeline-shared.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
-const REPORT_CHECK = join(EXTENSION_DIR, "report-check.mjs");
+// JSON-first checker (2026-09-01): regex/prose classification is banned.
+// status-json-check.mjs validates a pi.agent_status.v1 block via pydantic.
+const REPORT_CHECK = join(EXTENSION_DIR, "status-json-check.mjs");
 const SHAME_AUDIO = process.env.LAZY_REPORT_SHAME_AUDIO || join(EXTENSION_DIR, "shame.wav");
 const TRAINING_JSONL = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || "/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl";
 const PENDING_REVIEW_PACKET = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || "/mnt/storage12tb/skills/shame/training/pending-review-packet.json";
@@ -236,21 +238,20 @@ function unresolvedGates(state: ContinuationState): ContinuationGate[] {
   return (state.gates || []).filter((gate) => !/^(pass|passed|ok|complete|completed|closed)$/i.test(String(gate.status || "")));
 }
 
-function completionClaim(text: string): boolean {
-  return /\b(?:done|complete|completed|finished|fixed|resolved|closed|implemented|landed|shipped|published)\b/i.test(text)
-    || /^\s*(?:not done|remaining|remains|todo|unfinished)\s*:\s*(?:none|nothing|n\/a|no|zero)\b/im.test(text)
-    || /\b(?:no remaining work|nothing remains)\b/i.test(text)
-    || /\bstatus report\b/i.test(text);
+// JSON-first (2026-09-01): a completion claim is state === "done" in the
+// validated pi.agent_status.v1 object. No prose regex.
+function completionClaim(statusState: string | undefined): boolean {
+  return statusState === "done";
 }
 
-function evaluateContinuationGuard(text: string): CheckResult | null {
+function evaluateContinuationGuard(statusState: string | undefined): CheckResult | null {
   const state = activeContinuationState();
   if (!state) return null;
   const tickets = actionableOpenTickets(state);
   const gates = unresolvedGates(state);
   const steps = Array.isArray(state.obvious_next_steps) ? state.obvious_next_steps.filter(Boolean) : [];
   if (!tickets.length && !gates.length && !steps.length && !state.next_command) return null;
-  if (!completionClaim(text)) return null;
+  if (!completionClaim(statusState)) return null;
 
   const nextAction = state.next_command
     || tickets.find((ticket) => ticket.next_command)?.next_command
@@ -627,7 +628,8 @@ export default function lazyReportShameShameShame(pi: any) {
     const forceStatus = sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
-    const continuationCheck = evaluateContinuationGuard(text);
+    const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
+    const continuationCheck = evaluateContinuationGuard(statusState);
     if (continuationCheck && check.decision !== "reject") check = continuationCheck;
     let keepGuardForRetry = false;
 
