@@ -11,7 +11,6 @@ triage code that exists in the triage-error catalog or matches the minted
 from __future__ import annotations
 
 import json
-import re
 import sys
 from pathlib import Path
 from typing import Literal
@@ -19,7 +18,16 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 CATALOG_PATH = Path(__file__).resolve().parents[3] / "skills/triage-error/failure_codes.json"
-MINTED_CODE_RE = re.compile(r"^[a-z0-9_]+_unclassified_[0-9a-f]{8}$")
+def is_minted_code(value: str) -> bool:
+    """Exact-shape check for minted ``<prefix>_unclassified_<8hex>`` codes. No regex."""
+    marker = "_unclassified_"
+    idx = value.rfind(marker)
+    if idx <= 0:
+        return False
+    prefix, suffix = value[:idx], value[idx + len(marker):]
+    if len(suffix) != 8 or not all(c in "0123456789abcdef" for c in suffix):
+        return False
+    return all(c.islower() or c.isdigit() or c == "_" for c in prefix)
 
 
 def catalog_codes() -> frozenset[str]:
@@ -48,7 +56,7 @@ class Triage(BaseModel):
     @field_validator("code")
     @classmethod
     def code_must_be_unambiguous(cls, value: str) -> str:
-        if value in catalog_codes() or MINTED_CODE_RE.fullmatch(value):
+        if value in catalog_codes() or is_minted_code(value):
             return value
         raise ValueError(
             f"ambiguous failure label {value!r}: not in triage-error catalog and "

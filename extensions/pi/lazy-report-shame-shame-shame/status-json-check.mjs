@@ -13,9 +13,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 const CHECKER_VERSION = '2026-09-01.status-json-first.v1';
-const MUTATING_TURN = /^(1|true|yes)$/i.test(process.env.LRSSS_MUTATING_TURN || '');
-const FORCE_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_FORCE_STATUS || '');
-const STRICT_STATUS = /^(1|true|yes)$/i.test(process.env.LRSSS_STRICT_STATUS || '');
+const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
+const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
+const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
+const FORCE_STATUS = flagEnabled(process.env.LRSSS_FORCE_STATUS);
+const STRICT_STATUS = flagEnabled(process.env.LRSSS_STRICT_STATUS);
 
 const VALIDATOR = join(
   homedir(),

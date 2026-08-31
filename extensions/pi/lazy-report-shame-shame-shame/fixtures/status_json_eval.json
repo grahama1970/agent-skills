@@ -19,7 +19,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'I fixed it and pushed.' | LRSSS_MUTATING_TURN=1 node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" > /tmp/sj1.json; test $? -eq 1 && grep -q missing_agent_status_json /tmp/sj1.json"
+        "printf 'I fixed it and pushed.' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj1.json; test $? -eq 1 && grep -q missing_agent_status_json /tmp/sj1.json"
       ],
       "expected": {
         "exit_code": 0
@@ -41,7 +41,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'done.\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"decision\": \"pass\"'"
+        "printf 'done.\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
       ],
       "expected": {
         "exit_code": 0
@@ -63,7 +63,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"stuff broke\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q invalid_agent_status_json"
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"stuff broke\",\"cause\":\"c\"}}}\\n```\\n' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q invalid_agent_status_json"
       ],
       "expected": {
         "exit_code": 0
@@ -85,7 +85,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"tau_project_dag_missing_required_evidence\",\"cause\":\"c\"}}}\\n```\\n' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"decision\": \"pass\"'"
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"tau_project_dag_missing_required_evidence\",\"cause\":\"c\"}}}\\n```\\n' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
       ],
       "expected": {
         "exit_code": 0
@@ -106,7 +106,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'yes, I understand.' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q no_status_required_non_mutating_turn"
+        "printf 'yes, I understand.' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q no_status_required_non_mutating_turn"
       ],
       "expected": {
         "exit_code": 0
@@ -128,7 +128,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"continuing\",\"not_done\":[{\"item\":\"x\",\"next_command\":\"./run.sh\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/status-json-check.mjs\" | grep -q '\"state\": \"continuing\"'"
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"continuing\",\"not_done\":[{\"item\":\"x\",\"next_command\":\"./run.sh\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"state\": \"continuing\"'"
       ],
       "expected": {
         "exit_code": 0
@@ -150,7 +150,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_brave_search\",\"needs_brave_search\":{\"queries\":[\"q1\"]}}' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/compile-status-command.mjs\" | grep -q 'brave-search/run.sh web'"
+        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_brave_search\",\"needs_brave_search\":{\"queries\":[\"q1\"]}}' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs | grep -q 'brave-search/run.sh web'"
       ],
       "expected": {
         "exit_code": 0
@@ -171,7 +171,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_webgpt\",\"needs_webgpt\":{\"question\":\"q\",\"brave_search_receipt\":\"/tmp/r0.json\",\"agent_receipt\":\"/tmp/r1.json\"}}' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/compile-status-command.mjs\" | grep -q \"handler 'webgpt'\""
+        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_webgpt\",\"needs_webgpt\":{\"question\":\"q\",\"brave_search_receipt\":\"/tmp/r0.json\",\"agent_receipt\":\"/tmp/r1.json\"}}' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs | grep -q \"handler 'webgpt'\""
       ],
       "expected": {
         "exit_code": 0
@@ -192,7 +192,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_human\",\"needs_human\":{\"action\":\"a\",\"reason\":\"r\"}}' | node \"$(ls -d /home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame* | head -1)/compile-status-command.mjs\" | grep -q 'terminal_or_human_state_needs_human'"
+        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_human\",\"needs_human\":{\"action\":\"a\",\"reason\":\"r\"}}' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs | grep -q 'terminal_or_human_state_needs_human'"
       ],
       "expected": {
         "exit_code": 0
