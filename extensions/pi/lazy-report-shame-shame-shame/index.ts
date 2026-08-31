@@ -19,7 +19,7 @@ const CONFIGURED_MEMORY_URL = process.env.MEMORY_SERVICE_URL || process.env.MEMO
 const MEMORY_URL = (CONFIGURED_MEMORY_URL.startsWith("unix://") ? "http://127.0.0.1:8601" : (CONFIGURED_MEMORY_URL || "http://127.0.0.1:8601")).replace(/\/+$/, "");
 const MEMORY_COLLECTION = process.env.SHAME_MEMORY_COLLECTION || "shame_training_examples";
 const MEMORY_SEARCH_COLLECTION = process.env.SHAME_MEMORY_SEARCH_COLLECTION || "project_knowledge";
-const MEMORY_ENABLED = !/^(0|false|off|no)$/i.test(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
+const MEMORY_ENABLED = !flagDisabled(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
 const AUDIO_COOLDOWN_MS = 10_000;
 const MAX_REJECTED_EXCERPT_CHARS = 8_000;
 const CONTINUATION_GUARD_FILE = process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE || "/mnt/storage12tb/skills/shame/continuation-guard/current.json";
@@ -116,12 +116,49 @@ function appendText(content: unknown, text: string): unknown {
   return [...content, { type: "text", text: `\n\n${text}` }];
 }
 
+// Exact-match helpers: the no-regex/no-prose-classification policy bans regex
+// even over control tokens. These use tokenization + set membership only.
+const FALSEY_FLAG_VALUES = new Set(["0", "false", "off", "no"]);
+function flagDisabled(value: unknown): boolean {
+  return FALSEY_FLAG_VALUES.has(String(value ?? "").trim().toLowerCase());
+}
+function tokenize(text: unknown): string[] {
+  const out: string[] = [];
+  let current = "";
+  for (const ch of String(text ?? "")) {
+    if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") {
+      if (current) { out.push(current); current = ""; }
+    } else {
+      current += ch.toLowerCase();
+    }
+  }
+  if (current) out.push(current);
+  return out;
+}
+function hasAnyToken(text: unknown, tokens: Set<string>): boolean {
+  return tokenize(text).some((token) => tokens.has(token));
+}
+const SHAME_TOKENS = new Set(["$shame", "/shame"]);
+const GUARD_TOKENS = new Set(["$shame", "/shame", "$unlazy", "/unlazy"]);
+const CLOSED_TICKET_STATUSES = new Set(["closed", "done", "complete", "completed", "merged"]);
+const PASSING_GATE_STATUSES = new Set(["pass", "passed", "ok", "complete", "completed", "closed"]);
+function isMutatingShellCommand(command: string): boolean {
+  const tokens = tokenize(command);
+  for (let i = 0; i < tokens.length; i += 1) {
+    const tok = tokens[i];
+    if (tok === "git" && ["commit", "push", "merge"].includes(tokens[i + 1] ?? "")) return true;
+    if (tok === "gh" && ["issue", "pr"].includes(tokens[i + 1] ?? "") && ["close", "comment", "edit", "create"].includes(tokens[i + 2] ?? "")) return true;
+    if ((tok === "npm" || tok === "pnpm") && (tokens[i + 1] ?? "") === "publish") return true;
+  }
+  return false;
+}
+
 function activatesGuard(text: string): boolean {
-  return /\$unlazy\b|\/unlazy\b|\$shame\b|\/shame\b|\bacceptance ledger\b/i.test(text);
+  return hasAnyToken(text, GUARD_TOKENS) || String(text ?? "").toLowerCase().includes("acceptance ledger");
 }
 
 function activatesShameSelfCorrection(text: string): boolean {
-  return /\$shame\b|\/shame\b/i.test(text);
+  return hasAnyToken(text, SHAME_TOKENS);
 }
 
 function sha256(value: string): string {
@@ -185,6 +222,21 @@ function checkReport(text: string, forceStatus: boolean, mutatingTurn: boolean, 
   return parseCheckerPayload(String(result.stdout || ""), String(result.stderr || ""), result.status);
 }
 
+function compileStatusCommand(status: unknown): { command: string | null; reason: string } | null {
+  const result = spawnSync("node", [join(EXTENSION_DIR, "compile-status-command.mjs")], {
+    input: JSON.stringify(status),
+    encoding: "utf8",
+    timeout: 5000,
+  });
+  if (result.error || result.status !== 0) return null;
+  try {
+    const parsed = JSON.parse(String(result.stdout || ""));
+    return { command: parsed.command ?? null, reason: String(parsed.reason || "unknown") };
+  } catch {
+    return null;
+  }
+}
+
 function loadContinuationState(): ContinuationState | null {
   if (!CONTINUATION_GUARD_FILE) return null;
   if (!existsSync(CONTINUATION_GUARD_FILE)) return null;
@@ -220,7 +272,7 @@ function ticketRef(ticket: ContinuationTicket): string {
 }
 
 function isClosedState(value: unknown): boolean {
-  return /^(closed|done|complete|completed|merged)$/i.test(String(value || ""));
+  return CLOSED_TICKET_STATUSES.has(String(value || "").trim().toLowerCase());
 }
 
 function actionableOpenTickets(state: ContinuationState): ContinuationTicket[] {
@@ -235,7 +287,7 @@ function actionableOpenTickets(state: ContinuationState): ContinuationTicket[] {
 }
 
 function unresolvedGates(state: ContinuationState): ContinuationGate[] {
-  return (state.gates || []).filter((gate) => !/^(pass|passed|ok|complete|completed|closed)$/i.test(String(gate.status || "")));
+  return (state.gates || []).filter((gate) => !PASSING_GATE_STATUSES.has(String(gate.status || "").trim().toLowerCase()));
 }
 
 // JSON-first (2026-09-01): a completion claim is state === "done" in the
@@ -280,7 +332,7 @@ function evaluateContinuationGuard(statusState: string | undefined): CheckResult
 }
 
 function playShameAudio(lastPlayedAt: { value: number }): void {
-  if (/^(0|false|off|no)$/i.test(process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED || "1")) return;
+  if (flagDisabled(process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED || "1")) return;
   const now = Date.now();
   if (now - lastPlayedAt.value < AUDIO_COOLDOWN_MS) return;
   lastPlayedAt.value = now;
@@ -424,9 +476,9 @@ Status Report
 function parseShameArgs(args: string): { action: "capture" | "show" | "undo" | "review"; verdict: HumanVerdict; reasons: string[]; note: string; error?: string } {
   const trimmed = String(args || "").trim();
   if (!trimmed) return { action: "capture", verdict: "needs_review", reasons: [], note: "" };
-  if (/^show\b/i.test(trimmed)) return { action: "show", verdict: "needs_review", reasons: [], note: "" };
-  if (/^review\b/i.test(trimmed)) return { action: "review", verdict: "needs_review", reasons: [], note: trimmed.replace(/^review\s*/i, "") };
-  if (/^undo\b/i.test(trimmed)) return { action: "undo", verdict: "needs_review", reasons: [], note: trimmed.replace(/^undo\s*/i, "") };
+  if (tokenize(trimmed)[0] === "show") return { action: "show", verdict: "needs_review", reasons: [], note: "" };
+  if (tokenize(trimmed)[0] === "review") return { action: "review", verdict: "needs_review", reasons: [], note: trimmed.slice(trimmed.toLowerCase().indexOf("review") + 6).trim() };
+  if (tokenize(trimmed)[0] === "undo") return { action: "undo", verdict: "needs_review", reasons: [], note: trimmed.slice(trimmed.toLowerCase().indexOf("undo") + 4).trim() };
 
   const [beforeNote, ...afterNote] = trimmed.split(/\s+--\s+/);
   const tokens = beforeNote.trim().split(/\s+/).filter(Boolean);
@@ -600,7 +652,7 @@ export default function lazyReportShameShameShame(pi: any) {
     const input = event.input || {};
     const command = String(input.command || "");
     if (["edit", "write"].includes(tool)) mutatingTurn = true;
-    if (tool === "bash" && /\b(git\s+(?:commit|push|merge)|gh\s+(?:issue|pr)\s+(?:close|comment|edit|create)|npm\s+publish|pnpm\s+publish)\b/i.test(command)) {
+    if (tool === "bash" && isMutatingShellCommand(command)) {
       mutatingTurn = true;
     }
   });
@@ -641,26 +693,26 @@ export default function lazyReportShameShameShame(pi: any) {
         return;
       }
       if (check.decision !== "reject") {
-        // JSON-first keep-going: a validated status with state="continuing"
-        // queues its own declared next_command as a follow-up. No prose regex.
-        if (statusState === "continuing") {
-          const status = (check as any)?.features?.status;
-          const nextCommand = Array.isArray(status?.not_done)
-            ? status.not_done.map((item: any) => String(item?.next_command || "")).find((cmd: string) => cmd.trim())
-            : undefined;
-          if (nextCommand) {
+        // JSON-first keep-going and escalation: every validated status compiles
+        // through compile-status-command.mjs (pure data -> command; no regex).
+        // continuing and needs_* escalation states queue their exact compiled
+        // command; done/needs_human/failed compile to null and end the turn.
+        const status = (check as any)?.features?.status;
+        if (status && typeof statusState === "string") {
+          const compiled = compileStatusCommand(status);
+          if (compiled?.command) {
             const claim = claimGuardFollowUp({
-              guard: "shame-continuing",
+              guard: "shame-status-compiler",
               messageId: String(event.message.id || event.id || "unknown"),
               assistantText: text,
               userText: currentUserText,
-              reason: "agent_status_continuing",
+              reason: compiled.reason || `agent_status_${statusState}`,
               maxRetries: 3,
             });
             if (claim.ok) {
               try {
                 pi.sendUserMessage(
-                  `CONTINUE_FROM_AGENT_STATUS\nThe last pi.agent_status.v1 object declared state="continuing". Execute the declared next command now:\n${nextCommand}`,
+                  `CONTINUE_FROM_AGENT_STATUS\nThe last pi.agent_status.v1 object declared state="${statusState}" (${compiled.reason}). Execute the compiled command now:\n${compiled.command}`,
                   { deliverAs: "followUp", expandPromptTemplates: false },
                 );
               } catch { /* follow-up delivery is best-effort */ }
