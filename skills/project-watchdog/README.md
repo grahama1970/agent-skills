@@ -64,8 +64,9 @@ snapshot before serving it:
     cd ui && npm install && npm run dev
 
 The UI is observational only. Rows link the operator to GitHub issues, local
-receipt paths, and Tau DAG artifacts when the watchdog recorded them; mutations
-still go through the receipt-backed CLI lanes.
+receipt paths, and embed a read-only Tau React Flow DAG when the watchdog
+recorded real Tau `dag-progress.json`/`dag.json` artifacts; mutations still go
+through the receipt-backed CLI lanes.
 
 ## Evaluation
 

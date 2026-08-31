@@ -1,9 +1,13 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '../../lib';
 
-export function Card({ children, className }: { children: ReactNode; className?: string }) {
+interface CardProps extends HTMLAttributes<HTMLElement> {
+  children: ReactNode;
+}
+
+export function Card({ children, className, ...props }: CardProps) {
   return (
-    <section className={cn('rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-2xl shadow-cyan-950/20', className)}>
+    <section className={cn('rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-2xl shadow-cyan-950/20', className)} {...props}>
       {children}
     </section>
   );

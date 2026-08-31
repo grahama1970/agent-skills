@@ -57,6 +57,36 @@ class TriageSummary:
 
 
 @dataclass(frozen=True, slots=True)
+class TauDagNode:
+    """One node in the embedded Tau DAG preview."""
+
+    id: str
+    label: str
+    status: str
+    agent: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class TauDagEdge:
+    """One directed edge in the embedded Tau DAG preview."""
+
+    id: str
+    source: str
+    target: str
+
+
+@dataclass(frozen=True, slots=True)
+class TauDagGraph:
+    """Small graph payload rendered by the React Flow panel."""
+
+    dag_id: str | None
+    status: str | None
+    verdict: str | None
+    nodes: list[TauDagNode]
+    edges: list[TauDagEdge]
+
+
+@dataclass(frozen=True, slots=True)
 class TauDagLink:
     """Read-only linkage from a watchdog row to a Tau/Ask DAG artifact."""
 
@@ -66,6 +96,7 @@ class TauDagLink:
     progress_path: str | None
     stream_monitor_path: str | None
     viewer_hint: str
+    graph: TauDagGraph | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -259,12 +290,13 @@ def _triage_from_flat_payload(payload: dict[str, Any]) -> TriageSummary | None:
 
 def _tau_dag_from_payload(payload: dict[str, Any], receipt_path: Path) -> TauDagLink | None:
     action = str(payload.get("action") or "")
-    expects_dag = action == "ticket_repair" or "tau" in action
+    expects_dag = action in {"ticket_repair", "closure_audit"} or "tau" in action
     run_dir = _first_existing_path(
         payload.get("ask_run_dir"),
         payload.get("ask_run"),
         payload.get("tau_run_dir"),
         payload.get("dag_run_dir"),
+        _first_artifact_dir(payload),
     )
     progress_path = _find_progress_path(run_dir)
     stream_monitor_path = _first_existing_path(
@@ -273,14 +305,104 @@ def _tau_dag_from_payload(payload: dict[str, Any], receipt_path: Path) -> TauDag
     )
     if not expects_dag and not run_dir and not progress_path and not stream_monitor_path:
         return None
+    graph = _load_tau_dag_graph(progress_path, run_dir)
     return TauDagLink(
         expected=expects_dag,
         available=bool(run_dir or progress_path or stream_monitor_path),
         run_dir=str(run_dir) if run_dir else None,
         progress_path=str(progress_path) if progress_path else None,
         stream_monitor_path=str(stream_monitor_path) if stream_monitor_path else None,
-        viewer_hint="Open the Tau React Flow viewer with this run directory when available.",
+        viewer_hint="Embedded Tau React Flow preview uses this run directory/progress path when available.",
+        graph=graph,
     )
+
+
+def _load_tau_dag_graph(progress_path: Path | None, run_dir: Path | None) -> TauDagGraph | None:
+    progress = _read_json(progress_path)
+    dag = _read_json(_find_dag_json(run_dir, progress_path))
+    if not isinstance(progress, dict) and not isinstance(dag, dict):
+        return None
+
+    progress_nodes = progress.get("node_progress", []) if isinstance(progress, dict) else []
+    nodes_by_id: dict[str, TauDagNode] = {}
+    if isinstance(progress_nodes, list):
+        for entry in progress_nodes:
+            if not isinstance(entry, dict):
+                continue
+            node_id = _str_or_none(entry.get("node_id"))
+            if not node_id:
+                continue
+            nodes_by_id[node_id] = TauDagNode(
+                id=node_id,
+                label=node_id,
+                status=str(entry.get("status") or "UNKNOWN"),
+                agent=_str_or_none(entry.get("agent")),
+            )
+
+    dag_nodes = dag.get("nodes", []) if isinstance(dag, dict) else []
+    if isinstance(dag_nodes, list):
+        for entry in dag_nodes:
+            if not isinstance(entry, dict):
+                continue
+            node_id = _str_or_none(entry.get("id"))
+            if not node_id or node_id in nodes_by_id:
+                continue
+            nodes_by_id[node_id] = TauDagNode(
+                id=node_id,
+                label=node_id,
+                status="DECLARED",
+                agent=_str_or_none(entry.get("agent")),
+            )
+
+    edges: list[TauDagEdge] = []
+    dag_edges = dag.get("edges", []) if isinstance(dag, dict) else []
+    if isinstance(dag_edges, list):
+        for index, entry in enumerate(dag_edges):
+            if not isinstance(entry, dict):
+                continue
+            source = _str_or_none(entry.get("from") or entry.get("source"))
+            target = _str_or_none(entry.get("to") or entry.get("target"))
+            if not source or not target:
+                continue
+            edges.append(TauDagEdge(id=f"edge-{index:04d}", source=source, target=target))
+            for node_id in (source, target):
+                nodes_by_id.setdefault(
+                    node_id,
+                    TauDagNode(id=node_id, label=node_id, status="DECLARED", agent=None),
+                )
+
+    return TauDagGraph(
+        dag_id=_str_or_none((progress or {}).get("dag_id") or (dag or {}).get("dag_id")),
+        status=_str_or_none((progress or {}).get("status")),
+        verdict=_str_or_none((progress or {}).get("verdict") or (progress or {}).get("status")),
+        nodes=list(nodes_by_id.values()),
+        edges=edges,
+    )
+
+
+def _find_dag_json(run_dir: Path | None, progress_path: Path | None) -> Path | None:
+    candidates: list[Path] = []
+    if run_dir:
+        candidates.append(run_dir / "dag.json")
+        candidates.append(run_dir.parent / "dag.json")
+    if progress_path:
+        candidates.append(progress_path.parent / "dag.json")
+        candidates.append(progress_path.parent.parent / "dag.json")
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _read_json(path: Path | None) -> dict[str, Any] | None:
+    if not path or not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("could not read Tau DAG graph payload {}: {}", path, exc)
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def _find_progress_path(run_dir: Path | None) -> Path | None:
@@ -289,6 +411,20 @@ def _find_progress_path(run_dir: Path | None) -> Path | None:
     for candidate in [run_dir / "dag-progress.json", run_dir / "tau-receipts" / "dag-progress.json"]:
         if candidate.exists():
             return candidate
+    for candidate in run_dir.glob("**/dag-progress.json"):
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _first_artifact_dir(payload: dict[str, Any]) -> Path | None:
+    artifacts = payload.get("artifacts")
+    if not isinstance(artifacts, list):
+        return None
+    for entry in artifacts:
+        path = Path(str(entry)).expanduser()
+        if path.is_dir():
+            return path
     return None
 
 

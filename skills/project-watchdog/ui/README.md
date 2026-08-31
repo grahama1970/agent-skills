@@ -25,5 +25,6 @@ npm run check:contract
 ```
 
 `check:contract` verifies the `data-qid`, `data-qs-action`, `title`,
-`useRegisterAction`, desktop table, mobile card, sticky filter, Tau DAG, and
-receipt-chain literals required by the watchdog UI contract.
+`useRegisterAction`, desktop table, mobile card, sticky filter, embedded
+Tau React Flow DAG, and receipt-chain literals required by the watchdog UI
+contract.

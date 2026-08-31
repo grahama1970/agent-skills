@@ -58,7 +58,23 @@ export const sampleSnapshot: WatchdogSnapshot = {
         run_dir: '/home/graham/workspace/experiments/agent-skills/.ask_artifacts/tau-dag-runs/example',
         progress_path: '/home/graham/workspace/experiments/agent-skills/.ask_artifacts/tau-dag-runs/example/tau-receipts/dag-progress.json',
         stream_monitor_path: null,
-        viewer_hint: 'Open the Tau React Flow viewer with this run directory when available.',
+        viewer_hint: 'Embedded Tau React Flow preview uses this run directory/progress path when available.',
+        graph: {
+          dag_id: 'ask-tau-example',
+          status: 'BLOCKED',
+          verdict: 'EVIDENCE_RECEIPT_VERDICT_FAILED',
+          nodes: [
+            { id: 'handler-webclaude', label: 'handler-webclaude', status: 'COMPLETED', agent: 'handler-webclaude' },
+            { id: 'handler-gpt-5-5-xhigh', label: 'handler-gpt-5-5-xhigh', status: 'COMPLETED', agent: 'handler-gpt-5-5-xhigh' },
+            { id: 'join-gate', label: 'join-gate', status: 'COMPLETED', agent: 'join-gate' },
+            { id: 'join', label: 'join', status: 'COMPLETED', agent: 'join' },
+          ],
+          edges: [
+            { id: 'edge-0000', source: 'handler-webclaude', target: 'join-gate' },
+            { id: 'edge-0001', source: 'handler-gpt-5-5-xhigh', target: 'join-gate' },
+            { id: 'edge-0002', source: 'join-gate', target: 'join' },
+          ],
+        },
       },
       evidence_paths: ['/tmp/project-watchdog-1519-closure-loop-agentic-eval.json'],
     },
@@ -80,7 +96,7 @@ export const sampleSnapshot: WatchdogSnapshot = {
       updated_at: '2026-08-31T12:20:00Z',
       stop_reason: null,
       triage: null,
-      tau_dag: { expected: true, available: false, run_dir: null, progress_path: null, stream_monitor_path: null, viewer_hint: 'No Tau DAG artifact recorded for this row.' },
+      tau_dag: { expected: true, available: false, run_dir: null, progress_path: null, stream_monitor_path: null, viewer_hint: 'No Tau DAG artifact recorded for this row.', graph: null },
       evidence_paths: ['/tmp/ticket-skill-target-memory-plan-agentic-eval.json'],
     },
     {

@@ -15,6 +15,27 @@ export interface TriageSummary {
   source: string;
 }
 
+export interface TauDagNode {
+  id: string;
+  label: string;
+  status: string;
+  agent: string | null;
+}
+
+export interface TauDagEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+export interface TauDagGraph {
+  dag_id: string | null;
+  status: string | null;
+  verdict: string | null;
+  nodes: TauDagNode[];
+  edges: TauDagEdge[];
+}
+
 export interface TauDagLink {
   expected: boolean;
   available: boolean;
@@ -22,6 +43,7 @@ export interface TauDagLink {
   progress_path: string | null;
   stream_monitor_path: string | null;
   viewer_hint: string;
+  graph: TauDagGraph | null;
 }
 
 export interface WatchdogItem {

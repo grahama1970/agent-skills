@@ -19,7 +19,8 @@
     "tailwind-merge": "3.6.0",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
-    "vite": "8.2.2"
+    "vite": "8.2.2",
+    "@xyflow/react": "12.9.3"
   },
   "devDependencies": {
     "@types/react": "19.2.18",

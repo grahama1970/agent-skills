@@ -31,6 +31,8 @@ const required = [
   'data-qs-action="WATCHDOG_OPEN_ROW"',
   'data-qid="watchdog:cards"',
   'data-qs-action="WATCHDOG_OPEN_CARD"',
+  'data-qid="watchdog:dag-flow"',
+  'data-qs-action="WATCHDOG_INSPECT_DAG_FLOW"',
   'title="Reload the latest project-watchdog UI snapshot JSON"',
 ];
 for (const needle of required) {
@@ -42,8 +44,8 @@ if (!joined.includes('useRegisterAction({ qid:')) {
 if (!joined.includes('lg:hidden') || !joined.includes('hidden overflow-hidden') || !joined.includes('sticky top-0')) {
   failures.push('responsive/sticky table-card classes are missing');
 }
-if (!joined.includes('Tau React Flow viewer') || !joined.includes('Receipt chain')) {
-  failures.push('Tau DAG / receipt-chain language is missing');
+if (!joined.includes('ReactFlow') || !joined.includes('Embedded Tau React Flow') || !joined.includes('Receipt chain')) {
+  failures.push('Tau DAG React Flow / receipt-chain language is missing');
 }
 
 if (failures.length) {

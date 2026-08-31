@@ -2265,6 +2265,16 @@ def test_ui_snapshot_projects_issue_receipts_with_gate_and_tau_links(tmp_path: P
     progress = tau_dir / "tau-receipts" / "dag-progress.json"
     progress.parent.mkdir(parents=True)
     progress.write_text('{"schema":"tau.dag_progress.v1"}', encoding="utf-8")
+    (tau_dir / "dag.json").write_text(
+        json.dumps(
+            {
+                "dag_id": "ask-tau-test",
+                "nodes": [{"id": "handler"}, {"id": "join"}],
+                "edges": [{"from": "handler", "to": "join"}],
+            }
+        ),
+        encoding="utf-8",
+    )
     receipt = {
         "schema": "agent_skills.project_watchdog.tick_receipt.v1",
         "run_id": "project-watchdog-20260831T130000Z",
@@ -2311,3 +2321,6 @@ def test_ui_snapshot_projects_issue_receipts_with_gate_and_tau_links(tmp_path: P
     assert item["triage"]["code"] == "closure_audit_failed"
     assert item["tau_dag"]["available"] is True
     assert item["tau_dag"]["progress_path"] == str(progress)
+    assert item["tau_dag"]["graph"]["dag_id"] == "ask-tau-test"
+    assert len(item["tau_dag"]["graph"]["nodes"]) == 2
+    assert len(item["tau_dag"]["graph"]["edges"]) == 1
