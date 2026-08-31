@@ -5,97 +5,208 @@
     {
       "code": "tau_project_dag_missing_required_evidence",
       "layer": "tau.project_dag",
-      "match": ["missing_required_evidence", "node response did not include required evidence", "required evidence", "MISSING_REQUIRED_EVIDENCE"],
+      "match": [
+        "missing_required_evidence",
+        "node response did not include required evidence",
+        "required evidence",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
       "cause": "A required Tau DAG node response omitted one or more evidence kinds declared by node.required_evidence, so downstream DAG progress must stay blocked.",
       "next_command": "Open the failed-step receipt named in pipeline_self_repair.failed_step_receipt; repair the same node handler so result.evidence includes every missing kind with the active goal_hash; run the retained agentic eval; mark the repair ledger CATEGORY_GREEN; rerun tau dag-run against the same receipt directory.",
       "recoverable": true,
-      "not_this": ["provider authentication", "Discord delivery failure", "watchdog dispatch failure"]
+      "not_this": [
+        "provider authentication",
+        "Discord delivery failure",
+        "watchdog dispatch failure"
+      ]
     },
     {
       "code": "tau_project_dag_ops_discord_notification_failed",
       "layer": "tau.project_dag",
-      "match": ["OPS_DISCORD_NOTIFICATION_FAILED", "CHANNEL_NOT_FOUND", "SEND_FAILED", "ops_discord_notification_ok", "ops-discord notification"],
+      "match": [
+        "OPS_DISCORD_NOTIFICATION_FAILED",
+        "CHANNEL_NOT_FOUND",
+        "SEND_FAILED",
+        "ops_discord_notification_ok",
+        "ops-discord notification"
+      ],
       "cause": "Tau reached the human-adjudication route, but the ops-discord notification receipt reported a delivery failure or missing channel.",
       "next_command": "Read the ops_discord.notification_receipt.v1 path from the repair projection, fix the Discord channel/token/policy through the ops-discord skill, then rerun the same Tau repair notification path and verify the viewer exposes SENT or a typed failure.",
       "recoverable": true,
-      "not_this": ["handler evidence missing", "repair category closed", "status receipt unblocks repair"]
+      "not_this": [
+        "handler evidence missing",
+        "repair category closed",
+        "status receipt unblocks repair"
+      ]
     },
     {
       "code": "tau_project_dag_human_adjudication_required",
       "layer": "tau.project_dag",
-      "match": ["HUMAN_ADJUDICATION_REQUIRED", "AWAITING_ADJUDICATION", "WAITING_FOR_HUMAN", "human adjudication", "human_adjudication_required"],
+      "match": [
+        "HUMAN_ADJUDICATION_REQUIRED",
+        "AWAITING_ADJUDICATION",
+        "WAITING_FOR_HUMAN",
+        "human adjudication",
+        "human_adjudication_required"
+      ],
       "cause": "A Tau repair category requires a typed human decision before the same semantic node can rerun or downstream nodes can advance.",
       "next_command": "Send or inspect the ops-discord question receipt; accept only a tau.discord_human_answer.v1 receipt matching question_id, run_id, node_id, goal_hash, and allowed answer; do not treat status text as an unblock.",
       "recoverable": true,
-      "not_this": ["agentic eval proof", "GitHub ticket closure", "provider semantic pass"]
+      "not_this": [
+        "agentic eval proof",
+        "GitHub ticket closure",
+        "provider semantic pass"
+      ]
     },
     {
       "code": "tau_project_dag_ticket_watchdog_repair_not_green",
       "layer": "tau.project_dag",
-      "match": ["ticket_skipped", "watchdog dispatch disabled", "watchdog", "ticket disposition", "lacks ticket disposition", "repair_state=TICKETED", "repair_state=WATCHDOG_DISPATCHED"],
+      "match": [
+        "ticket_skipped",
+        "watchdog dispatch disabled",
+        "watchdog",
+        "ticket disposition",
+        "lacks ticket disposition",
+        "repair_state=TICKETED",
+        "repair_state=WATCHDOG_DISPATCHED"
+      ],
       "cause": "A Tau repair category has not completed the durable ticket/watchdog/eval closure path required for CATEGORY_GREEN.",
       "next_command": "Bind or create the focused GitHub ticket with the repair category marker, run project-watchdog for the exact issue or record its refusal receipt, attach the retained agentic-evals report, then run pipeline-self-repair mark-repaired and validate-ledger --require-agentic-eval.",
       "recoverable": true,
-      "not_this": ["Discord delivery only", "local status JSON only", "pytest-only proof"]
+      "not_this": [
+        "Discord delivery only",
+        "local status JSON only",
+        "pytest-only proof"
+      ]
     },
     {
       "code": "tau_project_dag_agentic_eval_not_ready",
       "layer": "tau.project_dag",
-      "match": ["agentic-evals", "readiness", "NOT_READY", "BLOCKED", "fixture rejected", "low-value ('slop')"],
+      "match": [
+        "agentic-evals",
+        "readiness",
+        "NOT_READY",
+        "BLOCKED",
+        "fixture rejected",
+        "low-value ('slop')"
+      ],
       "cause": "A Tau repair closure proof lacks a retained READY/PASS agentic-evals report or the eval fixture was rejected as low value.",
       "next_command": "Repair the eval fixture so it has a real_world adversarial case, rerun skills/agentic-evals/run.sh run for the Tau manifest, read back readiness=READY, then attach that report to the repair ledger before rerun.",
       "recoverable": true,
-      "not_this": ["pytest green", "manual reviewer prose", "Discord status update"]
+      "not_this": [
+        "pytest green",
+        "manual reviewer prose",
+        "Discord status update"
+      ]
+    },
+    {
+      "code": "pi_research_gate_tool_result_input_missing",
+      "layer": "pi",
+      "match": [
+        "tool_result event omitted input",
+        "tool_result events omit the original input",
+        "result event omitted input",
+        "successful memory tool result",
+        "missing_memory_recall_gate after exact memory recall"
+      ],
+      "cause": "The Pi research-routing guard saw the tool call but the corresponding tool_result event did not carry the original input, so successful gate evidence was lost unless the extension correlates the result to the prior tool_call by toolCallId.",
+      "next_command": "Patch the research-routing-gates Pi extension to cache classified tool_call evidence by toolCallId and reuse it for input-less tool_result events; rerun the extension_hook_tool_result_without_input_uses_call_classification e2e case and the research-routing-gates agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "memory service outage",
+        "agent skipped Memory",
+        "browser provider cooldown"
+      ]
     },
     {
       "code": "webgpt_attachment_bundle_rejected",
       "layer": "surf",
-      "match": ["attach_file_preflight_failed", "maximum is", "zip contains"],
+      "match": [
+        "attach_file_preflight_failed",
+        "maximum is",
+        "zip contains"
+      ],
       "cause": "The WebGPT provider rejected the attachment bundle SHAPE before browser dispatch (e.g. zip file-count over the provider limit).",
       "next_command": "Rebuild the SAME content as one provider-compatible attachment (concatenate to a single markdown, or a zip with <= max files), then resubmit with --attach-file.",
       "recoverable": true,
-      "not_this": ["tab binding", "open-bind", "rebind"]
+      "not_this": [
+        "tab binding",
+        "open-bind",
+        "rebind"
+      ]
     },
     {
       "code": "scillm_api_base_double_version_segment",
       "layer": "scillm",
-      "match": ["/v4/v1/chat/completions", "paas/v4/v1", "_with_openai_v1_suffix"],
+      "match": [
+        "/v4/v1/chat/completions",
+        "paas/v4/v1",
+        "_with_openai_v1_suffix"
+      ],
       "cause": "scillm appended /v1 to an api_base whose path already ends in a /vN version segment (e.g. z.ai /api/paas/v4), producing a 404 path.",
       "next_command": "Skip the /v1 append when the base path already ends in /vN (scillm/proxy/config.py _with_openai_v1_suffix).",
       "recoverable": true,
-      "not_this": ["api key", "model name", "endpoint host"]
+      "not_this": [
+        "api key",
+        "model name",
+        "endpoint host"
+      ]
     },
     {
       "code": "scillm_empty_response_200",
       "layer": "ask",
-      "match": ["scillm_empty_response_200", "\"submit_meta_status\": 200", "\"submit_meta_status\":200"],
+      "match": [
+        "scillm_empty_response_200",
+        "\"submit_meta_status\": 200",
+        "\"submit_meta_status\":200"
+      ],
       "cause": "Ask received a successful SciLLM HTTP response, but the selected handler produced zero assistant content, so the roundtable seat had no usable answer.",
       "next_command": "Read the handler response.raw.md and response.meta.json; if choices[0].message.content is empty, rerun with another healthy handler or repair the SciLLM response-shape adapter before retrying the same lane.",
       "recoverable": true,
-      "not_this": ["provider authentication", "model not found", "browser submit failure"]
+      "not_this": [
+        "provider authentication",
+        "model not found",
+        "browser submit failure"
+      ]
     },
     {
       "code": "surf_native_host_stale_cjs",
       "layer": "surf",
-      "match": ["edits.*no effect", "stale.*host", "host.cjs.*cache"],
+      "match": [
+        "edits.*no effect",
+        "stale.*host",
+        "host.cjs.*cache"
+      ],
       "cause": "The surf native host require-caches chatgpt-client.cjs at process start; a long-running host runs pre-edit code.",
       "next_command": "Kill the host (pgrep -f surf-cli/native/host.cjs; kill PID) so Chrome respawns it fresh; doctor logs go to /tmp/surf-host.log.",
       "recoverable": true,
-      "not_this": ["code was wrong", "deployment gap"]
+      "not_this": [
+        "code was wrong",
+        "deployment gap"
+      ]
     },
     {
       "code": "webgpt_preflight_composer_missing",
       "layer": "surf",
-      "match": ["composer_selector_drift_all_missing", "preflight_composer"],
+      "match": [
+        "composer_selector_drift_all_missing",
+        "preflight_composer"
+      ],
       "cause": "The ChatGPT composer selector did not resolve on the live page (all layered selectors missing).",
       "next_command": "Inspect the live DOM; the composer markup changed. Update SELECTORS in preflight_doctor.js / chatgpt-client.cjs, or hand off if logged-out.",
       "recoverable": false,
-      "not_this": ["send button (advisory pre-typing)"]
+      "not_this": [
+        "send button (advisory pre-typing)"
+      ]
     },
     {
       "code": "webgpt_preflight_logged_out",
       "layer": "surf",
-      "match": ["preflight_logged_out", "auth/login", "logged_out"],
+      "match": [
+        "preflight_logged_out",
+        "auth/login",
+        "logged_out"
+      ],
       "cause": "The controlled ChatGPT tab is logged out; no submit is possible.",
       "next_command": "Hand off to the human to log the reviewer tab back in; do not retry automatically.",
       "recoverable": false,
@@ -104,29 +215,133 @@
     {
       "code": "monitor_opportunities_linkedin_source_accounting_failed",
       "layer": "monitor-opportunities",
-      "match": ["linkedin_top_applicant_status_accounted", "linkedin_premium_status_accounted", "browser_capture_linkedin", "source_accounting"],
+      "match": [
+        "linkedin_top_applicant_status_accounted",
+        "linkedin_premium_status_accounted",
+        "browser_capture_linkedin",
+        "source_accounting"
+      ],
       "cause": "A monitor-opportunities nightly exited zero but failed to account for required LinkedIn signal sources such as Top Applicant, Easy Apply, or Premium low-competition lanes.",
       "next_command": "Inspect the scheduler-exec-check receipt source_accounting block and the browser-capture LinkedIn receipts, repair the failing capture or browser-control dependency, then rerun skills/monitor-opportunities/run.sh scheduler-exec-check and keep the pipeline-self-repair ledger attached until the failed check passes.",
       "recoverable": true,
-      "not_this": ["nightly revision mismatch", "no opportunities found after a successful source count", "human declined LinkedIn authorization"]
+      "not_this": [
+        "nightly revision mismatch",
+        "no opportunities found after a successful source count",
+        "human declined LinkedIn authorization"
+      ]
     },
     {
       "code": "monitor_opportunities_nightly_revision_mismatch",
       "layer": "monitor-opportunities",
-      "match": ["nightly_revision_mismatch", "NIGHTLY_REVISION_MISMATCH"],
+      "match": [
+        "nightly_revision_mismatch",
+        "NIGHTLY_REVISION_MISMATCH"
+      ],
       "cause": "The scheduler invoked monitor-opportunities with a stale --expected-revision pin, so cron refused to publish a nightly report from code that no longer matched the registered revision.",
       "next_command": "Run skills/monitor-opportunities/run.sh schedule --promoted-stage0 from the intended agent-skills worktree, read back ~/.pi/scheduler/jobs.json for monitor-opportunities-nightly, then file a skills/ticket bug with route:ops_or_scheduler if the next scheduler log still emits NIGHTLY_REVISION_MISMATCH so project-watchdog can dispatch the repair.",
       "recoverable": true,
-      "not_this": ["no opportunities found", "LinkedIn empty", "source ranking threshold"]
+      "not_this": [
+        "no opportunities found",
+        "LinkedIn empty",
+        "source ranking threshold"
+      ]
     },
     {
       "code": "project_watchdog_closure_audit_nonzero_needs_attention",
       "layer": "project-watchdog",
-      "match": ["project_watchdog_closure_audit_nonzero_needs_attention", "wrapper exit", "VERDICT: NEEDS_ATTENTION", "closure-unverified", "Ask/Tau exited nonzero"],
+      "match": [
+        "project_watchdog_closure_audit_nonzero_needs_attention",
+        "wrapper exit",
+        "VERDICT: NEEDS_ATTENTION",
+        "closure-unverified",
+        "Ask/Tau exited nonzero"
+      ],
       "cause": "Ask/Tau exited nonzero while closure-audit seats declared VERDICT: NEEDS_ATTENTION. The semantic verdict is usable; project-watchdog must make it durable with closure-unverified or cooldown instead of reporting no usable panel verdict.",
       "next_command": "Run skills/ticket/run.sh ensure-labels --repo <owner/repo>, then run cd skills/agentic-evals && ./run.sh run ../project-watchdog/fixtures/agentic_eval.json --only-category closure-audit-nonzero-needs-attention and read back READY before resuming project-watchdog.",
       "recoverable": true,
-      "not_this": ["provider did not answer", "no seat verdict", "closure PASS", "closure FAIL"]
+      "not_this": [
+        "provider did not answer",
+        "no seat verdict",
+        "closure PASS",
+        "closure FAIL"
+      ]
+    },
+    {
+      "code": "create_svg_variant_count_invalid",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_variant_count_invalid"
+      ],
+      "cause": "A Tau SVG variant fanout requested fewer than two or more than five concurrent creator candidates.",
+      "next_command": "Edit the variant spec to contain 2..5 variants, then rerun skills/create-svg/run.sh tau-variant-loop before any provider execution.",
+      "recoverable": true,
+      "not_this": [
+        "provider failure",
+        "visual reviewer rejection",
+        "Surf screenshot failure"
+      ]
+    },
+    {
+      "code": "create_svg_variant_handler_count_mismatch",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_variant_handler_count_mismatch"
+      ],
+      "cause": "The Tau SVG variant fanout could not bind exactly one creator handler to each requested variant direction.",
+      "next_command": "Pass one --creator-handler per variant, or put handler on every variants.yml entry, then rerun skills/create-svg/run.sh tau-variant-loop.",
+      "recoverable": true,
+      "not_this": [
+        "provider failure",
+        "visual reviewer rejection",
+        "Tau runtime failure"
+      ]
+    },
+    {
+      "code": "create_svg_variant_handler_family_overlap",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_variant_handler_family_overlap"
+      ],
+      "cause": "The Tau SVG variant fanout reused the same provider family for a creator and the judge, weakening independent visual adjudication.",
+      "next_command": "Choose a --judge-handler from a different provider family than every creator handler, then rerun skills/create-svg/run.sh tau-variant-loop.",
+      "recoverable": true,
+      "not_this": [
+        "variant count",
+        "handler count",
+        "visual reviewer rejection"
+      ]
+    },
+    {
+      "code": "create_svg_tau_compile_or_execute_failed",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_tau_compile_or_execute_failed"
+      ],
+      "cause": "The create-svg Tau variant loop compile or execute command returned non-zero or did not emit a readable Tau run directory.",
+      "next_command": "Read the launch receipt plus .ask.stderr.txt/.ask.stdout.json, then run skills/triage-error/run.sh classify --receipt <receipt.ask.stderr.txt> --layer create-svg; if still ambiguous, file a skills/ticket bug with the receipt and scaffold an agentic eval.",
+      "recoverable": true,
+      "not_this": [
+        "visual gate NOT_READY",
+        "human aesthetic rejection",
+        "variant spec validation"
+      ]
+    },
+    {
+      "code": "create_svg_visual_gate_not_ready",
+      "layer": "create-svg",
+      "match": [
+        "create_svg_visual_gate_not_ready",
+        "\"status\": \"NOT_READY\"",
+        "create_svg.visual_gate.v1"
+      ],
+      "cause": "A rendered SVG candidate was screenshot-reviewed and failed goal representation or target-size attractiveness.",
+      "next_command": "Use the visual-gate receipt issues and next_edit fields as the next variant direction; do not classify this as a runtime/tool defect unless the gate receipt itself is malformed.",
+      "recoverable": true,
+      "not_this": [
+        "Tau compile failure",
+        "provider authentication",
+        "missing screenshot file"
+      ]
     }
   ]
 }
