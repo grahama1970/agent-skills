@@ -95,6 +95,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "research_routing.meta_questions_skip_memory_first",
+      "description": "Meta questions about routing-gate naming or guard design do not require Memory-first evidence and therefore cannot fail from stale scan observations.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -217,11 +225,44 @@
           "\"ok\":true",
           "checker_json_first_status_guard_design_exempt",
           "\"brave_required\":false",
-          "\"ask_webgpt_required\":false"
+          "\"ask_webgpt_required\":false",
+          "\"memory_required\":false"
         ],
         "artifacts": [
           {
             "path": "../eval-output/json-first-status-guard-design.json",
+            "json_pointer": "/ok",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "real-world-research-routing-name-meta-question-with-stale-scan-does-not-fail-memory-first",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "research_routing.meta_questions_skip_memory_first"
+      ],
+      "seams": [
+        "checker-route-classification"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output && node /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/scripts/research-routing-e2e.mjs checker_research_routing_name_meta_exempt_with_stale_scan | tee /home/graham/workspace/experiments/agent-skills/extensions/pi/research-routing-gates/eval-output/name-meta-stale-scan.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "checker_research_routing_name_meta_exempt_with_stale_scan",
+          "\"memory_required\":false"
+        ],
+        "artifacts": [
+          {
+            "path": "../eval-output/name-meta-stale-scan.json",
             "json_pointer": "/ok",
             "equals": true
           }

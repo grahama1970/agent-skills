@@ -119,7 +119,7 @@ const mvpFirst = matchesAny(combined, mvpFirstPatterns);
 const concreteCandidates = /\b(?:candidate|option|approach|implementation|patch|solution)s?\s*(?:A|B|1|2|one|two|:)|\b(?:two|2|three|3|multiple|several|competing|alternative)\s+(?:candidate|option|approach|implementation|patch|solution)s?\b/i.test(combined);
 
 const route = {
-  memory_required: substantive,
+  memory_required: substantive && !metaRoutingQuestion,
   brave_required: false,
   dogpile_required: false,
   tau_or_triage_required: false,

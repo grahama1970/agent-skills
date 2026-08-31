@@ -209,18 +209,31 @@ const cases = {
     console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, signals: out.parsed.signals, route: out.parsed.route }));
   },
   checker_meta_routing_exempt() {
-    const out = runChecker({ user_text: 'is there logic to determine when an agent should use $brave-search vs $dogpile vs $ask roundtable or $ask compete?', assistant_text: 'Yes.', observations: memoryObs() });
+    const out = runChecker({ user_text: 'is there logic to determine when an agent should use $brave-search vs $dogpile vs $ask roundtable or $ask compete?', assistant_text: 'Yes.', observations: [] });
     requireCond(out.status === 0 && out.parsed.decision === 'pass', 'meta routing question should not require dogpile/ask just because names are mentioned', out);
-    console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, signals: out.parsed.signals }));
+    requireCond(out.parsed.route.memory_required === false, 'meta routing question should not require Memory-first evidence', out);
+    console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
   },
   checker_json_first_status_guard_design_exempt() {
     const out = runChecker({
       user_text: "and isn't this simply a json first of the status report that be deterministically checked first",
       assistant_text: 'Yes. The status object should be JSON-first, then deterministically checked, then rendered. That can mention research-routing-gates and WebGPT as gate names without requesting web research or WebGPT review.',
-      observations: memoryObs(),
+      observations: [],
     });
-    requireCond(out.status === 0 && out.parsed.decision === 'pass' && out.parsed.route.brave_required === false && out.parsed.route.ask_webgpt_required === false, 'JSON-first status guard design question should not require Brave or WebGPT gates', out);
+    requireCond(out.status === 0 && out.parsed.decision === 'pass' && out.parsed.route.memory_required === false && out.parsed.route.brave_required === false && out.parsed.route.ask_webgpt_required === false, 'JSON-first status guard design question should not require Memory, Brave, or WebGPT gates', out);
     requireCond(out.parsed.signals.status_question === true || out.parsed.signals.meta_routing_question === true, 'JSON-first status guard design should be classified as status/meta routing', out);
+    console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
+  },
+  checker_research_routing_name_meta_exempt_with_stale_scan() {
+    const out = runChecker({
+      user_text: "and isn't research-routing-gates the wrong name for this? as it triggers if the block or research gates are triggered, correct?",
+      assistant_text: 'Yes. The name is too narrow because it covers research and blocked/error gates.',
+      observations: [
+        { phase: 'call', kind: 'scan', toolName: 'read', command: 'extensions/pi/research-routing-gates/index.ts' },
+        { phase: 'result', kind: 'scan', toolName: 'read', command: 'extensions/pi/research-routing-gates/index.ts', ok: true },
+      ],
+    });
+    requireCond(out.status === 0 && out.parsed.decision === 'pass' && out.parsed.route.memory_required === false, 'research-routing naming meta question should not fail Memory-first due stale scans', out);
     console.log(JSON.stringify({ ok: true, mode, decision: out.parsed.decision, route: out.parsed.route, signals: out.parsed.signals }));
   },
   checker_sidequest_thrashing_requires_roundtable() {
