@@ -37,7 +37,7 @@ Capture bad agent status updates into a JSONL training set, the structured `sham
 
 This is a recording skill, not a scolding skill. Do not generate essays about agent behavior. Store the labeled example and return the receipt.
 
-`$shame` is also a self-correction trigger for the installed Pi extension. A `$shame` turn must produce a concise corrected answer in plain spoken English and end with the exact `Status Report` footer. The extension rejects answers that skip that footer, shows a plain correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate.
+`$shame` is also a self-correction trigger for the installed Pi extension. The extension is JSON-first: it never classifies prose and never uses regex over user/assistant text. A mutating or guard-forced turn must end with a fenced ```json block containing a valid `pi.agent_status.v1` object; the extension validates it with the pydantic model in `scripts/agent_status_schema.py` and rejects answers whose object is missing or invalid, shows a correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate.
 
 Missing per-feature `$agentic-evals` coverage is shame. For every new feature, add or update a retained `$agentic-evals` fixture, run it, and cite the receipt before reporting the feature done. Leaving relevant files, skills, or project changes uncommitted or unpushed when no external blocker exists is also shame.
 
@@ -63,17 +63,25 @@ Use `/shame review` for an interactive label picker when the TUI/RPC UI is avail
 
 The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, pending packet path, machine decision, checker version, excerpt, and copyable label commands before deciding. Use `/shame review` to choose the label without remembering the exact command syntax.
 
-For active goal-driven work, the footer must say either what changed against the immutable/current goal or the exact next step toward that goal. A hook-only, guard-only, reload-only, or routing-only update with `Not done: none` is a non-status update when the original goal still has obvious work.
+## pi.agent_status.v1 — the status contract
 
-For inline `$shame`, the self-corrected answer must be short and must end exactly in this shape:
+One JSON object per report-like turn, validated by `scripts/agent_status_schema.py` (pydantic, `extra="forbid"`). Nine states, each with a typed payload that makes the wrong thing unrepresentable:
 
-```text
-Status Report
-- Changed: plain-English correction or user-visible change.
-- Verified: exact command/readback and observed result, or Not verified: exact reason.
-- Proof: concrete path, URL, issue/PR number, receipt, or Missing: exact reason.
-- Not done: none, or exact unfinished item and next concrete step.
-```
+| state | required payload | enforces |
+| --- | --- | --- |
+| `done` | `verified[]` + `proof[]` | no proof-less completion |
+| `continuing` | `not_done[].next_command` | deterministic keep-going; the extension queues the command |
+| `needs_human` | `needs_human.action` + `reason` | exact human action; no auto follow-up |
+| `failed` | `failure.triage.code` | triage-error catalog or minted `*_unclassified_<8hex>` code; ambiguous labels fail validation |
+| `needs_brave_search` | `queries[]` | escalation rung 0 |
+| `needs_agent` | cross-family `handler` + `question` | escalation rung 1 |
+| `needs_webgpt` | `question` + both prior rung receipt paths | rung 2; the ladder cannot be skipped |
+| `needs_roundtable` | `immutable_goal` + >=3 `handlers` | $ask roundtable quorum floor |
+| `needs_competition` | `immutable_goal` + >=2 `handlers` + `criteria[]` | $ask compete candidate floor |
+
+`compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension queues the compiled command as a follow-up on `message_end`.
+
+A human-readable `Status Report` footer may accompany the JSON as a rendering, but the JSON object is the contract the checker enforces.
 
 The pending review packet is overwritten on each new rejected candidate:
 
@@ -178,7 +186,6 @@ The fixture must prove:
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
 - extension rejection notices are correction packets with a final `Status Report` footer rather than bare gate JSON;
-- tool-call-only assistant messages with no text are ignored instead of being rejected as missing status reports;
 - rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 
