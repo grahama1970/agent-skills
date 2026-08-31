@@ -1,159 +1,233 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="tau-card-title tau-card-desc" tabindex="0">
-  <title id="tau-card-title">Tau zero-trust DAG</title>
-  <desc id="tau-card-desc">A clean DAG chart shows ask entering a Tau trust boundary. Three DAG nodes and a Tau-owned scillm adapter emit animated receipt tokens through a receipt gate into an inspectable ledger, while a direct shortcut is blocked outside the boundary.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="260" viewBox="0 0 400 260" role="img" aria-labelledby="tau-title tau-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="tau-title">Tau zero-trust DAG execution harness</title>
+  <desc id="tau-desc">A compact Tau project card showing a locked goal hash, policy and data gate, two accepted receipt-backed agent lanes, a blocked substitute lane, a join gate, a reviewer gate, and fail-closed outcome.</desc>
+
   <defs>
-    <radialGradient id="bg" cx="52%" cy="54%" r="70%">
-      <stop offset="0" stop-color="#211a15" stop-opacity="0.66" />
-      <stop offset="0.58" stop-color="#14110f" stop-opacity="0.45" />
-      <stop offset="1" stop-color="#090807" stop-opacity="0" />
+    <!-- Background Gradients -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f141c"/>
+      <stop offset="60%" stop-color="#0b0e14"/>
+      <stop offset="100%" stop-color="#14110d"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#f2b75f" stop-opacity="0.12"/>
+      <stop offset="70%" stop-color="#71d7a4" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#f2c574" />
-      <stop offset="1" stop-color="#b77535" />
+
+    <linearGradient id="goalBg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1b1712"/>
+      <stop offset="50%" stop-color="#141916"/>
+      <stop offset="100%" stop-color="#10181b"/>
     </linearGradient>
-    <linearGradient id="ledger-fill" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#93a289" stop-opacity="0.18" />
-      <stop offset="1" stop-color="#e2ac62" stop-opacity="0.06" />
+
+    <linearGradient id="gateBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#221c13"/>
+      <stop offset="100%" stop-color="#12171b"/>
     </linearGradient>
-    <filter id="glow" x="-70%" y="-70%" width="240%" height="240%">
-      <feGaussianBlur stdDeviation="6" result="blur" />
-      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+
+    <linearGradient id="reviewBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#13241c"/>
+      <stop offset="100%" stop-color="#0f1915"/>
+    </linearGradient>
+
+    <pattern id="dotPattern" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#d8e0e8" fill-opacity="0.04"/>
+    </pattern>
+
+    <!-- Filters -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.45"/>
     </filter>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-      <path d="M0 1.5 7 5 0 8.5z" fill="rgba(236,226,211,0.50)" />
+
+    <!-- Markers -->
+    <marker id="arrowGood" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0 0L6 3 0 6Z" fill="#71d7a4"/>
     </marker>
-    <marker id="arrow-gold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-      <path d="M0 1.5 7 5 0 8.5z" fill="#e2ac62" />
+    <marker id="arrowBad" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <path d="M0 0L6 3 0 6Z" fill="#f17869"/>
     </marker>
-    <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-      <path d="M0 1.5 7 5 0 8.5z" fill="#d1703c" />
-    </marker>
+
     <style>
-      #tau .sans{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-      #tau .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
-      #tau .eyebrow{fill:#e2ac62;font-size:31px;font-weight:780;letter-spacing:10px}
-      #tau .rule{fill:#f5efe4;font-size:58px;font-weight:760;letter-spacing:-.4px}
-      #tau .label{fill:#ece2d3;font-size:44px;font-weight:760;letter-spacing:.4px}
-      #tau .small{fill:#8f8174;font-size:30px;font-weight:760;letter-spacing:5px}
-      #tau .panel{fill:rgba(18,17,15,.78);stroke:rgba(236,226,211,.14);stroke-width:2}
-      #tau .grid{stroke:rgba(236,226,211,.04);stroke-width:1}
-      #tau .boundary{fill:rgba(226,172,98,.032);stroke:url(#gold);stroke-width:4}
-      #tau .node{fill:#12110f;stroke:#c99149;stroke-width:4}
-      #tau .node-ok{fill:#12110f;stroke:#93a289;stroke-width:4}
-      #tau .edge{fill:none;stroke:rgba(236,226,211,.24);stroke-width:4;stroke-linecap:round;marker-end:url(#arrow)}
-      #tau .edge-live{fill:none;stroke:#e2ac62;stroke-width:5;stroke-linecap:round;marker-end:url(#arrow-gold);opacity:.24}
-      #tau .receipt-edge{fill:none;stroke:#93a289;stroke-width:4;stroke-linecap:round;stroke-dasharray:10 14;marker-end:url(#arrow);opacity:.62}
-      #tau .receipt-token{fill:#93a289;opacity:.9;filter:url(#glow)}
-      #tau .blocked{fill:none;stroke:#d1703c;stroke-width:5;stroke-linecap:round;stroke-dasharray:12 16;marker-end:url(#arrow-red)}
-      #tau .ledger-card{fill:url(#ledger-fill);stroke:rgba(147,162,137,.72);stroke-width:4}
-      #tau .check{fill:none;stroke:#93a289;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}
-      #tau .x{stroke:#d1703c;stroke-width:8;stroke-linecap:round}
-      @media (prefers-reduced-motion: no-preference){
-        @keyframes draw{0%,12%{stroke-dashoffset:820;opacity:0}26%,72%{stroke-dashoffset:0;opacity:.88}100%{stroke-dashoffset:0;opacity:.20}}
-        @keyframes tokenA{0%,26%{transform:translate(0,0) scale(.7);opacity:0}42%{opacity:1}72%,84%{transform:translate(700px,-230px) scale(1);opacity:1}100%{transform:translate(780px,-250px) scale(.45);opacity:0}}
-        @keyframes tokenB{0%,34%{transform:translate(0,0) scale(.7);opacity:0}48%{opacity:1}74%,86%{transform:translate(650px,0) scale(1);opacity:1}100%{transform:translate(730px,0) scale(.45);opacity:0}}
-        @keyframes tokenC{0%,42%{transform:translate(0,0) scale(.7);opacity:0}54%{opacity:1}78%,90%{transform:translate(700px,230px) scale(1);opacity:1}100%{transform:translate(780px,250px) scale(.45);opacity:0}}
-        @keyframes pulse{0%,55%,100%{opacity:.78}66%,82%{opacity:1;filter:url(#glow)}}
-        @keyframes reject{0%,26%,100%{opacity:.22}38%,56%{opacity:.92}}
-        #tau .edge-live{stroke-dasharray:820;stroke-dashoffset:820;animation:draw 7s ease-in-out infinite}
-        #tau .token-a{animation:tokenA 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-        #tau .token-b{animation:tokenB 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-        #tau .token-c{animation:tokenC 7s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
-        #tau .admit{animation:pulse 7s ease-in-out infinite}
-        #tau .reject{animation:reject 7s ease-in-out infinite}
+      text {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
-      @media (prefers-reduced-motion: reduce){
-        #tau *{animation:none!important;transition:none!important}
-        #tau .edge-live{opacity:.56;stroke-dasharray:none;stroke-dashoffset:0}
-        #tau .receipt-token{opacity:.9}
+      .mono {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .flow-good {
+          animation: flowGlow 6s ease-in-out infinite;
+        }
+        .pulse-gate {
+          animation: gatePulse 6s ease-in-out infinite;
+          transform-origin: center;
+          transform-box: fill-box;
+        }
+        .block-anim {
+          animation: blockPulse 6s ease-in-out infinite;
+          transform-origin: center;
+          transform-box: fill-box;
+        }
+      }
+
+      @keyframes flowGlow {
+        0%, 24%, 100% { stroke-opacity: 0.30; stroke-width: 2; }
+        42%, 74% { stroke-opacity: 1; stroke-width: 3; }
+      }
+      @keyframes gatePulse {
+        0%, 46%, 100% { filter: drop-shadow(0 0 2px rgba(242, 183, 95, 0.18)); }
+        64% { filter: drop-shadow(0 0 10px rgba(242, 183, 95, 0.62)); }
+      }
+      @keyframes blockPulse {
+        0%, 28%, 46%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(241, 120, 105, 0.24)); }
+        36% { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(241, 120, 105, 0.70)); }
       }
     </style>
   </defs>
 
-  <g id="tau" data-component="tau-card">
-    <rect width="1920" height="1200" fill="#0c0908" />
-    <rect x="64" y="64" width="1792" height="1072" rx="56" class="panel" />
-    <rect x="96" y="96" width="1728" height="1008" rx="48" fill="url(#bg)" />
-    <g data-component="grid" opacity=".8">
-      <path d="M230 190v820M510 190v820M790 190v820M1070 190v820M1350 190v820M1630 190v820" class="grid" />
-      <path d="M150 280h1620M150 520h1620M150 760h1620M150 1000h1620" class="grid" />
+  <!-- Card Frame -->
+  <g id="card-shell">
+    <rect x="1" y="1" width="398" height="258" rx="16" fill="url(#bg)"/>
+    <rect x="1" y="1" width="398" height="258" rx="16" fill="url(#glow)"/>
+    <rect x="1" y="1" width="398" height="258" rx="16" fill="none" stroke="#f0bc68" stroke-opacity="0.22" stroke-width="1"/>
+  </g>
+
+  <!-- Header Section -->
+  <g id="header">
+    <text x="18" y="31" fill="#f6eee1" font-size="20" font-weight="850" letter-spacing="-0.5">TAU</text>
+    <rect x="74" y="15" width="118" height="15" rx="7.5" fill="#e7b45f" fill-opacity="0.12"/>
+    <text x="133" y="25.5" text-anchor="middle" fill="#e7b45f" font-size="7.5" font-weight="800" letter-spacing="1.2">ZERO-TRUST DAG</text>
+  </g>
+
+  <!-- Goal & Policy Header Bar -->
+  <g id="goal-and-policy">
+    <rect x="18" y="50" width="364" height="32" rx="10" fill="url(#goalBg)" stroke="#e6b25c" stroke-opacity="0.38" stroke-width="1"/>
+
+    <!-- Lucide Lock Icon -->
+    <g transform="translate(28 58) scale(0.65)" stroke="#f1c575" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
     </g>
 
-    <g data-component="rule-text">
-      <text x="156" y="178" class="sans eyebrow">TAU / ZERO TRUST</text>
-      <text x="156" y="246" class="sans rule">No receipt, no proof.</text>
-      <path d="M160 286h145M160 310h80" stroke="url(#gold)" stroke-width="6" stroke-linecap="round" />
+    <text x="48" y="70" fill="#f3e8d5" font-size="10" font-weight="750" letter-spacing="0.4">GOAL HASH</text>
+
+    <!-- Lucide ShieldCheck Icon -->
+    <g transform="translate(262 57) scale(0.65)" stroke="#71d7a4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z"/>
+      <path d="m9 12 2 2 4-4"/>
     </g>
 
-    <g data-component="ask-entry">
-      <rect x="160" y="515" width="220" height="250" rx="46" class="node" />
-      <path d="M220 596l58 58-58 58" fill="none" stroke="#e2ac62" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M302 712h62" stroke="#e2ac62" stroke-width="10" stroke-linecap="round" />
-      <circle cx="335" cy="574" r="10" fill="#93a289" />
-      <text x="218" y="842" class="mono label">$ask</text>
+    <text x="282" y="70" fill="#71d7a4" font-size="9" font-weight="800" letter-spacing="0.45">POLICY + DATA</text>
+
+    <path d="M200 82 V94" stroke="#e7b45e" stroke-width="1.8" stroke-dasharray="2 2" stroke-linecap="round" stroke-opacity="0.7"/>
+  </g>
+
+  <!-- Live DAG Canvas -->
+  <g id="dag" transform="translate(12 94)">
+    <rect width="376" height="112" rx="14" fill="url(#dotPattern)" stroke="#ffffff" stroke-opacity="0.06"/>
+
+    <!-- Agent Nodes -->
+    <g id="agents" filter="url(#shadow)">
+      <!-- Agent A -->
+      <g transform="translate(18 12)">
+        <rect width="68" height="26" rx="8" fill="#17202a" stroke="#6f8094" stroke-opacity="0.75" stroke-width="1.2"/>
+        <!-- Lucide Cpu Icon -->
+        <g transform="translate(6 5) scale(0.65)" stroke="#93c5fd" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+          <rect x="9" y="9" width="6" height="6"/>
+          <path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2"/>
+        </g>
+        <text x="44" y="17" text-anchor="middle" fill="#e7edf5" font-size="7.5" font-weight="800" letter-spacing="0.3">AGENT N</text>
+      </g>
+
+      <!-- Agent B -->
+      <g transform="translate(18 48)">
+        <rect width="68" height="26" rx="8" fill="#17202a" stroke="#6f8094" stroke-opacity="0.75" stroke-width="1.2"/>
+        <!-- Lucide Cpu Icon -->
+        <g transform="translate(6 5) scale(0.65)" stroke="#93c5fd" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/>
+          <rect x="9" y="9" width="6" height="6"/>
+          <path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2"/>
+        </g>
+        <text x="44" y="17" text-anchor="middle" fill="#e7edf5" font-size="7.5" font-weight="800" letter-spacing="0.3">AGENT N+1</text>
+      </g>
+
+      <!-- No Substitute Badge -->
+      <g transform="translate(18 84)">
+        <rect width="86" height="18" rx="7" fill="#2a1515" stroke="#f17869" stroke-opacity="0.8" stroke-width="1"/>
+        <!-- Lucide AlertTriangle Icon -->
+        <g transform="translate(6 2.5) scale(0.55)" stroke="#f17869" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </g>
+        <text x="50" y="12.5" text-anchor="middle" fill="#ffc3ba" font-size="7.5" font-weight="800" letter-spacing="0.3">NO SUBSTITUTE</text>
+      </g>
     </g>
 
-    <g data-component="tau-boundary">
-      <rect x="470" y="300" width="790" height="680" rx="96" class="boundary" />
-      <rect x="504" y="334" width="722" height="612" rx="74" fill="rgba(12,9,8,.31)" stroke="rgba(226,172,98,.18)" stroke-width="2" />
-      <text x="722" y="906" class="sans label">Tau DAG</text>
+    <!-- Connectors -->
+    <path class="flow-good" d="M 86 25 H 134" stroke="#71d7a4" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowGood)"/>
+    <path class="flow-good" d="M 86 61 H 134" stroke="#71d7a4" stroke-width="2" stroke-linecap="round" marker-end="url(#arrowGood)"/>
+    <path class="flow-bad" d="M 104 93 H 134" stroke="#f17869" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrowBad)"/>
+
+    <!-- Join Gate Node -->
+    <g id="join" class="pulse-gate" transform="translate(136 24)" filter="url(#shadow)">
+      <rect width="84" height="64" rx="14" fill="url(#gateBg)" stroke="#f2b75f" stroke-width="1.5"/>
+      <!-- Lucide ShieldCheck Icon -->
+      <g transform="translate(30 8)" stroke="#f2bd66" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z" fill="#f0b65b" fill-opacity="0.15"/>
+        <path d="m9 12 2 2 4-4" stroke="#71d7a4" stroke-width="2.2"/>
+      </g>
+      <text x="42" y="55" text-anchor="middle" fill="#f8ebd5" font-size="9" font-weight="850" letter-spacing="0.5">JOIN GATE</text>
     </g>
 
-    <g data-component="dag-graph">
-      <circle cx="660" cy="640" r="64" class="node" />
-      <circle cx="865" cy="482" r="70" class="node" />
-      <circle cx="1070" cy="640" r="64" class="node" />
-      <circle cx="865" cy="805" r="70" class="node-ok" />
-      <path d="M714 600l94-72M922 528l94 72M865 552v182M714 680l98 80M1016 680l-98 80" fill="none" stroke="rgba(226,172,98,.62)" stroke-width="5" stroke-linecap="round" />
-      <path d="M830 802l30 30 64-84" class="check" />
+    <!-- Join to Reviewer Path -->
+    <path class="flow-good" d="M 220 56 H 268" stroke="#71d7a4" stroke-width="2.4" stroke-linecap="round" marker-end="url(#arrowGood)"/>
+
+    <!-- Reviewer Node -->
+    <g id="review" transform="translate(270 24)" filter="url(#shadow)">
+      <rect width="88" height="64" rx="14" fill="url(#reviewBg)" stroke="#71d7a4" stroke-opacity="0.75" stroke-width="1.4"/>
+      <!-- Lucide UserCheck Icon -->
+      <g transform="translate(32 8)" stroke="#71d7a4" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <polyline points="16 11 18 13 22 9" stroke="#71d7a4" stroke-width="2"/>
+      </g>
+      <text x="44" y="55" text-anchor="middle" fill="#e7fff2" font-size="9" font-weight="850" letter-spacing="0.5">REVIEWER</text>
     </g>
 
-    <g data-component="tau-owned-scillm">
-      <rect x="1330" y="542" width="190" height="170" rx="40" class="node-ok" />
-      <path d="M1308 582h34M1308 630h34M1308 678h34M1508 582h34M1508 630h34M1508 678h34M1370 520v34M1425 520v34M1480 520v34M1370 700v34M1425 700v34M1480 700v34" stroke="rgba(236,226,211,.42)" stroke-width="5" stroke-linecap="round" />
-      <rect x="1375" y="594" width="100" height="78" rx="18" fill="rgba(12,9,8,.52)" stroke="#93a289" stroke-width="4" />
-      <path d="M1400 594v-22c0-24 16-39 35-39s35 15 35 39v22" fill="none" stroke="#93a289" stroke-width="6" stroke-linecap="round" />
+    <!-- Blocked Circle Mark -->
+    <g id="blocked" transform="translate(134 93)">
+      <g class="block-anim">
+        <circle r="10" fill="#2a1515" stroke="#f17869" stroke-width="1.5"/>
+        <path d="M -3.5 -3.5 L 3.5 3.5 M 3.5 -3.5 L -3.5 3.5" stroke="#ff9e91" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Bottom Ledger Footer -->
+  <g id="ledger" transform="translate(18 214)">
+    <rect width="364" height="28" rx="9" fill="#0d1117" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1"/>
+
+    <!-- Ledger Item 1 -->
+    <g transform="translate(14 7)">
+      <circle cx="6" cy="7" r="2.5" fill="#f1c575"/>
+      <text x="14" y="10" fill="#f1c575" font-size="7.5" font-weight="820" letter-spacing="0.45">APPEND-ONLY LEDGER</text>
     </g>
 
-    <g data-component="receipt-gate" class="admit">
-      <path d="M1585 430h118v420h-118l-42-42V472z" fill="rgba(226,172,98,.10)" stroke="#e2ac62" stroke-width="6" />
-      <path d="M1665 430v82h76" fill="none" stroke="rgba(236,226,211,.66)" stroke-width="5" />
-      <path d="M1608 570h52M1608 660h72M1608 750h56" stroke="rgba(236,226,211,.70)" stroke-width="9" stroke-linecap="round" />
-      <circle cx="1695" cy="818" r="42" fill="#12110f" stroke="#93a289" stroke-width="7" />
-      <path d="M1674 816l18 18 41-56" class="check" />
+    <!-- Ledger Item 2 -->
+    <g transform="translate(145 7)">
+      <circle cx="6" cy="7" r="2.5" fill="#71d7a4"/>
+      <text x="14" y="10" fill="#71d7a4" font-size="7.5" font-weight="820" letter-spacing="0.45">HASHED EVIDENCE</text>
     </g>
 
-    <g data-component="ledger">
-      <rect x="1748" y="386" width="110" height="438" rx="34" class="ledger-card" opacity=".42" transform="rotate(5 1803 605)" />
-      <rect x="1704" y="356" width="110" height="438" rx="34" class="ledger-card" />
-      <path d="M1732 462h48M1732 560h58M1732 658h48" stroke="rgba(236,226,211,.76)" stroke-width="10" stroke-linecap="round" />
-      <circle cx="1796" cy="462" r="17" fill="none" stroke="#e2ac62" stroke-width="6" />
-      <circle cx="1796" cy="640" r="17" fill="none" stroke="#93a289" stroke-width="6" />
-      <path d="M1728 818a42 42 0 1 0 84 0a42 42 0 1 0-84 0M1798 848l32 32" fill="none" stroke="#e2ac62" stroke-width="9" stroke-linecap="round" />
-    </g>
-
-    <g data-component="flow">
-      <path d="M380 640C418 640 440 640 470 640" class="edge" />
-      <path d="M380 640C418 640 440 640 470 640" class="edge-live" />
-      <path d="M1134 640C1210 640 1260 626 1330 626" class="edge" />
-      <path d="M1134 640C1210 640 1260 626 1330 626" class="edge-live" style="animation-delay:.8s" />
-      <path d="M1520 626C1548 626 1560 626 1585 626" class="edge" />
-      <path d="M1520 626C1548 626 1560 626 1585 626" class="edge-live" style="animation-delay:1.5s" />
-      <path d="M865 482C1168 342 1406 404 1594 540" class="receipt-edge" />
-      <path d="M1070 640C1262 662 1432 650 1588 650" class="receipt-edge" />
-      <path d="M865 805C1156 986 1428 932 1708 744" class="receipt-edge" />
-      <circle cx="865" cy="482" r="14" class="receipt-token token-a" />
-      <circle cx="1070" cy="640" r="14" class="receipt-token token-b" />
-      <circle cx="865" cy="805" r="14" class="receipt-token token-c" />
-    </g>
-
-    <g data-component="blocked-shortcut" class="reject">
-      <circle cx="530" cy="770" r="42" fill="#12110f" stroke="#d1703c" stroke-width="6" />
-      <path d="M511 751l38 38M549 751l-38 38" class="x" />
-      <path d="M250 944C365 930 440 842 530 770" class="blocked" />
-      <rect x="198" y="902" width="86" height="86" rx="8" fill="rgba(18,17,15,.55)" stroke="rgba(236,226,211,.32)" stroke-width="4" />
-      <path d="M218 930h46M218 956h30" stroke="rgba(236,226,211,.48)" stroke-width="5" stroke-linecap="round" />
-      <text x="150" y="1050" class="sans small">SHORTCUT BLOCKED</text>
+    <!-- Ledger Item 3 -->
+    <g transform="translate(268 7)">
+      <circle cx="6" cy="7" r="2.5" fill="#f17869"/>
+      <text x="14" y="10" fill="#f17869" font-size="7.5" font-weight="820" letter-spacing="0.45">FAIL CLOSED</text>
     </g>
   </g>
 </svg>

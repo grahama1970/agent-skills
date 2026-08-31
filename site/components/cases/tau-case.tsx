@@ -47,7 +47,7 @@ export function TauCase({ project }: TauCaseProps) {
       >
         <img
           src="/artifacts/tau-dag-ledger-card.svg"
-          alt="Animated Tau DAG card showing ask routed through Tau, a Tau-owned scillm adapter, receipt admission, and an inspectable ledger."
+          alt="Animated Tau zero-trust DAG card showing a locked goal hash, policy and data gate, receipt-backed agent lanes, a blocked substitute lane, join gate, reviewer gate, append-only ledger, and fail-closed outcome."
         />
       </a>
     </article>

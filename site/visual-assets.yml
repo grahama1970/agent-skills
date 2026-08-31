@@ -355,14 +355,14 @@ assets:
   path: site/public/artifacts/tau-dag-ledger-card.svg
   kind: svg
   source: docs/assets/project-cards/tau-dag-ledger-card.svg
-  creation_method: ask_webgpt_svg_design_reviewed_and_installed
-  sha256: 2b1b5f0275a56f10ec7a18bfb081f0d8a8c795fb1a82ca9e6bfa1ebef3938bea
+  creation_method: human_reviewed_svg_hardened_with_best_practices_svg_design
+  sha256: 46fc87738c297c6a72bbc41550a21fa43b25af0a724b82a4f5ad4edfaa39c14c
   project_ids:
   - tau
   public_approval: true
   role: explanation
-  caption: Tau dominant-case SVG showing Ask routed through a Tau DAG, Tau-owned scillm adapter, receipt admission, and inspectable ledger.
-  alt_text: Tau DAG card showing ask routed through Tau, a Tau-owned scillm adapter, receipt admission, and an inspectable ledger.
+  caption: Tau zero-trust DAG card showing a locked goal hash, policy/data gate, receipt-backed agent lanes, no-substitute failure, join/reviewer gates, append-only ledger, hashed evidence, and fail-closed outcome.
+  alt_text: Tau zero-trust DAG card showing a locked goal hash, policy and data gate, receipt-backed agent lanes, a blocked substitute lane, join gate, reviewer gate, append-only ledger, and fail-closed outcome.
   crop: full
   does_not_establish: Live provider correctness, semantic truth of model output, or closure of Tau project gaps.
   rights:
