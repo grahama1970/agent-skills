@@ -1,0 +1,45 @@
+client: openai-privacy
+kb_root: /home/graham/workspace/experiments/openai-security-kb
+openapi_specs:
+  - /home/graham/workspace/experiments/openai-openapi/openapi.yaml
+probes:
+  - data controls zero data retention endpoint behavior and application state
+  - retention deletion backups derived data and legal exceptions
+  - data residency compared with inference residency
+  - enterprise key management key lifecycle revocation and failure
+  - role based access control groups explicit deny and least privilege
+  - workload identity federation short lived tokens and claim rules
+  - admin APIs compliance logs provenance and audit events
+  - prompt injection structured outputs guardrails and human approval
+  - sandbox network filesystem and command approval boundaries
+  - privacy data inventory classification ownership and lineage
+  - lawful access intake scoping retrieval review redaction and provenance
+  - professional services and supplier security measures
+  - private safety processing with zero data retention
+  - plugin and MCP security privacy authentication and review
+  - reliability retries idempotency partial failure and independent verification
+memory_daemon: http://127.0.0.1:8601
+live_evidence_backend: http://127.0.0.1:8799
+live_evidence_prep_pack: /home/graham/workspace/experiments/agent-skills/skills/live-evidence/fixtures/prep_pack_openai_privacy_2026_09.json
+target_kind: employer
+purpose: rehearsal
+topic: OpenAI privacy engineering system design and agent-assisted coding interview
+anchor_terms:
+  - data inventory
+  - classification
+  - lineage
+  - retention
+  - deletion
+  - purpose limitation
+  - access governance
+  - least privilege
+  - provenance
+  - auditability
+  - safe failure
+  - observability
+  - idempotency
+  - data residency
+  - inference residency
+  - enterprise key management
+  - zero data retention
+  - human review
