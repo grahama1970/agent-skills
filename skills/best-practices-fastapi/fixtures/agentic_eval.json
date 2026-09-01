@@ -32,7 +32,7 @@
     {
       "name": "skill-documents-memory-default-boundary",
       "type": "adversarial",
-      "command": ["bash", "-c", "grep -Fq 'default persistence boundary' ../SKILL.md && grep -Fq 'Qdrant directly' ../SKILL.md && grep -Fq 'PostgreSQL is only an adapter choice' ../SKILL.md"],
+      "command": ["bash", "-c", "grep -Fq 'default persistence boundary' ../SKILL.md && grep -Fq 'Qdrant directly' ../SKILL.md && grep -Fq 'Do not add a second database' ../SKILL.md && grep -Fq 'Memory-native method' ../SKILL.md"],
       "expected": {"exit_code": 0}
     },
     {

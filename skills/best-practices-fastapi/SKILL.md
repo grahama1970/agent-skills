@@ -78,9 +78,8 @@ a team requires Flask.
   `/memory` `/store` or `/upsert`; do not write raw AQL from the app, do not call
   Qdrant directly, and do not store embedding arrays in ArangoDB. ArangoDB holds
   canonical documents/edges; Qdrant holds vectors via Memory semantic sync.
-- PostgreSQL is only an adapter choice when the target team explicitly requires
-  relational deployment state. Do not add it just because a generated FastAPI
-  scaffold did.
+- Do not add a second database for this demo. The point is to show Graham's
+  Memory-native method, not a generic web-app storage pattern.
 - Terraform stays outside the app: use `$terraform` for scaffold/plan/apply and
   `$ops-terraform` for detection/check/plan summaries. Never reimplement
   Terraform inside FastAPI.
@@ -107,20 +106,19 @@ Add extra endpoints only after that vertical slice works.
 
 ## Persistence boundary
 
-For Graham's OpenAI prep artifact, prefer the existing Memory stack over a new
-PostgreSQL dependency:
+For Graham's OpenAI prep artifact, the persistence answer is the existing
+Memory stack:
 
 - Authorization manifests, workload records, permits, monitor events, eval runs,
-  and receipt envelopes are graph-shaped audit records. They fit ArangoDB
-  documents plus edge collections.
+  and receipt envelopes are graph-shaped audit records. Store them as ArangoDB
+  documents plus edge collections through `$memory`.
 - Retrieval over prior evals, sources, findings, and interview prep should use
   `$memory recall`, which combines BM25, graph traversal, and Qdrant dense
   search.
 - Qdrant is not the app database. It stores vectors and payload metadata through
   Memory semantic sync.
-- If a production environment mandates PostgreSQL for operational state, keep it
-  behind a repository adapter and still sync retrieval-worthy facts into
-  `$memory`.
+- Do not spend interview scope explaining or maintaining an unrelated relational
+  datastore. Show the graph/evidence system Graham already uses.
 
 ## Deployment questions to ask first
 
