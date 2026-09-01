@@ -1638,7 +1638,9 @@ def sanitize_local_paths_for_browser_prompt(text: str) -> str:
     return _LOCAL_PATH_IN_PROMPT.sub(replace, text)
 
 
-def collect_closure_artifacts(comments: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def collect_closure_artifacts(
+    comments: list[dict[str, Any]], *, base_dir: Path | None = None
+) -> list[dict[str, Any]]:
     """Read the proof artifacts a closure claimed, so the audit can see them.
 
     Both audit seats reported they could not read local files, so they judged
@@ -1652,8 +1654,27 @@ def collect_closure_artifacts(comments: list[dict[str, Any]]) -> list[dict[str, 
     """
     found: list[dict[str, Any]] = []
     seen: set[str] = set()
+
+    def add_artifact(path_value: str, *, tier: str, command: Any = None) -> None:
+        path = path_value.strip().strip("`.,;)]")
+        if not path or path in seen:
+            return
+        seen.add(path)
+        record: dict[str, Any] = {"tier": tier, "path": path, "command": command}
+        artifact_path = Path(path)
+        if not artifact_path.is_absolute() and base_dir is not None:
+            artifact_path = base_dir / artifact_path
+        try:
+            text = artifact_path.read_text(encoding="utf-8", errors="replace")
+            record["content"] = text[:ARTIFACT_EXCERPT_CHARS]
+            record["bytes"] = len(text)
+        except OSError as exc:
+            record["missing"] = str(exc)
+        found.append(record)
+
     for comment in comments:
-        for block in re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", str(comment.get("body", "")), re.S):
+        body = str(comment.get("body", ""))
+        for block in re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", body, re.S):
             try:
                 payload = json.loads(block)
             except ValueError:
@@ -1662,21 +1683,10 @@ def collect_closure_artifacts(comments: list[dict[str, Any]]) -> list[dict[str, 
                 continue
             for tier in ("unit", "e2e"):
                 entry = payload.get(tier)
-                if not isinstance(entry, dict):
-                    continue
-                path = str(entry.get("artifact") or "").strip()
-                if not path or path in seen:
-                    continue
-                seen.add(path)
-                record: dict[str, Any] = {"tier": tier, "path": path,
-                                          "command": entry.get("command")}
-                try:
-                    text = Path(path).read_text(encoding="utf-8", errors="replace")
-                    record["content"] = text[:ARTIFACT_EXCERPT_CHARS]
-                    record["bytes"] = len(text)
-                except OSError as exc:
-                    record["missing"] = str(exc)
-                found.append(record)
+                if isinstance(entry, dict):
+                    add_artifact(str(entry.get("artifact") or ""), tier=tier, command=entry.get("command"))
+        for match in re.findall(r"`?((?:docs|local|artifacts)/[^`\s]+?\.json)`?", body):
+            add_artifact(match, tier="comment")
     return found
 
 
@@ -1866,7 +1876,7 @@ def handle_closure_audit(
         for c in comments
     ) or "(no comments on this issue)"
 
-    collected = collect_closure_artifacts(comments)
+    collected = collect_closure_artifacts(comments, base_dir=Path(project["worktree"]))
     result["closure_artifacts"] = [
         {k: v for k, v in a.items() if k != "content"} for a in collected
     ]

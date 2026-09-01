@@ -1925,6 +1925,22 @@ def test_a_cited_artifact_that_is_gone_is_reported_not_dropped(tmp_path) -> None
     assert "NOT READABLE" in rendered
 
 
+def test_markdown_receipt_paths_are_read_relative_to_the_project_worktree(tmp_path) -> None:
+    artifact = tmp_path / "docs/proofs/tickets/issue-319/closure-evidence.json"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text('{"schema":"tau.ticket_closure_evidence.v1","status":"PASS"}\n')
+    comment = {
+        "body": "Receipts:\n- `docs/proofs/tickets/issue-319/closure-evidence.json`\n"
+    }
+
+    found = handlers.collect_closure_artifacts([comment], base_dir=tmp_path)
+
+    assert len(found) == 1
+    assert found[0]["tier"] == "comment"
+    assert found[0]["path"] == "docs/proofs/tickets/issue-319/closure-evidence.json"
+    assert "tau.ticket_closure_evidence.v1" in found[0]["content"]
+
+
 def test_artifacts_are_capped_so_a_huge_log_cannot_crowd_out_the_ticket(tmp_path) -> None:
     art = tmp_path / "big.txt"
     art.write_text("x" * (handlers.ARTIFACT_EXCERPT_CHARS * 3))
