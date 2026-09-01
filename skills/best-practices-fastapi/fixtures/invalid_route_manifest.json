@@ -1,0 +1,12 @@
+{
+  "schema": "best_practices_fastapi.route_manifest.v1",
+  "routes": [
+    {
+      "name": "bad route",
+      "method": "POST",
+      "path": "eval/batch",
+      "response_model": "EvalBatchResponse",
+      "service_call": "service.submit_eval_batch"
+    }
+  ]
+}

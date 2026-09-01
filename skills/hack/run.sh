@@ -22,5 +22,10 @@ fi
 # Ensure the script directory and shared repo contracts are importable.
 export PYTHONPATH="$PROJECT_ROOT:$PROJECT_ROOT/skills:${PYTHONPATH-}:$(dirname "$0")"
 
+if [[ "${1:-}" == "verify" ]]; then
+    shift
+    exec python3 "$SCRIPT_DIR/scripts/verify.py" "$@"
+fi
+
 # Execute the python CLI
 exec python3 "$(dirname "$0")/hack.py" "$@"

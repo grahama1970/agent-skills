@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "skill": "best-practices-fastapi",
+  "trials": 3,
+  "proof_scope": "FastAPI control-plane standards, deployment handoff boundaries, and Flask fallback adapter generation",
+  "claims": {
+    "proves": "the skill has an executable converter, validates route manifests with Pydantic, generates a Flask adapter over shared contracts/service, rejects invalid manifests, and documents Terraform as an external skill handoff",
+    "does_not_prove": "a deployed cloud service, production auth, real OpenAI/Astra access, or live cyber scanning"
+  },
+  "cases": [
+    {
+      "name": "sanity",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "../sanity.sh"],
+      "expected": {"exit_code": 0, "stdout_contains": ["Result: PASS"]}
+    },
+    {
+      "name": "convert-to-flask-generates-adapter",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh convert-to-flask route_manifest.json --out $OUT && grep -q \"@app.route('/eval/batch'\" $OUT && grep -q \"contracts.EvalBatchRequest.model_validate\" $OUT"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\""]}
+    },
+    {
+      "name": "invalid-manifest-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh convert-to-flask invalid_route_manifest.json --out $OUT; test $? -eq 1"],
+      "expected": {"exit_code": 0, "stderr_contains": ["manifest validation failed"]}
+    },
+    {
+      "name": "skill-documents-terraform-external-boundary",
+      "type": "adversarial",
+      "command": ["bash", "-c", "grep -q \"Terraform stays outside the app\" ../SKILL.md && grep -q \"Never reimplement\" ../SKILL.md"],
+      "expected": {"exit_code": 0}
+    }
+  ]
+}

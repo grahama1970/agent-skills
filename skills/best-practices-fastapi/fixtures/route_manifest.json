@@ -1,0 +1,14 @@
+{
+  "schema": "best_practices_fastapi.route_manifest.v1",
+  "module": "openai_eval_control_plane",
+  "routes": [
+    {
+      "name": "submit_eval_batch",
+      "method": "POST",
+      "path": "/eval/batch",
+      "request_model": "EvalBatchRequest",
+      "response_model": "EvalBatchResponse",
+      "service_call": "service.submit_eval_batch"
+    }
+  ]
+}
