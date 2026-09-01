@@ -46,6 +46,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "agent_ecosystem.membership_cli_contract",
+      "description": "run.sh exposes the documented membership validate/table contract for members.json.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -61,6 +69,14 @@
       "seam_id": "ecosystem-graph",
       "seam_type": "cli",
       "criticality": "important",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "membership-cli",
+      "seam_type": "cli",
+      "criticality": "critical",
       "required_evidence": [
         "live_e2e"
       ]
@@ -90,6 +106,27 @@
         "stdout_contains": [
           "SHAME_IMMUTABLE_GOAL_ECOSYSTEM_OK"
         ]
+      }
+    },
+    {
+      "name": "membership-cli-validates-members-json",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "agent_ecosystem.membership_cli_contract"
+      ],
+      "seams": [
+        "membership-cli"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "/home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh membership validate | grep -q '\"valid\": true'"
+      ],
+      "expected": {
+        "exit_code": 0
       }
     },
     {

@@ -41,6 +41,7 @@ def generate_report(quick: bool = False, full: bool = False) -> dict[str, Any]:
     components_data = collect_components()
 
     report = {
+        "schema": "project_state.report.v1",
         "project": PROJECT_NAME,
         "project_root": str(PROJECT_ROOT),
         "project_profile": PROJECT_PROFILE,

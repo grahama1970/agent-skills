@@ -71,6 +71,14 @@
       "evidence_required": {
         "live_e2e": true
       }
+    },
+    {
+      "id": "project_state.standard_report_schema",
+      "description": "quick, standard, and full project-state JSON reports declare project_state.report.v1 so ecosystem consumers do not receive anonymous contract payloads.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -178,6 +186,15 @@
       "seam_type": "mutation/destructive effect",
       "criticality": "critical",
       "claim_id": "project_state.cleanup_tail_readiness_receipt",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "standard_report_schema_boundary",
+      "seam_type": "contract/schema",
+      "criticality": "critical",
+      "claim_id": "project_state.standard_report_schema",
       "required_evidence": [
         "live_e2e"
       ]
@@ -481,6 +498,33 @@
           "QUICK_BOUNDARY_OK=True",
           "STANDARD_BOUNDARY_OK=True",
           "STANDARD_RESEARCH_SKIPPED=True"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "standard-reports-declare-ecosystem-schema",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.standard_report_schema"
+      ],
+      "seams": [
+        "standard_report_schema_boundary"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --quick --json --output \"$tmp/quick.json\" >/dev/null; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --json --output \"$tmp/standard.json\" >/dev/null; python - \"$tmp/quick.json\" \"$tmp/standard.json\" <<'PY2'\nimport json, sys\nreports=[json.loads(open(path).read()) for path in sys.argv[1:]]\nok=all(r.get('schema') == 'project_state.report.v1' and r.get('project') == 'pitchdeck' for r in reports)\nprint('REPORT_SCHEMA_OK=%s SCHEMAS=%s' % (ok, ','.join(str(r.get('schema')) for r in reports)))\nsys.exit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REPORT_SCHEMA_OK=True",
+          "project_state.report.v1"
         ],
         "stderr_contains": []
       }

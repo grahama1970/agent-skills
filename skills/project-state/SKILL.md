@@ -230,6 +230,21 @@ Current-state notes for this skill live in `docs/PROJECT_KNOWLEDGE.md`. Treat
 that document as context, not proof. Readiness claims still require the
 machine-readable report and command receipts.
 
+## Ecosystem
+
+`$project-state` is a reporting component in the agent-governance ecosystem. It
+produces `project_state.report.v1`, `skill.readiness_report.v1`, and
+`project_state.config_doctor.v1` payloads. It consumes local worktree evidence,
+Memory recall observations, optional cleanup receipts, and optional current
+research receipts.
+
+Per `$agent-ecosystem`, Memory recall output remains an observation and is not
+wrapped. Standard/quick/full reports are state payloads, not acceptance or
+closure receipts. Cleanup-tail readiness reports are durable state receipts;
+when another component uses one for dispatch, handoff, acceptance, escalation,
+closure, or durable failure, that boundary component wraps it in
+`pi.receipt_envelope.v1` and resolves parent references.
+
 ## Cleanup Sequence Fit
 
 Use cleanup-tail at the end of this sequence:
