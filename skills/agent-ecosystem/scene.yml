@@ -1,0 +1,72 @@
+schema_version: 1
+theme: fixing-opus-neon-v1
+template: fanout-anatomy
+metadata:
+  title: Agent-governance ecosystem
+  description: Shared JSON contracts fan out into the four layers of the governance loop
+source:
+  title: SHARED CONTRACTS
+  subtitle: agent_status + triage codes + receipt envelope
+targets:
+  - number: 1
+    heading: TURN
+    detail: shame validates, triage names failures
+    accent: green
+  - number: 2
+    heading: WORKFLOW
+    detail: ask compiles, tau executes and accepts
+    accent: cyan
+  - number: 3
+    heading: OPERATIONS
+    detail: watchdog dispatches, herdr transports
+    accent: amber
+  - number: 4
+    heading: MEMORY
+    detail: labels, minted codes, receipts recalled
+    accent: orange
+caption: ONE VOCABULARY, EVERY LAYER - AMBIGUITY IS UNREPRESENTABLE
+timeline:
+  cycle_ms: 12000
+  events:
+    - target: source-node
+      recipe: fade-slide-y
+      start_ms: 150
+      end_ms: 900
+      from_y: -24
+    - target: connector-0
+      recipe: draw-stroke
+      start_ms: 900
+      end_ms: 1350
+    - target: target-card-0
+      recipe: fade
+      start_ms: 1350
+      end_ms: 1800
+    - target: connector-1
+      recipe: draw-stroke
+      start_ms: 1100
+      end_ms: 1550
+    - target: target-card-1
+      recipe: fade
+      start_ms: 1550
+      end_ms: 2000
+    - target: connector-2
+      recipe: draw-stroke
+      start_ms: 1300
+      end_ms: 1750
+    - target: target-card-2
+      recipe: fade
+      start_ms: 1750
+      end_ms: 2200
+    - target: connector-3
+      recipe: draw-stroke
+      start_ms: 1500
+      end_ms: 1950
+    - target: target-card-3
+      recipe: fade
+      start_ms: 1950
+      end_ms: 2400
+    - target: source-glow
+      recipe: halo-pulse
+      start_ms: 7800
+      end_ms: 11600
+      peak_opacity: 0.35

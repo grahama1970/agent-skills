@@ -35,6 +35,13 @@ the review artifact is cited in ECOSYSTEM.md.
 
 ## The graph
 
+![Agent-governance ecosystem](./ecosystem.svg)
+
+Rendered with $create-svg (`scene.yml` is the source; regenerate with
+`skills/create-svg/run.sh render skills/agent-ecosystem/scene.yml skills/agent-ecosystem/ecosystem.svg`).
+The mermaid block below stays as the machine-readable edge list.
+
+
 ```mermaid
 flowchart TB
     subgraph SHAPE[Generation shaping]
