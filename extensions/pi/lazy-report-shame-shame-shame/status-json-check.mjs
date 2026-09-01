@@ -95,7 +95,8 @@ function hasRawHtmlTag(input) {
 }
 
 function hasMarkdownLinkOrImage(input) {
-  return /!?\[[^\]]*\]\(/.test(String(input || ''));
+  const raw = String(input || '');
+  return /!?\[[^\]]*\]\(/.test(raw) || /^\s*\[[^\]]+\]:/m.test(raw);
 }
 
 function collectJsonStrings(value, out = []) {
