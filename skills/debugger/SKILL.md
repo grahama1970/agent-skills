@@ -58,6 +58,8 @@ caller never exports `UV_PROJECT_ENVIRONMENT` or assembles `uv run` commands.
 ```bash
 ./run.sh break <file:line> [--local NAME ...] -- <python-cmd>   # headless breakpoint proof -> debugger.proof.v1
 ./run.sh stop <file:line> [--local NAME ...] [--expand N[:D]]   # live VS Code stop; prints STATUS_PATH + settled STATUS
+./run.sh open <file> --json-field FIELD [--bridge]              # reveal/select a file range; preserves user focus by default
+./run.sh windows list|close [--workspace NAME] [--execute]      # list/close VS Code windows; close is explicit and scoped
 ./run.sh walkthrough <spec.json> [--speak] [--voice]            # narrated breakpoint tour (review/blocked)
 ./run.sh session [--wait-seconds N]                             # collaborative live session with explained pauses
 ./run.sh validate <proof.json> [--expect-valid] [--repo-root P] # independent proof validation
@@ -70,7 +72,41 @@ caller never exports `UV_PROJECT_ENVIRONMENT` or assembles `uv run` commands.
 from its own directory. Live subcommands default the workspace to the git
 toplevel of `$PWD` (override with `DEBUGGER_VSCODE_WORKSPACE`) and fail closed
 with `BRIDGE_BLOCKED` when no open, trusted VS Code bridge answers.
-Gate: `fixtures/front-door.json` (agentic eval).
+
+`open --bridge` is the safe human handoff path for files, JSON fields, and exact
+selected ranges. It uses VS Code `preserveFocus` and leaves the user's active
+window and geometry unchanged by default, so a human typing in another app does
+not lose keystrokes to VS Code. Only move or focus VS Code when the human asks:
+
+```bash
+./run.sh open report.json --json-field cases[].trials[].stderr --bridge
+./run.sh open report.json --json-field cases[].trials[].stderr --bridge \
+  --place-window --frontmost --monitor right --window-layout half-vertical
+./run.sh open report.json --json-field cases[].trials[].stderr --bridge \
+  --place-window --frontmost --monitor left --window-layout quarter
+```
+
+VS Code window hygiene:
+
+```bash
+./run.sh windows list
+./run.sh windows close --workspace agent-skills        # dry-run plan only
+./run.sh windows close --workspace agent-skills --execute
+```
+
+`windows close` refuses unfiltered closes and skips Remote SSH windows unless
+`--include-remote` is explicitly supplied. Use this after a debugger handoff if
+VS Code windows accumulated, but do not close a human's unrelated project window.
+
+Prompt examples for humans:
+
+- "Use `$debugger` to open the failing receipt at `cases[].trials[].stderr`, but do not steal focus."
+- "Use `$debugger` to show me the selected field on the right monitor, half width, full height, frontmost."
+- "Use `$debugger` to pause at `src/server.py:184`, inspect `request` and `selected_handler`, then tell me what changed."
+
+Gates: `fixtures/front-door.json` for the front door and
+`fixtures/vscode-selection.json` for selected-range reveal, focus preservation,
+explicit window placement, and fail-closed missing-bridge behavior.
 
 ### Debug it, then explain what happened
 

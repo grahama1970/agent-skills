@@ -7,6 +7,7 @@
 #   ./run.sh walkthrough <spec.json> [--speak] [--voice] [--commands S] narrated breakpoint tour
 #   ./run.sh session [--wait-seconds N]                                 collaborative live session
 #   ./run.sh open <file> --line N|--function F|--json-field K            reveal code/data in VS Code
+#   ./run.sh windows list|close [--workspace NAME] [--execute]           manage VS Code windows explicitly
 #   ./run.sh validate <proof.json> [--expect-valid|--expect-invalid] [--repo-root P]
 #   ./run.sh matrix [--suite NAME ...]                                  capability-gated eval matrix
 #   ./run.sh spec-from-proof <proof.json> --out spec.json          session -> walkthrough spec
@@ -95,6 +96,11 @@ case "$cmd" in
         shift
         [ "$#" -ge 1 ] || { echo "usage: ./run.sh open <file> --line N|--function F|--json-field K" >&2; exit 2; }
         exec uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/open_in_vscode.py" "$@"
+        ;;
+    windows)
+        shift
+        [ "$#" -ge 1 ] || { echo "usage: ./run.sh windows list|close [--workspace NAME] [--execute]" >&2; exit 2; }
+        exec uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/vscode_window_manager.py" "$@"
         ;;
     validate)
         shift

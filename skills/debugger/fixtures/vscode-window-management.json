@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "initial_prompt": "$brave-search for solutions to each implementation and when it works add an $agentic-evals which also include the initial prompt; also don't we need some kind of VSCode window management as it seems to load a new Window each time and its never close/managed",
+  "proof_scope": "VS Code window hygiene for debugger: list VS Code windows, refuse unsafe close requests, and provide an explicit dry-run close plan before any window is closed.",
+  "claims": {
+    "proves": "run.sh windows lists VS Code windows and close is fail-closed unless scoped by title/workspace and --execute is explicitly supplied",
+    "does_not_prove": "that a human wanted a particular VS Code window closed"
+  },
+  "cases": [
+    {
+      "name": "list-vscode-windows-json",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "List current VS Code windows without mutating them.",
+      "command": ["bash", "-c", "../run.sh windows list > /tmp/debugger-vscode-windows-list.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/debugger-vscode-windows-list.json'))\nassert d['schema']=='debugger.vscode_windows.v1'\nassert isinstance(d['windows'], list)\nprint('WINDOW_LIST_OK')\nPY"],
+      "timeout_seconds": 20,
+      "expected": {"exit_code": 0, "stdout_contains": ["WINDOW_LIST_OK"]}
+    },
+    {
+      "name": "refuse-unfiltered-close",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "Closing without a workspace/title filter is refused.",
+      "command": ["bash", "-c", "../run.sh windows close 2>/tmp/debugger-window-refuse.err; rc=$?; cat /tmp/debugger-window-refuse.err; test $rc -eq 2"],
+      "timeout_seconds": 20,
+      "expected": {"exit_code": 0, "stdout_contains": ["REFUSE_CLOSE_UNFILTERED"]}
+    },
+    {
+      "name": "scoped-close-defaults-to-dry-run",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "A scoped close request without --execute returns a plan and does not close windows.",
+      "command": ["bash", "-c", "../run.sh windows close --workspace agent-skills > /tmp/debugger-window-close-plan.json && python3 - <<'PY'\nimport json\nd=json.load(open('/tmp/debugger-window-close-plan.json'))\nassert d['schema']=='debugger.vscode_window_close_plan.v1'\nassert d['execute'] is False\nassert isinstance(d['targets'], list)\nprint('WINDOW_CLOSE_DRY_RUN_OK')\nPY"],
+      "timeout_seconds": 20,
+      "expected": {"exit_code": 0, "stdout_contains": ["WINDOW_CLOSE_DRY_RUN_OK"]}
+    }
+  ]
+}

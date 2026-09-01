@@ -27,6 +27,9 @@ the human/operator guide.
 | Inspect live Python locals | `scripts/capture_breakpoints.py --break path/to/file.py:123` |
 | Prove a Node/TypeScript branch | use the JavaScript debugger launch path in `SKILL.md` |
 | Capture Rust runtime state | use the LLDB/GDB-backed launch path in `SKILL.md` |
+| Open a proof file or JSON field for the human | `./run.sh open report.json --json-field cases[].trials[].stderr --bridge` |
+| Place VS Code when explicitly requested | add `--place-window --frontmost --monitor right --window-layout half-vertical` |
+| List or close stale VS Code windows | `./run.sh windows list`; `./run.sh windows close --workspace agent-skills --execute` |
 | Hand runtime state to a human | preserve breakpoint, frame, locals, and watch output |
 
 Most LLM debugging today is reactive: read stderr, read stdout, skim logs,
@@ -99,6 +102,38 @@ read a whole dump.
 The goal is not to make the human do the debugging. The goal is to make the
 runtime state small enough and concrete enough that a human can correct the
 agent's interpretation when product or domain judgment matters.
+
+For file and receipt review, `$debugger open --bridge` is the safe visible path:
+it selects the requested range in VS Code with `preserveFocus` and leaves the
+human's active window alone by default. This prevents the failure mode where the
+human types in another app and VS Code steals focus. If the human wants the
+editor arranged visibly, they must ask for it explicitly:
+
+```bash
+./run.sh open /tmp/report.json --json-field cases[].trials[].stderr --bridge
+./run.sh open /tmp/report.json --json-field cases[].trials[].stderr --bridge \
+  --place-window --frontmost --monitor right --window-layout half-vertical
+./run.sh open /tmp/report.json --json-field cases[].trials[].stderr --bridge \
+  --place-window --frontmost --monitor left --window-layout quarter
+```
+
+Window cleanup is explicit and scoped:
+
+```bash
+./run.sh windows list
+./run.sh windows close --workspace agent-skills        # dry-run plan only
+./run.sh windows close --workspace agent-skills --execute
+```
+
+The close command refuses unfiltered requests and does not include Remote SSH
+windows unless explicitly asked, so it is safe for project agents to show a plan
+before closing anything.
+
+Human prompt examples:
+
+- "Use `$debugger` to open the eval report at the failing `stderr` field, but do not steal focus."
+- "Use `$debugger` to put the selected receipt on the right monitor, half width and full height, frontmost."
+- "Use `$debugger` to pause at this handler, inspect `request` and `selected_handler`, then ask me only if the paused state needs product judgment."
 
 ## When The Agent Should Use It On Its Own
 
