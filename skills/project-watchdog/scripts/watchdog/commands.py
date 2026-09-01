@@ -278,6 +278,58 @@ def _project_runtime_state(project: dict[str, Any], state: dict[str, Any]) -> st
     return str(default) if default else None
 
 
+def _record_closure_audit_attempt(
+    state: dict[str, Any], repo: str, issue_number: int, audited: dict[str, Any], *, now: float
+) -> None:
+    attempts = state.setdefault("closure_audit_attempts", {})
+    key = f"{repo}#{issue_number}"
+    if audited.get("ok") is True and audited.get("verdict") in {"PASS", "FAIL"}:
+        attempts.pop(key, None)
+    else:
+        attempts[key] = now
+    _persist_tick_state(state)
+
+
+def _audit_targeted_closure(
+    run_id: str,
+    receipt_dir: Path,
+    state: dict[str, Any],
+    receipt: dict[str, Any],
+    *,
+    apply: bool,
+    candidates: list[dict[str, Any]],
+    only_issue: int,
+) -> dict[str, Any] | None:
+    """Audit one explicitly requested closed issue, bypassing fleet rotation."""
+    pending_counts: dict[str, int] = {}
+    for candidate in candidates:
+        cid = str(candidate.get("project_id"))
+        if _project_runtime_state(candidate, state) != "active":
+            continue
+        try:
+            pending = registry.list_closed_for_audit(run_id, candidate)
+        except RuntimeError as exc:
+            logger.error("closure audit scan failed for {}: {}", cid, exc)
+            continue
+        pending_counts[cid] = len(pending)
+        match = next((issue for issue in pending if int(issue["number"]) == int(only_issue)), None)
+        if match is None:
+            continue
+        repo = str(candidate.get("repo"))
+        receipt["closure_audit"] = {
+            "pending_counts": pending_counts,
+            "selected": int(only_issue),
+            "targeted": True,
+        }
+        audited = handle_closure_audit(run_id, receipt_dir, candidate, match, apply=apply)
+        if apply:
+            _record_closure_audit_attempt(state, repo, int(only_issue), audited, now=time.time())
+        return audited
+    if pending_counts:
+        receipt["closure_audit"] = {"pending_counts": pending_counts, "targeted": True}
+    return None
+
+
 def _audit_one_closure(
     run_id: str,
     receipt_dir: Path,
@@ -342,14 +394,15 @@ def _audit_one_closure(
     issue = sorted(chosen["pending"], key=lambda i: str(i.get("closedAt") or ""))[0]
     receipt["closure_audit"]["selected"] = int(issue["number"])
 
-    key = f"{chosen['project'].get('repo')}#{issue['number']}"
     audited = handle_closure_audit(run_id, receipt_dir, chosen["project"], issue, apply=apply)
     if apply:
-        if audited.get("ok") is True and audited.get("verdict") in {"PASS", "FAIL"}:
-            attempts.pop(key, None)  # durably answered: no reason to hold it back
-        else:
-            attempts[key] = now
-        _persist_tick_state(state)
+        _record_closure_audit_attempt(
+            state,
+            str(chosen["project"].get("repo")),
+            int(issue["number"]),
+            audited,
+            now=now,
+        )
     return audited
 
 
@@ -601,10 +654,27 @@ def _tick_locked(
     # is done, and until now nothing verified that claim. Repairs come first --
     # an audit must never delay a ticket that is actually waiting.
     if project is None and only_issue is not None:
-        # Targeted mode: this tick exists for one named issue. When it is not
-        # dispatchable, refuse -- do NOT spend the tick on closure audits or
-        # attestation, which would let the caller believe its regression got
-        # repair capacity (agent-skills#1456).
+        # Targeted mode: first try the named issue as repair work; if it is
+        # closed, audit exactly that closure. Refuse only when neither route is
+        # legal. This keeps targeted closure rechecks from being swallowed by an
+        # unrelated open ticket or fleet audit.
+        audited = _audit_targeted_closure(
+            run_id,
+            receipt_dir,
+            state,
+            receipt,
+            apply=apply,
+            candidates=candidates,
+            only_issue=only_issue,
+        )
+        if audited is not None:
+            receipt["handled_issues"].append(audited)
+            receipt["handled_count"] = 1
+            preview = audited.get("status") == "DRY_RUN"
+            receipt["ok"] = _handled_result_allows_agent_followup(audited)
+            _record_agent_authorization(receipt, audited)
+            receipt["status"] = _handled_tick_status(audited, preview=preview)
+            return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=not preview)
         receipt.update({"ok": True, "status": "SKIPPED",
                         "stop_reason": "targeted_issue_not_routable",
                         "targeted_issue": int(only_issue)})

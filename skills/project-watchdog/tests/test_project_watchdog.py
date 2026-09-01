@@ -1434,6 +1434,30 @@ def test_closure_unverified_is_retryable_not_a_permanent_hold() -> None:
     assert [i["number"] for i in pending] == [4]
 
 
+def test_targeted_closed_issue_runs_closure_audit(tmp_path, monkeypatch) -> None:
+    from watchdog import commands  # noqa: PLC0415
+
+    project = {"project_id": "tau", "repo": TAU_REPO, "worktree": str(tmp_path)}
+    issue = _closed(319, labels=["agent-work", config.CLOSURE_UNVERIFIED_LABEL], closed_at="2026-09-01T00:00:00Z")
+    called: dict = {}
+    monkeypatch.setattr(commands.registry, "list_closed_for_audit", lambda *a, **k: [issue])
+    monkeypatch.setattr(
+        commands,
+        "handle_closure_audit",
+        lambda run_id, receipt_dir, candidate, matched, apply: called.update(issue=matched["number"]) or {
+            "action": "closure_audit", "issue_number": matched["number"], "status": "DRY_RUN", "ok": True,
+        },
+    )
+
+    result = commands._audit_targeted_closure(
+        "run", tmp_path, {"projects": {"tau": {"state": "active"}}}, {},
+        apply=False, candidates=[project], only_issue=319,
+    )
+
+    assert called["issue"] == 319
+    assert result and result["action"] == "closure_audit"
+
+
 def test_audit_ignores_closures_older_than_the_window() -> None:
     import datetime as _dt
 
