@@ -58,16 +58,24 @@ Environment overrides:
 ```bash
 AGENT_SKILLS_ROOT=/path/to/agent-skills \
 KB_ROOT=/path/to/openai-security-kb \
+FETCH_ROOT=/path/to/openai-security-fetch \
 OPENAI_SPEC_REPO=/path/to/openai-openapi \
 skills/curate-client/scripts/bootstrap-openai-security.sh
 ```
 
+The fetch workspace is intentionally outside `kb_root`.
+`graph_memory.workspace.ingest` recursively scans supported text extensions
+under the complete KB root; storing raw fetch outputs and staged copies there
+would create duplicate lessons and ingest URL-list noise. Hidden
+`.source-control/` and `.reports/` directories remain available for audit
+without entering the graph.
+
 The bootstrap script:
 
 - pins the current official OpenAPI commit;
-- fetches the primary and secondary lanes through `fetcher`;
-- stages `fit_markdown` or Markdown beneath `knowledge/sources/`;
-- records source lists and the OpenAPI commit;
+- fetches the primary and secondary lanes through `fetcher` outside the KB root;
+- stages only selected `fit_markdown` or Markdown beneath `knowledge/sources/`;
+- records source lists and the OpenAPI commit under hidden control metadata;
 - emits a deprecation/conflict report;
 - deliberately stops before database mutation.
 
@@ -76,13 +84,13 @@ The bootstrap script:
 Before ingesting:
 
 ```bash
-find ~/workspace/experiments/openai-security-kb/fetch \
+find ~/workspace/experiments/openai-security-fetch \
   -name consumer_summary.json -print -exec jq . {} \;
 
-find ~/workspace/experiments/openai-security-kb/fetch \
+find ~/workspace/experiments/openai-security-fetch \
   -name junk_results.jsonl -size +0c -print
 
-less ~/workspace/experiments/openai-security-kb/reports/deprecation-and-conflict-scan.txt
+less ~/workspace/experiments/openai-security-kb/.reports/deprecation-and-conflict-scan.txt
 ```
 
 A missing or failed P0 source is blocking unless a canonical replacement is
