@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "Feature-mapped shame skill and Pi extension coverage: CLI JSONL capture, session/user extraction, legacy labels, unsafe collection validation, live Memory structured readback, searchable Memory shadow recall, pending review packet, audio installer. JSON-first checker/compiler coverage lives in extensions/pi/lazy-report-shame-shame-shame/fixtures/status_json_eval.json. Mandatory prose Status Report rendering is checked before the final pi.agent_status.v1 JSON. Includes 50 WebGPT-derived adversarial status-report attack cases.",
   "claims": {
-    "proves": "Each declared $shame feature has at least one retained command case with a failing oracle: CLI capture, Memory persistence, searchable recall, strict report checker behavior, Pi extension rejection/retry/pending packet behavior, extension label/review commands, guard-loop interlock behavior, and one-word audio policy.",
+    "proves": "Each declared $shame feature has at least one retained command case with a failing oracle: CLI capture, Memory persistence, searchable recall, strict report checker behavior, Pi extension rejection/retry/pending packet behavior, extension label/review commands, guard-loop interlock behavior, and one-word audio policy. Proof[] paths are read back from disk before a done status can pass.",
     "does_not_prove": "Future classifier quality, every possible Pi transcript shape, every active TUI already reloaded, or human approval of labels."
   },
   "capability_claims": [
@@ -144,9 +144,51 @@
         "deterministic": true,
         "real_world": true
       }
+    },
+    {
+      "id": "shame.immutable_goal_contract",
+      "description": "The shame immutable goal is pydantic-validated and names each ecosystem component plus what it MUST do.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.proof_paths_must_exist",
+      "description": "pydantic-valid done status cannot cite fake proof paths; proof[] entries must exist on disk",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
+    {
+      "name": "immutable-goal-contract-validates",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.immutable_goal_contract"
+      ],
+      "seams": [
+        "immutable-goal-schema",
+        "agent-ecosystem-ownership"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --with pydantic python3 skills/shame/scripts/immutable_goal_schema.py validate skills/shame/immutable_goal.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"valid\": true",
+          "\"component_count\": 16"
+        ]
+      }
+    },
     {
       "name": "status-guard-data-first-static-and-live-check",
       "type": "adversarial",
@@ -2732,6 +2774,28 @@
           "\"ok\":true"
         ]
       }
+    },
+    {
+      "name": "fake-proof-path-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.proof_paths_must_exist"
+      ],
+      "seams": [
+        "status-json-check",
+        "proof-readback"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "rm -f /tmp/shame-fake-proof-missing.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/shame-fake-proof-missing.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-fake-proof.json; test $? -eq 1 && grep -q proof_path_missing /tmp/sj-fake-proof.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
     }
   ],
   "seams": [

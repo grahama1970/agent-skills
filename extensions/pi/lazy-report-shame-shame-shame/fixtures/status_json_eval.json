@@ -66,7 +66,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'work.\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
+        "printf ok >/tmp/x; printf 'work.\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
       ],
       "expected": {
         "exit_code": 0
@@ -266,10 +266,32 @@
       "expected": {
         "exit_code": 0
       }
+    },
+    {
+      "name": "fake-proof-path-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.proof_paths_must_exist"
+      ],
+      "seams": [
+        "status-json-check",
+        "proof-readback"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "rm -f /tmp/shame-fake-proof-missing.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/shame-fake-proof-missing.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-fake-proof.json; test $? -eq 1 && grep -q proof_path_missing /tmp/sj-fake-proof.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
     }
   ],
   "claims": {
-    "proves": "JSON-first status checking: pi.agent_status.v1 validated by pydantic against the triage-error catalog; ambiguous blocker labels rejected; no prose/regex classification."
+    "proves": "JSON-first status checking: pi.agent_status.v1 validated by pydantic against the triage-error catalog; ambiguous blocker labels rejected; no prose/regex classification. Proof[] paths are read back from disk before a done status can pass."
   },
   "capability_claims": [
     {
@@ -359,6 +381,14 @@
       "evidence_required": {
         "deterministic": true,
         "real_world": true
+      }
+    },
+    {
+      "id": "shame.proof_paths_must_exist",
+      "description": "pydantic-valid done status cannot cite fake proof paths; proof[] entries must exist on disk",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
       }
     }
   ],

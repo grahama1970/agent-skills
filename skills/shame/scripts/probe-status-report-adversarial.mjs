@@ -5,6 +5,8 @@ import { existsSync, writeFileSync } from 'node:fs';
 const checker = process.env.REPORT_CHECK
   || '/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs';
 const mode = process.argv[2] || 'list';
+writeFileSync('/tmp/proof.json', '{"ok":true}\n');
+writeFileSync('/tmp/proof.txt', 'ok\n');
 
 function status(overrides = {}) {
   return JSON.stringify({
@@ -149,12 +151,18 @@ const dataInvalidModes = new Set([
   'trailing-reference-after-json',
   'trailing-template-after-json',
   'status-report-after-json',
+  'bdo-reversed-what-remains',
+  'inline-css-bidi-override',
+  'bdo-ancestor-reversed-what-remains',
+  'css-bidi-ancestor-reversed-what-remains',
 ]);
 
 for (const [name, c] of Object.entries(cases)) {
   if (!dataInvalidModes.has(name)) {
     c.expect = 'pass';
     c.reason = null;
+  } else if (new Set(['bdo-reversed-what-remains', 'inline-css-bidi-override', 'bdo-ancestor-reversed-what-remains', 'css-bidi-ancestor-reversed-what-remains']).has(name)) {
+    c.reason = 'proof_path_missing';
   } else if (name === 'pre-json-fence'
       || String(c.reason || '').startsWith('status_report_')
       || String(c.reason || '').startsWith('banned_')

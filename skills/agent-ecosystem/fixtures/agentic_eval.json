@@ -38,6 +38,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "agent_ecosystem.shame_immutable_goal_contract",
+      "description": "agent-ecosystem names the shame immutable goal and each ecosystem component boundary obligation.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -60,9 +68,34 @@
   ],
   "cases": [
     {
+      "name": "shame-immutable-goal-mentioned-with-all-components",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "agent_ecosystem.shame_immutable_goal_contract"
+      ],
+      "seams": [
+        "agent-ecosystem-skill-doc",
+        "shame-immutable-goal"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && python3 - <<'PY2'\nfrom pathlib import Path\ntext=Path('skills/agent-ecosystem/SKILL.md').read_text()\nrequired=['shame-deterministic-instruction-obedience-v1','skills/shame/immutable_goal.json','project agents','triage-error','shame','lazy-report-shame-shame-shame extension','status-json-check.mjs','agent_status_schema.py','compile-status-command.mjs','agentic-evals','ask','tau','project-watchdog','ops-herdr','ponytail','Memory','agent-ecosystem','goal-helper']\nmissing=[item for item in required if item not in text]\nif missing:\n    raise SystemExit('missing '+repr(missing))\nprint('SHAME_IMMUTABLE_GOAL_ECOSYSTEM_OK')\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SHAME_IMMUTABLE_GOAL_ECOSYSTEM_OK"
+        ]
+      }
+    },
+    {
       "name": "valid-envelope-passes",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "ecosystem.envelope_valid_passes"
@@ -83,7 +116,7 @@
     {
       "name": "ambiguous-triage-code-rejects",
       "type": "negative",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "ecosystem.ambiguous_triage_code_rejects"
@@ -104,7 +137,7 @@
     {
       "name": "extra-fields-reject",
       "type": "negative",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "ecosystem.extra_fields_reject"
@@ -125,7 +158,7 @@
     {
       "name": "graph-retrievable",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "ecosystem.graph_retrievable"
@@ -146,7 +179,7 @@
     {
       "name": "parent-refs-without-goal-hash-reject",
       "type": "negative",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "ecosystem.envelope_valid_passes"
@@ -167,7 +200,7 @@
     {
       "name": "payload-schema-mismatch-rejects",
       "type": "negative",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "ecosystem.envelope_valid_passes"

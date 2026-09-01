@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 const checker = process.argv[2] || 'extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs';
@@ -44,6 +44,7 @@ function run(input) {
   return { status: r.status, parsed, stdout: r.stdout, stderr: r.stderr };
 }
 
+writeFileSync('/tmp/data-first-proof.json', '{"ok":true}\n');
 const valid = JSON.stringify({
   schema: 'pi.agent_status.v1',
   goal: 'data first guard',

@@ -1,0 +1,167 @@
+{
+  "schema": "shame.immutable_goal.v1",
+  "goal_id": "shame-deterministic-instruction-obedience-v1",
+  "goal_hash": "sha256:47e3bdfa4459efe35a249218b3e69defff93bf99e5dae2043c62e0946ee80972",
+  "outcome": "Make it impossible for project agents to ignore explicit instructions by converting instruction-obedience and completion-reporting into typed pydantic-validated contracts, deterministic extension gates, and retained agentic evals; prose is display only and cannot decide success.",
+  "primary_proof": {
+    "command": "cd /home/graham/workspace/experiments/agent-skills && uv run --with pydantic python3 skills/shame/scripts/immutable_goal_schema.py validate skills/shame/immutable_goal.json && skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --output /tmp/shame-agentic-eval.json",
+    "expected": "validator exits 0 and agentic-evals reports READY with zero FAIL/BLOCKED cases"
+  },
+  "completion_criteria": [
+    "Every guarded project-agent completion report ends with one pydantic-valid pi.agent_status.v1 JSON object.",
+    "A valid status object cannot encode done with hidden unfinished work, ambiguous failure labels, missing state payloads, missing changed, or done without verified/proof fields.",
+    "A valid status object cannot rely on model-authored prose for status truth; the extension renders the visible Status Report from validated JSON.",
+    "A valid status object with not_done is only legal as state=continuing and must carry not_done[0].next_command for deterministic follow-up.",
+    "Retained agentic-evals fail if status validity returns to regex/prose policy or if the pydantic contract is weakened.",
+    "Boundary handoffs use pi.receipt_envelope.v1 or owner-specific typed receipts where authority changes."
+  ],
+  "allowed_scope": [
+    "skills/shame/**",
+    "extensions/pi/lazy-report-shame-shame-shame/**",
+    "skills/agent-ecosystem/**",
+    "skills/triage-error/failure_codes.json when new canonical failure codes are required",
+    "ask/tau/project-watchdog/ops-herdr integration points only when needed to carry typed status, receipts, or continuation ledgers"
+  ],
+  "forbidden_drift": [
+    "Do not replace pydantic validation with LLM judgment, regex status policy, or model-authored prose checks.",
+    "Do not treat commit, push, branch, issue, or reviewer prose as completion proof without a typed status object and readback evidence.",
+    "Do not add dashboards, reports, or classifier loops before the deterministic status contract and retained evals pass.",
+    "Do not bypass a rejected status by disabling the guard, deleting eval cases, or weakening schema fields."
+  ],
+  "retry_stop_rule": {
+    "attempts_per_blocker": 2,
+    "stop_condition": "If the same blocker survives two focused attempts, emit state=needs_human with one exact question or state=failed with a triage-error code and proof artifacts; do not keep retrying from stale context."
+  },
+  "ecosystem_must": [
+    {
+      "component": "project agents",
+      "must": [
+        "MUST treat explicit operator instructions as standing constraints.",
+        "MUST end guarded mutating or self-correction turns with one valid pi.agent_status.v1 JSON object.",
+        "MUST use state=continuing with not_done[0].next_command when agent-executable work remains.",
+        "MUST use state=needs_human only for one exact human action and state=failed only with a triage-error code.",
+        "MUST not claim completion from prose, commits, pushes, tests, or reviewer opinion without typed evidence."
+      ]
+    },
+    {
+      "component": "shame skill",
+      "must": [
+        "MUST own pi.agent_status.v1 and this immutable goal contract.",
+        "MUST record human labels as training examples with readback through Memory when enabled.",
+        "MUST require retained agentic-evals for every enforcement change.",
+        "MUST keep prose display subordinate to pydantic-valid status data."
+      ]
+    },
+    {
+      "component": "lazy-report-shame-shame-shame extension",
+      "must": [
+        "MUST reject missing, invalid, duplicate-key, or trailing-content status JSON on guarded turns.",
+        "MUST strip model-authored status prose and raw JSON from accepted output.",
+        "MUST render the visible Status Report from validated pi.agent_status.v1 data.",
+        "MUST queue compiled continuing or needs_* follow-up commands deterministically.",
+        "MUST write pending review packets for rejected candidates."
+      ]
+    },
+    {
+      "component": "status-json-check.mjs",
+      "must": [
+        "MUST only extract the final status JSON, reject duplicate keys/trailing content, and invoke the pydantic validator.",
+        "MUST NOT decide status truth from regexes, prose headings, markdown, HTML, or LLM judgment.",
+        "MUST return the validated status object to the extension renderer."
+      ]
+    },
+    {
+      "component": "agent_status_schema.py",
+      "must": [
+        "MUST use pydantic with extra=forbid.",
+        "MUST make invalid states unrepresentable: done needs verified/proof and empty not_done; continuing needs not_done[].next_command; not_done is only legal with continuing.",
+        "MUST reject ambiguous failure labels unless they are triage-error catalog codes or deterministic minted *_unclassified_<8hex> codes.",
+        "MUST keep changed non-empty for every report."
+      ]
+    },
+    {
+      "component": "compile-status-command.mjs",
+      "must": [
+        "MUST compile continuing and needs_* payloads into exact runnable commands with no interpretation.",
+        "MUST compile done, needs_human, and failed to no automatic command."
+      ]
+    },
+    {
+      "component": "agentic-evals",
+      "must": [
+        "MUST fail if regex/prose status policy returns.",
+        "MUST fail if pydantic status invariants are weakened.",
+        "MUST include real_world deterministic cases for extension, schema, compiler, and Memory-backed label capture paths."
+      ]
+    },
+    {
+      "component": "agent-ecosystem",
+      "must": [
+        "MUST publish component ownership and authority boundaries.",
+        "MUST use pi.receipt_envelope.v1 for authority-changing dispatch, handoff, acceptance, escalation, closure, and durable failure.",
+        "MUST state that pydantic proves structure and consumers must separately resolve referenced evidence."
+      ]
+    },
+    {
+      "component": "triage-error",
+      "must": [
+        "MUST own the canonical failure-code vocabulary.",
+        "MUST mint deterministic *_unclassified_<8hex> codes for unmatched signals.",
+        "MUST prevent generic terminal failure labels from becoming valid ecosystem decisions."
+      ]
+    },
+    {
+      "component": "ask",
+      "must": [
+        "MUST consume typed needs_* status payloads instead of informal escalation prose.",
+        "MUST compile escalation requests into typed Tau DAG contracts or recovery packets."
+      ]
+    },
+    {
+      "component": "tau",
+      "must": [
+        "MUST own immutable goal hashes and DAG acceptance receipts.",
+        "MUST emit typed node receipts and handoffs that can embed or reference pi.agent_status.v1.",
+        "MUST not let reviewer prose replace acceptance receipts."
+      ]
+    },
+    {
+      "component": "project-watchdog",
+      "must": [
+        "MUST create/read continuation ledgers, proof gates, and locks for active project work.",
+        "MUST prevent done reports when machine-readable tickets, gates, or next steps remain unresolved.",
+        "MUST route durable failures through typed triage/status receipts."
+      ]
+    },
+    {
+      "component": "ops-herdr",
+      "must": [
+        "MUST transport cross-session state through typed inbox/dead-letter records.",
+        "MUST use triage-error codes for dead letters rather than vague blocked prose."
+      ]
+    },
+    {
+      "component": "Memory",
+      "must": [
+        "MUST store shame training examples, triage resolutions, and project knowledge with readback.",
+        "MUST treat recalls as observations, not completion receipts.",
+        "MUST not be used to bypass typed status validation."
+      ]
+    },
+    {
+      "component": "ponytail",
+      "must": [
+        "MUST shape generation toward minimal code only.",
+        "MUST not override pydantic status, receipt, proof, or eval requirements."
+      ]
+    },
+    {
+      "component": "goal-helper",
+      "must": [
+        "MUST define proof surface, completion criteria, allowed scope, forbidden drift, retry budget, and stop condition for this immutable goal.",
+        "MUST keep success tied to observed behavior rather than agent activity."
+      ]
+    }
+  ],
+  "final_report_rule": "A final report may claim this immutable goal is met only after the primary proof passes and the report cites the produced eval artifact plus any remaining proof-boundary limitations."
+}

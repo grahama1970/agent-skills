@@ -37,7 +37,7 @@ Capture bad agent status updates into a JSONL training set, the structured `sham
 
 This is a recording skill, not a scolding skill. Do not generate essays about agent behavior. Store the labeled example and return the receipt.
 
-`$shame` is also a self-correction trigger for the installed Pi extension. The extension is data-first: it never classifies prose and never uses LLM judgment over user/assistant text. A mutating or guard-forced turn must end with a fenced ```json block containing one valid `pi.agent_status.v1` object. The extension validates that JSON with the pydantic model in `scripts/agent_status_schema.py`, compiles `continuing.not_done[].next_command` into the next follow-up command, strips the raw JSON from the visible answer, and renders the human `Status Report` itself. A rejection shows a correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate. After two `state=failed` reports with the same goal plus triage fingerprint, the extension blocks another stale failure report until the agent either asks one plain human question, cites valid `debugger.proof.v1` breakpoint/local-state proof, or cites a `lazy_report_shame.debugger_failure_handoff.v1` file with exact file:line and debugger error.
+`$shame` is also a self-correction trigger for the installed Pi extension. The immutable goal is defined in `immutable_goal.json` and validated by `scripts/immutable_goal_schema.py`: make it impossible for project agents to ignore explicit instructions by converting instruction-obedience and completion-reporting into typed pydantic-validated contracts, deterministic extension gates, and retained agentic evals; prose is display only and cannot decide success. The extension is data-first: it never classifies prose and never uses LLM judgment over user/assistant text. A mutating or guard-forced turn must end with a fenced ```json block containing one valid `pi.agent_status.v1` object. The extension validates that JSON with the pydantic model in `scripts/agent_status_schema.py`, compiles `continuing.not_done[].next_command` into the next follow-up command, strips the raw JSON from the visible answer, and renders the human `Status Report` itself. A rejection shows a correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate. After two `state=failed` reports with the same goal plus triage fingerprint, the extension blocks another stale failure report until the agent either asks one plain human question, cites valid `debugger.proof.v1` breakpoint/local-state proof, or cites a `lazy_report_shame.debugger_failure_handoff.v1` file with exact file:line and debugger error.
 
 Missing per-feature `$agentic-evals` coverage is shame. For every new feature, add or update a retained `$agentic-evals` fixture, run it, and cite the receipt before reporting the feature done. Leaving relevant files, skills, or project changes uncommitted or unpushed when no external blocker exists is also shame.
 
@@ -83,7 +83,7 @@ Two invariants hold for every report regardless of state: `changed` must be non-
 
 `compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension queues the compiled command as a follow-up on `message_end`.
 
-The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the final `pi.agent_status.v1` JSON remains the typed contract the checker enforces.
+The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the final `pi.agent_status.v1` JSON remains the typed contract the checker enforces. For `state=done`, every `proof[]` entry must be an existing local file or directory, so a pydantic-valid object cannot cite a fake receipt path.
 
 The pending review packet is overwritten on each new rejected candidate:
 
@@ -172,14 +172,16 @@ Each line is one JSON object:
 
 ## Agentic evals
 
-Run the retained eval before changing the CLI contract:
+Run the immutable-goal validator and retained eval before changing the CLI contract:
 
 ```bash
 cd /home/graham/workspace/experiments/agent-skills
+uv run --with pydantic python3 skills/shame/scripts/immutable_goal_schema.py validate skills/shame/immutable_goal.json
 skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --output /tmp/shame-agentic-eval.json
 ```
 
 The fixture must prove:
+- `immutable_goal.json` remains pydantic-valid and names every ecosystem component plus what it MUST do;
 - local JSONL capture works without Memory (`--no-memory`);
 - live Memory capture writes to `shame_training_examples` and reads the same `_key` back;
 - related examples are recallable through `$memory recall` from `retrieval_text` and tags;
@@ -188,6 +190,7 @@ The fixture must prove:
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
 - every valid `pi.agent_status.v1` report can be rendered into a visible `Status Report` by the extension;
+- fake `proof[]` receipt paths are rejected after pydantic validation and before visible report rendering;
 - JSON-only reports are accepted after pydantic validation, model-authored status prose is stripped before display, and a static/live guard fails if `status-json-check.mjs` reintroduces regex/prose status policy;
 - repeated same-fingerprint failures are blocked unless the next report asks one plain human question, cites `debugger.proof.v1`, or cites an exact file:line debugger failure handoff;
 - extension rejection notices are correction packets naming the pydantic/checker reason rather than bare gate JSON;

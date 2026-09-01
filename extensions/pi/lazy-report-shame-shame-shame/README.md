@@ -22,12 +22,13 @@ On assistant `message_end`, it:
 2. ignores tool-call-only assistant messages with no text, so intermediate tool use is not rejected as a missing report;
 3. runs `status-json-check.mjs` as a deterministic checker;
 4. validates the final `pi.agent_status.v1` JSON with pydantic instead of classifying prose;
-5. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final `state=done` report while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
-6. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
-7. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
-8. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
-9. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
-10. refuses to queue a second automatic retry for the same originating turn.
+5. rejects any `proof[]` entry that does not exist on disk;
+6. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final `state=done` report while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
+7. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
+8. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
+9. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
+10. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
+11. refuses to queue a second automatic retry for the same originating turn.
 
 The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
 
@@ -101,7 +102,7 @@ The retained `$agentic-evals` include `skills/shame/scripts/check-status-guard-d
 
 ## Required report shape
 
-A guarded answer must end with a final fenced `json` block containing one `pi.agent_status.v1` object. The extension renders the visible report from that data.
+A guarded answer must end with a final fenced `json` block containing one `pi.agent_status.v1` object. For `state=done`, every `proof[]` entry must be an existing local file or directory. The extension renders the visible report from that data.
 
 Rules:
 

@@ -33,6 +33,14 @@ One layered governance loop. Each component owns exactly one concern; they
 couple only through typed JSON contracts, never by importing each other's
 state machines.
 
+The immutable `$shame` goal is `shame-deterministic-instruction-obedience-v1`
+(`skills/shame/immutable_goal.json`): make it impossible for project agents to
+ignore explicit instructions by converting instruction-obedience and completion
+reporting into typed pydantic-validated contracts, deterministic extension
+gates, and retained agentic evals. Prose is display only and cannot decide
+success. Every ecosystem member named below MUST preserve that goal at its
+boundary.
+
 ## The graph
 
 ![Agent-governance ecosystem](./ecosystem.svg)
@@ -79,16 +87,24 @@ flowchart TB
 
 ## Ownership table
 
-| Component | Owns | Emits | Consumes |
-| --- | --- | --- | --- |
-| triage-error | failure vocabulary (`failure_codes.json`) | `{code, cause, next_command}` | raw error text from any layer |
-| shame | turn status (`pi.agent_status.v1`) | status objects, training examples | triage codes, human labels |
-| ask | intent-to-DAG compilation | `tau.dag_contract.v1`, recovery packets | status escalation payloads |
-| tau | DAG execution and acceptance | node receipts, `tau.agent_handoff.v1/v2`, goal hashes | DAG contracts, embedded status objects |
-| project-watchdog | scheduled dispatch | tick receipts, proof gates, locks | GitHub tickets, tau verdicts |
-| ops-herdr | cross-session transport | inbox records, dead-letters | triage codes |
-| ponytail | generation minimalism | `ponytail:` debt comments (not receipts) | nothing from the receipt world |
-| Memory | recall | store/recall readback responses (not envelope receipts; recalls are observations, never wrapped) | everything durable |
+| Component | Owns | Emits | Consumes | MUST for the `$shame` immutable goal |
+| --- | --- | --- | --- | --- |
+| project agents | instruction-obedience at the turn boundary | `pi.agent_status.v1` reports | operator instructions, tool results, receipts | MUST report guarded work as typed status data, use `continuing.not_done[].next_command` for agent-executable unfinished work, and never treat prose/commits/reviewer opinion as completion proof. |
+| triage-error | failure vocabulary (`failure_codes.json`) | `{code, cause, next_command}` | raw error text from any layer | MUST make one raw signal map to one catalog or minted code; vague terminal labels cannot become valid decisions. |
+| shame | turn status (`pi.agent_status.v1`) and `shame.immutable_goal.v1` | status objects, immutable goal, training examples | triage codes, human labels | MUST keep status truth pydantic-validated, prose-display-only, and eval-gated. |
+| lazy-report-shame-shame-shame extension | Pi `message_end` enforcement | rejection packets, rendered status, follow-up commands | final status JSON, continuation ledgers | MUST reject missing/invalid status JSON, strip model-authored status prose, render from validated data, and queue compiled continuation/escalation commands. |
+| status-json-check.mjs | final-status extraction and validator invocation | checker result with validated status object | assistant text | MUST not decide status validity with regex, prose headings, markdown, HTML, or LLM judgment. |
+| agent_status_schema.py | pydantic status legality | parse pass/fail | final status JSON | MUST make invalid status states unrepresentable with `extra=forbid`, typed state payloads, canonical triage codes, and `not_done` only on `continuing`. |
+| compile-status-command.mjs | typed status-to-command compilation | exact follow-up command or no command | pydantic-valid status object | MUST compile `continuing`/`needs_*` payloads mechanically and compile terminal/human states to no auto-command. |
+| agentic-evals | retained regression proof | readiness reports | fixtures and commands | MUST fail if regex/prose status policy returns or pydantic status invariants are weakened. |
+| ask | intent-to-DAG compilation | `tau.dag_contract.v1`, recovery packets | status escalation payloads | MUST consume typed `needs_*` payloads instead of informal escalation prose. |
+| tau | DAG execution and acceptance | node receipts, `tau.agent_handoff.v1/v2`, goal hashes | DAG contracts, embedded status objects | MUST own immutable goal hashes and typed acceptance receipts; reviewer prose cannot replace acceptance. |
+| project-watchdog | scheduled dispatch | tick receipts, proof gates, locks, continuation ledgers | GitHub tickets, tau verdicts | MUST expose machine-readable open work so `done` can fail while tickets/gates/next steps remain unresolved. |
+| ops-herdr | cross-session transport | inbox records, dead-letters | triage codes | MUST carry cross-session failure/state as typed inbox or dead-letter records with triage codes. |
+| ponytail | generation minimalism | `ponytail:` debt comments (not receipts) | nothing from the receipt world | MUST not override status, receipt, proof, or eval requirements. |
+| Memory | recall | store/recall readback responses (not envelope receipts; recalls are observations, never wrapped) | everything durable | MUST store shame examples, triage resolutions, and project knowledge with readback; recalls are observations, not completion receipts. |
+| agent-ecosystem | component ownership and receipt boundaries | `pi.receipt_envelope.v1` validation | boundary payloads | MUST publish the ownership map and require envelope wrapping at authority-changing boundaries. |
+| goal-helper | proof-centered goal shape | immutable goal prompt/checklist | human goal text | MUST keep success tied to primary proof, completion criteria, allowed scope, forbidden drift, retry budget, and stop condition. |
 
 ## pi.receipt_envelope.v1 - the boundary envelope
 
@@ -150,7 +166,7 @@ when it emits or validates the same name, shape, and semantics as the owner.
 | `cause` / `next_command` | plain string / exact runnable command | triage-error | every consumer of a triage classification; `next_command` is also the shame `continuing` keep-going field |
 | `goal_hash` | `sha256:` + 64 lowercase hex | tau (immutable goal packet) | shame status (optional), envelope (optional), every tau node receipt |
 | `verified[]` | `{command, result}` pairs | shame | done-state proof everywhere a status object is embedded |
-| `proof[]` | concrete paths/URLs/ids | shame | status objects; watchdog proof gates name the same artifacts |
+| `proof[]` | concrete paths/URLs/ids; local paths in `pi.agent_status.v1` must exist before `done` passes | shame | status objects; watchdog proof gates name the same artifacts |
 | `parent_refs[]` | `{receipt_id, expected_schema, expected_producer, digest?}` | agent-ecosystem envelope | escalation evidence (replaces ad hoc paths in `needs_webgpt`) |
 | `producer` / `receipt_id` / `emitted_at` | string / stable id / RFC3339 | agent-ecosystem envelope | any boundary-wrapped receipt |
 | `payload_schema` | versioned id; must equal `payload.schema` when the payload declares one | agent-ecosystem envelope | any boundary-wrapped receipt |

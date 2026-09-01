@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "Pi extension feature coverage for lazy-report-shame-shame-shame: mandatory Status Report rendering, strict footer checking, empty tool-turn skip, collaborative rejection notice, pending review packet, /shame show recovery, /shame review fallback, direct label JSONL capture, and one-retry behavior, and explicit $shame extension debug status reports without control-plane false positives, and external-owner reload blockers. Includes 50 WebGPT-derived adversarial status-report attack cases.",
   "claims": {
-    "proves": "The installed-style Pi extension hooks and commands behave as the $shame contract requires under deterministic simulation.",
+    "proves": "The installed-style Pi extension hooks and commands behave as the $shame contract requires under deterministic simulation. Proof[] paths are read back from disk before a done status can pass.",
     "does_not_prove": "Every already-running Pi session has reloaded the extension, human label quality, or future classifier performance."
   },
   "capability_claims": [
@@ -104,6 +104,22 @@
         "deterministic": true,
         "real_world": true
       }
+    },
+    {
+      "id": "shame.immutable_goal_contract",
+      "description": "The shame immutable goal is pydantic-validated and names each ecosystem component plus what it MUST do.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.proof_paths_must_exist",
+      "description": "pydantic-valid done status cannot cite fake proof paths; proof[] entries must exist on disk",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -189,6 +205,32 @@
     }
   ],
   "cases": [
+    {
+      "name": "immutable-goal-contract-validates",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.immutable_goal_contract"
+      ],
+      "seams": [
+        "immutable-goal-schema",
+        "agent-ecosystem-ownership"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && uv run --with pydantic python3 skills/shame/scripts/immutable_goal_schema.py validate skills/shame/immutable_goal.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"valid\": true",
+          "\"component_count\": 16"
+        ]
+      }
+    },
     {
       "name": "status-guard-data-first-static-and-live-check",
       "type": "adversarial",
@@ -382,7 +424,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs && cat > /tmp/lrsss-shame-ticket-status.txt <<'EOF'\nStatus Report\n- Goal: check $shame ticket proposals\n- State: done\n- Verified: jq returned matching_shame_issue_count: 0 and summary_ticket_count: 7 -> PASS\n- Proof: /tmp/shame-assigned-ticket-check.json\n- Proof: /tmp/shame-review-ask/ticket-previews-summary.json\n\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"check $shame ticket proposals\",\"state\":\"done\",\"changed\":[\"fixture status\"],\"verified\":[{\"command\":\"jq returned matching_shame_issue_count: 0 and summary_ticket_count: 7\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-assigned-ticket-check.json\",\"/tmp/shame-review-ask/ticket-previews-summary.json\"]}\n```\nEOF\nLRSSS_STRICT_STATUS=1 node $REPORT_CHECK </tmp/lrsss-shame-ticket-status.txt >/tmp/lrsss-shame-ticket-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-ticket-status-allowed.json >/dev/null && echo SHAME_SKILL_TICKET_STATUS_ALLOWED"
+        "cd /home/graham/workspace/experiments/agent-skills && mkdir -p /tmp/shame-review-ask && printf '{}\\n' >/tmp/shame-assigned-ticket-check.json && printf '{}\\n' >/tmp/shame-review-ask/ticket-previews-summary.json && skills/shame/run.sh path >/dev/null && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs && cat > /tmp/lrsss-shame-ticket-status.txt <<'EOF'\nStatus Report\n- Goal: check $shame ticket proposals\n- State: done\n- Verified: jq returned matching_shame_issue_count: 0 and summary_ticket_count: 7 -> PASS\n- Proof: /tmp/shame-assigned-ticket-check.json\n- Proof: /tmp/shame-review-ask/ticket-previews-summary.json\n\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"check $shame ticket proposals\",\"state\":\"done\",\"changed\":[\"fixture status\"],\"verified\":[{\"command\":\"jq returned matching_shame_issue_count: 0 and summary_ticket_count: 7\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-assigned-ticket-check.json\",\"/tmp/shame-review-ask/ticket-previews-summary.json\"]}\n```\nEOF\nLRSSS_STRICT_STATUS=1 node $REPORT_CHECK </tmp/lrsss-shame-ticket-status.txt >/tmp/lrsss-shame-ticket-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-ticket-status-allowed.json >/dev/null && echo SHAME_SKILL_TICKET_STATUS_ALLOWED"
       ],
       "expected": {
         "exit_code": 0,
@@ -406,7 +448,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs && cat > /tmp/lrsss-shame-extension-debug-status.txt <<'EOF'\nStatus Report\n- Goal: diagnose $shame feedback-loop\n- State: done\n- Verified: checker probes returned pass -> PASS\n- Proof: /tmp/probe.json\n\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"diagnose $shame feedback-loop\",\"state\":\"done\",\"changed\":[\"fixture status\"],\"verified\":[{\"command\":\"checker probes returned pass\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/probe.json\"]}\n```\nEOF\nLRSSS_STRICT_STATUS=1 LRSSS_USER_TEXT='$shame is putting you into some kind of feedback loop with its pi extension. please diagnose and debug' node $REPORT_CHECK < /tmp/lrsss-shame-extension-debug-status.txt >/tmp/lrsss-shame-extension-debug-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-extension-debug-status-allowed.json >/dev/null && echo SHAME_EXTENSION_DEBUG_STATUS_ALLOWED"
+        "cd /home/graham/workspace/experiments/agent-skills && printf '{}\\n' >/tmp/probe.json && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs && cat > /tmp/lrsss-shame-extension-debug-status.txt <<'EOF'\nStatus Report\n- Goal: diagnose $shame feedback-loop\n- State: done\n- Verified: checker probes returned pass -> PASS\n- Proof: /tmp/probe.json\n\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"diagnose $shame feedback-loop\",\"state\":\"done\",\"changed\":[\"fixture status\"],\"verified\":[{\"command\":\"checker probes returned pass\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/probe.json\"]}\n```\nEOF\nLRSSS_STRICT_STATUS=1 LRSSS_USER_TEXT='$shame is putting you into some kind of feedback loop with its pi extension. please diagnose and debug' node $REPORT_CHECK < /tmp/lrsss-shame-extension-debug-status.txt >/tmp/lrsss-shame-extension-debug-status-allowed.json && jq -e '.decision == \"pass\" and (.footer_failures|length == 0)' /tmp/lrsss-shame-extension-debug-status-allowed.json >/dev/null && echo SHAME_EXTENSION_DEBUG_STATUS_ALLOWED"
       ],
       "expected": {
         "exit_code": 0,
@@ -490,7 +532,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && cat > /tmp/lrsss-owner-reload-fixture.txt <<'EOF'\nStatus Report\n- Goal: reload target Pi TUI after $shame extension update\n- State: needs_human\n- Verified: reload_runtime returned Reload not available in this tool context; no follow-up was queued. -> PASS\n- Verified: skills/triage-error/run.sh classify --text ... wrote /tmp/shame-loaded-runtime-reload-triage.json with code unknown_unclassified_696e5ccd -> PASS\n- Verified: skills/shame/scripts/probe-shame-extension.sh all with LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts produced 9/9 ok:true probe records -> PASS\n- Proof: /tmp/shame-loaded-runtime-reload-triage.json\n- Proof: /tmp/shame-loaded-runtime-installed-extension-probe.jsonl\n- Proof: /tmp/shame-agentic-eval-user-continue.json\n- Proof: /tmp/lrsss-agentic-eval-user-continue.json\n- Needs Human: target Pi TUI owner must run /reload in that TUI because reload is not available from this API/tool context\n\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"reload target Pi TUI after $shame extension update\",\"state\":\"needs_human\",\"changed\":[\"fixture needs human\"],\"verified\":[{\"command\":\"reload_runtime returned Reload not available in this tool context; no follow-up was queued.\",\"result\":\"PASS\"},{\"command\":\"skills/triage-error/run.sh classify --text ... wrote /tmp/shame-loaded-runtime-reload-triage.json with code unknown_unclassified_696e5ccd\",\"result\":\"PASS\"},{\"command\":\"skills/shame/scripts/probe-shame-extension.sh all with LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts produced 9/9 ok:true probe records\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-loaded-runtime-reload-triage.json\",\"/tmp/shame-loaded-runtime-installed-extension-probe.jsonl\",\"/tmp/shame-agentic-eval-user-continue.json\",\"/tmp/lrsss-agentic-eval-user-continue.json\"],\"needs_human\":{\"action\":\"target Pi TUI owner must run /reload in that TUI\",\"reason\":\"reload is not available from this API/tool context\"}}\n```\nEOF\nLRSSS_STRICT_STATUS=1 node extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs </tmp/lrsss-owner-reload-fixture.txt >/tmp/lrsss-owner-reload-fixture-report.json && node - <<'NODE'\nconst fs = require('fs');\nconst d = JSON.parse(fs.readFileSync('/tmp/lrsss-owner-reload-fixture-report.json', 'utf8'));\nif (d.decision !== 'pass') throw new Error('expected pass');\nif ((d.footer_failures || []).length) throw new Error('unexpected footer failures ' + d.footer_failures.join(','));\nif (d.checker_version !== '2026-09-01.status-json-data-first.v4') throw new Error('wrong checker version ' + d.checker_version);\nconsole.log('OWNER_RELOAD_BLOCKER_ALLOWED_OK');\nNODE"
+        "cd /home/graham/workspace/experiments/agent-skills && cat > /tmp/lrsss-owner-reload-fixture.txt <<'EOF'\nStatus Report\n- Goal: reload target Pi TUI after $shame extension update\n- State: needs_human\n- Verified: reload_runtime returned Reload not available in this tool context; no follow-up was queued. -> PASS\n- Verified: skills/triage-error/run.sh classify --text ... wrote /tmp/shame-loaded-runtime-reload-triage.json with code unknown_unclassified_696e5ccd -> PASS\n- Verified: skills/shame/scripts/probe-shame-extension.sh all with LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts produced 9/9 ok:true probe records -> PASS\n- Proof: /tmp/shame-loaded-runtime-reload-triage.json\n- Proof: /tmp/shame-loaded-runtime-installed-extension-probe.jsonl\n- Proof: /tmp/shame-agentic-eval-user-continue.json\n- Proof: /tmp/lrsss-agentic-eval-user-continue.json\n- Needs Human: target Pi TUI owner must run /reload in that TUI because reload is not available from this API/tool context\n\n```json\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"reload target Pi TUI after $shame extension update\",\"state\":\"needs_human\",\"changed\":[\"fixture needs human\"],\"verified\":[{\"command\":\"reload_runtime returned Reload not available in this tool context; no follow-up was queued.\",\"result\":\"PASS\"},{\"command\":\"skills/triage-error/run.sh classify --text ... wrote /tmp/shame-loaded-runtime-reload-triage.json with code unknown_unclassified_696e5ccd\",\"result\":\"PASS\"},{\"command\":\"skills/shame/scripts/probe-shame-extension.sh all with LAZY_REPORT_SHAME_INDEX=/home/graham/.pi/agent/extensions/lazy-report-shame-shame-shame/index.ts produced 9/9 ok:true probe records\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-loaded-runtime-reload-triage.json\",\"/tmp/shame-loaded-runtime-installed-extension-probe.jsonl\",\"/tmp/shame-agentic-eval-user-continue.json\",\"/tmp/lrsss-agentic-eval-user-continue.json\"],\"needs_human\":{\"action\":\"target Pi TUI owner must run /reload in that TUI\",\"reason\":\"reload is not available from this API/tool context\"}}\n```\nEOF\nLRSSS_STRICT_STATUS=1 node extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs </tmp/lrsss-owner-reload-fixture.txt >/tmp/lrsss-owner-reload-fixture-report.json && node - <<'NODE'\nconst fs = require('fs');\nconst d = JSON.parse(fs.readFileSync('/tmp/lrsss-owner-reload-fixture-report.json', 'utf8'));\nif (d.decision !== 'pass') throw new Error('expected pass');\nif ((d.footer_failures || []).length) throw new Error('unexpected footer failures ' + d.footer_failures.join(','));\nif (d.checker_version !== '2026-09-01.status-json-data-first.v5') throw new Error('wrong checker version ' + d.checker_version);\nconsole.log('OWNER_RELOAD_BLOCKER_ALLOWED_OK');\nNODE"
       ],
       "expected": {
         "exit_code": 0,
@@ -2785,6 +2827,28 @@
           "\"ok\":true"
         ]
       }
+    },
+    {
+      "name": "fake-proof-path-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.proof_paths_must_exist"
+      ],
+      "seams": [
+        "status-json-check",
+        "proof-readback"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "rm -f /tmp/shame-fake-proof-missing.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/shame-fake-proof-missing.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-fake-proof.json; test $? -eq 1 && grep -q proof_path_missing /tmp/sj-fake-proof.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
     }
   ]
 }
