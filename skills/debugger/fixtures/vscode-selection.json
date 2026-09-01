@@ -3,9 +3,9 @@
   "skill": "debugger",
   "trials": 2,
   "eval_tier": "standard",
-  "proof_scope": "VS Code selected-range reveal: the debugger bridge opens a file in the trusted workspace, selects the requested JSON/code range with VS Code API calls, reveals it in the editor, and writes a readback receipt proving the active editor selection matched the requested range. Capability-gated on an open trusted VS Code workspace with the debugger bridge extension.",
+  "proof_scope": "VS Code selected-range reveal: the debugger bridge opens a file in the trusted workspace, selects the requested JSON/code range with VS Code API calls, reveals it in the editor, and writes a readback receipt proving the active editor selection matched the requested range. Capability-gated on an open trusted VS Code workspace with the debugger bridge extension. Default reveal must preserve the user's active window; frontmost/placement requires explicit flags.",
   "claims": {
-    "proves": "run.sh open --bridge requests a VS Code bridge reveal action, and the bridge uses VS Code editor APIs to set and read back the exact selected range when the live bridge is available; absent bridge/workspace fails closed instead of claiming selection",
+    "proves": "run.sh open --bridge requests a VS Code bridge reveal action, selects the exact range, preserves focus by default, supports explicit frontmost/window placement, and fails closed when the bridge is absent",
     "does_not_prove": "that the human looked at the highlighted range, or semantic correctness of the selected JSON field"
   },
   "cases": [
@@ -27,7 +27,30 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "SELECTED report.json:3:26-3:34 -- VS Code API selection active; frontmost"
+          "SELECTED report.json:3:26-3:34 -- VS Code API selection active; window unchanged"
+        ]
+      }
+    },
+    {
+      "name": "default-preserves-active-window-focus",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Default bridge reveal must not activate VS Code; it selects in VS Code with preserveFocus and leaves the user active window unchanged.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; command -v xdotool >/dev/null || { echo BRIDGE_BLOCKED; exit 0; }; command -v wmctrl >/dev/null || { echo BRIDGE_BLOCKED; exit 0; }; TERM_WIN=$(wmctrl -l | awk '/Konsole|herdr/ {print $1; exit}'); [ -z \"$TERM_WIN\" ] && { echo BRIDGE_BLOCKED; exit 0; }; wmctrl -ia \"$TERM_WIN\"; sleep 0.2; BEFORE=$(xdotool getactivewindow); D=\"$WS/.vscode/debugger-bridge/selection-eval\"; mkdir -p \"$D\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; OUT=$(../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --bridge --workspace \"$WS\" --wait-seconds 12); AFTER=$(xdotool getactivewindow); printf '%s\n' \"$OUT\"; [ \"$BEFORE\" = \"$AFTER\" ] && echo FOCUS_PRESERVED || { echo \"FOCUS_STOLEN before=$BEFORE after=$AFTER\"; exit 1; }"
+      ],
+      "timeout_seconds": 40,
+      "blocked_when_stdout_contains": [
+        "BRIDGE_BLOCKED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SELECTED report.json:3:26-3:34 -- VS Code API selection active; window unchanged",
+          "FOCUS_PRESERVED"
         ]
       }
     },
@@ -40,7 +63,7 @@
       "command": [
         "bash",
         "-c",
-        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; D=\"$WS/.vscode/debugger-bridge/selection-eval\"; mkdir -p \"$D\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; ../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --bridge --workspace \"$WS\" --monitor right --window-layout half-vertical --wait-seconds 12"
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; D=\"$WS/.vscode/debugger-bridge/selection-eval\"; mkdir -p \"$D\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; ../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --bridge --workspace \"$WS\" --monitor right --window-layout half-vertical --place-window --frontmost --wait-seconds 12"
       ],
       "timeout_seconds": 40,
       "blocked_when_stdout_contains": [

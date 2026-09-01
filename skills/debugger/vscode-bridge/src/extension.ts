@@ -548,6 +548,7 @@ async function revealRequestedRange(folder: vscode.WorkspaceFolder, request: Bri
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
   const editor = await vscode.window.showTextDocument(document, {
     preview: false,
+    preserveFocus: true,
     selection,
   });
   editor.selection = selection;
@@ -559,7 +560,7 @@ async function revealRequestedRange(folder: vscode.WorkspaceFolder, request: Bri
     endLine: target.endLine ?? target.line,
     endColumn: target.endColumn ?? target.column ?? 1,
     selected: editor.selection.isEqual(selection),
-    api: ['workspace.openTextDocument', 'window.showTextDocument', 'TextEditor.selection', 'TextEditor.revealRange'],
+    api: ['workspace.openTextDocument', 'window.showTextDocument(preserveFocus)', 'TextEditor.selection', 'TextEditor.revealRange'],
   };
 }
 
