@@ -3,6 +3,7 @@ set -euo pipefail
 
 AGENT_SKILLS_ROOT="${AGENT_SKILLS_ROOT:-$HOME/workspace/experiments/agent-skills}"
 KB_ROOT="${KB_ROOT:-$HOME/workspace/experiments/openai-security-kb}"
+FETCH_ROOT="${FETCH_ROOT:-$HOME/workspace/experiments/openai-security-fetch}"
 OPENAI_SPEC_REPO="${OPENAI_SPEC_REPO:-$HOME/workspace/experiments/openai-openapi}"
 CURATE_ROOT="$AGENT_SKILLS_ROOT/skills/curate-client"
 SOURCE_ROOT="$CURATE_ROOT/sources"
@@ -15,11 +16,14 @@ for required in "$FETCHER" "$CONFIG" \
   test -e "$required" || { echo >&2 "missing required path: $required"; exit 2; }
 done
 
+CONTROL_ROOT="$KB_ROOT/.source-control"
+REPORT_ROOT="$KB_ROOT/.reports"
+
 mkdir -p \
-  "$KB_ROOT/fetch" \
+  "$FETCH_ROOT" \
   "$KB_ROOT/knowledge/sources" \
-  "$KB_ROOT/source-control" \
-  "$KB_ROOT/reports"
+  "$CONTROL_ROOT" \
+  "$REPORT_ROOT"
 
 # Pin the official OpenAI OpenAPI repository. Its real specification satisfies
 # curate-client's current OpenAPI/Terraform source gate.
@@ -32,7 +36,7 @@ else
 fi
 
 git -C "$OPENAI_SPEC_REPO" rev-parse HEAD \
-  | tee "$KB_ROOT/source-control/openai-openapi.commit"
+  | tee "$CONTROL_ROOT/openai-openapi.commit"
 test -s "$OPENAI_SPEC_REPO/openapi.yaml"
 
 export FETCHER_EMIT_MARKDOWN=1
@@ -41,7 +45,7 @@ export FETCHER_HTTP_CACHE_DISABLE=1
 
 for lane in primary secondary; do
   manifest="$SOURCE_ROOT/openai-security-${lane}.txt"
-  out="$KB_ROOT/fetch/$lane"
+  out="$FETCH_ROOT/$lane"
 
   "$FETCHER" get-manifest "$manifest" --out "$out"
 
@@ -56,23 +60,23 @@ for lane in primary secondary; do
   rsync -a --delete "$src/" "$KB_ROOT/knowledge/sources/$lane/"
 done
 
-cp "$SOURCE_ROOT/openai-security-primary.txt" "$KB_ROOT/source-control/"
-cp "$SOURCE_ROOT/openai-security-secondary.txt" "$KB_ROOT/source-control/"
-cp "$SOURCE_ROOT/openai-security-reference.txt" "$KB_ROOT/source-control/"
-cp "$SOURCE_ROOT/openai-security-auth-required.txt" "$KB_ROOT/source-control/"
+cp "$SOURCE_ROOT/openai-security-primary.txt" "$CONTROL_ROOT/"
+cp "$SOURCE_ROOT/openai-security-secondary.txt" "$CONTROL_ROOT/"
+cp "$SOURCE_ROOT/openai-security-reference.txt" "$CONTROL_ROOT/"
+cp "$SOURCE_ROOT/openai-security-auth-required.txt" "$CONTROL_ROOT/"
 
 # graph-memory-operator's workspace-ingest contract requires a hygiene review
 # for deprecated, contradictory, moved, or limited guidance before reliance.
 rg -n -i \
   'deprecated|superseded|this content has moved|no longer supported|legacy|retired|known issue|temporary limitation' \
   "$KB_ROOT/knowledge" \
-  | tee "$KB_ROOT/reports/deprecation-and-conflict-scan.txt" || true
+  | tee "$REPORT_ROOT/deprecation-and-conflict-scan.txt" || true
 
 cat >&2 <<NEXT
 Retrieval and staging completed.
 
 REQUIRED HUMAN GATE:
-  Review $KB_ROOT/reports/deprecation-and-conflict-scan.txt
+  Review $REPORT_ROOT/deprecation-and-conflict-scan.txt
   Review every fetcher consumer_summary.json and non-empty junk_results.jsonl.
   Do not ingest until every missing P0 source has an explicit disposition.
 
