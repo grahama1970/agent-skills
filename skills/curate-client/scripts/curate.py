@@ -249,7 +249,9 @@ class CurateClientRecallProbe(BaseModel):
     status_code: int
     found: bool
     confidence: float | int | None = None
+    scope: str = Field(min_length=1)
     item_count: int
+    scoped_item_count: int
     tagged_item_count: int
     returned_keys: list[str]
     ok: bool
@@ -354,6 +356,7 @@ class PlanReceipt(BaseModel):
     curated_sources: list[Any]
     canonical_validation: CanonicalValidationReceipt
     knowledge_files: int
+    graph_memory_repo: str
     scope: str
     writes: bool
 
@@ -381,6 +384,10 @@ class VerifyProbe(BaseModel):
     probe: str
     found: bool | None = None
     client_hit: bool | None = None
+    scope: str | None = None
+    collections: list[str] | None = None
+    tags: list[str] | None = None
+    keys: list[str] | None = None
     confidence: Any | None = None
     error: str | None = None
 
@@ -703,6 +710,7 @@ def cmd_chunks(cfg: dict) -> dict:
 
 def cmd_ingest(cfg: dict) -> dict:
     scope = f"client:{cfg['client']}"
+    memory_repo = Path(str(cfg.get("graph_memory_repo") or MEMORY_REPO)).expanduser().resolve()
     code = (
         "import json;from typer.testing import CliRunner;"
         "from graph_memory.workspace.ingest import app;"
@@ -711,7 +719,7 @@ def cmd_ingest(cfg: dict) -> dict:
     )
     proc = subprocess.run(
         ["uv", "run", "--all-extras", "python", "-c", code],
-        cwd=MEMORY_REPO, capture_output=True, text=True, timeout=1800,
+        cwd=memory_repo, capture_output=True, text=True, timeout=1800,
     )
     if proc.returncode != 0:
         return _validate_pydantic_json(IngestReceipt, {"schema": "curate_client.ingest_receipt.v1", "status": "FAIL", "stderr": proc.stderr[-500:]})
@@ -720,23 +728,29 @@ def cmd_ingest(cfg: dict) -> dict:
 
 
 def cmd_verify(cfg: dict) -> dict:
-    daemon = cfg.get("memory_daemon") or "http://127.0.0.1:8601"
+    daemon = str(cfg.get("memory_daemon") or "http://127.0.0.1:8601").rstrip("/")
+    scope = f"client:{cfg['client']}"
+    collections = [str(item) for item in (cfg.get("memory_recall_collections") or cfg.get("oracle_recall_collections") or ["lessons"])]
+    tags = _oracle_tags(cfg)
     results = []
     ok = True
     for probe in cfg.get("probes") or []:
         req = urllib.request.Request(
             daemon + "/recall",
-            data=json.dumps({"q": f"{cfg['client']} {probe}", "limit": 3}).encode(),
+            data=json.dumps({"q": f"{cfg['client']} {probe}", "scope": scope, "collections": collections, "tags": tags, "k": 10, "threshold": 0.2}).encode(),
             headers={"Content-Type": "application/json"}, method="POST")
         try:
             d = json.loads(urllib.request.urlopen(req, timeout=30).read())
-            hit = bool(d.get("found")) and any(
-                cfg["client"].lower() in json.dumps(i).lower() for i in d.get("items", []))
+            scoped_items = [item for item in d.get("items", []) if isinstance(item, dict) and item.get("scope") == scope]
+            tagged_items = [item for item in scoped_items if not tags or any(tag in (item.get("tags") or []) for tag in tags)]
+            hit = bool(d.get("found")) and bool(tagged_items)
         except Exception as exc:  # daemon down => fail closed with the reason
-            results.append({"probe": probe, "error": str(exc)[:120]})
+            results.append({"probe": probe, "scope": scope, "collections": collections, "tags": tags, "error": str(exc)[:120]})
             ok = False
             continue
         results.append({"probe": probe, "found": d.get("found"), "client_hit": hit,
+                        "scope": scope, "collections": collections, "tags": tags,
+                        "keys": [str(item.get("_key")) for item in tagged_items[:3] if item.get("_key")],
                         "confidence": d.get("confidence")})
         ok = ok and hit
     return _validate_pydantic_json(VerifyReceipt, {"schema": "curate_client.verify_receipt.v1", "status": "PASS" if ok and results else "FAIL", "probes": results})
@@ -1145,27 +1159,31 @@ def cmd_validate_memory_recall(cfg: dict) -> dict[str, Any]:
         }
     pack = prep["prep_pack"]
     daemon = str(cfg.get("memory_daemon") or "http://127.0.0.1:8601").rstrip("/")
+    scope = f"client:{cfg['client']}"
     collections = [str(item) for item in (cfg.get("memory_recall_collections") or cfg.get("oracle_recall_collections") or ["lessons"])]
     tags = _oracle_tags(cfg)
     probes: list[dict[str, Any]] = []
     for oracle in pack.get("question_oracles") or []:
-        body = {"q": oracle.get("canonical_question"), "k": int(cfg.get("memory_recall_k") or 8), "collections": collections, "tags": tags}
+        body = {"q": oracle.get("canonical_question"), "scope": scope, "k": int(cfg.get("memory_recall_k") or 8), "collections": collections, "tags": tags}
         req = urllib.request.Request(daemon + "/recall", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}, method="POST")
         with urllib.request.urlopen(req, timeout=30) as response:
             payload = json.loads(response.read())
             status_code = response.status
         items = [item for item in payload.get("items", []) if isinstance(item, dict)]
-        tagged = [item for item in items if any(tag in (item.get("tags") or []) for tag in tags)]
+        scoped = [item for item in items if item.get("scope") == scope]
+        tagged = [item for item in scoped if any(tag in (item.get("tags") or []) for tag in tags)]
         probes.append({
             "question_id": str(oracle.get("question_id") or "unknown"),
             "canonical_question": str(oracle.get("canonical_question") or ""),
             "status_code": int(status_code),
             "found": bool(payload.get("found")),
             "confidence": payload.get("confidence"),
+            "scope": scope,
             "item_count": len(items),
+            "scoped_item_count": len(scoped),
             "tagged_item_count": len(tagged),
             "returned_keys": [str(item.get("_key")) for item in items if item.get("_key")],
-            "ok": status_code == 200 and bool(payload.get("found")) and bool(tagged),
+            "ok": status_code == 200 and bool(payload.get("found")) and bool(scoped) and bool(tagged),
         })
     receipt = {
         "schema": "curate_client.memory_recall_validation.v1",
@@ -1435,6 +1453,7 @@ def main() -> None:
                "curated_sources": cfg.get("curated_sources") or [],
                "canonical_validation": cmd_validate_canonical(cfg),
                "knowledge_files": len(_knowledge_files(cfg)),
+               "graph_memory_repo": str(Path(str(cfg.get("graph_memory_repo") or MEMORY_REPO)).expanduser().resolve()),
                "scope": f"client:{cfg['client']}", "writes": False})
     elif cmd == "chunks":
         out = cmd_chunks(cfg)
