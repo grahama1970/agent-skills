@@ -350,6 +350,129 @@ async function runStatusReportMatchesJsonAllowed() {
   console.log(JSON.stringify({ ok: true, mode: 'status-report-matches-json-allowed', retryMessages: sent.length }));
 }
 
+function failedStatusText(goal) {
+  const status = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal,
+    state: 'failed',
+    changed: ['no change: repeated failure probe'],
+    failure: {
+      triage: {
+        code: 'tau_node_sanity_check_failed',
+        cause: 'focused probe still fails',
+        next_command: 'run the focused probe again',
+      },
+      escalation_rung: 0,
+    },
+  });
+  return (
+    `Status Report\n- Goal: ${goal}\n- State: failed\n- Changed: no change: repeated failure probe\n`
+    + '- Failure: tau_node_sanity_check_failed -> focused probe still fails -> run the focused probe again\n\n'
+    + '```json\n' + status + '\n```'
+  );
+}
+
+async function runRepeatedFailureRequiresDebuggerOrQuestion() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-repeated-failure-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame enforce repeated failure debugger gate', source: 'user' }, c);
+  await markShameSkillRead(handlers, c);
+  const first = await handlers.message_end[0]({ id: 'assistant-fail-1', message: { id: 'assistant-fail-1', role: 'assistant', content: [{ type: 'text', text: failedStatusText('repeat failure gate probe') }] } }, c);
+  assert(allowedWithSwallow(first), 'first failed status should pass before repetition threshold', { first });
+  const second = await handlers.message_end[0]({ id: 'assistant-fail-2', message: { id: 'assistant-fail-2', role: 'assistant', content: [{ type: 'text', text: failedStatusText('repeat failure gate probe') }] } }, c);
+  const notice = second?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(second?.message?.content || '');
+  assert(notice.includes('repeated_failure_requires_debugger_or_human_question'), 'second same-fingerprint failure was not blocked', { notice });
+  assert(sent.length === 1, 'repeated failure did not queue one retry', { sentCount: sent.length, sent });
+  assert(sent[0].text.includes('debugger.proof.v1'), 'retry prompt did not name debugger proof recovery', { sent });
+  assert(existsSync(packet), 'repeated failure rejection did not write pending packet', { packet });
+  console.log(JSON.stringify({ ok: true, mode: 'repeated-failure-requires-debugger-or-question', retryMessages: sent.length, packet }));
+}
+
+async function runRepeatedFailureAllowsPlainHumanQuestion() {
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame enforce repeated failure debugger gate', source: 'user' }, c);
+  await markShameSkillRead(handlers, c);
+  await handlers.message_end[0]({ id: 'assistant-fail-1', message: { id: 'assistant-fail-1', role: 'assistant', content: [{ type: 'text', text: failedStatusText('repeat failure question probe') }] } }, c);
+  await handlers.message_end[0]({ id: 'assistant-fail-2', message: { id: 'assistant-fail-2', role: 'assistant', content: [{ type: 'text', text: failedStatusText('repeat failure question probe') }] } }, c);
+  const status = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'repeat failure question probe',
+    state: 'needs_human',
+    changed: ['no change: asking human after repeated failure'],
+    needs_human: { action: 'Which runtime value should I inspect next?', reason: 'the same failure repeated twice' },
+  });
+  const text = (
+    'Status Report\n- Goal: repeat failure question probe\n- State: needs_human\n- Changed: no change: asking human after repeated failure\n'
+    + '- Needs Human: Which runtime value should I inspect next? because the same failure repeated twice\n\n'
+    + '```json\n' + status + '\n```'
+  );
+  const result = await handlers.message_end[0]({ id: 'assistant-question', message: { id: 'assistant-question', role: 'assistant', content: [{ type: 'text', text }] } }, c);
+  assert(allowedWithSwallow(result), 'plain human question should satisfy repeated failure gate', { result });
+  assert(sent.length === 1, 'only the blocked second failure should have queued retry', { sentCount: sent.length, sent });
+  console.log(JSON.stringify({ ok: true, mode: 'repeated-failure-allows-plain-human-question', retryMessages: sent.length }));
+}
+
+async function runRepeatedFailureAllowsDebuggerProof() {
+  const proof = `/tmp/shame-probe-debugger-proof-${process.pid}.json`;
+  writeFileSync(proof, JSON.stringify({
+    schema: 'debugger.proof.v1',
+    stopped: { hit: true },
+    assessment: { proofValid: true, variableInspectionValid: true },
+  }), 'utf8');
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame enforce repeated failure debugger gate', source: 'user' }, c);
+  await markShameSkillRead(handlers, c);
+  await handlers.message_end[0]({ id: 'assistant-fail-1', message: { id: 'assistant-fail-1', role: 'assistant', content: [{ type: 'text', text: failedStatusText('repeat failure debugger probe') }] } }, c);
+  await handlers.message_end[0]({ id: 'assistant-fail-2', message: { id: 'assistant-fail-2', role: 'assistant', content: [{ type: 'text', text: failedStatusText('repeat failure debugger probe') }] } }, c);
+  const status = JSON.stringify({
+    schema: 'pi.agent_status.v1',
+    goal: 'repeat failure debugger probe',
+    state: 'failed',
+    changed: ['captured debugger proof for repeated failure'],
+    proof: [proof],
+    failure: {
+      triage: { code: 'tau_node_sanity_check_failed', cause: 'focused probe still fails', next_command: 'patch from debugger state' },
+      escalation_rung: 1,
+    },
+  });
+  const text = (
+    'Status Report\n- Goal: repeat failure debugger probe\n- State: failed\n- Changed: captured debugger proof for repeated failure\n'
+    + `- Proof: ${proof}\n- Failure: tau_node_sanity_check_failed -> focused probe still fails -> patch from debugger state\n\n`
+    + '```json\n' + status + '\n```'
+  );
+  const result = await handlers.message_end[0]({ id: 'assistant-debugger-proof', message: { id: 'assistant-debugger-proof', role: 'assistant', content: [{ type: 'text', text }] } }, c);
+  assert(allowedWithSwallow(result), 'debugger.proof.v1 should satisfy repeated failure gate', { result });
+  assert(sent.length === 1, 'only the blocked second failure should have queued retry', { sentCount: sent.length, sent });
+  rmSync(proof, { force: true });
+  console.log(JSON.stringify({ ok: true, mode: 'repeated-failure-allows-debugger-proof', retryMessages: sent.length }));
+}
+
+async function runForcedRetryRequiresStatusJson() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-forced-retry-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'UNLAZY_FORCED_RETRY\nRewrite the answer now.', source: 'user' }, c);
+  await markShameSkillRead(handlers, c);
+  const text = (
+    'Corrected prose.\n\n'
+    + 'Status Report\n- Changed: vague change\n- Verified: vague pass\n- Proof: /tmp/proof\n- Not done: none\n\n'
+    + '⏺ status: done · verified 1 · proof: /tmp/proof'
+  );
+  const result = await handlers.message_end[0]({ id: 'assistant-forced-retry-no-json', message: { id: 'assistant-forced-retry-no-json', role: 'assistant', content: [{ type: 'text', text }] } }, c);
+  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(notice.includes('missing_agent_status_json'), 'forced retry without pi.agent_status.v1 JSON was not rejected', { notice });
+  assert(notice.includes('REJECTED_BY_SLOTH_COURT'), 'forced retry rejection did not show correction packet', { notice });
+  assert(sent.length === 1, 'forced retry rejection did not queue one retry', { sentCount: sent.length, sent });
+  const saved = JSON.parse(readFileSync(packet, 'utf8'));
+  assert(saved.machine?.reason_codes?.includes('missing_agent_status_json'), 'pending packet omitted missing JSON reason', saved);
+  console.log(JSON.stringify({ ok: true, mode: 'forced-retry-requires-status-json', retryMessages: sent.length, packet }));
+}
+
 async function runSkillReadGuardBlocksActionBeforeRead() {
   const { handlers } = await loadExtension();
   const c = ctx();
@@ -425,6 +548,10 @@ const modes = {
   'status-report-required-with-json': runStatusReportRequiredWithJson,
   'status-report-mismatch-rejected': runStatusReportMismatchRejected,
   'status-report-matches-json-allowed': runStatusReportMatchesJsonAllowed,
+  'repeated-failure-requires-debugger-or-question': runRepeatedFailureRequiresDebuggerOrQuestion,
+  'repeated-failure-allows-plain-human-question': runRepeatedFailureAllowsPlainHumanQuestion,
+  'repeated-failure-allows-debugger-proof': runRepeatedFailureAllowsDebuggerProof,
+  'forced-retry-requires-status-json': runForcedRetryRequiresStatusJson,
 };
 
 if (mode === 'all') {

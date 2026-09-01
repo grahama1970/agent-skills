@@ -164,17 +164,24 @@ function stripStatusJson(content: unknown, statusJsonText: string): unknown {
 }
 
 function renderStatusLine(status: any): string {
-  const state = String(status?.state || "unknown");
-  const parts: string[] = [`\u23fa status: ${state}`];
-  if (Array.isArray(status?.verified) && status.verified.length) parts.push(`verified ${status.verified.length}`);
-  if (Array.isArray(status?.proof) && status.proof.length) parts.push(`proof: ${String(status.proof[0]).slice(0, 60)}`);
-  if (status?.failure?.triage?.code) parts.push(`triage: ${status.failure.triage.code}`);
-  if (status?.needs_human?.action) parts.push(`human: ${String(status.needs_human.action).slice(0, 80)}`);
-  const nextCommand = Array.isArray(status?.not_done)
-    ? status.not_done.map((item: any) => String(item?.next_command || "")).find((cmd: string) => cmd.trim())
-    : undefined;
-  if (nextCommand) parts.push(`next: ${nextCommand.slice(0, 60)}`);
-  return parts.join(" \u00b7 ");
+  const lines = ["Status Report"];
+  lines.push(`- Goal: ${String(status?.goal || "unknown")}`);
+  lines.push(`- State: ${String(status?.state || "unknown")}`);
+  const changed = Array.isArray(status?.changed) ? status.changed : [];
+  for (const item of changed) lines.push(`- Changed: ${String(item)}`);
+  const verified = Array.isArray(status?.verified) ? status.verified : [];
+  for (const item of verified) lines.push(`- Verified: ${String(item?.command || "") } -> ${String(item?.result || "")}`);
+  const proof = Array.isArray(status?.proof) ? status.proof : [];
+  for (const item of proof) lines.push(`- Proof: ${String(item)}`);
+  const notDone = Array.isArray(status?.not_done) ? status.not_done : [];
+  if (notDone.length) {
+    for (const item of notDone) lines.push(`- Not done: ${String(item?.item || "")} -> ${String(item?.next_command || "")}`);
+  } else {
+    lines.push("- Not done: none");
+  }
+  if (status?.needs_human?.action) lines.push(`- Needs Human: ${String(status.needs_human.action)} because ${String(status.needs_human.reason || "")}`);
+  if (status?.failure?.triage?.code) lines.push(`- Failure: ${String(status.failure.triage.code)} -> ${String(status.failure.triage.cause || "")} -> ${String(status.failure.triage.next_command || "")}`);
+  return lines.join("\n");
 }
 
 const SHAME_MODES = new Set(["off", "normal", "strict"]);
@@ -199,11 +206,16 @@ function appendText(content: unknown, text: string): unknown {
 }
 
 function activatesGuard(text: string): boolean {
-  return hasAnyToken(text, GUARD_TOKENS) || String(text ?? "").toLowerCase().includes("acceptance ledger");
+  const raw = String(text ?? "");
+  return hasAnyToken(raw, GUARD_TOKENS)
+    || raw.toLowerCase().includes("acceptance ledger")
+    || raw.includes("UNLAZY_FORCED_RETRY")
+    || raw.includes("CONTINUE_FROM_AGENT_STATUS");
 }
 
 function activatesShameSelfCorrection(text: string): boolean {
-  return hasAnyToken(text, SHAME_TOKENS);
+  const raw = String(text ?? "");
+  return hasAnyToken(raw, SHAME_TOKENS) || raw.includes("UNLAZY_FORCED_RETRY");
 }
 
 function sha256(value: string): string {
@@ -376,6 +388,88 @@ function evaluateContinuationGuard(statusState: string | undefined): CheckResult
   };
 }
 
+function statusFailureFingerprint(status: any): string | null {
+  const triage = status?.failure?.triage;
+  if (status?.state !== "failed" || !triage?.code) return null;
+  return sha256([
+    status.goal_hash || status.goal_id || status.goal || "unknown-goal",
+    triage.code,
+    triage.cause || "unknown-cause",
+  ].map(String).join("\n"));
+}
+
+function readJsonFile(path: unknown): any | null {
+  const raw = String(path || "").trim();
+  if (!raw || raw.includes("\n") || !existsSync(raw)) return null;
+  try { return JSON.parse(readFileSync(raw, "utf8")); } catch { return null; }
+}
+
+function hasDebuggerProof(status: any): boolean {
+  const proof = Array.isArray(status?.proof) ? status.proof : [];
+  return proof.some((path) => {
+    const doc = readJsonFile(path);
+    return doc?.schema === "debugger.proof.v1"
+      && doc?.stopped?.hit === true
+      && doc?.assessment?.proofValid === true
+      && doc?.assessment?.variableInspectionValid === true;
+  });
+}
+
+function hasDebuggerFailureHandoff(status: any): boolean {
+  if (status?.state !== "needs_human") return false;
+  const proof = Array.isArray(status?.proof) ? status.proof : [];
+  return proof.some((path) => {
+    const doc = readJsonFile(path);
+    return doc?.schema === "lazy_report_shame.debugger_failure_handoff.v1"
+      && typeof doc?.breakpoint?.file === "string"
+      && Number.isInteger(doc?.breakpoint?.line)
+      && doc.breakpoint.line > 0
+      && typeof doc?.error === "string"
+      && doc.error.trim();
+  });
+}
+
+function isPlainHumanQuestion(status: any): boolean {
+  if (status?.state !== "needs_human") return false;
+  const action = String(status?.needs_human?.action || "").trim();
+  if (!action.endsWith("?")) return false;
+  if (action.includes("\n") || action.includes("```") || action.includes("{") || action.includes("}")) return false;
+  return tokenize(action).length <= 40;
+}
+
+function evaluateRepeatedFailureGuard(status: any, failureCounts: Map<string, number>, repeatedFailure: { fingerprint: string | null; count: number }): CheckResult | null {
+  const fingerprint = statusFailureFingerprint(status);
+  if (fingerprint) {
+    const count = (failureCounts.get(fingerprint) || 0) + 1;
+    failureCounts.set(fingerprint, count);
+    if (count >= 2) {
+      repeatedFailure.fingerprint = fingerprint;
+      repeatedFailure.count = count;
+    }
+  }
+
+  if (!repeatedFailure.fingerprint) return null;
+  if (hasDebuggerProof(status) || hasDebuggerFailureHandoff(status) || isPlainHumanQuestion(status)) {
+    repeatedFailure.fingerprint = null;
+    repeatedFailure.count = 0;
+    return null;
+  }
+
+  return {
+    schema: "lazy_report_shame.report_check.v2",
+    checker_version: "repeated-failure-guard-v1",
+    decision: "reject",
+    reason_codes: ["repeated_failure_requires_debugger_or_human_question"],
+    features: {
+      fingerprint: repeatedFailure.fingerprint,
+      count: repeatedFailure.count,
+      next_action: "Ask one plain human question, or run $debugger and cite debugger.proof.v1; if $debugger fails, cite a debugger failure handoff with exact file:line and error.",
+    },
+    footer_failures: ["repeated_same_fingerprint_failure_without_debugger_or_human_question"],
+    diagnostics: "Repeated same-fingerprint failure blocked. Stop retrying from stale context; use $debugger proof or ask one plain human question.",
+  };
+}
+
 function playShameAudio(lastPlayedAt: { value: number }): void {
   if (flagDisabled(process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED || "1")) return;
   const now = Date.now();
@@ -507,15 +601,22 @@ Rewrite the answer now. Preserve only supported facts. Do not invent commands, r
 
 Collaborative correction flow:
 - Give the corrected answer first.
-- End with the exact Status Report footer below.
+- End with a prose section named exactly Status Report and a final fenced json block containing one valid pi.agent_status.v1 object.
+- If work remains and no exact human action is required, state must be "continuing" and not_done[0].next_command must be the next runnable command.
+- If the same failure survived twice, stop retrying: either ask one plain human question with state="needs_human", cite a valid debugger.proof.v1 path, or cite a lazy_report_shame.debugger_failure_handoff.v1 path with exact file:line and error.
 - The human can inspect the raw rejected candidate with \`/shame show\`.
 - The human can label that candidate with \`/shame review\` or \`/shame reject|allow|warn <reason> -- <note>\`.
 
+Minimum continuing example:
 Status Report
-- Changed: plain-English user-visible/project-visible change, not a commit/SHA/branch by itself.
-- Verified: exact command/readback and observed result, or Not verified: exact reason.
-- Proof: concrete path, URL, issue/PR number, commit, or Missing: exact reason.
-- Not done: none, or exact unfinished item and next concrete step.`;
+- Goal: continue active goal
+- State: continuing
+- Changed: no change: previous answer was rejected
+- Not done: run the next check -> exact command here
+
+\`\`\`json
+{"schema":"pi.agent_status.v1","goal":"continue active goal","state":"continuing","changed":["no change: previous answer was rejected"],"not_done":[{"item":"run the next check","next_command":"exact command here"}]}
+\`\`\``;
 }
 
 function parseShameArgs(args: string): { action: "capture" | "show" | "undo" | "review"; verdict: HumanVerdict; reasons: string[]; note: string; error?: string } {
@@ -684,6 +785,8 @@ export default function lazyReportShameShameShame(pi: any) {
   let lastCandidate: Candidate | null = null;
   let lastWrittenExampleId: string | null = null;
   const retriedTurnIds = new Set<string>();
+  const failureCounts = new Map<string, number>();
+  const repeatedFailure = { fingerprint: null as string | null, count: 0 };
   const lastAudioPlayedAt = { value: 0 };
 
   pi.on("session_start", async (event: any, ctx: any) => {
@@ -751,12 +854,12 @@ export default function lazyReportShameShameShame(pi: any) {
     if (!sessionGuardActive && !turnGuardActive && !activatesGuard(prompt)) return;
     turnGuardActive = true;
     const shameSelfCorrection = shameSelfCorrectTurn
-      ? "\n\n[Lazy Report Shame Self-Correction]\nThe user invoked $shame. Do not answer with meta-commentary about shame. Give the corrected answer in plain spoken English for the human to approve or correct. If the previous answer lacked proof, say Not verified or Missing instead of pretending it was proven. End with the exact titled footer below; after that, the human can label the raw candidate with /shame allow|reject|warn.\n\nStatus Report\n- Changed: ...\n- Verified: ...\n- Proof: ...\n- Not done: ..."
+      ? "\n\n[Lazy Report Shame Self-Correction]\nThe user invoked $shame or a forced shame retry. Do not answer with meta-commentary about shame. Give the corrected answer in plain spoken English for the human to approve or correct. If the previous answer lacked proof, say Not verified or Missing instead of pretending it was proven. End with a prose section named exactly Status Report followed by a fenced json block containing one valid pi.agent_status.v1 object. If work remains and no exact human action is required, use state=continuing with not_done[0].next_command so the extension queues the next command. Use state=needs_human only for a specific human action, and state=failed only with a triage-error code."
       : "";
     return {
       systemPrompt:
         systemPrompt +
-        "\n\n[Lazy Report Shame Guard]\nIf you report delivery, GitHub work, commits, pushes, branches, SHAs, issue closure, or implementation status, end with a clear title and plain-spoken bullets. Include the user-visible change, verification/readback or Not verified, proof location or Missing, and remaining work if any. Git metadata and unit tests are supporting evidence, not the user-visible result. Do not invent proof." +
+        "\n\n[Lazy Report Shame Guard]\nIf you report delivery, GitHub work, commits, pushes, branches, SHAs, issue closure, or implementation status, end with a clear title and plain-spoken bullets. Include the user-visible change, verification/readback or Not verified, proof location or Missing, and remaining work if any. Git metadata and unit tests are supporting evidence, not the user-visible result. Do not invent proof. If the same failure survived twice, stop retrying: ask one plain human question or use $debugger and cite breakpoint/local-state proof." +
         shameSelfCorrection,
     };
   });
@@ -770,8 +873,13 @@ export default function lazyReportShameShameShame(pi: any) {
     const strictStatus = shameSelfCorrectTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
+    const status = (check as any)?.features?.status;
     const continuationCheck = evaluateContinuationGuard(statusState);
     if (continuationCheck && check.decision !== "reject") check = continuationCheck;
+    const repeatedFailureCheck = status && check.decision !== "reject"
+      ? evaluateRepeatedFailureGuard(status, failureCounts, repeatedFailure)
+      : null;
+    if (repeatedFailureCheck) check = repeatedFailureCheck;
     let keepGuardForRetry = false;
 
     try {
@@ -786,7 +894,6 @@ export default function lazyReportShameShameShame(pi: any) {
         // through compile-status-command.mjs (pure data -> command; no regex).
         // continuing and needs_* escalation states queue their exact compiled
         // command; done/needs_human/failed compile to null and end the turn.
-        const status = (check as any)?.features?.status;
         let displayReturn: any = undefined;
         if (status && typeof statusState === "string") {
           // Human directive (2026-08-31): agent output is not polluted with JSON

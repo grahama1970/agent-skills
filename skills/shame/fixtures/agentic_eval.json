@@ -119,9 +119,59 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.repeated_failure_debugger_gate",
+      "description": "After two same-fingerprint failed status reports, the Pi extension blocks another stale failure report unless the agent asks one plain human question, cites debugger.proof.v1, or cites an exact debugger failure handoff.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.forced_retry_guard",
+      "description": "UNLAZY_FORCED_RETRY follow-up prompts keep the guard active and reject vague prose footers without final pi.agent_status.v1 JSON.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.no_regex_or_agent_prose_status_validity",
+      "description": "status validity is controlled by final pi.agent_status.v1 pydantic validation, not regex or agent-authored prose",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "real_world": true
+      }
     }
   ],
   "cases": [
+    {
+      "name": "status-guard-data-first-static-and-live-check",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.no_regex_or_agent_prose_status_validity"
+      ],
+      "seams": [
+        "status-json-check",
+        "pydantic-validator"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/scripts/check-status-guard-data-first.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "data_first_status_guard_verified"
+        ]
+      },
+      "real_world": true
+    },
     {
       "name": "local-jsonl-capture-contract",
       "type": "positive",
@@ -518,8 +568,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -543,8 +592,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -568,8 +616,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -593,8 +640,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -618,8 +664,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -643,8 +688,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"pass\""
+          "\"ok\":true"
         ]
       }
     },
@@ -668,8 +712,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -693,8 +736,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -718,8 +760,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -743,8 +784,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -768,8 +808,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -793,8 +832,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -818,8 +856,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -843,8 +880,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -868,8 +904,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -893,8 +928,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -918,8 +952,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -943,8 +976,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -968,8 +1000,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -993,8 +1024,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1018,8 +1048,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1043,8 +1072,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1068,8 +1096,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1093,8 +1120,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1118,8 +1144,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1143,8 +1168,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1168,8 +1192,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1193,8 +1216,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1218,8 +1240,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1243,8 +1264,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1268,8 +1288,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1293,8 +1312,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1318,8 +1336,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1343,8 +1360,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1368,8 +1384,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1393,10 +1408,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-50-what-remains-heading-continuing",
@@ -1418,8 +1433,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1443,8 +1457,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1468,8 +1481,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1493,8 +1505,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1518,8 +1529,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1543,8 +1553,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1568,8 +1577,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1593,8 +1601,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1618,8 +1625,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1643,8 +1649,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1668,8 +1673,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1693,8 +1697,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1718,8 +1721,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1743,8 +1745,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1768,8 +1769,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
       }
     },
@@ -1819,10 +1819,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-hidden-html-attribute-values",
@@ -1845,10 +1845,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-indented-pseudofenced-json",
@@ -1871,10 +1871,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-reference-values",
@@ -1897,10 +1897,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-midline-pseudofenced-json",
@@ -1923,10 +1923,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-quoted-values-wrong-labels",
@@ -1949,10 +1949,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-unequal-length-fenced-heading",
@@ -1975,10 +1975,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-validator-nonzero-with-valid-true",
@@ -2001,10 +2001,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-html-comment-inside-word-continuing",
@@ -2027,10 +2027,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-duplicate-changed-contradiction",
@@ -2053,10 +2053,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-pre-heading",
@@ -2079,10 +2079,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-pre-json-fence",
@@ -2105,10 +2105,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-substring-negated-changed",
@@ -2131,10 +2131,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-trailing-html-comment-after-json",
@@ -2157,10 +2157,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-trailing-reference-after-json",
@@ -2183,10 +2183,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-trailing-template-after-json",
@@ -2209,10 +2209,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-html-entity-continuing",
@@ -2235,10 +2235,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-multiline-html-comment-status-report",
@@ -2261,10 +2261,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-nobreak-entity-continuing",
@@ -2287,10 +2287,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-word-joiner-continuing",
@@ -2313,10 +2313,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-bidi-heading",
@@ -2339,10 +2339,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-bidi-rlo-entity-continuing",
@@ -2365,10 +2365,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-bidi-rlo-raw-continuing",
@@ -2391,10 +2391,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-bdo-reversed-what-remains",
@@ -2417,10 +2417,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-bdo-visible-projection-mismatch",
@@ -2443,10 +2443,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-inline-css-bidi-override",
@@ -2469,10 +2469,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-bdo-ancestor-reversed-what-remains",
@@ -2495,10 +2495,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-css-bidi-ancestor-reversed-what-remains",
@@ -2521,10 +2521,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-image-title-hidden-status-report",
@@ -2547,10 +2547,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-link-title-hidden-status-report",
@@ -2573,10 +2573,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-duplicate-array-multiset-laundering",
@@ -2599,10 +2599,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-nested-link-title-hidden-status-report",
@@ -2625,10 +2625,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-tab-entity-continuing",
@@ -2651,10 +2651,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"ok\":true"
         ]
-      }
+      },
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
     },
     {
       "name": "schema-rejects-parked-done-and-empty-changed",
@@ -2678,6 +2678,58 @@
         "exit_code": 0,
         "stdout_contains": [
           "PARKED_WORK_UNREPRESENTABLE"
+        ]
+      }
+    },
+    {
+      "name": "repeated-failure-requires-debugger-or-question",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.repeated_failure_debugger_gate"
+      ],
+      "seams": [
+        "extension-message-end",
+        "debugger-escalation-gate"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-repeated-failure-agentic-packet.json skills/shame/scripts/probe-shame-extension.sh repeated-failure-requires-debugger-or-question && skills/shame/scripts/probe-shame-extension.sh repeated-failure-allows-plain-human-question && skills/shame/scripts/probe-shame-extension.sh repeated-failure-allows-debugger-proof"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "repeated-failure-requires-debugger-or-question",
+          "repeated-failure-allows-plain-human-question",
+          "repeated-failure-allows-debugger-proof"
+        ]
+      }
+    },
+    {
+      "name": "forced-retry-requires-status-json",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.forced_retry_guard"
+      ],
+      "seams": [
+        "extension-input",
+        "extension-message-end",
+        "forced-retry-guard"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/shame-forced-retry-agentic-packet.json skills/shame/scripts/probe-shame-extension.sh forced-retry-requires-status-json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "forced-retry-requires-status-json",
+          "\"ok\":true"
         ]
       }
     }
