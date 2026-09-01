@@ -186,6 +186,49 @@ def report_from(path: str) -> CreateReport:
     return validate_payload(json.loads(Path(path).read_text()))
 
 
+def repair_payload(data: dict[str, Any], source_path: str, error: Exception) -> dict[str, Any]:
+    """Build the smallest safe report from invalid input.
+
+    ponytail: this repairs missing/invalid contract shape only; semantic evidence
+    still needs a real report authoring pass.
+    """
+    repaired = sample()
+    for key in ("report_id", "title", "persona", "primary_object", "decision_supported", "core_conclusion", "evidence_basis"):
+        if isinstance(data.get(key), str) and data[key].strip():
+            repaired[key] = data[key]
+    if data.get("overall_finding") in {"Needs Changes", "Blocked", "Degraded", "Unknown", "Partially Verified"}:
+        repaired["overall_finding"] = data["overall_finding"]
+    repaired["source_of_truth_inventory"] = [{
+        "id": "S-001",
+        "kind": "invalid-input",
+        "path": source_path,
+        "limitation": "auto-repaired from invalid JSON; project evidence is not established",
+    }]
+    repaired["findings"][0].update({
+        "title": "Input report failed pydantic validation",
+        "status": "Needs Changes",
+        "evidence": [f"pydantic validation error: {str(error).splitlines()[0]}"],
+        "rationale": "The original JSON did not satisfy create_report.report.v1, so rendering from it would be unsafe.",
+        "impact": "The report cannot support a project decision until a valid evidence model replaces this repair skeleton.",
+        "acceptance_check": "replace repaired fields with evidence-backed values and rerun skills/create-report/run.sh validate",
+        "non_claims": ["does not prove the original report's claims"],
+    })
+    repaired["highest_risk_issues"] = ["F-001 Input report failed pydantic validation"]
+    repaired["immediate_next_steps"] = ["A-001 Replace repaired skeleton fields with evidence-backed report data"]
+    repaired["plan_ready_next_actions"][0].update({
+        "action": "Replace repaired skeleton fields with evidence-backed report data.",
+        "primary_object": source_path,
+        "rationale": "The self-repair only restores a valid contract shape.",
+        "acceptance_check": "validate-report passes and source inventory cites real artifacts",
+        "risk_if_skipped": "a structurally valid report may still be semantically unproven",
+        "suggested_priority": "P0",
+    })
+    repaired["plan_iterate_seed"]["recommended_phase_id"] = "replace-repaired-report-fields"
+    repaired["plan_iterate_seed"]["objective"] = "Replace auto-repaired report fields with evidence-backed project data."
+    repaired["non_claims"] = ["This is an automatic contract repair, not a completed evidence report."]
+    return validate_payload(repaired).model_dump(by_alias=True)
+
+
 def sample() -> dict[str, Any]:
     return {
         "schema": "create_report.report.v1",
@@ -273,6 +316,7 @@ def main() -> int:
     sub.add_parser("schema")
     sp = sub.add_parser("sample"); sp.add_argument("--output")
     vp = sub.add_parser("validate"); vp.add_argument("path")
+    fp = sub.add_parser("repair"); fp.add_argument("path"); fp.add_argument("--output", required=True)
     rp = sub.add_parser("render"); rp.add_argument("path"); rp.add_argument("--format", choices=["markdown", "html"], default="markdown"); rp.add_argument("--output")
     args = parser.parse_args()
 
@@ -290,6 +334,25 @@ def main() -> int:
         report_from(args.path)
         print(json.dumps({"schema": "create_report.validation_result.v1", "valid": True, "validated_schema": "create_report.report.v1"}))
         return 0
+    if args.cmd == "repair":
+        data = json.loads(Path(args.path).read_text())
+        try:
+            report = CreateReport.model_validate(data)
+            Path(args.output).write_text(json.dumps(report.model_dump(by_alias=True), indent=2) + "\n")
+            print(json.dumps({"schema": "create_report.repair_result.v1", "repaired": False, "valid": True, "output": args.output}))
+            return 0
+        except ValidationError as exc:
+            triage_payload = triage(exc)
+            repaired = repair_payload(data, args.path, exc)
+            Path(args.output).write_text(json.dumps(repaired, indent=2) + "\n")
+            print(json.dumps({
+                "schema": "create_report.repair_result.v1",
+                "repaired": True,
+                "valid": True,
+                "triage": triage_payload,
+                "output": args.output,
+            }))
+            return 0
     if args.cmd == "render":
         report = report_from(args.path)
         text = html_doc(report) if args.format == "html" else markdown(report)

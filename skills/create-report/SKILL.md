@@ -76,6 +76,7 @@ source of truth. Validation failures route through `$triage-error` and emit
 ./run.sh schema
 ./run.sh sample --output /tmp/create-report.sample.json
 ./run.sh validate /tmp/create-report.sample.json
+./run.sh repair /tmp/create-report.bad.json --output /tmp/create-report.repaired.json
 ./run.sh render /tmp/create-report.sample.json --format markdown --output report.md
 ./run.sh render /tmp/create-report.sample.json --format html --output report.html
 ```
@@ -126,7 +127,10 @@ source of truth. Validation failures route through `$triage-error` and emit
    - next `$plan-iterate` seed.
    Run `./run.sh validate <report.json>` before rendering. If validation fails,
    keep the report incomplete and use the emitted `$triage-error` code; do not
-   patch the Markdown by hand.
+   patch the Markdown by hand. Use `./run.sh repair <bad.json> --output
+   <repaired.json>` for deterministic self-repair: it routes the pydantic error
+   through `$triage-error`, writes a valid `Needs Changes` repair skeleton, and
+   marks the original claims unproven.
 
 6. Render only after the model is explicit and pydantic-valid:
    - prefer HTML/CSS for substantial human-facing reports;
