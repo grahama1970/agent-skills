@@ -1,0 +1,34 @@
+client: openai-privacy
+kb_root: /home/graham/workspace/experiments/openai-privacy-kb
+canonical_client_file: /home/graham/workspace/experiments/openai-privacy-kb/canonical-client.json
+require_canonical_json: true
+html_report: /home/graham/workspace/experiments/openai-privacy-kb/reports/openai_privacy_curate_report.html
+question_oracles_file: /home/graham/workspace/experiments/openai-privacy-kb/question-oracles.json
+briefing_points_file: /home/graham/workspace/experiments/openai-privacy-kb/briefing-points.json
+source_context_limit: 120
+briefing_points_limit: 20
+question_oracles_limit: 75
+probes:
+  - what domains does OpenAI privacy engineering cover
+  - how should distributed deletion prove completion
+  - how does purpose-bound access fail safely
+  - what controls bound a lawful data access workflow
+  - how can zero data retention coexist with safety monitoring
+purpose: rehearsal
+memory_daemon: http://127.0.0.1:8601
+live_evidence_prep_pack: /home/graham/workspace/experiments/agent-skills/skills/live-evidence/fixtures/prep_pack_openai_privacy_2026_09.json
+oracle_recall_collections:
+  - lessons
+anchor_terms:
+  - data inventory
+  - lineage
+  - retention
+  - deletion
+  - purpose limitation
+  - least privilege
+  - provenance
+  - minimization
+  - auditability
+  - safe failure
+  - observability
+  - idempotency

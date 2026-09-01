@@ -1,0 +1,74 @@
+name: openai-privacy-2026-09
+candidate_name: Graham Anderson
+organization: OpenAI
+watch_terms:
+  - OpenAI
+  - privacy engineering
+  - data inventory
+  - lineage
+  - retention
+  - deletion
+  - purpose limitation
+  - least privilege
+  - provenance
+  - minimization
+  - auditability
+  - safe failure
+  - observability
+  - idempotency
+  - Zero Data Retention
+  - lawful access
+project_aliases:
+  openai-privacy:
+    - OpenAI privacy
+    - privacy engineering
+    - privacy and compliance
+    - lawful access
+  graham-bridges:
+    - Tau
+    - SPARTA
+    - Graph Memory
+    - Live Evidence
+    - receipt-gated workflows
+repo_priorities:
+  - openai-privacy-kb
+  - openai-privacy-flask
+  - agent-skills
+memory_scope: client:openai-privacy
+memory_collections:
+  - lessons
+  - live_evidence_answers
+  - live_evidence_questions
+  - live_evidence_source_context
+  - live_evidence_skill_chains
+  - live_evidence_edges
+  - project_knowledge
+  - dogpile_research
+  - code_symbols
+stt_prompt_terms:
+  - OpenAI
+  - privacy engineering
+  - data deletion
+  - retention
+  - lineage
+  - policy enforcement
+  - purpose-bound access
+  - lawful access
+  - Zero Data Retention
+  - Private Safety Processing
+  - Flask
+  - idempotency
+  - independent verification
+blocked_tags:
+  - private
+  - confidential
+  - restricted
+  - secret
+  - credential
+  - itar-sensitive
+  - export-controlled-content
+blocked_path_fragments:
+  - /.env
+  - /secrets/
+  - /credentials/
+  - /private/

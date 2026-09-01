@@ -146,6 +146,46 @@
      "interview_packet"
     ]
    }
+  },
+  {
+   "name": "openai-privacy-curated-sources-and-oracle-files",
+   "type": "positive",
+   "real_world": true,
+   "evidence_class": "live_e2e",
+   "readback": true,
+   "command": [
+    "bash",
+    "-c",
+    "../run.sh plan --config ../configs/openai_privacy_2026_09.yaml > /tmp/curate-openai-plan.json && ../run.sh prep-pack --config ../configs/openai_privacy_2026_09.yaml > /tmp/curate-openai-prep.json && python3 - <<'PY2'\nimport json\nplan=json.load(open('/tmp/curate-openai-plan.json'))\nprep=json.load(open('/tmp/curate-openai-prep.json'))\npack=prep['prep_pack']\nassert plan['openapi_specs'] == [] and plan['terraform_repos'] == []\nassert plan['knowledge_files'] >= 75, plan['knowledge_files']\nassert prep['status'] == 'PASS'\nassert pack['target']['purpose'] == 'rehearsal'\nassert len(pack['question_oracles']) == 75\nassert len(pack['briefing_pack']['points']) == 5\nassert 'lessons' in pack['memory_exports']['collections']\nprint('openai privacy curated prep pack readback: PASS')\nPY2"
+   ],
+   "timeout_seconds": 420,
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "openai privacy curated prep pack readback: PASS"
+    ]
+   },
+   "notes": "Regression for curated Markdown/source-manifest configs with no OpenAPI/Terraform sources, external oracle/briefing files, configurable limits, rehearsal purpose, and at least two recallable Memory keys per oracle."
+  },
+  {
+   "name": "canonical-json-pydantic-triage-and-report",
+   "type": "adversarial",
+   "real_world": true,
+   "evidence_class": "live_e2e",
+   "readback": true,
+   "command": [
+    "bash",
+    "-c",
+    "python3 - <<'PY2'\nimport json, pathlib\nsrc=pathlib.Path('/home/graham/workspace/experiments/openai-privacy-kb/canonical-client.json')\nd=json.load(open(src))\nd['question_oracles'][0].pop('classification', None)\nbad=pathlib.Path('/tmp/curate-client-bad-canonical-eval.json')\nbad.write_text(json.dumps(d, indent=2)+'\\n')\nyaml=pathlib.Path('/tmp/curate-client-bad-canonical-eval.yaml')\ncfg=pathlib.Path('../configs/openai_privacy_2026_09.yaml').read_text().replace(str(src), str(bad))\nyaml.write_text(cfg)\nPY2\nset +e\n../run.sh validate-canonical --config /tmp/curate-client-bad-canonical-eval.yaml > /tmp/curate-client-bad-canonical-eval-receipt.json\nrc=$?\nset -e\ntest $rc -ne 0\npython3 - <<'PY2'\nimport json, pathlib\nfail=json.load(open('/tmp/curate-client-bad-canonical-eval-receipt.json'))\nassert fail['status']=='FAIL'\nassert 'classification' in fail['errors']\nassert fail['triage']['code']\np=pathlib.Path('/tmp/curate-client-bad-canonical-eval.json')\nd=json.load(open(p))\nd['question_oracles'][0]['classification']='curated_seed_inference'\np.write_text(json.dumps(d, indent=2)+'\\n')\nPY2\n../run.sh validate-canonical --config /tmp/curate-client-bad-canonical-eval.yaml > /tmp/curate-client-repaired-canonical-eval-receipt.json\n../run.sh report --config ../configs/openai_privacy_2026_09.yaml > /tmp/curate-client-canonical-report-eval-receipt.json\npython3 - <<'PY2'\nimport json, pathlib\nrepaired=json.load(open('/tmp/curate-client-repaired-canonical-eval-receipt.json'))\nreport=json.load(open('/tmp/curate-client-canonical-report-eval-receipt.json'))\nassert repaired['status']=='PASS' and repaired['question_oracle_count']==75\nassert report['status']=='PASS' and pathlib.Path(report['path']).is_file()\nprint('canonical json pydantic triage retry report: PASS')\nPY2"
+   ],
+   "timeout_seconds": 420,
+   "expected": {
+    "exit_code": 0,
+    "stdout_contains": [
+     "canonical json pydantic triage retry report: PASS"
+    ]
+   },
+   "notes": "Deterministic gate: missing classification in canonical JSON fails Pydantic validation, emits a triage-error classification, then passes only after the canonical JSON is repaired; HTML report is built from validated JSON."
   }
  ],
  "eval_kind": "skill_behavior"

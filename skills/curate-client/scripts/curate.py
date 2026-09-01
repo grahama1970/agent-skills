@@ -7,6 +7,7 @@ Fail-closed: missing required config emits curate_client.needs_interview.v1.
 from __future__ import annotations
 
 import hashlib
+import html
 import json
 import os
 import re
@@ -16,8 +17,86 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+
 MEMORY_REPO = Path.home() / "workspace/experiments/memory"
 LIVE_EVIDENCE_DEFAULT_BACKEND = "http://127.0.0.1:8799"
+TRIAGE_RUNNER = Path(__file__).resolve().parents[2] / "triage-error" / "run.sh"
+
+
+class CanonicalReviewedAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    review_status: str = Field(min_length=1)
+    expected_response_shape: str = Field(min_length=1)
+    quality_bar: list[str] = Field(min_length=1)
+
+
+class CanonicalSource(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    source_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    authority: str = Field(min_length=1)
+    retrieved_at: str = Field(min_length=1)
+    digest: str = Field(min_length=1)
+    url: str | None = None
+    path: str | None = None
+    summary: str = Field(min_length=1)
+
+    @field_validator("path", "url")
+    @classmethod
+    def empty_to_none(cls, value: str | None) -> str | None:
+        return value or None
+
+
+class CanonicalBriefingPoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    point_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    opening_triggers: list[list[str]] = Field(min_length=1)
+    hook: str = Field(min_length=1)
+    story: str = Field(min_length=1)
+    sources: list[str] = Field(min_length=1)
+
+
+class CanonicalQuestionOracle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    question_id: str = Field(min_length=1)
+    canonical_question: str = Field(min_length=1)
+    spoken_variants: list[str] = Field(default_factory=list)
+    scenario: str = Field(min_length=1)
+    rubric_dimension: str = Field(min_length=1)
+    clarifications_expected_before_answering: list[str] = Field(min_length=1)
+    answer_thesis: str = Field(min_length=1)
+    architecture_components: list[str] = Field(min_length=1)
+    failure_cases: list[str] = Field(min_length=1)
+    tradeoffs: list[str] = Field(min_length=1)
+    source_references: list[str] = Field(min_length=1)
+    graham_project_bridge: str = Field(min_length=1)
+    skill_chain: list[str] = Field(min_length=1)
+    hold_answer_clarify_disposition: str = Field(min_length=1)
+    reviewed_answer: CanonicalReviewedAnswer
+    memory_keys: list[str] = Field(default_factory=list)
+
+
+class CanonicalClientData(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    client: str = Field(min_length=1)
+    classification: str = Field(min_length=1)
+    sources: list[CanonicalSource] = Field(min_length=1)
+    briefing_points: list[CanonicalBriefingPoint] = Field(min_length=1)
+    question_oracles: list[CanonicalQuestionOracle] = Field(min_length=1)
+
+    @field_validator("schema_")
+    @classmethod
+    def schema_is_current(cls, value: str) -> str:
+        if value != "curate_client.canonical_data.v1":
+            raise ValueError("schema must be curate_client.canonical_data.v1")
+        return value
 
 
 def _load_config(path: str) -> dict:
@@ -55,22 +134,118 @@ def _needs_interview(missing: list[str]) -> None:
     sys.exit(3)
 
 
+def _knowledge_files(cfg: dict) -> list[Path]:
+    root = cfg.get("kb_root")
+    if not root:
+        return []
+    knowledge = Path(str(root)).expanduser() / "knowledge"
+    return sorted(knowledge.rglob("*.md")) if knowledge.is_dir() else []
+
+
+def _has_source(cfg: dict) -> bool:
+    return bool(
+        cfg.get("openapi_specs")
+        or cfg.get("terraform_repos")
+        or cfg.get("document_sources")
+        or cfg.get("curated_sources")
+        or _knowledge_files(cfg)
+    )
+
+
 def _validate(cfg: dict) -> None:
     missing = [k for k in ("client", "kb_root") if not cfg.get(k)]
-    if not (cfg.get("openapi_specs") or cfg.get("terraform_repos")):
-        missing.append("openapi_specs|terraform_repos")
+    if not _has_source(cfg):
+        missing.append("openapi_specs|terraform_repos|document_sources|curated_sources|knowledge/*.md")
     if missing:
         _needs_interview(missing)
 
 
-def _prep_pack_path(cfg: dict) -> Path:
-    value = cfg.get("live_evidence_prep_pack")
+def _path_from_cfg(cfg: dict, key: str) -> Path | None:
+    value = cfg.get(key)
     if not value:
-        _needs_interview(["live_evidence_prep_pack"])
+        return None
     path = Path(str(value)).expanduser()
     if not path.is_absolute():
         path = Path.cwd() / path
     return path
+
+
+def _prep_pack_path(cfg: dict) -> Path:
+    path = _path_from_cfg(cfg, "live_evidence_prep_pack")
+    if path is None:
+        _needs_interview(["live_evidence_prep_pack"])
+    return path
+
+
+def _triage(text: str) -> dict[str, Any]:
+    if TRIAGE_RUNNER.exists():
+        proc = subprocess.run(
+            [str(TRIAGE_RUNNER), "classify", "--text", text],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if proc.returncode == 0 and "{" in proc.stdout:
+            return json.loads(proc.stdout[proc.stdout.index("{"):])
+    return {
+        "code": "curate_client_unclassified_" + hashlib.sha256(text.encode()).hexdigest()[:8],
+        "cause": text[:500],
+        "next_command": "repair canonical JSON and rerun validate-canonical",
+    }
+
+
+def _canonical_path(cfg: dict) -> Path | None:
+    return _path_from_cfg(cfg, "canonical_client_file")
+
+
+def _load_canonical(cfg: dict) -> CanonicalClientData | None:
+    path = _canonical_path(cfg)
+    if path is None:
+        return None
+    return CanonicalClientData.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _canonical_validation_failure(path: Path | None, exc: Exception) -> dict[str, Any]:
+    text = f"curate-client canonical JSON pydantic validation failed for {path}: {exc}"
+    return {
+        "schema": "curate_client.canonical_validation_receipt.v1",
+        "status": "FAIL",
+        "path": str(path) if path else None,
+        "triage": _triage(text),
+        "errors": str(exc),
+        "next_command": "repair canonical JSON fields/classification and rerun validate-canonical",
+    }
+
+
+def cmd_validate_canonical(cfg: dict) -> dict[str, Any]:
+    path = _canonical_path(cfg)
+    if path is None:
+        if cfg.get("require_canonical_json"):
+            return _canonical_validation_failure(path, ValueError("missing canonical_client_file"))
+        return {"schema": "curate_client.canonical_validation_receipt.v1", "status": "SKIP", "path": None}
+    try:
+        data = _load_canonical(cfg)
+    except (ValidationError, ValueError, OSError) as exc:
+        return _canonical_validation_failure(path, exc)
+    assert data is not None
+    return {
+        "schema": "curate_client.canonical_validation_receipt.v1",
+        "status": "PASS",
+        "path": str(path),
+        "client": data.client,
+        "source_count": len(data.sources),
+        "briefing_point_count": len(data.briefing_points),
+        "question_oracle_count": len(data.question_oracles),
+    }
+
+
+def _require_canonical_valid(cfg: dict) -> dict[str, Any] | None:
+    receipt = cmd_validate_canonical(cfg)
+    if receipt.get("status") == "FAIL":
+        return receipt
+    if cfg.get("require_canonical_json") and receipt.get("status") != "PASS":
+        return _canonical_validation_failure(_canonical_path(cfg), ValueError("canonical JSON validation did not pass"))
+    return None
 
 
 def extract_openapi(spec_path: str, outdir: Path, client: str) -> int:
@@ -140,6 +315,26 @@ def extract_terraform(repo: str, outdir: Path, client: str) -> int:
     return n
 
 
+def _copy_markdown_source(source: Any, outdir: Path) -> int:
+    src = source.get("path") if isinstance(source, dict) else source
+    if not src:
+        return 0
+    path = Path(str(src)).expanduser()
+    if not path.exists():
+        return 0
+    files = [path] if path.is_file() else sorted(path.rglob("*.md"))
+    n = 0
+    for file in files:
+        if file.suffix.lower() != ".md":
+            continue
+        target = outdir / "curated" / file.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if file.resolve() != target.resolve():
+            target.write_text(file.read_text(encoding="utf-8", errors="ignore"), encoding="utf-8")
+            n += 1
+    return n
+
+
 def cmd_chunks(cfg: dict) -> dict:
     outdir = Path(cfg["kb_root"]) / "knowledge"
     outdir.mkdir(parents=True, exist_ok=True)
@@ -148,7 +343,9 @@ def cmd_chunks(cfg: dict) -> dict:
         total += extract_openapi(spec, outdir, cfg["client"])
     for repo in cfg.get("terraform_repos") or []:
         total += extract_terraform(repo, outdir, cfg["client"])
-    return {"chunks_written": total, "knowledge_dir": str(outdir)}
+    for source in (cfg.get("document_sources") or []) + (cfg.get("curated_sources") or []):
+        total += _copy_markdown_source(source, outdir)
+    return {"chunks_written": total, "knowledge_dir": str(outdir), "existing_knowledge_files": len(_knowledge_files(cfg))}
 
 
 def cmd_ingest(cfg: dict) -> dict:
@@ -202,6 +399,35 @@ LIVE_EVIDENCE_ORACLE_COLLECTIONS = [
 ]
 
 
+def _limit(cfg: dict, key: str, default: int) -> int:
+    try:
+        return max(1, int(cfg.get(key) or default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _json_file(cfg: dict, key: str) -> Any | None:
+    path = _path_from_cfg(cfg, key)
+    if path is None:
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _without_classification(model: BaseModel) -> dict[str, Any]:
+    data = model.model_dump(mode="json", by_alias=True)
+    data.pop("classification", None)
+    return data
+
+
+def _oracle_collections(cfg: dict) -> list[str]:
+    configured = [str(item) for item in (cfg.get("oracle_recall_collections") or [])]
+    collections: list[str] = []
+    for item in configured + LIVE_EVIDENCE_ORACLE_COLLECTIONS:
+        if item not in collections:
+            collections.append(item)
+    return collections
+
+
 def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-") or "item"
 
@@ -227,7 +453,7 @@ def _recall_keys(cfg: dict, query: str, *, limit: int = 6) -> list[str]:
         daemon + "/recall",
         data=json.dumps({
             "q": query,
-            "collections": LIVE_EVIDENCE_ORACLE_COLLECTIONS,
+            "collections": _oracle_collections(cfg),
             "k": limit,
             "limit": limit,
         }).encode(),
@@ -242,6 +468,24 @@ def _recall_keys(cfg: dict, query: str, *, limit: int = 6) -> list[str]:
         if key and key not in keys:
             keys.append(str(key))
     return keys
+
+
+def _manifest_sources(cfg: dict) -> list[dict[str, str]]:
+    canonical = _load_canonical(cfg)
+    if canonical is not None:
+        return [{k: str(v) for k, v in _without_classification(source).items() if v is not None} for source in canonical.sources]
+    path = Path(cfg["kb_root"]) / "source-manifest.json"
+    if not path.is_file():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    docs = payload.get("documents") if isinstance(payload, dict) else payload
+    if not isinstance(docs, list):
+        return []
+    out: list[dict[str, str]] = []
+    for item in docs:
+        if isinstance(item, dict):
+            out.append({k: str(v) for k, v in item.items() if v is not None})
+    return out
 
 
 def _source_context(cfg: dict) -> list[dict[str, str]]:
@@ -260,21 +504,32 @@ def _source_context(cfg: dict) -> list[dict[str, str]]:
             "path": str(repo),
             "use": "client infrastructure source for Q-A chunks and coverage questions",
         })
-    knowledge = Path(cfg["kb_root"]) / "knowledge"
-    for index, path in enumerate(sorted(knowledge.rglob("*.md"))[:8]):
+    sources.extend(_manifest_sources(cfg))
+    for index, path in enumerate(_knowledge_files(cfg)[:_limit(cfg, "source_context_limit", 8)]):
+        text = path.read_text(encoding="utf-8", errors="ignore")
         sources.append({
             "source_id": f"{_slug(cfg['client'])}_knowledge_{index + 1}",
             "kind": "knowledge_chunk",
             "path": str(path),
-            "use": "generated Q-A knowledge chunk for local ripgrep fallback",
+            "digest": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback",
         })
     return sources
 
 
 def _briefing_points(cfg: dict) -> list[dict[str, Any]]:
+    canonical = _load_canonical(cfg)
+    if canonical is not None:
+        return [_without_classification(point) for point in canonical.briefing_points[:_limit(cfg, "briefing_points_limit", len(canonical.briefing_points))]]
+    configured = _json_file(cfg, "briefing_points_file")
+    if configured is not None:
+        points = configured.get("points") if isinstance(configured, dict) else configured
+        if not isinstance(points, list) or not points:
+            raise RuntimeError("briefing_points_file must contain a non-empty list or {points: [...]}")
+        return points[:_limit(cfg, "briefing_points_limit", len(points))]
     research = cmd_research_plan(cfg)
     points = []
-    for item in (research.get("collaboration_points") or [])[:3]:
+    for item in (research.get("collaboration_points") or [])[:_limit(cfg, "briefing_points_limit", 3)]:
         system = str(item.get("system") or "coverage")
         points.append({
             "point_id": f"{_slug(system)}-coverage",
@@ -300,9 +555,60 @@ def _briefing_points(cfg: dict) -> list[dict[str, Any]]:
 
 
 def _question_oracles(cfg: dict) -> list[dict[str, Any]]:
+    canonical = _load_canonical(cfg)
+    if canonical is not None:
+        out = []
+        for item in canonical.question_oracles[:_limit(cfg, "question_oracles_limit", len(canonical.question_oracles))]:
+            oracle = _without_classification(item)
+            reviewed = oracle.get("reviewed_answer")
+            if isinstance(reviewed, dict):
+                reviewed.pop("classification", None)
+            keys = [str(k) for k in (oracle.get("memory_keys") or [])]
+            if len(keys) < 2:
+                keys = _recall_keys(cfg, f"{cfg['client']} {oracle['canonical_question']}", limit=8)
+            if len(keys) < 2:
+                raise RuntimeError(f"recall probe did not return at least two memory keys: {oracle['canonical_question']}")
+            oracle["memory_keys"] = keys[:4]
+            out.append(oracle)
+        return out
+    configured = _json_file(cfg, "question_oracles_file")
+    if configured is not None:
+        items = configured.get("question_oracles") if isinstance(configured, dict) else configured
+        if not isinstance(items, list) or not items:
+            raise RuntimeError("question_oracles_file must contain a non-empty list or {question_oracles: [...]}")
+        out = []
+        for index, item in enumerate(items[:_limit(cfg, "question_oracles_limit", len(items))]):
+            if not isinstance(item, dict):
+                raise RuntimeError("question_oracles_file entries must be objects")
+            oracle = dict(item)
+            query = str(oracle.get("canonical_question") or oracle.get("question") or "")
+            if not query:
+                raise RuntimeError("question_oracles_file entry missing canonical_question")
+            oracle.setdefault("question_id", f"{_slug(cfg['client'])}-oracle-{index + 1}")
+            chain = oracle.get("skill_chain")
+            if not isinstance(chain, list) or not chain or chain[0] != "memory":
+                oracle["skill_chain"] = ["memory"] + ([str(v) for v in chain] if isinstance(chain, list) else [])
+            oracle.setdefault("category", str(oracle.get("rubric_dimension") or "client_context_question"))
+            oracle.setdefault("reviewed_answer", {
+                "review_status": "reviewed",
+                "expected_response_shape": "source_checked_client_context_answer",
+                "quality_bar": [
+                    "uses stored client context first",
+                    "keeps live answers bounded to retrieved evidence",
+                    "fails closed if source evidence is unavailable",
+                ],
+            })
+            keys = [str(k) for k in (oracle.get("memory_keys") or [])]
+            if len(keys) < 2:
+                keys = _recall_keys(cfg, f"{cfg['client']} {query}", limit=8)
+            if len(keys) < 2:
+                raise RuntimeError(f"recall probe did not return at least two memory keys: {query}")
+            oracle["memory_keys"] = keys[:4]
+            out.append(oracle)
+        return out
     probes = cfg.get("probes") or []
     oracles = []
-    for index, probe in enumerate(probes[:8]):
+    for index, probe in enumerate(probes[:_limit(cfg, "question_oracles_limit", 8)]):
         query = f"{cfg['client']} {probe}"
         keys = _recall_keys(cfg, query, limit=8)
         if len(keys) < 2:
@@ -355,7 +661,7 @@ def _generate_prep_pack(cfg: dict, path: Path) -> dict[str, Any]:
             "kind": str(cfg.get("target_kind") or "employer"),
             "name": client,
             "topic": topic,
-            "purpose": str(cfg.get("purpose") or "meeting"),
+            "purpose": str(cfg.get("purpose") or "rehearsal"),
         },
         "research_chain": [
             {"skill": "curate-client", "role": "builds client KB and emits live-evidence prep pack"},
@@ -376,7 +682,7 @@ def _generate_prep_pack(cfg: dict, path: Path) -> dict[str, Any]:
         "memory_exports": {
             "ingest_endpoint": "/live-evidence/oracle-pack",
             "recall_endpoint": "/recall",
-            "collections": LIVE_EVIDENCE_ORACLE_COLLECTIONS,
+            "collections": _oracle_collections(cfg),
         },
         "live_use": {
             "before_call": [
@@ -423,6 +729,7 @@ def cmd_prep_pack(cfg: dict) -> dict:
             "schema": "curate_client.prep_pack_receipt.v1",
             "status": "FAIL",
             "path": str(path),
+            "triage": _triage(f"curate-client prep-pack failed: {type(exc).__name__}: {exc}"),
             "error": f"prep pack regeneration failed: {type(exc).__name__}: {exc}",
         }
     if payload.get("schema") != "live_evidence.prep_pack.v1":
@@ -452,6 +759,52 @@ def cmd_prep_pack(cfg: dict) -> dict:
             "purpose": "load briefing pack and verify prep-pack oracle recall before the call",
         },
         "prep_pack": payload,
+    }
+
+
+def cmd_report(cfg: dict) -> dict[str, Any]:
+    receipt = cmd_validate_canonical(cfg)
+    if receipt.get("status") != "PASS":
+        return receipt
+    data = _load_canonical(cfg)
+    assert data is not None
+    out = _path_from_cfg(cfg, "html_report") or (Path(cfg["kb_root"]) / "reports" / f"{_slug(data.client)}.html")
+    rows = "\n".join(
+        f"<tr><td>{html.escape(o.question_id)}</td><td>{html.escape(o.scenario)}</td>"
+        f"<td>{html.escape(o.rubric_dimension)}</td><td>{html.escape(o.classification)}</td></tr>"
+        for o in data.question_oracles
+    )
+    source_rows = "\n".join(
+        f"<tr><td>{html.escape(s.source_id)}</td><td>{html.escape(s.title)}</td>"
+        f"<td>{html.escape(s.classification)}</td><td>{html.escape(s.authority)}</td></tr>"
+        for s in data.sources
+    )
+    body = f"""<!doctype html>
+<html lang=\"en\"><head><meta charset=\"utf-8\"><title>{html.escape(data.client)} curate-client report</title>
+<style>
+body{{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.5;margin:2rem;max-width:1100px}}
+table{{border-collapse:collapse;width:100%;margin:1rem 0}}td,th{{border:1px solid #ddd;padding:.45rem;text-align:left;vertical-align:top}}
+th{{background:#f5f5f5}}code{{background:#f6f8fa;padding:.1rem .25rem}}.warn{{border-left:4px solid #b45309;padding-left:1rem}}
+</style></head><body>
+<h1>{html.escape(data.client)} curate-client report</h1>
+<h2>Report Summary</h2>
+<p>Canonical source is validated JSON: <code>{html.escape(str(_canonical_path(cfg)))}</code>. It contains {len(data.sources)} sources, {len(data.briefing_points)} briefing points, and {len(data.question_oracles)} question oracles.</p>
+<h2>Scope</h2><p>Client prep data for Memory ingest, Live Evidence prep-pack generation, and rehearsal report rendering.</p>
+<h2>Source-of-Truth Inventory</h2><table><thead><tr><th>Source</th><th>Title</th><th>Classification</th><th>Authority</th></tr></thead><tbody>{source_rows}</tbody></table>
+<h2>Findings</h2><p>Every source, briefing point, question oracle, and reviewed answer in the canonical JSON carries a classification field because Pydantic validation is the acceptance gate.</p>
+<h2>Question Oracles</h2><table><thead><tr><th>ID</th><th>Scenario</th><th>Rubric</th><th>Classification</th></tr></thead><tbody>{rows}</tbody></table>
+<h2>Finished / Pending / Outstanding / Broken / Blocked / Unproven</h2><p>Finished: canonical JSON validation and HTML report generation. Unproven: browser visual rendering until a screenshot/CDP check is run.</p>
+<h2>Plan-Ready Next Actions</h2><p>If visual publication matters, open this HTML report and capture a screenshot/CDP receipt. If not, the JSON receipt is the source of truth.</p>
+<h2>Non-Claims</h2><p>This report does not prove the full iterative dogpile/Tau research loop or Chrome rendering.</p>
+</body></html>"""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(body, encoding="utf-8")
+    return {
+        "schema": "curate_client.html_report_receipt.v1",
+        "status": "PASS",
+        "canonical_validation": receipt,
+        "path": str(out),
+        "source": str(_canonical_path(cfg)),
     }
 
 
@@ -541,17 +894,26 @@ def cmd_research_plan(cfg: dict) -> dict:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("usage: curate.py plan|chunks|ingest|verify|prep-pack|build --config <yaml>", file=sys.stderr)
+        print("usage: curate.py plan|chunks|ingest|verify|prep-pack|report|validate-canonical|build --config <yaml>", file=sys.stderr)
         sys.exit(2)
     cmd = sys.argv[1]
     if "--config" not in sys.argv:
         _needs_interview(["config"])
     cfg = _load_config(sys.argv[sys.argv.index("--config") + 1])
     _validate(cfg)
-    if cmd == "plan":
+    canonical_failure = _require_canonical_valid(cfg)
+    if canonical_failure:
+        out = canonical_failure
+    elif cmd == "validate-canonical":
+        out = cmd_validate_canonical(cfg)
+    elif cmd == "plan":
         out = {"client": cfg["client"], "kb_root": cfg["kb_root"],
                "openapi_specs": cfg.get("openapi_specs") or [],
                "terraform_repos": cfg.get("terraform_repos") or [],
+               "document_sources": cfg.get("document_sources") or [],
+               "curated_sources": cfg.get("curated_sources") or [],
+               "canonical_validation": cmd_validate_canonical(cfg),
+               "knowledge_files": len(_knowledge_files(cfg)),
                "scope": f"client:{cfg['client']}", "writes": False}
     elif cmd == "chunks":
         out = cmd_chunks(cfg)
@@ -563,9 +925,11 @@ def main() -> None:
         out = cmd_research_plan(cfg)
     elif cmd == "prep-pack":
         out = cmd_prep_pack(cfg)
+    elif cmd == "report":
+        out = cmd_report(cfg)
     elif cmd == "build":
-        out = {"chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg), "prep_pack": cmd_prep_pack(cfg)}
-        out["status"] = out["verify"]["status"]
+        out = {"canonical_validation": cmd_validate_canonical(cfg), "chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg), "prep_pack": cmd_prep_pack(cfg)}
+        out["status"] = "PASS" if out["canonical_validation"].get("status") == "PASS" and out["verify"].get("status") == "PASS" and out["prep_pack"].get("status") == "PASS" else "FAIL"
     else:
         print(f"unknown command {cmd}", file=sys.stderr)
         sys.exit(2)
