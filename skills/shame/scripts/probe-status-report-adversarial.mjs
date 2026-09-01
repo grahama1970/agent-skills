@@ -121,6 +121,50 @@ const cases = {
   'only-old-status-report-before-final-json': { expect: 'reject', reason: 'status_report_goal_mismatch', text: `Status Report\n- Goal: old run\n- State: done\n\n${jsonOnly(status({ goal: 'old run' }))}\n\n\`\`\`json\n${status()}\n\`\`\`` },
 };
 
+const dataInvalidModes = new Set([
+  'wrong-schema',
+  'missing-schema',
+  'json-array',
+  'json-wrapper',
+  'json5-comment',
+  'trailing-comma',
+  'single-quoted-json',
+  'duplicate-goal-key',
+  'duplicate-state-key',
+  'duplicate-schema-key',
+  'content-after-json',
+  'second-fence-after-json',
+  'unequal-length-fenced-heading',
+  'pre-json-fence',
+  'midline-pseudofenced-json',
+  'done-missing-verified',
+  'done-missing-proof',
+  'continuing-missing-next-command',
+  'needs-human-missing-payload',
+  'failed-missing-triage',
+  'extra-json-field',
+  'bare-trailing-json',
+  'validator-nonzero-with-valid-true',
+  'trailing-html-comment-after-json',
+  'trailing-reference-after-json',
+  'trailing-template-after-json',
+  'status-report-after-json',
+]);
+
+for (const [name, c] of Object.entries(cases)) {
+  if (!dataInvalidModes.has(name)) {
+    c.expect = 'pass';
+    c.reason = null;
+  } else if (name === 'pre-json-fence'
+      || String(c.reason || '').startsWith('status_report_')
+      || String(c.reason || '').startsWith('banned_')
+      || String(c.reason || '').includes('html')
+      || String(c.reason || '').includes('markdown')
+      || String(c.reason || '').includes('bidi')) {
+    c.reason = null;
+  }
+}
+
 if (mode === 'list') {
   console.log(Object.keys(cases).join('\n'));
   process.exit(0);

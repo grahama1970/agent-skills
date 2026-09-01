@@ -37,7 +37,7 @@ Capture bad agent status updates into a JSONL training set, the structured `sham
 
 This is a recording skill, not a scolding skill. Do not generate essays about agent behavior. Store the labeled example and return the receipt.
 
-`$shame` is also a self-correction trigger for the installed Pi extension. The extension is JSON-first with a mandatory prose rendering: it never classifies prose and never uses LLM judgment over user/assistant text. A mutating or guard-forced turn must include a prose section named `Status Report` derived from the final `pi.agent_status.v1` object, then end with a fenced ```json block containing that valid object. The extension validates the JSON with the pydantic model in `scripts/agent_status_schema.py`, checks that the prose `Status Report` copies the JSON `goal` and `state`, and rejects answers whose object or rendering is missing or invalid. A rejection shows a correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate. `UNLAZY_FORCED_RETRY` follow-up prompts keep the same guard active instead of allowing a plain/vague retry footer. After two `state=failed` reports with the same goal plus triage fingerprint, the extension blocks another stale failure report until the agent either asks one plain human question, cites valid `debugger.proof.v1` breakpoint/local-state proof, or cites a `lazy_report_shame.debugger_failure_handoff.v1` file with exact file:line and debugger error.
+`$shame` is also a self-correction trigger for the installed Pi extension. The extension is data-first: it never classifies prose and never uses LLM judgment over user/assistant text. A mutating or guard-forced turn must end with a fenced ```json block containing one valid `pi.agent_status.v1` object. The extension validates that JSON with the pydantic model in `scripts/agent_status_schema.py`, compiles `continuing.not_done[].next_command` into the next follow-up command, strips the raw JSON from the visible answer, and renders the human `Status Report` itself. A rejection shows a correction packet, queues one forced retry, and tells the human how to label the raw rejected candidate. After two `state=failed` reports with the same goal plus triage fingerprint, the extension blocks another stale failure report until the agent either asks one plain human question, cites valid `debugger.proof.v1` breakpoint/local-state proof, or cites a `lazy_report_shame.debugger_failure_handoff.v1` file with exact file:line and debugger error.
 
 Missing per-feature `$agentic-evals` coverage is shame. For every new feature, add or update a retained `$agentic-evals` fixture, run it, and cite the receipt before reporting the feature done. Leaving relevant files, skills, or project changes uncommitted or unpushed when no external blocker exists is also shame.
 
@@ -47,7 +47,7 @@ Preferred human UX is collaborative, not punitive:
 
 1. Extension rejects the bad answer and shows the raw candidate hash, machine reason, excerpt, and correction target.
 2. Extension writes `/mnt/storage12tb/skills/shame/training/pending-review-packet.json` so `/shame show` can recover the candidate after a reload.
-3. Agent rewrites the answer with a prose `Status Report` section derived from the final `pi.agent_status.v1` JSON block, then ends with that JSON block.
+3. Agent rewrites the answer and ends with one valid `pi.agent_status.v1` JSON block; the extension renders the visible `Status Report` from that object.
 4. Human labels the raw candidate with the Pi extension command:
 
 ```text
@@ -79,11 +79,11 @@ One JSON object per report-like turn, validated by `scripts/agent_status_schema.
 | `needs_roundtable` | `immutable_goal` + >=3 `handlers` | $ask roundtable quorum floor |
 | `needs_competition` | `immutable_goal` + >=2 `handlers` + `criteria[]` | $ask compete candidate floor |
 
-Two invariants hold for every report regardless of state: `changed` must be non-empty (say what is different, or explicitly `no change: <reason>`), and unfinished work cannot coexist with `done`. A report with `not_done` items and no human gate must use `state=continuing`, whose `not_done[0].next_command` the extension queues deterministically; the only ways to stop with open items are `needs_human` (exact action) or `failed` (triage code).
+Two invariants hold for every report regardless of state: `changed` must be non-empty (say what is different, or explicitly `no change: <reason>`), and `not_done` is only legal with `state=continuing`. If the JSON says unfinished agent-executable work exists, the extension compiles `not_done[0].next_command` and queues it deterministically. Use `needs_human.action` instead of `not_done` when a person must act; use `failed.failure.triage` instead of `not_done` for a terminal failure.
 
 `compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension queues the compiled command as a follow-up on `message_end`.
 
-A human-readable `Status Report` section is required before the JSON. It is a deterministic rendering of the JSON contract, not a substitute for it. At minimum it must contain `Goal: <json.goal>` and `State: <json.state>` copied from the final `pi.agent_status.v1` object; the JSON remains the typed contract the checker enforces.
+The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the final `pi.agent_status.v1` JSON remains the typed contract the checker enforces.
 
 The pending review packet is overwritten on each new rejected candidate:
 
@@ -187,10 +187,11 @@ The fixture must prove:
 - strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
-- every `pi.agent_status.v1` report includes a prose `Status Report` section whose Goal and State match the JSON;
-- JSON-only reports and mismatched `Status Report` renderings are rejected;
+- every valid `pi.agent_status.v1` report can be rendered into a visible `Status Report` by the extension;
+- JSON-only reports are accepted after pydantic validation, model-authored status prose is stripped before display, and a static/live guard fails if `status-json-check.mjs` reintroduces regex/prose status policy;
 - repeated same-fingerprint failures are blocked unless the next report asks one plain human question, cites `debugger.proof.v1`, or cites an exact file:line debugger failure handoff;
 - extension rejection notices are correction packets naming the pydantic/checker reason rather than bare gate JSON;
+- `UNLAZY_FORCED_RETRY` follow-up prompts keep the guard active and reject plain/vague footers that omit final `pi.agent_status.v1` JSON;
 - rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 

@@ -161,6 +161,12 @@ class AgentStatus(BaseModel):
             raise ValueError("failure is only legal with state=failed")
         if self.state == "continuing" and not self.not_done:
             raise ValueError("state=continuing requires not_done[].next_command")
+        if self.not_done and self.state != "continuing":
+            raise ValueError(
+                "not_done items mean unfinished agent-executable work; use state=continuing "
+                "so not_done[0].next_command is queued deterministically. Use "
+                "needs_human.action instead of not_done when a person must act."
+            )
         payload_states = {
             "needs_human": "needs_human",
             "needs_brave_search": "needs_brave_search",

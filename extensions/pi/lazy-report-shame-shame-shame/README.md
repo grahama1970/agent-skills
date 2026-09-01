@@ -2,7 +2,7 @@
 
 A serious Pi extension wearing a joke hat, for agentic engineers who have personally suffered through “committed and pushed, done” while the actual product still does not work.
 
-When an assistant tries to turn commit-heavy or GitHub-heavy delivery prose into progress without ending in a plain status footer, the extension rejects the answer, plays one Chatterbox “shame”, and starts a short correction workflow: the agent rewrites the status report, then the human labels the raw rejected candidate for training.
+When an assistant tries to turn commit-heavy or GitHub-heavy delivery prose into progress without ending in validated `pi.agent_status.v1` data, the extension rejects the answer, plays one Chatterbox “shame”, and starts a short correction workflow: the agent rewrites the answer, then the human labels the raw rejected candidate for training.
 
 It is meant to be funny because the failure mode is otherwise exhausting. The humor is restorative; the enforcement is not optional.
 
@@ -20,15 +20,16 @@ On assistant `message_end`, it:
 
 1. extracts the assistant’s final text;
 2. ignores tool-call-only assistant messages with no text, so intermediate tool use is not rejected as a missing report;
-3. runs `report-check.mjs` as a deterministic checker;
-4. rejects only likely delivery/status reports that are commit-heavy, GitHub-heavy, or jargon-heavy and lack a final `Status Report` footer;
-5. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final report that claims completion while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
-6. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a final `Status Report` footer so the replacement itself is plain-spoken;
-7. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
-8. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
-9. refuses to queue a second automatic retry for the same originating turn.
+3. runs `status-json-check.mjs` as a deterministic checker;
+4. validates the final `pi.agent_status.v1` JSON with pydantic instead of classifying prose;
+5. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final `state=done` report while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
+6. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
+7. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
+8. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
+9. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
+10. refuses to queue a second automatic retry for the same originating turn.
 
-The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `Status Report` footer. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
+The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
 
 ## Continuation guard file
 
@@ -76,9 +77,9 @@ skills/shame/scripts/write-continuation-guard.mjs \
 
 The intended human-agent flow is:
 
-1. The extension rejects the bad status answer and shows the machine reason, raw candidate hash, excerpt, and required footer.
+1. The extension rejects the bad status answer and shows the machine reason, raw candidate hash, excerpt, and required JSON contract.
 2. The extension writes a pending review packet to `/mnt/storage12tb/skills/shame/training/pending-review-packet.json` so the raw candidate survives an extension reload.
-3. The agent rewrites the answer in plain English with `Status Report` bullets.
+3. The agent rewrites the answer and ends with one valid `pi.agent_status.v1` JSON block; the extension renders the visible `Status Report`.
 4. The human approves or corrects the classification with `/shame review` for an interactive label picker, or directly with `/shame allow|reject|warn <reason> -- <note>`.
 5. `/shame show` displays the raw candidate, pending packet path, machine decision, checker version, excerpt, and copyable human-labeling commands.
 6. The captured label goes to JSONL and Memory for the future classifier loop.
@@ -87,30 +88,26 @@ The extension should never leave the human staring at only gate JSON. A rejectio
 
 ## Rejected patterns
 
-These fail outright when they look like a delivery/status report and do not end with the required footer:
+These fail outright on guarded turns:
 
-- Git metadata presented as progress: “Committed and pushed. Done.”
-- GitHub/issue/PR-heavy closure reports with no user-visible change.
-- Jargon-heavy completion prose with no proof line.
-- Vague unresolved work inside a delivery report: “remaining gates are open.”
+- Missing final `pi.agent_status.v1` JSON.
+- Invalid pydantic status data.
+- `state=done` with no `changed`, no `verified`, no `proof`, or any `not_done` item.
+- `state=continuing` without `not_done[].next_command`.
+- `state=needs_human` without an exact human action and reason.
+- Any content after the final status JSON block.
+
+The retained `$agentic-evals` include `skills/shame/scripts/check-status-guard-data-first.mjs`. That check fails if `status-json-check.mjs` reintroduces status-prose policy symbols, regex helpers, or a live behavior where bad prose overrides valid JSON or good prose rescues invalid JSON.
 
 ## Required report shape
 
-A delivery/status answer must end with this exact footer shape:
-
-```text
-Status Report
-- Changed: plain-English user-visible/project-visible change.
-- Verified: `exact command` -> exact result, or say not verified.
-- Proof: path, URL, issue, receipt, artifact, or explicit missing proof.
-- Not done: none, or exact unfinished item plus next command.
-```
+A guarded answer must end with a final fenced `json` block containing one `pi.agent_status.v1` object. The extension renders the visible report from that data.
 
 Rules:
 
-- Git commits, pushes, branches, SHAs, issues, and PRs are retention metadata, not the `Changed` value by themselves.
-- Unit tests, lint, and typechecks are supporting evidence. Put the exact command/result in `Verified`, not as the headline result.
-- If no real verification or proof exists, say that plainly and put the next command in `Not done`.
+- Git commits, pushes, branches, SHAs, issues, and PRs are retention metadata, not the `changed` value by themselves.
+- Unit tests, lint, and typechecks are supporting evidence. Put the exact command/result in `verified`, not as the headline result.
+- If no real verification or proof exists, do not use `state=done`; use `state=continuing` with `not_done[].next_command`, `state=needs_human`, or `state=failed` with a triage code.
 
 ## Shame audio
 
@@ -180,12 +177,12 @@ Reload Pi after editing:
 Manual checker use:
 
 ```bash
-node ~/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs < candidate-report.txt
-LRSSS_FORCE_STATUS=1 node ~/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs < candidate-report.txt
-LRSSS_STRICT_STATUS=1 node ~/.pi/agent/extensions/lazy-report-shame-shame-shame/report-check.mjs < candidate-report.txt
+node ~/.pi/agent/extensions/lazy-report-shame-shame-shame/status-json-check.mjs < candidate-report.txt
+LRSSS_FORCE_STATUS=1 node ~/.pi/agent/extensions/lazy-report-shame-shame-shame/status-json-check.mjs < candidate-report.txt
+LRSSS_STRICT_STATUS=1 node ~/.pi/agent/extensions/lazy-report-shame-shame-shame/status-json-check.mjs < candidate-report.txt
 ```
 
-`LRSSS_STRICT_STATUS=1` is the `$shame` self-correction mode: even a short answer such as `Recorded.` is rejected unless it has the final `Status Report` footer.
+`LRSSS_STRICT_STATUS=1` is the `$shame` self-correction mode: even a short answer such as `Recorded.` is rejected unless it has the final `pi.agent_status.v1` JSON block.
 
 ## Proof boundary
 

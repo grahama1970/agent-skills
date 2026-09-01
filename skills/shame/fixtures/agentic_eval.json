@@ -106,7 +106,7 @@
     },
     {
       "id": "shame.status_report_rendering",
-      "description": "Every pi.agent_status.v1 report must include an assistant-owned visible prose Status Report section whose values are bound to the matching final JSON labels; hidden HTML, code fences, reference definitions, pseudo-fences, JSON-only reports, and mismatched renderings are rejected.",
+      "description": "Every guarded report must end with pydantic-valid pi.agent_status.v1 JSON; the extension strips model-authored status prose/JSON and renders the visible Status Report from validated data.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -474,7 +474,7 @@
       }
     },
     {
-      "name": "extension-status-report-required-with-json",
+      "name": "extension-json-only-status-accepted-and-rendered",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "deterministic",
@@ -494,12 +494,12 @@
         "exit_code": 0,
         "stdout_contains": [
           "\"ok\":true",
-          "missing_status_report_section"
+          "json-only-status-accepted-and-rendered"
         ]
       }
     },
     {
-      "name": "extension-status-report-mismatch-rejected",
+      "name": "extension-status-report-prose-mismatch-ignored",
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "deterministic",
@@ -519,7 +519,7 @@
         "exit_code": 0,
         "stdout_contains": [
           "\"ok\":true",
-          "status_report_state_mismatch"
+          "status-report-prose-mismatch-ignored"
         ]
       }
     },

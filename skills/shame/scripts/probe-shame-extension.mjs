@@ -155,12 +155,13 @@ async function runContinuationGuardOpenTicket() {
     schema: 'pi.agent_status.v1',
     goal: 'continuation guard probe',
     state: 'done',
+    changed: ['claimed continuation guard handled'],
     verified: [{ command: 'probe', result: 'probe' }],
     proof: ['/tmp/probe'],
   });
   const goodLookingFinal = (
     'The continuation guard is handled.\n\n'
-    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n- Verified: probe -> probe\n- Proof: /tmp/probe\n\n'
+    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n- Changed: claimed continuation guard handled\n- Verified: probe -> probe\n- Proof: /tmp/probe\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-premature', message: { id: 'assistant-premature', role: 'assistant', content: [{ type: 'text', text: goodLookingFinal }] } }, c);
@@ -193,12 +194,13 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
     schema: 'pi.agent_status.v1',
     goal: 'continuation guard probe',
     state: 'done',
+    changed: ['closed ticket and passed gate'],
     verified: [{ command: 'live-replay', result: 'PASS' }],
     proof: ['/tmp/proof.json'],
   });
   const finalText = (
     'Done.\n\n'
-    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n- Verified: live-replay -> PASS\n- Proof: /tmp/proof.json\n\n'
+    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n- Changed: closed ticket and passed gate\n- Verified: live-replay -> PASS\n- Proof: /tmp/proof.json\n\n'
     + '```json\n' + okStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-ok', message: { id: 'assistant-ok', role: 'assistant', content: [{ type: 'text', text: finalText }] } }, c);
@@ -234,24 +236,25 @@ async function runWhatRemainsRejectedWithoutNeedsHuman() {
   await handlers.input[0]({ text: 'report status for this active goal', source: 'user' }, c);
   const continuingStatus = JSON.stringify({
     schema: 'pi.agent_status.v1',
-    goal: 'what remains ban probe',
+    goal: 'what remains data-first probe',
     state: 'continuing',
+    changed: ['no change: continuing probe'],
     not_done: [{ item: 'continue work', next_command: 'run the next deterministic command' }],
   });
-  const badText = (
+  const text = (
     'Result text.\n\n'
-    + 'Status Report\n- Goal: what remains ban probe\n- State: continuing\n- Not done: continue work -> run the next deterministic command\n\n'
-    + 'What remains:\n- keep working\n\n'
+    + 'Status Report\n- State: done\n- What remains: confusing prose that should not be trusted\n\n'
     + '```json\n' + continuingStatus + '\n```'
   );
-  const result = await handlers.message_end[0]({ id: 'assistant-what-remains', message: { id: 'assistant-what-remains', role: 'assistant', content: [{ type: 'text', text: badText }] } }, c);
-  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
-  assert(notice.includes('banned_what_remains_without_needs_human'), 'What remains was not rejected when state was not needs_human', { notice });
-  assert(sent.length === 1, 'What remains rejection did not queue one retry', { sentCount: sent.length, sent });
-  assert(existsSync(packet), 'What remains rejection did not write pending packet', { packet });
-  const saved = JSON.parse(readFileSync(packet, 'utf8'));
-  assert(saved.machine?.reason_codes?.includes('banned_what_remains_without_needs_human'), 'pending packet omitted banned What remains reason', saved);
-  console.log(JSON.stringify({ ok: true, mode: 'what-remains-rejected-without-needs-human', retryMessages: sent.length, reason: 'banned_what_remains_without_needs_human' }));
+  const result = await handlers.message_end[0]({ id: 'assistant-what-remains', message: { id: 'assistant-what-remains', role: 'assistant', content: [{ type: 'text', text }] } }, c);
+  assert(allowedWithSwallow(result), 'valid continuing JSON should be accepted and rendered by the extension', { result });
+  const rendered = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(rendered.includes('State: continuing'), 'extension did not render state from JSON', { rendered });
+  assert(!rendered.includes('What remains: confusing prose'), 'model-authored status prose was not stripped', { rendered });
+  assert(sent.length === 1, 'continuing state did not queue one follow-up', { sentCount: sent.length, sent });
+  assert(sent[0].text.includes('run the next deterministic command'), 'follow-up did not include not_done next_command', { sent });
+  assert(!existsSync(packet), 'accepted continuing status should not write rejection packet', { packet });
+  console.log(JSON.stringify({ ok: true, mode: 'what-remains-continuing-queues-follow-up', retryMessages: sent.length, reason: 'continuing_next_command' }));
 }
 
 async function runWhatRemainsAllowedWithNeedsHuman() {
@@ -262,6 +265,7 @@ async function runWhatRemainsAllowedWithNeedsHuman() {
     schema: 'pi.agent_status.v1',
     goal: 'what remains ban probe',
     state: 'needs_human',
+    changed: ['no change: human decision required'],
     needs_human: {
       action: 'choose the next target',
       reason: 'the next action requires a human decision',
@@ -269,7 +273,7 @@ async function runWhatRemainsAllowedWithNeedsHuman() {
   });
   const okText = (
     'Result text.\n\n'
-    + 'Status Report\n- Goal: what remains ban probe\n- State: needs_human\n- Needs Human: choose the next target because the next action requires a human decision\n\n'
+    + 'Status Report\n- Goal: what remains ban probe\n- State: needs_human\n- Changed: no change: human decision required\n- Needs Human: choose the next target because the next action requires a human decision\n\n'
     + 'What remains:\n- human decision required\n\n'
     + '```json\n' + needsHumanStatus + '\n```'
   );
@@ -288,19 +292,19 @@ async function runStatusReportRequiredWithJson() {
   await markShameSkillRead(handlers, c);
   const doneStatus = JSON.stringify({
     schema: 'pi.agent_status.v1',
-    goal: 'status report required probe',
+    goal: 'json-only status probe',
     state: 'done',
+    changed: ['json-only probe'],
     verified: [{ command: 'probe', result: 'PASS' }],
     proof: ['/tmp/proof.json'],
   });
   const result = await handlers.message_end[0]({ id: 'assistant-json-only', message: { id: 'assistant-json-only', role: 'assistant', content: [{ type: 'text', text: 'Done.\n\n```json\n' + doneStatus + '\n```' }] } }, c);
-  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
-  assert(notice.includes('missing_status_report_section'), 'JSON-only status was not rejected for missing Status Report section', { notice });
-  assert(sent.length === 1, 'missing Status Report rejection did not queue one retry', { sentCount: sent.length, sent });
-  assert(existsSync(packet), 'missing Status Report rejection did not write pending packet', { packet });
-  const saved = JSON.parse(readFileSync(packet, 'utf8'));
-  assert(saved.machine?.reason_codes?.includes('missing_status_report_section'), 'pending packet omitted missing Status Report reason', saved);
-  console.log(JSON.stringify({ ok: true, mode: 'status-report-required-with-json', retryMessages: sent.length, reason: 'missing_status_report_section' }));
+  assert(allowedWithSwallow(result), 'JSON-only status should pass after pydantic validation', { result });
+  const rendered = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(rendered.includes('Status Report') && rendered.includes('Goal: json-only status probe'), 'extension did not render Status Report from JSON', { rendered });
+  assert(sent.length === 0, 'done JSON-only status should not queue retry or follow-up', { sentCount: sent.length, sent });
+  assert(!existsSync(packet), 'accepted JSON-only status should not write rejection packet', { packet });
+  console.log(JSON.stringify({ ok: true, mode: 'json-only-status-accepted-and-rendered', retryMessages: sent.length }));
 }
 
 async function runStatusReportMismatchRejected() {
@@ -312,20 +316,24 @@ async function runStatusReportMismatchRejected() {
   await markShameSkillRead(handlers, c);
   const doneStatus = JSON.stringify({
     schema: 'pi.agent_status.v1',
-    goal: 'status report mismatch probe',
+    goal: 'status report data source probe',
     state: 'done',
+    changed: ['mismatch prose ignored'],
     verified: [{ command: 'probe', result: 'PASS' }],
     proof: ['/tmp/proof.json'],
   });
   const text = (
-    'Status Report\n- Goal: status report mismatch probe\n- State: continuing\n- Verified: probe -> PASS\n- Proof: /tmp/proof.json\n\n'
+    'Status Report\n- Goal: status report data source probe\n- State: continuing\n- Changed: wrong prose\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-mismatch', message: { id: 'assistant-mismatch', role: 'assistant', content: [{ type: 'text', text }] } }, c);
-  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
-  assert(notice.includes('status_report_state_mismatch'), 'mismatched Status Report was not rejected', { notice });
-  assert(sent.length === 1, 'mismatched Status Report rejection did not queue one retry', { sentCount: sent.length, sent });
-  console.log(JSON.stringify({ ok: true, mode: 'status-report-mismatch-rejected', retryMessages: sent.length, reason: 'status_report_state_mismatch' }));
+  assert(allowedWithSwallow(result), 'valid JSON should pass even when model-authored status prose is wrong', { result });
+  const rendered = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(rendered.includes('State: done'), 'extension did not render state from JSON', { rendered });
+  assert(!rendered.includes('State: continuing'), 'model-authored status prose was not stripped', { rendered });
+  assert(sent.length === 0, 'done status should not queue retry or follow-up', { sentCount: sent.length, sent });
+  assert(!existsSync(packet), 'accepted status should not write rejection packet', { packet });
+  console.log(JSON.stringify({ ok: true, mode: 'status-report-prose-mismatch-ignored', retryMessages: sent.length }));
 }
 
 async function runStatusReportMatchesJsonAllowed() {
@@ -337,11 +345,12 @@ async function runStatusReportMatchesJsonAllowed() {
     schema: 'pi.agent_status.v1',
     goal: 'status report derived from json probe',
     state: 'done',
+    changed: ['matching status report probe'],
     verified: [{ command: 'probe', result: 'PASS' }],
     proof: ['/tmp/proof.json'],
   });
   const text = (
-    'Status Report\n- Goal: status report derived from json probe\n- State: done\n- Verified: probe -> PASS\n- Proof: /tmp/proof.json\n\n'
+    'Status Report\n- Goal: status report derived from json probe\n- State: done\n- Changed: matching status report probe\n- Verified: probe -> PASS\n- Proof: /tmp/proof.json\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-status-report-ok', message: { id: 'assistant-status-report-ok', role: 'assistant', content: [{ type: 'text', text }] } }, c);
@@ -543,7 +552,7 @@ const modes = {
   'continuation-open-ticket': runContinuationGuardOpenTicket,
   'continuation-closed-ticket-allows-final': runContinuationGuardClosedTicketAllowsFinal,
   'namespaced-mutating-tool-forces-status': runNamespacedMutatingToolForcesStatus,
-  'what-remains-rejected-without-needs-human': runWhatRemainsRejectedWithoutNeedsHuman,
+  'what-remains-continuing-queues-follow-up': runWhatRemainsRejectedWithoutNeedsHuman,
   'what-remains-allowed-with-needs-human': runWhatRemainsAllowedWithNeedsHuman,
   'status-report-required-with-json': runStatusReportRequiredWithJson,
   'status-report-mismatch-rejected': runStatusReportMismatchRejected,

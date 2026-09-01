@@ -5,9 +5,34 @@
   "proof_scope": "JSON-first status checking for the lazy-report-shame-shame-shame extension: pi.agent_status.v1 blocks validated by the live pydantic model against the live triage-error catalog; no regex/prose classification. real_world: every case executes the live checker script and live validator.",
   "cases": [
     {
+      "name": "status-guard-data-first-static-and-live-check",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.no_regex_or_agent_prose_status_validity"
+      ],
+      "seams": [
+        "status-json-check",
+        "pydantic-validator"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/scripts/check-status-guard-data-first.mjs"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "data_first_status_guard_verified"
+        ]
+      },
+      "real_world": true
+    },
+    {
       "name": "mutating-turn-missing-json-rejects",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "supports_claims": [
         "shame.status_json_required_on_mutating_turn"
       ],
@@ -29,7 +54,7 @@
     {
       "name": "valid-done-status-passes",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "supports_claims": [
         "shame.status_json_valid_done_passes"
       ],
@@ -41,7 +66,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'work.\\n\\nStatus Report\\nGoal: g\\nState: done\\nVerified: ls -> ok\\nProof: /tmp/x\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
+        "printf 'work.\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
       ],
       "expected": {
         "exit_code": 0
@@ -51,7 +76,7 @@
     {
       "name": "ambiguous-blocker-label-rejects",
       "type": "negative",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "supports_claims": [
         "shame.ambiguous_blocker_label_unrepresentable"
       ],
@@ -73,7 +98,7 @@
     {
       "name": "catalog-triage-code-passes",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "supports_claims": [
         "shame.catalog_triage_code_accepted"
       ],
@@ -85,7 +110,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'work.\\n\\nStatus Report\\nGoal: g\\nState: failed\\nFailure: tau_project_dag_missing_required_evidence -> c -> undefined\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"tau_project_dag_missing_required_evidence\",\"cause\":\"c\"}}}\\n```\\n' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
+        "printf 'work.\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"changed\":[\"no change: failed with triage\"],\"failure\":{\"triage\":{\"code\":\"tau_project_dag_missing_required_evidence\",\"cause\":\"c\"}}}\\n```\\n' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
       ],
       "expected": {
         "exit_code": 0
@@ -95,7 +120,7 @@
     {
       "name": "non-mutating-chat-without-json-passes",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "supports_claims": [
         "shame.non_mutating_chat_exempt"
       ],
@@ -116,7 +141,7 @@
     {
       "name": "continuing-status-carries-next-command",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "supports_claims": [
         "shame.continuing_state_exposes_next_command"
       ],
@@ -128,7 +153,51 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'work.\\n\\nStatus Report\\nGoal: g\\nState: continuing\\nNot done: x -> ./run.sh\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"continuing\",\"not_done\":[{\"item\":\"x\",\"next_command\":\"./run.sh\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"state\": \"continuing\"'"
+        "printf 'work.\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"continuing\",\"changed\":[\"no change: continuing\"],\"not_done\":[{\"item\":\"x\",\"next_command\":\"./run.sh\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"state\": \"continuing\"'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "done-with-not-done-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.not_done_requires_continuing"
+      ],
+      "seams": [
+        "status-json-check",
+        "pydantic-validator"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/p\"],\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-done-not-done.json; test $? -eq 1 && grep -q 'not_done items mean unfinished agent-executable work' /tmp/sj-done-not-done.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "needs-agent-with-not-done-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.not_done_requires_continuing"
+      ],
+      "seams": [
+        "status-json-check",
+        "pydantic-validator"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_agent\",\"changed\":[\"x\"],\"needs_agent\":{\"handler\":\"claude-fable-low\",\"question\":\"q\"},\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-needs-agent-not-done.json; test $? -eq 1 && grep -q 'not_done items mean unfinished agent-executable work' /tmp/sj-needs-agent-not-done.json"
       ],
       "expected": {
         "exit_code": 0
@@ -138,7 +207,7 @@
     {
       "name": "compiler-brave-search-rung0",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "shame.compiler_rung0_brave"
@@ -159,7 +228,7 @@
     {
       "name": "compiler-webgpt-rung2",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "shame.compiler_rung2_webgpt"
@@ -180,7 +249,7 @@
     {
       "name": "compiler-needs-human-no-command",
       "type": "positive",
-      "evidence_class": "live_e2e",
+      "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
         "shame.compiler_human_state_no_command"
@@ -273,6 +342,23 @@
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
+      }
+    },
+    {
+      "id": "shame.not_done_requires_continuing",
+      "description": "not_done is only legal with state=continuing so unfinished work always queues a next command",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.no_regex_or_agent_prose_status_validity",
+      "description": "status validity is controlled by final pi.agent_status.v1 pydantic validation, not regex or agent-authored prose",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "real_world": true
       }
     }
   ],
