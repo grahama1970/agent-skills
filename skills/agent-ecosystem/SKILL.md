@@ -39,7 +39,10 @@ state machines.
 
 Rendered with $create-svg (`scene.yml` is the source; regenerate with
 `skills/create-svg/run.sh render skills/agent-ecosystem/scene.yml skills/agent-ecosystem/ecosystem.svg`).
-The mermaid block below stays as the machine-readable edge list.
+Until the machine-readable membership manifest from issue 1584 exists and
+generates them, the SVG above and the mermaid block below are NON-NORMATIVE
+illustrations; the ownership table and member `## Ecosystem` sections are the
+normative topology.
 
 
 ```mermaid
@@ -124,10 +127,14 @@ Rules enforced by `scripts/receipt_envelope.py` (pydantic, extra=forbid):
 - `goal_hash` and `parent_refs[].digest` must be `sha256:` + 64 lowercase hex.
 - `parent_refs` require `goal_hash`: an evidence edge without a shared goal is
   untrusted and fails validation.
-- Pydantic proves STRUCTURE only. Reference RESOLUTION (the referenced receipt
-  exists, matches `expected_schema`/`expected_producer`, digest verifies) is a
-  separate consumer-side step; a structurally valid envelope is not yet a
-  trusted one.
+- Pydantic proves STRUCTURE only. Reference RESOLUTION is a separate
+  consumer-side step with four mandatory checks: the referenced receipt exists;
+  its schema equals `expected_schema`; its producer equals `expected_producer`;
+  and `resolved_parent.goal_hash == envelope.goal_hash` (a present hash is not
+  a shared goal until compared). Digest verification applies when `digest` is
+  set. A structurally valid envelope is not yet a trusted one.
+- `payload_schema` congruence is enforced at parse time: when `payload.schema`
+  is present it must equal `payload_schema`.
 - Field-set changes to any `extra=forbid` schema are breaking by construction;
   they require a new schema version, never an in-place edit.
 
@@ -156,16 +163,25 @@ when it emits or validates the same name, shape, and semantics as the owner.
    a layer boundary is a bug, not a classification.
 2. Catalog entries live in `skills/triage-error/failure_codes.json` with
    `{code, layer, match[], cause, next_command, recoverable, not_this[]}`.
-   Matching is deterministic: the signal is lowercased and
-   whitespace-normalized; an entry matches when ANY of its `match[]` tokens is
-   a substring; when `--layer` is given, entries with a different `layer` are
-   skipped; the FIRST matching entry in file order wins. Never regex, never
-   LLM judgment.
+   Matching is deterministic: normalization is exactly
+   `" ".join(text.lower().split())` (lowercase, all whitespace runs collapsed
+   to single spaces, ends trimmed); an entry matches when ANY of its `match[]`
+   tokens (also lowercased) is a substring of the normalized signal; when
+   `--layer` is given, entries with a different `layer` are skipped; the FIRST
+   matching entry in file order wins. Never regex, never LLM judgment.
+   Prohibited as terminal classifications (they are symptoms, not causes, and
+   must be re-triaged from the underlying signal): `NEEDS_ATTENTION`,
+   `BLOCKED`, `browser_handler_timeout`, `unknown_error`, `generic_failure`,
+   and any bare terminal verdict word.
 3. Unmatched signals mint `<layer-or-unknown>_unclassified_<8hex>` where the
    8 hex chars are the first 8 of sha256 over the normalized signal text, so
    the same signal always mints the same code. Minting opens the ticket +
-   agentic-eval + memory loop; a minted code that recurs gets promoted to the
-   catalog or aliased to an existing code, never left to sprawl.
+   agentic-eval + memory loop. Recurrence threshold: the SECOND observation of
+   the same minted code triggers promotion or aliasing. Alias representation:
+   add the minted code string itself to the `match[]` tokens of the canonical
+   catalog entry, so future identical signals classify to the canonical code;
+   the minted code is never a second canonical identity. The ticket/eval/memory
+   side effects are idempotent per minted code (keyed by the code string).
 4. Every ecosystem component that names a failure uses a catalog or minted
    code. Both pydantic validators (status schema, envelope) enforce this at
    parse time, so an ambiguous label cannot exist in a valid object.

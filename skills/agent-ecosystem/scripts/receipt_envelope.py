@@ -79,6 +79,18 @@ class ReceiptEnvelope(BaseModel):
         return value
 
     @model_validator(mode="after")
+    def payload_schema_congruence(self) -> "ReceiptEnvelope":
+        # Reviewer must-land (F1/R1): when the payload declares its own schema,
+        # the envelope's payload_schema must equal it. A mismatch is a wrapped
+        # lie and fails at parse time.
+        declared = self.payload.get("schema")
+        if declared is not None and declared != self.payload_schema:
+            raise ValueError(
+                f"payload_schema {self.payload_schema!r} != payload.schema {declared!r}; the envelope may not misdescribe its payload"
+            )
+        return self
+
+    @model_validator(mode="after")
     def parent_refs_require_goal_hash(self) -> "ReceiptEnvelope":
         # Reviewer ruling (R3): an escalation-evidence edge without a shared
         # goal is untrusted. Require goal_hash whenever parent_refs is nonempty.

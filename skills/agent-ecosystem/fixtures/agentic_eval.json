@@ -163,6 +163,27 @@
       "expected": {
         "exit_code": 0
       }
+    },
+    {
+      "name": "payload-schema-mismatch-rejects",
+      "type": "negative",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": [
+        "ecosystem.envelope_valid_passes"
+      ],
+      "seams": [
+        "envelope-validator"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"p\",\"emitted_at\":\"t\",\"payload\":{\"schema\":\"something.else.v1\"}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'may not misdescribe'"
+      ],
+      "expected": {
+        "exit_code": 0
+      }
     }
   ]
 }
