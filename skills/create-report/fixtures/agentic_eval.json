@@ -1,25 +1,116 @@
 {
   "version": 2,
   "skill": "create-report",
-  "trials": 3,
-  "proof_scope": "static skill contract validation",
+  "trials": 2,
+  "proof_scope": "JSON-first create-report contract: pydantic JSON Schema emission, sample report validation, validated Markdown/HTML rendering, and triage-error routing for invalid report payloads through the real ./run.sh entrypoint.",
   "claims": {
-    "proves": "the skill contract can be parsed and checked by the best-practices-skills validator",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "create-report exposes a pydantic-backed create_report.report.v1 schema, validates report JSON before rendering, renders Markdown/HTML views from validated JSON, routes invalid JSON through triage-error, and still satisfies the best-practices-skills contract.",
+    "does_not_prove": "that any project-specific report contains true live evidence, that reviewer/runtime artifacts are available, or that a generated report supports a real project decision. The included sample is a fixture."
   },
+  "capability_claims": [
+    {
+      "id": "create_report.skill_contract_valid",
+      "description": "create-report keeps a valid SKILL.md contract.",
+      "criticality": "important",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "create_report.json_schema_emitted",
+      "description": "create-report emits a pydantic JSON Schema for create_report.report.v1.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "create_report.validated_json_before_render",
+      "description": "create-report validates JSON before rendering Markdown or HTML views.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "create_report.invalid_json_routes_triage_error",
+      "description": "invalid create-report JSON fails closed and routes through triage-error instead of prose-only errors.",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    }
+  ],
+  "seams": [
+    {"seam_id": "skill_contract", "seam_type": "static contract", "criticality": "important", "claim_id": "create_report.skill_contract_valid", "required_evidence": ["deterministic"]},
+    {"seam_id": "pydantic_schema_cli", "seam_type": "contract/schema", "criticality": "critical", "claim_id": "create_report.json_schema_emitted", "required_evidence": ["live_e2e"]},
+    {"seam_id": "validate_cli", "seam_type": "contract/schema", "criticality": "critical", "claim_id": "create_report.validated_json_before_render", "required_evidence": ["live_e2e"]},
+    {"seam_id": "render_cli", "seam_type": "filesystem/process", "criticality": "critical", "claim_id": "create_report.validated_json_before_render", "required_evidence": ["live_e2e"]},
+    {"seam_id": "triage_error_boundary", "seam_type": "error-boundary", "criticality": "critical", "claim_id": "create_report.invalid_json_routes_triage_error", "required_evidence": ["live_e2e"]}
+  ],
   "cases": [
     {
       "name": "skill-contract-validation",
       "type": "positive",
-      "command": [
-        "python3",
-        "../../best-practices-skills/scripts/validate_skill.py",
-        "..",
-        "--json"
-      ],
-      "expected": {
-        "exit_code": 0
-      }
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["create_report.skill_contract_valid"],
+      "seams": ["skill_contract"],
+      "timeout_seconds": 60,
+      "command": ["python3", "../../best-practices-skills/scripts/validate_skill.py", "..", "--json"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "pydantic-json-schema-emitted",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["create_report.json_schema_emitted"],
+      "seams": ["pydantic_schema_cli"],
+      "timeout_seconds": 120,
+      "command": ["bash", "-lc", "cd /home/graham/workspace/experiments/agent-skills && skills/create-report/run.sh schema | jq -r '.properties.schema.const'"],
+      "expected": {"exit_code": 0, "stdout_contains": ["create_report.report.v1"]}
+    },
+    {
+      "name": "generated-json-validates",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["create_report.validated_json_before_render"],
+      "seams": ["validate_cli"],
+      "timeout_seconds": 120,
+      "command": ["bash", "-lc", "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; python3 - \"$tmp/report.json\" <<'PY'\nimport json, sys\ndata={\"schema\":\"create_report.report.v1\",\"report_id\":\"create-report-json-first-eval\",\"title\":\"Create Report Contract Eval\",\"persona\":\"project maintainer\",\"primary_object\":\"skills/create-report/scripts/report_contract.py\",\"decision_supported\":\"decide whether rendering is allowed\",\"overall_finding\":\"Needs Changes\",\"core_conclusion\":\"The report must validate JSON before rendering.\",\"evidence_basis\":\"create-report run.sh validation output and schema output.\",\"highest_risk_issues\":[\"F-001 Rendering without validation would be unsafe\"],\"immediate_next_steps\":[\"A-001 Keep validation in the render path\"],\"scope\":{\"reviewed\":[\"skills/create-report/run.sh\",\"skills/create-report/scripts/report_contract.py\"],\"excluded\":[],\"evidence_available\":[\"schema command\",\"validate command\"]},\"project_context\":{\"goals\":[\"JSON first reporting\"],\"current_state\":\"contract command under evaluation\",\"sources\":[\"skills/create-report/scripts/report_contract.py\"]},\"source_of_truth_inventory\":[{\"id\":\"S-001\",\"kind\":\"source\",\"path\":\"skills/create-report/scripts/report_contract.py\",\"limitation\":\"does not prove project-specific evidence quality\"}],\"findings\":[{\"id\":\"F-001\",\"title\":\"Rendering requires validation\",\"status\":\"Verified\",\"evidence\":[\"render command calls report_from before output\"],\"rationale\":\"The renderer loads the JSON through the pydantic validation path.\",\"impact\":\"Invalid model data cannot become the human report view.\",\"owner\":\"project maintainer\",\"valid_next_actions\":[\"preserve validate before render\"],\"acceptance_check\":\"render command exits non-zero for invalid JSON\",\"non_claims\":[\"does not prove external reviewer evidence\"]}],\"surface_contracts\":[],\"state_split\":{\"finished\":[\"validation command exists\"],\"unproven\":[\"project-specific evidence quality\"]},\"plan_ready_next_actions\":[{\"id\":\"A-001\",\"related_finding\":\"F-001\",\"action\":\"Keep validation in the render path.\",\"owner_persona\":\"project maintainer\",\"primary_object\":\"scripts/report_contract.py\",\"rationale\":\"Human views must be generated from valid JSON.\",\"acceptance_check\":\"invalid JSON does not render\",\"dependencies\":[],\"risk_if_skipped\":\"bad report data reaches readers\",\"suggested_priority\":\"P0\"}],\"plan_iterate_seed\":{\"recommended_phase_id\":\"preserve-json-validation\",\"objective\":\"Keep report rendering behind pydantic validation.\",\"candidate_phases\":[\"validate JSON\",\"render view\"],\"deterministic_evidence_gates\":[\"skills/create-report/run.sh validate <report.json>\"],\"domain_review_loops\":[],\"interaction_evidence\":\"not required\",\"ask_persona_review\":\"not required\",\"dogpile_reference_research\":\"not required\",\"human_decisions\":[],\"stop_conditions\":[\"validation failure\"],\"non_claims\":[\"does not prove a real project report\"]},\"non_claims\":[\"This report does not prove a real project decision.\"]}\nopen(sys.argv[1],'w').write(json.dumps(data))\nPY\nskills/create-report/run.sh validate \"$tmp/report.json\" | jq -r '.valid, .validated_schema'"],
+      "expected": {"exit_code": 0, "stdout_contains": ["true", "create_report.report.v1"]}
+    },
+    {
+      "name": "rendered-markdown-comes-from-validated-json",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["create_report.validated_json_before_render"],
+      "seams": ["validate_cli", "render_cli"],
+      "timeout_seconds": 120,
+      "command": ["bash", "-lc", "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; skills/create-report/run.sh sample --output \"$tmp/report.json\"; python3 - \"$tmp/report.json\" <<'PY'\nimport json, sys\np=sys.argv[1]; d=json.load(open(p)); d['report_id']='runtime-render-eval'; d['title']='Runtime Render Eval'; d['source_of_truth_inventory'][0]['path']='skills/create-report/scripts/report_contract.py'; d['source_of_truth_inventory'][0]['limitation']='does not prove live project truth'; json.dump(d, open(p,'w'))\nPY\nskills/create-report/run.sh render \"$tmp/report.json\" --format markdown --output \"$tmp/report.md\"; grep -E '^(## Report Summary|## Source-of-Truth Inventory|## Plan-Iterate Seed|## Non-Claims)' \"$tmp/report.md\" | wc -l"],
+      "expected": {"exit_code": 0, "stdout_contains": ["4"]}
+    },
+    {
+      "name": "rendered-html-comes-from-validated-json",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["create_report.validated_json_before_render"],
+      "seams": ["validate_cli", "render_cli"],
+      "timeout_seconds": 120,
+      "command": ["bash", "-lc", "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; skills/create-report/run.sh sample --output \"$tmp/report.json\"; python3 - \"$tmp/report.json\" <<'PY'\nimport json, sys\np=sys.argv[1]; d=json.load(open(p)); d['report_id']='runtime-html-render-eval'; d['title']='Runtime HTML Render Eval'; d['source_of_truth_inventory'][0]['path']='skills/create-report/scripts/report_contract.py'; d['source_of_truth_inventory'][0]['limitation']='does not prove live project truth'; json.dump(d, open(p,'w'))\nPY\nskills/create-report/run.sh render \"$tmp/report.json\" --format html --output \"$tmp/report.html\"; grep -q '<!doctype html>' \"$tmp/report.html\" && grep -q 'Report Summary' \"$tmp/report.html\" && echo HTML_RENDER_OK"],
+      "expected": {"exit_code": 0, "stdout_contains": ["HTML_RENDER_OK"]}
+    },
+    {
+      "name": "invalid-json-routes-through-triage-error",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": ["create_report.invalid_json_routes_triage_error"],
+      "seams": ["triage_error_boundary"],
+      "timeout_seconds": 120,
+      "command": ["bash", "-lc", "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; printf '{\"schema\":\"create_report.report.v1\",\"report_id\":\"bad\"}' > \"$tmp/bad.json\"; if skills/create-report/run.sh validate \"$tmp/bad.json\" > \"$tmp/stdout.txt\" 2> \"$tmp/stderr.txt\"; then exit 1; fi; python3 - \"$tmp/stderr.txt\" <<'PY'\nimport json, sys\nraw=open(sys.argv[1]).read(); data=json.loads(raw[raw.find('{'):]); code=data.get('triage',{}).get('code'); ok=data.get('schema')=='create_report.validation_failure.v1' and bool(code); print('TRIAGE_ERROR_OK=%s CODE=%s' % (ok, code)); raise SystemExit(0 if ok else 1)\nPY"],
+      "expected": {"exit_code": 0, "stdout_contains": ["TRIAGE_ERROR_OK=True", "CODE="]}
     }
   ]
 }

@@ -1,0 +1,111 @@
+{
+  "schema": "create_report.report.v1",
+  "report_id": "sample-report",
+  "title": "Sample Evidence Report",
+  "persona": "project maintainer",
+  "primary_object": "sample artifact",
+  "decision_supported": "decide whether follow-on repair is needed",
+  "overall_finding": "Needs Changes",
+  "core_conclusion": "The sample demonstrates the JSON-first report contract.",
+  "evidence_basis": "Fixture source and pydantic validation output.",
+  "highest_risk_issues": [
+    "F-001 Missing live project evidence"
+  ],
+  "immediate_next_steps": [
+    "A-001 Replace fixture evidence with live artifacts"
+  ],
+  "scope": {
+    "reviewed": [
+      "fixture report"
+    ],
+    "excluded": [
+      "live UI"
+    ],
+    "evidence_available": [
+      "fixture JSON"
+    ]
+  },
+  "project_context": {
+    "goals": [
+      "report from validated JSON"
+    ],
+    "current_state": "fixture only",
+    "sources": [
+      "fixtures/sample-report.json"
+    ]
+  },
+  "source_of_truth_inventory": [
+    {
+      "id": "S-001",
+      "kind": "fixture",
+      "path": "fixtures/sample-report.json",
+      "limitation": "not live evidence"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-001",
+      "title": "Missing live project evidence",
+      "status": "Unverified",
+      "evidence": [
+        "fixture JSON only"
+      ],
+      "rationale": "The fixture is enough for schema validation, not project truth.",
+      "impact": "Report cannot support a real project decision.",
+      "owner": "project maintainer",
+      "valid_next_actions": [
+        "collect live evidence"
+      ],
+      "acceptance_check": "report cites live artifacts",
+      "non_claims": [
+        "does not prove live readiness"
+      ]
+    }
+  ],
+  "surface_contracts": [],
+  "state_split": {
+    "unproven": [
+      "live evidence"
+    ]
+  },
+  "plan_ready_next_actions": [
+    {
+      "id": "A-001",
+      "related_finding": "F-001",
+      "action": "Replace fixture evidence with live artifacts.",
+      "owner_persona": "project maintainer",
+      "primary_object": "source_of_truth_inventory",
+      "rationale": "A real report needs real source artifacts.",
+      "acceptance_check": "validate-report passes and sources exist",
+      "dependencies": [],
+      "risk_if_skipped": "report remains a fixture",
+      "suggested_priority": "P1"
+    }
+  ],
+  "plan_iterate_seed": {
+    "recommended_phase_id": "replace-fixture-evidence",
+    "objective": "Prove the report against live artifacts.",
+    "candidate_phases": [
+      "collect evidence",
+      "validate JSON",
+      "render report"
+    ],
+    "deterministic_evidence_gates": [
+      "skills/create-report/run.sh validate <report.json>"
+    ],
+    "domain_review_loops": [],
+    "interaction_evidence": "not required for this fixture",
+    "ask_persona_review": "not required for this fixture",
+    "dogpile_reference_research": "not required for this fixture",
+    "human_decisions": [],
+    "stop_conditions": [
+      "missing source artifact"
+    ],
+    "non_claims": [
+      "does not prove production readiness"
+    ]
+  },
+  "non_claims": [
+    "This sample does not prove any real project state."
+  ]
+}

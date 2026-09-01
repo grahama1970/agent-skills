@@ -66,6 +66,20 @@ primary object, source of truth, evidence, findings, rationale, valid actions,
 constraints, acceptance checks, non-claims, and a `$plan-iterate` seed when
 follow-on work exists.
 
+`$create-report` is JSON-first. The authoritative artifact is a
+pydantic-validated `create_report.report.v1` JSON object. Markdown, HTML/CSS,
+and React report surfaces are generated views from that validated JSON, not the
+source of truth. Validation failures route through `$triage-error` and emit
+`create_report.validation_failure.v1` with a canonical or minted triage code.
+
+```bash
+./run.sh schema
+./run.sh sample --output /tmp/create-report.sample.json
+./run.sh validate /tmp/create-report.sample.json
+./run.sh render /tmp/create-report.sample.json --format markdown --output report.md
+./run.sh render /tmp/create-report.sample.json --format html --output report.html
+```
+
 ## Workflow
 
 1. Define the report target:
@@ -99,7 +113,7 @@ follow-on work exists.
      rationale, and context.
    - SPARTA / Sparta Explorer: `$monitor-sparta` plus `$project-knowledge`.
 
-5. Build the semantic model before layout:
+5. Build and validate the semantic JSON model before layout:
    - persona;
    - primary object;
    - source of truth;
@@ -110,8 +124,11 @@ follow-on work exists.
    - acceptance checks;
    - non-claims;
    - next `$plan-iterate` seed.
+   Run `./run.sh validate <report.json>` before rendering. If validation fails,
+   keep the report incomplete and use the emitted `$triage-error` code; do not
+   patch the Markdown by hand.
 
-6. Render only after the model is explicit:
+6. Render only after the model is explicit and pydantic-valid:
    - prefer HTML/CSS for substantial human-facing reports;
    - keep the layout document-like, prose-first, and evidence-oriented;
    - avoid KPI cards, hero metrics, fake status badges, decorative charts, and
