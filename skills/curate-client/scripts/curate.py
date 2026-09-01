@@ -1227,23 +1227,33 @@ def cmd_report(cfg: dict) -> dict[str, Any]:
     model_path = _report_model_path(cfg)
     recall_by_question = {probe["canonical_question"]: probe for probe in recall["probes"]}
     scenarios: list[dict[str, Any]] = []
+    used_oracles: set[str] = set()
+
+    def report_oracle(oracle: CanonicalQuestionOracle) -> dict[str, Any]:
+        probe = recall_by_question.get(oracle.canonical_question, {})
+        return {
+            "classification": oracle.classification,
+            "question_id": oracle.question_id,
+            "canonical_question": oracle.canonical_question,
+            "answer_thesis": oracle.answer_thesis,
+            "architecture_components": oracle.architecture_components,
+            "failure_cases": oracle.failure_cases,
+            "tradeoffs": oracle.tradeoffs,
+            "graham_project_bridge": oracle.graham_project_bridge,
+            "memory_recall_ok": bool(probe.get("ok")),
+        }
+
     for point in data.briefing_points:
+        point_keys = {point.title, point.point_id, _slug(point.title), _slug(point.point_id)}
         oracles = []
         for oracle in data.question_oracles:
-            if oracle.scenario != point.title:
+            if oracle.question_id in used_oracles:
                 continue
-            probe = recall_by_question.get(oracle.canonical_question, {})
-            oracles.append({
-                "classification": oracle.classification,
-                "question_id": oracle.question_id,
-                "canonical_question": oracle.canonical_question,
-                "answer_thesis": oracle.answer_thesis,
-                "architecture_components": oracle.architecture_components,
-                "failure_cases": oracle.failure_cases,
-                "tradeoffs": oracle.tradeoffs,
-                "graham_project_bridge": oracle.graham_project_bridge,
-                "memory_recall_ok": bool(probe.get("ok")),
-            })
+            oracle_keys = {oracle.scenario, _slug(oracle.scenario)}
+            if point_keys.isdisjoint(oracle_keys):
+                continue
+            oracles.append(report_oracle(oracle))
+            used_oracles.add(oracle.question_id)
         if oracles:
             scenarios.append({
                 "classification": point.classification,
@@ -1253,6 +1263,19 @@ def cmd_report(cfg: dict) -> dict[str, Any]:
                 "story": point.story,
                 "oracles": oracles,
             })
+    unmatched: dict[str, list[CanonicalQuestionOracle]] = {}
+    for oracle in data.question_oracles:
+        if oracle.question_id not in used_oracles:
+            unmatched.setdefault(oracle.scenario, []).append(oracle)
+    for scenario, items in unmatched.items():
+        scenarios.append({
+            "classification": "curate_client_report_unmatched_scenario",
+            "point_id": _slug(scenario),
+            "title": scenario,
+            "hook": "Supplemental WebGPT scenario without a matching briefing-point title.",
+            "story": "Included so appended oracle data is visible instead of silently dropped from the report.",
+            "oracles": [report_oracle(oracle) for oracle in items],
+        })
     report_model = _validate_pydantic_json(CurateClientReportModel, {
         "schema": "curate_client.report_model.v1",
         "classification": "curate_client_report_model",

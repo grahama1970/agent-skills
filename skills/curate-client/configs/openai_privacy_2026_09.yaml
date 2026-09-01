@@ -8,9 +8,9 @@ memory_recall_receipt: /tmp/openai_privacy_curate_client_memory_recall.json
 regenerate_prep_pack: true
 question_oracles_file: /home/graham/workspace/experiments/openai-privacy-kb/question-oracles.json
 briefing_points_file: /home/graham/workspace/experiments/openai-privacy-kb/briefing-points.json
-source_context_limit: 120
+source_context_limit: 240
 briefing_points_limit: 20
-question_oracles_limit: 75
+question_oracles_limit: 150
 probes:
   - what domains does OpenAI privacy engineering cover
   - how should distributed deletion prove completion
