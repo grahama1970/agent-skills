@@ -75,6 +75,7 @@ class CanonicalQuestionOracle(BaseModel):
     failure_cases: list[str] = Field(min_length=1)
     tradeoffs: list[str] = Field(min_length=1)
     source_references: list[str] = Field(min_length=1)
+    meta_tags: list[str] = Field(default_factory=list)
     graham_project_bridge: str = Field(min_length=1)
     skill_chain: list[str] = Field(min_length=1)
     hold_answer_clarify_disposition: str = Field(min_length=1)
@@ -186,6 +187,7 @@ class PrepPackQuestionOracle(BaseModel):
     failure_cases: list[str] = Field(default_factory=list)
     tradeoffs: list[str] = Field(default_factory=list)
     source_references: list[str] = Field(default_factory=list)
+    meta_tags: list[str] = Field(default_factory=list)
     graham_project_bridge: str | None = None
     skill_chain: list[str] = Field(min_length=1)
     hold_answer_clarify_disposition: str | None = None
@@ -289,6 +291,7 @@ class CurateClientReportOracle(BaseModel):
     failure_cases: list[str] = Field(min_length=1)
     tradeoffs: list[str] = Field(min_length=1)
     graham_project_bridge: str = Field(min_length=1)
+    meta_tags: list[str] = Field(default_factory=list)
     memory_recall_ok: bool
 
 
@@ -1240,6 +1243,7 @@ def cmd_report(cfg: dict) -> dict[str, Any]:
             "failure_cases": oracle.failure_cases,
             "tradeoffs": oracle.tradeoffs,
             "graham_project_bridge": oracle.graham_project_bridge,
+            "meta_tags": oracle.meta_tags,
             "memory_recall_ok": bool(probe.get("ok")),
         }
 
@@ -1316,6 +1320,7 @@ def cmd_report(cfg: dict) -> dict[str, Any]:
 <p><strong>Failure cases:</strong></p><ul>{li(oracle['failure_cases'])}</ul>
 <p><strong>Tradeoffs:</strong></p><ul>{li(oracle['tradeoffs'])}</ul>
 <p><strong>Graham project bridge:</strong> {esc(oracle['graham_project_bridge'])}</p>
+<p><strong>Meta tags:</strong> {esc(', '.join(oracle.get('meta_tags') or []))}</p>
 <p><strong>Memory recall:</strong> {'PASS' if oracle['memory_recall_ok'] else 'FAIL'}</p>
 </article>""")
         scenario_sections.append(f"""
