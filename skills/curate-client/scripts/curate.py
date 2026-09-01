@@ -320,6 +320,138 @@ class CurateClientReportModel(BaseModel):
         return value
 
 
+class NeedsInterviewReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    missing_fields: list[str]
+    next_action: str
+
+
+class CanonicalValidationReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    path: str | None = None
+    client: str | None = None
+    source_count: int | None = None
+    briefing_point_count: int | None = None
+    question_oracle_count: int | None = None
+    triage: dict[str, Any] | None = None
+    errors: str | None = None
+    next_command: str | None = None
+
+
+class PlanReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    client: str
+    kb_root: str
+    openapi_specs: list[Any]
+    terraform_repos: list[Any]
+    document_sources: list[Any]
+    curated_sources: list[Any]
+    canonical_validation: CanonicalValidationReceipt
+    knowledge_files: int
+    scope: str
+    writes: bool
+
+
+class ChunksReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    chunks_written: int
+    knowledge_dir: str
+    existing_knowledge_files: int
+
+
+class IngestReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    scope: str | None = None
+    meta: dict[str, Any] | None = None
+    stderr: str | None = None
+
+
+class VerifyProbe(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    probe: str
+    found: bool | None = None
+    client_hit: bool | None = None
+    confidence: Any | None = None
+    error: str | None = None
+
+
+class VerifyReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    probes: list[VerifyProbe]
+
+
+class LiveEvidenceLoadCommandReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    command: str | list[str]
+    purpose: str
+
+
+class PrepPackReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    path: str
+    client: str | None = None
+    scope: str | None = None
+    generated: bool | None = None
+    live_evidence_load: LiveEvidenceLoadCommandReceipt | None = None
+    prep_pack: LiveEvidencePrepPack | None = None
+    triage: dict[str, Any] | None = None
+    error: str | None = None
+    next_command: str | None = None
+
+
+class HtmlReportReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    canonical_validation: CanonicalValidationReceipt | None = None
+    memory_recall_validation: dict[str, Any] | None = None
+    path: str
+    report_model_json: str | None = None
+    source: str | None = None
+    triage: dict[str, Any] | None = None
+    errors: list[str] | None = None
+
+
+class ResearchPlanReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    classification: str
+    status: str
+    client: str
+    collaboration_points: list[dict[str, Any]]
+    interview_packet: dict[str, Any]
+    deep_research_directives: dict[str, Any]
+    note: str | None = None
+    failure_code: str | None = None
+
+
+class BuildReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    canonical_validation: CanonicalValidationReceipt
+    chunks: ChunksReceipt
+    ingest: IngestReceipt
+    verify: VerifyReceipt
+    prep_pack: PrepPackReceipt
+    memory_recall: CurateClientMemoryRecallReceipt
+
+
 def _load_config(path: str) -> dict:
     text = Path(path).read_text()
     try:
@@ -346,12 +478,12 @@ def _load_config(path: str) -> dict:
 
 
 def _needs_interview(missing: list[str]) -> None:
-    print(json.dumps({
+    print(json.dumps(_validate_pydantic_json(NeedsInterviewReceipt, {
         "schema": "curate_client.needs_interview.v1",
         "status": "NEEDS_INTERVIEW",
         "missing_fields": missing,
         "next_action": "Run $interview to collect the missing fields; do not guess.",
-    }, indent=1))
+    }), indent=1))
     sys.exit(3)
 
 
@@ -428,14 +560,14 @@ def _load_canonical(cfg: dict) -> CanonicalClientData | None:
 
 def _canonical_validation_failure(path: Path | None, exc: Exception) -> dict[str, Any]:
     text = f"curate-client canonical JSON pydantic validation failed for {path}: {exc}"
-    return {
+    return _validate_pydantic_json(CanonicalValidationReceipt, {
         "schema": "curate_client.canonical_validation_receipt.v1",
         "status": "FAIL",
         "path": str(path) if path else None,
         "triage": _triage(text),
         "errors": str(exc),
         "next_command": "repair canonical JSON fields/classification and rerun validate-canonical",
-    }
+    })
 
 
 def cmd_validate_canonical(cfg: dict) -> dict[str, Any]:
@@ -443,13 +575,13 @@ def cmd_validate_canonical(cfg: dict) -> dict[str, Any]:
     if path is None:
         if cfg.get("require_canonical_json"):
             return _canonical_validation_failure(path, ValueError("missing canonical_client_file"))
-        return {"schema": "curate_client.canonical_validation_receipt.v1", "status": "SKIP", "path": None}
+        return _validate_pydantic_json(CanonicalValidationReceipt, {"schema": "curate_client.canonical_validation_receipt.v1", "status": "SKIP", "path": None})
     try:
         data = _load_canonical(cfg)
     except (ValidationError, ValueError, OSError) as exc:
         return _canonical_validation_failure(path, exc)
     assert data is not None
-    return {
+    return _validate_pydantic_json(CanonicalValidationReceipt, {
         "schema": "curate_client.canonical_validation_receipt.v1",
         "status": "PASS",
         "path": str(path),
@@ -457,7 +589,7 @@ def cmd_validate_canonical(cfg: dict) -> dict[str, Any]:
         "source_count": len(data.sources),
         "briefing_point_count": len(data.briefing_points),
         "question_oracle_count": len(data.question_oracles),
-    }
+    })
 
 
 def _require_canonical_valid(cfg: dict) -> dict[str, Any] | None:
@@ -566,7 +698,7 @@ def cmd_chunks(cfg: dict) -> dict:
         total += extract_terraform(repo, outdir, cfg["client"])
     for source in (cfg.get("document_sources") or []) + (cfg.get("curated_sources") or []):
         total += _copy_markdown_source(source, outdir)
-    return {"chunks_written": total, "knowledge_dir": str(outdir), "existing_knowledge_files": len(_knowledge_files(cfg))}
+    return _validate_pydantic_json(ChunksReceipt, {"schema": "curate_client.chunks_receipt.v1", "status": "PASS", "chunks_written": total, "knowledge_dir": str(outdir), "existing_knowledge_files": len(_knowledge_files(cfg))})
 
 
 def cmd_ingest(cfg: dict) -> dict:
@@ -582,9 +714,9 @@ def cmd_ingest(cfg: dict) -> dict:
         cwd=MEMORY_REPO, capture_output=True, text=True, timeout=1800,
     )
     if proc.returncode != 0:
-        return {"status": "FAIL", "stderr": proc.stderr[-500:]}
+        return _validate_pydantic_json(IngestReceipt, {"schema": "curate_client.ingest_receipt.v1", "status": "FAIL", "stderr": proc.stderr[-500:]})
     out = json.loads(proc.stdout[proc.stdout.index("{"):])
-    return {"status": "ok", "scope": scope, "meta": out.get("meta")}
+    return _validate_pydantic_json(IngestReceipt, {"schema": "curate_client.ingest_receipt.v1", "status": "ok", "scope": scope, "meta": out.get("meta")})
 
 
 def cmd_verify(cfg: dict) -> dict:
@@ -607,7 +739,7 @@ def cmd_verify(cfg: dict) -> dict:
         results.append({"probe": probe, "found": d.get("found"), "client_hit": hit,
                         "confidence": d.get("confidence")})
         ok = ok and hit
-    return {"status": "PASS" if ok and results else "FAIL", "probes": results}
+    return _validate_pydantic_json(VerifyReceipt, {"schema": "curate_client.verify_receipt.v1", "status": "PASS" if ok and results else "FAIL", "probes": results})
 
 
 LIVE_EVIDENCE_ORACLE_COLLECTIONS = [
@@ -964,15 +1096,15 @@ def cmd_prep_pack(cfg: dict) -> dict:
         payload, generated = _load_or_generate_prep_pack(cfg, path)
         payload = _validate_pydantic_json(LiveEvidencePrepPack, payload)
     except Exception as exc:
-        return {
+        return _validate_pydantic_json(PrepPackReceipt, {
             "schema": "curate_client.prep_pack_receipt.v1",
             "status": "FAIL",
             "path": str(path),
             "triage": _triage(f"curate-client prep-pack pydantic validation failed: {type(exc).__name__}: {exc}"),
             "error": f"prep pack pydantic validation failed: {type(exc).__name__}: {exc}",
             "next_command": "regenerate or repair prep-pack JSON and rerun prep-pack",
-        }
-    return {
+        })
+    return _validate_pydantic_json(PrepPackReceipt, {
         "schema": "curate_client.prep_pack_receipt.v1",
         "status": "PASS",
         "client": cfg["client"],
@@ -985,7 +1117,7 @@ def cmd_prep_pack(cfg: dict) -> dict:
             "purpose": "load briefing pack and verify prep-pack oracle recall before the call",
         },
         "prep_pack": payload,
-    }
+    })
 
 
 def _oracle_tags(cfg: dict) -> list[str]:
@@ -1182,10 +1314,10 @@ body{{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.62;m
     required = ["Answer thesis:", "Architecture components:", "Failure cases:", "Tradeoffs:", "Memory recall:", "Plan-Iterate Seed", "New Plan-Iterate Instructions"]
     missing = [term for term in required if term not in body]
     if missing:
-        return {"schema": "curate_client.html_report_receipt.v1", "status": "FAIL", "path": str(out), "source": str(_canonical_path(cfg)), "triage": _triage(f"curate-client report content missing {missing}"), "errors": missing}
+        return _validate_pydantic_json(HtmlReportReceipt, {"schema": "curate_client.html_report_receipt.v1", "status": "FAIL", "path": str(out), "source": str(_canonical_path(cfg)), "triage": _triage(f"curate-client report content missing {missing}"), "errors": missing})
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(body, encoding="utf-8")
-    return {
+    return _validate_pydantic_json(HtmlReportReceipt, {
         "schema": "curate_client.html_report_receipt.v1",
         "status": "PASS",
         "canonical_validation": receipt,
@@ -1193,7 +1325,7 @@ body{{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.62;m
         "path": str(out),
         "report_model_json": str(model_path),
         "source": str(_canonical_path(cfg)),
-    }
+    })
 
 
 
@@ -1230,15 +1362,16 @@ def cmd_research_plan(cfg: dict) -> dict:
             continue
     hits = {k: v for k, v in COLLABORATION_SIGNALS.items() if k in corpus}
     questions = [
-        {"id": f"coverage-{key}", "header": key[:12],
+        {"classification": "curate_client_research_question", "id": f"coverage-{key}", "header": key[:12],
          "text": q, "options": []}
         for key, (_team, q) in hits.items()
     ]
     plan = {
         "schema": "curate_client.research_plan.v1",
+        "classification": "curate_client_research_plan",
         "client": cfg["client"],
         "collaboration_points": [
-            {"system": k, "owner_team": team, "coverage_question": q}
+            {"classification": "curate_client_collaboration_point", "system": k, "owner_team": team, "coverage_question": q}
             for k, (team, q) in hits.items()
         ],
         "interview_packet": {"title": f"{cfg['client']} coverage interview",
@@ -1275,9 +1408,9 @@ def cmd_research_plan(cfg: dict) -> dict:
     if not hits:
         plan["status"] = "FAIL"
         plan["failure_code"] = "kb_too_thin_for_research_plan"
-        return plan
+        return _validate_pydantic_json(ResearchPlanReceipt, plan)
     plan["status"] = "PASS"
-    return plan
+    return _validate_pydantic_json(ResearchPlanReceipt, plan)
 
 
 def main() -> None:
@@ -1295,14 +1428,14 @@ def main() -> None:
     elif cmd == "validate-canonical":
         out = cmd_validate_canonical(cfg)
     elif cmd == "plan":
-        out = {"client": cfg["client"], "kb_root": cfg["kb_root"],
+        out = _validate_pydantic_json(PlanReceipt, {"schema": "curate_client.plan_receipt.v1", "status": "PASS", "client": cfg["client"], "kb_root": cfg["kb_root"],
                "openapi_specs": cfg.get("openapi_specs") or [],
                "terraform_repos": cfg.get("terraform_repos") or [],
                "document_sources": cfg.get("document_sources") or [],
                "curated_sources": cfg.get("curated_sources") or [],
                "canonical_validation": cmd_validate_canonical(cfg),
                "knowledge_files": len(_knowledge_files(cfg)),
-               "scope": f"client:{cfg['client']}", "writes": False}
+               "scope": f"client:{cfg['client']}", "writes": False})
     elif cmd == "chunks":
         out = cmd_chunks(cfg)
     elif cmd == "ingest":
@@ -1318,8 +1451,9 @@ def main() -> None:
     elif cmd == "report":
         out = cmd_report(cfg)
     elif cmd == "build":
-        out = {"canonical_validation": cmd_validate_canonical(cfg), "chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg), "prep_pack": cmd_prep_pack(cfg), "memory_recall": cmd_validate_memory_recall(cfg)}
+        out = {"schema": "curate_client.build_receipt.v1", "canonical_validation": cmd_validate_canonical(cfg), "chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg), "prep_pack": cmd_prep_pack(cfg), "memory_recall": cmd_validate_memory_recall(cfg)}
         out["status"] = "PASS" if out["canonical_validation"].get("status") == "PASS" and out["verify"].get("status") == "PASS" and out["prep_pack"].get("status") == "PASS" and out["memory_recall"].get("status") == "PASS" else "FAIL"
+        out = _validate_pydantic_json(BuildReceipt, out)
     else:
         print(f"unknown command {cmd}", file=sys.stderr)
         sys.exit(2)
