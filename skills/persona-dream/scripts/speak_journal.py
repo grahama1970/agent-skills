@@ -43,6 +43,16 @@ CHATTERBOX_OUT_HOST_ROOT = Path(
 DEFAULT_REF_AUDIO = "/data/embry_ref.wav"
 DEFAULT_ASR_MAX_CANDIDATES = int(os.environ.get("PERSONA_DREAM_JOURNAL_ASR_MAX_CANDIDATES", "3"))
 MARKDOWN_FOOTER = re.compile(r"\n---\n.*", re.DOTALL)
+_BAD_TAG_BOUNDARY_RE = re.compile(
+    r"\b(?:about|toward|towards|with|from|for|at|to|of|by|beside|near|into|inside|through|like|called|named)\s+"
+    r"\[(?:clear throat|sigh|shush|cough|groan|sniff|gasp|chuckle|laugh|crying|happy|sad|angry|fear|surprised)\]\s+"
+    r"[A-Z][a-z]+"
+)
+
+
+def has_bad_chatterbox_tag_boundary(text: str) -> bool:
+    """Reject tags that split a noun phrase or name instead of marking a beat."""
+    return bool(_BAD_TAG_BOUNDARY_RE.search(str(text or "")))
 
 
 def utc_now() -> str:
@@ -133,10 +143,13 @@ for sentence pause, ellipsis (...) for hesitation/longer pause, em dash or -- fo
 an abrupt break. Put pauses where Embry is thinking or feeling, not mechanically.
 Do not end the utterance on an ellipsis, dash, tag, or unfinished thought.
 For tenderness, grief, fear, or a moment where she has to collect herself, prefer
-repeated embodied cues such as "[sniff] [sniff]... give me a second" and use
+repeated embodied cues such as "[sniff] [sniff] ... give me a second" and use
 [crying] only when the line genuinely carries tears. Persona Dream will convert
 these ellipses and collection cues into exact Chatterbox render_chunks
 pause_after_ms silence; your job is to put the affect beats at honest locations.
+Do not place a tag inside a noun phrase or immediately before a proper name/object;
+write "I thought about Kai. [sniff]" or "[sniff] I thought about Kai", not
+"I thought about [sniff] Kai".
 
 Use the context packet to choose relevant utterances and pauses. Embry is not a
 generic narrator: she is thinking through her dream, Memory residue, extracted
@@ -171,7 +184,9 @@ Return JSON: {{"chatterbox_utterance_text": "..."}}"""
         }
     proposed = utterances.normalize_collect_cues(str((parsed or {}).get("chatterbox_utterance_text") or "").strip())
     tags = utterances.existing_event_tags(proposed)
-    if len(tags) >= 2 and utterances.has_delay_markup(proposed) and not utterances.has_unfinished_tail(proposed):
+    if (len(tags) >= 2 and utterances.has_delay_markup(proposed)
+            and not utterances.has_unfinished_tail(proposed)
+            and not has_bad_chatterbox_tag_boundary(proposed)):
         return {
             "text": utterances.ensure_delay_markup(proposed),
             "tags": tags,

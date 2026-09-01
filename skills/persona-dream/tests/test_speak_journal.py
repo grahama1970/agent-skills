@@ -205,6 +205,46 @@ def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, mo
     assert receipt["emotional_utterance_tags"] == ["[sigh]", "[sniff]"]
 
 
+def test_journal_chatterbox_tags_must_not_split_names_or_noun_phrases():
+    assert speak.has_bad_chatterbox_tag_boundary("I thought about [sniff] Kai.") is True
+    assert speak.has_bad_chatterbox_tag_boundary("I thought about Kai. [sniff]") is False
+    assert speak.has_bad_chatterbox_tag_boundary("[sniff] I thought about Kai.") is False
+
+
+def test_bad_model_tag_boundary_is_repaired_before_journal_render(monkeypatch):
+    utterances = _load("chatterbox_utterances")
+
+    class FakeAdapter:
+        @staticmethod
+        def dispatch_text_reasoning(*args, **kwargs):
+            return {"chatterbox_utterance_text": "[sigh] I thought about [sniff] Kai ... and the glowing box."}, {"status": "PASS"}
+
+        @staticmethod
+        def receipt_provenance(receipt):
+            return {"status": receipt["status"]}
+
+    def fake_load(name):
+        if name == "chatterbox_utterances":
+            return utterances
+        if name == "tau_text_reasoning_adapter":
+            return FakeAdapter
+        raise AssertionError(name)
+
+    monkeypatch.setattr(speak, "_load_sibling", fake_load)
+
+    result = speak.prepare_journal_utterance(
+        "I thought about Kai and the glowing box. The warmth felt tender.",
+        "memory_uncertain",
+        "guarded_soft_yearning",
+        "SOURCE CONTEXT",
+    )
+
+    assert result["source"] == "agent_repaired_model_missing_tags"
+    assert speak.has_bad_chatterbox_tag_boundary(result["text"]) is False
+    assert "[sniff] Kai" not in result["text"]
+    assert len(result["tags"]) >= 2
+
+
 def test_journal_utterance_is_the_text_sent_to_chatterbox(tmp_path, monkeypatch):
     host_root = tmp_path / "logs"
     wav = host_root / "test-journal" / "finished_response.wav"
@@ -237,8 +277,11 @@ def test_journal_utterance_is_the_text_sent_to_chatterbox(tmp_path, monkeypatch)
     receipt = speak.run(_args(tmp_path, asr_verify=False))
 
     assert captured["payload"]["answer_text"] == "[sigh] I woke carrying the dream ... [sniff] and I kept listening."
+    assert captured["payload"]["render_chunks"]
+    assert any(int(chunk["pause_after_ms"]) >= 900 for chunk in captured["payload"]["render_chunks"][:-1])
     assert receipt["chatterbox_utterance_source"] == "model_authored"
     assert receipt["emotional_utterance_tags"] == ["[sigh]", "[sniff]"]
+    assert receipt["chatterbox_pause_plan"]
 
 
 def test_live_receipt_binds_audio_to_text_and_disclaims_achieved_tone():

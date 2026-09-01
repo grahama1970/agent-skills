@@ -202,9 +202,20 @@ def main() -> int:
         "memory_found": (transcript_context.get("memory_probe") or {}).get("found"),
     }
 
-    # 2. dream spine through Tau
-    p = sh(["dream", "--run-dir", str(spine_dir), "--persona", "embry",
-            "--idea", "today's persona-dream loop, watched dream images, journal, and specific memory residue"], 1800)
+    # 2. dream spine through Tau. The retained eval runs repeatedly; after the
+    # production variation ledger is exhausted, the eval may reuse an already
+    # selected residue cluster without mutating the ledger while still producing
+    # a fresh live dream, journal, speech, conversation, and Memory carry receipt.
+    old_reuse = os.environ.get("PERSONA_DREAM_ALLOW_VARIATION_REUSE")
+    os.environ["PERSONA_DREAM_ALLOW_VARIATION_REUSE"] = "1"
+    try:
+        p = sh(["dream", "--run-dir", str(spine_dir), "--persona", "embry",
+                "--idea", "today's persona-dream loop, watched dream images, journal, and specific memory residue"], 1800)
+    finally:
+        if old_reuse is None:
+            os.environ.pop("PERSONA_DREAM_ALLOW_VARIATION_REUSE", None)
+        else:
+            os.environ["PERSONA_DREAM_ALLOW_VARIATION_REUSE"] = old_reuse
     m = re.search(r"\{.*\}", p.stdout, re.S)
     if not m:
         fail("DREAM_NO_RECEIPT", p)

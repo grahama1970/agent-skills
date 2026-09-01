@@ -93,6 +93,23 @@ Extended tokenizer tokens may be used sparingly when the line genuinely needs th
 
 Use tags where the vocal event belongs, usually before a breath, turn, interruption, or affect shift. Do not prefix every sentence with the same tag.
 
+## Text preprocessing and SSML import
+
+Normalize renderer text before it reaches Chatterbox:
+
+- Convert markdown emphasis to vocal stress only when the source intentionally emphasized the word: `*cannot*` becomes `CANNOT`.
+- Normalize ASCII dashes to em dashes when the dash is meant as a breath or interruption.
+- Preserve explicit pause controls as `[pause:750ms]` or `[pause:1.2s]` for the pause compiler.
+- Convert small SSML fragments into Chatterbox-native text at the boundary: `<break time="800ms"/>` becomes `[pause:800ms]`, `<emphasis>` becomes uppercase, and `<express-as type="gasp">` becomes a native inline tag.
+- Reject broad SSML passthrough. Chatterbox is not an SSML engine; the conversion must produce plain `answer_text` plus `render_chunks`.
+
+Use the helper commands for deterministic transformations:
+
+```bash
+./run.sh preprocess --text 'I *cannot* -- [SIGH] keep pretending.'
+./run.sh ssml --text '<speak>Wait <break time="800ms"/><express-as type="gasp">look out</express-as></speak>'
+```
+
 ## Pause policy
 
 Spaced ellipsis is the reliable text form:
@@ -102,7 +119,7 @@ Good:  bottle rocket ... a room where grief could sit down
 Bad:   bottle rocket... a room where grief could sit down
 ```
 
-When the pause matters, do not rely on punctuation alone. Split the utterance into `render_chunks` and set `pause_after_ms`:
+When the pause matters, do not rely on punctuation alone. Split the utterance into `render_chunks` and set `pause_after_ms`. `[pause:500ms]` and `[pause:1.2s]` are source-side directives that must be compiled out of `answer_text` and into chunk metadata before render:
 
 ```json
 {
@@ -122,6 +139,12 @@ When the pause matters, do not rely on punctuation alone. Split the utterance in
     }
   ]
 }
+```
+
+Compile the plan with the helper when exact silence matters:
+
+```bash
+./run.sh plan-silence --text 'I need a second. [pause:1.2s] [sniff] [sniff] ... give me a second.' --tone grief_safe
 ```
 
 Use longer pauses for collect-herself beats:
@@ -148,6 +171,16 @@ Advisory starting points for backends that actually honor the knobs:
 - Conversational: `exaggeration=0.4-0.5`, `cfg_weight=0.5`.
 - Fast reference speaker: lower `cfg_weight` toward `0.3` to reduce rushed cadence.
 - Cross-language cloning: consider `cfg_weight=0.0` only after backend support is verified.
+
+Parameter sweeps are useful only when the backend exposes those parameters. Hold seed, text, reference audio, temperature, and pause plan constant so the comparison isolates `exaggeration` and `cfg_weight`:
+
+```bash
+./run.sh sweep-plan \
+  --backend chatterbox_base \
+  --text 'I cannot believe you pulled this off! ... [gasp] That was incredible.'
+```
+
+Do not sweep by repeatedly rerunning the same failing prompt and hoping for luck. Use the sweep manifest, render each cell once through the supported backend, run `/analyze-chatterbox-emotions`, and pick from measured pause, clipping, F0 variation, transcript similarity, and human listening notes.
 
 ## Intensity example
 
@@ -190,8 +223,18 @@ Advisory starting points for backends that actually honor the knobs:
 ## Reference audio
 
 - Use a 5-10 second reference clip that already has the baseline affect you want.
-- Avoid background noise, music, reverb, and clipped source audio.
+- Prefer clips inside the `3-12` second usable window; `5-10` seconds is the normal target.
+- Avoid background noise, music, reverb, clipped source audio, and long silent margins.
+- Check WAV references before render for sample rate, RMS level, clipping, active-speech ratio, and energy-derived SNR.
 - Keep persona reference IDs and hashes in the render receipt.
+
+Reference gate:
+
+```bash
+./run.sh check-reference --audio reference_speaker.wav
+```
+
+Default thresholds: duration `3-12s`, clipping ratio `<=0.001`, SNR `>=18dB`, speech ratio `>=0.60`, RMS between `-35dB` and `-3dB`.
 
 ## Evaluation gate
 
@@ -208,3 +251,12 @@ Minimum evidence:
 - JSON artifact path read back by `$agentic-evals`.
 
 Never claim the voice is emotionally good from tags alone. A pass means the waveform and receipts match the requested voice-quality contract; human listening still decides final perceived naturalness.
+
+## Streaming boundary
+
+Chunked streaming is valid when the product needs low-latency playback, but it belongs in the Chatterbox service layer, not in planning code. A streaming endpoint must preserve the same contract as file renders:
+
+- every yielded PCM chunk has declared sample rate, channel count, and format;
+- chunk boundaries come from the same `render_chunks` plan used for non-streamed output;
+- programmatic silence is emitted as audio samples, not as a comment in metadata;
+- the final receipt still records the complete `answer_text`, chunk list, reference ID, and analyzer result.

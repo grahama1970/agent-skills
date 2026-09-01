@@ -18,9 +18,20 @@ required = [
     'intensity',
     'exaggeration=0.7-0.8',
     'Turbo ignores `exaggeration` and `cfg_weight`',
+    '[pause:750ms]',
+    './run.sh sweep-plan',
+    './run.sh check-reference',
+    'Streaming boundary',
 ]
 missing = [item for item in required if item not in text]
 if missing:
     raise SystemExit('MISSING_REQUIRED_TEXT ' + repr(missing))
-print('PASS_BEST_PRACTICES_CHATTERBOX_SANITY')
+print('PASS_BEST_PRACTICES_CHATTERBOX_TEXT_CONTRACT')
 PY
+python3 -m pytest tests/test_chatterbox_contract_tools.py -q
+./run.sh preprocess --text 'I *cannot* -- [SIGH] keep pretending....' | grep -F '... [sigh]'
+./run.sh ssml --text '<speak>Wait <break time="800ms"/><express-as type="gasp">look out</express-as></speak>' | grep -F '[pause:800ms]'
+./run.sh plan-silence --text 'I need a second. [pause:1.2s] [sniff] [sniff] ... give me a second.' --tone grief_safe | grep -F '"pause_after_ms": 1200'
+./run.sh sweep-plan --text 'I cannot believe you pulled this off! ... [gasp] That was incredible.' | grep -F '"run_count": 16'
+printenv >/dev/null
+printf '%s\n' 'PASS_BEST_PRACTICES_CHATTERBOX_SANITY'

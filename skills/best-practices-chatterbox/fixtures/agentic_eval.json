@@ -67,6 +67,45 @@
           "PASS_ADVERSARIAL_CONTRACT_MISSING_REQUIRED_TEXT"
         ]
       }
+    },
+    {
+      "name": "text-ssml-pause-and-sweep-tools",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/best-practices-chatterbox && ./run.sh plan-silence --text 'I need a second. [pause:1.2s] [sniff] [sniff] ... give me a second.' --tone grief_safe > /tmp/best-practices-chatterbox-render-plan.json && ./run.sh sweep-plan --text 'I cannot believe you pulled this off! ... [gasp] That was incredible.' > /tmp/best-practices-chatterbox-sweep-plan.json && ./run.sh ssml --text '<speak>Wait <break time=\"800ms\"/><express-as type=\"gasp\">look out</express-as></speak>' > /tmp/best-practices-chatterbox-ssml.json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nplan=json.loads(Path('/tmp/best-practices-chatterbox-render-plan.json').read_text())\nsweep=json.loads(Path('/tmp/best-practices-chatterbox-sweep-plan.json').read_text())\nssml=json.loads(Path('/tmp/best-practices-chatterbox-ssml.json').read_text())\nassert plan['render_chunks'][0]['pause_after_ms'] == 1200\nassert '[pause:' not in plan['answer_text']\nassert sweep['run_count'] == 16\nassert '[pause:800ms]' in ssml['text']\nassert '... [gasp]' in ssml['text']\nprint('PASS_CHATTERBOX_CONTRACT_TOOLS')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CHATTERBOX_CONTRACT_TOOLS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/best-practices-chatterbox-render-plan.json",
+            "json_pointer": "/schema",
+            "equals": "best_practices_chatterbox.render_plan.v1"
+          },
+          {
+            "path": "/tmp/best-practices-chatterbox-render-plan.json",
+            "json_pointer": "/render_chunks/0/pause_after_ms",
+            "equals": 1200
+          },
+          {
+            "path": "/tmp/best-practices-chatterbox-sweep-plan.json",
+            "json_pointer": "/run_count",
+            "equals": 16
+          },
+          {
+            "path": "/tmp/best-practices-chatterbox-ssml.json",
+            "json_pointer": "/schema",
+            "equals": "best_practices_chatterbox.ssml_conversion.v1"
+          }
+        ]
+      }
     }
   ]
 }

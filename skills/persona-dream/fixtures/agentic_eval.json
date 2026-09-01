@@ -1232,7 +1232,7 @@
         ],
         "exit_code": 0,
         "stdout_contains": [
-          "17 passed",
+          "19 passed",
           "\"terminal_step\": \"spoken_journal\"",
           "CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK"
         ],

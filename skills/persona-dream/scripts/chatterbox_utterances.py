@@ -188,7 +188,7 @@ def normalize_collect_cues(text: str) -> str:
     return normalize_delay_markup(normalized)
 
 
-def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 300,
+def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 180,
                           min_final_chars: int = 60) -> list[dict[str, object]]:
     """Build caller-owned Chatterbox chunks with exact silence pauses.
 
@@ -216,7 +216,12 @@ def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 300,
                 current = sentence
         if current:
             chunks.append(current)
-    if len(chunks) > 1 and len(chunks[-1]) < min_final_chars and not _COLLECT_RE.search(chunks[-2]):
+    if (
+        len(chunks) > 1
+        and len(chunks[-1]) < min_final_chars
+        and not _COLLECT_RE.search(chunks[-2])
+        and not chunks[-2].rstrip().endswith("...")
+    ):
         chunks[-2] = f"{chunks[-2]} {chunks[-1]}"
         chunks.pop()
     if not chunks:

@@ -14,6 +14,7 @@ provenance trail.
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -89,3 +90,65 @@ def test_stopword_list_stays_small():
     """Over-filtering an idea quietly changes what she dreams about. An idea is
     a sentence a human typed, not a query language."""
     assert len(adc._IDEA_STOPWORDS) < 60
+
+
+def test_eval_can_reuse_variation_after_ledger_exhaustion_without_mutating_ledger(tmp_path, monkeypatch):
+    """Retained evals run repeatedly; they must not consume a finite production ledger."""
+    (tmp_path / "GOAL_V3.md").write_text("goal", encoding="utf-8")
+    (tmp_path / "reports" / "goal_v5").mkdir(parents=True)
+
+    roots = {
+        "a": {"retrieval_text": "Kai box warmth", "claim": "Kai box warmth"},
+        "b": {"retrieval_text": "Kai bottle rocket", "claim": "Kai bottle rocket"},
+        "c": {"retrieval_text": "Kai ocean light", "claim": "Kai ocean light"},
+    }
+
+    class Profile:
+        persona_id = "embry"
+        strategy = "entity_mediated"
+
+        def roots(self, docs):
+            return roots
+
+        def band(self, key, doc):
+            return "recent"
+
+        def counterparts(self, doc):
+            return ["kai"]
+
+        def entities_of(self, doc):
+            return []
+
+        def intra_neighbors(self, seed_key, doc, members, entity_index):
+            return []
+
+        def conflict_score(self, doc):
+            return {"Kai box warmth": 3, "Kai bottle rocket": 2, "Kai ocean light": 1}[doc["claim"]]
+
+        def recency_index(self, band):
+            return 0
+
+    monkeypatch.setattr(adc, "ROOT", tmp_path)
+    monkeypatch.setattr(adc, "fetch_persona_docs", lambda persona_id: list(roots.values()))
+    monkeypatch.setattr(adc, "charged_interaction_pulls", lambda persona_id: [])
+    monkeypatch.setattr(adc, "_load", lambda name: type("Ledger", (), {"read_ledger": staticmethod(lambda persona_id, docs: {})})())
+
+    members = set(roots)
+    exhausted = []
+    for vi, seed_key in enumerate(["a", "b", "c"]):
+        selected = [seed_key] + [m for m in sorted(members) if m != seed_key]
+        emphasis = "negative" if vi % 2 == 1 else "positive"
+        exhausted.append(adc.sha256_text("recent:kai" + "|" + "|".join(sorted(selected[:3])) + "|" + emphasis))
+    ledger_path = tmp_path / "reports" / "goal_v5" / "variation_ledger.json"
+    ledger_path.write_text(json.dumps({"variation_keys": exhausted}, indent=2), encoding="utf-8")
+
+    with pytest.raises(SystemExit) as exc:
+        adc.select_cluster(Profile(), tmp_path / "blocked")
+    assert "BLOCKED_CYCLE_ALL_VARIATIONS_EXHAUSTED" in str(exc.value)
+
+    monkeypatch.setenv("PERSONA_DREAM_ALLOW_VARIATION_REUSE", "1")
+    reuse_out = tmp_path / "reused"
+    reuse_out.mkdir()
+    result = adc.select_cluster(Profile(), reuse_out)
+    assert result["cluster"]["reused_after_ledger_exhaustion"] is True
+    assert json.loads(ledger_path.read_text(encoding="utf-8"))["variation_keys"] == exhausted

@@ -30,6 +30,12 @@ REQUIREMENTS = [
     Requirement("pause_after_ms", "pause_after_ms", "skill requires exact silence field"),
     Requirement("intensity", "\"intensity\": 0.72", "skill shows intensity in JSON"),
     Requirement("turbo_boundary", "Turbo ignores `exaggeration` and `cfg_weight`", "skill states local Turbo knob boundary"),
+    Requirement("preprocess_cli", "./run.sh preprocess", "skill documents deterministic text preprocessing"),
+    Requirement("pause_token", "[pause:750ms]", "skill documents explicit pause tokens"),
+    Requirement("ssml_conversion", "<break time=\"800ms\"/>", "skill documents bounded SSML conversion"),
+    Requirement("sweep_plan", "./run.sh sweep-plan", "skill documents backend-aware parameter sweeps"),
+    Requirement("reference_gate", "./run.sh check-reference", "skill documents reference-audio validation"),
+    Requirement("streaming_boundary", "Streaming boundary", "skill states service-layer streaming boundary"),
 ]
 
 

@@ -31,6 +31,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -326,7 +327,26 @@ def select_cluster(profile, out: Path, persist_ledger: bool = True,
         if chosen:
             break
     if chosen is None:
-        raise SystemExit("BLOCKED_CYCLE_ALL_VARIATIONS_EXHAUSTED")
+        if os.environ.get("PERSONA_DREAM_ALLOW_VARIATION_REUSE") != "1":
+            raise SystemExit("BLOCKED_CYCLE_ALL_VARIATIONS_EXHAUSTED")
+        cl = clusters[0]
+        members = cl["members"]
+        conflicted = sorted(members, key=lambda m: (profile.conflict_score(roots[m]),
+                                                    sha256_text(seed + m)),
+                            reverse=True)
+        seed_key = conflicted[0]
+        selected = traverse(seed_key, members, k=3)
+        chosen = {"cluster_id": cl["cluster_id"], "band": cl["band"],
+                  "age_band": cl["age_band"], "selected": selected,
+                  "seed_memory": seed_key, "valence_emphasis": "positive",
+                  "variation_index": cl["used_overlap"],
+                  "variation_key": sha256_text(cl["cluster_id"] + "|" + "|".join(sorted(selected))
+                                                + "|eval_reuse"),
+                  "used_overlap": cl["used_overlap"],
+                  "arc_resonance": cl.get("arc_resonance", 0),
+                  "order_hash": cl["order_hash"],
+                  "reused_after_ledger_exhaustion": True}
+        persist_ledger = False
 
     if persist_ledger:
         ledger["variation_keys"].append(chosen["variation_key"])

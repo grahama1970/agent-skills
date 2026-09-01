@@ -93,6 +93,12 @@ def test_existing_native_event_tag_is_not_duplicated():
     assert tags == ["[sniff]"]
 
 
+def test_model_authored_tags_must_not_split_names_or_noun_phrases():
+    assert speak_reply.has_bad_chatterbox_tag_boundary("I thought about [sniff] Kai.") is True
+    assert speak_reply.has_bad_chatterbox_tag_boundary("I thought about Kai. [sniff]") is False
+    assert speak_reply.has_bad_chatterbox_tag_boundary("[sniff] I thought about Kai.") is False
+
+
 def test_collect_herself_cue_becomes_exact_programmatic_pause():
     text = chatterbox_utterances.normalize_collect_cues(
         "This is tender. [sniff] [sniff] give me a second. I can keep going."

@@ -24,6 +24,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 import urllib.error
@@ -42,6 +43,18 @@ CHATTERBOX_OUT_HOST_ROOT = Path(
 
 #: Long enough to say something real, short enough to stay a conversation.
 MAX_REPLY_CHARS = 700
+
+_BAD_TAG_BOUNDARY_RE = re.compile(
+    r"\b(?:about|toward|towards|with|from|for|at|to|of|by|beside|near|into|inside|through|like|called|named)\s+"
+    r"\[(?:clear throat|sigh|shush|cough|groan|sniff|gasp|chuckle|laugh|crying|happy|sad|angry|fear|surprised)\]\s+"
+    r"[A-Z][a-z]+"
+)
+
+
+def has_bad_chatterbox_tag_boundary(text: str) -> bool:
+    """Reject tags that split a noun phrase or name instead of marking a beat."""
+    return bool(_BAD_TAG_BOUNDARY_RE.search(str(text or "")))
+
 
 def _load(name: str):
     spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
@@ -175,12 +188,14 @@ for sentence pause, ellipsis (...) for hesitation/longer pause, em dash or -- fo
 an abrupt break. Put pauses where Embry is thinking or feeling, not mechanically.
 Do not end the utterance on an ellipsis, dash, tag, or unfinished thought.
 For tenderness, grief, fear, or a moment where she has to collect herself, prefer
-repeated embodied cues such as "[sniff] [sniff]... give me a second" and use
+repeated embodied cues such as "[sniff] [sniff] ... give me a second" and use
 [crying] only when the line genuinely carries tears. Persona Dream will convert
 these ellipses and collection cues into exact Chatterbox render_chunks
 pause_after_ms silence; your job is to put the affect beats at honest locations.
 Do not prefix every line with the same tag. Put tags where Embry would actually
-sigh, gasp, sniff, chuckle, or clear her throat.
+sigh, gasp, sniff, chuckle, or clear her throat. Do not place a tag inside a noun
+phrase or immediately before a proper name/object; write "I thought about Kai.
+[sniff]" or "[sniff] I thought about Kai", not "I thought about [sniff] Kai".
 
 Return JSON: {{"reply": "...", "tone": "<one tone from the list above>", "chatterbox_utterance_text": "..."}}"""
     return prompt, asked
@@ -324,7 +339,8 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
     proposed_utterance = utterances.normalize_collect_cues(str((parsed or {}).get("chatterbox_utterance_text") or "").strip())
     proposed_tags = utterances.existing_event_tags(proposed_utterance)
     if (len(proposed_tags) >= 2 and utterances.has_delay_markup(proposed_utterance)
-            and not utterances.has_unfinished_tail(proposed_utterance)):
+            and not utterances.has_unfinished_tail(proposed_utterance)
+            and not has_bad_chatterbox_tag_boundary(proposed_utterance)):
         chatterbox_utterance_text, emotional_utterance_tags = proposed_utterance, proposed_tags
         utterance_source = "model_authored"
     else:
