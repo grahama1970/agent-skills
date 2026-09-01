@@ -76,7 +76,6 @@ https://help.openai.com/en/articles/11750701-role-based-access-controls-for-chat
 https://help.openai.com/en/articles/10011769-scim-provisioning-and-management
 https://help.openai.com/en/articles/9534785-single-sign-on-sso-setup-for-openai-products
 https://help.openai.com/en/articles/20001418-where-your-chatgpt-business-content-is-stored
-https://raw.githubusercontent.com/openai/openai-openapi/main/openapi.yaml
 https://openai.com/business-data/
 https://openai.com/enterprise-privacy/
 https://openai.com/policies/eu-privacy-policy/
