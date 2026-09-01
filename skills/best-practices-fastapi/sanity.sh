@@ -13,6 +13,7 @@ echo "PASS"
 
 echo -n "Check 2 - skill contract text: "
 grep -q "framework-neutral" "$SCRIPT_DIR/SKILL.md"
+grep -q 'Use `$memory` as the default persistence boundary' "$SCRIPT_DIR/SKILL.md"
 grep -q "Terraform stays outside the app" "$SCRIPT_DIR/SKILL.md"
 grep -q "Flask fallback" "$SCRIPT_DIR/SKILL.md"
 echo "PASS"

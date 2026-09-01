@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "best-practices-fastapi",
   "trials": 3,
-  "proof_scope": "FastAPI control-plane standards, deployment handoff boundaries, and Flask fallback adapter generation",
+  "proof_scope": "FastAPI control-plane standards, Memory persistence boundaries, deployment handoff boundaries, and Flask fallback adapter generation",
   "claims": {
-    "proves": "the skill has an executable converter, validates route manifests with Pydantic, generates a Flask adapter over shared contracts/service, rejects invalid manifests, and documents Terraform as an external skill handoff",
-    "does_not_prove": "a deployed cloud service, production auth, real OpenAI/Astra access, or live cyber scanning"
+    "proves": "the skill has an executable converter, validates route manifests with Pydantic, generates a Flask adapter over shared contracts/service, rejects invalid manifests, documents Memory as default persistence, and documents Terraform as an external skill handoff",
+    "does_not_prove": "a deployed cloud service, production auth, real OpenAI/Astra access, live cyber scanning, or live Memory writes"
   },
   "cases": [
     {
@@ -28,6 +28,12 @@
       "real_world": true,
       "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh convert-to-flask invalid_route_manifest.json --out $OUT; test $? -eq 1"],
       "expected": {"exit_code": 0, "stderr_contains": ["manifest validation failed"]}
+    },
+    {
+      "name": "skill-documents-memory-default-boundary",
+      "type": "adversarial",
+      "command": ["bash", "-c", "grep -Fq 'default persistence boundary' ../SKILL.md && grep -Fq 'Qdrant directly' ../SKILL.md && grep -Fq 'PostgreSQL is only an adapter choice' ../SKILL.md"],
+      "expected": {"exit_code": 0}
     },
     {
       "name": "skill-documents-terraform-external-boundary",

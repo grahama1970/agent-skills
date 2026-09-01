@@ -73,6 +73,14 @@ a team requires Flask.
 - Auth is a dependency, not repeated route code. Start with API key for demos;
   upgrade to OAuth2 scopes when the environment requires it.
 - Every external tool/skill call returns a receipt path or typed result object.
+- Use `$memory` as the default persistence boundary for agent evidence, receipts,
+  source packs, eval results, and retrieval state. That means writes go through
+  `/memory` `/store` or `/upsert`; do not write raw AQL from the app, do not call
+  Qdrant directly, and do not store embedding arrays in ArangoDB. ArangoDB holds
+  canonical documents/edges; Qdrant holds vectors via Memory semantic sync.
+- PostgreSQL is only an adapter choice when the target team explicitly requires
+  relational deployment state. Do not add it just because a generated FastAPI
+  scaffold did.
 - Terraform stays outside the app: use `$terraform` for scaffold/plan/apply and
   `$ops-terraform` for detection/check/plan summaries. Never reimplement
   Terraform inside FastAPI.
@@ -89,11 +97,30 @@ For the OpenAI/Astra-style prep artifact, v1 should do only this:
 3. Each item returns request hash, response/finding, provider or skill identity,
    placement/deployment decision, status/error, timing, monitor events, and
    receipt/proof refs.
-4. At least one success and one forced failure both produce schema-valid
+4. Durable artifacts are stored through `$memory`: ArangoDB for canonical
+   documents/edges, Qdrant for semantic retrieval metadata managed by Memory.
+5. At least one success and one forced failure both produce schema-valid
    receipts.
-5. `$agentic-evals` retains the live-path proof.
+6. `$agentic-evals` retains the live-path proof.
 
 Add extra endpoints only after that vertical slice works.
+
+## Persistence boundary
+
+For Graham's OpenAI prep artifact, prefer the existing Memory stack over a new
+PostgreSQL dependency:
+
+- Authorization manifests, workload records, permits, monitor events, eval runs,
+  and receipt envelopes are graph-shaped audit records. They fit ArangoDB
+  documents plus edge collections.
+- Retrieval over prior evals, sources, findings, and interview prep should use
+  `$memory recall`, which combines BM25, graph traversal, and Qdrant dense
+  search.
+- Qdrant is not the app database. It stores vectors and payload metadata through
+  Memory semantic sync.
+- If a production environment mandates PostgreSQL for operational state, keep it
+  behind a repository adapter and still sync retrieval-worthy facts into
+  `$memory`.
 
 ## Deployment questions to ask first
 
