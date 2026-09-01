@@ -13,7 +13,10 @@
     "A valid status object cannot rely on model-authored prose for status truth; the extension renders the visible Status Report from validated JSON.",
     "A valid status object with not_done is only legal as state=continuing and must carry not_done[0].next_command for deterministic follow-up.",
     "Retained agentic-evals fail if status validity returns to regex/prose policy or if the pydantic contract is weakened.",
-    "Boundary handoffs use pi.receipt_envelope.v1 or owner-specific typed receipts where authority changes."
+    "Boundary handoffs use pi.receipt_envelope.v1 or owner-specific typed receipts where authority changes.",
+    "A done status with local proof must cite existing proof artifacts, known JSON proof receipts must validate, and verified command/result pairs must be backed by proof text.",
+    "Escalation evidence uses typed parent_refs rather than ad hoc receipt path strings.",
+    "Ecosystem membership is represented as pydantic-valid agent_ecosystem.membership.v1 data."
   ],
   "allowed_scope": [
     "skills/shame/**",
@@ -76,7 +79,11 @@
         "MUST use pydantic with extra=forbid.",
         "MUST make invalid states unrepresentable: done needs verified/proof and empty not_done; continuing needs not_done[].next_command; not_done is only legal with continuing.",
         "MUST reject ambiguous failure labels unless they are triage-error catalog codes or deterministic minted *_unclassified_<8hex> codes.",
-        "MUST keep changed non-empty for every report."
+        "MUST keep changed non-empty for every report.",
+        "MUST reject missing local proof paths for done reports.",
+        "MUST reject known JSON proof receipts that do not pass schema-specific checks.",
+        "MUST reject verified command/result pairs that are not backed by local proof text when local proof is supplied.",
+        "MUST require needs_webgpt parent_refs rather than ad hoc receipt path fields."
       ]
     },
     {
@@ -99,7 +106,8 @@
       "must": [
         "MUST publish component ownership and authority boundaries.",
         "MUST use pi.receipt_envelope.v1 for authority-changing dispatch, handoff, acceptance, escalation, closure, and durable failure.",
-        "MUST state that pydantic proves structure and consumers must separately resolve referenced evidence."
+        "MUST state that pydantic proves structure and consumers must separately resolve referenced evidence.",
+        "MUST publish and validate agent_ecosystem.membership.v1 as the machine-readable membership source."
       ]
     },
     {
@@ -130,7 +138,8 @@
       "must": [
         "MUST create/read continuation ledgers, proof gates, and locks for active project work.",
         "MUST prevent done reports when machine-readable tickets, gates, or next steps remain unresolved.",
-        "MUST route durable failures through typed triage/status receipts."
+        "MUST route durable failures through typed triage/status receipts.",
+        "MUST write pydantic-valid lazy_report_shame.continuation_guard.v1 ledgers through the shame guard contract when machine-readable work remains."
       ]
     },
     {

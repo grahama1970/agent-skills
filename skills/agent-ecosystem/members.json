@@ -1,0 +1,22 @@
+{
+  "schema": "agent_ecosystem.membership.v1",
+  "goal_id": "shame-deterministic-instruction-obedience-v1",
+  "members": [
+    {"component": "project agents", "owns": "instruction-obedience at the turn boundary", "emits": ["pi.agent_status.v1"], "consumes": ["operator instructions", "tool results", "receipts"], "must": "report guarded work as typed status data; use continuing.not_done[].next_command for unfinished agent-executable work"},
+    {"component": "triage-error", "owns": "failure vocabulary", "emits": ["code", "cause", "next_command"], "consumes": ["raw error text"], "must": "map one raw signal to one catalog or minted code"},
+    {"component": "shame", "owns": "pi.agent_status.v1 and shame.immutable_goal.v1", "emits": ["status objects", "immutable goal", "training examples"], "consumes": ["triage codes", "human labels"], "must": "keep status truth pydantic-validated, prose-display-only, and eval-gated"},
+    {"component": "lazy-report-shame-shame-shame extension", "owns": "Pi message_end enforcement", "emits": ["rejection packets", "rendered status", "follow-up commands"], "consumes": ["final status JSON", "continuation ledgers"], "must": "reject missing or invalid status JSON and render from validated data"},
+    {"component": "status-json-check.mjs", "owns": "final-status extraction and validator invocation", "emits": ["checker result"], "consumes": ["assistant text"], "must": "not decide status validity with prose, markdown, HTML, regex policy, or LLM judgment"},
+    {"component": "agent_status_schema.py", "owns": "pydantic status legality", "emits": ["parse pass/fail"], "consumes": ["final status JSON"], "must": "make invalid states unrepresentable"},
+    {"component": "compile-status-command.mjs", "owns": "typed status-to-command compilation", "emits": ["exact follow-up command or no command"], "consumes": ["pydantic-valid status object"], "must": "compile continuing and needs_* payloads mechanically"},
+    {"component": "agentic-evals", "owns": "retained regression proof", "emits": ["readiness reports"], "consumes": ["fixtures", "commands"], "must": "fail if status invariants are weakened"},
+    {"component": "ask", "owns": "intent-to-DAG compilation", "emits": ["tau.dag_contract.v1", "recovery packets"], "consumes": ["status escalation payloads"], "must": "consume typed needs_* payloads instead of informal escalation prose"},
+    {"component": "tau", "owns": "DAG execution and acceptance", "emits": ["node receipts", "tau.agent_handoff.v1/v2", "goal hashes"], "consumes": ["DAG contracts", "embedded status objects"], "must": "own immutable goal hashes and typed acceptance receipts"},
+    {"component": "project-watchdog", "owns": "scheduled dispatch", "emits": ["tick receipts", "proof gates", "locks", "continuation ledgers"], "consumes": ["GitHub tickets", "tau verdicts"], "must": "expose machine-readable open work so done fails while tickets/gates/next steps remain"},
+    {"component": "ops-herdr", "owns": "cross-session transport", "emits": ["inbox records", "dead-letters"], "consumes": ["triage codes"], "must": "carry cross-session failure/state as typed records with triage codes"},
+    {"component": "ponytail", "owns": "generation minimalism", "emits": ["ponytail debt comments"], "consumes": [], "must": "not override status, receipt, proof, or eval requirements"},
+    {"component": "Memory", "owns": "recall", "emits": ["store/readback responses"], "consumes": ["durable observations"], "must": "store shame examples, triage resolutions, and project knowledge with readback"},
+    {"component": "agent-ecosystem", "owns": "component ownership and receipt boundaries", "emits": ["pi.receipt_envelope.v1 validation"], "consumes": ["boundary payloads"], "must": "publish the ownership map and require envelope wrapping at authority-changing boundaries"},
+    {"component": "goal-helper", "owns": "proof-centered goal shape", "emits": ["immutable goal prompt/checklist"], "consumes": ["human goal text"], "must": "keep success tied to primary proof, completion criteria, allowed scope, forbidden drift, retry budget, and stop condition"}
+  ]
+}

@@ -7,7 +7,7 @@
 //   needs_brave_search -> skills/brave-search/run.sh web (rung 0)
 //   needs_agent        -> $ask tau-dag single-call, cross-family (rung 1)
 //   needs_webgpt       -> $ask tau-dag --handler webgpt (rung 2; schema
-//                         already required both prior rung receipts)
+//                         already required typed parent_refs)
 //   needs_roundtable   -> $ask tau-dag --dag-template roundtable (>=3 seats)
 //   needs_competition  -> $ask compete (>=2 candidates)
 //   continuing         -> first not_done[].next_command verbatim
@@ -49,8 +49,12 @@ function compile(s) {
     }
     case 'needs_agent':
       return { command: tauSingle(s.needs_agent.question, s.needs_agent.handler), reason: 'escalation_rung_1_cross_family' };
-    case 'needs_webgpt':
-      return { command: tauSingle(`${s.needs_webgpt.question}\n\nPrior rung receipts: ${s.needs_webgpt.brave_search_receipt} ${s.needs_webgpt.agent_receipt}`, 'webgpt'), reason: 'escalation_rung_2_webgpt' };
+    case 'needs_webgpt': {
+      const refs = (s.needs_webgpt.parent_refs || [])
+        .map((r) => `${r.receipt_id} (${r.expected_schema} from ${r.expected_producer})`)
+        .join(', ');
+      return { command: tauSingle(`${s.needs_webgpt.question}\n\nPrior typed parent refs: ${refs}`, 'webgpt'), reason: 'escalation_rung_2_webgpt' };
+    }
     case 'needs_roundtable': {
       const p = s.needs_roundtable;
       const handlers = p.handlers.map((h) => `--handler ${q(h)}`).join(' ');

@@ -281,3 +281,7 @@ context on every dispatch.
 - GitHub Actions evidence is optional corroboration; CI green alone is not
   closure proof.
 - Do not use this skill to bypass `$best-practices-github-ticket`.
+
+## Ecosystem
+
+Adjacent agent-governance boundary. Produces ticket proof and closure evidence; consumes `pi.agent_status.v1` proof claims from resolvers. When a ticket remains open or closure proof is incomplete, emit or validate `lazy_report_shame.continuation_guard.v1` via `skills/shame/run.sh guard` so `$shame` rejects terminal `done` reports until machine-readable work is closed.

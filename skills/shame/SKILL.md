@@ -75,7 +75,7 @@ One JSON object per report-like turn, validated by `scripts/agent_status_schema.
 | `failed` | `failure.triage.code` | triage-error catalog or minted `*_unclassified_<8hex>` code; ambiguous labels fail validation |
 | `needs_brave_search` | `queries[]` | escalation rung 0 |
 | `needs_agent` | cross-family `handler` + `question` | escalation rung 1 |
-| `needs_webgpt` | `question` + both prior rung receipt paths | rung 2; the ladder cannot be skipped |
+| `needs_webgpt` | `question` + `parent_refs[]` for both prior rung receipts | rung 2; the ladder cannot be skipped or faked with ad hoc paths |
 | `needs_roundtable` | `immutable_goal` + >=3 `handlers` | $ask roundtable quorum floor |
 | `needs_competition` | `immutable_goal` + >=2 `handlers` + `criteria[]` | $ask compete candidate floor |
 
@@ -83,7 +83,7 @@ Two invariants hold for every report regardless of state: `changed` must be non-
 
 `compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension queues the compiled command as a follow-up on `message_end`.
 
-The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the final `pi.agent_status.v1` JSON remains the typed contract the checker enforces. For `state=done`, every `proof[]` entry must be an existing local file or directory, so a pydantic-valid object cannot cite a fake receipt path.
+The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the final `pi.agent_status.v1` JSON remains the typed contract the checker enforces. For `state=done`, every local `proof[]` entry must exist, known JSON receipt schemas are validated, and each `verified[]` command/result pair must appear in local proof text when local proof is supplied.
 
 The pending review packet is overwritten on each new rejected candidate:
 
@@ -190,7 +190,7 @@ The fixture must prove:
 - strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
 - strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
 - every valid `pi.agent_status.v1` report can be rendered into a visible `Status Report` by the extension;
-- fake `proof[]` receipt paths are rejected after pydantic validation and before visible report rendering;
+- fake `proof[]` receipt paths, failed known receipt schemas, and `verified[]` entries not backed by local proof text are rejected by pydantic before visible report rendering;
 - JSON-only reports are accepted after pydantic validation, model-authored status prose is stripped before display, and a static/live guard fails if `status-json-check.mjs` reintroduces regex/prose status policy;
 - repeated same-fingerprint failures are blocked unless the next report asks one plain human question, cites `debugger.proof.v1`, or cites an exact file:line debugger failure handoff;
 - extension rejection notices are correction packets naming the pydantic/checker reason rather than bare gate JSON;

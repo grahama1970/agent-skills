@@ -12,6 +12,9 @@ case "$cmd" in
   audio)
     node "$SKILL_DIR/scripts/install-shame-audio.mjs" "$@"
     ;;
+  guard)
+    uv run --with pydantic python3 "$SKILL_DIR/scripts/continuation_guard_schema.py" "$@"
+    ;;
   path)
     printf '%s\n' "${LAZY_REPORT_SHAME_TRAINING_JSONL:-/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl}"
     ;;
@@ -25,6 +28,8 @@ Usage:
   run.sh capture --text TEXT --verdict reject --reason commit_laundering
   run.sh audio install [--source FILE] [--extension-dir DIR]
   run.sh audio status [--extension-dir DIR]
+  run.sh guard validate <file.json|->
+  run.sh guard write <out.json> <target> <next_command>
   run.sh path
 
 Audio command installs one short Chatterbox word: "shame". No bell, no loop.

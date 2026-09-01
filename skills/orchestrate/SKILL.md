@@ -294,3 +294,7 @@ ORCHESTRATE_ENABLE_INTERVIEW_ESCALATION=1 orchestrate run tasks.yaml
 ```
 
 CI always remains artifact-only even if the env flag is set.
+
+## Ecosystem
+
+Adjacent agent-governance boundary. Produces task receipts and gate outcomes; consumes plan tasks and status follow-up commands. When tasks remain pending, failed, or waiting on a deterministic gate, emit or validate `lazy_report_shame.continuation_guard.v1` via `skills/shame/run.sh guard` so `$shame` rejects terminal `done` reports until machine-readable work is closed.

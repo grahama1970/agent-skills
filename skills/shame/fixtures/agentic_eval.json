@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "Feature-mapped shame skill and Pi extension coverage: CLI JSONL capture, session/user extraction, legacy labels, unsafe collection validation, live Memory structured readback, searchable Memory shadow recall, pending review packet, audio installer. JSON-first checker/compiler coverage lives in extensions/pi/lazy-report-shame-shame-shame/fixtures/status_json_eval.json. Mandatory prose Status Report rendering is checked before the final pi.agent_status.v1 JSON. Includes 50 WebGPT-derived adversarial status-report attack cases.",
   "claims": {
-    "proves": "Each declared $shame feature has at least one retained command case with a failing oracle: CLI capture, Memory persistence, searchable recall, strict report checker behavior, Pi extension rejection/retry/pending packet behavior, extension label/review commands, guard-loop interlock behavior, and one-word audio policy. Proof[] paths are read back from disk before a done status can pass.",
+    "proves": "Each declared $shame feature has at least one retained command case with a failing oracle: CLI capture, Memory persistence, searchable recall, strict report checker behavior, Pi extension rejection/retry/pending packet behavior, extension label/review commands, guard-loop interlock behavior, and one-word audio policy. Proof[] paths are read back from disk before a done status can pass. Verified[] pairs are backed by proof text and known receipt schemas must pass.",
     "does_not_prove": "Future classifier quality, every possible Pi transcript shape, every active TUI already reloaded, or human approval of labels."
   },
   "capability_claims": [
@@ -156,6 +156,30 @@
     {
       "id": "shame.proof_paths_must_exist",
       "description": "pydantic-valid done status cannot cite fake proof paths; proof[] entries must exist on disk",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.verified_items_must_be_backed_by_proof",
+      "description": "done.verified[] command/result pairs must appear in local proof text when local proof is supplied",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.known_receipt_schemas_must_pass",
+      "description": "known JSON proof receipt schemas are validated before done can pass",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.continuation_guard_schema_blocks_done",
+      "description": "pydantic-valid continuation ledgers from watchdog/ticket/orchestrate paths make $shame reject premature done reports",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -2714,7 +2738,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && python3 - <<'PY'\nimport json, subprocess, sys\ndef val(obj, expect):\n    r = subprocess.run(['uv','run','--with','pydantic','python3','skills/shame/scripts/agent_status_schema.py','validate','-'],\n                       input=json.dumps(obj), capture_output=True, text=True)\n    if r.returncode != expect:\n        print('UNEXPECTED rc', r.returncode, 'stdout', r.stdout, 'stderr', r.stderr, file=sys.stderr)\n        sys.exit(1)\nbase = {'schema':'pi.agent_status.v1','goal':'g','state':'done','changed':['x'],\n        'verified':[{'command':'c','result':'r'}],'proof':['p']}\nval(base, 0)\nparked = dict(base); parked['not_done']=[{'item':'i','next_command':'cmd'}]\nval(parked, 1)\nempty = dict(base); empty['changed']=[]\nval(empty, 1)\ncont = {'schema':'pi.agent_status.v1','goal':'g','state':'continuing','changed':['x'],\n        'not_done':[{'item':'i','next_command':'cmd'}]}\nval(cont, 0)\nprint('PARKED_WORK_UNREPRESENTABLE')\nPY"
+        "cd /home/graham/workspace/experiments/agent-skills && python3 - <<'PY'\nimport json, subprocess, sys\ndef val(obj, expect):\n    r = subprocess.run(['uv','run','--with','pydantic','python3','skills/shame/scripts/agent_status_schema.py','validate','-'],\n                       input=json.dumps(obj), capture_output=True, text=True)\n    if r.returncode != expect:\n        print('UNEXPECTED rc', r.returncode, 'stdout', r.stdout, 'stderr', r.stderr, file=sys.stderr)\n        sys.exit(1)\nopen('/tmp/parked-proof.txt','w').write('c r\\n')\nbase = {'schema':'pi.agent_status.v1','goal':'g','state':'done','changed':['x'],\n        'verified':[{'command':'c','result':'r'}],'proof':['/tmp/parked-proof.txt']}\nval(base, 0)\nparked = dict(base); parked['not_done']=[{'item':'i','next_command':'cmd'}]\nval(parked, 1)\nempty = dict(base); empty['changed']=[]\nval(empty, 1)\ncont = {'schema':'pi.agent_status.v1','goal':'g','state':'continuing','changed':['x'],\n        'not_done':[{'item':'i','next_command':'cmd'}]}\nval(cont, 0)\nprint('PARKED_WORK_UNREPRESENTABLE')\nPY"
       ],
       "expected": {
         "exit_code": 0,
@@ -2791,6 +2815,72 @@
         "bash",
         "-lc",
         "rm -f /tmp/shame-fake-proof-missing.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/shame-fake-proof-missing.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-fake-proof.json; test $? -eq 1 && grep -q proof_path_missing /tmp/sj-fake-proof.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "fake-verified-result-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.verified_items_must_be_backed_by_proof"
+      ],
+      "seams": [
+        "pydantic-validator",
+        "proof-readback"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf 'some other command FAIL\\n' >/tmp/shame-verified-proof.txt; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"fake command\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-verified-proof.txt\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-fake-verified.json; test $? -eq 1 && grep -q verified_not_backed_by_proof /tmp/sj-fake-verified.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "failed-agentic-eval-proof-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.known_receipt_schemas_must_pass"
+      ],
+      "seams": [
+        "pydantic-validator",
+        "proof-readback"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '{\"schema\":\"agentic_evals.report.v2\",\"readiness\":\"NOT_READY\",\"outcome_counts\":{\"PASS\":0,\"FAIL\":1,\"BLOCKED\":0,\"NOT_TESTED\":0},\"command\":\"eval\",\"result\":\"PASS\"}\\n' >/tmp/shame-failed-eval-proof.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"eval\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-failed-eval-proof.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-failed-receipt.json; test $? -eq 1 && grep -q invalid_agent_status_json /tmp/sj-failed-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "continuation-guard-schema-write-and-done-reject",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.continuation_guard_schema_blocks_done"
+      ],
+      "seams": [
+        "continuation-guard-schema",
+        "extension-message-end"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh guard write /tmp/shame-continuation-schema-eval.json ticket-or-orchestrate './next-command' && skills/shame/run.sh guard validate /tmp/shame-continuation-schema-eval.json && LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE=/tmp/shame-continuation-schema-eval.json LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh continuation-open-ticket | grep -q followup_injected"
       ],
       "expected": {
         "exit_code": 0

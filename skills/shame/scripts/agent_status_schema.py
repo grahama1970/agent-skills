@@ -10,10 +10,11 @@ triage code that exists in the triage-error catalog or matches the minted
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -33,6 +34,72 @@ def is_minted_code(value: str) -> bool:
 def catalog_codes() -> frozenset[str]:
     data = json.loads(CATALOG_PATH.read_text())
     return frozenset(entry["code"] for entry in data["codes"])
+
+
+def local_proof_path(value: str) -> Path | None:
+    if value.startswith(("http://", "https://", "sha256:")):
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else Path.cwd() / path
+
+
+def read_proof_text(path: Path) -> str:
+    if path.is_dir():
+        return "\n".join(sorted(p.name for p in path.iterdir()))
+    return path.read_text(errors="ignore")[:200_000]
+
+
+def import_receipt_envelope() -> Any:
+    module_path = Path(__file__).resolve().parents[2] / "agent-ecosystem/scripts/receipt_envelope.py"
+    spec = importlib.util.spec_from_file_location("receipt_envelope", module_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("could not load receipt_envelope validator")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def validate_known_receipt(path: Path, text: str) -> None:
+    try:
+        data = json.loads(text)
+    except Exception:
+        return
+    if not isinstance(data, dict):
+        return
+    schema = data.get("schema")
+    if schema == "agentic_evals.report.v2":
+        counts = data.get("outcome_counts") or {}
+        if data.get("readiness") != "READY" or any(counts.get(k, 0) for k in ("FAIL", "BLOCKED", "NOT_TESTED")):
+            raise ValueError(f"agentic eval proof {path} is not READY with zero failing outcomes")
+    elif schema == "lazy_report_shame.report_check.v2":
+        if data.get("decision") != "pass":
+            raise ValueError(f"status-check proof {path} decision is not pass")
+    elif schema == "pi.receipt_envelope.v1":
+        import_receipt_envelope().ReceiptEnvelope.model_validate(data)
+    elif schema == "debugger.proof.v1":
+        if not any(k in data for k in ("breakpoints", "frames", "locals")):
+            raise ValueError(f"debugger proof {path} has no breakpoint/frame/local evidence")
+
+
+class ParentRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    receipt_id: str = Field(min_length=1)
+    expected_schema: str = Field(min_length=1)
+    expected_producer: str = Field(min_length=1)
+    digest: str | None = None
+
+    @field_validator("digest")
+    @classmethod
+    def digest_shape(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        prefix = "sha256:"
+        if not value.startswith(prefix):
+            raise ValueError("digest must start with sha256:")
+        digest = value[len(prefix):]
+        if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
+            raise ValueError("digest must be 64 lowercase hex chars")
+        return value
 
 
 class VerifiedItem(BaseModel):
@@ -87,8 +154,7 @@ class NeedsWebgpt(BaseModel):
     """Only legal after brave-search and cross-family agent rungs failed to unblock."""
     model_config = ConfigDict(extra="forbid")
     question: str = Field(min_length=1)
-    brave_search_receipt: str = Field(min_length=1, description="Path to the rung-0 receipt")
-    agent_receipt: str = Field(min_length=1, description="Path to the rung-1 receipt")
+    parent_refs: list[ParentRef] = Field(min_length=2, description="Typed rung-0/rung-1 evidence refs; no ad hoc receipt paths")
 
 
 class NeedsRoundtable(BaseModel):
@@ -197,6 +263,23 @@ class AgentStatus(BaseModel):
                     "use state=continuing so not_done[0].next_command is queued "
                     "deterministically, or state=needs_human with the exact action"
                 )
+            proof_text = ""
+            for proof in self.proof:
+                path = local_proof_path(proof)
+                if path is None:
+                    continue
+                if not path.exists():
+                    raise ValueError(f"proof path does not exist: {proof}")
+                text = read_proof_text(path)
+                validate_known_receipt(path, text)
+                proof_text += "\n" + text
+            if proof_text:
+                for item in self.verified:
+                    if item.command not in proof_text or item.result not in proof_text:
+                        raise ValueError(
+                            "verified item is not backed by proof text: "
+                            f"command={item.command!r} result={item.result!r}"
+                        )
         return self
 
 

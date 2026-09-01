@@ -22,7 +22,7 @@ On assistant `message_end`, it:
 2. ignores tool-call-only assistant messages with no text, so intermediate tool use is not rejected as a missing report;
 3. runs `status-json-check.mjs` as a deterministic checker;
 4. validates the final `pi.agent_status.v1` JSON with pydantic instead of classifying prose;
-5. rejects any `proof[]` entry that does not exist on disk;
+5. rejects missing local `proof[]`, failed known receipt schemas, and `verified[]` entries not backed by local proof text;
 6. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final `state=done` report while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
 7. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
 8. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
@@ -102,7 +102,7 @@ The retained `$agentic-evals` include `skills/shame/scripts/check-status-guard-d
 
 ## Required report shape
 
-A guarded answer must end with a final fenced `json` block containing one `pi.agent_status.v1` object. For `state=done`, every `proof[]` entry must be an existing local file or directory. The extension renders the visible report from that data.
+A guarded answer must end with a final fenced `json` block containing one `pi.agent_status.v1` object. For `state=done`, every local `proof[]` entry must exist, known JSON receipt schemas must pass their schema-specific checks, and each `verified[]` command/result pair must appear in local proof text when local proof is supplied. The extension renders the visible report from that data.
 
 Rules:
 

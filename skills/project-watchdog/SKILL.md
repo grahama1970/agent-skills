@@ -461,7 +461,7 @@ See `PROJECT_KNOWLEDGE.md` for current readiness and open questions.
 
 Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
 for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
-envelope). Produces: tick receipts, proof gates, leases. Consumes: GitHub agent-work tickets, tau verdicts. Envelope-wrapped
+envelope). Produces: tick receipts, proof gates, leases, `lazy_report_shame.continuation_guard.v1` ledgers. Consumes: GitHub agent-work tickets, tau verdicts. Envelope-wrapped
 boundary events: dispatch, closure. Failure names come only from the triage-error
 catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
-unrepresentable ecosystem-wide.
+unrepresentable ecosystem-wide. When open machine work remains, write/validate the continuation ledger through `skills/shame/run.sh guard` so `$shame` rejects `state=done` until the ticket/gate/next command is resolved.

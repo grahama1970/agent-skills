@@ -5,8 +5,8 @@ import { existsSync, writeFileSync } from 'node:fs';
 const checker = process.env.REPORT_CHECK
   || '/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs';
 const mode = process.argv[2] || 'list';
-writeFileSync('/tmp/proof.json', '{"ok":true}\n');
-writeFileSync('/tmp/proof.txt', 'ok\n');
+writeFileSync('/tmp/proof.json', 'probe command PASS\nprobe PASS\nlive-replay PASS\n');
+writeFileSync('/tmp/proof.txt', 'probe command PASS\n');
 
 function status(overrides = {}) {
   return JSON.stringify({

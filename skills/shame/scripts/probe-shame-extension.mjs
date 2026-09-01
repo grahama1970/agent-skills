@@ -8,8 +8,8 @@ process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED ||= '0';
 process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET ||= `/tmp/shame-probe-${mode}-pending-packet.json`;
 process.env.LAZY_REPORT_SHAME_TRAINING_JSONL ||= `/tmp/shame-probe-${mode}-training.jsonl`;
 const indexPath = process.env.LAZY_REPORT_SHAME_INDEX || '/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts';
-writeFileSync('/tmp/proof.json', '{"ok":true}\n');
-writeFileSync('/tmp/probe', 'ok\n');
+writeFileSync('/tmp/proof.json', 'probe PASS\nlive-replay PASS\nchecker probes returned pass PASS\n');
+writeFileSync('/tmp/probe', 'probe probe\nprobe PASS\n');
 
 function assert(condition, message, details = {}) {
   if (!condition) {

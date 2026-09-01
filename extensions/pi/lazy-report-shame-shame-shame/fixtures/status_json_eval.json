@@ -66,7 +66,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf ok >/tmp/x; printf 'work.\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
+        "printf 'ls ok\\n' >/tmp/x; printf 'work.\\n\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"ls\",\"result\":\"ok\"}],\"proof\":[\"/tmp/x\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q '\"decision\": \"pass\"'"
       ],
       "expected": {
         "exit_code": 0
@@ -175,7 +175,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/p\"],\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-done-not-done.json; test $? -eq 1 && grep -q 'not_done items mean unfinished agent-executable work' /tmp/sj-done-not-done.json"
+        "printf 'c r\\n' >/tmp/p; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/p\"],\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-done-not-done.json; test $? -eq 1 && grep -q 'not_done items mean unfinished agent-executable work' /tmp/sj-done-not-done.json"
       ],
       "expected": {
         "exit_code": 0
@@ -240,7 +240,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_webgpt\",\"needs_webgpt\":{\"question\":\"q\",\"brave_search_receipt\":\"/tmp/r0.json\",\"agent_receipt\":\"/tmp/r1.json\"}}' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs | grep -q \"handler 'webgpt'\""
+        "printf '{\"schema\": \"pi.agent_status.v1\", \"goal\": \"g\", \"state\": \"needs_webgpt\", \"changed\": [\"no change: escalating\"], \"needs_webgpt\": {\"question\": \"q\", \"parent_refs\": [{\"receipt_id\": \"r0\", \"expected_schema\": \"brave_search.result.v1\", \"expected_producer\": \"brave-search\"}, {\"receipt_id\": \"r1\", \"expected_schema\": \"tau.agent_handoff.v2\", \"expected_producer\": \"tau\"}]}}' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/compile-status-command.mjs | grep -q \"handler 'webgpt'\""
       ],
       "expected": {
         "exit_code": 0
@@ -288,10 +288,54 @@
         "exit_code": 0
       },
       "real_world": true
+    },
+    {
+      "name": "fake-verified-result-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.verified_items_must_be_backed_by_proof"
+      ],
+      "seams": [
+        "pydantic-validator",
+        "proof-readback"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf 'some other command FAIL\\n' >/tmp/shame-verified-proof.txt; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"fake command\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-verified-proof.txt\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-fake-verified.json; test $? -eq 1 && grep -q verified_not_backed_by_proof /tmp/sj-fake-verified.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "failed-agentic-eval-proof-rejects",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.known_receipt_schemas_must_pass"
+      ],
+      "seams": [
+        "pydantic-validator",
+        "proof-readback"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "printf '{\"schema\":\"agentic_evals.report.v2\",\"readiness\":\"NOT_READY\",\"outcome_counts\":{\"PASS\":0,\"FAIL\":1,\"BLOCKED\":0,\"NOT_TESTED\":0},\"command\":\"eval\",\"result\":\"PASS\"}\\n' >/tmp/shame-failed-eval-proof.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"eval\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-failed-eval-proof.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-failed-receipt.json; test $? -eq 1 && grep -q invalid_agent_status_json /tmp/sj-failed-receipt.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
     }
   ],
   "claims": {
-    "proves": "JSON-first status checking: pi.agent_status.v1 validated by pydantic against the triage-error catalog; ambiguous blocker labels rejected; no prose/regex classification. Proof[] paths are read back from disk before a done status can pass."
+    "proves": "JSON-first status checking: pi.agent_status.v1 validated by pydantic against the triage-error catalog; ambiguous blocker labels rejected; no prose/regex classification. Proof[] paths are read back from disk before a done status can pass. Verified[] pairs are backed by proof text and known receipt schemas must pass."
   },
   "capability_claims": [
     {
@@ -386,6 +430,22 @@
     {
       "id": "shame.proof_paths_must_exist",
       "description": "pydantic-valid done status cannot cite fake proof paths; proof[] entries must exist on disk",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.verified_items_must_be_backed_by_proof",
+      "description": "done.verified[] command/result pairs must appear in local proof text when local proof is supplied",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.known_receipt_schemas_must_pass",
+      "description": "known JSON proof receipt schemas are validated before done can pass",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
