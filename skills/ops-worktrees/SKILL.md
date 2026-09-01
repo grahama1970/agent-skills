@@ -88,6 +88,27 @@ inferring one:
 skills/ops-worktrees/run.sh audit --json
 ```
 
+## Agent dispatch: worktrees are allowed again, via `wt` only
+
+The worktree ban existed because agents forget the finish steps (merge, remove,
+branch delete) 100% of the time. The fix is not remembering — it is making
+cleanup nobody's job but the cron's.
+
+- **Create/switch/finish through [worktrunk](https://github.com/max-sixty/worktrunk)**
+  (`wt`, installed at `~/.local/bin/wt`, v0.75.0). `wt switch -c <branch>` to
+  dispatch, `wt merge main` or `wt remove` to finish. Raw `git worktree add`
+  stays banned.
+- **Agents are not trusted to clean up.** The scheduler job `worktree-reap`
+  runs `scripts/reap_worktrees.sh` hourly (`15 * * * *`) with
+  `WORKTREE_REAP_APPLY=1 WORKTREE_GRACE_DAYS=3`: landed worktrees are removed,
+  unmerged work is bundle-archived, active/dirty/in-TTL trees are kept. An
+  agent that forgets its worktree loses nothing and strands nothing.
+- **Merged-ness caveat in this repo:** local `main` is permanently diverged
+  (plumbing pushes), so `wt list`'s `main_state` reads `would_conflict` for
+  everything. The reaper's landed check uses `@{upstream}..HEAD` /
+  `origin/main..HEAD`, not `wt`'s local-main comparison. Trust the reaper's
+  classification, not `wt list` merged-ness, here.
+
 ## Commands
 
 ```bash
