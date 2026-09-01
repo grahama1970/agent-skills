@@ -830,6 +830,9 @@ def test_the_repair_task_names_the_bar_the_reviewer_applies() -> None:
         issue_body="type: bug\ntarget: skills/x\n", targets=["skills/x"],
     )
     assert "VERDICT: PASS" in task and "VERDICT: FAIL" in task
+    assert "whether the code works" in task
+    assert "required best-practices-* skills" in task
+    assert "Nits are not a blocking verdict" in task
     assert "Allowed paths: skills/x" in task
     assert "type: bug" in task, "the ticket body carries the orientation a cron agent needs"
 
