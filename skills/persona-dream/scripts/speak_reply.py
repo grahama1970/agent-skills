@@ -43,7 +43,6 @@ CHATTERBOX_OUT_HOST_ROOT = Path(
 #: Long enough to say something real, short enough to stay a conversation.
 MAX_REPLY_CHARS = 700
 
-
 def _load(name: str):
     spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
     if spec is None or spec.loader is None:
@@ -157,7 +156,26 @@ Choose the one that matches what you actually said. If you said you are unsure,
 do not pick a confident tone -- your voice contradicting your words is worse
 than a plain delivery.
 
-Return JSON: {{"reply": "...", "tone": "<one tone from the list above>"}}"""
+Now write the exact Chatterbox utterance text that should be rendered. It must
+be the same reply, but with two or three relevant Chatterbox tags placed inline
+where the vocal events belong, plus natural punctuation pauses.
+
+Native vocal event tags available: [clear throat], [sigh], [shush], [cough],
+[groan], [sniff], [gasp], [chuckle], [laugh].
+
+Extended tokenizer style/emotion tokens available when genuinely relevant:
+[angry], [fear], [surprised], [whispering], [advertisement], [dramatic],
+[narration], [crying], [happy], [sarcastic]. Prefer the native vocal event tags
+for audible utterances; use extended style tokens sparingly because their effect
+varies.
+
+Delay and cadence marks available: comma for short breath, semicolon or period
+for sentence pause, ellipsis (...) for hesitation/longer pause, em dash or -- for
+an abrupt break. Put pauses where Embry is thinking or feeling, not mechanically.
+Do not prefix every line with the same tag. Put tags where Embry would actually
+sigh, gasp, sniff, chuckle, or clear her throat.
+
+Return JSON: {{"reply": "...", "tone": "<one tone from the list above>", "chatterbox_utterance_text": "..."}}"""
     return prompt, asked
 
 
@@ -218,6 +236,12 @@ def resolve_host_audio(container_path: str) -> Path | None:
     return None
 
 
+def inject_emotional_utterance(text: str, tone: str) -> tuple[str, list[str]]:
+    """Add native Chatterbox Turbo event tags to the spoken text."""
+    utterances = _load("chatterbox_utterances")
+    return utterances.inject_event_tags(text, tone, max_tags=3)
+
+
 def speak(text: str, voice_delivery: dict[str, Any], run_dir: Path,
           label: str) -> tuple[Path | None, dict[str, Any]]:
     """Render through Chatterbox. Returns (audio_path, response)."""
@@ -255,7 +279,7 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         parsed, tau_receipt = adapter.dispatch_text_reasoning(
             prompt,
             role="persona_reply",
-            output_contract={"reply": "string", "tone": "string"},
+            output_contract={"reply": "string", "tone": "string", "chatterbox_utterance_text": "string"},
             caller_skill="persona-dream-ux",
             timeout_s=180.0,
         )
@@ -286,10 +310,19 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         text, day_grounding_injected = grounding.ground_day_if_needed(text, grounding_context, role="embry")
 
     tone, voice_delivery = choose_tone(run_dir, felt)
-    label = f"pd_reply_{run_dir.name}_{abs(hash(text)) % 10**8}"
+    proposed_utterance = str((parsed or {}).get("chatterbox_utterance_text") or "").strip()
+    utterances = _load("chatterbox_utterances")
+    proposed_tags = utterances.existing_event_tags(proposed_utterance)
+    if len(proposed_tags) >= 2:
+        chatterbox_utterance_text, emotional_utterance_tags = proposed_utterance, proposed_tags
+        utterance_source = "model_authored"
+    else:
+        chatterbox_utterance_text, emotional_utterance_tags = inject_emotional_utterance(text, tone)
+        utterance_source = "agent_repaired_model_missing_tags"
+    label = f"pd_reply_{run_dir.name}_{abs(hash(chatterbox_utterance_text)) % 10**8}"
 
     try:
-        audio_path, response = speak(text, voice_delivery, run_dir, label)
+        audio_path, response = speak(chatterbox_utterance_text, voice_delivery, run_dir, label)
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         return {
             "status": "BLOCKED_REPLY_NOT_SPOKEN",
@@ -312,6 +345,9 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         "live": True,
         "asked": asked,
         "text": text,
+        "chatterbox_utterance_text": chatterbox_utterance_text,
+        "emotional_utterance_tags": emotional_utterance_tags,
+        "chatterbox_utterance_source": utterance_source,
         "chose_tone": felt,
         "tone_was_in_vocabulary": felt in _load("map_delivery_tone").ALLOWED_TONES,
         "tone": tone,

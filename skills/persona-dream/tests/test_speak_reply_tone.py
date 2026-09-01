@@ -73,3 +73,20 @@ def test_a_tone_outside_the_vocabulary_falls_back_to_the_dream(competence_dream)
     tone, delivery = speak_reply.choose_tone(competence_dream, "exposed, honest")
     assert tone == "memory_confident"
     assert delivery["tone"] == tone
+
+
+def test_memory_uncertain_injects_multiple_native_chatterbox_event_tags():
+    spoken, tags = speak_reply.inject_emotional_utterance(
+        "I do not land cleanly. I am afraid the warmth will become proof.",
+        "memory_uncertain",
+    )
+    assert spoken.startswith("[sigh]... I do not land cleanly.")
+    assert len(tags) >= 2
+    assert "[sigh]" in tags
+    assert any(tag in {"[sniff]", "[gasp]", "[chuckle]"} for tag in tags)
+
+
+def test_existing_native_event_tag_is_not_duplicated():
+    spoken, tags = speak_reply.inject_emotional_utterance("[sniff] I am still here.", "memory_uncertain")
+    assert spoken == "[sniff]... I am still here."
+    assert tags == ["[sniff]"]

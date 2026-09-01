@@ -36,6 +36,7 @@ ARTIFACTS = [
     ("contact_sheet.png", "image", "the imagery I saw in the dream, laid out as a contact sheet"),
     ("storyboard_contact_sheet.png", "image", "the watched storyboard imagery from the dream spine"),
     ("journal.wav", "audio", "my own voice reading the journal entry aloud"),
+    ("journal_chatterbox_utterance.json", "text", "the exact Chatterbox utterance plan for my journal: tone, tags, pauses, source context, and spoken text"),
     ("provider_return.mp4", "video", "the dream rendered as moving image"),
 ]
 
@@ -95,6 +96,20 @@ def describe(run_dir: Path, name: str, modality: str, base: str) -> str:
             text = " ".join(spoken.read_text(encoding="utf-8").split())
             if text:
                 detail = f" I said: {text[:200]}"
+    elif name == "journal_chatterbox_utterance.json":
+        utterance = run_dir / name
+        try:
+            payload = json.loads(utterance.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            payload = {}
+        tags = ", ".join(str(t) for t in (payload.get("emotional_utterance_tags") or []))
+        tone = str(payload.get("requested_delivery_tone") or "")
+        spoken = " ".join(str(payload.get("chatterbox_utterance_text") or "").split())
+        context = payload.get("source_context_counts") if isinstance(payload.get("source_context_counts"), dict) else {}
+        detail = (
+            f" Tone: {tone}. Tags: {tags}. Context counts: {context}. "
+            f"Chatterbox answer_text: {spoken[:260]}"
+        )
     return f"From a dream: {base}.{detail}"
 
 
@@ -153,7 +168,9 @@ def build_documents(run_dir: Path, persona: str, day: str, run_id: str) -> list[
             "solution": text,
             "scope": f"episodic:day={day}",
             "tags": ["persona-dream", "dream-artifact", f"modality:{modality}",
-                     f"persona:{persona}", f"day:{day}"],
+                     f"persona:{persona}", f"day:{day}"]
+                    + (["journal-utterance-plan", "chatterbox-tags", "memory-context"]
+                       if name == "journal_chatterbox_utterance.json" else []),
             "persona_id": persona,
             "record_type": "dream_artifact",
             "kind": "dream_artifact",

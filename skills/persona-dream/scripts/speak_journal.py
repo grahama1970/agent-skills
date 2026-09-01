@@ -107,6 +107,79 @@ def post_json(url: str, payload: dict[str, Any], timeout: int = 900) -> dict[str
         return json.loads(resp.read().decode("utf-8"))
 
 
+def prepare_journal_utterance(text: str, tone: str, mood_label: str | None,
+                              source_packet: str = "") -> dict[str, Any]:
+    """Ask Tau to add Chatterbox event tags and punctuation to journal speech."""
+    utterances = _load_sibling("chatterbox_utterances")
+    prompt = f"""You are preparing Embry's journal for Chatterbox Turbo narration.
+
+Keep the wording and meaning of the journal excerpt. Add two or three relevant
+native Chatterbox Turbo paralinguistic event tags inline, exactly where Embry
+would vocalize them, and add natural spoken pauses with punctuation where useful.
+Do not add new facts. Do not use markdown. Do not use stage directions.
+
+Native vocal event tags available: [clear throat], [sigh], [shush], [cough],
+[groan], [sniff], [gasp], [chuckle], [laugh].
+
+Extended tokenizer style/emotion tokens available when genuinely relevant:
+[angry], [fear], [surprised], [whispering], [advertisement], [dramatic],
+[narration], [crying], [happy], [sarcastic]. Prefer the native vocal event tags
+for audible utterances; use extended style tokens sparingly because their effect
+varies.
+
+Delay and cadence marks available: comma for short breath, semicolon or period
+for sentence pause, ellipsis (...) for hesitation/longer pause, em dash or -- for
+an abrupt break. Put pauses where Embry is thinking or feeling, not mechanically.
+
+Use the context packet to choose relevant utterances and pauses. Embry is not a
+generic narrator: she is thinking through her dream, Memory residue, extracted
+entities, day events, and mined human/operator feedback.
+
+SOURCE CONTEXT PACKET
+{source_packet or '(no source context packet available)'}
+
+Tone: {tone}
+Mood label: {mood_label or 'unset'}
+
+Journal excerpt:
+{text}
+
+Return JSON: {{"chatterbox_utterance_text": "..."}}"""
+    adapter = _load_sibling("tau_text_reasoning_adapter")
+    try:
+        parsed, tau_receipt = adapter.dispatch_text_reasoning(
+            prompt,
+            role="persona_journal_chatterbox_utterance",
+            output_contract={"chatterbox_utterance_text": "string"},
+            caller_skill="persona-dream",
+            timeout_s=180.0,
+        )
+    except Exception as exc:
+        tagged, tags = utterances.inject_event_tags(text, tone, max_tags=3)
+        return {
+            "text": tagged,
+            "tags": tags,
+            "source": "agent_repaired_tau_failure",
+            "tau_error": str(exc),
+        }
+    proposed = str((parsed or {}).get("chatterbox_utterance_text") or "").strip()
+    tags = utterances.existing_event_tags(proposed)
+    if len(tags) >= 2:
+        return {
+            "text": utterances.ensure_delay_markup(proposed),
+            "tags": tags,
+            "source": "model_authored",
+            "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
+        }
+    tagged, tags = utterances.inject_event_tags(text, tone, max_tags=3)
+    return {
+        "text": tagged,
+        "tags": tags,
+        "source": "agent_repaired_model_missing_tags",
+        "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
+    }
+
+
 def accepted_chunk_asr(chunk: dict[str, Any]) -> dict[str, Any]:
     verification = chunk.get("asr_verification") or {}
     candidates = verification.get("candidates") or []
@@ -215,10 +288,53 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             if isinstance(sm, dict):
                 mood_label = sm.get("mood_label")
     mapping = mapper.map_mood(mood_label, contradictions, args.intensity, args.valence)
+    requested = mapping["voice_delivery"]["tone"]
+    grounding = _load_sibling("conversation_grounding")
+    grounding_context = grounding.load_context(run_dir)
+    source_packet = grounding.format_for_prompt(grounding_context, max_chars=3000)
+    utterance = prepare_journal_utterance(rendered_spoken, requested, mood_label, source_packet)
+    chatterbox_utterance_text = str(utterance.get("text") or rendered_spoken).strip()
+    emotional_utterance_tags = list(utterance.get("tags") or [])
+
+    utterance_artifact = {
+        "schema": "persona_dream.journal_chatterbox_utterance.v1",
+        "created_at": utc_now(),
+        "source_spoken_text": rel(spoken_path),
+        "source_spoken_text_sha256": sha_text(rendered_spoken),
+        "source_context_packet": source_packet,
+        "source_context_counts": {
+            "memory_residue": grounding_context.get("source_count"),
+            "day_events": len(grounding_context.get("day_lines") or []),
+            "mined_transcript_items": grounding_context.get("transcript_count"),
+            "dream_panels": grounding_context.get("panel_count"),
+            "observed_entity_frames": grounding_context.get("observation_count"),
+        },
+        "requested_delivery_tone": requested,
+        "persona_mood_label": mapping["persona_mood_label"],
+        "dominant_tension_axis": mapping["dominant_tension_axis"],
+        "chatterbox_utterance_text": chatterbox_utterance_text,
+        "chatterbox_utterance_text_sha256": sha_text(chatterbox_utterance_text),
+        "emotional_utterance_tags": emotional_utterance_tags,
+        "chatterbox_utterance_source": utterance.get("source"),
+        "chatterbox_utterance_tau_receipt": utterance.get("tau_receipt"),
+        "pause_markup_present": bool(_load_sibling("chatterbox_utterances").has_delay_markup(chatterbox_utterance_text)),
+    }
+    (run_dir / "journal_chatterbox_utterance.json").write_text(
+        json.dumps(utterance_artifact, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (run_dir / "journal_chatterbox_utterance.md").write_text(
+        "# Embry journal Chatterbox utterance\n\n"
+        f"Tone: `{requested}`\n\n"
+        f"Tags: {', '.join(emotional_utterance_tags)}\n\n"
+        f"Source: `{utterance.get('source')}`\n\n"
+        "## Exact Chatterbox answer_text\n\n"
+        f"{chatterbox_utterance_text}\n\n"
+        "## Source context used for utterance placement\n\n"
+        f"{source_packet}\n",
+        encoding="utf-8")
 
     label = args.label or f"pd_journal_{run_dir.name}"
     request = {
-        "answer_text": rendered_spoken,
+        "answer_text": chatterbox_utterance_text,
         "label": label,
         "use_blessed_qra_cache": False,
         "asr_verify": bool(args.asr_verify),
@@ -261,7 +377,6 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     engine = response.get("engine")
     normalized = response.get("normalized_tone")
-    requested = mapping["voice_delivery"]["tone"]
     if normalized != requested:
         failed.append(f"tone_did_not_survive:requested={requested},normalized={normalized}")
 
@@ -327,6 +442,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "spoken_text": rel(spoken_path),
         "spoken_text_sha256": sha_text(rendered_spoken),
         "source_spoken_text_sha256": sha_text(spoken),
+        "chatterbox_utterance_text": chatterbox_utterance_text,
+        "chatterbox_utterance_text_sha256": sha_text(chatterbox_utterance_text),
+        "emotional_utterance_tags": emotional_utterance_tags,
+        "chatterbox_utterance_source": utterance.get("source"),
+        "chatterbox_utterance_tau_receipt": utterance.get("tau_receipt"),
+        "chatterbox_utterance_artifact": rel(run_dir / "journal_chatterbox_utterance.json"),
+        "chatterbox_utterance_markdown": rel(run_dir / "journal_chatterbox_utterance.md"),
+        "source_context_packet": source_packet,
+        "source_context_counts": utterance_artifact["source_context_counts"],
+        "pause_markup_present": bool(_load_sibling("chatterbox_utterances").has_delay_markup(chatterbox_utterance_text)),
         "spoken_chars": len(rendered_spoken),
         "truncated_to": args.max_chars if len(spoken) > args.max_chars else None,
         "audio": rel(dest) if dest.is_file() else None,
@@ -359,6 +484,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "the journal text published for this run was rendered to audio by a live renderer",
                 "the audio in the run directory is bound by hash to the rendered spoken text or bounded excerpt",
                 "the delivery tone derived from the dream's own tension survived normalization",
+                "the Chatterbox answer_text includes native inline event tags for vocal utterances",
                 "an independent transcription of the rendered audio was captured",
             ] if not failed else [],
             "does_not_prove": [
@@ -377,8 +503,10 @@ def main() -> int:
     ap.add_argument("--run-dir", type=Path, required=True)
     ap.add_argument("--label", default=None)
     ap.add_argument("--mood-label", default=None)
-    ap.add_argument("--intensity", type=float, default=0.6)
-    ap.add_argument("--valence", type=float, default=-0.1)
+    ap.add_argument("--intensity", type=float, default=None,
+                    help="explicit base-model affect knob; omit for Turbo inline tag realization")
+    ap.add_argument("--valence", type=float, default=None,
+                    help="explicit base-model affect knob; omit for Turbo inline tag realization")
     ap.add_argument("--ref-audio", default=DEFAULT_REF_AUDIO)
     ap.add_argument("--asr-max-candidates", type=int, default=DEFAULT_ASR_MAX_CANDIDATES)
     ap.add_argument("--max-chars", type=int, default=250,

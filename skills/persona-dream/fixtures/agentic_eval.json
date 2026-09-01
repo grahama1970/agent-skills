@@ -1,18 +1,225 @@
 {
-  "version": 2,
-  "skill": "persona-dream",
-  "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, source-grounded dream conversation context, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
-  "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step",
-    "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
-  },
+  "capability_claims": [
+    {
+      "criticality": "critical",
+      "description": "self-repair-run executes a required step manifest in order, records required-step failures through pipeline-self-repair with immutable goal alignment, and refuses to advance to step N+1 while step N is blocking.",
+      "evidence_required": {
+        "adversarial": true,
+        "deterministic": true
+      },
+      "id": "persona_dream.pipeline_self_repair_runner"
+    },
+    {
+      "criticality": "important",
+      "description": "The run.sh pipeline run --step crew_casting command can write a schema-valid, receipt-backed crew_contract.json from a selector payload and reject out-of-pool selections. Fixture-backed evidence proves wiring only; live ask tau-dag selector proof is separate.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.pipeline_crew_casting_command_wiring"
+    },
+    {
+      "criticality": "critical",
+      "description": "Persona Dream refuses unfunded API-key image lanes and retained receipts show create_panel --backend scillm routed through ask image generation with Codex OAuth instead of the unsupported $create-image scillm backend.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.image_generation_oauth_lane"
+    },
+    {
+      "criticality": "critical",
+      "description": "The retained story-contract work-order executor consumes a validated work order, emits a validated accepted story_contract.json plus fulfillment/review/stale receipts, and refuses to promote stale storyboard or Kling artifacts.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.story_contract_work_order_executor"
+    },
+    {
+      "criticality": "critical",
+      "description": "The retained storyboard-panel work-order executor consumes a validated work order, emits a validated storyboard_panel_receipt.json plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.storyboard_panel_work_order_executor"
+    },
+    {
+      "criticality": "critical",
+      "description": "The retained panel-repair work-order executor consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final-image backends, and has retained receipt readback for the accepted live regeneration artifact.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.panel_repair_work_order_executor"
+    },
+    {
+      "criticality": "critical",
+      "description": "The executable Persona Dream spine carries the autonomous cycle journal into a spoken_journal terminal node without requiring generate-lane dream_packet artifacts.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.cycle_journal_spoken_spine_contract"
+    },
+    {
+      "criticality": "critical",
+      "description": "The corrected operational goal and PD-CORRECTED-GOAL-V1 sealed manifest are pinned with deterministic fail-closed validators before any live paired run can be claimed.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.corrected_goal_manifest"
+    },
+    {
+      "criticality": "critical",
+      "description": "The 35-cycle reliability soak is gated by a frozen source-dream diversity and normalized state-transition preflight with typed negative controls and zero provider/canonical-write side effects.",
+      "evidence_required": {
+        "fault_injected_deterministic": true
+      },
+      "id": "persona_dream.soak35_source_transition_preflight"
+    },
+    {
+      "criticality": "important",
+      "description": "Session mood maps dream/journal conflict into Chatterbox delivery fields while preserving one invariant answer body and using calibrated pace values instead of request-only delivery labels.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.session_mood_delivery_contract"
+    },
+    {
+      "criticality": "important",
+      "description": "A valid structured BLOCKED_SESSION_MOOD_VOICE_RECOGNITION receipt from the recognition subprocess is propagated into the live-chain block with its failed gates, per-render scores, thresholds, duration-aware floor, separation, adversarial scores, backend_error and child exit metadata; BLOCKED_RECOGNITION_COMMAND_FAILED stays reserved for missing, malformed, unreadable, unrecognized or crash-before-receipt children.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.session_mood_recognition_status_contract"
+    },
+    {
+      "criticality": "critical",
+      "description": "Persona Dream records Chatterbox backend/profile/range registry matches and refuses perceived-emotion claims unless a hash-bound registry entry exactly permits the recorded scope.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.chatterbox_affect_validation_registry_consumer"
+    },
+    {
+      "criticality": "critical",
+      "description": "Persona Dream research hypotheses terminate through a machine-readable registry that recomputes receipt hashes, checks result/product/transfer consistency, and refuses immutable-goal completion while required hypotheses remain nonterminal.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.disposition_registry_contract"
+    },
+    {
+      "criticality": "critical",
+      "description": "Persona Dream restart and stale-session recovery is exercised as seven retained fault scenarios with hash-bound receipts, duplicate-effect accounting, typed stale/tampered controls, and explicit live service restart proof when requested.",
+      "evidence_required": {
+        "fault_injected_deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.recovery_campaign_contract"
+    },
+    {
+      "criticality": "critical",
+      "description": "Rendered-and-Watch-observed dream media value is evaluated through a provider-free M/R/D/DW matched ablation with sealed commitments, zero canonical writes, typed negative controls, and terminal null/positive/negative disposition.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.multimodal_ablation_contract"
+    },
+    {
+      "criticality": "critical",
+      "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.ux.workspace_renders"
+    },
+    {
+      "criticality": "critical",
+      "description": "The dream API host lists real manifest-backed runs and refuses paths outside its roots.",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "id": "persona_dream.ux.pipeline_api_serves_runs"
+    },
+    {
+      "criticality": "critical",
+      "description": "The residue board's stratified sample keeps image, video, and audio memories through the 12-card cut against live memory recall.",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "id": "persona_dream.ux.board_media_stratified"
+    },
+    {
+      "criticality": "important",
+      "description": "The documented run.sh command surface exposes converse-dynamic and dispatches it to the dynamic Horus/Embry conversation CLI instead of falling through to usage.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.conversation.runsh_surface"
+    },
+    {
+      "criticality": "critical",
+      "description": "Horus and Embry hold a DYNAMIC audible conversation: each Horus turn drafted live by Tau from her journal and the transcript (proven by Tau receipt provenance and conditioned-on-reply oracles), spoken in his own voice; both roles voiced first-class in conversation.jsonl with tone + sha256-bound audio.",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "id": "persona_dream.conversation.audible_two_agent"
+    },
+    {
+      "criticality": "critical",
+      "description": "Persona Dream conversations consume the Tau spine's watched dream context: dream_journal.v1, storyboard panels, observation_packet frame entities, residue/mined memory context, and day events when present; generic conversation drafts are grounded with a concrete source anchor before being accepted.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.conversation.source_grounding"
+    },
+    {
+      "criticality": "critical",
+      "description": "Persona Dream status surfaces preserve the operational boundary: a live audible full-cycle loop is evidence for the loop, not provider/Kling completion, human-perception proof, production readiness, or immutable-goal closure; PD-CORRECTED-GOAL-V1 remains the next agent-owned proof while #1058 remains blocked on human listener artifacts.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.status_scope_boundary"
+    },
+    {
+      "criticality": "critical",
+      "description": "Autonomous dream-cycle recall gates preserve ranked recall rows, probe ranks, and the negative-control dream rank in the receipt so pass/block outcomes are auditable without a second mutable live recall.",
+      "evidence_required": {
+        "deterministic": true
+      },
+      "id": "persona_dream.autonomous_cycle_recall_instrumentation"
+    },
+    {
+      "criticality": "critical",
+      "description": "The listener-study target stimuli can be rendered through live Chatterbox with one shared norm_loudness policy and hash-bound back into both preregistration files.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.blinded_listener_stimuli_normalized_render"
+    },
+    {
+      "criticality": "critical",
+      "description": "Embry speaker identity can be preregistered, rendered, and scored across a frozen 4 mood x 3 text x 3 seed matrix with calibration-derived identity thresholds and adversarial comparisons.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.cross_mood_identity_matrix"
+    },
+    {
+      "criticality": "critical",
+      "description": "One complete persona-dream run start to finish in a fresh run dir: day ingest, Tau dream spine (select/instrument/observe/interpret/ToM/persist with exact re-read + dream journal), materialized watched-dream context from the spine, ASR-verified spoken journal, journal memory lineage proof, artifact store, a 3-pair fully audible source-grounded dynamic Horus/Embry conversation about the dream, the day, and her mood (every turn tone + sha256-bound audio), and carry-back into memory with read-back equality.",
+      "evidence_required": {
+        "live_e2e": true
+      },
+      "id": "persona_dream.full_cycle.live"
+    }
+  ],
   "cases": [
     {
-      "name": "video-plan-blocks-without-crew-casting",
-      "type": "adversarial",
-      "real_world": true,
-      "notes": "Anti-bespoking guard. A live video_plan run with NO crew-casting artifacts must fail closed with reason crew_casting_required and must NOT write a storyboard. This is the exact bypass an agent would take to skip $cinematic-technique-selector and hand-compose the storyboard; the skill must refuse it in code, not rely on operator discipline.",
       "command": [
         "bash",
         "-lc",
@@ -25,13 +232,13 @@
           "phase_03_crew_casting",
           "no_storyboard_written"
         ]
-      }
+      },
+      "name": "video-plan-blocks-without-crew-casting",
+      "notes": "Anti-bespoking guard. A live video_plan run with NO crew-casting artifacts must fail closed with reason crew_casting_required and must NOT write a storyboard. This is the exact bypass an agent would take to skip $cinematic-technique-selector and hand-compose the storyboard; the skill must refuse it in code, not rely on operator discipline.",
+      "real_world": true,
+      "type": "adversarial"
     },
     {
-      "name": "video-plan-blocks-when-crew-roster-skipped",
-      "type": "adversarial",
-      "real_world": true,
-      "notes": "The specific bespoking I committed: dismissing crew casting and treating the style artifacts (technique_selection/script_dna/look_lock) as sufficient. This run supplies ONLY those style artifacts -- NO crew_contract.json -- and video_plan must still block with crew_casting_required naming crew_contract.json missing, and write no storyboard. Encodes 'you may not skip or hand-pick the director/producer/scriptwriter; the phase_03_crew step must have run.'",
       "command": [
         "bash",
         "-lc",
@@ -44,13 +251,13 @@
           "crew_contract.json",
           "no_storyboard_written"
         ]
-      }
+      },
+      "name": "video-plan-blocks-when-crew-roster-skipped",
+      "notes": "The specific bespoking I committed: dismissing crew casting and treating the style artifacts (technique_selection/script_dna/look_lock) as sufficient. This run supplies ONLY those style artifacts -- NO crew_contract.json -- and video_plan must still block with crew_casting_required naming crew_contract.json missing, and write no storyboard. Encodes 'you may not skip or hand-pick the director/producer/scriptwriter; the phase_03_crew step must have run.'",
+      "real_world": true,
+      "type": "adversarial"
     },
     {
-      "name": "video-plan-crew-gate-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "notes": "Runs the deterministic crew-gate suite (blocks without crew, blocks when roster missing, blocks on incomplete roster, blocks on schema-invalid crew, passes with the full phase_03_crew bundle) through the real run.sh entrypoint.",
       "command": [
         "bash",
         "-lc",
@@ -61,131 +268,133 @@
         "stdout_contains": [
           "5 passed"
         ]
-      }
+      },
+      "name": "video-plan-crew-gate-tests",
+      "notes": "Runs the deterministic crew-gate suite (blocks without crew, blocks when roster missing, blocks on incomplete roster, blocks on schema-invalid crew, passes with the full phase_03_crew bundle) through the real run.sh entrypoint.",
+      "real_world": true,
+      "type": "adversarial"
     },
     {
-      "name": "pipeline-run-crew-casting-fixture-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.pipeline_crew_casting_command_wiring"
-      ],
-      "seams": [
-        "pipeline.run.crew_casting"
-      ],
-      "notes": "Runs the new run.sh pipeline run --step crew_casting entrypoint with a fixture selector and an adversarial out-of-pool selector. This proves command wiring and validation only; live selector proof requires an ask tau-dag run.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_pipeline_run_crew_casting.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
         ]
-      }
+      },
+      "name": "pipeline-run-crew-casting-fixture-tests",
+      "notes": "Runs the new run.sh pipeline run --step crew_casting entrypoint with a fixture selector and an adversarial out-of-pool selector. This proves command wiring and validation only; live selector proof requires an ask tau-dag run.",
+      "real_world": true,
+      "seams": [
+        "pipeline.run.crew_casting"
+      ],
+      "supports_claims": [
+        "persona_dream.pipeline_crew_casting_command_wiring"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "image-generation-lane-contract-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.image_generation_oauth_lane"
-      ],
-      "seams": [
-        "image_generation.create_panel_scillm_backend"
-      ],
-      "notes": "Runs image-lane regression tests that refuse unfunded API-key backends and require create_panel --backend scillm to route through ask image generation with Codex OAuth rather than $create-image.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_image_generation_lane.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "7 passed"
         ]
-      }
+      },
+      "name": "image-generation-lane-contract-tests",
+      "notes": "Runs image-lane regression tests that refuse unfunded API-key backends and require create_panel --backend scillm to route through ask image generation with Codex OAuth rather than $create-image.",
+      "real_world": true,
+      "seams": [
+        "image_generation.create_panel_scillm_backend"
+      ],
+      "supports_claims": [
+        "persona_dream.image_generation_oauth_lane"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "story-contract-work-order-executor-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.story_contract_work_order_executor"
-      ],
-      "seams": [
-        "pipeline_loop.story_contract_work_order"
-      ],
-      "notes": "Runs the retained story-contract work-order executor tests through pytest. This guards the non-bespoke repair that consumes a validated work order, emits a validated accepted story_contract.json, refuses missing dream_packet input, and does not promote storyboard_plan.json into storyboard_packet.json.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_story_contract_work_order.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "4 passed"
         ]
-      }
+      },
+      "name": "story-contract-work-order-executor-tests",
+      "notes": "Runs the retained story-contract work-order executor tests through pytest. This guards the non-bespoke repair that consumes a validated work order, emits a validated accepted story_contract.json, refuses missing dream_packet input, and does not promote storyboard_plan.json into storyboard_packet.json.",
+      "real_world": true,
+      "seams": [
+        "pipeline_loop.story_contract_work_order"
+      ],
+      "supports_claims": [
+        "persona_dream.story_contract_work_order_executor"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "storyboard-panel-work-order-executor-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.storyboard_panel_work_order_executor"
-      ],
-      "seams": [
-        "pipeline_loop.storyboard_panel_work_order"
-      ],
-      "notes": "Runs the retained storyboard-panel work-order executor tests through pytest. This guards the non-bespoke repair that consumes a validated work order, emits a validated panel receipt plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_storyboard_panel_receipt.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "5 passed"
         ]
-      }
+      },
+      "name": "storyboard-panel-work-order-executor-tests",
+      "notes": "Runs the retained storyboard-panel work-order executor tests through pytest. This guards the non-bespoke repair that consumes a validated work order, emits a validated panel receipt plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
+      "real_world": true,
+      "seams": [
+        "pipeline_loop.storyboard_panel_work_order"
+      ],
+      "supports_claims": [
+        "persona_dream.storyboard_panel_work_order_executor"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "panel-repair-work-order-executor-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.panel_repair_work_order_executor"
-      ],
-      "seams": [
-        "pipeline_loop.panel_repair_work_order"
-      ],
-      "notes": "Runs the retained panel-repair work-order executor tests through pytest. This guards the non-bespoke repair command that consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final image backends, and refuses provider eligibility until a public media probe passes. Fixture-backed tests prove wiring only; live Scillm/Tau image generation is proven by a live command receipt.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_fulfill_panel_repair_work_order.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
         ]
-      }
+      },
+      "name": "panel-repair-work-order-executor-tests",
+      "notes": "Runs the retained panel-repair work-order executor tests through pytest. This guards the non-bespoke repair command that consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final image backends, and refuses provider eligibility until a public media probe passes. Fixture-backed tests prove wiring only; live Scillm/Tau image generation is proven by a live command receipt.",
+      "real_world": true,
+      "seams": [
+        "pipeline_loop.panel_repair_work_order"
+      ],
+      "supports_claims": [
+        "persona_dream.panel_repair_work_order_executor"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "render-blinded-listener-rater-page",
-      "type": "positive",
       "command": [
         "bash",
         "../run.sh",
@@ -197,11 +406,11 @@
         "stdout_contains": [
           "PASS_BLINDED_LISTENER_RATER_PAGE_READY"
         ]
-      }
+      },
+      "name": "render-blinded-listener-rater-page",
+      "type": "positive"
     },
     {
-      "name": "rater-page-contract-tests",
-      "type": "positive",
       "command": [
         "bash",
         "-lc",
@@ -212,114 +421,107 @@
         "stdout_contains": [
           "passed"
         ]
-      }
+      },
+      "name": "rater-page-contract-tests",
+      "type": "positive"
     },
     {
-      "name": "render-blinded-listener-stimuli-policy-tests",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.blinded_listener_stimuli_normalized_render"
-      ],
-      "seams": [
-        "listener_study.normalized_render"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_render_blinded_listener_stimuli.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
         ]
-      }
+      },
+      "name": "render-blinded-listener-stimuli-policy-tests",
+      "real_world": true,
+      "seams": [
+        "listener_study.normalized_render"
+      ],
+      "supports_claims": [
+        "persona_dream.blinded_listener_stimuli_normalized_render"
+      ],
+      "type": "positive"
     },
     {
-      "name": "cross-mood-identity-matrix-contract",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.cross_mood_identity_matrix"
-      ],
-      "seams": [
-        "continuity.cross_mood_identity"
-      ],
       "command": [
         "bash",
         "-lc",
         "D=$(mktemp -d /tmp/persona-dream-cross-mood-contract.XXXXXX); bash ../run.sh cross-mood-identity-matrix --out-dir \"$D\" --preregister-only --json"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "PASS_CROSS_MOOD_IDENTITY_PREREGISTERED"
         ]
-      }
+      },
+      "name": "cross-mood-identity-matrix-contract",
+      "real_world": true,
+      "seams": [
+        "continuity.cross_mood_identity"
+      ],
+      "supports_claims": [
+        "persona_dream.cross_mood_identity_matrix"
+      ],
+      "type": "positive"
     },
     {
-      "name": "dream-workspace-ssr-render",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.ux.workspace_renders"
-      ],
-      "seams": [
-        "ui.dream_workspace.render"
-      ],
       "command": [
         "node",
         "../ux/app/scripts/eval/render_dream_workspace.mjs"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "WORKSPACE_RENDER_OK"
         ]
-      }
-    },
-    {
-      "name": "dream-workspace-render-guard-non-vacuous",
-      "type": "adversarial",
+      },
+      "name": "dream-workspace-ssr-render",
       "real_world": true,
-      "evidence_class": "fault_injected_deterministic",
-      "supports_claims": [
-        "persona_dream.ux.workspace_renders"
-      ],
       "seams": [
         "ui.dream_workspace.render"
       ],
+      "supports_claims": [
+        "persona_dream.ux.workspace_renders"
+      ],
+      "type": "positive"
+    },
+    {
       "command": [
         "bash",
         "../ux/app/scripts/eval/prove_fail_before_fix.sh"
       ],
+      "evidence_class": "fault_injected_deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "FAIL_BEFORE_FIX_PROVEN"
         ]
-      }
+      },
+      "name": "dream-workspace-render-guard-non-vacuous",
+      "real_world": true,
+      "seams": [
+        "ui.dream_workspace.render"
+      ],
+      "supports_claims": [
+        "persona_dream.ux.workspace_renders"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "dream-api-runs-readback",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": [
-        "persona_dream.ux.pipeline_api_serves_runs"
-      ],
-      "seams": [
-        "api.dream_router.runs"
-      ],
       "command": [
         "bash",
         "../ux/app/scripts/eval/dream_api_probe.sh",
         "runs"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -327,43 +529,42 @@
           "manifest_run_listed=true"
         ]
       },
-      "readback": true
-    },
-    {
-      "name": "dream-api-asset-path-policy-refuses-outside-root",
-      "type": "adversarial",
+      "name": "dream-api-runs-readback",
+      "readback": true,
       "real_world": true,
-      "evidence_class": "live_e2e",
+      "seams": [
+        "api.dream_router.runs"
+      ],
       "supports_claims": [
         "persona_dream.ux.pipeline_api_serves_runs"
       ],
-      "seams": [
-        "api.dream_router.path_policy"
-      ],
+      "type": "positive"
+    },
+    {
       "command": [
         "bash",
         "../ux/app/scripts/eval/dream_api_probe.sh",
         "policy"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "PATH_POLICY_REFUSED_OUTSIDE_ROOT code=403"
         ]
       },
-      "readback": true
+      "name": "dream-api-asset-path-policy-refuses-outside-root",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "api.dream_router.path_policy"
+      ],
+      "supports_claims": [
+        "persona_dream.ux.pipeline_api_serves_runs"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "residue-board-media-mix-live",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": [
-        "persona_dream.ux.board_media_stratified"
-      ],
-      "seams": [
-        "ui.residue_board.stratified_sample"
-      ],
       "blocked_when_stdout_contains": [
         "BLOCKED_MEMORY_API_UNREACHABLE"
       ],
@@ -371,26 +572,25 @@
         "bash",
         "../ux/app/scripts/eval/board_media_mix_live.sh"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "BOARD_MEDIA_MIX_OK"
         ]
       },
-      "readback": true
+      "name": "residue-board-media-mix-live",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "ui.residue_board.stratified_sample"
+      ],
+      "supports_claims": [
+        "persona_dream.ux.board_media_stratified"
+      ],
+      "type": "positive"
     },
     {
-      "name": "horus-embry-audible-conversation-live",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.conversation.audible_two_agent"
-      ],
-      "seams": [
-        "conversation.horus_embry.audible"
-      ],
       "blocked_when_stdout_contains": [
         "BLOCKED_UX_SERVER_UNREACHABLE",
         "BLOCKED_CHATTERBOX_UNREACHABLE"
@@ -399,32 +599,33 @@
         "python3",
         "../scripts/eval_audible_conversation.py"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "AUDIBLE_CONVERSATION_OK turns=2"
         ]
       },
-      "timeout_seconds": 900
+      "name": "horus-embry-audible-conversation-live",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "conversation.horus_embry.audible"
+      ],
+      "supports_claims": [
+        "persona_dream.conversation.audible_two_agent"
+      ],
+      "timeout_seconds": 900,
+      "type": "positive"
     },
     {
-      "name": "converse-dynamic-runsh-wrapper",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.conversation.runsh_surface"
-      ],
-      "seams": [
-        "runsh.converse_dynamic"
-      ],
       "command": [
         "bash",
         "../run.sh",
         "converse-dynamic",
         "--help"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -432,50 +633,46 @@
           "--run-dir RUN_DIR",
           "--opening-topic OPENING_TOPIC"
         ]
-      }
+      },
+      "name": "converse-dynamic-runsh-wrapper",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "runsh.converse_dynamic"
+      ],
+      "supports_claims": [
+        "persona_dream.conversation.runsh_surface"
+      ],
+      "type": "positive"
     },
     {
-      "name": "conversation-grounding-contract-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.conversation.source_grounding",
-        "persona_dream.cycle_journal_spoken_spine_contract"
-      ],
-      "seams": [
-        "conversation.grounding_context",
-        "pipeline.cycle_context_materialization"
-      ],
-      "notes": "Guards the regression where the full-cycle path proved the Tau dream spine, then discarded the watched dream and generated a generic side journal for conversation. The deterministic contract requires the conversation prompt context to include dream observation, residue/mined context, concrete anchors, and materialized dream_journal.v1 artifacts.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_conversation_grounding.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "5 passed"
         ]
-      }
-    },
-    {
-      "name": "full-cycle-live",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
+      },
+      "name": "conversation-grounding-contract-tests",
+      "notes": "Guards the regression where the full-cycle path proved the Tau dream spine, then discarded the watched dream and generated a generic side journal for conversation. The deterministic contract requires the conversation prompt context to include dream observation, residue/mined context, concrete anchors, and materialized dream_journal.v1 artifacts.",
       "readback": true,
-      "timeout_seconds": 3000,
+      "real_world": true,
+      "seams": [
+        "conversation.grounding_context",
+        "pipeline.cycle_context_materialization"
+      ],
       "supports_claims": [
-        "persona_dream.full_cycle.live",
+        "persona_dream.conversation.source_grounding",
         "persona_dream.cycle_journal_spoken_spine_contract"
       ],
-      "seams": [
-        "pipeline.full_cycle.e2e",
-        "pipeline.cycle_journal_to_spoken_journal"
-      ],
+      "type": "adversarial"
+    },
+    {
       "blocked_when_stdout_contains": [
         "BLOCKED_CHATTERBOX_UNREACHABLE",
         "BLOCKED_DREAM_DOCTOR"
@@ -484,119 +681,124 @@
         "python3",
         "../scripts/eval_full_cycle.py"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
+        "artifacts": [
+          {
+            "equals": "FULL_CYCLE_OK",
+            "json_pointer": "/status",
+            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json"
+          },
+          {
+            "equals": "PASS_JOURNAL_SPOKEN",
+            "json_pointer": "/stages/journal_spoken/status",
+            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json"
+          },
+          {
+            "equals": "PASS_DYNAMIC_CONVERSATION",
+            "json_pointer": "/stages/conversation/status",
+            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json"
+          }
+        ],
         "exit_code": 0,
         "stdout_contains": [
           "FULL_CYCLE_OK stages=8",
           "transcript_context_curated:",
           "conversation:3_pairs_all_voiced_grounded"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json",
-            "json_pointer": "/status",
-            "equals": "FULL_CYCLE_OK"
-          },
-          {
-            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json",
-            "json_pointer": "/stages/journal_spoken/status",
-            "equals": "PASS_JOURNAL_SPOKEN"
-          },
-          {
-            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json",
-            "json_pointer": "/stages/conversation/status",
-            "equals": "PASS_DYNAMIC_CONVERSATION"
-          }
         ]
-      }
+      },
+      "name": "full-cycle-live",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "pipeline.full_cycle.e2e",
+        "pipeline.cycle_journal_to_spoken_journal"
+      ],
+      "supports_claims": [
+        "persona_dream.full_cycle.live",
+        "persona_dream.cycle_journal_spoken_spine_contract"
+      ],
+      "timeout_seconds": 3000,
+      "type": "positive"
     },
     {
-      "name": "status-scope-boundary-regression",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.status_scope_boundary"
-      ],
-      "seams": [
-        "status.scope_boundary"
-      ],
-      "notes": "Feature-regression guard for the exact agent confusion: audible full-cycle evidence must not be reported as provider/Kling completion, human-perception proof, production readiness, or immutable-goal closure. The authoritative status must keep PD-CORRECTED-GOAL-V1 as the next step and leave human listener collection blocked on real human artifacts.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_status_scope_boundary.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "4 passed"
         ]
-      }
+      },
+      "name": "status-scope-boundary-regression",
+      "notes": "Feature-regression guard for the exact agent confusion: audible full-cycle evidence must not be reported as provider/Kling completion, human-perception proof, production readiness, or immutable-goal closure. The authoritative status must keep PD-CORRECTED-GOAL-V1 as the next step and leave human listener collection blocked on real human artifacts.",
+      "real_world": true,
+      "seams": [
+        "status.scope_boundary"
+      ],
+      "supports_claims": [
+        "persona_dream.status_scope_boundary"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "autonomous-cycle-recall-instrumentation-stability",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.autonomous_cycle_recall_instrumentation"
-      ],
-      "seams": [
-        "autonomous_cycle.recall_instrumentation"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_autonomous_recall_instrumentation.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
         ]
-      }
+      },
+      "name": "autonomous-cycle-recall-instrumentation-stability",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "autonomous_cycle.recall_instrumentation"
+      ],
+      "supports_claims": [
+        "persona_dream.autonomous_cycle_recall_instrumentation"
+      ],
+      "type": "positive"
     },
     {
-      "name": "corrected-goal-manifest-validators",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.corrected_goal_manifest"
-      ],
-      "seams": [
-        "experiment.corrected_goal.manifest"
-      ],
       "command": [
         "bash",
         "-lc",
         "bash ../run.sh validate-operational-goal --goal ../GOAL.md --status ../CURRENT_STATUS.json --expected-proof-id PD-CORRECTED-GOAL-V1 >/tmp/persona-dream-operational-goal-validation.json && bash ../run.sh validate-corrected-goal-manifest --manifest ../evals/fixtures/pd_corrected_goal_v1.json --strict"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "PASS_CORRECTED_GOAL_MANIFEST"
         ]
-      }
+      },
+      "name": "corrected-goal-manifest-validators",
+      "real_world": true,
+      "seams": [
+        "experiment.corrected_goal.manifest"
+      ],
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "type": "positive"
     },
     {
-      "name": "soak35-source-transition-preflight",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "fault_injected_deterministic",
-      "supports_claims": [
-        "persona_dream.soak35_source_transition_preflight"
-      ],
-      "seams": [
-        "continuity.soak35.preflight"
-      ],
       "command": [
         "bash",
         "-lc",
         "bash ../run.sh validate-soak35-preflight --manifest ../reports/goal_v5/continuity/reliability/soak35/SOURCE_DIVERSITY_MANIFEST.json --policy ../reports/goal_v5/continuity/reliability/soak35/TRANSITION_POLICY.json --output /tmp/persona-dream-soak35-preflight-eval.json --json"
       ],
+      "evidence_class": "fault_injected_deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -606,71 +808,70 @@
           "\"canonical_write_attempts\": 0",
           "\"provider_calls\": 0"
         ]
-      }
+      },
+      "name": "soak35-source-transition-preflight",
+      "real_world": true,
+      "seams": [
+        "continuity.soak35.preflight"
+      ],
+      "supports_claims": [
+        "persona_dream.soak35_source_transition_preflight"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "session-mood-delivery-contract-tests",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.session_mood_delivery_contract"
-      ],
-      "seams": [
-        "continuity.session_mood.delivery"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_session_mood_binding.py ../tests/test_live_chain_receipt.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "passed"
         ]
-      }
+      },
+      "name": "session-mood-delivery-contract-tests",
+      "real_world": true,
+      "seams": [
+        "continuity.session_mood.delivery"
+      ],
+      "supports_claims": [
+        "persona_dream.session_mood_delivery_contract"
+      ],
+      "type": "positive"
     },
     {
-      "name": "chatterbox-affect-validation-registry-contract-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.chatterbox_affect_validation_registry_consumer"
-      ],
-      "seams": [
-        "continuity.chatterbox_affect_validation_registry"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_affect_validation_registry.py ../tests/test_session_mood_chatterbox_live.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "18 passed"
         ]
-      }
+      },
+      "name": "chatterbox-affect-validation-registry-contract-tests",
+      "real_world": true,
+      "seams": [
+        "continuity.chatterbox_affect_validation_registry"
+      ],
+      "supports_claims": [
+        "persona_dream.chatterbox_affect_validation_registry_consumer"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "disposition-registry-contract-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "supports_claims": [
-        "persona_dream.disposition_registry_contract"
-      ],
-      "seams": [
-        "research.disposition_registry"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_check_dispositions.py -q && bash ../run.sh check-dispositions --strict --allow-live-github --json --out /tmp/persona-dream-disposition-registry-eval-receipt.json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nreceipt = json.loads(Path('/tmp/persona-dream-disposition-registry-eval-receipt.json').read_text(encoding='utf-8'))\nassert receipt['status'] == 'PASS_DISPOSITION_REGISTRY'\nassert receipt['mocked'] is False\nassert receipt['live'] is True\nchecks = receipt['live_checks']\nassert checks and checks[0]['repo'] == 'grahama1970/chatterbox'\nassert checks[0]['number'] == 7\nassert checks[0]['actual_state'] == checks[0]['expected_state'] == 'OPEN'\nassert checks[0]['actual_url'] == checks[0]['expected_url'] == 'https://github.com/grahama1970/chatterbox/issues/7'\nprint('DISPOSITION_LIVE_READBACK_OK')\nPY"
       ],
-      "readback": true,
+      "evidence_class": "live_e2e",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -679,25 +880,25 @@
           "\"immutable_goal_completion_claimed\": false",
           "DISPOSITION_LIVE_READBACK_OK"
         ]
-      }
+      },
+      "name": "disposition-registry-contract-tests",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "research.disposition_registry"
+      ],
+      "supports_claims": [
+        "persona_dream.disposition_registry_contract"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "recovery-campaign-contract-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "fault_injected_deterministic",
-      "supports_claims": [
-        "persona_dream.recovery_campaign_contract"
-      ],
-      "seams": [
-        "continuity.recovery_campaign"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_recovery_campaign.py -q && bash ../run.sh run-recovery-campaign --out-dir /tmp/persona-dream-recovery-campaign-eval --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nreceipt = json.loads(Path('/tmp/persona-dream-recovery-campaign-eval/AGGREGATE_RECEIPT.json').read_text(encoding='utf-8'))\nassert receipt['status'] == 'PASS_RECOVERY_CAMPAIGN'\nassert receipt['mocked'] is False\nassert receipt['counts']['scenario_count'] == 7\nassert receipt['counts']['duplicate_accepted_effect_count'] == 0\nassert receipt['counts']['provider_calls'] == 0\nassert len(receipt['scenario_receipts']) == 7\nassert {row['status'] for row in receipt['scenario_receipts']} == {'PASS_RECOVERY_SCENARIO'}\nprint('RECOVERY_CAMPAIGN_READBACK_OK')\nPY"
       ],
-      "readback": true,
+      "evidence_class": "fault_injected_deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -705,22 +906,28 @@
           "PASS_RECOVERY_CAMPAIGN",
           "RECOVERY_CAMPAIGN_READBACK_OK"
         ]
-      }
+      },
+      "name": "recovery-campaign-contract-tests",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "continuity.recovery_campaign"
+      ],
+      "supports_claims": [
+        "persona_dream.recovery_campaign_contract"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "session-mood-recognition-status-contract-tests",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.session_mood_recognition_status_contract"
-      ],
-      "seams": [
-        "continuity.session_mood.voice_recognition_status"
-      ],
       "command": [
         "python3",
         "../scripts/eval_recognition_status_contract.py"
+      ],
+      "evidence_class": "deterministic",
+      "expect_stdout_contains": [
+        "PASS command_failed_reserved_for_missing_receipt",
+        "PASS domain_block_status_in_message",
+        "RECOGNITION_STATUS_CONTRACT_OK"
       ],
       "expected": {
         "exit_code": 0,
@@ -733,129 +940,123 @@
           "FAIL "
         ]
       },
-      "expect_stdout_contains": [
-        "PASS command_failed_reserved_for_missing_receipt",
-        "PASS domain_block_status_in_message",
-        "RECOGNITION_STATUS_CONTRACT_OK"
-      ]
+      "name": "session-mood-recognition-status-contract-tests",
+      "real_world": true,
+      "seams": [
+        "continuity.session_mood.voice_recognition_status"
+      ],
+      "supports_claims": [
+        "persona_dream.session_mood_recognition_status_contract"
+      ],
+      "type": "positive"
     },
     {
-      "name": "corrected-goal-pair-blocks-without-live-artifacts",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "fault_injected_deterministic",
-      "supports_claims": [
-        "persona_dream.corrected_goal_manifest"
-      ],
-      "seams": [
-        "experiment.corrected_goal.manifest"
-      ],
       "command": [
         "bash",
         "-lc",
         "D=$(mktemp -d /tmp/persona-dream-corrected-goal-pair.XXXXXX); bash ../run.sh corrected-goal-pair --manifest ../evals/fixtures/pd_corrected_goal_v1.json --out \"$D\" --require-live --forbid-mocked; RC=$?; test \"$RC\" -eq 2; test -f \"$D/manifest.json\"; test -f \"$D/corrected_goal_pair_runner_receipt.json\"; grep -q BLOCKED_CORRECTED_GOAL_PAIR_LIVE_ARTIFACTS_MISSING \"$D/corrected_goal_pair_runner_receipt.json\""
       ],
+      "evidence_class": "fault_injected_deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "BLOCKED_CORRECTED_GOAL_PAIR_LIVE_ARTIFACTS_MISSING"
         ]
-      }
-    },
-    {
-      "name": "corrected-goal-live-pair-preflight",
-      "type": "positive",
+      },
+      "name": "corrected-goal-pair-blocks-without-live-artifacts",
       "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.corrected_goal_manifest"
-      ],
       "seams": [
         "experiment.corrected_goal.manifest"
       ],
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "type": "adversarial"
+    },
+    {
       "command": [
         "bash",
         "-lc",
         "bash ../run.sh corrected-goal-live-pair --manifest ../evals/fixtures/pd_corrected_goal_v1.json --source-run /mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260820T143356Z --out /tmp/persona-dream-corrected-goal-live-pair-preflight --preflight-only"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "PASS_CORRECTED_GOAL_LIVE_PAIR_PREFLIGHT"
         ]
-      }
-    },
-    {
-      "name": "corrected-goal-live-pair-gate-readback",
-      "type": "positive",
+      },
+      "name": "corrected-goal-live-pair-preflight",
       "real_world": true,
-      "evidence_class": "live_e2e",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.corrected_goal_manifest"
-      ],
       "seams": [
         "experiment.corrected_goal.manifest"
       ],
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "type": "positive"
+    },
+    {
       "command": [
         "bash",
         "-lc",
         "set -euo pipefail\ncd ../../..\nMANIFEST=\"$(find skills/persona-dream/evals -name pd_corrected_goal_v1.json -print -quit)\"\ntest -n \"$MANIFEST\"\nSOURCE_ROOT=\"skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z\"\nRUN_ROOT=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-run\"\nPAIR_OUT=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json\"\nREADBACK=\"/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json\"\nrm -rf \"$RUN_ROOT\"\ncp -a \"$SOURCE_ROOT\" \"$RUN_ROOT\"\nbash skills/persona-dream/run.sh corrected-goal-pair --manifest \"$MANIFEST\" --out \"$RUN_ROOT\" --require-live --forbid-mocked > \"$PAIR_OUT\"\nbash skills/persona-dream/run.sh adjudicate-corrected-goal --manifest \"$MANIFEST\" --run-root \"$RUN_ROOT\" --out \"$READBACK\" --fail-closed\npython3 - <<'PY'\nimport json\nfrom pathlib import Path\npair = json.loads(Path('/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json').read_text(encoding='utf-8'))\nreceipt = json.loads(Path('/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json').read_text(encoding='utf-8'))\nassert pair['status'] == 'PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT'\nassert pair['mocked'] is False\nassert pair['live'] is True\nassert pair['missing_live_artifacts'] == []\nassert receipt['status'] == 'PASS_CORRECTED_GOAL_PAIRED_PROOF'\nassert receipt['mocked'] is False\nassert receipt['live'] is True\nassert receipt['failures'] == []\nassert receipt['gate_statuses']['answer_invariance'] == 'PASS_ANSWER_INVARIANCE'\nassert receipt['gate_statuses']['emotional_carryover'] == 'PASS_EMOTION_LINEAGE'\nassert receipt['gate_statuses']['chatterbox_delivery'] == 'PASS_CHATTERBOX_DELIVERY'\nprint(pair['status'])\nprint('CORRECTED_GOAL_LIVE_PAIR_GATE_READBACK_OK')\nPY"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
-        "exit_code": 0,
         "artifacts": [
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json",
+            "equals": "PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT",
             "json_pointer": "/status",
-            "equals": "PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT"
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json",
+            "equals": false,
             "json_pointer": "/mocked",
-            "equals": false
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json",
+            "equals": true,
             "json_pointer": "/live",
-            "equals": true
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback-pair-runner.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "equals": "PASS_CORRECTED_GOAL_PAIRED_PROOF",
             "json_pointer": "/status",
-            "equals": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "equals": false,
             "json_pointer": "/mocked",
-            "equals": false
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "equals": true,
             "json_pointer": "/live",
-            "equals": true
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "equals": [],
             "json_pointer": "/failures",
-            "equals": []
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "equals": "PASS_ANSWER_INVARIANCE",
             "json_pointer": "/gate_statuses/answer_invariance",
-            "equals": "PASS_ANSWER_INVARIANCE"
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "equals": "PASS_EMOTION_LINEAGE",
             "json_pointer": "/gate_statuses/emotional_carryover",
-            "equals": "PASS_EMOTION_LINEAGE"
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json"
           },
           {
-            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json",
+            "equals": "PASS_CHATTERBOX_DELIVERY",
             "json_pointer": "/gate_statuses/chatterbox_delivery",
-            "equals": "PASS_CHATTERBOX_DELIVERY"
+            "path": "/tmp/persona-dream-corrected-goal-live-pair-gate-readback.json"
           }
         ],
+        "exit_code": 0,
         "stdout_contains": [
           "PASS_CORRECTED_GOAL_PAIR_ARTIFACTS_PRESENT",
           "PASS_CORRECTED_GOAL_PAIRED_PROOF",
@@ -865,24 +1066,25 @@
           "BLOCKED_CORRECTED_GOAL_PAIRED_PROOF",
           "BLOCKED_CORRECTED_GOAL_PAIR_LIVE_ARTIFACTS_MISSING"
         ]
-      }
+      },
+      "name": "corrected-goal-live-pair-gate-readback",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "experiment.corrected_goal.manifest"
+      ],
+      "supports_claims": [
+        "persona_dream.corrected_goal_manifest"
+      ],
+      "type": "positive"
     },
     {
-      "name": "session-mood-recognition-floor-margin-audit",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.session_mood_recognition_status_contract"
-      ],
-      "seams": [
-        "continuity.session_mood.voice_recognition_status"
-      ],
       "command": [
         "bash",
         "-lc",
         "python3 ../scripts/audit_recognition_floor_margins.py --root ../reports/goal_v5/continuity/reliability --out /tmp/persona-dream-recognition-floor-margin-audit.report.json --report-only"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -900,24 +1102,24 @@
         "stdout_not_contains": [
           "FAIL "
         ]
-      }
-    },
-    {
-      "name": "session-mood-recognition-policy-heldout-separation",
-      "type": "positive",
+      },
+      "name": "session-mood-recognition-floor-margin-audit",
       "real_world": true,
-      "evidence_class": "deterministic",
+      "seams": [
+        "continuity.session_mood.voice_recognition_status"
+      ],
       "supports_claims": [
         "persona_dream.session_mood_recognition_status_contract"
       ],
-      "seams": [
-        "continuity.session_mood.voice_recognition_policy_holdout"
-      ],
+      "type": "positive"
+    },
+    {
       "command": [
         "bash",
         "-lc",
         "python3 ../scripts/audit_recognition_floor_margins.py --root ../reports/goal_v5/continuity/reliability --policy-holdout ../fixtures/session_mood_recognition_policy_holdout.json --out /tmp/persona-dream-recognition-policy-heldout-separation.report.json --report-only"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -932,62 +1134,61 @@
           "FAIL ",
           "BLOCKED_RECOGNITION_POLICY_HOLDOUT_AUDIT"
         ]
-      }
-    },
-    {
-      "name": "session-mood-recognition-fixed-threshold-policy",
-      "type": "positive",
+      },
+      "name": "session-mood-recognition-policy-heldout-separation",
       "real_world": true,
-      "evidence_class": "deterministic",
+      "seams": [
+        "continuity.session_mood.voice_recognition_policy_holdout"
+      ],
       "supports_claims": [
         "persona_dream.session_mood_recognition_status_contract"
       ],
-      "seams": [
-        "continuity.session_mood.voice_recognition_policy"
-      ],
+      "type": "positive"
+    },
+    {
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_session_mood_voice_recognition_policy.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
         ]
-      }
+      },
+      "name": "session-mood-recognition-fixed-threshold-policy",
+      "real_world": true,
+      "seams": [
+        "continuity.session_mood.voice_recognition_policy"
+      ],
+      "supports_claims": [
+        "persona_dream.session_mood_recognition_status_contract"
+      ],
+      "type": "positive"
     },
     {
-      "name": "multimodal-ablation-contract-tests",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.multimodal_ablation_contract"
-      ],
-      "seams": [
-        "research.multimodal_ablation"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_multimodal_ablation.py -q && bash ../run.sh run-multimodal-ablation --out-dir /tmp/persona-dream-multimodal-ablation-eval --live-artifact-readback --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nreceipt = json.loads(Path('/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json').read_text(encoding='utf-8'))\nassert receipt['status'] == 'PASS_MULTIMODAL_ABLATION_RESULT'\nassert receipt['mocked'] is False\nassert receipt['live'] is True\nassert receipt['provider_calls'] == 0\nassert receipt['canonical_memory_writes'] == 0\nassert receipt['identity_writes'] == 0\nassert receipt['terminal_result_class'] == 'NULL_OR_TIE'\nassert receipt['dw_minus_strongest_simple'] == 0.0\nassert receipt['visible_evidence_refs_by_arm']['D']['text_dream_sha256'] == receipt['visible_evidence_refs_by_arm']['DW']['text_dream_sha256']\nassert receipt['visible_evidence_refs_by_arm']['D']['watch_observation_visible'] is False\nassert receipt['visible_evidence_refs_by_arm']['DW']['watch_observation_visible'] is True\nprint('MULTIMODAL_ABLATION_READBACK_OK')\nPY"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
-        "exit_code": 0,
         "artifacts": [
           {
-            "path": "/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json",
+            "equals": "PASS_MULTIMODAL_ABLATION_RESULT",
             "json_pointer": "/status",
-            "equals": "PASS_MULTIMODAL_ABLATION_RESULT"
+            "path": "/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json"
           },
           {
-            "path": "/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json",
+            "equals": "NULL_OR_TIE",
             "json_pointer": "/terminal_result_class",
-            "equals": "NULL_OR_TIE"
+            "path": "/tmp/persona-dream-multimodal-ablation-eval/RESULT_RECEIPT.json"
           }
         ],
+        "exit_code": 0,
         "stdout_contains": [
           "11 passed",
           "PASS_MULTIMODAL_ABLATION_RESULT",
@@ -997,41 +1198,41 @@
           "FAIL ",
           "BLOCKED_MULTIMODAL_ABLATION_RESULT"
         ]
-      }
+      },
+      "name": "multimodal-ablation-contract-tests",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "research.multimodal_ablation"
+      ],
+      "supports_claims": [
+        "persona_dream.multimodal_ablation_contract"
+      ],
+      "type": "positive"
     },
     {
-      "name": "cycle-journal-spoken-spine-contract-tests",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.cycle_journal_spoken_spine_contract"
-      ],
-      "seams": [
-        "pipeline.cycle_journal_to_spoken_journal"
-      ],
       "command": [
         "bash",
         "-lc",
         "D=/tmp/persona-dream-spoken-spine-eval-agentic; rm -rf \"$D\"; mkdir -p \"$D\"; export D; uv run --project .. pytest ../tests/test_speak_journal.py ../tests/test_run_dream_pipeline.py ../tests/test_pipeline_contract_and_phase10_reproducibility.py -q && bash ../run.sh check-pipeline-contract --json --receipt-out \"$D/pipeline_contract_receipt.json\" && bash ../run.sh dream-spec --run-dir \"$D/run\" --persona embry --idea 'kai and what I never said' --timeout-seconds 120 --out \"$D/dag-spec.json\" && python3 - <<'PY'\nimport json\nimport os\nfrom pathlib import Path\nroot = Path(os.environ['D'])\ncontract = json.loads((root / 'pipeline_contract_receipt.json').read_text(encoding='utf-8'))\nspec = json.loads((root / 'dag-spec.json').read_text(encoding='utf-8'))\nassert contract['status'] == 'PASS_PERSONA_DREAM_PIPELINE_CONTRACT'\nassert contract['terminal_step'] == 'spoken_journal'\nassert 'journal.wav' in contract['produced_artifacts']\nassert 'JOURNAL_SPOKEN_TEXT_RECEIPT.json' in contract['produced_artifacts']\nassert not contract['active_competing_contracts']\nnodes = spec['nodes']\nassert [node['node_id'] for node in nodes] == ['dream_cycle', 'journal_entry', 'spoken_journal']\nfinal = nodes[-1]\nargv = final['command']\nassert '--command' in argv and argv[argv.index('--command') + 1] == 'speak-journal'\nproduces = argv[argv.index('--produces') + 1]\nassert 'journal.wav' in produces\nassert 'journal_spoken.txt' in produces\nprint('CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK')\nPY"
       ],
+      "evidence_class": "deterministic",
       "expected": {
-        "exit_code": 0,
         "artifacts": [
           {
-            "path": "/tmp/persona-dream-spoken-spine-eval-agentic/pipeline_contract_receipt.json",
+            "equals": "spoken_journal",
             "json_pointer": "/terminal_step",
-            "equals": "spoken_journal"
+            "path": "/tmp/persona-dream-spoken-spine-eval-agentic/pipeline_contract_receipt.json"
           },
           {
-            "path": "/tmp/persona-dream-spoken-spine-eval-agentic/dag-spec.json",
+            "equals": "spoken_journal",
             "json_pointer": "/nodes/2/node_id",
-            "equals": "spoken_journal"
+            "path": "/tmp/persona-dream-spoken-spine-eval-agentic/dag-spec.json"
           }
         ],
+        "exit_code": 0,
         "stdout_contains": [
-          "16 passed",
+          "17 passed",
           "\"terminal_step\": \"spoken_journal\"",
           "CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK"
         ],
@@ -1039,49 +1240,50 @@
           "BLOCKED_PERSONA_DREAM_PIPELINE_CONTRACT",
           "BLOCKED_COMPETING_ACTIVE_PIPELINE_CONTRACT"
         ]
-      }
+      },
+      "name": "cycle-journal-spoken-spine-contract-tests",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "pipeline.cycle_journal_to_spoken_journal"
+      ],
+      "supports_claims": [
+        "persona_dream.cycle_journal_spoken_spine_contract"
+      ],
+      "type": "positive"
     },
     {
-      "name": "self-repair-runner-records-failure-and-blocks-next-step",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.pipeline_self_repair_runner"
-      ],
-      "seams": [
-        "persona_dream.self_repair_run",
-        "pipeline_self_repair.record_failure"
-      ],
-      "notes": "Runs the retained self-repair controller tests. Proves a failing required step calls pipeline-self-repair, writes a goal-aligned ledger event, and does not advance to the next step.",
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_self_repair_run.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "2 passed"
         ]
-      }
+      },
+      "name": "self-repair-runner-records-failure-and-blocks-next-step",
+      "notes": "Runs the retained self-repair controller tests. Proves a failing required step calls pipeline-self-repair, writes a goal-aligned ledger event, and does not advance to the next step.",
+      "real_world": true,
+      "seams": [
+        "persona_dream.self_repair_run",
+        "pipeline_self_repair.record_failure"
+      ],
+      "supports_claims": [
+        "persona_dream.pipeline_self_repair_runner"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "disposition-registry-deterministic-contract-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.disposition_registry_contract"
-      ],
-      "seams": [
-        "research.disposition_registry"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_check_dispositions.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -1090,24 +1292,24 @@
         "stdout_not_contains": [
           "FAILED"
         ]
-      }
+      },
+      "name": "disposition-registry-deterministic-contract-tests",
+      "real_world": true,
+      "seams": [
+        "research.disposition_registry"
+      ],
+      "supports_claims": [
+        "persona_dream.disposition_registry_contract"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "multimodal-ablation-deterministic-contract-tests",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "supports_claims": [
-        "persona_dream.multimodal_ablation_contract"
-      ],
-      "seams": [
-        "research.multimodal_ablation"
-      ],
       "command": [
         "bash",
         "-lc",
         "uv run --project .. pytest ../tests/test_multimodal_ablation.py -q"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
@@ -1116,97 +1318,94 @@
         "stdout_not_contains": [
           "FAILED"
         ]
-      }
+      },
+      "name": "multimodal-ablation-deterministic-contract-tests",
+      "real_world": true,
+      "seams": [
+        "research.multimodal_ablation"
+      ],
+      "supports_claims": [
+        "persona_dream.multimodal_ablation_contract"
+      ],
+      "type": "adversarial"
     },
     {
-      "name": "recovery-campaign-live-service-restart-readback",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "readback": true,
-      "timeout_seconds": 900,
-      "supports_claims": [
-        "persona_dream.recovery_campaign_contract"
-      ],
-      "seams": [
-        "continuity.recovery_campaign"
-      ],
       "command": [
         "bash",
         "-lc",
         "bash ../run.sh run-recovery-campaign --out-dir /tmp/persona-dream-recovery-campaign-live-eval --allow-service-restart --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nr=json.loads(Path('/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json').read_text())\nassert r['status']=='PASS_RECOVERY_CAMPAIGN'\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['counts']['scenario_count']==7\nassert r['counts']['live_restart_count'] >= 1\nassert r['counts']['duplicate_accepted_effect_count']==0\nprint('RECOVERY_CAMPAIGN_LIVE_RESTART_READBACK_OK')\nPY"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
-        "exit_code": 0,
         "artifacts": [
           {
-            "path": "/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json",
+            "equals": true,
             "json_pointer": "/live",
-            "equals": true
+            "path": "/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json"
           },
           {
-            "path": "/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json",
+            "equals": "PASS_RECOVERY_CAMPAIGN",
             "json_pointer": "/status",
-            "equals": "PASS_RECOVERY_CAMPAIGN"
+            "path": "/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json"
           }
         ],
+        "exit_code": 0,
         "stdout_contains": [
           "PASS_RECOVERY_CAMPAIGN",
           "RECOVERY_CAMPAIGN_LIVE_RESTART_READBACK_OK"
         ]
-      }
+      },
+      "name": "recovery-campaign-live-service-restart-readback",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "continuity.recovery_campaign"
+      ],
+      "supports_claims": [
+        "persona_dream.recovery_campaign_contract"
+      ],
+      "timeout_seconds": 900,
+      "type": "adversarial"
     },
     {
-      "name": "cross-mood-identity-matrix-live-readback",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "readback": true,
-      "timeout_seconds": 900,
-      "supports_claims": [
-        "persona_dream.cross_mood_identity_matrix"
-      ],
-      "seams": [
-        "continuity.cross_mood_identity"
-      ],
       "command": [
         "bash",
         "-lc",
         "rm -rf /tmp/persona-dream-cross-mood-live-eval; bash ../run.sh cross-mood-identity-matrix --out-dir /tmp/persona-dream-cross-mood-live-eval --reuse-existing --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nr=json.loads(Path('/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json').read_text())\nassert r['status']=='PASS_CROSS_MOOD_IDENTITY_MATRIX_WITH_RANGE_LIMITS'\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['target_render_count']==36\nassert r['terminal_target_rows']==36\nprint('CROSS_MOOD_IDENTITY_LIVE_READBACK_OK')\nPY"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
-        "exit_code": 0,
         "artifacts": [
           {
-            "path": "/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json",
+            "equals": true,
             "json_pointer": "/live",
-            "equals": true
+            "path": "/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json"
           },
           {
-            "path": "/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json",
+            "equals": 36,
             "json_pointer": "/target_render_count",
-            "equals": 36
+            "path": "/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json"
           }
         ],
+        "exit_code": 0,
         "stdout_contains": [
           "PASS_CROSS_MOOD_IDENTITY_MATRIX_WITH_RANGE_LIMITS",
           "CROSS_MOOD_IDENTITY_LIVE_READBACK_OK"
         ]
-      }
+      },
+      "name": "cross-mood-identity-matrix-live-readback",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "continuity.cross_mood_identity"
+      ],
+      "supports_claims": [
+        "persona_dream.cross_mood_identity_matrix"
+      ],
+      "timeout_seconds": 900,
+      "type": "positive"
     },
     {
-      "name": "render-blinded-listener-stimuli-live-readback",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "live_e2e",
-      "readback": true,
-      "timeout_seconds": 900,
-      "supports_claims": [
-        "persona_dream.blinded_listener_stimuli_normalized_render"
-      ],
-      "seams": [
-        "listener_study.normalized_render"
-      ],
       "blocked_when_stdout_contains": [
         "BLOCKED_CHATTERBOX_UNREACHABLE"
       ],
@@ -1215,479 +1414,280 @@
         "-lc",
         "bash ../run.sh render-blinded-listener-stimuli --out /tmp/persona-dream-listener-stimuli-live-eval.json --run-id eval-listener-live --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nr=json.loads(Path('/tmp/persona-dream-listener-stimuli-live-eval.json').read_text())\nassert r['status']=='PASS_RENDERED_BLINDED_LISTENER_STIMULI'\nassert r['mocked'] is False\nassert r['live'] is True\nassert len(r['rendered']) == 4\nprint('LISTENER_STIMULI_LIVE_READBACK_OK')\nPY"
       ],
+      "evidence_class": "live_e2e",
       "expected": {
-        "exit_code": 0,
         "artifacts": [
           {
-            "path": "/tmp/persona-dream-listener-stimuli-live-eval.json",
+            "equals": true,
             "json_pointer": "/live",
-            "equals": true
+            "path": "/tmp/persona-dream-listener-stimuli-live-eval.json"
           },
           {
-            "path": "/tmp/persona-dream-listener-stimuli-live-eval.json",
+            "equals": "PASS_RENDERED_BLINDED_LISTENER_STIMULI",
             "json_pointer": "/status",
-            "equals": "PASS_RENDERED_BLINDED_LISTENER_STIMULI"
+            "path": "/tmp/persona-dream-listener-stimuli-live-eval.json"
           }
         ],
+        "exit_code": 0,
         "stdout_contains": [
           "PASS_RENDERED_BLINDED_LISTENER_STIMULI",
           "LISTENER_STIMULI_LIVE_READBACK_OK"
         ]
-      }
+      },
+      "name": "render-blinded-listener-stimuli-live-readback",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "listener_study.normalized_render"
+      ],
+      "supports_claims": [
+        "persona_dream.blinded_listener_stimuli_normalized_render"
+      ],
+      "timeout_seconds": 900,
+      "type": "positive"
     },
     {
-      "name": "image-generation-oauth-lane-live-readback",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.image_generation_oauth_lane"
-      ],
-      "seams": [
-        "image_generation.create_panel_scillm_backend"
-      ],
       "command": [
         "bash",
         "-lc",
         "python3 - <<'PY'\nimport json, pathlib\np=pathlib.Path('../reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_generation_receipt.json')\nr=json.loads(p.read_text())\nassert r['schema']=='persona_dream.phase_c.frame_generation_receipt.v1'\nassert r['ok'] is True\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['provider']=='codex'\nassert r['auth']=='codex-oauth'\nassert r['model']=='gpt-image-2'\nimg=pathlib.Path(r['output_path'])\nassert img.is_file() and img.stat().st_size > 10000\nprint('IMAGE_GENERATION_OAUTH_LIVE_READBACK_OK')\nPY"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "IMAGE_GENERATION_OAUTH_LIVE_READBACK_OK"
         ]
-      }
+      },
+      "name": "image-generation-oauth-lane-live-readback",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "image_generation.create_panel_scillm_backend"
+      ],
+      "supports_claims": [
+        "persona_dream.image_generation_oauth_lane"
+      ],
+      "type": "positive"
     },
     {
-      "name": "panel-repair-live-regeneration-readback",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "readback": true,
-      "supports_claims": [
-        "persona_dream.panel_repair_work_order_executor"
-      ],
-      "seams": [
-        "pipeline_loop.panel_repair_work_order"
-      ],
       "command": [
         "bash",
         "-lc",
         "python3 - <<'PY'\nimport json, pathlib\np=pathlib.Path('../reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/lane_c_regeneration_receipt.json')\nr=json.loads(p.read_text())\nassert r['schema']=='persona_dream.lane_c.sb_003_end_regeneration_receipt.waiver.v1'\nassert r['status']=='PASS_LANE_C_SB_003_END_REGENERATED_WAIVER'\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['image_auth']=='codex-oauth'\nassert r['image_model']=='gpt-image-2'\nimg=pathlib.Path(r['new_frame_path'])\nif not img.is_file():\n    img=pathlib.Path('../reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png')\nassert img.is_file() and img.stat().st_size > 10000\nprint('PANEL_REPAIR_LIVE_REGENERATION_READBACK_OK')\nPY"
       ],
+      "evidence_class": "deterministic",
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "PANEL_REPAIR_LIVE_REGENERATION_READBACK_OK"
         ]
-      }
+      },
+      "name": "panel-repair-live-regeneration-readback",
+      "readback": true,
+      "real_world": true,
+      "seams": [
+        "pipeline_loop.panel_repair_work_order"
+      ],
+      "supports_claims": [
+        "persona_dream.panel_repair_work_order_executor"
+      ],
+      "type": "positive"
     }
   ],
-  "capability_claims": [
-    {
-      "id": "persona_dream.pipeline_self_repair_runner",
-      "description": "self-repair-run executes a required step manifest in order, records required-step failures through pipeline-self-repair with immutable goal alignment, and refuses to advance to step N+1 while step N is blocking.",
-      "criticality": "critical",
-      "evidence_required": {
-        "adversarial": true,
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.pipeline_crew_casting_command_wiring",
-      "description": "The run.sh pipeline run --step crew_casting command can write a schema-valid, receipt-backed crew_contract.json from a selector payload and reject out-of-pool selections. Fixture-backed evidence proves wiring only; live ask tau-dag selector proof is separate.",
-      "criticality": "important",
-      "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.image_generation_oauth_lane",
-      "description": "Persona Dream refuses unfunded API-key image lanes and retained receipts show create_panel --backend scillm routed through ask image generation with Codex OAuth instead of the unsupported $create-image scillm backend.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.story_contract_work_order_executor",
-      "description": "The retained story-contract work-order executor consumes a validated work order, emits a validated accepted story_contract.json plus fulfillment/review/stale receipts, and refuses to promote stale storyboard or Kling artifacts.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.storyboard_panel_work_order_executor",
-      "description": "The retained storyboard-panel work-order executor consumes a validated work order, emits a validated storyboard_panel_receipt.json plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.panel_repair_work_order_executor",
-      "description": "The retained panel-repair work-order executor consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final-image backends, and has retained receipt readback for the accepted live regeneration artifact.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.cycle_journal_spoken_spine_contract",
-      "description": "The executable Persona Dream spine carries the autonomous cycle journal into a spoken_journal terminal node without requiring generate-lane dream_packet artifacts.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.corrected_goal_manifest",
-      "description": "The corrected operational goal and PD-CORRECTED-GOAL-V1 sealed manifest are pinned with deterministic fail-closed validators before any live paired run can be claimed.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.soak35_source_transition_preflight",
-      "description": "The 35-cycle reliability soak is gated by a frozen source-dream diversity and normalized state-transition preflight with typed negative controls and zero provider/canonical-write side effects.",
-      "criticality": "critical",
-      "evidence_required": {
-        "fault_injected_deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.session_mood_delivery_contract",
-      "description": "Session mood maps dream/journal conflict into Chatterbox delivery fields while preserving one invariant answer body and using calibrated pace values instead of request-only delivery labels.",
-      "criticality": "important",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.session_mood_recognition_status_contract",
-      "description": "A valid structured BLOCKED_SESSION_MOOD_VOICE_RECOGNITION receipt from the recognition subprocess is propagated into the live-chain block with its failed gates, per-render scores, thresholds, duration-aware floor, separation, adversarial scores, backend_error and child exit metadata; BLOCKED_RECOGNITION_COMMAND_FAILED stays reserved for missing, malformed, unreadable, unrecognized or crash-before-receipt children.",
-      "criticality": "important",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.chatterbox_affect_validation_registry_consumer",
-      "description": "Persona Dream records Chatterbox backend/profile/range registry matches and refuses perceived-emotion claims unless a hash-bound registry entry exactly permits the recorded scope.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.disposition_registry_contract",
-      "description": "Persona Dream research hypotheses terminate through a machine-readable registry that recomputes receipt hashes, checks result/product/transfer consistency, and refuses immutable-goal completion while required hypotheses remain nonterminal.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.recovery_campaign_contract",
-      "description": "Persona Dream restart and stale-session recovery is exercised as seven retained fault scenarios with hash-bound receipts, duplicate-effect accounting, typed stale/tampered controls, and explicit live service restart proof when requested.",
-      "criticality": "critical",
-      "evidence_required": {
-        "fault_injected_deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.multimodal_ablation_contract",
-      "description": "Rendered-and-Watch-observed dream media value is evaluated through a provider-free M/R/D/DW matched ablation with sealed commitments, zero canonical writes, typed negative controls, and terminal null/positive/negative disposition.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.ux.workspace_renders",
-      "description": "DreamWorkspace renders its full skeleton without runtime ReferenceErrors (2026-08-19 blank-page incident).",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.ux.pipeline_api_serves_runs",
-      "description": "The dream API host lists real manifest-backed runs and refuses paths outside its roots.",
-      "criticality": "critical",
-      "evidence_required": {
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.ux.board_media_stratified",
-      "description": "The residue board's stratified sample keeps image, video, and audio memories through the 12-card cut against live memory recall.",
-      "criticality": "critical",
-      "evidence_required": {
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.conversation.runsh_surface",
-      "description": "The documented run.sh command surface exposes converse-dynamic and dispatches it to the dynamic Horus/Embry conversation CLI instead of falling through to usage.",
-      "criticality": "important",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.conversation.audible_two_agent",
-      "description": "Horus and Embry hold a DYNAMIC audible conversation: each Horus turn drafted live by Tau from her journal and the transcript (proven by Tau receipt provenance and conditioned-on-reply oracles), spoken in his own voice; both roles voiced first-class in conversation.jsonl with tone + sha256-bound audio.",
-      "criticality": "critical",
-      "evidence_required": {
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.conversation.source_grounding",
-      "description": "Persona Dream conversations consume the Tau spine's watched dream context: dream_journal.v1, storyboard panels, observation_packet frame entities, residue/mined memory context, and day events when present; generic conversation drafts are grounded with a concrete source anchor before being accepted.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.status_scope_boundary",
-      "description": "Persona Dream status surfaces preserve the operational boundary: a live audible full-cycle loop is evidence for the loop, not provider/Kling completion, human-perception proof, production readiness, or immutable-goal closure; PD-CORRECTED-GOAL-V1 remains the next agent-owned proof while #1058 remains blocked on human listener artifacts.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.autonomous_cycle_recall_instrumentation",
-      "description": "Autonomous dream-cycle recall gates preserve ranked recall rows, probe ranks, and the negative-control dream rank in the receipt so pass/block outcomes are auditable without a second mutable live recall.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true
-      }
-    },
-    {
-      "id": "persona_dream.blinded_listener_stimuli_normalized_render",
-      "description": "The listener-study target stimuli can be rendered through live Chatterbox with one shared norm_loudness policy and hash-bound back into both preregistration files.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.cross_mood_identity_matrix",
-      "description": "Embry speaker identity can be preregistered, rendered, and scored across a frozen 4 mood x 3 text x 3 seed matrix with calibration-derived identity thresholds and adversarial comparisons.",
-      "criticality": "critical",
-      "evidence_required": {
-        "deterministic": true,
-        "live_e2e": true
-      }
-    },
-    {
-      "id": "persona_dream.full_cycle.live",
-      "description": "One complete persona-dream run start to finish in a fresh run dir: day ingest, Tau dream spine (select/instrument/observe/interpret/ToM/persist with exact re-read + dream journal), materialized watched-dream context from the spine, ASR-verified spoken journal, journal memory lineage proof, artifact store, a 3-pair fully audible source-grounded dynamic Horus/Embry conversation about the dream, the day, and her mood (every turn tone + sha256-bound audio), and carry-back into memory with read-back equality.",
-      "criticality": "critical",
-      "evidence_required": {
-        "live_e2e": true
-      }
-    }
-  ],
+  "claims": {
+    "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step"
+  },
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, source-grounded dream conversation context, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
   "seams": [
     {
-      "seam_id": "experiment.corrected_goal.manifest",
-      "seam_type": "experiment_contract",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
-      ]
+      ],
+      "seam_id": "experiment.corrected_goal.manifest",
+      "seam_type": "experiment_contract"
     },
     {
-      "seam_id": "continuity.soak35.preflight",
-      "seam_type": "reliability_gate",
       "criticality": "critical",
       "required_evidence": [
         "fault_injected_deterministic"
-      ]
+      ],
+      "seam_id": "continuity.soak35.preflight",
+      "seam_type": "reliability_gate"
     },
     {
+      "criticality": "important",
+      "required_evidence": [
+        "deterministic"
+      ],
       "seam_id": "continuity.session_mood.delivery",
-      "seam_type": "delivery_contract",
+      "seam_type": "delivery_contract"
+    },
+    {
       "criticality": "important",
       "required_evidence": [
         "deterministic"
-      ]
-    },
-    {
+      ],
       "seam_id": "continuity.session_mood.voice_recognition_status",
-      "seam_type": "status_propagation_contract",
-      "criticality": "important",
-      "required_evidence": [
-        "deterministic"
-      ]
+      "seam_type": "status_propagation_contract"
     },
     {
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ],
       "seam_id": "continuity.chatterbox_affect_validation_registry",
-      "seam_type": "claim_boundary_contract",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic"
-      ]
+      "seam_type": "claim_boundary_contract"
     },
     {
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ],
       "seam_id": "research.disposition_registry",
-      "seam_type": "research_governance_contract",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic",
-        "live_e2e"
-      ]
+      "seam_type": "research_governance_contract"
     },
     {
-      "seam_id": "status.scope_boundary",
-      "seam_type": "status_claim_boundary",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
-      ]
+      ],
+      "seam_id": "status.scope_boundary",
+      "seam_type": "status_claim_boundary"
     },
     {
-      "seam_id": "research.multimodal_ablation",
-      "seam_type": "matched_ablation_contract",
       "criticality": "critical",
       "required_evidence": [
         "deterministic",
         "live_e2e"
-      ]
+      ],
+      "seam_id": "research.multimodal_ablation",
+      "seam_type": "matched_ablation_contract"
     },
     {
-      "seam_id": "continuity.recovery_campaign",
-      "seam_type": "fault_recovery_contract",
       "criticality": "critical",
       "required_evidence": [
         "fault_injected_deterministic",
         "live_e2e"
-      ]
+      ],
+      "seam_id": "continuity.recovery_campaign",
+      "seam_type": "fault_recovery_contract"
     },
     {
-      "seam_id": "continuity.cross_mood_identity",
-      "seam_type": "speaker_identity_matrix",
       "criticality": "critical",
       "required_evidence": [
         "deterministic",
         "live_e2e"
-      ]
+      ],
+      "seam_id": "continuity.cross_mood_identity",
+      "seam_type": "speaker_identity_matrix"
     },
     {
-      "seam_id": "ui.dream_workspace.render",
-      "seam_type": "ui_render",
       "criticality": "critical",
       "required_evidence": [
         "deterministic",
         "fault_injected_deterministic"
-      ]
+      ],
+      "seam_id": "ui.dream_workspace.render",
+      "seam_type": "ui_render"
     },
     {
-      "seam_id": "api.dream_router.runs",
-      "seam_type": "http_api",
       "criticality": "high",
       "required_evidence": [
         "live_e2e"
-      ]
+      ],
+      "seam_id": "api.dream_router.runs",
+      "seam_type": "http_api"
     },
     {
-      "seam_id": "api.dream_router.path_policy",
-      "seam_type": "security_boundary",
       "criticality": "critical",
       "required_evidence": [
         "live_e2e"
-      ]
+      ],
+      "seam_id": "api.dream_router.path_policy",
+      "seam_type": "security_boundary"
     },
     {
-      "seam_id": "ui.residue_board.stratified_sample",
-      "seam_type": "data_pipeline",
       "criticality": "high",
       "required_evidence": [
         "live_e2e"
-      ]
+      ],
+      "seam_id": "ui.residue_board.stratified_sample",
+      "seam_type": "data_pipeline"
     },
     {
-      "seam_id": "runsh.converse_dynamic",
-      "seam_type": "command_surface",
       "criticality": "important",
       "required_evidence": [
         "deterministic"
-      ]
+      ],
+      "seam_id": "runsh.converse_dynamic",
+      "seam_type": "command_surface"
     },
     {
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ],
       "seam_id": "conversation.horus_embry.audible",
-      "seam_type": "multi_agent_voice",
-      "criticality": "critical",
-      "required_evidence": [
-        "live_e2e"
-      ]
+      "seam_type": "multi_agent_voice"
     },
     {
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ],
       "seam_id": "conversation.grounding_context",
-      "seam_type": "source_context_contract",
+      "seam_type": "source_context_contract"
+    },
+    {
       "criticality": "critical",
       "required_evidence": [
         "deterministic",
         "live_e2e"
-      ]
-    },
-    {
+      ],
       "seam_id": "listener_study.normalized_render",
-      "seam_type": "voice_stimulus_render",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic",
-        "live_e2e"
-      ]
+      "seam_type": "voice_stimulus_render"
     },
     {
-      "seam_id": "autonomous_cycle.recall_instrumentation",
-      "seam_type": "recall_gate",
       "criticality": "critical",
       "required_evidence": [
         "deterministic"
-      ]
+      ],
+      "seam_id": "autonomous_cycle.recall_instrumentation",
+      "seam_type": "recall_gate"
     },
     {
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e"
+      ],
       "seam_id": "pipeline.full_cycle.e2e",
-      "seam_type": "end_to_end_pipeline",
-      "criticality": "critical",
-      "required_evidence": [
-        "live_e2e"
-      ]
+      "seam_type": "end_to_end_pipeline"
     },
     {
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ],
       "seam_id": "pipeline.cycle_journal_to_spoken_journal",
-      "seam_type": "pipeline_spine",
-      "criticality": "critical",
-      "required_evidence": [
-        "deterministic",
-        "live_e2e"
-      ]
+      "seam_type": "pipeline_spine"
     },
     {
-      "seam_id": "pipeline.cycle_context_materialization",
-      "seam_type": "pipeline_spine",
       "criticality": "critical",
       "required_evidence": [
         "deterministic",
         "live_e2e"
-      ]
+      ],
+      "seam_id": "pipeline.cycle_context_materialization",
+      "seam_type": "pipeline_spine"
     }
-  ]
+  ],
+  "skill": "persona-dream",
+  "trials": 3,
+  "version": 2
 }

@@ -94,9 +94,15 @@ def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any],
         if not args.audio:
             failed.append(f"{args.role}_turn_requires_audio")
         turn["requested_delivery_tone"] = args.tone
+        chatterbox_utterance_text = getattr(args, "chatterbox_utterance_text", None)
+        emotional_utterance_tags = getattr(args, "emotional_utterance_tags", None)
+        if chatterbox_utterance_text:
+            turn["chatterbox_utterance_text"] = chatterbox_utterance_text.strip()
+        if emotional_utterance_tags:
+            turn["emotional_utterance_tags"] = [tag.strip() for tag in emotional_utterance_tags.split(",") if tag.strip()]
         turn["tone_boundary"] = (
-            "requested of the renderer, not achieved in the audio; the delivery "
-            "tone was measured inaudible on this engine"
+            "requested_delivery_tone is the delivery preset, not achieved emotion by itself; "
+            "emotional_utterance_tags are native Chatterbox Turbo inline event tags injected into answer_text"
         )
         if args.audio:
             audio = Path(args.audio)
@@ -197,6 +203,8 @@ def main() -> int:
     ap.add_argument("--text", required=True)
     ap.add_argument("--tone", help="voiced turns (embry/horus) only: the delivery tone requested")
     ap.add_argument("--audio", help="voiced turns (embry/horus) only: rendered audio for this turn")
+    ap.add_argument("--chatterbox-utterance-text", help="exact answer_text sent to Chatterbox, including inline event tags")
+    ap.add_argument("--emotional-utterance-tags", help="comma-separated native Chatterbox event tags injected into answer_text")
     ap.add_argument("--created-at", help="override the timestamp (tests, backfill)")
     ap.add_argument("--out", type=Path)
     ap.add_argument("--json", action="store_true")

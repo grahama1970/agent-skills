@@ -96,6 +96,11 @@ def _args(tmp_path, **overrides):
 
 def test_chatterbox_failed_gates_are_preserved_in_journal_audio_receipt(tmp_path, monkeypatch):
     (tmp_path / "journal_spoken.txt").write_text("I woke carrying the dream.\n", encoding="utf-8")
+    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
+        "text": "[sigh]... I woke carrying the dream. [sniff]",
+        "tags": ["[sigh]", "[sniff]"],
+        "source": "test",
+    })
     captured = {}
 
     def fake_post_json(url, payload):
@@ -137,6 +142,11 @@ def test_chatterbox_failed_gates_are_preserved_in_journal_audio_receipt(tmp_path
 
 
 def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, monkeypatch):
+    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
+        "text": "[sigh]... First sentence. [sniff] Second sentence.",
+        "tags": ["[sigh]", "[sniff]"],
+        "source": "test",
+    })
     host_root = tmp_path / "logs"
     wav = host_root / "test-journal" / "finished_response.wav"
     wav.parent.mkdir(parents=True)
@@ -188,6 +198,47 @@ def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, mo
     assert receipt["asr_wer"] == 0.1
     assert receipt["asr_ok"] is True
     assert receipt["audio_bytes"] > 0
+    assert receipt["chatterbox_utterance_text"] == "[sigh]... First sentence. [sniff] Second sentence."
+    assert receipt["pause_markup_present"] is True
+    assert Path(receipt["chatterbox_utterance_artifact"]).is_file()
+    assert Path(receipt["chatterbox_utterance_markdown"]).is_file()
+    assert receipt["emotional_utterance_tags"] == ["[sigh]", "[sniff]"]
+
+
+def test_journal_utterance_is_the_text_sent_to_chatterbox(tmp_path, monkeypatch):
+    host_root = tmp_path / "logs"
+    wav = host_root / "test-journal" / "finished_response.wav"
+    wav.parent.mkdir(parents=True)
+    wav.write_bytes(b"RIFF....WAVE")
+    monkeypatch.setattr(speak, "CHATTERBOX_OUT_HOST_ROOT", host_root)
+    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
+        "text": "[sigh] I woke carrying the dream... [sniff] and I kept listening.",
+        "tags": ["[sigh]", "[sniff]"],
+        "source": "model_authored",
+    })
+    (tmp_path / "journal_spoken.txt").write_text("I woke carrying the dream. And I kept listening.\n", encoding="utf-8")
+    captured = {}
+
+    def fake_post_json(url, payload):
+        captured["payload"] = payload
+        return {
+            "ok": True,
+            "engine": "chatterbox_turbo",
+            "normalized_tone": payload["voice_delivery"]["tone"],
+            "finished_response_audio": "/out/test-journal/finished_response.wav",
+            "finished_response_metrics": {"bytes": wav.stat().st_size},
+            "failed_gates": [],
+            "asr_verification": {"enabled": False},
+            "chunks": [],
+        }
+
+    monkeypatch.setattr(speak, "post_json", fake_post_json)
+
+    receipt = speak.run(_args(tmp_path, asr_verify=False))
+
+    assert captured["payload"]["answer_text"] == "[sigh] I woke carrying the dream... [sniff] and I kept listening."
+    assert receipt["chatterbox_utterance_source"] == "model_authored"
+    assert receipt["emotional_utterance_tags"] == ["[sigh]", "[sniff]"]
 
 
 def test_live_receipt_binds_audio_to_text_and_disclaims_achieved_tone():
