@@ -893,6 +893,24 @@
         "provider timeout",
         "visual screenshot failure"
       ]
+    },
+    {
+      "code": "project_state_pydantic_validation_failed",
+      "layer": "project-state",
+      "match": [
+        "project-state pydantic validation failed",
+        "project_state.report.v1 validation failed",
+        "validation error for ProjectStateReport",
+        "validation errors for ProjectStateReport"
+      ],
+      "cause": "A project-state JSON payload failed its pydantic contract, so it cannot be rendered or used as the state source of truth without repair.",
+      "next_command": "Run skills/project-state/run.sh repair-report <bad-report.json> --output <repaired-report.json>, inspect the embedded Phase 6 critical gap, then rerun skills/project-state/run.sh validate-report <repaired-report.json>.",
+      "recoverable": true,
+      "not_this": [
+        "memory recall unavailable",
+        "best-practices finding",
+        "external research timeout"
+      ]
     }
   ],
   "aliases": {}

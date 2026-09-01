@@ -123,6 +123,7 @@ PROJECT_STATE_ROOT=/path/to/project ./run.sh report --json
 # Emit or validate pydantic-backed report contracts
 ./run.sh schema project_state.report.v1
 ./run.sh validate-report state.json
+./run.sh repair-report bad-state.json --output repaired-state.json
 ./run.sh render-report state.json --output state.md
 
 # Non-interactive configuration check
@@ -243,11 +244,13 @@ produces pydantic-validated `project_state.report.v1`,
 `skill.readiness_report.v1`, and `project_state.config_doctor.v1` JSON payloads.
 `./run.sh schema <schema>` emits the JSON Schema; `./run.sh validate-report
 <report.json>` validates a saved report and routes validation failures through
-`$triage-error`; `./run.sh render-report <report.json> --output <report.md>`
-renders a saved pydantic-valid JSON report as Markdown. Human prose/HTML is
-generated only from those JSON payloads. It consumes local worktree evidence,
-Memory recall observations, optional cleanup receipts, and optional current
-research receipts.
+`$triage-error`; `./run.sh repair-report <bad.json> --output <repaired.json>`
+self-heals invalid project-state JSON into a valid repair skeleton with a Phase
+6 critical gap and the `$triage-error` classification embedded;
+`./run.sh render-report <report.json> --output <report.md>` renders a saved
+pydantic-valid JSON report as Markdown. Human prose/HTML is generated only from
+those JSON payloads. It consumes local worktree evidence, Memory recall
+observations, optional cleanup receipts, and optional current research receipts.
 
 Per `$agent-ecosystem`, Memory recall output remains an observation and is not
 wrapped. Standard/quick/full reports are state payloads, not acceptance or

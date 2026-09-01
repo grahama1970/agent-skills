@@ -86,6 +86,7 @@ from report import format_markdown, generate_report  # noqa: F401
 from research import collect_competitive  # noqa: F401
 from schemas import (  # noqa: F401
     ProjectStateSchemaError,
+    repair_project_state_report,
     validate_config_doctor_report,
     validate_project_state_report,
     validate_readiness_report,
@@ -1053,6 +1054,32 @@ def cmd_validate_report(
     """Validate a report JSON with pydantic; route failures through triage-error."""
     schema_name, _ = _validated_report_payload(input_file)
     print(json.dumps({"schema": "project_state.validation_result.v1", "valid": True, "validated_schema": schema_name}))
+
+
+@app.command("repair-report")
+def cmd_repair_report(
+    input_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True),
+    output: Path = typer.Option(..., "-o", "--output", help="Write repaired project_state.report.v1 JSON here"),
+):
+    """Self-heal invalid project-state JSON into a valid Needs-Attention report skeleton."""
+    payload = json.loads(input_file.read_text())
+    try:
+        repaired = validate_project_state_report(payload)
+        changed = False
+        triage = None
+    except ProjectStateSchemaError as exc:
+        repaired = repair_project_state_report(payload, str(input_file), exc)
+        changed = True
+        triage = repaired["phase_6_gaps"]["gaps"][0]["triage"]
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(repaired, indent=2) + "\n")
+    print(json.dumps({
+        "schema": "project_state.repair_result.v1",
+        "repaired": changed,
+        "valid": True,
+        "triage": triage,
+        "output": str(output),
+    }))
 
 
 @app.command("render-report")

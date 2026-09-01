@@ -95,6 +95,14 @@
       "evidence_required": {
         "live_e2e": true
       }
+    },
+    {
+      "id": "project_state.pydantic_self_repair",
+      "description": "project-state self-heals pydantic validation failures by routing through triage-error, writing a valid repair skeleton, and embedding the triage code in Phase 6.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -238,6 +246,15 @@
       "seam_type": "contract/rendering",
       "criticality": "critical",
       "claim_id": "project_state.markdown_render_from_json",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "pydantic_repair_report_cli",
+      "seam_type": "error-boundary",
+      "criticality": "critical",
+      "claim_id": "project_state.pydantic_self_repair",
       "required_evidence": [
         "live_e2e"
       ]
@@ -651,6 +668,40 @@
         "stdout_contains": [
           "MARKDOWN_FROM_JSON_OK=True",
           "SCHEMA=project_state.report.v1"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "pydantic-validation-failure-self-repairs-through-triage-error",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.pydantic_self_repair"
+      ],
+      "seams": [
+        "pydantic_report_model",
+        "triage_error_on_schema_failure",
+        "pydantic_repair_report_cli",
+        "markdown_render_from_saved_json"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; printf '{\"schema\":\"project_state.report.v1\",\"project\":\"broken-demo\",\"timestamp\":\"bad\"}' > \"$tmp/bad.json\"; skills/project-state/run.sh repair-report \"$tmp/bad.json\" --output \"$tmp/repaired.json\" > \"$tmp/repair.json\"; skills/project-state/run.sh validate-report \"$tmp/repaired.json\" > \"$tmp/validate.json\"; skills/project-state/run.sh render-report \"$tmp/repaired.json\" --output \"$tmp/repaired.md\"; python3 - \"$tmp/repair.json\" \"$tmp/validate.json\" \"$tmp/repaired.json\" \"$tmp/repaired.md\" <<'PY2'\nimport json, sys\nrepair=json.load(open(sys.argv[1])); valid=json.load(open(sys.argv[2])); repaired=json.load(open(sys.argv[3])); md=open(sys.argv[4]).read()\ntriage=repair.get('triage') or {}; gap=repaired.get('phase_6_gaps',{}).get('gaps',[{}])[0]\nok=repair.get('repaired') is True and repair.get('valid') is True and triage.get('code')=='project_state_pydantic_validation_failed' and triage.get('ambiguous') is False and valid.get('valid') is True and gap.get('severity')=='critical' and 'Project State' in md\nprint('SELF_REPAIR_OK=%s CODE=%s AMBIGUOUS=%s VALID=%s GAP=%s MARKDOWN=%s' % (ok, triage.get('code'), triage.get('ambiguous'), valid.get('valid'), gap.get('severity'), 'Project State' in md))\nraise SystemExit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "SELF_REPAIR_OK=True",
+          "CODE=project_state_pydantic_validation_failed",
+          "AMBIGUOUS=False",
+          "VALID=True",
+          "GAP=critical",
+          "MARKDOWN=True"
         ],
         "stderr_contains": []
       }
