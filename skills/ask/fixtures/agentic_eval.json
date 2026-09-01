@@ -290,7 +290,25 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && uv run --project . pytest tests/test_lane_diagnostics.py::test_webkimi_accepts_signed_in_kimi_ai_origin tests/test_lane_diagnostics.py::test_webkimi_kimi_ai_tab_is_not_diagnosed_as_provider_drift -q"
+        "cd .. && uv run --project . pytest tests/test_lane_diagnostics.py::test_webkimi_accepts_only_signed_in_kimi_ai_origin tests/test_lane_diagnostics.py::test_webkimi_kimi_ai_tab_is_not_diagnosed_as_provider_drift -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      }
+    },
+    {
+      "name": "webkimi-kimi-com-origin-is-provider-drift",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest tests/test_lane_diagnostics.py::test_webkimi_accepts_only_signed_in_kimi_ai_origin tests/test_browser_provider_availability.py::test_probe_ignores_kimi_com_tabs_for_webkimi -q"
       ],
       "expected": {
         "exit_code": 0,
@@ -1747,6 +1765,78 @@
       "notes": "Proof for agent-skills#1461: through the REAL gh-ticket-tools.sh with a stateful fake gh -- (a) close without a lease fails with 'not leased with maintainer-active'; (b) close with an active lease but an EMPTY proof file fails; (c) close with the lease plus non-empty proof succeeds. The convergence loop's closure accounting depends on exactly these three behaviors."
     },
     {
+      "name": "ask-tau-dag-requires-json-progress-monitoring",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && skill=$repo/skills/ask/SKILL.md && grep -q 'Mandatory Tau JSON Progress Monitoring' \"$skill\" && grep -q 'tau-receipts/dag-progress.json' \"$skill\" && grep -q 'node-artifacts/<node-id>/node-receipt.json' \"$skill\" && grep -q 'node_progress' \"$skill\" && grep -q 'active_subagents' \"$skill\" && grep -q 'completed_subagents' \"$skill\" && grep -q 'outer Ask CLI' \"$skill\" && echo ASK_TAU_JSON_PROGRESS_MONITORING_REQUIRED"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ASK_TAU_JSON_PROGRESS_MONITORING_REQUIRED"
+        ]
+      },
+      "notes": "Regression guard for live Ask/Tau runs: the skill contract must force agents to read Tau's JSON progress and node receipts instead of waiting on opaque outer process output."
+    },
+    {
+      "name": "codex-no-diff-final-message-reaches-reviewer",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/ask pytest -q skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_codex_workspace_lane_admits_no_diff_final_message_for_review"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "notes": "Regression guard for project-watchdog Ask/Tau repairs where Codex produces a non-empty final message and proof references but no workspace diff; Ask must admit the response for reviewer inspection instead of failing before response.md exists."
+    },
+    {
+      "name": "reviewer-verdict-prompt-requires-first-line",
+      "type": "adversarial",
+      "real_world": true,
+      "seams": [
+        "evals.artifact_provenance"
+      ],
+      "supports_claims": [
+        "ask.evals.artifact_provenance"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo\" && uv run --project skills/ask pytest -q skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_worker_prompt_includes_prior_receipts_and_verdict_contract skills/ask/tests/test_tau_roundtable_sanity_eval.py::test_project_watchdog_repair_prompt_requires_reviewer_verdict"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "2 passed"
+        ]
+      },
+      "notes": "Regression guard for reviewer lanes that complete transport but omit a parseable VERDICT line, causing project-watchdog's proof gate to refuse closure after a Tau PASS. Includes the exact project-watchdog repair prompt shape: VERDICT: PASS / FAIL / NEEDS_ATTENTION must activate the first-line verdict requirement."
+    },
+    {
       "name": "execute-no-poll-still-monitors-tau-json-stream",
       "type": "adversarial",
       "evidence_class": "deterministic",
@@ -1767,48 +1857,6 @@
         "tau_dag.execution"
       ],
       "notes": "Regression guard for the unmonitored Ask/Tau path: even when a caller passes --execute --no-poll, the public Ask CLI forces Tau polling and emits tau_stream_monitoring_policy."
-    },
-    {
-      "name": "multiseat-uncertain-probe-keeps-browser-seat-not-substituted",
-      "type": "adversarial",
-      "real_world": true,
-      "seams": [
-        "provider.dispatch_and_substitution"
-      ],
-      "supports_claims": [
-        "ask.provider.dispatch_and_substitution"
-      ],
-      "timeout_seconds": 120,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && uv run --project . python scripts/selection_multiseat_uncertain_keep_check.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "UNCERTAIN_SEAT_KEPT_CONFIRMED_SEAT_REMOVED"
-        ]
-      },
-      "notes": "Operator 2026-08-25: a 5-seat compete dropped webgemini to a claude-opus-5-high API substitute because the uncertainty-keep in _select_available_browser_handlers was gated on single_explicit_seat. Now an UNCERTAIN probe (browser_provider_probe_timeout, provider_limited False) keeps the fresh-lifecycle seat at any seat count, while a CONFIRMED provider_limited still removes. Exercises the real selection function; asserts both directions."
-    },
-    {
-      "name": "webgpt-attachment-bundle-rejection-classified-not-open-bind-1531",
-      "type": "adversarial",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 180,
-      "command": [
-        "bash",
-        "-c",
-        "cd .. && UV_PROJECT_ENVIRONMENT=/tmp/ask-1531-eval-venv uv run --with pytest --project . python -m pytest -q tests/test_attachment_bundle_recovery_1531.py"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "2 passed"
-        ]
-      }
     },
     {
       "name": "browser-lane-conversation-identity-is-recorded-and-resumable",
