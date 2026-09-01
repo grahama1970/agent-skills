@@ -133,8 +133,8 @@ Rules enforced by `scripts/receipt_envelope.py` (pydantic, extra=forbid):
   and `resolved_parent.goal_hash == envelope.goal_hash` (a present hash is not
   a shared goal until compared). Digest verification applies when `digest` is
   set. A structurally valid envelope is not yet a trusted one.
-- `payload_schema` congruence is enforced at parse time: when `payload.schema`
-  is present it must equal `payload_schema`.
+- `payload.schema` is REQUIRED in every wrapped payload and must equal the
+  envelope `payload_schema`; an anonymous payload fails validation.
 - Field-set changes to any `extra=forbid` schema are breaking by construction;
   they require a new schema version, never an in-place edit.
 
@@ -178,9 +178,11 @@ when it emits or validates the same name, shape, and semantics as the owner.
    the same signal always mints the same code. Minting opens the ticket +
    agentic-eval + memory loop. Recurrence threshold: the SECOND observation of
    the same minted code triggers promotion or aliasing. Alias representation:
-   add the minted code string itself to the `match[]` tokens of the canonical
-   catalog entry, so future identical signals classify to the canonical code;
-   the minted code is never a second canonical identity. The ticket/eval/memory
+   a top-level `aliases` map in the catalog file maps minted code -> canonical
+   code; because minting is deterministic over the normalized signal, a
+   recurring signal re-mints the same code and the classifier resolves it
+   through the map to the canonical entry (recorded as `aliased_from`); the
+   minted code is never a second canonical identity. The ticket/eval/memory
    side effects are idempotent per minted code (keyed by the code string).
 4. Every ecosystem component that names a failure uses a catalog or minted
    code. Both pydantic validators (status schema, envelope) enforce this at

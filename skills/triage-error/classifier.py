@@ -21,6 +21,14 @@ def load_catalog() -> list[dict[str, Any]]:
         return []
 
 
+def load_aliases() -> dict[str, str]:
+    """Top-level aliases map: minted code -> canonical catalog code."""
+    try:
+        return json.loads(CATALOG_PATH.read_text(encoding="utf-8")).get("aliases", {})
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
 def _normalize(text: str) -> str:
     return " ".join(str(text or "").lower().split())
 
@@ -104,8 +112,19 @@ def classify(text: str, layer: str | None = None) -> dict[str, Any]:
         tokens = [t.lower() for t in entry.get("match", []) if t]
         if any(tok in norm for tok in tokens):
             return _result_from_entry(entry, [tok for tok in tokens if tok in norm])
+    minted = _mint_code(text, layer)
+    # Functional aliasing: minting is deterministic over the normalized signal,
+    # so a recurring signal re-mints the same code; the aliases map then
+    # resolves it to its canonical entry instead of a second identity.
+    canonical_code = load_aliases().get(minted)
+    if canonical_code:
+        entry = _catalog_entry_for_code(catalog, canonical_code, layer) or _catalog_entry_for_code(catalog, canonical_code, None)
+        if entry:
+            result = _result_from_entry(entry, [f"alias:{minted}"])
+            result["aliased_from"] = minted
+            return result
     return {
-        "code": _mint_code(text, layer),
+        "code": minted,
         "layer": layer,
         "cause": f"Unclassified error signal: {_first_error_line(text)}",
         "next_command": None,

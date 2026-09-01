@@ -84,7 +84,9 @@ class ReceiptEnvelope(BaseModel):
         # the envelope's payload_schema must equal it. A mismatch is a wrapped
         # lie and fails at parse time.
         declared = self.payload.get("schema")
-        if declared is not None and declared != self.payload_schema:
+        if declared is None:
+            raise ValueError("payload must declare its own schema field; an anonymous payload cannot be verified against payload_schema")
+        if declared != self.payload_schema:
             raise ValueError(
                 f"payload_schema {self.payload_schema!r} != payload.schema {declared!r}; the envelope may not misdescribe its payload"
             )
