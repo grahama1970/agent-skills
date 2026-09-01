@@ -30,6 +30,8 @@ import hashlib
 import importlib.util as _ilu
 import json
 import os
+import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -115,11 +117,37 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
     Path(path).write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _http_post(url: str, payload: dict[str, Any], timeout: float = 15.0) -> dict[str, Any]:
+def _http_post(url: str, payload: dict[str, Any], timeout: float = 15.0, attempts: int = 3) -> dict[str, Any]:
+    """POST JSON to the memory HTTP contract with bounded retry for transient 5xx.
+
+    The Persona Dream live eval writes several receipt-bound records through the
+    shared /memory daemon. A transient daemon 500 must not collapse an otherwise
+    complete dream cycle into Tau SUBAGENT_ERROR, but 4xx contract failures must
+    still fail immediately so schema/taxonomy problems are not hidden.
+    """
     body = json.dumps(payload).encode()
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read())
+    last_error: Exception | None = None
+    for attempt in range(1, max(1, attempts) + 1):
+        req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as exc:
+            response_body = exc.read().decode("utf-8", errors="replace")
+            if 500 <= exc.code < 600 and attempt < attempts:
+                last_error = RuntimeError(f"HTTP {exc.code} from {url}: {response_body[:500]}")
+                time.sleep(1.5 * attempt)
+                continue
+            raise RuntimeError(f"HTTP {exc.code} from {url}: {response_body[:1000]}") from exc
+        except (TimeoutError, urllib.error.URLError) as exc:
+            if attempt < attempts:
+                last_error = exc
+                time.sleep(1.5 * attempt)
+                continue
+            raise
+    if last_error:
+        raise last_error
+    raise RuntimeError(f"POST failed without response: {url}")
 
 
 # --------------------------------------------------------------------------- #

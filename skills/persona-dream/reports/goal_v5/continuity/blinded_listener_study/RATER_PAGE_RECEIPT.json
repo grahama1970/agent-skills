@@ -2,10 +2,10 @@
   "blinded_stimuli": [
     {
       "blinded_audio": {
-        "bytes": 272718,
+        "bytes": 240078,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S01.wav",
-        "sha256": "sha256:ab48192a6cc779cd5dc6dbfbcc414ae0778464ff56e3da181a849032e469fc55"
+        "sha256": "sha256:299f59003bfff09aab30168392137b32e5a7c76775f9962a7b605102aac3ab83"
       },
       "bytes_match": true,
       "condition_key_for_receipt_only": "control",
@@ -13,19 +13,19 @@
       "page_audio_src": "blinded_stimuli/S01.wav",
       "slot": 1,
       "source_audio": {
-        "bytes": 272718,
+        "bytes": 240078,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
-        "sha256": "sha256:ab48192a6cc779cd5dc6dbfbcc414ae0778464ff56e3da181a849032e469fc55"
+        "sha256": "sha256:299f59003bfff09aab30168392137b32e5a7c76775f9962a7b605102aac3ab83"
       },
       "stimulus_id": "S01"
     },
     {
       "blinded_audio": {
-        "bytes": 320718,
+        "bytes": 276558,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S02.wav",
-        "sha256": "sha256:0d28901f81247c21221a394ba7440d4a9f5d67c099d3f62466ddd8faf05a6d26"
+        "sha256": "sha256:bd1ff5dd18ada163c1f274c7e326bb1aa87392d1b8380fd8f87f9259416cc1dd"
       },
       "bytes_match": true,
       "condition_key_for_receipt_only": "dream",
@@ -33,19 +33,19 @@
       "page_audio_src": "blinded_stimuli/S02.wav",
       "slot": 2,
       "source_audio": {
-        "bytes": 320718,
+        "bytes": 276558,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
-        "sha256": "sha256:0d28901f81247c21221a394ba7440d4a9f5d67c099d3f62466ddd8faf05a6d26"
+        "sha256": "sha256:bd1ff5dd18ada163c1f274c7e326bb1aa87392d1b8380fd8f87f9259416cc1dd"
       },
       "stimulus_id": "S02"
     },
     {
       "blinded_audio": {
-        "bytes": 266958,
+        "bytes": 284238,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S03.wav",
-        "sha256": "sha256:e5ed7de9135bda06ac7505ea20bde45f315cd677b83d46aac4937476509886d5"
+        "sha256": "sha256:6bc8206b9f264cacddbad440343477942026623c7a40ae5f7094123a0c0a1acd"
       },
       "bytes_match": true,
       "condition_key_for_receipt_only": "adversarial",
@@ -53,19 +53,19 @@
       "page_audio_src": "blinded_stimuli/S03.wav",
       "slot": 3,
       "source_audio": {
-        "bytes": 266958,
+        "bytes": 284238,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
-        "sha256": "sha256:e5ed7de9135bda06ac7505ea20bde45f315cd677b83d46aac4937476509886d5"
+        "sha256": "sha256:6bc8206b9f264cacddbad440343477942026623c7a40ae5f7094123a0c0a1acd"
       },
       "stimulus_id": "S03"
     },
     {
       "blinded_audio": {
-        "bytes": 282318,
+        "bytes": 261198,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/blinded_stimuli/S04.wav",
-        "sha256": "sha256:ab6d661f26f47896783f398d9e14ad6b2c74e645f40c116742ddedc28f2b7197"
+        "sha256": "sha256:e197d95d6fefae7073234327906e13a7540b1bcb1fe0ad21411a213e93094ada"
       },
       "bytes_match": true,
       "condition_key_for_receipt_only": "baseline",
@@ -73,10 +73,10 @@
       "page_audio_src": "blinded_stimuli/S04.wav",
       "slot": 4,
       "source_audio": {
-        "bytes": 282318,
+        "bytes": 261198,
         "exists": true,
         "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
-        "sha256": "sha256:ab6d661f26f47896783f398d9e14ad6b2c74e645f40c116742ddedc28f2b7197"
+        "sha256": "sha256:e197d95d6fefae7073234327906e13a7540b1bcb1fe0ad21411a213e93094ada"
       },
       "stimulus_id": "S04"
     }
@@ -107,16 +107,16 @@
     "sha256": "sha256:aaf80e065138bee35f28751c8fa36c7951d7b276f40ae96efaec8b8ea6b92450"
   },
   "preregistration": {
-    "bytes": 10668,
+    "bytes": 10436,
     "exists": true,
     "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
-    "sha256": "sha256:bad560067665d3b99e333cd90f940acbf8227fdbcc5b4f0df136b3b61550a045"
+    "sha256": "sha256:faa9b898e8e8050996449dce80bb6411008510c21a54ceaeef166b908c5c1fc8"
   },
   "preregistration_v2": {
-    "bytes": 14261,
+    "bytes": 14029,
     "exists": true,
     "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
-    "sha256": "sha256:2bc804806a01e5b6c5ab69b8b495a5a231dea2134983e8c568c6697d58772fdd"
+    "sha256": "sha256:8fb881542a8dd9941ce40e24327155970fc4f877a0068e181c27a73f760f54e6"
   },
   "response_schema": {
     "bytes": 2672,

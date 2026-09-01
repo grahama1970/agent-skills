@@ -32,8 +32,8 @@ if [ "$MODE" = "runs" ]; then
   BODY=$(curl -sf "http://127.0.0.1:$PORT/api/projects/dream/runs")
   COUNT=$(printf '%s' "$BODY" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["status"]=="ok"; print(len(d["runs"]))')
   [ "$COUNT" -ge 1 ] || { echo "RUNS_EMPTY"; exit 1; }
-  printf '%s' "$BODY" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any("surf" in r["id"] for r in d["runs"]), "surf run missing"'
-  echo "DREAM_API_RUNS_OK count=$COUNT surf_run_listed=true"
+  printf '%s' "$BODY" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert any(r.get("runRoot") and r.get("manifestPath") for r in d["runs"]), "manifest-backed run missing"'
+  echo "DREAM_API_RUNS_OK count=$COUNT manifest_run_listed=true"
 else
   CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/api/projects/dream/asset?path=/etc/passwd")
   [ "$CODE" = "403" ] || { echo "PATH_POLICY_LEAK: /etc/passwd returned $CODE, expected 403"; exit 1; }

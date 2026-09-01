@@ -42,16 +42,28 @@ def main() -> int:
         return 0
     run_id = os.environ.get("PD_EVAL_RUN_ID")
     try:
-        runs = json.loads(urllib.request.urlopen(f"{UX}/api/runs", timeout=15).read())["runs"]
+        try:
+            runs = json.loads(urllib.request.urlopen(f"{UX}/api/runs", timeout=15).read())["runs"]
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404:
+                raise
+            runs = json.loads(urllib.request.urlopen(f"{UX}/api/projects/dream/runs", timeout=15).read())["runs"]
     except (urllib.error.URLError, OSError):
         print("BLOCKED_UX_SERVER_UNREACHABLE")
         return 0
+
+    def row_id(row: dict) -> str:
+        return str(row.get("run_id") or row.get("id") or "")
+
+    def row_dir(row: dict) -> str:
+        return str(row.get("run_dir") or row.get("runRoot") or "")
+
     if not run_id:
-        candidates = [r["run_id"] for r in runs if r.get("turns") or r.get("has_audio")]
-        run_id = candidates[0] if candidates else (runs[0]["run_id"] if runs else "")
+        candidates = [row_id(r) for r in runs if r.get("turns") or r.get("has_audio")]
+        run_id = candidates[0] if candidates else (row_id(runs[0]) if runs else "")
     if not run_id:
         raise SystemExit("FAIL_NO_RUN_AVAILABLE")
-    run_dir = Path(next(r["run_dir"] for r in runs if r["run_id"] == run_id))
+    run_dir = Path(next(row_dir(r) for r in runs if row_id(r) == run_id))
 
     convo_path = run_dir / "conversation.jsonl"
     before = len(convo_path.read_text().splitlines()) if convo_path.is_file() else 0

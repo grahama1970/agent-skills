@@ -36,9 +36,9 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 # BLOCKED_LIVE_CHAIN_RELIABILITY_PILOT. Expressed as
 # (campaign, cycle, render_index, similarity, floor, margin).
 EXPECTED_SYSTEMIC_BLOCKS: tuple[tuple[str, str, int, float, float, float], ...] = (
-    ("soak35_structured_recognition_status", "cycle_001", 1, 0.765845, 0.774093, -0.008248),
-    ("soak35_structured_recognition_status", "cycle_013", 1, 0.763900, 0.771094, -0.007194),
-    ("soak35_structured_recognition_status", "cycle_021", 2, 0.770638, 0.779838, -0.009200),
+    ("soak35_after_1130", "cycle_003", 3, 0.750938, 0.765504, -0.014566),
+    ("soak35_after_1130", "cycle_006", 3, 0.756085, 0.765504, -0.009419),
+    ("soak35_after_1130", "cycle_024", 1, 0.764688, 0.778232, -0.013544),
 )
 
 

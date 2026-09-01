@@ -65,7 +65,16 @@ def day_scope(date: str) -> str:
 
 
 def _key_for(persona: str, turn: dict[str, Any]) -> str:
-    src = f"{persona}:{turn.get('created_at')}:{turn.get('role')}:{turn.get('text')}"
+    src = ":".join(
+        str(part or "")
+        for part in (
+            persona,
+            turn.get("created_at"),
+            turn.get("role"),
+            turn.get("text"),
+            turn.get("audio_sha256"),
+        )
+    )
     return "pd_conv_" + hashlib.sha256(src.encode()).hexdigest()[:24]
 
 

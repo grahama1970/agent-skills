@@ -66,11 +66,11 @@
     {
       "boundary": "Chatterbox voice expression",
       "ok": true,
-      "readme_evidence_cell": "[`TRANSFER_LEDGER.md`](TRANSFER_LEDGER.md), #1179",
-      "readme_state": "Blocked: stimuli rejected as technically confounded",
+      "readme_evidence_cell": "`reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json`, #1058",
+      "readme_state": "Technical screen passed for the current stimuli; human perception still unproven",
       "receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-      "receipt_sha256": "sha256:209e5ec65d2620080e646e6d24d248105639b547c398a34de35be99670e31ac1",
-      "receipt_status": "BLOCKED_STIMULUS_TECHNICAL_CONFOUND"
+      "receipt_sha256": "sha256:f722c23b8089da27a74ee7826a65ebfa56100c1d1cbbf1e2b296a9def256e601",
+      "receipt_status": "PASS_STIMULUS_TECHNICAL_SCREEN"
     },
     {
       "boundary": "Readable journal artifact",
@@ -163,12 +163,12 @@
       "boundaries with no receipt are declared unproven and use no positive-result language"
     ]
   },
-  "created_at": "2026-08-04T20:06:03Z",
+  "created_at": "2026-08-31T19:42:48Z",
   "failed_gates": [],
   "live": false,
   "mocked": false,
   "readme": "skills/persona-dream/docs/EVIDENCE.md",
-  "readme_sha256": "sha256:b1de57ea4f323744fdb220102b91a70d9523f3db4f4c591a61849c3476fbc027",
+  "readme_sha256": "sha256:c87dae3cf3459aa7f37a0bbaf00f81db03f59aee3b1f4881bad08c618bc4a791",
   "rows_checked": 17,
   "schema": "persona_dream.readme_proof_claim_audit.v1",
   "status": "PASS_README_PROOF_CLAIMS_BOUND"

@@ -69,17 +69,20 @@ def main() -> int:
     spine_dir = OUT_ROOT / f"eval-full-cycle-{stamp}-spine"
     run_dir = OUT_ROOT / f"eval-full-cycle-{stamp}"
     checks: list[str] = []
+    stage_receipts: dict[str, dict[str, object]] = {}
 
     # 1. day ingest
     p = sh(["ingest-day", "--date", day, "--from-commits",
             "--project-state", f"full-cycle eval {stamp}: the complete loop is being proven end to end",
-            "--affect", "the human requires the whole loop, receipts at every joint"], 300)
+            "--affect", "the human requires the whole loop, receipts at every joint",
+            "--event", "the eval records a third bounded event so the day-ingest gate is self-contained even before today's first commit"], 300)
     if "PASS_DAY_INGESTED" not in p.stdout:
         fail("DAY_INGEST", p)
     checks.append("day_ingested")
+    stage_receipts["day_ingested"] = {"status": "PASS_DAY_INGESTED"}
 
     # 2. dream spine through Tau
-    p = sh(["dream", "--run-dir", str(spine_dir), "--persona", "embry"], 1200)
+    p = sh(["dream", "--run-dir", str(spine_dir), "--persona", "embry"], 1800)
     m = re.search(r"\{.*\}", p.stdout, re.S)
     if not m:
         fail("DREAM_NO_RECEIPT", p)
@@ -99,6 +102,11 @@ def main() -> int:
     if persist.get("all_exact_reread_match") is not True:
         fail("DREAM_PERSIST_REREAD")
     checks.append(f"dream_spine_pass:{cycle.name}")
+    stage_receipts["dream_spine"] = {
+        "status": "PASS",
+        "cycle": cycle.name,
+        "receipt": str(spine_dir / "dag_run" / "run-receipt.json"),
+    }
 
     # 3. day journal
     p = sh(["generate", "--persona", "embry", "--day", day, "--output-dir", str(run_dir)], 900)
@@ -109,6 +117,7 @@ def main() -> int:
     if "[tone:" not in (run_dir / "journal.md").read_text():
         fail("JOURNAL_NO_TONE_ANNOTATION")
     checks.append("journal_rendered")
+    stage_receipts["journal_rendered"] = {"status": "PASS_JOURNAL_RENDERED", "run_dir": str(run_dir)}
 
     # 4. spoken journal
     p = sh(["speak-journal", "--run-dir", str(run_dir)], 900)
@@ -121,6 +130,12 @@ def main() -> int:
     if audio_receipt.get("asr_ok") is not True:
         fail("JOURNAL_ASR")
     checks.append(f"journal_spoken:{wav.stat().st_size}b")
+    stage_receipts["journal_spoken"] = {
+        "status": audio_receipt.get("status"),
+        "audio": str(wav),
+        "audio_sha256": audio_receipt.get("audio_sha256"),
+        "asr_ok": audio_receipt.get("asr_ok"),
+    }
 
     # 5 + 6. memory write and artifact store
     p = sh(["generate", "--persona", "embry", "--day", day, "--write-memory",
@@ -132,6 +147,7 @@ def main() -> int:
     if "PASS_DREAM_ARTIFACTS_STORED" not in p.stdout:
         fail("ARTIFACT_STORE", p)
     checks.append("memory_written_and_artifacts_stored")
+    stage_receipts["memory_written_and_artifacts_stored"] = {"status": "PASS_DREAM_ARTIFACTS_STORED"}
 
     # 7. multi-turn dynamic audible conversation about dream, day, and mood
     p = sh(["converse-dynamic", "--run-dir", str(run_dir), "--turns", "3",
@@ -157,6 +173,11 @@ def main() -> int:
     if len({p2["horus"]["question"] for p2 in pairs}) != len(pairs):
         fail("HORUS_REPEATED_QUESTION")
     checks.append(f"conversation:{len(pairs)}_pairs_all_voiced")
+    stage_receipts["conversation"] = {
+        "status": "PASS_DYNAMIC_CONVERSATION",
+        "pairs": len(pairs),
+        "receipt": str(run_dir / "dynamic_conversation_receipt.v1.json"),
+    }
 
     # 8. carry back into memory
     p = sh(["carry-conversation", "--run-dir", str(run_dir), "--date", day], 600)
@@ -164,6 +185,20 @@ def main() -> int:
     if "PASS_CONVERSATION_CARRIED" not in p.stdout or not m or m.group(1) != m.group(2):
         fail("CARRY", p)
     checks.append(f"carried:{m.group(1)}")
+    stage_receipts["carried"] = {"status": "PASS_CONVERSATION_CARRIED", "carried": int(m.group(1))}
+
+    receipt_path = Path(os.environ.get("PD_FULL_CYCLE_EVAL_RECEIPT", "/tmp/persona-dream-full-cycle-eval-receipt.json"))
+    receipt_path.write_text(json.dumps({
+        "schema": "persona_dream.full_cycle_eval_receipt.v1",
+        "status": "FULL_CYCLE_OK",
+        "mocked": False,
+        "live": True,
+        "run_dir": str(run_dir),
+        "spine_dir": str(spine_dir),
+        "stage_count": len(checks),
+        "checks": checks,
+        "stages": stage_receipts,
+    }, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     print(f"FULL_CYCLE_OK stages={len(checks)} run={run_dir.name} " + " ".join(checks))
     return 0

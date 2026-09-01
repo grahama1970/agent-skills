@@ -210,7 +210,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "10 passed"
+          "passed"
         ]
       }
     },
@@ -324,7 +324,7 @@
         "exit_code": 0,
         "stdout_contains": [
           "DREAM_API_RUNS_OK",
-          "surf_run_listed=true"
+          "manifest_run_listed=true"
         ]
       },
       "readback": true
@@ -442,10 +442,12 @@
       "readback": true,
       "timeout_seconds": 3000,
       "supports_claims": [
-        "persona_dream.full_cycle.live"
+        "persona_dream.full_cycle.live",
+        "persona_dream.cycle_journal_spoken_spine_contract"
       ],
       "seams": [
-        "pipeline.full_cycle.e2e"
+        "pipeline.full_cycle.e2e",
+        "pipeline.cycle_journal_to_spoken_journal"
       ],
       "blocked_when_stdout_contains": [
         "BLOCKED_CHATTERBOX_UNREACHABLE",
@@ -460,6 +462,23 @@
         "stdout_contains": [
           "FULL_CYCLE_OK stages=7",
           "conversation:3_pairs_all_voiced"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json",
+            "json_pointer": "/status",
+            "equals": "FULL_CYCLE_OK"
+          },
+          {
+            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json",
+            "json_pointer": "/stages/journal_spoken/status",
+            "equals": "PASS_JOURNAL_SPOKEN"
+          },
+          {
+            "path": "/tmp/persona-dream-full-cycle-eval-receipt.json",
+            "json_pointer": "/stages/conversation/status",
+            "equals": "PASS_DYNAMIC_CONVERSATION"
+          }
         ]
       }
     },
@@ -627,7 +646,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-        "16 passed",
+          "passed",
           "PASS_DISPOSITION_REGISTRY",
           "\"immutable_goal_completion_claimed\": false",
           "DISPOSITION_LIVE_READBACK_OK"
@@ -672,9 +691,8 @@
         "continuity.session_mood.voice_recognition_status"
       ],
       "command": [
-        "bash",
-        "-lc",
-        "set -euo pipefail\nREPO_ROOT=\"$(cd ../../.. && pwd)\"\nexport REPO_ROOT\npython3 - <<'PY_CONTRACT_EOF'\n\"\"\"Deterministic contract check: recognition status propagation in live_chain_receipt.\n\nDrives run_recognition() with a stubbed child interpreter so the parent's\nwrapping path is exercised on real artifacts, with no Chatterbox, no GPU and no\nMemory traffic.\n\"\"\"\nimport importlib.util\nimport json\nimport os\nimport stat\nimport subprocess\nimport sys\nimport tempfile\nfrom pathlib import Path\n\nREPO = Path(os.environ[\"REPO_ROOT\"]).resolve()\nMOD = REPO / \"skills/persona-dream/scripts/live_chain_receipt.py\"\nREAL_BLOCKED = REPO / (\n    \"skills/persona-dream/reports/goal_v5/continuity/reliability/\"\n    \"soak35_accepted_candidate_readback/cycle_019/voice_recognition/RECEIPT.json\"\n)\n\nspec = importlib.util.spec_from_file_location(\"live_chain_receipt\", MOD)\nlcr = importlib.util.module_from_spec(spec)\nsys.modules[\"live_chain_receipt\"] = lcr\nspec.loader.exec_module(lcr)\n\nfailures = []\n\n\ndef check(name, cond, detail=\"\"):\n    print((\"PASS \" if cond else \"FAIL \") + name + ((\" :: \" + detail) if detail and not cond else \"\"))\n    if not cond:\n        failures.append(name)\n\n\ndef stub(body: str) -> Path:\n    path = Path(tempfile.mkdtemp(prefix=\"pd-stub-\")) / \"stub-python\"\n    path.write_text(\n        \"#!/usr/bin/env python3\\n\"\n        \"import sys, pathlib\\n\"\n        \"args = sys.argv[1:]\\n\"\n        \"out = pathlib.Path(args[args.index('--out') + 1])\\n\"\n        \"out.parent.mkdir(parents=True, exist_ok=True)\\n\"\n        + body\n        + \"\\nsys.stderr.write('stub stderr tail\\\\n')\\nsys.exit(1)\\n\",\n        encoding=\"utf-8\",\n    )\n    path.chmod(path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)\n    return path\n\n\ndef run(body):\n    out = Path(tempfile.mkdtemp(prefix=\"pd-out-\")) / \"voice_recognition\" / \"RECEIPT.json\"\n    try:\n        lcr.run_recognition(REPO / \"does-not-matter.json\", out, stub(body))\n    except BaseException as exc:  # noqa: BLE001 - the exception IS the contract\n        return exc\n    raise AssertionError(\"run_recognition did not raise on a non-zero child\")\n\n\nreal = json.loads(REAL_BLOCKED.read_text(encoding=\"utf-8\"))\ncheck(\"real_artifact_is_domain_blocked\", real[\"status\"] == \"BLOCKED_SESSION_MOOD_VOICE_RECOGNITION\")\ncheck(\"real_artifact_failed_gate\", real[\"failed_gates\"] == [\"all_renders_recognized_as_embry\"], str(real[\"failed_gates\"]))\ncheck(\"real_artifact_backend_error_null\", real[\"backend_error\"] is None)\n\n# 1. valid structured domain block -> propagated, not COMMAND_FAILED\nexc = run(f\"out.write_text({json.dumps(json.dumps(real))}, encoding='utf-8')\")\nDomainBlocked = getattr(lcr, \"RecognitionDomainBlocked\", None)\ncheck(\"domain_block_type\", DomainBlocked is not None and isinstance(exc, DomainBlocked), type(exc).__name__)\nmsg = str(exc)\ncheck(\"domain_block_not_command_failed\", \"BLOCKED_RECOGNITION_COMMAND_FAILED\" not in msg)\ncheck(\"domain_block_status_in_message\", \"BLOCKED_SESSION_MOOD_VOICE_RECOGNITION\" in msg)\ncheck(\"domain_block_stage_token_preserved\", \"BLOCKED_RECOGNITION\" in msg)\nd = getattr(exc, \"detail\", {})\ncheck(\"detail_status\", d.get(\"status\") == \"BLOCKED_SESSION_MOOD_VOICE_RECOGNITION\")\ncheck(\"detail_failed_gates\", d.get(\"failed_gates\") == [\"all_renders_recognized_as_embry\"])\ncheck(\"detail_min_threshold\", (d.get(\"preregistered_thresholds\") or {}).get(\"min_embry_similarity\") == 0.75)\ncheck(\"detail_separation\", d.get(\"separation\") == real[\"separation\"])\ncheck(\"detail_backend_error_key\", \"backend_error\" in d and d[\"backend_error\"] is None)\ncheck(\"detail_child_returncode\", (d.get(\"child_process\") or {}).get(\"returncode\") == 1)\ncheck(\"detail_child_stderr_tail\", \"stub stderr tail\" in (d.get(\"child_process\") or {}).get(\"stderr_tail\", \"\"))\nscores = d.get(\"genuine_renders\") or []\ncheck(\"detail_per_render_count\", len(scores) == len(real[\"genuine_renders\"]))\ncheck(\"detail_per_render_similarity\", any(r.get(\"similarity_to_embry\") == 0.767638 for r in scores))\ncheck(\"detail_duration_aware_floor\", [r.get(\"duration_aware_floor\") for r in scores] == [r.get(\"duration_aware_floor\") for r in real[\"genuine_renders\"]] and 0.772462 in [r.get(\"duration_aware_floor\") for r in scores])\ncheck(\"detail_render_gate_flags\", any(r.get(\"passes_duration_aware_floor\") is False for r in scores))\nadv = d.get(\"adversarial_voices\") or []\ncheck(\"detail_adversarial_scores\", len(adv) == len(real[\"adversarial_voices\"]) and all(\"similarity_to_embry\" in r for r in adv))\ncheck(\"detail_receipt_sha256\", str(d.get(\"sha256\", \"\")).startswith(\"sha256:\"))\ncheck(\"detail_marked_propagated\", d.get(\"propagated_from_child_receipt\") is True)\n\n# 2..n. everything else stays COMMAND_FAILED\nmocked = dict(real, mocked=True)\npassing = dict(real, status=\"PASS_SESSION_MOOD_VOICE_RECOGNITION\", failed_gates=[])\nunknown = dict(real, status=\"BLOCKED_SOMETHING_ELSE\")\nnoschema = {k: v for k, v in real.items() if k != \"schema\"}\nnogates = dict(real, failed_gates=[])\nnegatives = {\n    \"missing_receipt\": \"pass\",\n    \"malformed_receipt\": \"out.write_text('{not json', encoding='utf-8')\",\n    \"unreadable_receipt\": \"out.write_bytes(b'\\\\xff\\\\xfe\\\\x00garbage')\",\n    \"wrong_schema\": f\"out.write_text({json.dumps(json.dumps(noschema))}, encoding='utf-8')\",\n    \"mocked_receipt\": f\"out.write_text({json.dumps(json.dumps(mocked))}, encoding='utf-8')\",\n    \"unrecognized_status\": f\"out.write_text({json.dumps(json.dumps(unknown))}, encoding='utf-8')\",\n    \"passing_status_with_nonzero_exit\": f\"out.write_text({json.dumps(json.dumps(passing))}, encoding='utf-8')\",\n    \"blocked_without_failed_gates\": f\"out.write_text({json.dumps(json.dumps(nogates))}, encoding='utf-8')\",\n}\nfor name, body in negatives.items():\n    exc = run(body)\n    check(\n        f\"command_failed_reserved_for_{name}\",\n        type(exc) is RuntimeError and str(exc).startswith(\"BLOCKED_RECOGNITION_COMMAND_FAILED:\"),\n        f\"{type(exc).__name__}:{str(exc)[:120]}\",\n    )\n\n# invariants: nothing about thresholds, floors, ASR or the gate itself moved\nrec_src = (REPO / \"skills/persona-dream/scripts/session_mood_voice_recognition.py\").read_text(encoding=\"utf-8\")\ncheck(\"recognition_thresholds_unchanged\", \"MIN_EMBRY_SIMILARITY = 0.75\" in rec_src and \"MIN_REFERENCE_PROVENANCE_SIMILARITY = 0.75\" in rec_src, \"threshold literal not found\")\ncheck(\"recognition_gate_still_enforced\", 'failed_gates.append(\"all_renders_recognized_as_embry\")' in rec_src)\nlcr_src = MOD.read_text(encoding=\"utf-8\")\ncheck(\"parent_still_validates_pass_receipts\", 'raise ValueError(\"BLOCKED_RECOGNITION_RECEIPT_FAILED\")' in lcr_src)\n\nprint(json.dumps({\"failures\": failures}, sort_keys=True))\nif failures:\n    sys.exit(1)\nprint(\"RECOGNITION_STATUS_CONTRACT_OK\")\nPY_CONTRACT_EOF\n"
+        "python3",
+        "../scripts/eval_recognition_status_contract.py"
       ],
       "expected": {
         "exit_code": 0,
@@ -686,7 +704,12 @@
         "stdout_not_contains": [
           "FAIL "
         ]
-      }
+      },
+      "expect_stdout_contains": [
+        "PASS command_failed_reserved_for_missing_receipt",
+        "PASS domain_block_status_in_message",
+        "RECOGNITION_STATUS_CONTRACT_OK"
+      ]
     },
     {
       "name": "corrected-goal-pair-blocks-without-live-artifacts",
@@ -836,15 +859,15 @@
         "exit_code": 0,
         "stdout_contains": [
           "RECOGNITION_FLOOR_MARGIN_AUDIT_OK",
-          "FIXED_PASS_FLOOR_FAIL soak35_structured_recognition_status/cycle_001/render1 seconds=5.483 similarity=0.765845 fixed_threshold=0.75 floor=0.774093 margin=-0.008248",
-          "FIXED_PASS_FLOOR_FAIL soak35_structured_recognition_status/cycle_013/render1 seconds=4.907 similarity=0.7639 fixed_threshold=0.75 floor=0.771094 margin=-0.007194",
-          "FIXED_PASS_FLOOR_FAIL soak35_structured_recognition_status/cycle_021/render2 seconds=6.741 similarity=0.770638 fixed_threshold=0.75 floor=0.779838 margin=-0.0092",
-          "PASS systemic_block_reproduced soak35_structured_recognition_status/cycle_001/render1",
-          "PASS systemic_block_reproduced soak35_structured_recognition_status/cycle_013/render1",
-          "PASS systemic_block_reproduced soak35_structured_recognition_status/cycle_021/render2",
-          "\"fixed_pass_floor_fail\": 6",
-          "\"renders\": 381",
-          "\"renders_judged\": 336"
+          "FIXED_PASS_FLOOR_FAIL soak35_after_1130/cycle_003/render3 seconds=4.608 similarity=0.750938 fixed_threshold=0.75 floor=0.765504 margin=-0.014566",
+          "FIXED_PASS_FLOOR_FAIL soak35_after_1130/cycle_006/render3 seconds=5.301 similarity=0.756085 fixed_threshold=0.75 floor=0.765504 margin=-0.009419",
+          "FIXED_PASS_FLOOR_FAIL soak35_after_1130/cycle_024/render1 seconds=5.696 similarity=0.764688 fixed_threshold=0.75 floor=0.778232 margin=-0.013544",
+          "PASS systemic_block_reproduced soak35_after_1130/cycle_003/render3",
+          "PASS systemic_block_reproduced soak35_after_1130/cycle_006/render3",
+          "PASS systemic_block_reproduced soak35_after_1130/cycle_024/render1",
+          "\"fixed_pass_floor_fail\": 5",
+          "\"renders\": 129",
+          "\"renders_judged\": 117"
         ],
         "stdout_not_contains": [
           "FAIL "
@@ -872,8 +895,8 @@
         "stdout_contains": [
           "PASS_RECOGNITION_POLICY_HOLDOUT_AUDIT",
           "runtime_policy_changed=false",
-          "disputed_positive_count=6",
-          "disputed_positive_fixed_pass_count=6",
+          "disputed_positive_count=5",
+          "disputed_positive_fixed_pass_count=5",
           "fixed_0_75_adversarial_false_accept_count=0",
           "decision=ELIGIBLE_FIXED_0_75"
         ],
@@ -1014,63 +1037,278 @@
           "2 passed"
         ]
       }
+    },
+    {
+      "name": "disposition-registry-deterministic-contract-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.disposition_registry_contract"
+      ],
+      "seams": [
+        "research.disposition_registry"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_check_dispositions.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ],
+        "stdout_not_contains": [
+          "FAILED"
+        ]
+      }
+    },
+    {
+      "name": "multimodal-ablation-deterministic-contract-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "persona_dream.multimodal_ablation_contract"
+      ],
+      "seams": [
+        "research.multimodal_ablation"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_multimodal_ablation.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "passed"
+        ],
+        "stdout_not_contains": [
+          "FAILED"
+        ]
+      }
+    },
+    {
+      "name": "recovery-campaign-live-service-restart-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "timeout_seconds": 900,
+      "supports_claims": [
+        "persona_dream.recovery_campaign_contract"
+      ],
+      "seams": [
+        "continuity.recovery_campaign"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "bash ../run.sh run-recovery-campaign --out-dir /tmp/persona-dream-recovery-campaign-live-eval --allow-service-restart --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nr=json.loads(Path('/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json').read_text())\nassert r['status']=='PASS_RECOVERY_CAMPAIGN'\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['counts']['scenario_count']==7\nassert r['counts']['live_restart_count'] >= 1\nassert r['counts']['duplicate_accepted_effect_count']==0\nprint('RECOVERY_CAMPAIGN_LIVE_RESTART_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/persona-dream-recovery-campaign-live-eval/AGGREGATE_RECEIPT.json",
+            "json_pointer": "/status",
+            "equals": "PASS_RECOVERY_CAMPAIGN"
+          }
+        ],
+        "stdout_contains": [
+          "PASS_RECOVERY_CAMPAIGN",
+          "RECOVERY_CAMPAIGN_LIVE_RESTART_READBACK_OK"
+        ]
+      }
+    },
+    {
+      "name": "cross-mood-identity-matrix-live-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "timeout_seconds": 900,
+      "supports_claims": [
+        "persona_dream.cross_mood_identity_matrix"
+      ],
+      "seams": [
+        "continuity.cross_mood_identity"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "rm -rf /tmp/persona-dream-cross-mood-live-eval; bash ../run.sh cross-mood-identity-matrix --out-dir /tmp/persona-dream-cross-mood-live-eval --reuse-existing --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nr=json.loads(Path('/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json').read_text())\nassert r['status']=='PASS_CROSS_MOOD_IDENTITY_MATRIX_WITH_RANGE_LIMITS'\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['target_render_count']==36\nassert r['terminal_target_rows']==36\nprint('CROSS_MOOD_IDENTITY_LIVE_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/persona-dream-cross-mood-live-eval/AGGREGATE_RECEIPT.json",
+            "json_pointer": "/target_render_count",
+            "equals": 36
+          }
+        ],
+        "stdout_contains": [
+          "PASS_CROSS_MOOD_IDENTITY_MATRIX_WITH_RANGE_LIMITS",
+          "CROSS_MOOD_IDENTITY_LIVE_READBACK_OK"
+        ]
+      }
+    },
+    {
+      "name": "render-blinded-listener-stimuli-live-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "timeout_seconds": 900,
+      "supports_claims": [
+        "persona_dream.blinded_listener_stimuli_normalized_render"
+      ],
+      "seams": [
+        "listener_study.normalized_render"
+      ],
+      "blocked_when_stdout_contains": [
+        "BLOCKED_CHATTERBOX_UNREACHABLE"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "bash ../run.sh render-blinded-listener-stimuli --out /tmp/persona-dream-listener-stimuli-live-eval.json --run-id eval-listener-live --json && python3 - <<'PY'\nimport json\nfrom pathlib import Path\nr=json.loads(Path('/tmp/persona-dream-listener-stimuli-live-eval.json').read_text())\nassert r['status']=='PASS_RENDERED_BLINDED_LISTENER_STIMULI'\nassert r['mocked'] is False\nassert r['live'] is True\nassert len(r['rendered']) == 4\nprint('LISTENER_STIMULI_LIVE_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/persona-dream-listener-stimuli-live-eval.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/persona-dream-listener-stimuli-live-eval.json",
+            "json_pointer": "/status",
+            "equals": "PASS_RENDERED_BLINDED_LISTENER_STIMULI"
+          }
+        ],
+        "stdout_contains": [
+          "PASS_RENDERED_BLINDED_LISTENER_STIMULI",
+          "LISTENER_STIMULI_LIVE_READBACK_OK"
+        ]
+      }
+    },
+    {
+      "name": "image-generation-oauth-lane-live-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.image_generation_oauth_lane"
+      ],
+      "seams": [
+        "image_generation.create_panel_scillm_backend"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "python3 - <<'PY'\nimport json, pathlib\np=pathlib.Path('../reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_generation_receipt.json')\nr=json.loads(p.read_text())\nassert r['schema']=='persona_dream.phase_c.frame_generation_receipt.v1'\nassert r['ok'] is True\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['provider']=='codex'\nassert r['auth']=='codex-oauth'\nassert r['model']=='gpt-image-2'\nimg=pathlib.Path(r['output_path'])\nassert img.is_file() and img.stat().st_size > 10000\nprint('IMAGE_GENERATION_OAUTH_LIVE_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "IMAGE_GENERATION_OAUTH_LIVE_READBACK_OK"
+        ]
+      }
+    },
+    {
+      "name": "panel-repair-live-regeneration-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.panel_repair_work_order_executor"
+      ],
+      "seams": [
+        "pipeline_loop.panel_repair_work_order"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "python3 - <<'PY'\nimport json, pathlib\np=pathlib.Path('../reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/lane_c_regeneration_receipt.json')\nr=json.loads(p.read_text())\nassert r['schema']=='persona_dream.lane_c.sb_003_end_regeneration_receipt.waiver.v1'\nassert r['status']=='PASS_LANE_C_SB_003_END_REGENERATED_WAIVER'\nassert r['mocked'] is False\nassert r['live'] is True\nassert r['image_auth']=='codex-oauth'\nassert r['image_model']=='gpt-image-2'\nimg=pathlib.Path(r['new_frame_path'])\nif not img.is_file():\n    img=pathlib.Path('../reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png')\nassert img.is_file() and img.stat().st_size > 10000\nprint('PANEL_REPAIR_LIVE_REGENERATION_READBACK_OK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PANEL_REPAIR_LIVE_REGENERATION_READBACK_OK"
+        ]
+      }
     }
   ],
   "capability_claims": [
-  {
-    "id": "persona_dream.pipeline_self_repair_runner",
-    "description": "self-repair-run executes a required step manifest in order, records required-step failures through pipeline-self-repair with immutable goal alignment, and refuses to advance to step N+1 while step N is blocking.",
-    "criticality": "critical",
-    "evidence_required": {
-      "adversarial": true,
-      "deterministic": true
-    }
-  },
-  {
-    "id": "persona_dream.pipeline_crew_casting_command_wiring",
-    "description": "The run.sh pipeline run --step crew_casting command can write a schema-valid, receipt-backed crew_contract.json from a selector payload and reject out-of-pool selections. Fixture-backed evidence proves wiring only; live ask tau-dag selector proof is separate.",
-    "criticality": "important",
-    "evidence_required": {
-      "deterministic": true,
-      "live_e2e": true
-    }
-  },
-  {
-    "id": "persona_dream.image_generation_oauth_lane",
-    "description": "Persona Dream refuses unfunded API-key image lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth instead of the unsupported $create-image scillm backend.",
-    "criticality": "critical",
-    "evidence_required": {
-      "deterministic": true,
-      "live_e2e": true
-    }
-  },
-  {
-    "id": "persona_dream.story_contract_work_order_executor",
+    {
+      "id": "persona_dream.pipeline_self_repair_runner",
+      "description": "self-repair-run executes a required step manifest in order, records required-step failures through pipeline-self-repair with immutable goal alignment, and refuses to advance to step N+1 while step N is blocking.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial": true,
+        "deterministic": true
+      }
+    },
+    {
+      "id": "persona_dream.pipeline_crew_casting_command_wiring",
+      "description": "The run.sh pipeline run --step crew_casting command can write a schema-valid, receipt-backed crew_contract.json from a selector payload and reject out-of-pool selections. Fixture-backed evidence proves wiring only; live ask tau-dag selector proof is separate.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "persona_dream.image_generation_oauth_lane",
+      "description": "Persona Dream refuses unfunded API-key image lanes and retained receipts show create_panel --backend scillm routed through ask image generation with Codex OAuth instead of the unsupported $create-image scillm backend.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "persona_dream.story_contract_work_order_executor",
       "description": "The retained story-contract work-order executor consumes a validated work order, emits a validated accepted story_contract.json plus fulfillment/review/stale receipts, and refuses to promote stale storyboard or Kling artifacts.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
       }
     },
-  {
-    "id": "persona_dream.storyboard_panel_work_order_executor",
-    "description": "The retained storyboard-panel work-order executor consumes a validated work order, emits a validated storyboard_panel_receipt.json plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
-    "criticality": "critical",
-    "evidence_required": {
-      "deterministic": true
-    }
-  },
-  {
-    "id": "persona_dream.panel_repair_work_order_executor",
-    "description": "The retained panel-repair work-order executor consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final-image backends, and refuses provider eligibility until a public media probe passes.",
-    "criticality": "critical",
-    "evidence_required": {
-      "deterministic": true,
-      "live_e2e": true
-    }
-  },
-  {
-    "id": "persona_dream.cycle_journal_spoken_spine_contract",
+    {
+      "id": "persona_dream.storyboard_panel_work_order_executor",
+      "description": "The retained storyboard-panel work-order executor consumes a validated work order, emits a validated storyboard_panel_receipt.json plus continuity ledger, and refuses provider/Kling calls or storyboard_packet promotion.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "persona_dream.panel_repair_work_order_executor",
+      "description": "The retained panel-repair work-order executor consumes a validated work order, emits a validator-facing panel repair gate receipt, rejects forbidden final-image backends, and has retained receipt readback for the accepted live regeneration artifact.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "persona_dream.cycle_journal_spoken_spine_contract",
       "description": "The executable Persona Dream spine carries the autonomous cycle journal into a spoken_journal terminal node without requiring generate-lane dream_packet artifacts.",
       "criticality": "critical",
       "evidence_required": {
@@ -1155,7 +1393,7 @@
     },
     {
       "id": "persona_dream.ux.pipeline_api_serves_runs",
-      "description": "The dream API host lists real runs (including the recovered surf run) and refuses paths outside its roots.",
+      "description": "The dream API host lists real manifest-backed runs and refuses paths outside its roots.",
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true

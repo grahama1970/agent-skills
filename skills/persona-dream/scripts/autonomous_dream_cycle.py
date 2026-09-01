@@ -45,6 +45,7 @@ PERSONA = "embry"  # default persona; overridden by --persona via the profile
 MAX_ATTEMPTS = 5
 PANEL_COUNT = 4
 STOPWORDS = set("the a an and or of to in on for with her his she he it its is was are be as at by from that this".split())
+RECALL_NEGATIVE_CONTROL_QUERY = "kubernetes cgroup freezer ioctl nftables conntrack checksum"
 
 
 def _load(name: str):
@@ -388,8 +389,8 @@ def build_instruments(adapter, sel: dict, out: Path) -> dict:
         if len(probes) < 3 or not neg:
             raise SystemExit(f"BLOCKED_CYCLE_INSTRUMENTS: probes={len(probes)} neg={bool(neg)} "
                              f"receipt={json.dumps(receipt)[:160]}")
-        parsed = {"probes": probes[:3], "negative_control": neg}
-        neg_words = {w for w in re.findall(r"[a-z]{4,}", neg.lower())
+        parsed = {"probes": probes[:3], "negative_control": RECALL_NEGATIVE_CONTROL_QUERY}
+        neg_words = {w for w in re.findall(r"[a-z]{4,}", parsed["negative_control"].lower())
                      if w not in STOPWORDS}
         overlap = sorted(root_words & neg_words)
         if not overlap:

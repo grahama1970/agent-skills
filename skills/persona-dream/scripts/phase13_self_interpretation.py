@@ -189,6 +189,7 @@ def validate_candidate(
     observation_ids: set[str],
     source_ids: set[str],
     defect_observation_ids: set[str],
+    allowed_targets: set[str] | None = None,
 ) -> list[str]:
     """Return a list of rejection reasons. Empty list == admissible."""
     reasons: list[str] = []
@@ -196,6 +197,10 @@ def validate_candidate(
     for field in ("interpretation_id", "tom_state_type", "subject", "target", "statement"):
         if not str(candidate.get(field) or "").strip():
             reasons.append(f"MISSING_FIELD:{field}")
+
+    target = str(candidate.get("target") or "").strip()
+    if allowed_targets is not None and target and target not in allowed_targets:
+        reasons.append(f"TARGET_OUTSIDE_CONTRACT:{target}")
 
     obs_refs = candidate.get("observation_refs")
     if not isinstance(obs_refs, list) or not obs_refs:
@@ -238,13 +243,14 @@ def validate_interpretations(
     candidates: list[dict[str, Any]],
     observation_index: list[dict[str, Any]],
     source_ids: set[str],
+    allowed_targets: set[str] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     observation_ids = {o["observation_id"] for o in observation_index}
     defect_ids = renderer_defect_observation_ids(observation_index)
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     for cand in candidates:
-        reasons = validate_candidate(cand, observation_ids, source_ids, defect_ids)
+        reasons = validate_candidate(cand, observation_ids, source_ids, defect_ids, allowed_targets)
         if reasons:
             rejected.append({"interpretation_id": cand.get("interpretation_id", "?"), "reasons": reasons})
         else:
@@ -496,7 +502,12 @@ def run_phase13(
         llm_meta["candidate_count"] = len(candidates)
         llm_meta["tau_routing"] = tau_adapter.receipt_provenance(tau_receipt)
 
-    accepted, rejected = validate_interpretations(candidates, observation_index, source_ids)
+    accepted, rejected = validate_interpretations(
+        candidates,
+        observation_index,
+        source_ids,
+        allowed_targets={str(example_target), "unknown_person"},
+    )
 
     defect_ids = renderer_defect_observation_ids(observation_index)
     drift_dual = any(

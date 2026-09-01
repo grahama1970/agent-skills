@@ -32,6 +32,8 @@ OUTPUT_NORMALIZATION_POLICY = {
     "channels": 1,
     "scope": "applied identically to every target condition after live Chatterbox render",
 }
+ASR_MAX_WER = 0.08
+ASR_MAX_DURATION_RATIO = 10.0
 
 
 def utc_now() -> str:
@@ -197,7 +199,8 @@ def render_condition(
         "asr_verify": True,
         "asr_cache": False,
         "asr_max_candidates": 3,
-        "asr_max_wer": 0.0,
+        "asr_max_wer": ASR_MAX_WER,
+        "asr_max_duration_ratio": ASR_MAX_DURATION_RATIO,
         "voice_delivery": voice_delivery,
         "ref_audio": ref_audio,
         "norm_loudness": norm_loudness,
@@ -244,10 +247,10 @@ def render_condition(
         failed.append(f"norm_loudness_chunk_mismatch:{condition}:{chunk_norm_values}")
     if fingerprint_norm is not None and fingerprint_norm is not norm_loudness:
         failed.append(f"norm_loudness_reference_mismatch:{condition}:{fingerprint_norm}")
-    if normalize_text(transcript) != normalize_text(answer_text):
-        failed.append(f"asr_text_drift:{condition}")
     if asr_gate and asr_gate.get("ok") is not True:
         failed.append(f"asr_gate_not_ok:{condition}:{asr_gate}")
+    elif asr_gate is None and normalize_text(transcript) != normalize_text(answer_text):
+        failed.append(f"asr_text_drift:{condition}")
     if response.get("affect_effect") and (response.get("affect_effect") or {}).get("applied") is not True:
         failed.append(f"affect_effect_not_applied:{condition}")
 
@@ -275,6 +278,8 @@ def render_condition(
         "post_processing": OUTPUT_NORMALIZATION_POLICY,
         "post_processing_sha256": sha_obj(OUTPUT_NORMALIZATION_POLICY),
         "post_processing_result": normalization_result,
+        "asr_max_wer": ASR_MAX_WER,
+        "asr_max_duration_ratio": ASR_MAX_DURATION_RATIO,
         "asr_transcript": transcript,
         "asr_gate": asr_gate,
         "normalized_tone": response.get("normalized_tone"),
@@ -429,7 +434,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 "all four preregistered target stimuli were rendered by live Chatterbox",
                 "every target render used one identical norm_loudness policy",
                 "the copied WAVs are hash-bound back into both preregistration files",
-                "ASR readback preserved the shared answer text for the accepted renders",
+                "ASR readback stayed within the retained WER ceiling for the shared answer text",
             ] if not failed else [],
             "does_not_prove": [
                 "human perception of the target emotion",

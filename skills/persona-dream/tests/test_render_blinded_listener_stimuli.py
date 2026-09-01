@@ -1,3 +1,9 @@
+"""test_render_blinded_listener_stimuli - tests.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 import importlib.util
 import json
 from pathlib import Path
