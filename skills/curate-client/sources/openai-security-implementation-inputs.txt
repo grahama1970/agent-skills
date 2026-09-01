@@ -1,0 +1,1 @@
+https://raw.githubusercontent.com/openai/openai-openapi/main/openapi.yaml
