@@ -126,6 +126,38 @@ Rules enforced by `scripts/receipt_envelope.py` (pydantic, extra=forbid):
   referenced receipt exists, matches `expected_schema`/`expected_producer`, and
   shares the goal before trusting an escalation (replaces ad hoc file paths).
 
+## Shared JSON field conventions
+
+The fields below are the actual shared surface. A component "shares" a field
+when it emits or validates the same name, shape, and semantics as the owner.
+
+| Field | Shape | Owner | Shared by |
+| --- | --- | --- | --- |
+| `schema` | versioned id, e.g. `pi.agent_status.v1` | each schema owner | every contract object; version bumps are additive-or-new-name |
+| `code` (triage) | catalog entry or `<prefix>_unclassified_<8hex>` | triage-error | shame `failure.triage.code`, envelope `triage_code`, herdr dead-letters, ask recovery packets |
+| `cause` / `next_command` | plain string / exact runnable command | triage-error | every consumer of a triage classification; `next_command` is also the shame `continuing` keep-going field |
+| `goal_hash` | `sha256:` + 64 lowercase hex | tau (immutable goal packet) | shame status (optional), envelope (optional), every tau node receipt |
+| `verified[]` | `{command, result}` pairs | shame | done-state proof everywhere a status object is embedded |
+| `proof[]` | concrete paths/URLs/ids | shame | status objects; watchdog proof gates name the same artifacts |
+| `parent_refs[]` | `{receipt_id, expected_schema, expected_producer, digest?}` | agent-ecosystem envelope | escalation evidence (replaces ad hoc paths in `needs_webgpt`) |
+| `producer` / `receipt_id` / `emitted_at` | string / stable id / RFC3339 | agent-ecosystem envelope | any boundary-wrapped receipt |
+| terminal verdicts | `PASS FAIL BLOCKED NEEDS_ATTENTION` | tau | ask joins, watchdog proof gates, stream monitors |
+| `recoverable` / `not_this` | bool / exclusion list | triage-error catalog | consumers deciding retry vs escalate |
+
+### triage-error conventions (normative here, implemented there)
+
+1. One raw signal maps to ONE `{code, cause, next_command}`; a generic code at
+   a layer boundary is a bug, not a classification.
+2. Catalog entries live in `skills/triage-error/failure_codes.json` with
+   `{code, layer, match[], cause, next_command, recoverable, not_this[]}`;
+   matching is lowercase substring tokens, never regex, never LLM judgment.
+3. Unmatched signals mint `<prefix>_unclassified_<8hex>` deterministically and
+   open the ticket + agentic-eval + memory loop; a recurring minted code gets
+   promoted to the catalog or aliased, never left to sprawl.
+4. Every ecosystem component that names a failure uses a catalog or minted
+   code. Both pydantic validators (status schema, envelope) enforce this at
+   parse time, so an ambiguous label cannot exist in a valid object.
+
 ## Design rulings (from the external review)
 
 1. Strictness applies to DECISIONS, not observations. Keep raw evidence
