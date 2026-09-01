@@ -3,7 +3,7 @@
 
 Fetcher artifacts are content-hash named and do not embed their source URL.
 This gate reads consumer_summary.json, accepts only usable official OpenAI
-results, adds provenance, and atomically emits curated Markdown plus receipts.
+results, adds provenance, and performs rollback-safe curated promotion with receipts.
 """
 from __future__ import annotations
 
@@ -77,6 +77,19 @@ def artifact_for(summary_path: Path, item: dict[str, Any]) -> tuple[Path, str] |
         raw = (item.get("artifacts") or {}).get(key)
         if not raw:
             continue
+        if key == "download_path":
+            content_type = str(item.get("content_type") or "").lower()
+            source_url = str(item.get("original_url") or item.get("requested_url") or "")
+            suffix = Path(urlparse(source_url).path).suffix.lower()
+            raw_text_ok = (
+                any(token in content_type for token in (
+                    "text/plain", "text/markdown", "application/json",
+                    "application/yaml", "application/x-yaml",
+                ))
+                or suffix in {".md", ".mdx", ".txt", ".json", ".yaml", ".yml"}
+            )
+            if not raw_text_ok:
+                continue
         candidate = Path(str(raw)).expanduser()
         if not candidate.is_absolute():
             candidate = summary_path.parent / candidate
@@ -159,6 +172,7 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
     expected = {item.name: load_urls(item.path) for item in args.expected_url_file}
     target = args.staged_root.resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
+    args.manifest_out.unlink(missing_ok=True)
     temp = Path(tempfile.mkdtemp(prefix=f".{target.name}.", dir=target.parent))
 
     documents: list[dict[str, Any]] = []
@@ -269,11 +283,15 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
                 blocked.append(message)
 
         status = "FAIL" if blocked else ("PASS_WITH_WARNINGS" if warnings else "PASS")
+        corpus_digest = hashlib.sha256(
+            "\n".join(sorted(document["digest"] for document in documents)).encode()
+        ).hexdigest()
         receipt = {
             "schema": "openai.security_staging_receipt.v1",
             "status": status,
             "scope": args.scope,
             "staged_root": str(target),
+            "corpus_digest": corpus_digest,
             "counts": {
                 "lanes": len(args.lane), "staged": len(documents),
                 "required_urls": len(required), "blocked": len(blocked),
@@ -283,16 +301,26 @@ def stage(args: argparse.Namespace) -> dict[str, Any]:
         }
         write_json(args.receipt_out, receipt)
         if blocked:
+            shutil.rmtree(target, ignore_errors=True)
             return receipt
 
+        backup = target.with_name(f".{target.name}.previous")
+        shutil.rmtree(backup, ignore_errors=True)
         if target.exists():
-            shutil.rmtree(target)
-        temp.rename(target)
-        temp = None
+            target.rename(backup)
+        try:
+            temp.rename(target)
+            temp = None
+        except OSError:
+            if backup.exists() and not target.exists():
+                backup.rename(target)
+            raise
+        shutil.rmtree(backup, ignore_errors=True)
         write_json(args.manifest_out, {
             "schema": "curate_client.source_manifest.v1",
             "client": args.scope.removeprefix("client:"),
             "scope": args.scope,
+            "corpus_digest": corpus_digest,
             "generated_from": [str(item.path) for item in args.lane],
             "documents": sorted(documents, key=lambda item: (item["priority"], item["title"].casefold(), item["url"])),
         })
@@ -320,6 +348,8 @@ def main() -> int:
     try:
         receipt = stage(args)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
+        args.manifest_out.unlink(missing_ok=True)
+        shutil.rmtree(args.staged_root, ignore_errors=True)
         receipt = {
             "schema": "openai.security_staging_receipt.v1",
             "status": "FAIL",
