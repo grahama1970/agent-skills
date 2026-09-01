@@ -1084,6 +1084,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
         "browser_oracle": resolve_payload,
+        "conversation_identity": _conversation_identity(args, handler, resolve_payload, submit_meta, artifact_dir),
         "browser_oracle_binding_refresh": binding_refresh,
         "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
         "submit_meta": submit_meta,
@@ -2053,6 +2054,44 @@ def _live_tab_url(surf_run: str, tab_id: str, *, commands: list[dict[str, Any]])
         if str(tab.get("id") or "") == str(tab_id):
             return str(tab.get("url") or "").strip()
     return ""
+
+
+def _conversation_identity(
+    args: argparse.Namespace,
+    handler: str,
+    resolve_payload: dict[str, Any],
+    submit_meta: Any,
+    artifact_dir: Path,
+) -> dict[str, Any] | None:
+    """Durable conversation identity for a browser lane (#1585).
+
+    Recorded in node-receipt.json before lifecycle cleanup closes the tab, so a
+    follow-up review can reopen or rebind the same provider conversation instead
+    of reconstructing context in a fresh one.
+    """
+    if handler not in HANDLER_SUBMIT_COMMANDS or not resolve_payload:
+        return None
+    tab_id = str(resolve_payload.get("tab_id") or "")
+    meta = submit_meta if isinstance(submit_meta, dict) else {}
+    url = _proven_live_browser_conversation_url(handler, meta)
+    if not url and tab_id:
+        try:
+            url = _current_tab_url(args, tab_id)
+        except Exception:
+            url = ""
+    if not url:
+        url = str(resolve_payload.get("conversation_url") or "")
+    window_id = ""
+    lifecycle = _read_optional_json(artifact_dir.parent.parent / "browser-tab-lifecycle.json")
+    for tab in lifecycle.get("created_tabs") or []:
+        if isinstance(tab, dict) and str(tab.get("tab_id") or "") == tab_id:
+            window_id = str(tab.get("window_id") or "")
+            break
+    return {
+        "conversation_url": url or None,
+        "tab_id": tab_id or None,
+        "window_id": window_id or None,
+    }
 
 
 def _proven_live_browser_conversation_url(handler: str, meta: dict[str, Any]) -> str:

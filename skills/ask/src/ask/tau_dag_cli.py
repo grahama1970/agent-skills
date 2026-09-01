@@ -307,6 +307,13 @@ def run(
             ),
         ),
     ] = "auto",
+    browser_resume_run: Annotated[
+        str,
+        typer.Option(
+            "--browser-resume-run",
+            help="Prior Ask run directory; browser seats reopen each handler's recorded conversation_url (#1585).",
+        ),
+    ] = "",
     browser_lock_timeout: Annotated[
         int,
         typer.Option(
@@ -453,6 +460,7 @@ def run(
                 mode=browser_tab_lifecycle,
                 run_dir=Path(str(bundle["run_dir"])),
                 timeout_budget_seconds=int(poll_timeout_seconds) if execute else 0,
+                resume_run=Path(browser_resume_run) if browser_resume_run else None,
             )
             if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
                 input_payload = replace(
@@ -635,6 +643,13 @@ def compete(
             ),
         ),
     ] = "auto",
+    browser_resume_run: Annotated[
+        str,
+        typer.Option(
+            "--browser-resume-run",
+            help="Prior Ask run directory; browser seats reopen each handler's recorded conversation_url (#1585).",
+        ),
+    ] = "",
     browser_lock_timeout: Annotated[
         int,
         typer.Option(
@@ -784,6 +799,7 @@ def compete(
                 mode=browser_tab_lifecycle,
                 run_dir=Path(str(bundle["run_dir"])),
                 timeout_budget_seconds=int(poll_timeout_seconds) if execute else 0,
+                resume_run=Path(browser_resume_run) if browser_resume_run else None,
             )
             if lifecycle.get("status") == "READY" and lifecycle.get("handler_projects"):
                 input_payload = replace(
@@ -1325,12 +1341,20 @@ def _select_available_browser_handlers(
             # Measured 2026-08-16: 20 open chatgpt tabs, two of them Ask review
             # tabs left behind holding "Too many requests", and webgpt was
             # removed from every run until they were closed by hand.
-            if _provider_limit_is_attributable(payload, name, input_payload):
+            if _provider_limit_is_attributable(payload, name, input_payload) or name in set(requested):
                 unusable[name] = "provider_limited"
             else:
                 advisory_limited[name] = "ambient_tab_rate_limited"
         elif payload.get("probe_failed") is True:
-            unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
+            packet = payload.get("provider_probe_recovery_packet")
+            if (
+                isinstance(packet, dict)
+                and packet.get("auto_retry_blocked_reason") == "provider_probe_uncertain_requires_readback"
+            ):
+                unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
+                probe_uncertain.add(name)
+            else:
+                unusable[name] = str(payload.get("failure_code") or "browser_provider_probe_failed")
         elif payload.get("probe_degraded") is True:
             packet = payload.get("provider_probe_recovery_packet")
             blocked = isinstance(packet, dict) and packet.get("auto_retry_allowed") is False
@@ -1346,15 +1370,7 @@ def _select_available_browser_handlers(
     removed: list[str] = []
     for handler in requested:
         if handler in BROWSER_FRESH_URLS and handler in unusable:
-            if handler in probe_uncertain:
-                # Uncertainty is not unavailability (operator 2026-08-19/20):
-                # an UNCONFIRMED probe never removes a seat in ANY run shape.
-                # The fresh-tab worker owns the bounded retry, and the
-                # join-gate contains a genuinely dead lane without starving
-                # the panel. A CONFIRMED blocker still removes below.
-                active.append(handler)
-            else:
-                removed.append(handler)
+            removed.append(handler)
         else:
             active.append(handler)
 
@@ -1366,13 +1382,41 @@ def _select_available_browser_handlers(
     explicit_projects = _explicit_handler_projects(input_payload)
     fresh_lifecycle_kept: list[str] = []
     single_explicit_seat = len(browser_requested) == 1
+    fresh_lifecycle_uncertainty_codes = {
+        "browser_provider_probe_timeout",
+        "browser_provider_probe_failed",
+    }
+    # An UNCERTAIN probe (provider_probe_uncertain_requires_readback, surfaced
+    # as a probe timeout/failure with provider_limited False) must never remove
+    # a fresh-lifecycle browser seat, AT ANY SEAT COUNT. The fresh tab this run
+    # opens is a different tab than the ambient one the probe was unsure about,
+    # and the seat worker owns the bounded provider retry once that tab exists.
+    # This keep was previously gated on single_explicit_seat, so a 5-seat
+    # compete silently dropped an uncertain webgemini to a claude-opus-5-high
+    # API substitute -- 4 tabs in the shared window instead of 5 (operator
+    # report 2026-08-25, run compete-5seat-shared: removed_handlers
+    # ['webgemini'], failure_code browser_provider_probe_timeout, provider
+    # availability DEGRADED/provider_limited False). A CONFIRMED blocker
+    # (provider_limited True) still removes; this rescues only the uncertain.
+    if _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle):
+        rescued_uncertain = [
+            handler for handler in list(removed)
+            if handler in probe_uncertain
+            and unusable.get(handler) in fresh_lifecycle_uncertainty_codes
+            and handler not in explicit_projects
+        ]
+        for handler in rescued_uncertain:
+            removed.remove(handler)
+            active.append(handler)
+            fresh_lifecycle_kept.append(handler)
     if (
         single_explicit_seat
         and removed == browser_requested
         and _browser_lifecycle_creates_fresh_tabs(input_payload, browser_tab_lifecycle)
         and browser_requested[0] not in explicit_projects
         and all(
-            unusable.get(handler) == "provider_limited" or handler in probe_uncertain
+            unusable.get(handler) == "provider_limited"
+            or (handler in probe_uncertain and unusable.get(handler) in fresh_lifecycle_uncertainty_codes)
             for handler in removed
         )
     ):
@@ -1730,6 +1774,20 @@ def browser_provider_selection_blocked_execution(selection: dict[str, Any]) -> d
     }
 
 
+def _resume_conversation_urls(prior_run: Path) -> dict[str, str]:
+    """conversation_url per handler recorded by a prior run's browser lanes (#1585)."""
+    urls: dict[str, str] = {}
+    for receipt_path in sorted(prior_run.glob("node-artifacts/handler-*/node-receipt.json")):
+        receipt = _read_json_file(receipt_path)
+        if not isinstance(receipt, dict):
+            continue
+        identity = receipt.get("conversation_identity")
+        handler = str(receipt.get("handler") or "")
+        if handler and isinstance(identity, dict) and identity.get("conversation_url"):
+            urls[handler] = str(identity["conversation_url"])
+    return urls
+
+
 def _write_browser_availability(run_dir: Path, report: dict[str, Any]) -> None:
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "browser-provider-availability.json").write_text(
@@ -1746,6 +1804,7 @@ def _provision_browser_lifecycle(
     timeout_budget_seconds: int = 0,
     surf_run: Path | None = None,
     browser_oracle_run: Path | None = None,
+    resume_run: Path | None = None,
 ) -> dict[str, Any]:
     mode = (mode or "auto").strip()
     browser_handlers = [handler for handler in input_payload.handlers if handler in BROWSER_FRESH_URLS]
@@ -1816,13 +1875,15 @@ def _provision_browser_lifecycle(
         )
     shared_window = mode in SHARED_BROWSER_LIFECYCLE_MODES
     shared_window_id = ""
+    resume_urls = _resume_conversation_urls(resume_run) if resume_run else {}
     for handler in browser_handlers:
+        seat_url = resume_urls.get(handler) or BROWSER_FRESH_URLS[handler]
         project = f"{lifecycle_id}-{handler}"
         if shared_window and shared_window_id:
             window_command = [
                 str(surf_run),
                 "tab.new",
-                BROWSER_FRESH_URLS[handler],
+                seat_url,
                 "--json",
                 "--window-id",
                 shared_window_id,
@@ -1838,7 +1899,7 @@ def _provision_browser_lifecycle(
             window_command = [
                 str(surf_run),
                 "window.new",
-                BROWSER_FRESH_URLS[handler],
+                seat_url,
                 "--json",
                 "--unfocused",
                 "--lock-timeout",
@@ -1887,7 +1948,8 @@ def _provision_browser_lifecycle(
                 "handler": handler,
                 "project": project,
                 "tab_id": seat_tab_id,
-                "url": BROWSER_FRESH_URLS[handler],
+                "url": seat_url,
+                "resumed_conversation_url": resume_urls.get(handler),
                 "window_id": seat_window_id,
             }
         )
@@ -1957,6 +2019,8 @@ def _provision_browser_lifecycle(
         "window_id": window_id,
         "identity_guard": verified_identity_guard,
         "created_tabs": created_tabs,
+        "resume_run": str(resume_run) if resume_run else None,
+        "resumed_conversation_urls": resume_urls or None,
         "handler_projects": handler_projects,
         "lock_timeout_seconds": lock_timeout_seconds,
         "command_timeout_seconds": command_timeout_seconds,
