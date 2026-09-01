@@ -24,13 +24,13 @@ On assistant `message_end`, it:
 4. validates the final `pi.agent_status.v1` JSON with pydantic instead of classifying prose;
 5. rejects missing local `proof[]`, failed known receipt schemas, and `verified[]` entries not backed by local proof text;
 6. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final `state=done` report while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
-7. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
-8. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
-9. queues one `UNLAZY_FORCED_RETRY` with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
-10. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>`;
-11. refuses to queue a second automatic retry for the same originating turn.
+7. ignores trailing prose after valid status JSON because pydantic data is authoritative and the renderer discards model prose;
+8. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
+9. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
+10. queues up to three `UNLAZY_FORCED_RETRY` follow-ups with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
+11. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>` after automatic repair is exhausted.
 
-The guard no longer auto-activates from Pi’s system prompt or loaded `AGENTS.md` files. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not end in the required `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
+The default mode is `strict` unless `LAZY_REPORT_SHAME_DEFAULT_MODE=normal|off|strict` or `/shame normal|off|strict` overrides it for a session. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add a one-turn reminder. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not carry valid `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide reminders explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
 
 ## Continuation guard file
 
@@ -96,13 +96,13 @@ These fail outright on guarded turns:
 - `state=done` with no `changed`, no `verified`, no `proof`, or any `not_done` item.
 - `state=continuing` without `not_done[].next_command`.
 - `state=needs_human` without an exact human action and reason.
-- Any content after the final status JSON block.
+- Missing or malformed status JSON. Trailing prose after a valid status JSON block is ignored, not accepted as truth.
 
 The retained `$agentic-evals` include `skills/shame/scripts/check-status-guard-data-first.mjs`. That check fails if `status-json-check.mjs` reintroduces status-prose policy symbols, regex helpers, or a live behavior where bad prose overrides valid JSON or good prose rescues invalid JSON.
 
 ## Required report shape
 
-A guarded answer must end with a final fenced `json` block containing one `pi.agent_status.v1` object. For `state=done`, every local `proof[]` entry must exist, known JSON receipt schemas must pass their schema-specific checks, and each `verified[]` command/result pair must appear in local proof text when local proof is supplied. The extension renders the visible report from that data.
+A guarded answer must include a fenced `json` block containing one `pi.agent_status.v1` object. For `state=done`, every local `proof[]` entry must exist, known JSON receipt schemas must pass their schema-specific checks, and each `verified[]` command/result pair must appear in local proof text when local proof is supplied. The extension renders the visible report from that data and ignores trailing prose.
 
 Rules:
 

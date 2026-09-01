@@ -332,6 +332,28 @@
         "exit_code": 0
       },
       "real_world": true
+    },
+    {
+      "name": "trailing-content-after-valid-json-is-ignored",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.trailing_content_after_valid_json_ignored"
+      ],
+      "seams": [
+        "status-json-check",
+        "extension-renderer"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && printf 'c r\\n' >/tmp/trailing-proof.txt; printf 'answer\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/trailing-proof.txt\"]}\\n```\\nextra prose that must be ignored\\n' | LRSSS_FORCE_STATUS=1 node extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-trailing-ignored.json && grep -q '\"decision\": \"pass\"' /tmp/sj-trailing-ignored.json && grep -q ignored_trailing_content_chars /tmp/sj-trailing-ignored.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
     }
   ],
   "claims": {
@@ -446,6 +468,14 @@
     {
       "id": "shame.known_receipt_schemas_must_pass",
       "description": "known JSON proof receipt schemas are validated before done can pass",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.trailing_content_after_valid_json_ignored",
+      "description": "valid pi.agent_status.v1 data remains authoritative when prose appears after the JSON; renderer ignores trailing prose",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true

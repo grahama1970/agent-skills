@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-01.status-json-data-first.v6';
+const CHECKER_VERSION = '2026-09-01.status-json-data-first.v7';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
@@ -104,11 +104,7 @@ if (!statusJson) {
   emit('pass', ['no_status_required_non_mutating_turn']);
 }
 
-if (text.slice(extractedStatus.end).trim()) {
-  emit('reject', ['trailing_content_after_status_json'], {
-    correction: 'The pi.agent_status.v1 JSON block must be the final content so the hook can validate and compile it deterministically.',
-  });
-}
+const trailingContent = text.slice(extractedStatus.end).trim();
 
 if (!existsSync(VALIDATOR)) {
   emit('error', ['validator_script_missing'], { validator: VALIDATOR });
@@ -187,4 +183,5 @@ const parsedStatus = JSON.parse(statusJson);
 emit('pass', ['valid_agent_status_json'], {
   state: verdict.state,
   status: parsedStatus,
+  ignored_trailing_content_chars: trailingContent.length,
 });

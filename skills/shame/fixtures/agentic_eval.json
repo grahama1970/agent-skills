@@ -184,6 +184,30 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.trailing_content_after_valid_json_ignored",
+      "description": "valid pi.agent_status.v1 data remains authoritative when prose appears after the JSON; renderer ignores trailing prose",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.retry_exhaustion_is_failure_not_human_label_nonupdate",
+      "description": "after automatic retries are exhausted, the guard reports status_contract_retry_exhausted instead of a needs_human label-this-candidate non-update",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.extension_default_mode_is_strict",
+      "description": "project-agent extension sessions default to strict mode unless explicitly overridden",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -1428,7 +1452,8 @@
         "stdout_contains": [
           "\"ok\":true"
         ]
-      }
+      },
+      "notes": ""
     },
     {
       "name": "webgpt-50-second-fence-after-json",
@@ -1452,7 +1477,8 @@
         "stdout_contains": [
           "\"ok\":true"
         ]
-      }
+      },
+      "notes": ""
     },
     {
       "name": "webgpt-hardening-remaining-fixes-continuing",
@@ -1477,7 +1503,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-50-what-remains-heading-continuing",
@@ -1813,7 +1839,8 @@
         "stdout_contains": [
           "\"ok\":true"
         ]
-      }
+      },
+      "notes": ""
     },
     {
       "name": "webgpt-50-only-old-status-report-before-final-json",
@@ -1888,7 +1915,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-hidden-html-attribute-values",
@@ -1914,7 +1941,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-indented-pseudofenced-json",
@@ -1940,7 +1967,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-reference-values",
@@ -1966,7 +1993,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-midline-pseudofenced-json",
@@ -1992,7 +2019,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-quoted-values-wrong-labels",
@@ -2018,7 +2045,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-unequal-length-fenced-heading",
@@ -2044,7 +2071,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-validator-nonzero-with-valid-true",
@@ -2070,7 +2097,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-html-comment-inside-word-continuing",
@@ -2096,7 +2123,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-duplicate-changed-contradiction",
@@ -2122,7 +2149,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-pre-heading",
@@ -2148,7 +2175,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-pre-json-fence",
@@ -2174,7 +2201,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-substring-negated-changed",
@@ -2200,7 +2227,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-trailing-html-comment-after-json",
@@ -2226,7 +2253,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-trailing-reference-after-json",
@@ -2252,7 +2279,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-trailing-template-after-json",
@@ -2278,7 +2305,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-html-entity-continuing",
@@ -2304,7 +2331,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-multiline-html-comment-status-report",
@@ -2330,7 +2357,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-nobreak-entity-continuing",
@@ -2356,7 +2383,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-word-joiner-continuing",
@@ -2382,7 +2409,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-bidi-heading",
@@ -2408,7 +2435,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-bidi-rlo-entity-continuing",
@@ -2434,7 +2461,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-bidi-rlo-raw-continuing",
@@ -2460,7 +2487,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-bdo-reversed-what-remains",
@@ -2486,7 +2513,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-bdo-visible-projection-mismatch",
@@ -2512,7 +2539,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-inline-css-bidi-override",
@@ -2538,7 +2565,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-bdo-ancestor-reversed-what-remains",
@@ -2564,7 +2591,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-css-bidi-ancestor-reversed-what-remains",
@@ -2590,7 +2617,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-image-title-hidden-status-report",
@@ -2616,7 +2643,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-link-title-hidden-status-report",
@@ -2642,7 +2669,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-duplicate-array-multiset-laundering",
@@ -2668,7 +2695,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-markdown-nested-link-title-hidden-status-report",
@@ -2694,7 +2721,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "webgpt-hardening-what-remains-tab-entity-continuing",
@@ -2720,7 +2747,7 @@
           "\"ok\":true"
         ]
       },
-      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/trailing/duplicate JSON remains rejected by the typed checker."
+      "notes": "Data-first guard: adversarial prose around a valid final pi.agent_status.v1 object must not decide status validity; invalid/duplicate JSON remains rejected; trailing prose after valid JSON is ignored by the typed checker."
     },
     {
       "name": "schema-rejects-parked-done-and-empty-changed",
@@ -2881,6 +2908,71 @@
         "bash",
         "-lc",
         "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh guard write /tmp/shame-continuation-schema-eval.json ticket-or-orchestrate './next-command' && skills/shame/run.sh guard validate /tmp/shame-continuation-schema-eval.json && LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE=/tmp/shame-continuation-schema-eval.json LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh continuation-open-ticket | grep -q followup_injected"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "trailing-content-after-valid-json-is-ignored",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.trailing_content_after_valid_json_ignored"
+      ],
+      "seams": [
+        "status-json-check",
+        "extension-renderer"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && printf 'c r\\n' >/tmp/trailing-proof.txt; printf 'answer\\n```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/trailing-proof.txt\"]}\\n```\\nextra prose that must be ignored\\n' | LRSSS_FORCE_STATUS=1 node extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-trailing-ignored.json && grep -q '\"decision\": \"pass\"' /tmp/sj-trailing-ignored.json && grep -q ignored_trailing_content_chars /tmp/sj-trailing-ignored.json"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "retry-budget-exhausts-as-failure",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.retry_exhaustion_is_failure_not_human_label_nonupdate"
+      ],
+      "seams": [
+        "extension-message-end",
+        "guard-pipeline"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh retry-budget-exhausts-as-failure | grep -q '\"retryMessages\":3'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "extension-default-mode-strict-rejects-plain-status",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.extension_default_mode_is_strict"
+      ],
+      "seams": [
+        "extension-message-end"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh rejection-pending-retry | grep -q '\"retryMessages\":1'"
       ],
       "expected": {
         "exit_code": 0

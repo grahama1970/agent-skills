@@ -106,6 +106,25 @@ async function runRejectionPendingRetry() {
   console.log(JSON.stringify({ ok: true, mode: 'rejection-pending-retry', retryMessages: sent.length, packet, schema: saved.schema, candidateHash: saved.candidate_hash }));
 }
 
+
+async function runRetryBudgetExhaustsAsFailure() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-retry-budget-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: '$shame fix this bad status', source: 'user' });
+  let lastNotice = '';
+  for (let i = 0; i < 4; i += 1) {
+    const result = await handlers.message_end[0]({ id: `assistant-bad-${i}`, message: { id: `assistant-bad-${i}`, role: 'assistant', content: [{ type: 'text', text: `Committed and pushed. Done ${i}.` }] } }, c);
+    lastNotice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  }
+  assert(sent.length === 3, 'retry budget should allow exactly three automatic rewrites', { sentCount: sent.length, sent, lastNotice });
+  assert(lastNotice.includes('- State: failed'), 'retry-exhausted notice must be a failure, not a needs_human non-update', { lastNotice });
+  assert(!lastNotice.includes('- State: needs_human'), 'retry-exhausted notice must not claim human action by default', { lastNotice });
+  assert(lastNotice.includes('status_contract_retry_exhausted'), 'retry-exhausted notice must name the failure', { lastNotice });
+  console.log(JSON.stringify({ ok: true, mode: 'retry-budget-exhausts-as-failure', retryMessages: sent.length }));
+}
+
 async function runShowRecoversPending() {
   const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-pending-packet.json';
   process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET = packet;
@@ -546,6 +565,7 @@ const modes = {
   'empty-tool-turn': runEmptyToolTurn,
   'rejection-pending-retry': runRejectionPendingRetry,
   'show-recovers-pending': runShowRecoversPending,
+  'retry-budget-exhausts-as-failure': runRetryBudgetExhaustsAsFailure,
   'review-fallback': runReviewFallback,
   'direct-label-jsonl': runDirectLabelJsonl,
   'skill-read-guard-blocks-action-before-read': runSkillReadGuardBlocksActionBeforeRead,

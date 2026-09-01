@@ -68,7 +68,7 @@
     {
       "component": "status-json-check.mjs",
       "must": [
-        "MUST only extract the final status JSON, reject duplicate keys/trailing content, and invoke the pydantic validator.",
+        "MUST extract status JSON, reject duplicate keys, ignore trailing prose after valid status data, and invoke the pydantic validator.",
         "MUST NOT decide status truth from regexes, prose headings, markdown, HTML, or LLM judgment.",
         "MUST return the validated status object to the extension renderer."
       ]

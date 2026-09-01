@@ -68,6 +68,12 @@ if (badProseValidJson.status !== 0 || badProseValidJson.parsed?.decision !== 'pa
   process.exit(1);
 }
 
+const trailingAfterValidJson = run(`Status Report\n- Goal: data first guard\n- State: done\n\n\`\`\`json\n${valid}\n\`\`\`\nextra prose after valid JSON must be ignored`);
+if (trailingAfterValidJson.status !== 0 || trailingAfterValidJson.parsed?.decision !== 'pass' || !(trailingAfterValidJson.parsed?.features?.ignored_trailing_content_chars > 0)) {
+  console.error(JSON.stringify({ ok: false, reason: 'trailing_prose_was_not_ignored', actual: trailingAfterValidJson }, null, 2));
+  process.exit(1);
+}
+
 const goodProseInvalidJson = run(`Status Report\n- Goal: data first guard\n- State: done\n- Changed: typed JSON controls status\n- Verified: check-status-guard-data-first.mjs -> PASS\n- Proof: /tmp/data-first-proof.json\n\n\`\`\`json\n${invalid}\n\`\`\``);
 if (goodProseInvalidJson.status === 0 || goodProseInvalidJson.parsed?.decision !== 'reject' || !goodProseInvalidJson.parsed?.reason_codes?.includes('invalid_agent_status_json')) {
   console.error(JSON.stringify({ ok: false, reason: 'prose_rescued_invalid_json', actual: goodProseInvalidJson }, null, 2));

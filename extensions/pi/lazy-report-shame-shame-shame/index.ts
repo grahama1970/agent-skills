@@ -155,7 +155,7 @@ function stripStatusJson(content: unknown, statusJsonText: string): unknown {
     const afterJson = text.slice(fenceEnd + 3);
     const reportAt = Math.max(beforeJson.lastIndexOf("\nStatus Report"), beforeJson.startsWith("Status Report") ? 0 : -1);
     const beforeReport = reportAt >= 0 ? beforeJson.slice(0, reportAt).trimEnd() : beforeJson;
-    return (beforeReport + afterJson).trimEnd();
+    return beforeReport.trimEnd();
   };
   if (typeof content === "string") return removeFrom(content);
   if (!Array.isArray(content)) return content;
@@ -189,6 +189,9 @@ function renderStatusLine(status: any): string {
 }
 
 const SHAME_MODES = new Set(["off", "normal", "strict"]);
+const DEFAULT_SHAME_MODE = SHAME_MODES.has(String(process.env.LAZY_REPORT_SHAME_DEFAULT_MODE || "").trim().toLowerCase())
+  ? String(process.env.LAZY_REPORT_SHAME_DEFAULT_MODE).trim().toLowerCase()
+  : "strict";
 
 function contentToText(content: unknown): string {
   if (typeof content === "string") return content;
@@ -558,12 +561,12 @@ function loadPendingCandidate(): Candidate | null {
 function rejectionNotice(candidate: Candidate, check: CheckResult, retried: boolean, reviewPacketPath: string): string {
   const excerpt = candidateExcerpt(candidate);
   const disposition = retried
-    ? "The bad answer was hidden. One automatic retry was already used for this turn, so no second automatic retry was queued."
+    ? "The bad answer was hidden. The automatic retry budget is exhausted; no project update was accepted."
     : "The bad answer was hidden and one rewrite request was queued.";
   const footerFailures = check.footer_failures.length ? check.footer_failures.join(", ") : "none";
   const next = check.reason_codes.includes("continuation_guard_unresolved_work")
     ? String(check.features?.next_action || "Continue the active goal until unresolved work is closed or blocked.")
-    : "Human may label the raw candidate with /shame review after the corrected answer.";
+    : (retried ? "none; retry budget exhausted without an accepted status object" : "rewrite with a valid pi.agent_status.v1 object");
   return `🦥 REJECTED_BY_SLOTH_COURT
 
 The last answer failed the pi.agent_status.v1 status contract.
@@ -586,10 +589,11 @@ Correction workflow
 
 Status Report
 - Goal: repair rejected status report
-- State: ${retried ? "needs_human" : "continuing"}
+- State: ${retried ? "failed" : "continuing"}
 - Changed: The rejected answer was hidden and replaced with this correction packet.
 - Verified: status-json-check.mjs -> ${check.decision}; checker ${check.checker_version}; footer failures: ${footerFailures}.
 - Proof: ${reviewPacketPath}; rejected candidate ${candidate.response_sha256}.
+${retried ? `- Failure: status_contract_retry_exhausted -> ${check.reason_codes.join(", ") || "unknown"} -> inspect ${reviewPacketPath}` : ""}
 - Not done: ${next}`;
 }
 
@@ -786,7 +790,7 @@ export default function lazyReportShameShameShame(pi: any) {
   let retryInProgress = false;
   // Feature 1 (from ponytail): session-persisted guard mode via custom entries.
   // off = no enforcement; normal = mutating turns need status JSON; strict = every substantive turn.
-  let sessionMode: string = "normal";
+  let sessionMode: string = DEFAULT_SHAME_MODE;
   let lastCandidate: Candidate | null = null;
   let lastWrittenExampleId: string | null = null;
   const retriedTurnIds = new Set<string>();
@@ -864,7 +868,7 @@ export default function lazyReportShameShameShame(pi: any) {
     return {
       systemPrompt:
         systemPrompt +
-        "\n\n[Lazy Report Shame Guard]\nIf you report delivery, GitHub work, commits, pushes, branches, SHAs, issue closure, or implementation status, end with a clear title and plain-spoken bullets. Include the user-visible change, verification/readback or Not verified, proof location or Missing, and remaining work if any. Git metadata and unit tests are supporting evidence, not the user-visible result. Do not invent proof. If the same failure survived twice, stop retrying: ask one plain human question or use $debugger and cite breakpoint/local-state proof." +
+        "\n\n[Lazy Report Shame Guard]\nReport status with pi.agent_status.v1 JSON, not prose. Include the user-visible change in changed[], exact readback in verified[], proof paths in proof[], and unfinished agent work as state=continuing with not_done[].next_command. Git metadata and unit tests are supporting evidence, not the user-visible result. Do not invent proof. If the same failure survived twice, stop retrying: ask one plain human question or use $debugger and cite breakpoint/local-state proof." +
         shameSelfCorrection,
     };
   });
@@ -942,9 +946,9 @@ export default function lazyReportShameShameShame(pi: any) {
         assistantText: text,
         userText: currentUserText,
         reason: [...check.reason_codes, ...check.footer_failures].join(","),
-        maxRetries: 1,
+        maxRetries: 3,
       });
-      const alreadyRetried = retryInProgress || retriedTurnIds.has(turnId) || !pipelineClaim.ok;
+      const alreadyRetried = retriedTurnIds.has(turnId) || !pipelineClaim.ok;
       if (!alreadyRetried) retriedTurnIds.add(turnId);
 
       let reviewPacketPath = PENDING_REVIEW_PACKET;
@@ -973,7 +977,7 @@ export default function lazyReportShameShameShame(pi: any) {
       return {
         message: {
           ...event.message,
-          content: appendText(event.message.content, notice),
+          content: notice,
         },
       };
     } finally {
@@ -989,7 +993,7 @@ export default function lazyReportShameShameShame(pi: any) {
     handler: async (_args: string, ctx: any) => {
       sessionGuardActive = true;
       ctx.ui.notify(
-        "🦥 Shame guard active. Delivery/status reports must end with Status Report bullets: Changed, Verified, Proof, Not done.",
+        "🦥 Shame guard active. Delivery/status reports must include valid pi.agent_status.v1 JSON.",
         "warning",
       );
     },
@@ -1028,7 +1032,7 @@ export default function lazyReportShameShameShame(pi: any) {
           `- Checker: ${candidate.checker_version}`,
           `- Excerpt: ${excerpt}`,
           "- Human choices: /shame review; /shame reject <reason> -- <note>; /shame allow normal_answer -- <note>; /shame warn <reason> -- <note>",
-          "- Correction target: the agent should answer plainly, then end with Status Report bullets: Changed, Verified, Proof, Not done.",
+          "- Correction target: the agent should answer plainly, then include valid pi.agent_status.v1 JSON.",
         ].join("\n"), "info");
         return;
       }
