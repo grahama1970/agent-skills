@@ -18,6 +18,15 @@ function assert(condition, message, details = {}) {
 
 let extensionImportCounter = 0;
 
+// JSON-swallow contract (2026-09-01): an allowed final that carried a valid
+// pi.agent_status.v1 block returns a modified message whose displayed content
+// has the raw JSON stripped; a plain allow still returns undefined.
+function allowedWithSwallow(result) {
+  if (result === undefined) return true;
+  if (!result?.message) return false;
+  return !JSON.stringify(result.message.content || '').includes('pi.agent_status.v1');
+}
+
 async function loadExtension() {
   const handlers = {};
   const commands = {};
@@ -193,7 +202,7 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
     + '```json\n' + okStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-ok', message: { id: 'assistant-ok', role: 'assistant', content: [{ type: 'text', text: finalText }] } }, c);
-  assert(result === undefined, 'closed ticket / passed gates should allow final answer', { result });
+  assert(allowedWithSwallow(result), 'closed ticket / passed gates should allow final answer (JSON swallowed)', { result });
   assert(sent.length === 0, 'allowed final should not queue follow-up', { sent });
   rmSync(guardFile, { force: true });
   console.log(JSON.stringify({ ok: true, mode: 'continuation-closed-ticket-allows-final', followup_injected: false, ticket_gate: 'closed_or_passed' }));
@@ -265,7 +274,7 @@ async function runWhatRemainsAllowedWithNeedsHuman() {
     + '```json\n' + needsHumanStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-needs-human', message: { id: 'assistant-needs-human', role: 'assistant', content: [{ type: 'text', text: okText }] } }, c);
-  assert(result === undefined, 'What remains should be allowed only with state=needs_human', { result });
+  assert(allowedWithSwallow(result), 'What remains should be allowed only with state=needs_human (JSON swallowed)', { result });
   assert(sent.length === 0, 'allowed needs_human status should not queue retry', { sent });
   console.log(JSON.stringify({ ok: true, mode: 'what-remains-allowed-with-needs-human', retryMessages: sent.length }));
 }
@@ -336,7 +345,7 @@ async function runStatusReportMatchesJsonAllowed() {
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-status-report-ok', message: { id: 'assistant-status-report-ok', role: 'assistant', content: [{ type: 'text', text }] } }, c);
-  assert(result === undefined, 'matching Status Report and JSON should pass', { result });
+  assert(allowedWithSwallow(result), 'matching Status Report and JSON should pass (JSON swallowed)', { result });
   assert(sent.length === 0, 'matching Status Report should not queue retry', { sent });
   console.log(JSON.stringify({ ok: true, mode: 'status-report-matches-json-allowed', retryMessages: sent.length }));
 }
@@ -374,7 +383,7 @@ async function runSkillReadGuardAllowsActionAfterFullRead() {
   await handlers.input[0]({ text: '$shame update the guard', source: 'user' }, c);
   await markShameSkillRead(handlers, c);
   const result = await handlers.tool_call[0]({ toolName: 'bash', input: { command: 'echo allowed-after-read' } }, c);
-  assert(result === undefined, 'skill-read guard blocked after full SKILL.md read', { result });
+  assert(allowedWithSwallow(result), 'skill-read guard allows after full SKILL.md read (JSON swallowed)', { result });
   console.log(JSON.stringify({ ok: true, mode: 'skill-read-guard-allows-action-after-full-read', allowed: true }));
 }
 

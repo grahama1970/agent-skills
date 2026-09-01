@@ -141,6 +141,44 @@ type Candidate = {
   turn_id: string;
 };
 
+function stripStatusJson(content: unknown, statusJsonText: string): unknown {
+  // Remove the fenced block containing the validated status object from the
+  // displayed message. Humans see prose; the machine already consumed the JSON.
+  const removeFrom = (text: string): string => {
+    const fenceStart = text.lastIndexOf("```json");
+    if (fenceStart === -1) return text;
+    const fenceEnd = text.indexOf("```", fenceStart + 7);
+    if (fenceEnd === -1) return text;
+    const block = text.slice(fenceStart, fenceEnd + 3);
+    if (!block.includes('"pi.agent_status.v1"')) return text;
+    return (text.slice(0, fenceStart) + text.slice(fenceEnd + 3)).trimEnd();
+  };
+  if (typeof content === "string") return removeFrom(content);
+  if (!Array.isArray(content)) return content;
+  return content.map((part: any) => {
+    if (part && part.type === "text" && typeof part.text === "string" && part.text.includes('"pi.agent_status.v1"')) {
+      return { ...part, text: removeFrom(part.text) };
+    }
+    return part;
+  });
+}
+
+function renderStatusLine(status: any): string {
+  const state = String(status?.state || "unknown");
+  const parts: string[] = [`\u23fa status: ${state}`];
+  if (Array.isArray(status?.verified) && status.verified.length) parts.push(`verified ${status.verified.length}`);
+  if (Array.isArray(status?.proof) && status.proof.length) parts.push(`proof: ${String(status.proof[0]).slice(0, 60)}`);
+  if (status?.failure?.triage?.code) parts.push(`triage: ${status.failure.triage.code}`);
+  if (status?.needs_human?.action) parts.push(`human: ${String(status.needs_human.action).slice(0, 80)}`);
+  const nextCommand = Array.isArray(status?.not_done)
+    ? status.not_done.map((item: any) => String(item?.next_command || "")).find((cmd: string) => cmd.trim())
+    : undefined;
+  if (nextCommand) parts.push(`next: ${nextCommand.slice(0, 60)}`);
+  return parts.join(" \u00b7 ");
+}
+
+const SHAME_MODES = new Set(["off", "normal", "strict"]);
+
 function contentToText(content: unknown): string {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
@@ -640,10 +678,25 @@ export default function lazyReportShameShameShame(pi: any) {
   let shameSkillContractRead = false;
   let currentUserText = "";
   let retryInProgress = false;
+  // Feature 1 (from ponytail): session-persisted guard mode via custom entries.
+  // off = no enforcement; normal = mutating turns need status JSON; strict = every substantive turn.
+  let sessionMode: string = "normal";
   let lastCandidate: Candidate | null = null;
   let lastWrittenExampleId: string | null = null;
   const retriedTurnIds = new Set<string>();
   const lastAudioPlayedAt = { value: 0 };
+
+  pi.on("session_start", async (event: any, ctx: any) => {
+    const entries = Array.isArray(event?.entries) ? event.entries : [];
+    for (let i = entries.length - 1; i >= 0; i -= 1) {
+      const entry = entries[i];
+      if (entry?.type === "custom" && entry?.customType === "shame-mode" && SHAME_MODES.has(String(entry?.data?.mode))) {
+        sessionMode = String(entry.data.mode);
+        break;
+      }
+    }
+    try { ctx?.ui?.setStatus?.("shame", `\ud83e\udda5 ${sessionMode}`); } catch { /* optional */ }
+  });
 
   pi.on("input", async (event: any) => {
     const text = String(event.text || "");
@@ -710,9 +763,10 @@ export default function lazyReportShameShameShame(pi: any) {
 
   pi.on("message_end", async (event: any, ctx: any) => {
     if (event.message?.role !== "assistant") return;
+    if (sessionMode === "off") return;
     const text = contentToText(event.message.content);
     if (!text.trim()) return;
-    const forceStatus = mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
+    const forceStatus = sessionMode === "strict" || mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
@@ -733,7 +787,18 @@ export default function lazyReportShameShameShame(pi: any) {
         // continuing and needs_* escalation states queue their exact compiled
         // command; done/needs_human/failed compile to null and end the turn.
         const status = (check as any)?.features?.status;
+        let displayReturn: any = undefined;
         if (status && typeof statusState === "string") {
+          // Human directive (2026-08-31): agent output is not polluted with JSON
+          // unless the human asks. Validate, act, persist -- then strip the block
+          // and show a one-line rendering. LAZY_REPORT_SHAME_SHOW_STATUS_JSON=1 keeps raw.
+          const showRaw = ["1", "true", "yes"].includes(String(process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON || "").trim().toLowerCase());
+          if (!showRaw) {
+            const strippedContent = stripStatusJson(event.message.content, "");
+            const line = renderStatusLine(status);
+            displayReturn = { message: { ...event.message, content: appendText(strippedContent, line) } };
+          }
+          try { ctx?.ui?.setStatus?.("shame", `\ud83e\udda5 ${sessionMode} \u00b7 ${statusState}`); } catch { /* status bar optional */ }
           const compiled = compileStatusCommand(status);
           if (compiled?.command) {
             const claim = claimGuardFollowUp({
@@ -753,8 +818,9 @@ export default function lazyReportShameShameShame(pi: any) {
               } catch { /* follow-up delivery is best-effort */ }
             }
           }
+          return displayReturn;
         }
-        return;
+        return displayReturn;
       }
 
       const turnId = lastCandidate.turn_id;
@@ -820,6 +886,15 @@ export default function lazyReportShameShameShame(pi: any) {
   pi.registerCommand("shame", {
     description: "Add the previous assistant response to the shame classifier training JSONL",
     handler: async (args: string, ctx: any) => {
+      // Feature 1: /shame off|normal|strict — session-persisted guard mode.
+      const modeArg = String(args || "").trim().toLowerCase();
+      if (SHAME_MODES.has(modeArg)) {
+        sessionMode = modeArg;
+        try { pi.appendEntry("shame-mode", { mode: modeArg }); } catch { /* persistence best-effort */ }
+        try { ctx?.ui?.setStatus?.("shame", `\ud83e\udda5 ${sessionMode}`); } catch { /* optional */ }
+        ctx.ui.notify(`shame guard mode: ${sessionMode} (persisted for this session)`, "info");
+        return;
+      }
       let parsed = parseShameArgs(args);
       if (parsed.error) {
         ctx.ui.notify(`/shame error: ${parsed.error}`, "error");
