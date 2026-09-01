@@ -1,7 +1,8 @@
 client: openai-privacy
 kb_root: /home/graham/workspace/experiments/openai-security-kb
-openapi_specs:
-  - /home/graham/workspace/experiments/openai-openapi/openapi.yaml
+curated_sources:
+  - /home/graham/workspace/experiments/openai-security-staged/primary
+  - /home/graham/workspace/experiments/openai-security-staged/secondary
 probes:
   - data controls zero data retention endpoint behavior and application state
   - retention deletion backups derived data and legal exceptions
