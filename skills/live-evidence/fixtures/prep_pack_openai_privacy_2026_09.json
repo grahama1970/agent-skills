@@ -103,15 +103,15 @@
       "use": null
     },
     {
-      "classification": "source_bound",
+      "classification": "source_bound_official_surf_capture",
       "source_id": "openai-api-data-controls",
       "title": "OpenAI API data controls",
-      "authority": "official OpenAI developer documentation",
-      "retrieved_at": "2026-09-01",
-      "digest": "3e4f28d5f48170862f9f9a0d6aeb73be6cb75c57cd85299b8e2790b62a04f34d",
-      "url": "https://developers.openai.com/api/docs/guides/your-data",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-api-data-controls.md",
-      "summary": "OpenAI API data controls: API inputs and outputs are not used to train models by default; retention and application-state behavior vary by endpoint and setting; ZDR-eligible use requires avoiding persisted application state such as store=true where applicable.",
+      "authority": "official OpenAI platform documentation",
+      "retrieved_at": "2026-09-01T19:59:15.668043+00:00",
+      "digest": "d7d6c064dcff7a00f0bacd15cc103166197c0b86185e746942462f603de59b54",
+      "url": "https://platform.openai.com/docs/guides/your-data",
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/sources/openai-official-2026-09-01/surf/platform_your_data.txt",
+      "summary": "Captured official OpenAI API data-controls text covering training use, abuse monitoring, application state, ZDR/MAM, endpoint retention, data residency, and EKM.",
       "kind": null,
       "use": null
     },
@@ -467,15 +467,15 @@
       "use": null
     },
     {
-      "classification": "public_official_source",
+      "classification": "source_bound_official_surf_capture",
       "source_id": "openai-api-admin",
-      "title": "Admin APIs",
-      "authority": "official_openai:T1_product_controls:administration",
-      "retrieved_at": "2026-09-01T15:22:15+00:00",
-      "digest": "a119ee9f7aef4aea62a2c340d24873146e99450ad47494ca19b2d94fec310907",
-      "url": "https://developers.openai.com/api/docs/guides/admin-apis.md",
-      "path": null,
-      "summary": "Official OpenAI administration at authority tier T1_product_controls.",
+      "title": "Administration Overview",
+      "authority": "official OpenAI API reference",
+      "retrieved_at": "2026-09-01T19:59:15.668043+00:00",
+      "digest": "e43f02d5276bd2e6e65a9cae5fea062eea4376d72042fd3f738611bd12da8bca",
+      "url": "https://platform.openai.com/docs/api-reference/administration",
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/sources/openai-official-2026-09-01/surf/platform_admin_api.txt",
+      "summary": "Captured official OpenAI API reference overview for organization administration resources including users, projects, API keys, and audit logs.",
       "kind": null,
       "use": null
     },
@@ -597,15 +597,15 @@
       "use": null
     },
     {
-      "classification": "public_official_source",
+      "classification": "source_bound_official_surf_capture",
       "source_id": "openai-help-compliance-platform",
-      "title": "OpenAI Compliance Platform for Enterprise and Edu",
-      "authority": "official_openai:T1_product_controls:audit_compliance",
-      "retrieved_at": "2026-09-01T15:22:15+00:00",
-      "digest": "476e32ed841a3632b9a7921a638ee2c91dfdde65d1d7aa04bfb223b5eb4d6f3a",
+      "title": "OpenAI Compliance Platform for Enterprise and Edu Customers",
+      "authority": "official OpenAI Help Center",
+      "retrieved_at": "2026-09-01T19:59:15.668043+00:00",
+      "digest": "55d828f6976d108d027cb60174ae7bc27b2bf44df602608a7b377950138dafdb",
       "url": "https://help.openai.com/en/articles/9261474-openai-compliance-platform-for-enterprise-and-edu-customers",
-      "path": null,
-      "summary": "Official OpenAI audit_compliance at authority tier T1_product_controls.",
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/sources/openai-official-2026-09-01/surf/help_compliance_platform.txt",
+      "summary": "Captured official OpenAI Help Center text covering ChatGPT Enterprise/Edu compliance platform access, immutable logs, stateful API, eDiscovery, DLP, SIEM, and admin-key permissions.",
       "kind": null,
       "use": null
     },
@@ -805,28 +805,28 @@
       "use": null
     },
     {
-      "classification": "public_official_source",
+      "classification": "source_bound_official_surf_capture",
       "source_id": "openai-security-and-privacy",
-      "title": "Security & privacy",
-      "authority": "official_openai:T3_assurance_and_compliance:security_overview",
-      "retrieved_at": "2026-09-01T15:22:15+00:00",
-      "digest": "8280d594f9de75826c800fe28092aa99822c389f5eca59129108805f04e9c481",
+      "title": "Security and privacy at OpenAI",
+      "authority": "official OpenAI security page",
+      "retrieved_at": "2026-09-01T19:59:15.668043+00:00",
+      "digest": "701939c111261664c5ef2d5811809c8b847f7ea9a1d1a7c6dd4c7f39eac8a42c",
       "url": "https://openai.com/security-and-privacy/",
-      "path": null,
-      "summary": "Official OpenAI security_overview at authority tier T3_assurance_and_compliance.",
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/sources/openai-official-2026-09-01/surf/openai_security_privacy.txt",
+      "summary": "Captured official OpenAI security and privacy overview covering controls, encryption, vulnerability disclosure, trust portal, and compliance posture.",
       "kind": null,
       "use": null
     },
     {
-      "classification": "public_official_source",
+      "classification": "public_trust_portal_shell_surf_capture",
       "source_id": "openai-trust-portal-home",
       "title": "OpenAI Trust Portal",
-      "authority": "official_openai:T3_assurance_and_compliance:trust_portal",
-      "retrieved_at": "2026-09-01T15:22:15+00:00",
-      "digest": "e27ac847db9d865ff4b624884bc940e6c07b47861f393a57c8f4204b4697b546",
+      "authority": "official OpenAI Trust Portal public shell",
+      "retrieved_at": "2026-09-01T19:59:15.668043+00:00",
+      "digest": "86c2461813b608cee22d5a316df8b4a6a664cfee1e853f8ab0654f10272a406e",
       "url": "https://trust.openai.com/",
-      "path": null,
-      "summary": "Official OpenAI trust_portal at authority tier T3_assurance_and_compliance.",
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/sources/openai-official-2026-09-01/surf/trust_portal.txt",
+      "summary": "Captured public Trust Portal shell metadata; sensitive documents still require authorized access.",
       "kind": null,
       "use": null
     },
@@ -1282,6 +1282,32 @@
       "url": "https://docs.python.org/3.13/library/security_warnings.html",
       "path": null,
       "summary": "Security cautions for pickle, subprocess, tempfile, XML, zipfile, random/secrets, logging, and other standard-library modules.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "source_bound_official_surf_capture",
+      "source_id": "openai-help-admin-audit-logs",
+      "title": "Admin and Audit Logs API for the API Platform",
+      "authority": "official OpenAI Help Center",
+      "retrieved_at": "2026-09-01T19:59:15.668043+00:00",
+      "digest": "31d967d268a25dc016c28b1d09310fa59d595b9e33b920ba6267c75deb3ff70b",
+      "url": "https://help.openai.com/en/articles/9687866-admin-and-audit-logs-api-for-the-api-platform",
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/sources/openai-official-2026-09-01/surf/help_admin_audit_logs.txt",
+      "summary": "Captured official OpenAI Help Center text covering API Platform admin/audit log capabilities and administrative actions.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "source_bound_official_surf_capture",
+      "source_id": "openai-security-overview",
+      "title": "Security and privacy at OpenAI",
+      "authority": "official OpenAI security page",
+      "retrieved_at": "2026-09-01T19:59:15.668043+00:00",
+      "digest": "701939c111261664c5ef2d5811809c8b847f7ea9a1d1a7c6dd4c7f39eac8a42c",
+      "url": "https://openai.com/security/",
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/sources/openai-official-2026-09-01/surf/openai_security.txt",
+      "summary": "Captured official OpenAI security overview from the current headed browser path.",
       "kind": null,
       "use": null
     },
@@ -5120,7 +5146,7 @@
         "bc8b3df0a19da79cfd5259da233154327db8c9ff",
         "d11bb82860f8654048edb8edb083c7bb3ae11cde",
         "885938bc4777eaf0bf5dd80d4ea6d6bd917a1277",
-        "8117e9054ca0c10d04f37aeac10c619735ee50d5"
+        "812800ba670918a8c58306121eb359a931fc53a6"
       ]
     },
     {
@@ -6243,8 +6269,8 @@
       },
       "memory_keys": [
         "812800ba670918a8c58306121eb359a931fc53a6",
-        "3052bad420fe2321fad00b5456d3eeb77b0588d7",
         "cb6ed66acf257caae68e97c09071612fd8e822c6",
+        "3052bad420fe2321fad00b5456d3eeb77b0588d7",
         "4863f6d4b0cb49b853f5e76a249a19c8810f9157"
       ]
     },
@@ -8193,8 +8219,8 @@
       },
       "memory_keys": [
         "cbe1f1d131e6080c39b92797d98b1d7e6053e25b",
-        "ace576a164999520afd0ee34931837b85aa7dff7",
         "587b6054ac139f50ef2eb03cb66c7737c26d5aec",
+        "ace576a164999520afd0ee34931837b85aa7dff7",
         "0759388bf7613f25d850e5b2fa35bc6aa8dddb32"
       ]
     },
@@ -19420,6 +19446,2212 @@
       "memory_keys": [
         "openai_privacy_flask_challenge_21_40_3a1f39e2780b22baa1ec481aaea64594",
         "openai_privacy_flask_challenge_21_40_detail_3a1f39e2780b22baa1ec481aaea64594"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-01",
+      "canonical_question": "How would you architect an API gateway that enforces Zero Data Retention behavior across endpoints with different application-state rules?",
+      "spoken_variants": [
+        "How would you architect an API gateway that enforces Zero Data Retention behavior across endpoints with different application-state rules?",
+        "Can you architect an API gateway that enforces Zero Data Retention behavior across endpoints with different application-state rules?"
+      ],
+      "scenario": "ZDR endpoint routing",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "ZDR/MAM eligibility",
+        "endpoint retention matrix",
+        "project/org control hierarchy"
+      ],
+      "answer_thesis": "Use a policy-enforced request router that evaluates org/project retention settings, endpoint eligibility, store/background flags, and feature-specific application state before dispatch.",
+      "architecture_components": [
+        "retention policy service",
+        "endpoint capability matrix",
+        "request admission controller",
+        "audit receipt stream",
+        "policy simulation tests"
+      ],
+      "failure_cases": [
+        "store=true bypass",
+        "background response stored unexpectedly",
+        "ZDR-ineligible endpoint accepted",
+        "MCP third-party retention hidden"
+      ],
+      "tradeoffs": [
+        "strict fail-closed admission reduces feature availability",
+        "per-project controls avoid org-wide overblocking"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-01",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Receipts-first routing in Graham systems maps directly to retention-control admission and post-dispatch proof.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_285fec93877c3daec34e1bbde8e8eef5",
+        "9529eb1a9f2e4dc56059164448d4d8c40bf2089a",
+        "118c5e699fc08325f37b3f1cc56106207650b274",
+        "82b5fb7667cbf39d559e2a3d2c0f0afcc8805feb"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-02",
+      "canonical_question": "How would you design an immutable compliance-log export pipeline for ChatGPT Enterprise data into a SIEM or data lake?",
+      "spoken_variants": [
+        "How would you design an immutable compliance-log export pipeline for ChatGPT Enterprise data into a SIEM or data lake?",
+        "Can you design an immutable compliance-log export pipeline for ChatGPT Enterprise data into a SIEM or data lake?"
+      ],
+      "scenario": "Compliance logs lake",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "workspace scope",
+        "admin-key permissions",
+        "event categories",
+        "backfill window"
+      ],
+      "answer_thesis": "Build an append-only cursor export with scoped admin keys, per-category checkpoints, immutable raw landing, normalization, and reconciled delivery receipts.",
+      "architecture_components": [
+        "scoped admin key vault",
+        "cursor/checkpoint store",
+        "raw immutable bucket",
+        "schema normalizer",
+        "SIEM sink",
+        "dead-letter queue"
+      ],
+      "failure_cases": [
+        "duplicate events",
+        "missing category permission",
+        "schema drift",
+        "late events",
+        "overbroad admin key"
+      ],
+      "tradeoffs": [
+        "immutable raw first vs normalized query speed",
+        "broad compliance permissions vs least privilege"
+      ],
+      "source_references": [
+        "openai-help-compliance-platform",
+        "openai-help-admin-audit-logs"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-02",
+        "source:openai-help-compliance-platform",
+        "source:openai-help-admin-audit-logs"
+      ],
+      "graham_project_bridge": "Live Evidence receipts and replayable ledgers are the same operating model as compliance-log ingestion.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_dff135e993b6a60e73c56bc605750947",
+        "397760372685d66fe52c0b25cba0e268dea36735",
+        "6ac4f636aa796f81ba3ae492a97af60f6e2f5fb9",
+        "825c5f1206f028cc7e04f1806fd5dd23f617a732"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-03",
+      "canonical_question": "How would you route OpenAI API requests for regional storage and processing without violating endpoint and model eligibility?",
+      "spoken_variants": [
+        "How would you route OpenAI API requests for regional storage and processing without violating endpoint and model eligibility?",
+        "Can you route OpenAI API requests for regional storage and processing without violating endpoint and model eligibility?"
+      ],
+      "scenario": "Data residency routing",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "required region",
+        "project geography",
+        "endpoint/model support",
+        "MAM/ZDR requirements"
+      ],
+      "answer_thesis": "Use a region-aware client factory backed by an eligibility table and project metadata; reject unsupported endpoint/model/region combinations before sending content.",
+      "architecture_components": [
+        "project metadata registry",
+        "regional base-url selector",
+        "eligibility matrix",
+        "preflight validator",
+        "egress audit log"
+      ],
+      "failure_cases": [
+        "EU background responses accepted",
+        "unsupported model routed regionally",
+        "system data mistaken for customer content"
+      ],
+      "tradeoffs": [
+        "one client per region is simple but duplicates config",
+        "dynamic routing needs stronger tests"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-03",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This mirrors Graham\u2019s skill routing: resolve handler capability before dispatch, then receipt the applied route.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_f8972a32752dbd805d80e561d55caa47",
+        "9529eb1a9f2e4dc56059164448d4d8c40bf2089a",
+        "17f78a553b14e055945216a9b0c1be63fcb457f3",
+        "ea5f1a9d823b616c84029a9f3dca4b6703f22ef6"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-04",
+      "canonical_question": "What architecture would you use to enforce Enterprise Key Management while keeping unsupported OpenAI products from silently bypassing it?",
+      "spoken_variants": [
+        "What architecture would you use to enforce Enterprise Key Management while keeping unsupported OpenAI products from silently bypassing it?",
+        "Which architecture would you use to enforce Enterprise Key Management while keeping unsupported OpenAI products from silently bypassing it?"
+      ],
+      "scenario": "Enterprise key management boundaries",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "KMS provider",
+        "enabled projects",
+        "unsupported endpoints",
+        "failure behavior"
+      ],
+      "answer_thesis": "Put EKM eligibility into the same admission policy as retention and residency, and block or route away from unsupported products before content is submitted.",
+      "architecture_components": [
+        "EKM policy registry",
+        "KMS health probe",
+        "endpoint denylist",
+        "pre-submit validator",
+        "key-usage audit"
+      ],
+      "failure_cases": [
+        "KMS outage",
+        "unsupported Assistants call",
+        "files created outside protected project"
+      ],
+      "tradeoffs": [
+        "strong fail-closed safety vs operational availability",
+        "static denylist needs update cadence"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-04",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "The same contract as validated JSON: unsupported states must be unrepresentable at the boundary.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_fd5f44cc2e5f72ab5df09894a4b71bed",
+        "11bdb411f167697e9408324a4eb807519ace0868",
+        "7e2c1bb1bd19e565e76c42a68fc85e50844a60b1",
+        "656027bc072a958513dfd0b47f2a9b0acd96aca8"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-05",
+      "canonical_question": "How would you prove deleted application-state objects are removed within documented retention windows?",
+      "spoken_variants": [
+        "How would you prove deleted application-state objects are removed within documented retention windows?",
+        "Can you prove deleted application-state objects are removed within documented retention windows?"
+      ],
+      "scenario": "Deletion and retention proof",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "object type",
+        "delete API",
+        "retention window",
+        "search/index behavior"
+      ],
+      "answer_thesis": "Model deletion as a state machine with delete request, production-index removal check, retention-window timer, and independent verifier receipts.",
+      "architecture_components": [
+        "delete command ledger",
+        "object inventory",
+        "search/index verifier",
+        "retention timer",
+        "exception register"
+      ],
+      "failure_cases": [
+        "delete accepted but index still returns object",
+        "legal hold exception hidden",
+        "derived copy remains"
+      ],
+      "tradeoffs": [
+        "proof depth vs API cost",
+        "sampled verification vs exhaustive verification"
+      ],
+      "source_references": [
+        "openai-api-data-controls",
+        "openai-help-compliance-platform"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-05",
+        "source:openai-api-data-controls",
+        "source:openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "This is the same independent-verifier pattern already used in the OpenAI privacy KB.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_aa38ac8fa83c4229aad2286b30a0be81",
+        "5d3073d4465eeb6b4c58281d1ac0ad46c4f264b0",
+        "33d04ce093010f0db691c47df97d78224c57e9fb",
+        "7ba9553a0592a578a19873c71c396da28b9f4f4c"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-06",
+      "canonical_question": "How would you design around Remote MCP or web-search tools whose retention policy is outside OpenAI?",
+      "spoken_variants": [
+        "How would you design around Remote MCP or web-search tools whose retention policy is outside OpenAI?",
+        "Can you design around Remote MCP or web-search tools whose retention policy is outside OpenAI?"
+      ],
+      "scenario": "Third-party tool retention boundary",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "tool provider",
+        "content sensitivity",
+        "BAA/HIPAA mode",
+        "offline/cache setting"
+      ],
+      "answer_thesis": "Introduce a tool egress policy that classifies content before tool calls, records third-party destination, and blocks tools whose retention/BAA posture is incompatible.",
+      "architecture_components": [
+        "content classifier",
+        "tool registry",
+        "egress policy engine",
+        "destination receipt",
+        "manual approval lane"
+      ],
+      "failure_cases": [
+        "sensitive prompt sent to MCP",
+        "preview web_search ignores offline setting",
+        "tool vendor retention unknown"
+      ],
+      "tradeoffs": [
+        "manual approval adds latency",
+        "strict tool registry limits exploration"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-06",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Live Evidence already treats Brave/Dogpile as manual lanes receiving derived queries, not full transcript.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_9a57b0f8c107d6b8e263d4e770fa4851",
+        "9e5f41df2276e0e16ed462a3f9312dad2c67da50",
+        "3f66464d56ae1c0ef2d33a34fd54c50b202278a8",
+        "27bac6ef3d8ce89897f3c9ebf4bc96999009f87f"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-07",
+      "canonical_question": "How would you manage Admin API keys for organization and workspace operations with least privilege and auditability?",
+      "spoken_variants": [
+        "How would you manage Admin API keys for organization and workspace operations with least privilege and auditability?",
+        "Can you manage Admin API keys for organization and workspace operations with least privilege and auditability?"
+      ],
+      "scenario": "Admin key lifecycle",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "organization vs workspace",
+        "permission categories",
+        "owner/admin roles"
+      ],
+      "answer_thesis": "Use scoped admin keys with explicit permission manifests, rotation, redacted storage, usage logging, and deny-by-default command surfaces.",
+      "architecture_components": [
+        "key vault",
+        "permission manifest",
+        "rotation scheduler",
+        "usage log reconciler",
+        "break-glass approval"
+      ],
+      "failure_cases": [
+        "broad compliance access granted by default",
+        "expired key still configured",
+        "key used outside permitted integration"
+      ],
+      "tradeoffs": [
+        "short expiry increases ops work",
+        "fine-grained scopes increase setup friction"
+      ],
+      "source_references": [
+        "openai-api-admin",
+        "openai-help-compliance-platform"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-07",
+        "source:openai-api-admin",
+        "source:openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "This maps to project-agent tool allowlists and proof-bound external effects.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_19b67cbe16cb2b206b73f90f589f41e0",
+        "openai_official_source_b7332b30c1cf7ecc36397092a30e0bb5",
+        "138d387a3db05e227862cf29d1dd6639a2bf968b",
+        "933da5621139aea19fa33d290ccd4157009d42d0"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-08",
+      "canonical_question": "How would you turn Trust Portal and security-page evidence into a customer-facing assurance registry without overclaiming protected documents?",
+      "spoken_variants": [
+        "How would you turn Trust Portal and security-page evidence into a customer-facing assurance registry without overclaiming protected documents?",
+        "Can you turn Trust Portal and security-page evidence into a customer-facing assurance registry without overclaiming protected documents?"
+      ],
+      "scenario": "Trust evidence registry",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "authorized access",
+        "public vs protected artifact",
+        "evidence freshness"
+      ],
+      "answer_thesis": "Store public metadata separately from protected-document claims, attach access/classification state to each evidence row, and expire claims unless refreshed.",
+      "architecture_components": [
+        "evidence catalog",
+        "classification field",
+        "freshness monitor",
+        "protected-doc placeholder",
+        "human authorization gate"
+      ],
+      "failure_cases": [
+        "SOC report date stale",
+        "protected document summarized without access",
+        "marketing claim treated as audit evidence"
+      ],
+      "tradeoffs": [
+        "metadata-only is safer but less complete",
+        "authorization gate slows ingestion"
+      ],
+      "source_references": [
+        "openai-security-and-privacy",
+        "openai-trust-portal-home"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-08",
+        "source:openai-security-and-privacy",
+        "source:openai-trust-portal-home"
+      ],
+      "graham_project_bridge": "The KB\u2019s classification field is the right primitive for this trust-boundary problem.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_f6b7dec50e0f9d39737ecffcf4cd1ecb",
+        "45b7d66be7e908deb43417449302dbbcdc0de2af",
+        "f67196cbc99045c9571b530f296db02b7336c0f7",
+        "ccd440aa7bcea627b894253103d4111c798a92c7"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-09",
+      "canonical_question": "How do you separate abuse-monitoring logs from application state in a privacy architecture?",
+      "spoken_variants": [
+        "How do you separate abuse-monitoring logs from application state in a privacy architecture?",
+        "How do you separate abuse-monitoring logs from application state in a privacy architecture?"
+      ],
+      "scenario": "Abuse monitoring vs application state",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "endpoint",
+        "customer content vs metadata",
+        "store flag",
+        "retention control status"
+      ],
+      "answer_thesis": "Maintain separate data-class ledgers: abuse monitoring, application state, system data, and customer-controlled storage; each gets its own retention and access proof.",
+      "architecture_components": [
+        "data-class taxonomy",
+        "endpoint matrix",
+        "retention ledger",
+        "access-control policy",
+        "verification probes"
+      ],
+      "failure_cases": [
+        "metadata treated as customer content",
+        "application state retained until deleted",
+        "system data omitted from residency explanation"
+      ],
+      "tradeoffs": [
+        "more classes are harder to explain",
+        "fewer classes cause policy mistakes"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-09",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This is exactly why source-bound Q/A chunks beat prose summaries in live recall.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_0434090ce2c2559b12def3f5d9f181dc",
+        "be81ed021c11a14f39c72d0103edd5d9c0bb9173",
+        "32b4f0852d4831b78759a2addf86c3435bf65501",
+        "769440fba49e951b4a247bab4664013f8cc79559"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-arch-10",
+      "canonical_question": "What is the minimal control plane for OpenAI API privacy settings across organization and project levels?",
+      "spoken_variants": [
+        "What is the minimal control plane for OpenAI API privacy settings across organization and project levels?",
+        "Which is the minimal control plane for OpenAI API privacy settings across organization and project levels?"
+      ],
+      "scenario": "API privacy control plane",
+      "category": null,
+      "rubric_dimension": "architecture",
+      "clarifications_expected_before_answering": [
+        "org defaults",
+        "project overrides",
+        "eligible endpoints",
+        "operator roles"
+      ],
+      "answer_thesis": "A minimal control plane needs a settings registry, inheritance resolver, endpoint eligibility validator, change audit, and test harness that proves effective policy per project.",
+      "architecture_components": [
+        "settings registry",
+        "inheritance resolver",
+        "eligibility validator",
+        "change audit",
+        "policy tests"
+      ],
+      "failure_cases": [
+        "project override disables org ZDR unexpectedly",
+        "stale cache applies old retention mode",
+        "change not auditable"
+      ],
+      "tradeoffs": [
+        "central policy is clear but can bottleneck teams",
+        "project autonomy needs stronger guardrails"
+      ],
+      "source_references": [
+        "openai-api-data-controls",
+        "openai-api-admin"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:arch",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-arch-10",
+        "source:openai-api-data-controls",
+        "source:openai-api-admin"
+      ],
+      "graham_project_bridge": "This is analogous to Live Evidence session purpose policies: frozen policy digests beat UI toggles.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_68d68e1aaeb4ae95a20bae2227ffd6d3",
+        "9529eb1a9f2e4dc56059164448d4d8c40bf2089a",
+        "387ce196cf143754a9c738600abfd97c99ac2495",
+        "d11bb82860f8654048edb8edb083c7bb3ae11cde"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-01",
+      "canonical_question": "Write a Python function that decides whether a request is allowed under a retention policy matrix.",
+      "spoken_variants": [
+        "Write a Python function that decides whether a request is allowed under a retention policy matrix.",
+        "Write a Python function that decides whether a request is allowed under a retention policy matrix."
+      ],
+      "scenario": "Retention matrix validator",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "endpoint",
+        "store flag",
+        "background mode",
+        "ZDR/MAM state"
+      ],
+      "answer_thesis": "Implement a pure validator that accepts endpoint, flags, and project policy, returns an allow/deny reason, and defaults unknown endpoint combinations to deny.",
+      "architecture_components": [
+        "dataclass policy records",
+        "endpoint table",
+        "pure validation function",
+        "assert-based sanity checks"
+      ],
+      "failure_cases": [
+        "unknown endpoint allowed",
+        "store=true allowed under ZDR",
+        "background unsupported region ignored"
+      ],
+      "tradeoffs": [
+        "table-driven code is boring but auditable",
+        "hardcoded endpoint list needs freshness checks"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-01",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This is a natural Python/Flask coding prompt for Graham\u2019s fail-closed validation style.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_becbffdef47353fc2d808c0a5971294f",
+        "6899f6dad34335e0ae528391ff0cc89df072d300",
+        "ef87555da12e7631510dbcf851c726006944cdfd",
+        "099f47ff306da5ba043a6dcbdb2d2cbcfa0bff5e"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-02",
+      "canonical_question": "How would you implement a safe OpenAI client factory that chooses `api.openai.com`, `us.api.openai.com`, or `eu.api.openai.com`?",
+      "spoken_variants": [
+        "How would you implement a safe OpenAI client factory that chooses `api.openai.com`, `us.api.openai.com`, or `eu.api.openai.com`?",
+        "Can you implement a safe OpenAI client factory that chooses `api.openai.com`, `us.api.openai.com`, or `eu.api.openai.com`?"
+      ],
+      "scenario": "Regional client selector",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "region",
+        "project geography",
+        "endpoint support"
+      ],
+      "answer_thesis": "Use a small mapping from region to base URL plus an eligibility check before constructing the client; refuse unsupported regional processing.",
+      "architecture_components": [
+        "region enum",
+        "base-url map",
+        "endpoint/model validator",
+        "unit sanity cases"
+      ],
+      "failure_cases": [
+        "unknown region falls back global",
+        "unsupported endpoint sent EU",
+        "region string injection into URL"
+      ],
+      "tradeoffs": [
+        "explicit map is less flexible but safer",
+        "dynamic config needs signature/provenance"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-02",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Tests over routing tables are the fastest proof for this class of privacy bug.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_523834c671d6d7b1d1d7c539e2d0e05e",
+        "ea5f1a9d823b616c84029a9f3dca4b6703f22ef6",
+        "9b289d9dfe98a3c31bf227008dd8d81f47526c4e",
+        "f02507d737bd1d0b34720e6f53938f174e64262b"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-03",
+      "canonical_question": "Implement an idempotent cursor loop for exporting compliance logs without duplicates or gaps.",
+      "spoken_variants": [
+        "Implement an idempotent cursor loop for exporting compliance logs without duplicates or gaps.",
+        "Implement an idempotent cursor loop for exporting compliance logs without duplicates or gaps."
+      ],
+      "scenario": "Compliance log cursor",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "cursor semantics",
+        "time window",
+        "event category permissions"
+      ],
+      "answer_thesis": "Persist the last acknowledged cursor only after the raw event batch is durably written and reconciled; dedupe by event id.",
+      "architecture_components": [
+        "cursor store",
+        "raw batch writer",
+        "event-id dedupe",
+        "ack boundary",
+        "retry loop"
+      ],
+      "failure_cases": [
+        "advance cursor before write",
+        "duplicate event emitted twice",
+        "permission gap hidden as empty page"
+      ],
+      "tradeoffs": [
+        "exactly-once is expensive; effectively-once with dedupe is simpler",
+        "raw-first storage costs more but preserves evidence"
+      ],
+      "source_references": [
+        "openai-help-compliance-platform"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-03",
+        "source:openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "This matches the existing receipt journal model used across the agent stack.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_ca2cc1080e1631d168435ea77283ec31",
+        "9efa2c28d20c88b3de65cdbbc283f79fc70855c2",
+        "12a7ad7b4b70872072982d1d3967b96c9a2660c6",
+        "0bbf6a16b413bc0f23bc4c865c34c127aa3c7430"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-04",
+      "canonical_question": "Write a Flask endpoint that rejects an Admin API integration configured with overbroad permissions.",
+      "spoken_variants": [
+        "Write a Flask endpoint that rejects an Admin API integration configured with overbroad permissions.",
+        "Write a Flask endpoint that rejects an Admin API integration configured with overbroad permissions."
+      ],
+      "scenario": "Admin key scope checker",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "required operations",
+        "granted scopes",
+        "workspace/org boundary"
+      ],
+      "answer_thesis": "Compare requested operations to a minimal permission allowlist and reject broad compliance access unless a specific approved operation requires it.",
+      "architecture_components": [
+        "permission allowlist",
+        "config parser",
+        "403 response",
+        "audit log"
+      ],
+      "failure_cases": [
+        "wildcard permission accepted",
+        "workspace key used for org operation",
+        "error leaks secret key"
+      ],
+      "tradeoffs": [
+        "strict allowlist may need updates",
+        "operator override needs break-glass receipt"
+      ],
+      "source_references": [
+        "openai-api-admin",
+        "openai-help-compliance-platform"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-04",
+        "source:openai-api-admin",
+        "source:openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "Good interview code should show secret redaction and policy proof, not just auth middleware.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_4ea2b223a8f8eec99737ca3c4103b3cd",
+        "02a0874e2179cdfef527f23fbcf6af5da9ad818c",
+        "8a880de11ac7de4ec83e79e9e033a4dc161f02f0",
+        "0f1516374a12ee8cfecf62e3d8be69b20a7b50f2"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-05",
+      "canonical_question": "How would you code a background job that verifies deleted items no longer appear in search/retrieval indexes?",
+      "spoken_variants": [
+        "How would you code a background job that verifies deleted items no longer appear in search/retrieval indexes?",
+        "Can you code a background job that verifies deleted items no longer appear in search/retrieval indexes?"
+      ],
+      "scenario": "Delete verifier job",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "object key",
+        "delete time",
+        "index/search API",
+        "retention SLA"
+      ],
+      "answer_thesis": "Queue a verification task at delete time, poll boundedly after index propagation, and emit a receipt with observed absence or a named exception.",
+      "architecture_components": [
+        "job queue",
+        "delete ledger",
+        "search probe",
+        "timeout",
+        "receipt writer"
+      ],
+      "failure_cases": [
+        "self-reported delete accepted as proof",
+        "index lag mistaken for final failure",
+        "legal hold omitted"
+      ],
+      "tradeoffs": [
+        "bounded polling avoids infinite jobs",
+        "absence proof depends on query quality"
+      ],
+      "source_references": [
+        "openai-api-data-controls",
+        "openai-help-compliance-platform"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-05",
+        "source:openai-api-data-controls",
+        "source:openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "This is the same distinction as Memory recall proof versus green ingest count.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_e1287d988aad01dac883607bf91a6cee",
+        "84d6f7dd18440a27dbfe5c721b8de1bc62e4b901",
+        "5d3073d4465eeb6b4c58281d1ac0ad46c4f264b0",
+        "3b915105f037fe742ae76aac6d8ce6a2b7308a8f"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-06",
+      "canonical_question": "Write a Python guard that prevents sensitive transcript text from being sent to external web-search or MCP tools.",
+      "spoken_variants": [
+        "Write a Python guard that prevents sensitive transcript text from being sent to external web-search or MCP tools.",
+        "Write a Python guard that prevents sensitive transcript text from being sent to external web-search or MCP tools."
+      ],
+      "scenario": "Tool egress sanitizer",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "session purpose",
+        "tool type",
+        "content classification"
+      ],
+      "answer_thesis": "Classify the payload and session purpose, derive a minimized query, and deny raw transcript egress unless an explicit policy permits it.",
+      "architecture_components": [
+        "classification function",
+        "session policy",
+        "query minimizer",
+        "deny receipt"
+      ],
+      "failure_cases": [
+        "full transcript sent to Brave",
+        "MCP server retention ignored",
+        "formal_assessment mode leaks answer"
+      ],
+      "tradeoffs": [
+        "minimized query loses context",
+        "strict denial preserves privacy"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-06",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Live Evidence\u2019s manual Brave/Dogpile lane should use this exact guard shape.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_98aef3126988bb5116b1df5fea9371d9",
+        "913d522bc36876fbba4c6617e6d221a2068600de",
+        "3682a107bef9824bf51db6d7738fd921858b4d65",
+        "66204571331ca19785ed88e879d5d480886b13ba"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-07",
+      "canonical_question": "Implement a script that marks Trust Portal evidence stale unless refreshed within a configured window.",
+      "spoken_variants": [
+        "Implement a script that marks Trust Portal evidence stale unless refreshed within a configured window.",
+        "Implement a script that marks Trust Portal evidence stale unless refreshed within a configured window."
+      ],
+      "scenario": "Trust evidence freshness check",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "evidence type",
+        "retrieved_at",
+        "protected/public classification"
+      ],
+      "answer_thesis": "Read evidence records, parse UTC timestamps, and fail closed when protected docs are missing or public metadata is stale.",
+      "architecture_components": [
+        "JSON evidence records",
+        "UTC parser",
+        "classification check",
+        "staleness threshold"
+      ],
+      "failure_cases": [
+        "naive local time",
+        "missing protected doc treated as pass",
+        "marketing page used as SOC evidence"
+      ],
+      "tradeoffs": [
+        "simple timestamp rules are transparent",
+        "manual protected-doc refresh remains necessary"
+      ],
+      "source_references": [
+        "openai-trust-portal-home",
+        "openai-security-and-privacy"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-07",
+        "source:openai-trust-portal-home",
+        "source:openai-security-and-privacy"
+      ],
+      "graham_project_bridge": "This keeps assurance claims honest inside the KB.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_24d03fc49f65ca655cca05305fd7952d",
+        "45b7d66be7e908deb43417449302dbbcdc0de2af",
+        "537e9cf0cbfce1e291a8d98e73f781a5d1312bcb",
+        "1eaf2923652eb6a782e9741ced0dfe78480dc590"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-08",
+      "canonical_question": "How would you generate per-endpoint retention annotations for API request logs?",
+      "spoken_variants": [
+        "How would you generate per-endpoint retention annotations for API request logs?",
+        "Can you generate per-endpoint retention annotations for API request logs?"
+      ],
+      "scenario": "Application-state annotator",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "endpoint",
+        "feature flags",
+        "data class"
+      ],
+      "answer_thesis": "Use the official endpoint retention table as data and annotate logs with data-used-for-training, abuse-monitoring retention, application-state retention, and ZDR eligibility.",
+      "architecture_components": [
+        "retention table JSON",
+        "log enricher",
+        "unknown-endpoint fail code",
+        "schema version"
+      ],
+      "failure_cases": [
+        "endpoint alias not normalized",
+        "training/use field omitted",
+        "ZDR eligibility overstated"
+      ],
+      "tradeoffs": [
+        "annotation improves audits but must not store sensitive content",
+        "schema versioning avoids silent drift"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-08",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This turns docs into machine-readable controls, which is exactly curate-client\u2019s job.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_a7b155e944975029ed7d1c6256ec93f8",
+        "33d04ce093010f0db691c47df97d78224c57e9fb",
+        "7ba9553a0592a578a19873c71c396da28b9f4f4c",
+        "5d3073d4465eeb6b4c58281d1ac0ad46c4f264b0"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-09",
+      "canonical_question": "Write a small verifier that confirms a captured official page has enough text to be used as source evidence.",
+      "spoken_variants": [
+        "Write a small verifier that confirms a captured official page has enough text to be used as source evidence.",
+        "Write a small verifier that confirms a captured official page has enough text to be used as source evidence."
+      ],
+      "scenario": "Security page capture verifier",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "URL",
+        "title",
+        "text length",
+        "blocked-page tokens"
+      ],
+      "answer_thesis": "Validate final URL, title, text length, digest, and absence of block-page markers before the capture can feed canonical JSON.",
+      "architecture_components": [
+        "capture metadata",
+        "sha256 digest",
+        "minimum text length",
+        "block marker list"
+      ],
+      "failure_cases": [
+        "Cloudflare page accepted",
+        "empty text accepted",
+        "digest not recorded"
+      ],
+      "tradeoffs": [
+        "simple heuristics need human review but catch the common failures",
+        "Surf capture beats unauthenticated fetch for blocked pages"
+      ],
+      "source_references": [
+        "openai-security-and-privacy",
+        "openai-trust-portal-home"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-09",
+        "source:openai-security-and-privacy",
+        "source:openai-trust-portal-home"
+      ],
+      "graham_project_bridge": "This is the proof boundary we just needed for OpenAI official pages.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_7305aeadccc7dc5f4271406bef3ed6ab",
+        "f67196cbc99045c9571b530f296db02b7336c0f7",
+        "8af4b59068191f1957b2d8d7c3788450cca54180",
+        "5c02ef90f25635f8266f84c775a9e4669f4e5f7b"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-code-10",
+      "canonical_question": "What regression test would prove a code path cannot accidentally set `store=true` for a ZDR project?",
+      "spoken_variants": [
+        "What regression test would prove a code path cannot accidentally set `store=true` for a ZDR project?",
+        "Which regression test would prove a code path cannot accidentally set `store=true` for a ZDR project?"
+      ],
+      "scenario": "ZDR store flag regression",
+      "category": null,
+      "rubric_dimension": "coding",
+      "clarifications_expected_before_answering": [
+        "project policy",
+        "Responses API",
+        "Chat Completions API"
+      ],
+      "answer_thesis": "Test the request builder under ZDR policy and assert the serialized request omits or forces `store=false` even when caller input asks for `store=true`.",
+      "architecture_components": [
+        "request builder",
+        "policy fixture",
+        "serialized payload assertion"
+      ],
+      "failure_cases": [
+        "caller override wins",
+        "background path skips policy",
+        "test inspects Python object not wire payload"
+      ],
+      "tradeoffs": [
+        "wire-level assertion is slightly more work but catches serializer drift",
+        "policy fixture must match official docs"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:code",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-code-10",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Interview answer should emphasize proof at the boundary, not trusting internal state.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "ask"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_545213a0665c0bf6c61c732e13a896d7",
+        "caa48bf0a6f3d2c03204688fb1c95b764abc4b8e",
+        "a11ea47687517ba2c9eb881beb14d82e5dee3982",
+        "cfee49dd30b4aa6e4019640b15627576f07922e5"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-01",
+      "canonical_question": "What facts must we extract from OpenAI\u2019s endpoint retention table before relying on an answer about ZDR?",
+      "spoken_variants": [
+        "What facts must we extract from OpenAI\u2019s endpoint retention table before relying on an answer about ZDR?",
+        "Which facts must we extract from OpenAI\u2019s endpoint retention table before relying on an answer about ZDR?"
+      ],
+      "scenario": "Endpoint retention table",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "endpoint list",
+        "application state",
+        "ZDR eligibility",
+        "exceptions"
+      ],
+      "answer_thesis": "Extract each endpoint\u2019s training use, abuse-monitoring retention, application-state retention, ZDR eligibility, and endpoint-specific notes.",
+      "architecture_components": [
+        "retention table extractor",
+        "source citation",
+        "schema version"
+      ],
+      "failure_cases": [
+        "exceptions omitted",
+        "table staleness",
+        "preview tools treated as final"
+      ],
+      "tradeoffs": [
+        "full extraction costs time but prevents overgeneralization",
+        "selected extraction is faster but fragile"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-01",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This should become machine-readable JSON, not paragraph notes.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_ac9ce4d869897243d1fc5069e9bdd8f8",
+        "886fae460646b49f43df574a9570eab2468b4e96",
+        "a62df2dc2b9b26f5ebabc56ba95100b542c3f496",
+        "9529eb1a9f2e4dc56059164448d4d8c40bf2089a"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-02",
+      "canonical_question": "What research question distinguishes Modified Abuse Monitoring from Zero Data Retention for interview prep?",
+      "spoken_variants": [
+        "What research question distinguishes Modified Abuse Monitoring from Zero Data Retention for interview prep?",
+        "Which research question distinguishes Modified Abuse Monitoring from Zero Data Retention for interview prep?"
+      ],
+      "scenario": "MAM versus ZDR",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "customer content exclusion",
+        "store parameter behavior",
+        "endpoint limitations"
+      ],
+      "answer_thesis": "Ask which data classes are excluded from abuse logs, which application-state behaviors remain, and how ZDR changes `store` on responses/chat completions.",
+      "architecture_components": [
+        "doc quote capture",
+        "comparison table",
+        "edge-case list"
+      ],
+      "failure_cases": [
+        "claiming ZDR means no data ever stored",
+        "ignoring application state",
+        "missing safety retention exception"
+      ],
+      "tradeoffs": [
+        "short comparison is memorable; full matrix is more accurate"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-02",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This is a high-probability privacy interview clarification question.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_f800fde1442b9d3f0ba6b3b58b343978",
+        "886fae460646b49f43df574a9570eab2468b4e96",
+        "0e40e891eac446acfa56f96b4cb5eacbfadd7389",
+        "82b5fb7667cbf39d559e2a3d2c0f0afcc8805feb"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-03",
+      "canonical_question": "What should we know about who can grant Compliance Platform access and permissions?",
+      "spoken_variants": [
+        "What should we know about who can grant Compliance Platform access and permissions?",
+        "Which should we know about who can grant Compliance Platform access and permissions?"
+      ],
+      "scenario": "Compliance platform access model",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "workspace owner/admin role",
+        "admin key permissions",
+        "broad vs category access"
+      ],
+      "answer_thesis": "Identify which roles can create workspace-scoped admin keys and which permissions are broad versus category-specific.",
+      "architecture_components": [
+        "role matrix",
+        "permission matrix",
+        "setup link inventory"
+      ],
+      "failure_cases": [
+        "owner/admin distinction blurred",
+        "conversation messages permission overstated"
+      ],
+      "tradeoffs": [
+        "role detail makes the answer credible",
+        "too much admin UI detail may distract"
+      ],
+      "source_references": [
+        "openai-help-compliance-platform"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-03",
+        "source:openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "This improves interview answers about least-privilege operations.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_5e1e22560cbfd78d11298394dd8d5986",
+        "633d7817c2bb65e83768ee4065a29a8ab04945ff",
+        "566c1bd44c9a07122af0b392af112d36d45bf26a",
+        "76d0492ab256d1e999988d1f1c9659353a069503"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-04",
+      "canonical_question": "What should be verified before claiming the Admin and Audit Logs API covers a given event?",
+      "spoken_variants": [
+        "What should be verified before claiming the Admin and Audit Logs API covers a given event?",
+        "Which should be verified before claiming the Admin and Audit Logs API covers a given event?"
+      ],
+      "scenario": "Admin and audit logs scope",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "event category",
+        "API platform vs ChatGPT workspace",
+        "retention/deletion limitations"
+      ],
+      "answer_thesis": "Verify product scope, supported event categories, permissions, and whether the API can delete audit/security logs.",
+      "architecture_components": [
+        "capability matrix",
+        "negative capability list",
+        "source digest"
+      ],
+      "failure_cases": [
+        "ChatGPT compliance logs conflated with API Platform audit logs",
+        "deletion capability overstated"
+      ],
+      "tradeoffs": [
+        "separate products are harder to explain but prevent wrong answers",
+        "negative capabilities are important interview evidence"
+      ],
+      "source_references": [
+        "openai-help-admin-audit-logs",
+        "openai-api-admin"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-04",
+        "source:openai-help-admin-audit-logs",
+        "source:openai-api-admin"
+      ],
+      "graham_project_bridge": "This is exactly the sort of subtle distinction Live Evidence should surface.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_a05c2cf0dbeda1fe1baf033349688f8a",
+        "openai_official_source_b7332b30c1cf7ecc36397092a30e0bb5",
+        "48c3d94589b0488829d2db62485e1b4ad8543828",
+        "2fb4d030bc4d184719b395e3be1aa00140f750de"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-05",
+      "canonical_question": "How should we treat OpenAI security-page claims in a technical interview answer?",
+      "spoken_variants": [
+        "How should we treat OpenAI security-page claims in a technical interview answer?",
+        "How should we treat OpenAI security-page claims in a technical interview answer?"
+      ],
+      "scenario": "Security page evidence limits",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "control type",
+        "audit evidence",
+        "marketing language",
+        "trust portal link"
+      ],
+      "answer_thesis": "Use the security page for public control posture and links, but do not convert marketing or portal references into audit-proof claims without protected evidence.",
+      "architecture_components": [
+        "claim classifier",
+        "evidence tier",
+        "trust portal cross-reference"
+      ],
+      "failure_cases": [
+        "SOC/ISO claimed without document access",
+        "public overview treated as full control implementation"
+      ],
+      "tradeoffs": [
+        "conservative classification reduces punch but avoids false authority",
+        "protected artifacts require human access"
+      ],
+      "source_references": [
+        "openai-security-and-privacy"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-05",
+        "source:openai-security-and-privacy"
+      ],
+      "graham_project_bridge": "This keeps Graham from overclaiming during an interview.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_9d0ea37962e9356e6ca2b4fef75596eb",
+        "91402237a26e374ff495515c98c7c81762a1b6e2",
+        "2ee904026659a7577ccc5c5a437f952c0f6220c6",
+        "ba45bbac195c8dfeb10010353a4afd1c8b7d4c1d"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-06",
+      "canonical_question": "What should be asked before using Trust Portal material as source evidence?",
+      "spoken_variants": [
+        "What should be asked before using Trust Portal material as source evidence?",
+        "Which should be asked before using Trust Portal material as source evidence?"
+      ],
+      "scenario": "Trust Portal access",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "public shell vs protected artifact",
+        "access approval",
+        "document date"
+      ],
+      "answer_thesis": "Ask whether we have authorized access to the specific document, its date, and permission to store/use it in the KB.",
+      "architecture_components": [
+        "authorization note",
+        "document inventory",
+        "classification field"
+      ],
+      "failure_cases": [
+        "public shell summarized as SOC content",
+        "expired report used",
+        "private document stored without approval"
+      ],
+      "tradeoffs": [
+        "metadata-only is safe; authorized capture improves specificity"
+      ],
+      "source_references": [
+        "openai-trust-portal-home"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-06",
+        "source:openai-trust-portal-home"
+      ],
+      "graham_project_bridge": "This is a privacy-boundary issue, not a scraping problem.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_a5c9833fb03bd8d0510997755e854454",
+        "openai_official_source_b2a7adec295ad4ad26bd2cde4449ea3e",
+        "openai_privacy_source_b2a7adec295ad4ad26bd2cde4449ea3e",
+        "45b7d66be7e908deb43417449302dbbcdc0de2af"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-07",
+      "canonical_question": "What OpenAI data-controls caveat matters for HIPAA/BAA use of web search?",
+      "spoken_variants": [
+        "What OpenAI data-controls caveat matters for HIPAA/BAA use of web search?",
+        "Which OpenAI data-controls caveat matters for HIPAA/BAA use of web search?"
+      ],
+      "scenario": "Web Search and BAA caveat",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "Responses API web_search tool",
+        "external_web_access",
+        "preview variants",
+        "ZDR project"
+      ],
+      "answer_thesis": "The prep should distinguish offline/cache-only web_search behavior from preview variants and live external web access when discussing BAA eligibility.",
+      "architecture_components": [
+        "tool eligibility note",
+        "mode comparison",
+        "source quote"
+      ],
+      "failure_cases": [
+        "preview variant treated as offline",
+        "external web access allowed under BAA by accident"
+      ],
+      "tradeoffs": [
+        "precise caveat is narrow but important",
+        "broader answer risks legal overclaiming"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-07",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Live Evidence already avoids sending full transcript to Brave/Dogpile automatically.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_45b88e9f1134e39caa6476dc8ec8fac1",
+        "openai_official_source_5aa821e704201eecb30d346f11e21cd8",
+        "9529eb1a9f2e4dc56059164448d4d8c40bf2089a",
+        "74807447d7d9c4e656bceac25b2f4435a09b17fc"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-08",
+      "canonical_question": "What limitations must be named when describing OpenAI data residency?",
+      "spoken_variants": [
+        "What limitations must be named when describing OpenAI data residency?",
+        "Which limitations must be named when describing OpenAI data residency?"
+      ],
+      "scenario": "Data residency limitations",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "customer content vs system data",
+        "region processing vs storage",
+        "unsupported services"
+      ],
+      "answer_thesis": "Name that residency applies to customer content for supported endpoints/models and does not apply to system data or third-party services.",
+      "architecture_components": [
+        "regional support table",
+        "system-data definition",
+        "unsupported-service notes"
+      ],
+      "failure_cases": [
+        "system data promised regional",
+        "storage support confused with processing support",
+        "third-party tool data omitted"
+      ],
+      "tradeoffs": [
+        "limitations reduce marketing gloss but make the answer trustworthy",
+        "region tables need freshness checks"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-08",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This is a strong architecture-interview bridge to policy-aware routing.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_a538eeae896e81c767380db91ee238df",
+        "5a9afa4bb2a46f187d0901576b732617110ac416",
+        "2ba941d4cab15fb1b23cc5f75f7a332f207b3bb8",
+        "1df3ee5cee9550487d50b388dbae16f6d0967b78"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-09",
+      "canonical_question": "What must be checked before saying Enterprise Key Management covers an OpenAI workflow?",
+      "spoken_variants": [
+        "What must be checked before saying Enterprise Key Management covers an OpenAI workflow?",
+        "Which must be checked before saying Enterprise Key Management covers an OpenAI workflow?"
+      ],
+      "scenario": "EKM unsupported products",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "application state",
+        "supported KMS providers",
+        "unsupported products"
+      ],
+      "answer_thesis": "Check whether the workflow creates application state, whether the project has EKM configured, and whether the product is excluded from EKM support.",
+      "architecture_components": [
+        "EKM support matrix",
+        "workflow endpoint list",
+        "KMS provider check"
+      ],
+      "failure_cases": [
+        "unsupported product included",
+        "non-application-state data misunderstood",
+        "unsupported KMS vendor assumed"
+      ],
+      "tradeoffs": [
+        "support matrix is precise but can change",
+        "workflow inventory is required"
+      ],
+      "source_references": [
+        "openai-api-data-controls"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-09",
+        "source:openai-api-data-controls"
+      ],
+      "graham_project_bridge": "This becomes both an architecture and code validation prompt.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_8eabf69399f730bf32c89a9c5772a61f",
+        "4bb3e1e45c95e18a76895477d492fd94c01e1223",
+        "4b34250a1221bcfaf7609d8213dae78f0bdc2fe3",
+        "dd8d2071a1e3fcfd85cb76efcb1ce28e05634509"
+      ]
+    },
+    {
+      "classification": "official_source_bound_interview_oracle",
+      "question_id": "openai-official-research-10",
+      "canonical_question": "When should WebGPT-generated OpenAI prep be accepted into the KB?",
+      "spoken_variants": [
+        "When should WebGPT-generated OpenAI prep be accepted into the KB?",
+        "When should WebGPT-generated OpenAI prep be accepted into the KB?"
+      ],
+      "scenario": "Official docs versus WebGPT",
+      "category": null,
+      "rubric_dimension": "research",
+      "clarifications_expected_before_answering": [
+        "official source availability",
+        "synthetic vs factual claim",
+        "classification"
+      ],
+      "answer_thesis": "Accept WebGPT as challenge-generation input only when its claims are converted into Pydantic JSON with source references and unsupported facts labeled not verified.",
+      "architecture_components": [
+        "source classifier",
+        "Pydantic canonical JSON",
+        "unsupported-claim marker"
+      ],
+      "failure_cases": [
+        "WebGPT treated as primary source",
+        "synthetic interview prompt labeled real",
+        "missing classification"
+      ],
+      "tradeoffs": [
+        "WebGPT increases coverage but cannot replace official sources",
+        "strict validation slows ingestion but prevents slop"
+      ],
+      "source_references": [
+        "openai-api-data-controls",
+        "openai-security-and-privacy",
+        "openai-trust-portal-home"
+      ],
+      "meta_tags": [
+        "client:openai-privacy",
+        "employer:openai",
+        "question-type:research",
+        "source:official-openai",
+        "retrieval:bm25",
+        "retrieval:keyword",
+        "retrieval:semantic-qdrant",
+        "retrieval:graph",
+        "challenge-id:openai-official-research-10",
+        "source:openai-api-data-controls",
+        "source:openai-security-and-privacy",
+        "source:openai-trust-portal-home"
+      ],
+      "graham_project_bridge": "This captures the core immutable goal for curate-client.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence"
+      ],
+      "hold_answer_clarify_disposition": "Answer after naming assumptions; hold if the question asks for a source-specific fact not present in the official captured source text.",
+      "reviewed_answer": {
+        "classification": "official_source_bound_reviewed_answer",
+        "review_status": "reviewed",
+        "expected_response_shape": "clarify assumptions, name official source boundary, propose architecture/code/research answer, cite source references, name failure modes",
+        "quality_bar": [
+          "uses only captured official-source facts for factual claims",
+          "labels unsupported facts as Not verified",
+          "maps answer to architecture, code, or research rubric",
+          "names fail-closed behavior and evidence boundary"
+        ]
+      },
+      "memory_keys": [
+        "openai_official_question_oracle_fc02028882932e96ce319bfad8582b3d",
+        "91402237a26e374ff495515c98c7c81762a1b6e2",
+        "7b20d0e2b33a7083b77419b5bb1e07f27c28f1b0",
+        "f0f99b1c494248dbe26f5ef66f94e9c9edf5ec66"
       ]
     }
   ],

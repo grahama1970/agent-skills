@@ -13,6 +13,8 @@ import os
 import re
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -819,21 +821,36 @@ def _live_evidence_load_command(cfg: dict, prep_pack: Path) -> list[str]:
     ]
 
 
-def _recall_keys(cfg: dict, query: str, *, limit: int = 6) -> list[str]:
+def _recall_payload(cfg: dict, query: str, *, limit: int) -> tuple[int, dict[str, Any]]:
     daemon = str(cfg.get("memory_daemon") or "http://127.0.0.1:8601").rstrip("/")
-    req = urllib.request.Request(
-        daemon + "/recall",
-        data=json.dumps({
-            "q": query,
-            "collections": _oracle_collections(cfg),
-            "k": limit,
-            "limit": limit,
-        }).encode(),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=30) as response:
-        payload = json.loads(response.read())
+    body = {
+        "q": query,
+        "scope": f"client:{cfg['client']}",
+        "collections": _oracle_collections(cfg),
+        "tags": _oracle_tags(cfg),
+        "k": limit,
+        "limit": limit,
+    }
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        req = urllib.request.Request(
+            daemon + "/recall",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                return response.status, json.loads(response.read())
+        except (ConnectionResetError, urllib.error.URLError) as exc:
+            last_exc = exc
+            time.sleep(0.25 * (attempt + 1))
+    assert last_exc is not None
+    raise last_exc
+
+
+def _recall_keys(cfg: dict, query: str, *, limit: int = 6) -> list[str]:
+    _, payload = _recall_payload(cfg, query, limit=limit)
     keys = []
     for item in payload.get("items", []):
         key = item.get("_key") if isinstance(item, dict) else None
@@ -1167,11 +1184,7 @@ def cmd_validate_memory_recall(cfg: dict) -> dict[str, Any]:
     tags = _oracle_tags(cfg)
     probes: list[dict[str, Any]] = []
     for oracle in pack.get("question_oracles") or []:
-        body = {"q": oracle.get("canonical_question"), "scope": scope, "k": int(cfg.get("memory_recall_k") or 8), "collections": collections, "tags": tags}
-        req = urllib.request.Request(daemon + "/recall", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}, method="POST")
-        with urllib.request.urlopen(req, timeout=30) as response:
-            payload = json.loads(response.read())
-            status_code = response.status
+        status_code, payload = _recall_payload(cfg, str(oracle.get("canonical_question") or ""), limit=int(cfg.get("memory_recall_k") or 8))
         items = [item for item in payload.get("items", []) if isinstance(item, dict)]
         scoped = [item for item in items if item.get("scope") == scope]
         tagged = [item for item in scoped if any(tag in (item.get("tags") or []) for tag in tags)]
