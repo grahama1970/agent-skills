@@ -84,20 +84,12 @@ def read_conversation(run_dir: Path) -> list[dict[str, Any]]:
 
 def build_prompt(run_dir: Path, prompt_text: str | None) -> tuple[str, str]:
     """Condition her on her own entry and the conversation. Returns (prompt, asked)."""
-    journal = ""
-    journal_path = run_dir / "journal.md"
-    if journal_path.is_file():
-        journal = journal_path.read_text(encoding="utf-8")[:6000]
+    grounding = _load("conversation_grounding")
+    context = grounding.load_context(run_dir)
+    journal = str(context.get("journal_text") or "")[:6000]
+    source_block = grounding.format_for_prompt(context)
 
-    entry: dict[str, Any] = {}
-    for name in ("journal_entry.json", "persona_journal.json"):
-        candidate = run_dir / name
-        if candidate.is_file():
-            try:
-                entry = json.loads(candidate.read_text(encoding="utf-8"))
-                break
-            except Exception:
-                entry = {}
+    entry: dict[str, Any] = context.get("journal_entry") if isinstance(context.get("journal_entry"), dict) else {}
 
     turns = read_conversation(run_dir)
     asked = (prompt_text or "").strip()
@@ -116,8 +108,11 @@ def build_prompt(run_dir: Path, prompt_text: str | None) -> tuple[str, str]:
     mapper = _load("map_delivery_tone")
     tone_menu = "\n".join(f"  {t}" for t in sorted(mapper.ALLOWED_TONES))
 
-    prompt = f"""You are Embry. You dreamt, then wrote the journal entry below, and now
-someone who read it is talking to you about it.
+    prompt = f"""You are Embry. You dreamt, watched the dream frames, wrote the journal entry
+below, and now someone who read it is talking to you about it.
+
+SOURCE PACKET YOU MUST GROUND IN
+{source_block}
 
 YOUR JOURNAL ENTRY
 {journal}
@@ -142,6 +137,11 @@ Reply in your own voice, first person, as yourself.
 Hold the tension rather than resolving it. A dream did not settle anything; it
 showed you what you were already carrying. If you are still unsure, say so --
 being unresolved out loud is more honest than a tidy conclusion.
+
+You MUST name at least one concrete anchor from the source packet: a person,
+place, object, image, or day event. Bad: "the competence question" with no
+source detail. Good: "Marcus talking over me in the meeting", "the narrowing
+room", "the glass mask", "Dev's warmth", or another anchor present above.
 
 Speak only about your own inner state. You may say how a memory felt to you and
 what you made of it. You may NOT assert new facts about other people, or treat
@@ -276,6 +276,15 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
             "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
         }
 
+    grounding = _load("conversation_grounding")
+    grounding_context = grounding.load_context(run_dir)
+    text, grounding_injected = grounding.ground_if_needed(text, grounding_context, role="embry")
+    day_grounding_injected = False
+    prior_turns = read_conversation(run_dir)
+    prior_has_day = any(grounding.has_day_anchor(str(turn.get("text") or ""), grounding_context) for turn in prior_turns)
+    if not prior_has_day:
+        text, day_grounding_injected = grounding.ground_day_if_needed(text, grounding_context, role="embry")
+
     tone, voice_delivery = choose_tone(run_dir, felt)
     label = f"pd_reply_{run_dir.name}_{abs(hash(text)) % 10**8}"
 
@@ -307,6 +316,14 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         "tone_was_in_vocabulary": felt in _load("map_delivery_tone").ALLOWED_TONES,
         "tone": tone,
         "voice_delivery": voice_delivery,
+        "grounding_injected": grounding_injected,
+        "day_grounding_injected": day_grounding_injected,
+        "grounding_anchor_terms": grounding_context.get("anchor_terms") or [],
+        "day_anchor_terms": grounding_context.get("day_anchor_terms") or [],
+        "grounding_source_count": grounding_context.get("source_count"),
+        "grounding_transcript_count": grounding_context.get("transcript_count"),
+        "grounding_panel_count": grounding_context.get("panel_count"),
+        "grounding_observation_count": grounding_context.get("observation_count"),
         "audio": audio_path.name if audio_path else None,
         "engine": response.get("engine"),
         # What proves the tone was applied, as opposed to merely requested.

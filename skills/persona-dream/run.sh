@@ -112,7 +112,6 @@ Commands:
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
   check-pipeline-robustness  Aggregate offline autonomous, lineage, fail-closed, and provider-boundary checks
   check-live-memory-recall  Exercise live Memory /recall through static dream generation and write a fail-closed receipt
-  phase16-behavior-evaluation  Prove recall/traversal/grounded-use/identity behavior for the persisted successor dream
   run-live-pctom-gate0  Exercise live Memory recall and derive a PCTOM-R Gate 0 lineage case
   run-live-tau-gate2-4  Exercise live Tau text reasoning through PCTOM-R Gate 2-4 validators
   run-live-tau-score-revision  Score live Tau PCTOM-R commitments and validate Gate 7 revision
@@ -195,6 +194,7 @@ Commands:
   run-reliability-surface  Validate PCTOM-R Gate 8 repeated, perturbed, and fault-injected reliability surface
   run-causal-replay  Validate PCTOM-R Gate 9 causal replay and failure localization
   live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
+  curate-transcript-context Curate $mine-transcripts output into conversation grounding context
   converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
   render-blinded-listener-stimuli Render all target stimuli with one Chatterbox normalization policy
@@ -563,9 +563,6 @@ case "$COMMAND" in
   check-live-memory-recall)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_live_memory_recall.py" "$@"
     ;;
-  phase16-behavior-evaluation)
-    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/phase16_behavior_evaluation.py" "$@"
-    ;;
   run-live-pctom-gate0)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_pctom_gate0.py" "$@"
     ;;
@@ -844,6 +841,9 @@ case "$COMMAND" in
     ;;
   carry-conversation)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/carry_conversation.py" "$@"
+    ;;
+  curate-transcript-context)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/curate_transcript_context.py" "$@"
     ;;
   converse-dynamic)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/dynamic_conversation.py" "$@"

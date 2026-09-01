@@ -49,10 +49,10 @@ def transcript_tail(run_dir: Path, limit: int = 12) -> list[dict[str, Any]]:
 
 
 def draft_horus_turn(run_dir: Path, adapter, tones: list[str], opening_topic: str | None) -> tuple[dict[str, Any], dict[str, Any]]:
-    journal = ""
-    jpath = run_dir / "journal.md"
-    if jpath.is_file():
-        journal = jpath.read_text(encoding="utf-8")[:3000]
+    grounding = _load("conversation_grounding")
+    context = grounding.load_context(run_dir)
+    journal = str(context.get("journal_text") or "")[:3000]
+    source_block = grounding.format_for_prompt(context)
     tail = transcript_tail(run_dir)
     convo = "\n".join(f"{t['role']}: {t['text']}" for t in tail) or "(no turns yet)"
     last_embry = next((t["text"] for t in reversed(tail) if t["role"] == "embry"), None)
@@ -61,10 +61,21 @@ def draft_horus_turn(run_dir: Path, adapter, tones: list[str], opening_topic: st
         if last_embry else
         f"Open the conversation. Topic to open with: {opening_topic or 'her dream, her day, and how holding them together shifts her mood'}"
     )
-    prompt = f"""You are Horus, a steady companion persona talking with Embry about the dream
-journal entry below. You are curious about her dream, her day, and how the two
-together move her mood. Ask exactly ONE question (one to three sentences of
-speech, natural spoken register, no stage directions, no markdown).
+    prompt = f"""You are Horus, a steady companion persona talking with Embry about the actual
+finished Persona Dream cycle. Do not ask about generic uncertainty. Use the
+source packet below: the dream she watched, the memory residue, curated
+mined-transcript/operator feedback, the day events if present, and the journal
+tension.
+
+Ask exactly ONE question (one to three sentences of speech, natural spoken
+register, no stage directions, no markdown). The question MUST name at least one
+concrete anchor from the source packet, such as a person, place, object, image,
+or event. Bad: "the dream" or "the competence question" with no source detail.
+Good: "Marcus talking over you in the meeting", "the narrowing room", "Dev's
+warmth", "the glass mask", or another anchor that appears below.
+
+SOURCE PACKET
+{source_block}
 
 Her journal entry:
 {journal}
@@ -84,11 +95,23 @@ Return strict JSON: {{"question": "...", "tone": "<one tone from the list>"}}"""
     tone = str((parsed or {}).get("tone") or "").strip()
     if not question:
         raise SystemExit(f"BLOCKED_HORUS_NOT_DRAFTED: {json.dumps(receipt)[:200]}")
+    question, injected = grounding.ground_if_needed(question, context, role="horus")
+    day_injected = False
+    if not last_embry:
+        question, day_injected = grounding.ground_day_if_needed(question, context, role="horus")
     if tone not in tones:
         tone = "curious_searching" if "curious_searching" in tones else tones[0]
     return {"question": question, "tone": tone,
             "conditioned_on_last_embry": bool(last_embry),
-            "transcript_chars": len(convo)}, receipt
+            "transcript_chars": len(convo),
+            "grounding_injected": injected,
+            "day_grounding_injected": day_injected,
+            "grounding_anchor_terms": context.get("anchor_terms") or [],
+            "day_anchor_terms": context.get("day_anchor_terms") or [],
+            "grounding_source_count": context.get("source_count"),
+            "grounding_transcript_count": context.get("transcript_count"),
+            "grounding_panel_count": context.get("panel_count"),
+            "grounding_observation_count": context.get("observation_count")}, receipt
 
 
 def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> Path:

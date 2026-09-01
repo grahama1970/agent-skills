@@ -5,19 +5,24 @@ The whole loop, live, through run.sh (the documented layer), asserting the
 named receipt of every stage rather than trusting any stage's own exit code:
 
   1. ingest-day            -> PASS_DAY_INGESTED, events read back
-  2. dream (Tau DAG spine) -> tau.generic_dag_run_receipt.v1 PASS, both nodes;
+  2. curate-transcript-context -> $mine-transcripts output filtered into bounded
+                              operator-feedback context plus Memory probe
+  3. dream (Tau DAG spine) -> tau.generic_dag_run_receipt.v1 PASS, both nodes;
                               dream_journal.md + persist_proof exact re-read
-  3. generate (day journal)-> PASS_JOURNAL_RENDERED, tone-annotated journal.md
-                              + hash-bound journal_spoken.txt
-  4. speak-journal         -> PASS_JOURNAL_SPOKEN, journal.wav bytes + sha256,
+  4. materialize cycle    -> run dir consumes the Tau spine's watched dream,
+                              dream_journal, residue, panels, observation, and
+                              spoken journal text instead of re-generating a
+                              generic side journal
+  5. speak-journal         -> PASS_JOURNAL_SPOKEN, journal.wav bytes + sha256,
                               ASR verified
-  5. generate --write-memory -> memory_write ok
-  6. store-dream-artifacts -> PASS_DREAM_ARTIFACTS_STORED, read_back >= 1
-  7. converse-dynamic --turns 3 -> PASS_DYNAMIC_CONVERSATION; conversation.jsonl
+  6. journal memory        -> dream_journal.v1 persisted by the spine is present
+                              and exact persistence proof was read back
+  7. store-dream-artifacts -> PASS_DREAM_ARTIFACTS_STORED, read_back >= 1
+  8. converse-dynamic --turns 3 -> PASS_DYNAMIC_CONVERSATION; conversation.jsonl
                               gains 3 horus + 3 embry turns, every one voiced
                               (tone + audio sha256), WAVs non-empty on disk;
                               later Horus turns conditioned on her real replies
-  8. carry-conversation    -> PASS_CONVERSATION_CARRIED, read_back == carried
+  9. carry-conversation    -> PASS_CONVERSATION_CARRIED, read_back == carried
 
 Fresh run dirs per invocation (dream spine and journal run), so each trial is
 a real end-to-end pass, not a replay. BLOCKED_* markers when a required live
@@ -25,9 +30,11 @@ service (chatterbox, memory, scillm via doctor) is down.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -53,6 +60,104 @@ def fail(code: str, proc: subprocess.CompletedProcess | None = None) -> None:
     raise SystemExit(f"FAIL_{code}{detail}")
 
 
+def _load_grounding():
+    spec = importlib.util.spec_from_file_location("conversation_grounding", ROOT / "scripts" / "conversation_grounding.py")
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load conversation_grounding")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _items_from_day_ingest_receipt(run_dir: Path, day: str) -> list[dict[str, object]]:
+    receipt = run_dir / f"DAY_INGEST_{day}.json"
+    if not receipt.is_file():
+        return []
+    payload = json.loads(receipt.read_text(encoding="utf-8"))
+    items: list[dict[str, object]] = []
+    for event in payload.get("events") or []:
+        if not isinstance(event, dict) or not str(event.get("text") or "").strip():
+            continue
+        items.append({
+            "source_id": event.get("document_key"),
+            "scope": payload.get("scope"),
+            "text": event.get("text"),
+            "type": f"Day event ({event.get('kind') or 'unknown'})",
+            "day": day,
+            "source": "current_day_ingest_receipt",
+        })
+    return items
+
+
+def _fetch_day_context(persona: str, day: str, run_dir: Path) -> dict[str, object]:
+    current_items = _items_from_day_ingest_receipt(run_dir, day)
+    spec = importlib.util.spec_from_file_location("persona_dream", ROOT / "scripts" / "persona_dream.py")
+    if spec is None or spec.loader is None:
+        return {"status": "error", "error": "cannot_load_persona_dream", "items": current_items}
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["persona_dream"] = module
+    spec.loader.exec_module(module)
+    try:
+        fetched, receipt = module._fetch_day_memories(module.Persona(persona), day, 4)
+    except Exception as exc:
+        return {"status": "error", "error": str(exc), "items": current_items}
+    seen = {str(i.get("source_id")) for i in current_items if isinstance(i, dict)}
+    items = current_items + [item for item in fetched if str(item.get("source_id")) not in seen]
+    return {"status": "ok", "day": day, "persona": persona, "items": items, "current_ingest_count": len(current_items), "receipt": receipt}
+
+
+def materialize_cycle_context(cycle: Path, run_dir: Path, *, day: str | None = None, persona: str = "embry") -> dict[str, object]:
+    """Copy the cognition spine outputs into the conversation run dir.
+
+    The old full-cycle eval ran the rich Tau spine, proved its journal existed,
+    then threw that context away and called the simpler generate lane. That made
+    the live conversation audible but generic. This read-back/copy step makes
+    the downstream speech and chat surfaces consume the exact dream Embry watched
+    and journaled.
+    """
+    run_dir.mkdir(parents=True, exist_ok=True)
+    copies = [
+        ("dream_journal.v1.json", "dream_journal.v1.json"),
+        ("dream_journal.md", "dream_journal.md"),
+        ("dream_journal.md", "journal.md"),
+        ("journal_spoken.txt", "journal_spoken.txt"),
+        ("residue_links.json", "residue_links.json"),
+        ("storyboard_plan.json", "storyboard_plan.json"),
+        ("observation_packet.json", "observation_packet.json"),
+        ("phase14_tom.json", "phase14_tom.json"),
+        ("storyboard_contact_sheet.png", "storyboard_contact_sheet.png"),
+        ("storyboard_contact_sheet.png", "contact_sheet.png"),
+    ]
+    copied: list[str] = []
+    missing: list[str] = []
+    for source_name, dest_name in copies:
+        source = cycle / source_name
+        if not source.is_file():
+            missing.append(source_name)
+            continue
+        shutil.copyfile(source, run_dir / dest_name)
+        copied.append(dest_name)
+    entry = json.loads((run_dir / "dream_journal.v1.json").read_text(encoding="utf-8"))
+    sources = [str(s) for s in entry.get("source_memory_ids") or []]
+    day_context = _fetch_day_context(persona, day, run_dir) if day else {"status": "skipped", "items": []}
+    (run_dir / "day_context.json").write_text(json.dumps(day_context, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    context_receipt = {
+        "schema": "persona_dream.full_cycle_context_materialization.v1",
+        "status": "PASS_CYCLE_CONTEXT_MATERIALIZED" if not missing else "BLOCKED_CYCLE_CONTEXT_MISSING",
+        "cycle": str(cycle),
+        "run_dir": str(run_dir),
+        "copied": copied,
+        "missing": missing,
+        "source_memory_count": len(sources),
+        "day_context_status": day_context.get("status"),
+        "day_context_count": len(day_context.get("items") or []),
+        "has_dream_journal": bool(str(entry.get("journal") or "").strip()),
+        "has_session_mood": isinstance(entry.get("session_mood"), dict) and bool((entry.get("session_mood") or {}).get("mood_label")),
+    }
+    (run_dir / "FULL_CYCLE_CONTEXT_RECEIPT.json").write_text(json.dumps(context_receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return context_receipt
+
+
 def main() -> int:
     try:
         urllib.request.urlopen(f"{CHATTERBOX}/health", timeout=10)
@@ -75,14 +180,31 @@ def main() -> int:
     p = sh(["ingest-day", "--date", day, "--from-commits",
             "--project-state", f"full-cycle eval {stamp}: the complete loop is being proven end to end",
             "--affect", "the human requires the whole loop, receipts at every joint",
-            "--event", "the eval records a third bounded event so the day-ingest gate is self-contained even before today's first commit"], 300)
+            "--event", "the eval records a third bounded event so the day-ingest gate is self-contained even before today's first commit",
+            "--event", "the conversation must discuss the specific dream, the watched dream images, the written journal, and today's memory residue rather than generic uncertainty",
+            "--out", str(run_dir / f"DAY_INGEST_{day}.json"), "--json"], 300)
     if "PASS_DAY_INGESTED" not in p.stdout:
         fail("DAY_INGEST", p)
     checks.append("day_ingested")
     stage_receipts["day_ingested"] = {"status": "PASS_DAY_INGESTED"}
 
+    p = sh(["curate-transcript-context", "--run-mine", "--sample", "120",
+            "--output", str(run_dir / "transcript_context.json"), "--json"], 700)
+    if "PASS_TRANSCRIPT_CONTEXT_CURATED" not in p.stdout:
+        fail("TRANSCRIPT_CONTEXT", p)
+    transcript_context = json.loads((run_dir / "transcript_context.json").read_text(encoding="utf-8"))
+    if not transcript_context.get("items"):
+        fail("TRANSCRIPT_CONTEXT_EMPTY")
+    checks.append(f"transcript_context_curated:{len(transcript_context['items'])}")
+    stage_receipts["transcript_context_curated"] = {
+        "status": transcript_context.get("status"),
+        "items": len(transcript_context.get("items") or []),
+        "memory_found": (transcript_context.get("memory_probe") or {}).get("found"),
+    }
+
     # 2. dream spine through Tau
-    p = sh(["dream", "--run-dir", str(spine_dir), "--persona", "embry"], 1800)
+    p = sh(["dream", "--run-dir", str(spine_dir), "--persona", "embry",
+            "--idea", "today's persona-dream loop, watched dream images, journal, and specific memory residue"], 1800)
     m = re.search(r"\{.*\}", p.stdout, re.S)
     if not m:
         fail("DREAM_NO_RECEIPT", p)
@@ -108,16 +230,16 @@ def main() -> int:
         "receipt": str(spine_dir / "dag_run" / "run-receipt.json"),
     }
 
-    # 3. day journal
-    p = sh(["generate", "--persona", "embry", "--day", day, "--output-dir", str(run_dir)], 900)
-    m = re.search(r"\{.*\}", p.stdout, re.S)
-    gen = json.loads(m.group(0)) if m else {}
-    if gen.get("journal_status") != "PASS_JOURNAL_RENDERED":
-        fail("JOURNAL_RENDER", p)
-    if "[tone:" not in (run_dir / "journal.md").read_text():
-        fail("JOURNAL_NO_TONE_ANNOTATION")
-    checks.append("journal_rendered")
-    stage_receipts["journal_rendered"] = {"status": "PASS_JOURNAL_RENDERED", "run_dir": str(run_dir)}
+    # 3. materialize the watched dream + journal into the conversation run dir
+    materialized = materialize_cycle_context(cycle, run_dir, day=day, persona="embry")
+    if materialized.get("status") != "PASS_CYCLE_CONTEXT_MATERIALIZED":
+        fail(f"CYCLE_CONTEXT:{materialized.get('missing')}")
+    if not (run_dir / "dream_journal.v1.json").is_file() or not (run_dir / "storyboard_plan.json").is_file():
+        fail("CYCLE_CONTEXT_NOT_READABLE")
+    if materialized.get("day_context_count") == 0:
+        fail("DAY_CONTEXT_NOT_READABLE")
+    checks.append("cycle_context_materialized")
+    stage_receipts["cycle_context_materialized"] = materialized
 
     # 4. spoken journal
     p = sh(["speak-journal", "--run-dir", str(run_dir)], 900)
@@ -137,12 +259,10 @@ def main() -> int:
         "asr_ok": audio_receipt.get("asr_ok"),
     }
 
-    # 5 + 6. memory write and artifact store
-    p = sh(["generate", "--persona", "embry", "--day", day, "--write-memory",
-            "--output-dir", str(run_dir)], 900)
-    m = re.search(r"\{.*\}", p.stdout, re.S)
-    if not m or json.loads(m.group(0)).get("memory_write_status") != "ok":
-        fail("MEMORY_WRITE", p)
+    # 5 + 6. the spine wrote the dream journal to memory; now store its media artifacts
+    journal_entry = json.loads((run_dir / "dream_journal.v1.json").read_text(encoding="utf-8"))
+    if not str(journal_entry.get("journal") or "").strip() or not journal_entry.get("source_memory_ids"):
+        fail("JOURNAL_MEMORY_LINEAGE")
     p = sh(["store-dream-artifacts", "--run-dir", str(run_dir), "--day", day], 600)
     if "PASS_DREAM_ARTIFACTS_STORED" not in p.stdout:
         fail("ARTIFACT_STORE", p)
@@ -172,10 +292,23 @@ def main() -> int:
         fail("NOT_DYNAMIC")
     if len({p2["horus"]["question"] for p2 in pairs}) != len(pairs):
         fail("HORUS_REPEATED_QUESTION")
-    checks.append(f"conversation:{len(pairs)}_pairs_all_voiced")
+    grounding = _load_grounding()
+    grounding_context = grounding.load_context(run_dir)
+    anchored_turns = [t for t in horus + embry if grounding.has_anchor(t.get("text") or "", grounding_context)]
+    if len(anchored_turns) < len(horus) + len(embry):
+        missing = [t.get("text") for t in horus + embry if not grounding.has_anchor(t.get("text") or "", grounding_context)]
+        fail(f"CONVERSATION_NOT_GROUNDED:{missing[:2]}")
+    day_anchored_turns = [t for t in horus + embry if grounding.has_day_anchor(t.get("text") or "", grounding_context)]
+    if not day_anchored_turns:
+        fail("CONVERSATION_NO_DAY_EVENT_ANCHOR")
+    checks.append(f"conversation:{len(pairs)}_pairs_all_voiced_grounded")
     stage_receipts["conversation"] = {
         "status": "PASS_DYNAMIC_CONVERSATION",
         "pairs": len(pairs),
+        "anchored_turns": len(anchored_turns),
+        "day_anchored_turns": len(day_anchored_turns),
+        "anchor_terms": grounding_context.get("anchor_terms") or [],
+        "day_anchor_terms": grounding_context.get("day_anchor_terms") or [],
         "receipt": str(run_dir / "dynamic_conversation_receipt.v1.json"),
     }
 

@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "persona-dream",
   "trials": 3,
-  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
+  "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, source-grounded dream conversation context, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
   "claims": {
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step",
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step",
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness"
   },
   "cases": [
@@ -435,6 +435,33 @@
       }
     },
     {
+      "name": "conversation-grounding-contract-tests",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "readback": true,
+      "supports_claims": [
+        "persona_dream.conversation.source_grounding",
+        "persona_dream.cycle_journal_spoken_spine_contract"
+      ],
+      "seams": [
+        "conversation.grounding_context",
+        "pipeline.cycle_context_materialization"
+      ],
+      "notes": "Guards the regression where the full-cycle path proved the Tau dream spine, then discarded the watched dream and generated a generic side journal for conversation. The deterministic contract requires the conversation prompt context to include dream observation, residue/mined context, concrete anchors, and materialized dream_journal.v1 artifacts.",
+      "command": [
+        "bash",
+        "-lc",
+        "uv run --project .. pytest ../tests/test_conversation_grounding.py -q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "5 passed"
+        ]
+      }
+    },
+    {
       "name": "full-cycle-live",
       "type": "positive",
       "real_world": true,
@@ -460,8 +487,9 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "FULL_CYCLE_OK stages=7",
-          "conversation:3_pairs_all_voiced"
+          "FULL_CYCLE_OK stages=8",
+          "transcript_context_curated:",
+          "conversation:3_pairs_all_voiced_grounded"
         ],
         "artifacts": [
           {
@@ -1424,6 +1452,15 @@
       }
     },
     {
+      "id": "persona_dream.conversation.source_grounding",
+      "description": "Persona Dream conversations consume the Tau spine's watched dream context: dream_journal.v1, storyboard panels, observation_packet frame entities, residue/mined memory context, and day events when present; generic conversation drafts are grounded with a concrete source anchor before being accepted.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    },
+    {
       "id": "persona_dream.status_scope_boundary",
       "description": "Persona Dream status surfaces preserve the operational boundary: a live audible full-cycle loop is evidence for the loop, not provider/Kling completion, human-perception proof, production readiness, or immutable-goal closure; PD-CORRECTED-GOAL-V1 remains the next agent-owned proof while #1058 remains blocked on human listener artifacts.",
       "criticality": "critical",
@@ -1459,7 +1496,7 @@
     },
     {
       "id": "persona_dream.full_cycle.live",
-      "description": "One complete persona-dream run start to finish in a fresh run dir: day ingest, Tau dream spine (select/instrument/observe/interpret/ToM/persist with exact re-read + dream journal), tone-annotated day journal, ASR-verified spoken journal, memory write, artifact store, a 3-pair fully audible dynamic Horus/Embry conversation about the dream, the day, and her mood (every turn tone + sha256-bound audio), and carry-back into memory with read-back equality.",
+      "description": "One complete persona-dream run start to finish in a fresh run dir: day ingest, Tau dream spine (select/instrument/observe/interpret/ToM/persist with exact re-read + dream journal), materialized watched-dream context from the spine, ASR-verified spoken journal, journal memory lineage proof, artifact store, a 3-pair fully audible source-grounded dynamic Horus/Embry conversation about the dream, the day, and her mood (every turn tone + sha256-bound audio), and carry-back into memory with read-back equality.",
       "criticality": "critical",
       "evidence_required": {
         "live_e2e": true
@@ -1601,6 +1638,15 @@
       ]
     },
     {
+      "seam_id": "conversation.grounding_context",
+      "seam_type": "source_context_contract",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ]
+    },
+    {
       "seam_id": "listener_study.normalized_render",
       "seam_type": "voice_stimulus_render",
       "criticality": "critical",
@@ -1627,6 +1673,15 @@
     },
     {
       "seam_id": "pipeline.cycle_journal_to_spoken_journal",
+      "seam_type": "pipeline_spine",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic",
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "pipeline.cycle_context_materialization",
       "seam_type": "pipeline_spine",
       "criticality": "critical",
       "required_evidence": [

@@ -19,10 +19,11 @@ rendered. Her journal is hash-bound to its spoken text; a claim she said
 something, with no audio and no tone, would be a weaker artifact than the thing
 it is commenting on.
 
-What this does NOT do is write the conversation back into memory. That needs a
-memory service where a stored document is retrievable, which today it is not
-(graph-memory-operator#99). The file is the durable half; the return arc into
-memory stays open and is not pretended otherwise.
+This command does NOT itself write the conversation back into memory. The
+separate `carry-conversation` step owns that return arc and proves each carried
+turn by read-back from Memory. Keeping append and carry separate prevents a
+browser/chat write from silently becoming autobiographical memory without the
+conversation boundary receipt.
 """
 from __future__ import annotations
 

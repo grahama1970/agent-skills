@@ -34,6 +34,7 @@ COLLECTION = "persona_memory"
 #: What a dream can leave behind, and how she would refer to it.
 ARTIFACTS = [
     ("contact_sheet.png", "image", "the imagery I saw in the dream, laid out as a contact sheet"),
+    ("storyboard_contact_sheet.png", "image", "the watched storyboard imagery from the dream spine"),
     ("journal.wav", "audio", "my own voice reading the journal entry aloud"),
     ("provider_return.mp4", "video", "the dream rendered as moving image"),
 ]
@@ -67,6 +68,7 @@ def describe(run_dir: Path, name: str, modality: str, base: str) -> str:
     detail = ""
     if modality == "image":
         prompts = run_dir / "frame_prompts.json"
+        storyboard = run_dir / "storyboard_plan.json"
         if prompts.is_file():
             try:
                 rows = json.loads(prompts.read_text(encoding="utf-8"))
@@ -75,6 +77,16 @@ def describe(run_dir: Path, name: str, modality: str, base: str) -> str:
                 first = [f for f in first if f]
                 if first:
                     detail = " It showed: " + "; ".join(f[:120] for f in first)
+            except (json.JSONDecodeError, AttributeError):
+                pass
+        if not detail and storyboard.is_file():
+            try:
+                rows = json.loads(storyboard.read_text(encoding="utf-8"))
+                panels = rows.get("panels") or []
+                first = [str(r.get("action") or r.get("setting") or "").strip() for r in panels[:2]]
+                first = [f for f in first if f]
+                if first:
+                    detail = " I saw: " + "; ".join(f[:120] for f in first)
             except (json.JSONDecodeError, AttributeError):
                 pass
     elif modality == "audio":
@@ -108,20 +120,33 @@ def reflection_key(run_dir: Path, persona: str, run_id: str) -> str | None:
         return None
     # Only link to a reflection that actually landed. A key from a skipped or
     # errored write is a dangling edge dressed up as provenance.
-    if data.get("status") != "ok" or not data.get("read_back"):
-        return None
-    return data.get("document_key")
+    if data.get("status") == "ok" and data.get("read_back"):
+        return data.get("document_key")
+
+    journal = run_dir / "dream_journal.v1.json"
+    if journal.is_file():
+        try:
+            entry = json.loads(journal.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return None
+        cycle = entry.get("cycle") or run_dir.name
+        return f"{persona}_journal_{cycle}"
+    return None
 
 
 def build_documents(run_dir: Path, persona: str, day: str, run_id: str) -> list[dict[str, Any]]:
     docs: list[dict[str, Any]] = []
     parent = reflection_key(run_dir, persona, run_id)
+    seen_digests: set[str] = set()
     for name, modality, base in ARTIFACTS:
         path = run_dir / name
         if not path.is_file():
             continue
         text = describe(run_dir, name, modality, base)
         digest = sha_file(path)
+        if digest in seen_digests:
+            continue
+        seen_digests.add(digest)
         docs.append({
             "_key": "pd_art_" + hashlib.sha256(f"{persona}:{digest}".encode()).hexdigest()[:24],
             "problem": f"A dream artifact {persona} produced on {day}",
