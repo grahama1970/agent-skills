@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "skill": "agent-ecosystem",
+  "trials": 2,
+  "proof_scope": "pi.receipt_envelope.v1 boundary envelope: live pydantic validation against the live triage-error catalog, typed parent_refs, and the mermaid ecosystem graph. real_world: every case executes the live validator and reads the live SKILL.md.",
+  "claims": {
+    "proves": "The boundary envelope validates strictly (triage codes from the live catalog, sha256 shapes, no extra fields, typed parent refs) and the ecosystem graph is retrievable."
+  },
+  "capability_claims": [
+    {"id": "ecosystem.envelope_valid_passes", "description": "valid envelope with parent refs and catalog triage code passes", "criticality": "critical", "evidence_required": {"deterministic": true}},
+    {"id": "ecosystem.ambiguous_triage_code_rejects", "description": "ambiguous triage code is unrepresentable", "criticality": "critical", "evidence_required": {"deterministic": true}},
+    {"id": "ecosystem.extra_fields_reject", "description": "extra fields are rejected (extra=forbid)", "criticality": "critical", "evidence_required": {"deterministic": true}},
+    {"id": "ecosystem.graph_retrievable", "description": "the mermaid ecosystem graph is emitted by run.sh graph", "criticality": "important", "evidence_required": {"deterministic": true}}
+  ],
+  "seams": [
+    {"seam_id": "envelope-validator", "seam_type": "cli", "criticality": "critical", "required_evidence": ["live_e2e"]},
+    {"seam_id": "ecosystem-graph", "seam_type": "cli", "criticality": "important", "required_evidence": ["live_e2e"]}
+  ],
+  "cases": [
+    {
+      "name": "valid-envelope-passes",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": ["ecosystem.envelope_valid_passes"],
+      "seams": ["envelope-validator"],
+      "timeout_seconds": 30,
+      "command": ["bash", "-lc", "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r1\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"shame\",\"emitted_at\":\"2026-09-01T13:00:00Z\",\"parent_refs\":[{\"receipt_id\":\"r0\",\"expected_schema\":\"brave_search.result.v1\",\"expected_producer\":\"brave-search\"}],\"triage_code\":\"herdr_pane_unaddressable\",\"payload\":{}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q '\"valid\": true'"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "ambiguous-triage-code-rejects",
+      "type": "negative",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": ["ecosystem.ambiguous_triage_code_rejects"],
+      "seams": ["envelope-validator"],
+      "timeout_seconds": 30,
+      "command": ["bash", "-lc", "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r2\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"triage_code\":\"stuff broke\",\"payload\":{}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'ambiguous triage_code'"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "extra-fields-reject",
+      "type": "negative",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": ["ecosystem.extra_fields_reject"],
+      "seams": ["envelope-validator"],
+      "timeout_seconds": 30,
+      "command": ["bash", "-lc", "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r3\",\"payload_schema\":\"s\",\"producer\":\"p\",\"emitted_at\":\"t\",\"payload\":{},\"extra\":1}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q 'Extra inputs are not permitted'"],
+      "expected": {"exit_code": 0}
+    },
+    {
+      "name": "graph-retrievable",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": ["ecosystem.graph_retrievable"],
+      "seams": ["ecosystem-graph"],
+      "timeout_seconds": 30,
+      "command": ["bash", "-lc", "/home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh graph | grep -q 'flowchart TB'"],
+      "expected": {"exit_code": 0}
+    }
+  ]
+}

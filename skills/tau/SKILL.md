@@ -167,44 +167,6 @@ uv run tau proof-index build
 
 ## Tau Runtime Lanes
 
-## Mandatory Live DAG Monitoring
-
-When a project-agent turn starts, owns, or waits on any Tau-backed DAG run, the
-agent must monitor Tau's JSON artifacts continuously until the run reaches a
-terminal state or the agent hands off with a concrete receipt path. Do not wait
-on only the outer shell process, cron log, or provider subprocess.
-
-Required read loop:
-
-1. Identify the active Tau run directory from the command arguments, ask
-   receipt, watchdog receipt, or process list.
-2. Read `<run_dir>/dag-progress.json` first and report `status`,
-   `node_progress`, `active_subagents`, `completed_subagents`, `last_event`,
-   `event_count`, `mocked`, and `live`.
-3. While `status` is `RUNNING`, poll `dag-progress.json` and the active
-   `node-artifacts/<node_id>/` directory at short intervals. For long waits,
-   report the latest JSON state instead of saying only that the command is
-   still running.
-4. When a node completes or fails, read its `node-receipt.json`,
-   `normalized-handler-receipt.json`, `handler-response-receipt.json`, terminal
-   contribution receipt, and runtime event/capture artifacts when present.
-5. When the DAG finishes, read `dag-receipt.json`, join decisions, terminal
-   contributions, and node receipts before making any claim about PASS, FAIL,
-   NEEDS_ATTENTION, reviewer verdict, or closure readiness.
-
-Plain status must name the current node and evidence path. Example:
-
-```text
-Tau status: RUNNING. Active node: handler-gpt-5-5-high attempt 1.
-Last event: node_started at 2026-08-24T21:37:34Z. Reviewer node is PENDING.
-Evidence: <run_dir>/dag-progress.json; node artifact dir contains prompt.md
-only, so no handler response receipt exists yet.
-```
-
-This is mandatory because Tau uses JSON streaming/progress artifacts as its
-operator interface. Treating Tau as an opaque long-running shell command is a
-skill-use failure.
-
 ### Local DAG Lane
 
 Use local `tau.dag_contract.v1` DAGs for deterministic creator/reviewer loops,
@@ -514,27 +476,6 @@ Authoring rules for project subagents:
   command specs through adaptive expansion unless a separate validated
   expansion/branch-lock receipt allows it.
 
-### Releaser Node Contract
-
-For ticket-backed repair DAGs, `releaser` is the integration and disposal
-boundary. A reviewer decides whether evidence is acceptable; the releaser owns
-what happens after acceptance:
-
-1. Confirm the repair branch or worktree has no unrelated uncommitted changes.
-2. Integrate the task-only commit into the target branch, normally `main`.
-3. Push the integrated target branch and read back the remote ref.
-4. Run the ticket close/release command from the integrated state with the
-   accepted proof artifacts.
-5. Remove the ticket-bound secondary worktree after proving it is clean and the
-   task commit is reachable from the target branch, or write an explicit
-   retention reason naming the path, branch/HEAD, owner, and follow-up ticket.
-
-A Tau DAG must fail closed before a `releaser` terminal verdict when any of
-these receipts are missing: merge/integration receipt, remote-ref readback,
-ticket transition receipt, and worktree cleanup or retention receipt. A
-reviewer `PASS` is not a release verdict, and an open, dirty, or unaccounted
-ticket worktree is not releasable.
-
 ### Simple Example: One Local Creator/Reviewer Loop
 
 Use this shape when a project agent wants a coder/reviewer loop with one bounded
@@ -831,3 +772,12 @@ local proof command or ask for the exact side-effect target before ending the
 turn. For side-effecting proof such as Memory `/upsert`, state the target
 collection before executing and preserve both the write receipt and readback
 artifact.
+
+## Ecosystem
+
+Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
+for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
+envelope). Produces: DAG receipts, `tau.agent_handoff.v1` (v2 will embed `pi.agent_status.v1`), goal hashes. Consumes: `tau.dag_contract.v1`, embedded status objects. Envelope-wrapped
+boundary events: dispatch, handoff, acceptance, closure. Failure names come only from the triage-error
+catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
+unrepresentable ecosystem-wide.

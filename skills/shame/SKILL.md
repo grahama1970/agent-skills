@@ -192,3 +192,12 @@ The fixture must prove:
 - the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
 
 The skill records examples only. It does not train or promote a classifier.
+
+## Ecosystem
+
+Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
+for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
+envelope). Produces: `pi.agent_status.v1`, shame training examples. Consumes: triage-error codes, human labels. Envelope-wrapped
+boundary events: escalation, durable failure. Failure names come only from the triage-error
+catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
+unrepresentable ecosystem-wide.

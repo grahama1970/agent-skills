@@ -456,3 +456,12 @@ handler answered from an interactive shell. `install-cron` emits an explicit
 `PROJECT_WATCHDOG_SHELL_INIT`.
 
 See `PROJECT_KNOWLEDGE.md` for current readiness and open questions.
+
+## Ecosystem
+
+Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
+for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
+envelope). Produces: tick receipts, proof gates, leases. Consumes: GitHub agent-work tickets, tau verdicts. Envelope-wrapped
+boundary events: dispatch, closure. Failure names come only from the triage-error
+catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
+unrepresentable ecosystem-wide.

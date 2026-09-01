@@ -183,6 +183,25 @@ A single workstation can run different providers in different panes:
 ./run.sh agent start workstation.json --name petey-opencode --role petey --kind opencode --split right
 ```
 
+## Cross-provider session bridge (pi-herdr-bridge)
+
+`pi-herdr-bridge/` is a companion extension to pi-intercom that lets Pi,
+Codex, and Claude Code sessions discover each other and exchange bounded
+messages. The roster merges pi-intercom broker sessions with `herdr agent
+list` panes (which carry native session refs per provider); delivery routes
+per target: intercom broker for Pi, `codex queue --thread <uuid>` for Codex,
+`herdr agent prompt <pane_id>` otherwise.
+
+```bash
+node pi-herdr-bridge/bridge-cli.mjs list
+node pi-herdr-bridge/bridge-cli.mjs send --to <name|session-ref|pane-id> --text "handoff ready at <path>"
+node pi-herdr-bridge/bridge-cli.mjs listen --name <name>
+```
+
+Pi sessions get the same via the `herdr_bridge` tool (`pi-herdr-bridge/index.ts`).
+Messages stay bounded notifications/questions; durable work orders and
+receipts remain file-based per the pattern above. See `pi-herdr-bridge/README.md`.
+
 ## Verification
 
 ```bash
@@ -204,3 +223,12 @@ being offline.
 trials over the live topology proof, the live protocol report, plus negative and
 adversarial cases for an unknown agent kind, an empty prompt, and an unusable
 Herdr. `--with-agent` is opt-in because attaching a provider consumes a session.
+
+## Ecosystem
+
+Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
+for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
+envelope). Produces: inbox records, dead-letters with `herdr_pane_unaddressable`. Consumes: triage-error codes. Envelope-wrapped
+boundary events: durable failure (TTL dead-letter). Failure names come only from the triage-error
+catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
+unrepresentable ecosystem-wide.

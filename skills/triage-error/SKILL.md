@@ -93,3 +93,12 @@ first; see `best-practices-skills` for the contract clause.
 
 Files: `triage_error.py` (Typer CLI), `failure_codes.json` (catalog), `run.sh`,
 `sanity.sh`, `fixtures/agentic_eval.json`, `tests/`.
+
+## Ecosystem
+
+Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
+for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
+envelope). Produces: `{code, cause, next_command}` classifications, minted codes. Consumes: raw error text from any layer. Envelope-wrapped
+boundary events: durable failure (minted-code ticket/eval loop). Failure names come only from the triage-error
+catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
+unrepresentable ecosystem-wide.

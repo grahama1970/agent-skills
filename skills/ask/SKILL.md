@@ -3,10 +3,12 @@ name: ask
 description: >
   Use when the user asks to query project memory, ask an oracle, use supported
   browser-backed reviewers, run Tau roundtable/single-handler workflows,
-  run persona/deep-review workflows,
+  ask Pi-native subagents from within Pi, run persona/deep-review workflows,
   generate image prompts, check OS/project health through composed skills, or run
   an ask DAG. This skill is the executable /ask runtime; do not replace it with
-  an informal subagent, plain web search, or hand-written review.
+  an informal subagent, plain web search, or hand-written review; inside Pi,
+  explicit Pi-native subagent targets are routed through the pi-subagents tool as
+  an Ask target type.
 triggers:
   - $ask
   - /ask
@@ -17,6 +19,9 @@ triggers:
   - persona review
   - CAE gap review
   - browser oracle
+  - Pi subagent
+  - ask subagent
+  - local subagent
   - ask DAG
   - Tau DAG
   - reasoning effort
@@ -27,18 +32,21 @@ triggers:
 provides:
   - >
     Executable ask runtime for memory-backed answers, oracle calls, reviews,
-    supported browser-backed review, Tau single-handler and roundtable
-    workflows, Tau compete/bakeoff workflows, persona workflows, image
-    generation, ask/scillm-style DAG runs, and strict Tau DAG runs.
+    supported browser-backed review, Pi-native subagent advisory/worker calls,
+    Tau single-handler and roundtable workflows, Tau compete/bakeoff workflows,
+    persona workflows, image generation, ask/scillm-style DAG runs, and strict
+    Tau DAG runs.
   - >
     Evidence artifacts for each run: request, status, events, and mode-specific
     review outputs.
 composes:
+  - triage-error
   - memory
   - scillm
   - surf
   - captcha
   - subagent-runner
+  - pi-subagents
   - browser-oracle
   - create-report
   - tau
@@ -66,6 +74,7 @@ allowed-tools:
   - Grep
   - mcp__surf__*
   - mcp__browser_oracle__*
+  - subagent
 disciplines:
   - agentic-orchestration
   - research-retrieval
@@ -133,10 +142,7 @@ cd skills/ask
 
 One normalized read model over the run's own artifacts, so a roundtable, a
 compete run, a browser lane and a scillm-only DAG all answer "what happened?"
-the same way. For Tau-executed DAGs, this includes
-`tau-receipts/dag-receipt.json`: an explicit Tau `dag_error` such as
-`evidence_receipt_verdict_failed` is the primary failure, even when downstream
-nodes never ran and therefore have no receipt.
+the same way.
 
 **Absence is reported, never dropped.** Every node in the frozen DAG appears
 even when it produced nothing — that node is the failure worth seeing, not a
@@ -163,37 +169,9 @@ safe on a live run or in a watch loop.
 Not yet unified: the legacy `status --run` path reads a different artifact
 family and still has its own shape.
 
-## Mandatory Tau JSON Progress Monitoring
+## Four Kinds Of Target
 
-When Ask launches or inspects an executed `tau-dag`, `compete`, browser-handler
-roundtable, or creator-reviewer loop, the Ask run directory is not opaque
-process output. The project agent must monitor the Tau JSON artifacts while the
-run is active and before reporting status.
-
-Required watch path:
-
-```text
-<ask-run-dir>/tau-receipts/dag-progress.json
-<ask-run-dir>/tau-receipts/dag-receipt.json
-<ask-run-dir>/node-artifacts/<node-id>/node-receipt.json
-<ask-run-dir>/node-artifacts/<node-id>/response.md
-```
-
-Status updates for active Ask/Tau runs must read `dag-progress.json` and report
-the current `status`, `node_progress`, `active_subagents`,
-`completed_subagents`, `last_event`, `event_count`, `mocked`, `live`, and exact
-run directory. If a node has become terminal, read that node's
-`node-receipt.json`, normalized handler receipt, recovery packet, and response
-before describing the failure or success.
-
-Do not wait on the outer Ask CLI, a shell PID, or terminal scrollback when Tau
-has already written JSON progress. Treating an Ask/Tau run as a black-box
-long-running command is a skill-use failure. The JSON stream is the operational
-status surface.
-
-## Three Kinds Of Target
-
-`/ask` addresses three peer target types. They differ in transport, not in
+`/ask` addresses four peer target types. They differ in transport, not in
 standing:
 
 | Target | Example | Transport owner |
@@ -201,9 +179,36 @@ standing:
 | **Herdr session** — a live agent in a pane | `memory`, `w11:p13` | `$monitor-herdr` via `herdr pane run` |
 | **Model call** — API/model handler | `gpt-5.5-high`, `Codex-opus-5-high`, `deepseek-ai/DeepSeek-V3.2-TEE` | `$tau` (SciLLM is internal to Tau) |
 | **Web model** — browser-backed reviewer (chat tab, NOT the agentic model; see the `webclaude` warning below) | `webgpt`, `webclaude`, `webkimi` | `$surf` + `$browser-oracle` |
+| **Pi-native subagent** — local Pi child advisor/worker | `pi reviewer`, `subagent general-purpose`, `local coder` | `pi-subagents` native `subagent` tool |
 
-A project agent should not care which side is browser, model, or live session
-beyond naming the target.
+A project agent should not care which side is browser, model, Herdr session, or
+Pi-native subagent beyond naming the target.
+
+## Pi-Native Subagent Target
+
+Inside Pi, `$ask` remains the front door. When the user explicitly names a
+Pi-local target such as `pi`, `subagent`, `pi-subagent`, `local reviewer`, or
+`local coder`, route the request through the native `subagent` tool instead of
+Tau, Surf, Herdr, or SciLLM. This is the only approved substitution of a
+subagent for `$ask`, because the user selected the Pi-native target type.
+
+Required behavior for Pi-native subagent targets:
+
+1. Call `subagent({ action: "list" })` before launching so the available,
+   executable, non-disabled agents are known from the live Pi registry.
+2. Choose the named agent when the user names one. If they only name a role,
+   use the closest live Pi agent role and state the mapping.
+3. Use one `subagent` execution or one `workflowScript` fanout. Do not manually
+   simulate Tau, roundtable, compete, or creator-reviewer receipts.
+4. Keep browser/model Ask traffic on the existing Ask/Tau paths. Never route
+   `$ask webgpt`, `$ask webkimi`, `$ask tau-dag`, `$ask roundtable`, or
+   `$ask compete` through Pi subagents.
+5. Report the child run id/output as reviewer or worker evidence only. Local
+   task closure still requires deterministic proof from the parent session.
+
+The shell CLI `./run.sh` cannot call Pi host tools. This route applies when the
+skill is invoked inside Pi through `$ask` or `/skill:ask` context. Non-Pi CLI
+callers must use the documented `./run.sh` Ask/Tau commands.
 
 ## Talk To Another Agent's Session (Herdr)
 
@@ -322,6 +327,7 @@ orchestration path.
 | Roundtable | `./run.sh tau-dag "<shared task>" --repo <repo> --target <target> --immutable-goal "<goal>" --dag-template roundtable --handler <a> --handler <b> --topology concurrent --execute --json` |
 | Competition | `./run.sh compete "<isolated task>" --repo <repo> --target <target> --immutable-goal "<goal>" --handler <a> --handler <b> --criterion <criterion> --execute --json` |
 | One-shot (per-seat answers, no consensus) | `./run.sh one-shot "<question>" --handler <a> --handler <b> --handler <c>` — N independent single-call lanes run concurrently; each returns its own nonce-bound answer or a named blocker. Partial answers are DEGRADED-but-usable (exit 0 at or above `--min-answered`); a roundtable's quorum refusal never applies here. |
+| Pi-native subagent from inside Pi | `subagent({ action: "list" })`, then `subagent({ agent: "<agent>", task: "<task>" })` or one `workflowScript` fanout. This is for explicit `pi`/`subagent`/`local reviewer` targets only; it is not a replacement for Tau/browser handlers. |
 | Creator then reviewer | `./run.sh tau-dag "<creator task then reviewer verdict>" --repo <repo> --target <target> --immutable-goal "<goal>" --dag-template creator-reviewer --handler <creator> --handler <reviewer> --topology sequential --execute --json` |
 | Diagnose/fix/close GitHub issues | `./run.sh fix-issues --repo <owner/name> --issue <N> [--issue <M>] [--handler gpt-5.5] [--execute]` — gathers each issue via `gh`, diagnoses through a live one-shot handler into structured cause/fix JSON with the **debugger ladder gate** (`needs_debugger` recommends `$debugger` only when the failing transition is in-process runtime state no artifact explains), and is fail-closed: dry-run by default; `--execute` closes an issue ONLY after its named verify command (typically an `$agentic-evals` fixture) actually passes. No verify → `blocked`; failing verify → `verify-failed`, issue stays open. Per-issue receipts under `outputs/fix-issues/`. Gate: `fixtures/fix_issues.json`. |
 
@@ -537,7 +543,14 @@ Both outcomes pass. Three things fail, whatever the provider was doing:
 | --- | --- |
 | `PASS` with zero response bytes | a green run that produced nothing |
 | a non-PASS status with no `failure_code` | a dead end nobody can act on |
+| a **generic** `failure_code` where a specific cause is knowable | `browser_handler_timeout` hiding an attachment-shape rejection (#1531) |
 | a different model answered, unrecorded | a reply that looks fine and silently came from elsewhere |
+
+Ask composes `/triage-error`: `browser-recovery-packet.json` carries a canonical
+`triage: {code, cause, next_command}` from the shared catalog, and a failed
+webgpt lane writes `node-artifacts/handler-*/preflight-doctor.json` — so a
+browser-lane bug is diagnosed from the run dir, unambiguously, not from
+`/tmp/surf-host.log`.
 
 The third caught a real bug minutes after the rate-limit fallback was added:
 the receipt read `claude-fable-low PASS` while `claude-opus-4-8` had written the
@@ -1495,6 +1508,7 @@ Use the narrowest mode that matches the user request.
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
 | Pi browser-handler shortcut | `./run.sh webgpt What is 2 + 2?` from `/skill:ask webgpt What is 2 + 2?` | Rewrites to Tau `single-call` with `--handler webgpt --execute --json`; use `--compile-only` to emit the DAG without live browser transport. |
 | Single named handler | `./run.sh tau-dag "<request>" --handler <handler-or-model> --json` | Browser handlers use `$surf`; non-browser handlers are `$scillm` model names routed by Tau. Add `--execute` for live transport. |
+| Pi-native subagent target | Native Pi `subagent` tool, after `subagent({ action: "list" })` | Only when running inside Pi and the user explicitly names `pi`, `subagent`, `pi-subagent`, `local reviewer`, or `local coder`. Browser/model/Tau Ask requests do not use this route. |
 | Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology concurrent --execute --json` | Roundtable is prompt-to-Tau-DAG. Browser handlers get an Ask-owned fresh window by default. Preserve `browser-tab-lifecycle.json`, `dag.json`, command specs, handler receipts, and join receipts. |
 | Compete / bakeoff | `./run.sh compete "<task>" --handler webgpt --handler webclaude --handler gpt-5.5-high --criterion deterministic-proof --execute --json` | Isolated candidates plus compete scorecard and winner continuation request. Browser/API handlers are peers. Project agent must locally verify features before promotion. |
 | Creator-reviewer loop | `./run.sh tau-dag "<request>" --handler <creator> --handler <reviewer> --topology sequential --json` | The reviewer receives prior handler receipts. Pass/fail requests require a verdict in the reviewer response. |
@@ -1715,3 +1729,12 @@ local checks prove it.
 - Use `$best-practices-competition` when leading or judging a substantial
   compete/bakeoff workflow.
 - Use `$best-practices-skills` when modifying this skill or its scripts.
+
+## Ecosystem
+
+Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
+for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
+envelope). Produces: `tau.dag_contract.v1` bundles, recovery packets with triage codes. Consumes: escalation payloads from `pi.agent_status.v1` needs_* states. Envelope-wrapped
+boundary events: dispatch, escalation. Failure names come only from the triage-error
+catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
+unrepresentable ecosystem-wide.
