@@ -25,8 +25,8 @@ Reveal uses `code --reuse-window --goto <file>:<line>:<col>`. VS Code places the
 cursor on the requested line/column and highlights the active line. It is
 capability-gated: without the `code` CLI or a display it prints REVEAL_UNAVAILABLE
 and exits 3 (so an eval marks the case BLOCKED, never a false PASS). On a
-successful reveal it best-effort confirms via the window title and prints
-REVEALED, else OPENED.
+successful reveal it raises VS Code frontmost on the requested monitor/layout,
+best-effort confirms via the window title, and prints REVEALED, else OPENED.
 """
 
 from __future__ import annotations
@@ -113,7 +113,7 @@ def resolve_location(
     return Location(found, 1, found, 1) if found is not None else None
 
 
-def bridge_reveal(path: Path, location: Location, workspace: Path | None, wait_seconds: int) -> int:
+def bridge_reveal(path: Path, location: Location, workspace: Path | None, wait_seconds: int, monitor: str, layout: str) -> int:
     root = workspace or Path.cwd()
     request_script = Path(__file__).with_name("request_vscode_bridge.py")
     reveal = f"{path}:{location.line}:{location.col}:{location.end_line}:{location.end_col}"
@@ -152,9 +152,10 @@ def bridge_reveal(path: Path, location: Location, workspace: Path | None, wait_s
             pass
         time.sleep(0.5)
     if status == "revealed" and data.get("reveal", {}).get("selected") is True:
+        suffix = raise_vscode_window(path, root, monitor=monitor, layout=layout)
         print(
             f"SELECTED {path.name}:{location.line}:{location.col}-{location.end_line}:{location.end_col} -- "
-            f"VS Code API selection active"
+            f"VS Code API selection active; {suffix}"
         )
         return 0
     print(
@@ -164,15 +165,69 @@ def bridge_reveal(path: Path, location: Location, workspace: Path | None, wait_s
     return 3
 
 
-def window_title_has(basename: str) -> bool:
+def vscode_windows() -> list[tuple[str, str]]:
     wmctrl = shutil.which("wmctrl")
     if not wmctrl:
-        return False
+        return []
     try:
         out = subprocess.run([wmctrl, "-l"], capture_output=True, text=True, timeout=5).stdout
     except (OSError, subprocess.SubprocessError):
-        return False
-    return any(basename in row for row in out.splitlines())
+        return []
+    windows = []
+    for row in out.splitlines():
+        parts = row.split(None, 3)
+        if len(parts) == 4 and "Visual Studio Code" in parts[3]:
+            windows.append((parts[0], parts[3]))
+    return windows
+
+
+def window_title_has(basename: str) -> bool:
+    return any(basename in title for _, title in vscode_windows())
+
+
+def monitor_geometry(which: str, layout: str) -> tuple[int, int, int, int] | None:
+    xrandr = shutil.which("xrandr")
+    if not xrandr:
+        return None
+    try:
+        out = subprocess.run([xrandr, "--listmonitors"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    monitors: list[tuple[int, int, int, int]] = []
+    for row in out.splitlines():
+        match = re.search(r"\s(\d+)/(?:\d+)x(\d+)/(?:\d+)\+(-?\d+)\+(-?\d+)\s", row)
+        if match:
+            width, height, x, y = map(int, match.groups())
+            monitors.append((x, y, width, height))
+    if not monitors:
+        return None
+    x, y, width, height = (max if which == "right" else min)(monitors, key=lambda item: item[0])
+    if layout == "half-vertical":
+        return x, y, width // 2, height
+    return x, y, width // 2, height // 2
+
+
+def raise_vscode_window(path: Path, workspace: Path | None = None, *, monitor: str = "left", layout: str = "quarter") -> str:
+    wmctrl = shutil.which("wmctrl")
+    if not wmctrl or not os.environ.get("DISPLAY"):
+        return "frontmost not confirmed"
+    workspace_name = workspace.name if workspace else None
+    for window_id, title in vscode_windows():
+        if path.name in title or (workspace_name and workspace_name in title):
+            try:
+                box = monitor_geometry(monitor, layout)
+                if box:
+                    x, y, width, height = box
+                    subprocess.run([wmctrl, "-ir", window_id, "-b", "remove,maximized_vert,maximized_horz"], check=False, capture_output=True, text=True, timeout=5)
+                    subprocess.run([wmctrl, "-ir", window_id, "-e", f"0,{x},{y},{width},{height}"], check=True, capture_output=True, text=True, timeout=5)
+                    geometry = f"geometry {x},{y} {width}x{height}"
+                else:
+                    geometry = "geometry not confirmed"
+                subprocess.run([wmctrl, "-ia", window_id], check=True, capture_output=True, text=True, timeout=5)
+                return f"frontmost; {geometry}"
+            except (OSError, subprocess.SubprocessError):
+                return "frontmost not confirmed"
+    return "frontmost not confirmed"
 
 
 def main() -> int:
@@ -186,6 +241,8 @@ def main() -> int:
     parser.add_argument("--bridge", action="store_true", help="Use the VS Code bridge API for exact selected-range reveal.")
     parser.add_argument("--workspace", type=Path, help="Open trusted VS Code workspace for --bridge; defaults to cwd.")
     parser.add_argument("--wait-seconds", type=int, default=10, help="Seconds to wait for the bridge reveal status.")
+    parser.add_argument("--monitor", choices=["left", "right"], default=os.environ.get("DEBUGGER_VSCODE_MONITOR", "right"), help="Monitor for the visible VS Code window.")
+    parser.add_argument("--window-layout", choices=["quarter", "half-vertical"], default=os.environ.get("DEBUGGER_VSCODE_WINDOW_LAYOUT", "half-vertical"), help="Visible VS Code window size: quarter or half-width/full-height.")
     parser.add_argument("--print-only", action="store_true", help="Resolve and print the location; do not open anything.")
     args = parser.parse_args()
 
@@ -218,7 +275,7 @@ def main() -> int:
         return 0
 
     if args.bridge:
-        return bridge_reveal(path, location, args.workspace, args.wait_seconds)
+        return bridge_reveal(path, location, args.workspace, args.wait_seconds, args.monitor, args.window_layout)
 
     code = shutil.which("code")
     if not code or not os.environ.get("DISPLAY"):
@@ -242,8 +299,9 @@ def main() -> int:
             confirmed = True
             break
         time.sleep(0.5)
+    suffix = raise_vscode_window(path, args.workspace, monitor=args.monitor, layout=args.window_layout)
     if confirmed:
-        print(f"REVEALED {path.name}:{line}:{col}-{end_line}:{end_col} ({label}) -- editor showing {path.name}")
+        print(f"REVEALED {path.name}:{line}:{col}-{end_line}:{end_col} ({label}) -- editor showing {path.name}; {suffix}")
     else:
         print(f"OPENED {path.name}:{line}:{col}-{end_line}:{end_col} ({label}) -- goto issued (title unconfirmed)")
     return 0
