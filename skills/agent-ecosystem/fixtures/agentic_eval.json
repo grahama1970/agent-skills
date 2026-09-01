@@ -74,7 +74,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r1\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"shame\",\"emitted_at\":\"2026-09-01T13:00:00Z\",\"parent_refs\":[{\"receipt_id\":\"r0\",\"expected_schema\":\"brave_search.result.v1\",\"expected_producer\":\"brave-search\"}],\"triage_code\":\"herdr_pane_unaddressable\",\"payload\":{}}' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q '\"valid\": true'"
+        "printf '{\"schema\":\"pi.receipt_envelope.v1\",\"receipt_id\":\"r1\",\"payload_schema\":\"pi.agent_status.v1\",\"producer\":\"shame\",\"emitted_at\":\"2026-09-01T13:00:00Z\",\"goal_hash\":\"%s\",\"parent_refs\":[{\"receipt_id\":\"r0\",\"expected_schema\":\"brave_search.result.v1\",\"expected_producer\":\"brave-search\"}],\"triage_code\":\"herdr_pane_unaddressable\",\"payload\":{}}' 'sha256:cd0aa9856147b6c5b4ff2b7dfee5da20aa38253099ef1b4a64aced233c9afe29' | /home/graham/workspace/experiments/agent-skills/skills/agent-ecosystem/run.sh validate - | grep -q '\"valid\": true'"
       ],
       "expected": {
         "exit_code": 0
