@@ -33,6 +33,7 @@ Commands:
 
   schema          Emit a pydantic JSON Schema for a project-state payload
   validate-report Validate a saved report JSON with pydantic; failures route through triage-error
+  render-report   Render a saved pydantic-valid project-state JSON report as Markdown
   config doctor   Check non-secret project-state configuration without prompting
 
   Default (no flag) runs Phases 1-4 + 6 (~30s):
@@ -47,6 +48,7 @@ Examples:
   ./run.sh report --cleanup-tail --cleanup-receipt artifacts/cleanup/<run>/receipt.json --json --output artifacts/cleanup/project_state_after.json
   ./run.sh schema project_state.report.v1
   ./run.sh validate-report state.json
+  ./run.sh render-report state.json --output state.md
   ./run.sh config doctor --json
 EOF
 }
@@ -82,6 +84,9 @@ main() {
             ;;
         validate-report)
             "${EXEC[@]}" "$SCRIPT_DIR/project_state.py" validate-report "$@"
+            ;;
+        render-report)
+            "${EXEC[@]}" "$SCRIPT_DIR/project_state.py" render-report "$@"
             ;;
         config)
             "${EXEC[@]}" "$SCRIPT_DIR/project_state.py" config "$@"

@@ -87,6 +87,14 @@
       "evidence_required": {
         "live_e2e": true
       }
+    },
+    {
+      "id": "project_state.markdown_render_from_json",
+      "description": "project-state renders human-legible Markdown from a saved pydantic-valid JSON report instead of using Markdown as the source of truth.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -221,6 +229,15 @@
       "seam_type": "error-boundary",
       "criticality": "critical",
       "claim_id": "project_state.pydantic_report_contract",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "markdown_render_from_saved_json",
+      "seam_type": "contract/rendering",
+      "criticality": "critical",
+      "claim_id": "project_state.markdown_render_from_json",
       "required_evidence": [
         "live_e2e"
       ]
@@ -605,6 +622,35 @@
         "stdout_contains": [
           "REPORT_SCHEMA_OK=True",
           "project_state.report.v1"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "saved-json-renders-human-markdown",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.markdown_render_from_json"
+      ],
+      "seams": [
+        "standard_report_schema_boundary",
+        "pydantic_report_model",
+        "markdown_render_from_saved_json"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --quick --json --output \"$tmp/report.json\" >/dev/null; ./run.sh validate-report \"$tmp/report.json\" >/dev/null; ./run.sh render-report \"$tmp/report.json\" --output \"$tmp/report.md\"; python - \"$tmp/report.json\" \"$tmp/report.md\" <<'PY2'\nimport json, sys\nr=json.loads(open(sys.argv[1]).read())\nmd=open(sys.argv[2]).read()\nok = r.get('schema') == 'project_state.report.v1' and md.startswith('# pitchdeck Project State') and '## Phase 1: Infrastructure' in md\nprint('MARKDOWN_FROM_JSON_OK=%s SCHEMA=%s BYTES=%d' % (ok, r.get('schema'), len(md)))\nraise SystemExit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MARKDOWN_FROM_JSON_OK=True",
+          "SCHEMA=project_state.report.v1"
         ],
         "stderr_contains": []
       }

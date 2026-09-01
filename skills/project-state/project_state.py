@@ -1015,11 +1015,7 @@ def cmd_schema(
     print(json.dumps(model.model_json_schema(), indent=2))
 
 
-@app.command("validate-report")
-def cmd_validate_report(
-    input_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True),
-):
-    """Validate a report JSON with pydantic; route failures through triage-error."""
+def _validated_report_payload(input_file: Path) -> tuple[str, dict]:
     payload = json.loads(input_file.read_text())
     schema_name = payload.get("schema")
     validators = {
@@ -1040,7 +1036,7 @@ def cmd_validate_report(
         }, indent=2), file=sys.stderr)
         raise typer.Exit(code=1)
     try:
-        validator(payload)
+        return schema_name, validator(payload)
     except ProjectStateSchemaError as exc:
         print(json.dumps({
             "schema": "project_state.validation_failure.v1",
@@ -1048,7 +1044,38 @@ def cmd_validate_report(
             "error": str(exc),
         }, indent=2), file=sys.stderr)
         raise typer.Exit(code=1) from exc
+
+
+@app.command("validate-report")
+def cmd_validate_report(
+    input_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True),
+):
+    """Validate a report JSON with pydantic; route failures through triage-error."""
+    schema_name, _ = _validated_report_payload(input_file)
     print(json.dumps({"schema": "project_state.validation_result.v1", "valid": True, "validated_schema": schema_name}))
+
+
+@app.command("render-report")
+def cmd_render_report(
+    input_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True),
+    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Write Markdown to file instead of stdout"),
+):
+    """Render a saved pydantic-valid project-state JSON report as Markdown."""
+    schema_name, report = _validated_report_payload(input_file)
+    if schema_name == "project_state.report.v1":
+        text = format_markdown(report)
+    elif schema_name == "skill.readiness_report.v1":
+        text = _format_readiness_markdown(report)
+    else:
+        lines = ["# Project State Config Doctor", ""]
+        for check in report["checks"]:
+            lines.append(f"- {check['id']}: {check['status']} `{check['path']}`")
+        text = "\n".join(lines) + "\n"
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text)
+    else:
+        print(text, end="")
 
 
 @config_app.command("doctor")
