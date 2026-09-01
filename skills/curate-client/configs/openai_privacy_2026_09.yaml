@@ -3,6 +3,9 @@ kb_root: /home/graham/workspace/experiments/openai-privacy-kb
 canonical_client_file: /home/graham/workspace/experiments/openai-privacy-kb/canonical-client.json
 require_canonical_json: true
 html_report: /home/graham/workspace/experiments/openai-privacy-kb/reports/openai_privacy_curate_report.html
+report_model_json: /home/graham/workspace/experiments/openai-privacy-kb/reports/openai_privacy_curate_report.model.json
+memory_recall_receipt: /tmp/openai_privacy_curate_client_memory_recall.json
+regenerate_prep_pack: true
 question_oracles_file: /home/graham/workspace/experiments/openai-privacy-kb/question-oracles.json
 briefing_points_file: /home/graham/workspace/experiments/openai-privacy-kb/briefing-points.json
 source_context_limit: 120
@@ -19,6 +22,8 @@ memory_daemon: http://127.0.0.1:8601
 live_evidence_prep_pack: /home/graham/workspace/experiments/agent-skills/skills/live-evidence/fixtures/prep_pack_openai_privacy_2026_09.json
 oracle_recall_collections:
   - lessons
+oracle_recall_tags:
+  - openai-privacy-kb
 anchor_terms:
   - data inventory
   - lineage

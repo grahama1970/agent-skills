@@ -1,7 +1,9 @@
 {
   "schema": "live_evidence.prep_pack.v1",
+  "classification": "curate_client_generated_pydantic_validated",
   "pack_id": "openai-privacy-generated-3a1d0ac3",
   "target": {
+    "classification": "curate_client_target",
     "kind": "employer",
     "name": "openai-privacy",
     "topic": "openai-privacy interview preparation from curated client KB",
@@ -9,28 +11,34 @@
   },
   "research_chain": [
     {
+      "classification": "curate_client_research_step",
       "skill": "curate-client",
       "role": "builds client KB and emits live-evidence prep pack"
     },
     {
+      "classification": "curate_client_research_step",
       "skill": "brave-search",
       "role": "current public discovery when configured or needed"
     },
     {
+      "classification": "curate_client_research_step",
       "skill": "dogpile",
       "role": "deeper multi-source research when configured or needed"
     },
     {
+      "classification": "curate_client_research_step",
       "skill": "ask",
       "role": "question, answer, and skill-chain review"
     },
     {
+      "classification": "curate_client_research_step",
       "skill": "memory",
       "role": "retrieval boundary for known or similar live questions"
     }
   ],
   "source_context": [
     {
+      "classification": "source_bound",
       "source_id": "openai-privacy-engineering",
       "title": "OpenAI Software Engineer, Privacy Engineering",
       "authority": "official OpenAI careers page",
@@ -38,9 +46,12 @@
       "digest": "e13964173ff84f4107b5699a071022bea1b795048a506d38e96c294a65e3f1fb",
       "url": "https://openai.com/careers/software-engineer-privacy-engineering-san-francisco/",
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-privacy-engineering.md",
-      "summary": "Privacy Engineering scope: user data understood, retained, accessed, and used; inventory, mapping, classification, lineage, retention, deletion, access governance, purpose controls, auditability, lifecycle automation, exceptions, incident response, and production observability."
+      "summary": "Privacy Engineering scope: user data understood, retained, accessed, and used; inventory, mapping, classification, lineage, retention, deletion, access governance, purpose controls, auditability, lifecycle automation, exceptions, incident response, and production observability.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "source_bound",
       "source_id": "openai-privacy-compliance",
       "title": "OpenAI Software Engineer, Privacy & Compliance",
       "authority": "official OpenAI careers page",
@@ -48,9 +59,12 @@
       "digest": "60fa6f36b6d7d894f4a1b1a1f27053ade4b7d6cc9f2ab216c59f146354a83c25",
       "url": "https://openai.com/careers/software-engineer-privacy-and-compliance-san-francisco/",
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-privacy-compliance.md",
-      "summary": "Privacy & Compliance emphasis: backend services enforcing policy-driven access and lifecycle controls, distributed authorization, identity-aware enforcement, policy hooks, schema-level constraints, and continuously verifiable compliance."
+      "summary": "Privacy & Compliance emphasis: backend services enforcing policy-driven access and lifecycle controls, distributed authorization, identity-aware enforcement, policy hooks, schema-level constraints, and continuously verifiable compliance.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "source_bound",
       "source_id": "openai-lawful-access",
       "title": "OpenAI Software Engineer, Privacy Engineering (Lawful Access)",
       "authority": "official OpenAI careers page",
@@ -58,9 +72,12 @@
       "digest": "bf7b630fde2fa09d514bede17fbf3878e263575d394203f327a90d527a6d451c",
       "url": "https://openai.com/careers/software-engineer-privacy-engineering-%28lawful-access%29-san-francisco/",
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-lawful-access.md",
-      "summary": "Lawful Access emphasis: intake, scoping, authorized retrieval, review, preparation, provenance, least privilege, approval gates, data minimization, human oversight, safe failure, and operator experience."
+      "summary": "Lawful Access emphasis: intake, scoping, authorized retrieval, review, preparation, provenance, least privilege, approval gates, data minimization, human oversight, safe failure, and operator experience.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "source_bound",
       "source_id": "openai-research-privacy",
       "title": "OpenAI Research Engineer, Privacy",
       "authority": "official OpenAI careers page",
@@ -68,9 +85,12 @@
       "digest": "ad12baec195b3a5007e3e63711c3607276d9a017b614af81ad79ab5ef2cddb9c",
       "url": "https://openai.com/careers/research-engineer-privacy-san-francisco/",
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-research-privacy.md",
-      "summary": "Privacy research track: differential privacy, federated learning, data memorization, membership inference, model inversion, anonymization, and privacy evaluation."
+      "summary": "Privacy research track: differential privacy, federated learning, data memorization, membership inference, model inversion, anonymization, and privacy evaluation.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "source_bound",
       "source_id": "openai-zdr-private-safety",
       "title": "OpenAI Zero Data Retention and Private Safety Processing",
       "authority": "official OpenAI announcement",
@@ -78,9 +98,12 @@
       "digest": "8516a28158cdf5844a7d5487077151f528b7114b3c7389748c9ebe571f0f54f6",
       "url": "https://openai.com/index/offering-zero-data-retention-for-frontier-models/",
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-zdr-private-safety.md",
-      "summary": "ZDR/private safety framing: severe-risk pattern detection and safety signals under customer-content minimization; trust boundaries must distinguish readable content from narrow derived safety signals."
+      "summary": "ZDR/private safety framing: severe-risk pattern detection and safety signals under customer-content minimization; trust boundaries must distinguish readable content from narrow derived safety signals.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "source_bound",
       "source_id": "openai-api-data-controls",
       "title": "OpenAI API data controls",
       "authority": "official OpenAI developer documentation",
@@ -88,9 +111,12 @@
       "digest": "3e4f28d5f48170862f9f9a0d6aeb73be6cb75c57cd85299b8e2790b62a04f34d",
       "url": "https://developers.openai.com/api/docs/guides/your-data",
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-api-data-controls.md",
-      "summary": "OpenAI API data controls: API inputs and outputs are not used to train models by default; retention and application-state behavior vary by endpoint and setting; ZDR-eligible use requires avoiding persisted application state such as store=true where applicable."
+      "summary": "OpenAI API data controls: API inputs and outputs are not used to train models by default; retention and application-state behavior vary by endpoint and setting; ZDR-eligible use requires avoiding persisted application state such as store=true where applicable.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "source_bound",
       "source_id": "flask-testing",
       "title": "Flask testing documentation",
       "authority": "official Flask documentation",
@@ -98,763 +124,1378 @@
       "digest": "257d521cd20da4ad9a232ea91e4d0f181fccda6aaa8a38d31a35eb9f26baf70e",
       "url": "https://flask.palletsprojects.com/en/stable/testing/",
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/flask-testing.md",
-      "summary": "Flask supports lightweight app testing through pytest and the Flask test client; tests can call application endpoints without running a live server."
+      "summary": "Flask supports lightweight app testing through pytest and the Flask test client; tests can call application endpoints without running a live server.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "privacy-proof-invariants",
       "title": "Privacy proof invariants",
       "authority": "user-provided interview seed",
       "retrieved_at": "2026-09-01",
       "digest": "1597f6635b7bcaa290b35f2db32c48881ec2974aad48f898995af47ea989b857",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/privacy-proof-invariants.md",
-      "summary": "Unknown scope is not completion; authorization is explicit and least-privileged; effects are idempotent; raw personal data does not enter ordinary logs; policy and legal requirements are versioned inputs; the actor performing an action cannot solely certify success; unsupported formats and failed connectors remain visible; human review handles ambiguity; audit evidence is minimized but sufficient."
+      "summary": "Unknown scope is not completion; authorization is explicit and least-privileged; effects are idempotent; raw personal data does not enter ordinary logs; policy and legal requirements are versioned inputs; the actor performing an action cannot solely certify success; unsupported formats and failed connectors remain visible; human review handles ambiguity; audit evidence is minimized but sufficient.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "coding-agent-boundary",
       "title": "Agent-use boundary",
       "authority": "user-provided interview seed",
       "retrieved_at": "2026-09-01",
       "digest": "2d0967587ae3fb4124b7673e11c1143938cf857406a6442819881a9689a38cae",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/coding-agent-boundary.md",
-      "summary": "Use one primary coding agent and at most one focused adversarial review pass. Keep rehearsed implementations outside the clean interview repo. In formal assessment, use permitted coding assistance openly and do not use hidden live transcription or covert answer generation."
+      "summary": "Use one primary coding agent and at most one focused adversarial review pass. Keep rehearsed implementations outside the clean interview repo. In formal assessment, use permitted coding assistance openly and do not use hidden live transcription or covert answer generation.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "system-design-rhythm",
       "title": "Thirty-minute system design rhythm",
       "authority": "user-provided interview seed",
       "retrieved_at": "2026-09-01",
       "digest": "5b1ff44a584fb4e29247915080013c81f0adf008d27e46c3c669fec7b7eab635",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/system-design-rhythm.md",
-      "summary": "0-5 clarify scope and success criteria; 5-8 state invariants and domain objects; 8-16 primary data flow; 16-21 formats, scale, throughput, backpressure; 21-26 safety, validity, reliability, observability, human review; 26-30 tradeoffs, rollout, risks, metrics."
+      "summary": "0-5 clarify scope and success criteria; 5-8 state invariants and domain objects; 8-16 primary data flow; 16-21 formats, scale, throughput, backpressure; 21-26 safety, validity, reliability, observability, human review; 26-30 tradeoffs, rollout, risks, metrics.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "graham-privacy-system-bridges",
       "title": "Graham privacy-system bridges",
       "authority": "user-provided interview seed",
       "retrieved_at": "2026-09-01",
       "digest": "6d35455293b4c40227f817041ec06d6673cd8524567c290bfefe65f9f4e88b0c",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/graham-bridges/graham-privacy-system-bridges.md",
-      "summary": "Use ordinary distributed-systems and privacy language first, then bridge carefully: Tau receipt-gated DAGs for independent completion proof; SPARTA/Graph Memory for source-bound governance graphs, provenance, and bounded answerability; Live Evidence for rehearsal and retrieval proof only; evidence-case receipts for chain of custody; fail-closed evals for unsupported inputs and negative tests."
+      "summary": "Use ordinary distributed-systems and privacy language first, then bridge carefully: Tau receipt-gated DAGs for independent completion proof; SPARTA/Graph Memory for source-bound governance graphs, provenance, and bounded answerability; Live Evidence for rehearsal and retrieval proof only; evidence-case receipts for chain of custody; fail-closed evals for unsupported inputs and negative tests.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "scenario-01-deletion-retention",
       "title": "Scenario 1: Distributed data deletion and retention orchestration",
       "authority": "curated scenario from source-bound seed",
       "retrieved_at": "2026-09-01",
       "digest": "6a2c104c1889c1ce10db01c8941abdf3e2da905b9763b375f7f51c2861bbe1ed",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/01-deletion-retention.md",
-      "summary": "Find and delete, export, restrict, or change retention for one user across a large organization; handle legal holds, partial failures, derived data, backups, and prove what happened. Probability/rank: highest probability. Domain model: PrivacyRequest, SubjectIdentity, DataAsset, DataLocation, Policy, LegalHold, ConnectorAction, Exception, CompletionEvidence. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Tau receipt-gated DAGs and independent readback evidence."
+      "summary": "Find and delete, export, restrict, or change retention for one user across a large organization; handle legal holds, partial failures, derived data, backups, and prove what happened. Probability/rank: highest probability. Domain model: PrivacyRequest, SubjectIdentity, DataAsset, DataLocation, Policy, LegalHold, ConnectorAction, Exception, CompletionEvidence. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Tau receipt-gated DAGs and independent readback evidence.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "scenario-02-inventory-lineage",
       "title": "Scenario 2: Personal-data inventory, classification, and lineage",
       "authority": "curated scenario from source-bound seed",
       "retrieved_at": "2026-09-01",
       "digest": "3a1c451503b7eae9d6a24ceaeefc32092eadff939d769aacd27e7b117001499c",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/02-inventory-lineage.md",
-      "summary": "Continuously discover where personal or sensitive data exists, classify it, map movement, and tell product teams which policies apply. Probability/rank: very high probability. Domain model: DataAsset, DataLocation, ClassifierResult, LineageEdge, Owner, PolicyApplicability, ReviewState, UnsupportedSection. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: SPARTA and Graph Memory as governance graph and bounded answerability analogies."
+      "summary": "Continuously discover where personal or sensitive data exists, classify it, map movement, and tell product teams which policies apply. Probability/rank: very high probability. Domain model: DataAsset, DataLocation, ClassifierResult, LineageEdge, Owner, PolicyApplicability, ReviewState, UnsupportedSection. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: SPARTA and Graph Memory as governance graph and bounded answerability analogies.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "scenario-03-purpose-access",
       "title": "Scenario 3: Purpose-aware access control and policy enforcement",
       "authority": "curated scenario from source-bound seed",
       "retrieved_at": "2026-09-01",
       "digest": "e82dad8a2459110014a8803675f5a0c431ba795edf7b4a33ee8da3ebc347e547",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/03-purpose-access.md",
-      "summary": "Authorize access to user data using workload identity, actor role, classification, purpose, consent, jurisdiction, retention state, and emergency access. Probability/rank: high probability. Domain model: Actor, WorkloadIdentity, Resource, Action, Purpose, PolicyVersion, Obligation, Approval, BreakGlassGrant, AuditDecision. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Session-purpose capability policies and authority boundaries."
+      "summary": "Authorize access to user data using workload identity, actor role, classification, purpose, consent, jurisdiction, retention state, and emergency access. Probability/rank: high probability. Domain model: Actor, WorkloadIdentity, Resource, Action, Purpose, PolicyVersion, Obligation, Approval, BreakGlassGrant, AuditDecision. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Session-purpose capability policies and authority boundaries.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "scenario-04-case-workflow",
       "title": "Scenario 4: Data-subject or lawful-access case workflow",
       "authority": "curated scenario from source-bound seed",
       "retrieved_at": "2026-09-01",
       "digest": "8df526637d8e48fcc6e8e703ac636ec39de1c495809ebd8129bcd4380469c1db",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/04-case-workflow.md",
-      "summary": "Accept authorized requests, find records across products, support human review/redaction, produce auditable export with provenance and safe failure. Probability/rank: medium-high probability. Domain model: Case, Authority, Scope, RetrievalPlan, CollectionJob, ReviewItem, Redaction, ExportManifest, Approval, AuditClosure. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Evidence-case and receipt-envelope chain of custody."
+      "summary": "Accept authorized requests, find records across products, support human review/redaction, produce auditable export with provenance and safe failure. Probability/rank: medium-high probability. Domain model: Case, Authority, Scope, RetrievalPlan, CollectionJob, ReviewItem, Redaction, ExportManifest, Approval, AuditClosure. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Evidence-case and receipt-envelope chain of custody.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curated_seed",
       "source_id": "scenario-05-private-safety",
       "title": "Scenario 5: ZDR-compatible private safety or privacy-preserving ML",
       "authority": "curated scenario from source-bound seed",
       "retrieved_at": "2026-09-01",
       "digest": "d2b94dcac016c532ae8e5e0e04268618e4caddfcf3b21326e1500bbb7b0650f2",
+      "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/05-private-safety.md",
-      "summary": "Detect severe-risk patterns across related interactions without retaining readable customer content, or evaluate memorization/anonymization privacy properties. Probability/rank: strategic wildcard. Domain model: SafetySignal, CustomerKeyBoundary, DerivedFeature, TTLState, Alert, ReviewerView, Appeal, Experiment, Canary, LeakageThreshold. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Fail-closed evaluation and minimization of live evidence."
+      "summary": "Detect severe-risk patterns across related interactions without retaining readable customer content, or evaluate memorization/anonymization privacy properties. Probability/rank: strategic wildcard. Domain model: SafetySignal, CustomerKeyBoundary, DerivedFeature, TTLState, Alert, ReviewerView, Appeal, Experiment, Canary, LeakageThreshold. Architecture posture: clarify action, subject, actors, data universe, proof standard, SLA, then design durable state, explicit policy gates, idempotent workers, minimized audit evidence, and independent verification. Failure cases: duplicate requests, late-arriving data, unsupported formats, stale policy, partial failure, overbroad access, personal data in logs, worker self-certification, human-review gaps. Graham bridge: Fail-closed evaluation and minimization of live evidence.",
+      "kind": null,
+      "use": null
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_1",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/graham-bridges/graham-privacy-system-bridges.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "6d35455293b4c40227f817041ec06d6673cd8524567c290bfefe65f9f4e88b0c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/graham-bridges/graham-privacy-system-bridges.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_2",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/01-deletion-retention.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "86dbf5e777df79747da68719f95520f822cab03e3d14b05fbd5caa27f9d3e879",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/01-deletion-retention.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_3",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/02-inventory-lineage.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "4dafce35879e84f7dbbb9f92b60d060ebf06a320b1743a079979112ce7a241e7",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/02-inventory-lineage.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_4",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/03-purpose-access.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "c31e490795d76fb1efe60ce0ef759cffe65aa4409050114c8ee1bfa65153d0bd",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/03-purpose-access.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_5",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/04-case-workflow.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "c29547efd0e668dc824c69671dd109ca459789a590797e80f94824b2caa7c971",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/04-case-workflow.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_6",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/05-private-safety.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "bb82d91972f199715da904401583ede0a68395df911901bc7068f94810e1cdd7",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/mock-transcripts/05-private-safety.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_7",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/flask-testing.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "257d521cd20da4ad9a232ea91e4d0f181fccda6aaa8a38d31a35eb9f26baf70e",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/flask-testing.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_8",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-api-data-controls.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "3e4f28d5f48170862f9f9a0d6aeb73be6cb75c57cd85299b8e2790b62a04f34d",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-api-data-controls.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_9",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-lawful-access.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "bf7b630fde2fa09d514bede17fbf3878e263575d394203f327a90d527a6d451c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-lawful-access.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_10",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-privacy-compliance.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "60fa6f36b6d7d894f4a1b1a1f27053ade4b7d6cc9f2ab216c59f146354a83c25",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-privacy-compliance.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_11",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-privacy-engineering.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "e13964173ff84f4107b5699a071022bea1b795048a506d38e96c294a65e3f1fb",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-privacy-engineering.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_12",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-research-privacy.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "ad12baec195b3a5007e3e63711c3607276d9a017b614af81ad79ab5ef2cddb9c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-research-privacy.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_13",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-zdr-private-safety.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "8516a28158cdf5844a7d5487077151f528b7114b3c7389748c9ebe571f0f54f6",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/openai/openai-zdr-private-safety.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_14",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/coding-agent-boundary.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "2d0967587ae3fb4124b7673e11c1143938cf857406a6442819881a9689a38cae",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/coding-agent-boundary.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_15",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/privacy-proof-invariants.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "1597f6635b7bcaa290b35f2db32c48881ec2974aad48f898995af47ea989b857",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/privacy-proof-invariants.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_16",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/system-design-rhythm.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "5b1ff44a584fb4e29247915080013c81f0adf008d27e46c3c669fec7b7eab635",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/patterns/system-design-rhythm.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_17",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/01-deletion-retention.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "6a2c104c1889c1ce10db01c8941abdf3e2da905b9763b375f7f51c2861bbe1ed",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/01-deletion-retention.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_18",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/02-inventory-lineage.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "3a1c451503b7eae9d6a24ceaeefc32092eadff939d769aacd27e7b117001499c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/02-inventory-lineage.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_19",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/03-purpose-access.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "e82dad8a2459110014a8803675f5a0c431ba795edf7b4a33ee8da3ebc347e547",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/03-purpose-access.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_20",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/04-case-workflow.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "8df526637d8e48fcc6e8e703ac636ec39de1c495809ebd8129bcd4380469c1db",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/04-case-workflow.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_21",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/05-private-safety.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "d2b94dcac016c532ae8e5e0e04268618e4caddfcf3b21326e1500bbb7b0650f2",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/05-private-safety.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_22",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-agent_prompt.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "5ac740e40a2a2618701f3b121f34d3e33a956e2b204c48a254288817abe7ce67",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-agent_prompt.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_23",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-derived.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "546a9f2d470843ff2576790a9218869b3a3c322c30ddfef6f5a4b0266b3783cc",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-derived.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_24",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-domain.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "37ab54f756372c08ce47feec714bcc16f89d99b8f131653ef0326db7d951d1ec",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-domain.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_25",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-failure.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "6673852b25b1017b38bbe132a7e0d902d5861db8e7567a5cb63d48eac26f9f36",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-failure.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_26",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-flask_api.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "42fd0090d9f997102e7fd5765e3def24b91a1717959cb46542136f84473df056",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-flask_api.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_27",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-flow.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "170b91c91b46e2f01ed686894f9958df5c3c8efef62892adaa73fe63ffdb3113",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-flow.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_28",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-formats.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "22e48b3b871926f6d8170296b42b72395c1043f7e6b293d469ac532b0841a16f",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-formats.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_29",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-human.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "47b76644efadb13a91308cdeb133148608845c5b580311a4573b34054ba1596f",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-human.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_30",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-observability.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "f0a277c8695b9db012225ddd9bb52e4ac5a22174d18221c448ca83458b2a4457",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-observability.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_31",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-policy.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "437e8ee5d6e7e30c4fca0678fd9f05ab9ca4c0f7a1784a29158cedfc53729f8c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-policy.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_32",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-retry.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "9cf241558bdd869a0a997a4e31f08d2de900a6d97452a72e6714a0a88fc2669a",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-retry.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_33",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-scope.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "2d88aa980532eb11040413684abec889f9808679aa03fab3b04983645ef51608",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-scope.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_34",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-tests.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "db36d9f82023816d8f06d0f84e83dca8f37568baaa8472dff981d42b785b7b7e",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-tests.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_35",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-tradeoff.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "1e620086f86d53a9f3adeb5222bd3e6fb457a707add7e4c8e42b2d9ad3a9fa3d",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-tradeoff.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_36",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-verification.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "705d839823cd06e4456b26b94b5dfdcc8aa4dacc6125ed6b40271314b2a3ee4d",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-01-verification.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_37",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-agent_prompt.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "1afabf34e5615579288cb164144b521711a6db22edbaf0414f40fc965bf4b267",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-agent_prompt.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_38",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-derived.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "853dbd2c0e4e7ea5aab6f0ba93f42ae0d301e5790ac6dfb2714717eb36222ea0",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-derived.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_39",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-domain.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "0bbfff5d2c0980e83454a32391e93e574a566dd03c263052b14a7915b5467753",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-domain.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_40",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-failure.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "bc363f6e5d5c875d4a637c9b59bddb3d34de8af0ea53fedc0db02d201b39b535",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-failure.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_41",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-flask_api.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "4ebac36a152bdccaf8391b24a3129708b251332958ef2cc77a6f0295b87941b4",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-flask_api.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_42",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-flow.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "36d9897ecf43967fc1f66962c0b6f09b2fdf9cd7165847277e38ce3f689406f5",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-flow.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_43",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-formats.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "8eb3a660206076fc0dd2cf51793ae833dcdfc68a65f31e3357c10d9645b20bb0",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-formats.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_44",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-human.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "ed6f972bb49fc0a1766fc86d823622d36ea6cdb6ff7f7d4f0a1ce0e1accd8898",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-human.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_45",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-observability.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "315e102a6c58ed6506226dfda716483ab3be1afa92fbe111b934ccd27ef549a8",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-observability.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_46",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-policy.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "6f882c1c5ea1e07e64af874ffcd11eff1f671d12eaf60ea10cb2704155d5d92b",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-policy.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_47",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-retry.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "7bfca6a30b620fd266c2dee847b3a259dd0acd0ff82e2d5ef30d8259afefcd6c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-retry.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_48",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-scope.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "e14be5470375c64f36b9e3fa3950f668583a68fc494452d7d4e3df153ed9f8d3",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-scope.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_49",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-tests.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "5a85b30d471f17a4c32c2f92b8dca03cb37a88a2848d58dbe6365a1d480a5435",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-tests.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_50",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-tradeoff.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "7ab7713fe0c113367cb1690cc098c11e9a512ca3cd4f78146b4ba8441b7d8ecd",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-tradeoff.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_51",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-verification.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "aa63d5c5400be7737ee1b1b6af217a3f44aa4c9b0f1b09840674e45505d3180e",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-02-verification.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_52",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-agent_prompt.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "8fbc0d8d7b7c663927b5eff433057d676b1c4e3f8b76b252dcf292d02d79654f",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-agent_prompt.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_53",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-derived.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "6f7739ca7a615069907b8780bb345a73e49adf280b0bd9bcd95aab8560e6b069",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-derived.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_54",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-domain.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "63cd71752bc4e061b84be72931a4a059473b909e4cb523987de49abef8c21b51",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-domain.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_55",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-failure.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "9a0bc7812abcc05aa6448c04549e8e7acddcc801bb016173bd938627819fe1b1",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-failure.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_56",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-flask_api.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "d85a6c3904590bb15a0d5117704714b5ece03eace25cc64ac5b79c111ea83944",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-flask_api.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_57",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-flow.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "a3e700f0f379825db0cf84b0fc52d7541627f20275565cb6117cc03b7b7adf33",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-flow.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_58",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-formats.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "3a9d51388bc96335ccddb34b3eda0ff280c9b33f777004915d3b0ccd8ad16787",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-formats.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_59",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-human.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "f8259546920fdd435aa2b03fad9953c2742b634ada69053c01d5e55f436642e2",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-human.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_60",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-observability.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "8cc68921a52320d9f42e4617e5117d393f84523b4f53d56c353aa5a89b797e4a",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-observability.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_61",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-policy.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "55e41cc51194295b464242f8b8c36b1a4894422e307a78c06115d09b69e14cf6",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-policy.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_62",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-retry.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "a958ed459ecd147c8237b89a04f1b9a34337b1bc3188f6e55af0b9225f4659ff",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-retry.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_63",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-scope.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "a391286f0d5dc3fc42b1c389f8a72ae558fcd1f973b931ebd2d8c16ef5a0f720",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-scope.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_64",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-tests.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "d02df402d65861fff13e1c592e12daf9168f20568fde435c271e437669980786",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-tests.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_65",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-tradeoff.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "aeb3be484e24f6aecb1a39b80af9f5ed396225897520a1711a817b226f894b7c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-tradeoff.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_66",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-verification.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "c435ecceb113d1be7aea0fdaf38972dbd9b8ac00e381721e9217b435efd43475",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-03-verification.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_67",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-agent_prompt.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "ad4d2ee6e111333e8db2848f819ba53234cae4aa2ba00278a9bdae6a1ebb62f4",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-agent_prompt.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_68",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-derived.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "71029ba2e74c0fa226d98512aa6e79ce5b0300eb27dfc660e4f4a5e69d0ea6c0",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-derived.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_69",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-domain.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "52d7529bfc6fde3364cd6d29c5687ffa3a01271a4091b7de692547aa6ec046c7",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-domain.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_70",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-failure.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "7b72e937c12af995a488db95cc7c342f4745210e63ba311b39b967215a28e404",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-failure.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_71",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-flask_api.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "e54d47ee2d37e282da8bdc93ba9bf8cf0d1f39b9a7f397a8ef8238bb8cf07fdb",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-flask_api.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_72",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-flow.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "67c7b3df7d5441195d9b9ed1fd31fca2f2aaa8b3789a702180c02427fca5ce89",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-flow.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_73",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-formats.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "3b9974a10acc933c3cdd82ef13c6e12dc910436d1281c828c0c8d44061b13fd1",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-formats.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_74",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-human.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "eca932c9a96b0312b96ea179da56202550807a76be454961d8453db84db88d8c",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-human.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_75",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-observability.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "ee49572be9f077a98a8ce3076fc24c8d1009217219c9810d6fcd1c138ed2bc60",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-observability.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_76",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-policy.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "f36c3d208b7c2aff5d8bbc051c24691b5116e6781b2371ef8f40618383df4a5b",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-policy.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_77",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-retry.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "fc13695ed26e290e4baf5f71373130e9b89669068ca7748d1df4c52d8ef402eb",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-retry.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_78",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-scope.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "485be93114acfb6b59b9623444e92283d66c9d05a93c44e74b41c7d0f9de7f83",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-scope.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_79",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-tests.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "c21980f8cecca06925ae118747c2c5fee11a9c75e6ed51da96284a93cdeb249b",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-tests.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_80",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-tradeoff.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "187109f8fb3df283ec77a8fd99494a2e4da20d1145211d4a24e6bc8478ab70f2",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-tradeoff.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_81",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-verification.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "462cf2f4504bd529df432fc76643e6c1eaa7bbdc2177d0b9720cd4de26b3c7b2",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-04-verification.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_82",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-agent_prompt.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "e92b0fd35a1321b315f4b55e18393a8625f5f6d22c48474f35f6e43ef3c9a127",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-agent_prompt.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_83",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-derived.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "03802577339f8bf56372e097ea317fee21ff3466457dd472b8216b66588619ff",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-derived.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_84",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-domain.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "d713f01ac89ccb2a2d6feea9a15356dd393cdbc1da0a47e1371f8e7378fb198f",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-domain.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_85",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-failure.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "0de90826ebaa11516bc281416b2124f296142a6304c628aca30a81a2cb0f16bb",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-failure.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_86",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-flask_api.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "dae349ea34f7378de52e87fe2951f93299f17e520c3c138d1f671638e62ea876",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-flask_api.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_87",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-flow.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "bd3cc43f4182d49c659fdc5a100cf9e25882377b4c5debd75126e0564fb43301",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-flow.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_88",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-formats.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "10e05d037b935d49d34365c4e1e0029019ed064b11e82d3f529e15fae5995e9d",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-formats.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_89",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-human.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "cce817032266f63a2d8696129b7f498c2ceebc4e9791c863c7dcc4608c833901",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-human.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_90",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-observability.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "532ba1c54aecc1158c5708c7cdee3caa4780c8bef48e4a70a4987af52309e7a4",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-observability.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_91",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-policy.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "c30b974ee242ea3c039cc1ae380ab030f05b22621d7a720baf1c17d88181cc65",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-policy.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_92",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-retry.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "86c6e77648d925732821220f94f774aea9a38396c5b72925dcf003afdf4d302d",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-retry.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_93",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-scope.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "964587deda79e9d627eacf47ac4908056d888859e9c6e1fab382176ec1c74956",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-scope.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_94",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-tests.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "6e5780da981b0a0e29184bd4a8985840f8871c91c2092ae8def11dc5d03aefee",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-tests.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_95",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-tradeoff.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "808073f7c05b3da379790b52d17b6ba315b7408f9466b568b3b8673353dea1fc",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-tradeoff.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     },
     {
+      "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_96",
-      "kind": "knowledge_chunk",
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-verification.md",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
       "digest": "a837b6205a7df3ca428a5ce91480e94ce3528271919e282e28f94447af8de751",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/scenarios/openai-privacy-05-verification.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
     }
   ],
   "briefing_pack": {
+    "classification": "curate_client_briefing_pack",
     "schema": "live_evidence.briefing_pack.v1",
     "pack_id": "openai-privacy-generated-briefing",
     "audience": "openai-privacy interview or meeting",
@@ -866,6 +1507,7 @@
     ],
     "points": [
       {
+        "classification": "curated_seed_inference",
         "point_id": "01-deletion-retention",
         "title": "Distributed data deletion and retention orchestration",
         "opening_triggers": [
@@ -890,6 +1532,7 @@
         ]
       },
       {
+        "classification": "curated_seed_inference",
         "point_id": "02-inventory-lineage",
         "title": "Personal-data inventory, classification, and lineage",
         "opening_triggers": [
@@ -914,6 +1557,7 @@
         ]
       },
       {
+        "classification": "curated_seed_inference",
         "point_id": "03-purpose-access",
         "title": "Purpose-aware access control and policy enforcement",
         "opening_triggers": [
@@ -938,6 +1582,7 @@
         ]
       },
       {
+        "classification": "curated_seed_inference",
         "point_id": "04-case-workflow",
         "title": "Data-subject or lawful-access case workflow",
         "opening_triggers": [
@@ -962,6 +1607,7 @@
         ]
       },
       {
+        "classification": "curated_seed_inference",
         "point_id": "05-private-safety",
         "title": "ZDR-compatible private safety or privacy-preserving ML",
         "opening_triggers": [
@@ -989,6 +1635,7 @@
   },
   "question_oracles": [
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-scope",
       "canonical_question": "Distributed data deletion and retention orchestration: What clarifying questions do you ask before choosing the architecture?",
       "spoken_variants": [
@@ -996,6 +1643,7 @@
         "How would you handle clarification for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "clarification",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1042,6 +1690,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1060,6 +1709,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-domain",
       "canonical_question": "Distributed data deletion and retention orchestration: What domain objects and invariants define the system?",
       "spoken_variants": [
@@ -1067,6 +1717,7 @@
         "How would you handle domain modeling for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "domain modeling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1113,6 +1764,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1131,6 +1783,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-flow",
       "canonical_question": "Distributed data deletion and retention orchestration: What is the primary data flow and where are the trust boundaries?",
       "spoken_variants": [
@@ -1138,6 +1791,7 @@
         "How would you handle architecture for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "architecture",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1184,6 +1838,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1202,6 +1857,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-formats",
       "canonical_question": "Distributed data deletion and retention orchestration: How do heterogeneous data formats change the design?",
       "spoken_variants": [
@@ -1209,6 +1865,7 @@
         "How would you handle data formats for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "data formats",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1255,6 +1912,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1273,6 +1931,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-derived",
       "canonical_question": "Distributed data deletion and retention orchestration: How do derived stores, embeddings, caches, and backups affect correctness?",
       "spoken_variants": [
@@ -1280,6 +1939,7 @@
         "How would you handle derived data for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "derived data",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1326,6 +1986,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1344,6 +2005,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-policy",
       "canonical_question": "Distributed data deletion and retention orchestration: How are policies, legal holds, approvals, or consent represented?",
       "spoken_variants": [
@@ -1351,6 +2013,7 @@
         "How would you handle policy for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "policy",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1397,6 +2060,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1415,6 +2079,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-failure",
       "canonical_question": "Distributed data deletion and retention orchestration: What partial failures must remain visible?",
       "spoken_variants": [
@@ -1422,6 +2087,7 @@
         "How would you handle failure handling for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "failure handling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1468,6 +2134,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1486,6 +2153,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-retry",
       "canonical_question": "Distributed data deletion and retention orchestration: How do retries and duplicate requests stay safe?",
       "spoken_variants": [
@@ -1493,6 +2161,7 @@
         "How would you handle idempotency for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "idempotency",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1539,6 +2208,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1557,6 +2227,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-observability",
       "canonical_question": "Distributed data deletion and retention orchestration: What should be logged or measured without leaking personal data?",
       "spoken_variants": [
@@ -1564,6 +2235,7 @@
         "How would you handle observability for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "observability",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1610,6 +2282,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1628,6 +2301,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-verification",
       "canonical_question": "Distributed data deletion and retention orchestration: How do you independently prove completion or validity?",
       "spoken_variants": [
@@ -1635,6 +2309,7 @@
         "How would you handle proof for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "proof",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1681,6 +2356,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1699,6 +2375,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-human",
       "canonical_question": "Distributed data deletion and retention orchestration: What requires human review or escalation?",
       "spoken_variants": [
@@ -1706,6 +2383,7 @@
         "How would you handle human review for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "human review",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1752,6 +2430,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1770,6 +2449,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-tradeoff",
       "canonical_question": "Distributed data deletion and retention orchestration: Why not solve this with a single database/job/LLM/classifier?",
       "spoken_variants": [
@@ -1777,6 +2457,7 @@
         "How would you handle tradeoff for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "tradeoff",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1823,6 +2504,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1841,6 +2523,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-flask_api",
       "canonical_question": "Distributed data deletion and retention orchestration: What Flask endpoint is the smallest vertical slice for this scenario?",
       "spoken_variants": [
@@ -1848,6 +2531,7 @@
         "How would you handle coding for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "coding",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1894,6 +2578,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1912,6 +2597,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-tests",
       "canonical_question": "Distributed data deletion and retention orchestration: Which positive and negative tests prove the important behavior?",
       "spoken_variants": [
@@ -1919,6 +2605,7 @@
         "How would you handle testing for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "testing",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -1965,6 +2652,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -1983,6 +2671,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-01-agent_prompt",
       "canonical_question": "Distributed data deletion and retention orchestration: How should Graham direct the coding agent without overbuilding?",
       "spoken_variants": [
@@ -1990,6 +2679,7 @@
         "How would you handle agent use for distributed data deletion and retention orchestration?"
       ],
       "scenario": "Distributed data deletion and retention orchestration",
+      "category": null,
       "rubric_dimension": "agent use",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2036,6 +2726,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2054,6 +2745,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-scope",
       "canonical_question": "Personal-data inventory, classification, and lineage: What clarifying questions do you ask before choosing the architecture?",
       "spoken_variants": [
@@ -2061,6 +2753,7 @@
         "How would you handle clarification for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "clarification",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2107,6 +2800,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2125,6 +2819,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-domain",
       "canonical_question": "Personal-data inventory, classification, and lineage: What domain objects and invariants define the system?",
       "spoken_variants": [
@@ -2132,6 +2827,7 @@
         "How would you handle domain modeling for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "domain modeling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2178,6 +2874,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2196,6 +2893,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-flow",
       "canonical_question": "Personal-data inventory, classification, and lineage: What is the primary data flow and where are the trust boundaries?",
       "spoken_variants": [
@@ -2203,6 +2901,7 @@
         "How would you handle architecture for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "architecture",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2249,6 +2948,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2267,6 +2967,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-formats",
       "canonical_question": "Personal-data inventory, classification, and lineage: How do heterogeneous data formats change the design?",
       "spoken_variants": [
@@ -2274,6 +2975,7 @@
         "How would you handle data formats for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "data formats",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2320,6 +3022,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2338,6 +3041,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-derived",
       "canonical_question": "Personal-data inventory, classification, and lineage: How do derived stores, embeddings, caches, and backups affect correctness?",
       "spoken_variants": [
@@ -2345,6 +3049,7 @@
         "How would you handle derived data for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "derived data",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2391,6 +3096,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2409,6 +3115,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-policy",
       "canonical_question": "Personal-data inventory, classification, and lineage: How are policies, legal holds, approvals, or consent represented?",
       "spoken_variants": [
@@ -2416,6 +3123,7 @@
         "How would you handle policy for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "policy",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2462,6 +3170,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2480,6 +3189,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-failure",
       "canonical_question": "Personal-data inventory, classification, and lineage: What partial failures must remain visible?",
       "spoken_variants": [
@@ -2487,6 +3197,7 @@
         "How would you handle failure handling for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "failure handling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2533,6 +3244,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2551,6 +3263,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-retry",
       "canonical_question": "Personal-data inventory, classification, and lineage: How do retries and duplicate requests stay safe?",
       "spoken_variants": [
@@ -2558,6 +3271,7 @@
         "How would you handle idempotency for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "idempotency",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2604,6 +3318,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2622,6 +3337,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-observability",
       "canonical_question": "Personal-data inventory, classification, and lineage: What should be logged or measured without leaking personal data?",
       "spoken_variants": [
@@ -2629,6 +3345,7 @@
         "How would you handle observability for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "observability",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2675,6 +3392,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2693,6 +3411,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-verification",
       "canonical_question": "Personal-data inventory, classification, and lineage: How do you independently prove completion or validity?",
       "spoken_variants": [
@@ -2700,6 +3419,7 @@
         "How would you handle proof for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "proof",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2746,6 +3466,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2764,6 +3485,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-human",
       "canonical_question": "Personal-data inventory, classification, and lineage: What requires human review or escalation?",
       "spoken_variants": [
@@ -2771,6 +3493,7 @@
         "How would you handle human review for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "human review",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2817,6 +3540,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2835,6 +3559,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-tradeoff",
       "canonical_question": "Personal-data inventory, classification, and lineage: Why not solve this with a single database/job/LLM/classifier?",
       "spoken_variants": [
@@ -2842,6 +3567,7 @@
         "How would you handle tradeoff for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "tradeoff",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2888,6 +3614,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2906,6 +3633,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-flask_api",
       "canonical_question": "Personal-data inventory, classification, and lineage: What Flask endpoint is the smallest vertical slice for this scenario?",
       "spoken_variants": [
@@ -2913,6 +3641,7 @@
         "How would you handle coding for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "coding",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -2959,6 +3688,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -2977,6 +3707,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-tests",
       "canonical_question": "Personal-data inventory, classification, and lineage: Which positive and negative tests prove the important behavior?",
       "spoken_variants": [
@@ -2984,6 +3715,7 @@
         "How would you handle testing for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "testing",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3030,6 +3762,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3048,6 +3781,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-02-agent_prompt",
       "canonical_question": "Personal-data inventory, classification, and lineage: How should Graham direct the coding agent without overbuilding?",
       "spoken_variants": [
@@ -3055,6 +3789,7 @@
         "How would you handle agent use for personal-data inventory, classification, and lineage?"
       ],
       "scenario": "Personal-data inventory, classification, and lineage",
+      "category": null,
       "rubric_dimension": "agent use",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3101,6 +3836,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3119,6 +3855,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-scope",
       "canonical_question": "Purpose-aware access control and policy enforcement: What clarifying questions do you ask before choosing the architecture?",
       "spoken_variants": [
@@ -3126,6 +3863,7 @@
         "How would you handle clarification for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "clarification",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3172,6 +3910,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3190,6 +3929,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-domain",
       "canonical_question": "Purpose-aware access control and policy enforcement: What domain objects and invariants define the system?",
       "spoken_variants": [
@@ -3197,6 +3937,7 @@
         "How would you handle domain modeling for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "domain modeling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3243,6 +3984,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3261,6 +4003,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-flow",
       "canonical_question": "Purpose-aware access control and policy enforcement: What is the primary data flow and where are the trust boundaries?",
       "spoken_variants": [
@@ -3268,6 +4011,7 @@
         "How would you handle architecture for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "architecture",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3314,6 +4058,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3332,6 +4077,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-formats",
       "canonical_question": "Purpose-aware access control and policy enforcement: How do heterogeneous data formats change the design?",
       "spoken_variants": [
@@ -3339,6 +4085,7 @@
         "How would you handle data formats for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "data formats",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3385,6 +4132,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3403,6 +4151,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-derived",
       "canonical_question": "Purpose-aware access control and policy enforcement: How do derived stores, embeddings, caches, and backups affect correctness?",
       "spoken_variants": [
@@ -3410,6 +4159,7 @@
         "How would you handle derived data for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "derived data",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3456,6 +4206,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3474,6 +4225,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-policy",
       "canonical_question": "Purpose-aware access control and policy enforcement: How are policies, legal holds, approvals, or consent represented?",
       "spoken_variants": [
@@ -3481,6 +4233,7 @@
         "How would you handle policy for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "policy",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3527,6 +4280,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3545,6 +4299,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-failure",
       "canonical_question": "Purpose-aware access control and policy enforcement: What partial failures must remain visible?",
       "spoken_variants": [
@@ -3552,6 +4307,7 @@
         "How would you handle failure handling for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "failure handling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3598,6 +4354,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3616,6 +4373,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-retry",
       "canonical_question": "Purpose-aware access control and policy enforcement: How do retries and duplicate requests stay safe?",
       "spoken_variants": [
@@ -3623,6 +4381,7 @@
         "How would you handle idempotency for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "idempotency",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3669,6 +4428,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3687,6 +4447,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-observability",
       "canonical_question": "Purpose-aware access control and policy enforcement: What should be logged or measured without leaking personal data?",
       "spoken_variants": [
@@ -3694,6 +4455,7 @@
         "How would you handle observability for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "observability",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3740,6 +4502,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3758,6 +4521,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-verification",
       "canonical_question": "Purpose-aware access control and policy enforcement: How do you independently prove completion or validity?",
       "spoken_variants": [
@@ -3765,6 +4529,7 @@
         "How would you handle proof for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "proof",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3811,6 +4576,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3829,6 +4595,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-human",
       "canonical_question": "Purpose-aware access control and policy enforcement: What requires human review or escalation?",
       "spoken_variants": [
@@ -3836,6 +4603,7 @@
         "How would you handle human review for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "human review",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3882,6 +4650,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3900,6 +4669,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-tradeoff",
       "canonical_question": "Purpose-aware access control and policy enforcement: Why not solve this with a single database/job/LLM/classifier?",
       "spoken_variants": [
@@ -3907,6 +4677,7 @@
         "How would you handle tradeoff for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "tradeoff",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -3953,6 +4724,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -3971,6 +4743,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-flask_api",
       "canonical_question": "Purpose-aware access control and policy enforcement: What Flask endpoint is the smallest vertical slice for this scenario?",
       "spoken_variants": [
@@ -3978,6 +4751,7 @@
         "How would you handle coding for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "coding",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4024,6 +4798,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4042,6 +4817,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-tests",
       "canonical_question": "Purpose-aware access control and policy enforcement: Which positive and negative tests prove the important behavior?",
       "spoken_variants": [
@@ -4049,6 +4825,7 @@
         "How would you handle testing for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "testing",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4095,6 +4872,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4113,6 +4891,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-03-agent_prompt",
       "canonical_question": "Purpose-aware access control and policy enforcement: How should Graham direct the coding agent without overbuilding?",
       "spoken_variants": [
@@ -4120,6 +4899,7 @@
         "How would you handle agent use for purpose-aware access control and policy enforcement?"
       ],
       "scenario": "Purpose-aware access control and policy enforcement",
+      "category": null,
       "rubric_dimension": "agent use",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4166,6 +4946,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4184,6 +4965,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-scope",
       "canonical_question": "Data-subject or lawful-access case workflow: What clarifying questions do you ask before choosing the architecture?",
       "spoken_variants": [
@@ -4191,6 +4973,7 @@
         "How would you handle clarification for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "clarification",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4237,6 +5020,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4255,6 +5039,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-domain",
       "canonical_question": "Data-subject or lawful-access case workflow: What domain objects and invariants define the system?",
       "spoken_variants": [
@@ -4262,6 +5047,7 @@
         "How would you handle domain modeling for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "domain modeling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4308,6 +5094,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4326,6 +5113,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-flow",
       "canonical_question": "Data-subject or lawful-access case workflow: What is the primary data flow and where are the trust boundaries?",
       "spoken_variants": [
@@ -4333,6 +5121,7 @@
         "How would you handle architecture for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "architecture",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4379,6 +5168,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4397,6 +5187,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-formats",
       "canonical_question": "Data-subject or lawful-access case workflow: How do heterogeneous data formats change the design?",
       "spoken_variants": [
@@ -4404,6 +5195,7 @@
         "How would you handle data formats for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "data formats",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4450,6 +5242,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4468,6 +5261,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-derived",
       "canonical_question": "Data-subject or lawful-access case workflow: How do derived stores, embeddings, caches, and backups affect correctness?",
       "spoken_variants": [
@@ -4475,6 +5269,7 @@
         "How would you handle derived data for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "derived data",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4521,6 +5316,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4539,6 +5335,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-policy",
       "canonical_question": "Data-subject or lawful-access case workflow: How are policies, legal holds, approvals, or consent represented?",
       "spoken_variants": [
@@ -4546,6 +5343,7 @@
         "How would you handle policy for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "policy",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4592,6 +5390,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4610,6 +5409,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-failure",
       "canonical_question": "Data-subject or lawful-access case workflow: What partial failures must remain visible?",
       "spoken_variants": [
@@ -4617,6 +5417,7 @@
         "How would you handle failure handling for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "failure handling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4663,6 +5464,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4681,6 +5483,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-retry",
       "canonical_question": "Data-subject or lawful-access case workflow: How do retries and duplicate requests stay safe?",
       "spoken_variants": [
@@ -4688,6 +5491,7 @@
         "How would you handle idempotency for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "idempotency",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4734,6 +5538,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4752,6 +5557,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-observability",
       "canonical_question": "Data-subject or lawful-access case workflow: What should be logged or measured without leaking personal data?",
       "spoken_variants": [
@@ -4759,6 +5565,7 @@
         "How would you handle observability for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "observability",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4805,6 +5612,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4823,6 +5631,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-verification",
       "canonical_question": "Data-subject or lawful-access case workflow: How do you independently prove completion or validity?",
       "spoken_variants": [
@@ -4830,6 +5639,7 @@
         "How would you handle proof for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "proof",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4876,6 +5686,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4894,6 +5705,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-human",
       "canonical_question": "Data-subject or lawful-access case workflow: What requires human review or escalation?",
       "spoken_variants": [
@@ -4901,6 +5713,7 @@
         "How would you handle human review for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "human review",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -4947,6 +5760,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -4965,6 +5779,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-tradeoff",
       "canonical_question": "Data-subject or lawful-access case workflow: Why not solve this with a single database/job/LLM/classifier?",
       "spoken_variants": [
@@ -4972,6 +5787,7 @@
         "How would you handle tradeoff for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "tradeoff",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5018,6 +5834,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5036,6 +5853,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-flask_api",
       "canonical_question": "Data-subject or lawful-access case workflow: What Flask endpoint is the smallest vertical slice for this scenario?",
       "spoken_variants": [
@@ -5043,6 +5861,7 @@
         "How would you handle coding for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "coding",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5089,6 +5908,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5107,6 +5927,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-tests",
       "canonical_question": "Data-subject or lawful-access case workflow: Which positive and negative tests prove the important behavior?",
       "spoken_variants": [
@@ -5114,6 +5935,7 @@
         "How would you handle testing for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "testing",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5160,6 +5982,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5178,6 +6001,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-04-agent_prompt",
       "canonical_question": "Data-subject or lawful-access case workflow: How should Graham direct the coding agent without overbuilding?",
       "spoken_variants": [
@@ -5185,6 +6009,7 @@
         "How would you handle agent use for data-subject or lawful-access case workflow?"
       ],
       "scenario": "Data-subject or lawful-access case workflow",
+      "category": null,
       "rubric_dimension": "agent use",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5231,6 +6056,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5249,6 +6075,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-scope",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: What clarifying questions do you ask before choosing the architecture?",
       "spoken_variants": [
@@ -5256,6 +6083,7 @@
         "How would you handle clarification for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "clarification",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5302,6 +6130,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5320,6 +6149,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-domain",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: What domain objects and invariants define the system?",
       "spoken_variants": [
@@ -5327,6 +6157,7 @@
         "How would you handle domain modeling for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "domain modeling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5373,6 +6204,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5391,6 +6223,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-flow",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: What is the primary data flow and where are the trust boundaries?",
       "spoken_variants": [
@@ -5398,6 +6231,7 @@
         "How would you handle architecture for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "architecture",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5444,6 +6278,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5462,6 +6297,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-formats",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: How do heterogeneous data formats change the design?",
       "spoken_variants": [
@@ -5469,6 +6305,7 @@
         "How would you handle data formats for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "data formats",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5515,6 +6352,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5533,6 +6371,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-derived",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: How do derived stores, embeddings, caches, and backups affect correctness?",
       "spoken_variants": [
@@ -5540,6 +6379,7 @@
         "How would you handle derived data for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "derived data",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5586,6 +6426,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5604,6 +6445,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-policy",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: How are policies, legal holds, approvals, or consent represented?",
       "spoken_variants": [
@@ -5611,6 +6453,7 @@
         "How would you handle policy for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "policy",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5657,6 +6500,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5675,6 +6519,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-failure",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: What partial failures must remain visible?",
       "spoken_variants": [
@@ -5682,6 +6527,7 @@
         "How would you handle failure handling for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "failure handling",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5728,6 +6574,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5746,6 +6593,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-retry",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: How do retries and duplicate requests stay safe?",
       "spoken_variants": [
@@ -5753,6 +6601,7 @@
         "How would you handle idempotency for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "idempotency",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5799,6 +6648,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5817,6 +6667,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-observability",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: What should be logged or measured without leaking personal data?",
       "spoken_variants": [
@@ -5824,6 +6675,7 @@
         "How would you handle observability for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "observability",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5870,6 +6722,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5888,6 +6741,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-verification",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: How do you independently prove completion or validity?",
       "spoken_variants": [
@@ -5895,6 +6749,7 @@
         "How would you handle proof for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "proof",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -5941,6 +6796,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -5959,6 +6815,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-human",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: What requires human review or escalation?",
       "spoken_variants": [
@@ -5966,6 +6823,7 @@
         "How would you handle human review for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "human review",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -6012,6 +6870,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -6030,6 +6889,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-tradeoff",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: Why not solve this with a single database/job/LLM/classifier?",
       "spoken_variants": [
@@ -6037,6 +6897,7 @@
         "How would you handle tradeoff for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "tradeoff",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -6083,6 +6944,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -6101,6 +6963,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-flask_api",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: What Flask endpoint is the smallest vertical slice for this scenario?",
       "spoken_variants": [
@@ -6108,6 +6971,7 @@
         "How would you handle coding for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "coding",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -6154,6 +7018,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -6172,6 +7037,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-tests",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: Which positive and negative tests prove the important behavior?",
       "spoken_variants": [
@@ -6179,6 +7045,7 @@
         "How would you handle testing for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "testing",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -6225,6 +7092,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -6243,6 +7111,7 @@
       ]
     },
     {
+      "classification": "curated_seed_inference",
       "question_id": "openai-privacy-05-agent_prompt",
       "canonical_question": "ZDR-compatible private safety or privacy-preserving ML: How should Graham direct the coding agent without overbuilding?",
       "spoken_variants": [
@@ -6250,6 +7119,7 @@
         "How would you handle agent use for zdr-compatible private safety or privacy-preserving ml?"
       ],
       "scenario": "ZDR-compatible private safety or privacy-preserving ML",
+      "category": null,
       "rubric_dimension": "agent use",
       "clarifications_expected_before_answering": [
         "privacy action",
@@ -6296,6 +7166,7 @@
       ],
       "hold_answer_clarify_disposition": "clarify if scope or proof standard is missing; otherwise answer from retrieved sources",
       "reviewed_answer": {
+        "classification": "reviewed_curated_answer",
         "review_status": "reviewed",
         "expected_response_shape": "privacy_system_design_or_coding_answer",
         "quality_bar": [
@@ -6315,6 +7186,7 @@
     }
   ],
   "memory_exports": {
+    "classification": "curate_client_memory_exports",
     "ingest_endpoint": "/live-evidence/oracle-pack",
     "recall_endpoint": "/recall",
     "collections": [
@@ -6328,6 +7200,7 @@
     ]
   },
   "live_use": {
+    "classification": "curate_client_live_use",
     "before_call": [
       "load briefing_pack into /api/briefing/load",
       "verify question_oracles through /recall",
@@ -6344,6 +7217,7 @@
     ]
   },
   "producer": {
+    "classification": "curate_client_producer",
     "skill": "curate-client",
     "client_scope": "client:openai-privacy",
     "kb_root": "/home/graham/workspace/experiments/openai-privacy-kb",

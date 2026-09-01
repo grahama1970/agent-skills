@@ -99,6 +99,227 @@ class CanonicalClientData(BaseModel):
         return value
 
 
+class PrepPackTarget(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    kind: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    topic: str = Field(min_length=1)
+    purpose: str = Field(min_length=1)
+
+
+class PrepPackResearchStep(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    skill: str = Field(min_length=1)
+    role: str = Field(min_length=1)
+
+
+class PrepPackSourceContext(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    source_id: str = Field(min_length=1)
+    title: str | None = None
+    authority: str | None = None
+    retrieved_at: str | None = None
+    digest: str | None = None
+    url: str | None = None
+    path: str | None = None
+    summary: str | None = None
+    kind: str | None = None
+    use: str | None = None
+
+    @field_validator("title", "authority", "retrieved_at", "digest", "url", "path", "summary", "kind", "use")
+    @classmethod
+    def empty_optional_to_none(cls, value: str | None) -> str | None:
+        return value or None
+
+
+class PrepPackBriefingPoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    point_id: str = Field(min_length=1)
+    title: str | None = None
+    opening_triggers: list[list[str]] = Field(min_length=1)
+    hook: str = Field(min_length=1)
+    story: str = Field(min_length=1)
+    sources: list[str] = Field(min_length=1)
+
+
+class PrepPackBriefing(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    schema_: str = Field(alias="schema")
+    pack_id: str = Field(min_length=1)
+    audience: str = Field(min_length=1)
+    core_concepts: list[str] = Field(min_length=1)
+    points: list[PrepPackBriefingPoint] = Field(min_length=1)
+
+    @field_validator("schema_")
+    @classmethod
+    def schema_is_current(cls, value: str) -> str:
+        if value != "live_evidence.briefing_pack.v1":
+            raise ValueError("schema must be live_evidence.briefing_pack.v1")
+        return value
+
+
+class PrepPackReviewedAnswer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    review_status: str = Field(min_length=1)
+    expected_response_shape: str = Field(min_length=1)
+    quality_bar: list[str] = Field(min_length=1)
+
+
+class PrepPackQuestionOracle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    question_id: str = Field(min_length=1)
+    canonical_question: str = Field(min_length=1)
+    spoken_variants: list[str] = Field(default_factory=list)
+    scenario: str | None = None
+    category: str | None = None
+    rubric_dimension: str | None = None
+    clarifications_expected_before_answering: list[str] = Field(default_factory=list)
+    answer_thesis: str | None = None
+    architecture_components: list[str] = Field(default_factory=list)
+    failure_cases: list[str] = Field(default_factory=list)
+    tradeoffs: list[str] = Field(default_factory=list)
+    source_references: list[str] = Field(default_factory=list)
+    graham_project_bridge: str | None = None
+    skill_chain: list[str] = Field(min_length=1)
+    hold_answer_clarify_disposition: str | None = None
+    reviewed_answer: PrepPackReviewedAnswer
+    memory_keys: list[str] = Field(min_length=2)
+
+
+class PrepPackMemoryExports(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    ingest_endpoint: str = Field(min_length=1)
+    recall_endpoint: str = Field(min_length=1)
+    collections: list[str] = Field(min_length=1)
+
+
+class PrepPackLiveUse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    before_call: list[str] = Field(min_length=1)
+    during_call: list[str] = Field(min_length=1)
+    after_call: list[str] = Field(min_length=1)
+
+
+class PrepPackProducer(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    skill: str = Field(min_length=1)
+    client_scope: str = Field(min_length=1)
+    kb_root: str = Field(min_length=1)
+    knowledge_dir: str = Field(min_length=1)
+    live_evidence_repos_append: str = Field(min_length=1)
+    generated: bool
+
+
+class LiveEvidencePrepPack(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    classification: str = Field(min_length=1)
+    pack_id: str = Field(min_length=1)
+    target: PrepPackTarget
+    research_chain: list[PrepPackResearchStep] = Field(min_length=1)
+    source_context: list[PrepPackSourceContext] = Field(min_length=1)
+    briefing_pack: PrepPackBriefing
+    question_oracles: list[PrepPackQuestionOracle] = Field(min_length=1)
+    memory_exports: PrepPackMemoryExports
+    live_use: PrepPackLiveUse
+    producer: PrepPackProducer
+
+    @field_validator("schema_")
+    @classmethod
+    def schema_is_current(cls, value: str) -> str:
+        if value != "live_evidence.prep_pack.v1":
+            raise ValueError("schema must be live_evidence.prep_pack.v1")
+        return value
+
+
+class CurateClientRecallProbe(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    question_id: str = Field(min_length=1)
+    canonical_question: str = Field(min_length=1)
+    status_code: int
+    found: bool
+    confidence: float | int | None = None
+    item_count: int
+    tagged_item_count: int
+    returned_keys: list[str]
+    ok: bool
+
+
+class CurateClientMemoryRecallReceipt(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    status: str
+    pack_path: str = Field(min_length=1)
+    pack_id: str = Field(min_length=1)
+    memory_url: str = Field(min_length=1)
+    collections: list[str] = Field(min_length=1)
+    tags: list[str] = Field(min_length=1)
+    probe_count: int
+    pass_count: int
+    fail_count: int
+    probes: list[CurateClientRecallProbe]
+
+    @field_validator("schema_")
+    @classmethod
+    def schema_is_current(cls, value: str) -> str:
+        if value != "curate_client.memory_recall_validation.v1":
+            raise ValueError("schema must be curate_client.memory_recall_validation.v1")
+        return value
+
+
+class CurateClientReportOracle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    question_id: str = Field(min_length=1)
+    canonical_question: str = Field(min_length=1)
+    answer_thesis: str = Field(min_length=1)
+    architecture_components: list[str] = Field(min_length=1)
+    failure_cases: list[str] = Field(min_length=1)
+    tradeoffs: list[str] = Field(min_length=1)
+    graham_project_bridge: str = Field(min_length=1)
+    memory_recall_ok: bool
+
+
+class CurateClientReportScenario(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    classification: str = Field(min_length=1)
+    point_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    hook: str = Field(min_length=1)
+    story: str = Field(min_length=1)
+    oracles: list[CurateClientReportOracle] = Field(min_length=1)
+
+
+class CurateClientReportModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_: str = Field(alias="schema")
+    classification: str = Field(min_length=1)
+    client: str = Field(min_length=1)
+    canonical_json: str = Field(min_length=1)
+    prep_pack: str = Field(min_length=1)
+    memory_recall_receipt: str = Field(min_length=1)
+    memory_recall_status: str = Field(min_length=1)
+    scenarios: list[CurateClientReportScenario] = Field(min_length=1)
+    non_claims: list[str] = Field(min_length=1)
+
+    @field_validator("schema_")
+    @classmethod
+    def schema_is_current(cls, value: str) -> str:
+        if value != "curate_client.report_model.v1":
+            raise ValueError("schema must be curate_client.report_model.v1")
+        return value
+
+
 def _load_config(path: str) -> dict:
     text = Path(path).read_text()
     try:
@@ -413,10 +634,12 @@ def _json_file(cfg: dict, key: str) -> Any | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _without_classification(model: BaseModel) -> dict[str, Any]:
-    data = model.model_dump(mode="json", by_alias=True)
-    data.pop("classification", None)
-    return data
+def _model_json(model: BaseModel) -> dict[str, Any]:
+    return model.model_dump(mode="json", by_alias=True)
+
+
+def _validate_pydantic_json(model: type[BaseModel], payload: dict[str, Any]) -> dict[str, Any]:
+    return model.model_validate(payload).model_dump(mode="json", by_alias=True)
 
 
 def _oracle_collections(cfg: dict) -> list[str]:
@@ -473,7 +696,7 @@ def _recall_keys(cfg: dict, query: str, *, limit: int = 6) -> list[str]:
 def _manifest_sources(cfg: dict) -> list[dict[str, str]]:
     canonical = _load_canonical(cfg)
     if canonical is not None:
-        return [{k: str(v) for k, v in _without_classification(source).items() if v is not None} for source in canonical.sources]
+        return [{k: str(v) for k, v in _model_json(source).items() if v is not None} for source in canonical.sources]
     path = Path(cfg["kb_root"]) / "source-manifest.json"
     if not path.is_file():
         return []
@@ -492,6 +715,7 @@ def _source_context(cfg: dict) -> list[dict[str, str]]:
     sources: list[dict[str, str]] = []
     for index, spec in enumerate(cfg.get("openapi_specs") or []):
         sources.append({
+            "classification": "curate_client_configured_source",
             "source_id": f"{_slug(cfg['client'])}_openapi_{index + 1}",
             "kind": "openapi_spec",
             "path": str(spec),
@@ -499,6 +723,7 @@ def _source_context(cfg: dict) -> list[dict[str, str]]:
         })
     for index, repo in enumerate(cfg.get("terraform_repos") or []):
         sources.append({
+            "classification": "curate_client_configured_source",
             "source_id": f"{_slug(cfg['client'])}_terraform_{index + 1}",
             "kind": "terraform_repo",
             "path": str(repo),
@@ -508,6 +733,7 @@ def _source_context(cfg: dict) -> list[dict[str, str]]:
     for index, path in enumerate(_knowledge_files(cfg)[:_limit(cfg, "source_context_limit", 8)]):
         text = path.read_text(encoding="utf-8", errors="ignore")
         sources.append({
+            "classification": "curate_client_knowledge_chunk",
             "source_id": f"{_slug(cfg['client'])}_knowledge_{index + 1}",
             "kind": "knowledge_chunk",
             "path": str(path),
@@ -520,7 +746,7 @@ def _source_context(cfg: dict) -> list[dict[str, str]]:
 def _briefing_points(cfg: dict) -> list[dict[str, Any]]:
     canonical = _load_canonical(cfg)
     if canonical is not None:
-        return [_without_classification(point) for point in canonical.briefing_points[:_limit(cfg, "briefing_points_limit", len(canonical.briefing_points))]]
+        return [_model_json(point) for point in canonical.briefing_points[:_limit(cfg, "briefing_points_limit", len(canonical.briefing_points))]]
     configured = _json_file(cfg, "briefing_points_file")
     if configured is not None:
         points = configured.get("points") if isinstance(configured, dict) else configured
@@ -532,6 +758,7 @@ def _briefing_points(cfg: dict) -> list[dict[str, Any]]:
     for item in (research.get("collaboration_points") or [])[:_limit(cfg, "briefing_points_limit", 3)]:
         system = str(item.get("system") or "coverage")
         points.append({
+            "classification": "curate_client_generated",
             "point_id": f"{_slug(system)}-coverage",
             "title": f"{system.upper()} coverage needs source-bound prep",
             "opening_triggers": [[system], ["coverage"], ["evidence"]],
@@ -544,6 +771,7 @@ def _briefing_points(cfg: dict) -> list[dict[str, Any]]:
     probes = cfg.get("probes") or ["client evidence"]
     return [
         {
+            "classification": "curate_client_generated",
             "point_id": "client-evidence-gates",
             "title": "Client prep must stay source-bound",
             "opening_triggers": [[cfg["client"]], ["evidence"], ["retrieval"]],
@@ -559,10 +787,7 @@ def _question_oracles(cfg: dict) -> list[dict[str, Any]]:
     if canonical is not None:
         out = []
         for item in canonical.question_oracles[:_limit(cfg, "question_oracles_limit", len(canonical.question_oracles))]:
-            oracle = _without_classification(item)
-            reviewed = oracle.get("reviewed_answer")
-            if isinstance(reviewed, dict):
-                reviewed.pop("classification", None)
+            oracle = _model_json(item)
             keys = [str(k) for k in (oracle.get("memory_keys") or [])]
             if len(keys) < 2:
                 keys = _recall_keys(cfg, f"{cfg['client']} {oracle['canonical_question']}", limit=8)
@@ -584,12 +809,14 @@ def _question_oracles(cfg: dict) -> list[dict[str, Any]]:
             query = str(oracle.get("canonical_question") or oracle.get("question") or "")
             if not query:
                 raise RuntimeError("question_oracles_file entry missing canonical_question")
+            oracle.setdefault("classification", "curate_client_configured")
             oracle.setdefault("question_id", f"{_slug(cfg['client'])}-oracle-{index + 1}")
             chain = oracle.get("skill_chain")
             if not isinstance(chain, list) or not chain or chain[0] != "memory":
                 oracle["skill_chain"] = ["memory"] + ([str(v) for v in chain] if isinstance(chain, list) else [])
             oracle.setdefault("category", str(oracle.get("rubric_dimension") or "client_context_question"))
             oracle.setdefault("reviewed_answer", {
+                "classification": "curate_client_configured_review",
                 "review_status": "reviewed",
                 "expected_response_shape": "source_checked_client_context_answer",
                 "quality_bar": [
@@ -614,11 +841,13 @@ def _question_oracles(cfg: dict) -> list[dict[str, Any]]:
         if len(keys) < 2:
             raise RuntimeError(f"recall probe did not return at least two live-evidence memory keys: {query}")
         oracles.append({
+            "classification": "curate_client_generated",
             "question_id": f"{_slug(cfg['client'])}-probe-{index + 1}",
             "canonical_question": query,
             "category": "client_context_question",
             "skill_chain": ["memory"],
             "reviewed_answer": {
+                "classification": "curate_client_generated_review",
                 "review_status": "reviewed",
                 "expected_response_shape": "source_checked_client_context_answer",
                 "quality_bar": [
@@ -635,11 +864,13 @@ def _question_oracles(cfg: dict) -> list[dict[str, Any]]:
     if len(keys) < 2:
         raise RuntimeError(f"client recall did not return at least two live-evidence memory keys: {cfg['client']}")
     return [{
+        "classification": "curate_client_generated",
         "question_id": f"{_slug(cfg['client'])}-overview",
         "canonical_question": f"What should I know about {cfg['client']} before the live conversation?",
         "category": "client_context_question",
         "skill_chain": ["memory"],
         "reviewed_answer": {
+            "classification": "curate_client_generated_review",
             "review_status": "reviewed",
             "expected_response_shape": "source_checked_client_context_answer",
             "quality_bar": ["uses stored client context first", "fails closed if evidence is unavailable"],
@@ -656,23 +887,26 @@ def _generate_prep_pack(cfg: dict, path: Path) -> dict[str, Any]:
         raise RuntimeError("cannot generate prep pack without source context")
     payload = {
         "schema": "live_evidence.prep_pack.v1",
+        "classification": "curate_client_generated_pydantic_validated",
         "pack_id": f"{_slug(client)}-generated-{hashlib.sha256(str(path).encode()).hexdigest()[:8]}",
         "target": {
+            "classification": "curate_client_target",
             "kind": str(cfg.get("target_kind") or "employer"),
             "name": client,
             "topic": topic,
             "purpose": str(cfg.get("purpose") or "rehearsal"),
         },
         "research_chain": [
-            {"skill": "curate-client", "role": "builds client KB and emits live-evidence prep pack"},
-            {"skill": "brave-search", "role": "current public discovery when configured or needed"},
-            {"skill": "dogpile", "role": "deeper multi-source research when configured or needed"},
-            {"skill": "ask", "role": "question, answer, and skill-chain review"},
-            {"skill": "memory", "role": "retrieval boundary for known or similar live questions"},
+            {"classification": "curate_client_research_step", "skill": "curate-client", "role": "builds client KB and emits live-evidence prep pack"},
+            {"classification": "curate_client_research_step", "skill": "brave-search", "role": "current public discovery when configured or needed"},
+            {"classification": "curate_client_research_step", "skill": "dogpile", "role": "deeper multi-source research when configured or needed"},
+            {"classification": "curate_client_research_step", "skill": "ask", "role": "question, answer, and skill-chain review"},
+            {"classification": "curate_client_research_step", "skill": "memory", "role": "retrieval boundary for known or similar live questions"},
         ],
         "source_context": sources,
         "briefing_pack": {
             "schema": "live_evidence.briefing_pack.v1",
+            "classification": "curate_client_briefing_pack",
             "pack_id": f"{_slug(client)}-generated-briefing",
             "audience": f"{client} interview or meeting",
             "core_concepts": [client, "client evidence", "retrieval", "source provenance"],
@@ -680,11 +914,13 @@ def _generate_prep_pack(cfg: dict, path: Path) -> dict[str, Any]:
         },
         "question_oracles": _question_oracles(cfg),
         "memory_exports": {
+            "classification": "curate_client_memory_exports",
             "ingest_endpoint": "/live-evidence/oracle-pack",
             "recall_endpoint": "/recall",
             "collections": _oracle_collections(cfg),
         },
         "live_use": {
+            "classification": "curate_client_live_use",
             "before_call": [
                 "load briefing_pack into /api/briefing/load",
                 "verify question_oracles through /recall",
@@ -701,6 +937,7 @@ def _generate_prep_pack(cfg: dict, path: Path) -> dict[str, Any]:
             ],
         },
         "producer": {
+            "classification": "curate_client_producer",
             "skill": "curate-client",
             "client_scope": f"client:{client}",
             "kb_root": cfg["kb_root"],
@@ -709,13 +946,14 @@ def _generate_prep_pack(cfg: dict, path: Path) -> dict[str, Any]:
             "generated": True,
         },
     }
+    payload = _validate_pydantic_json(LiveEvidencePrepPack, payload)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     return payload
 
 
 def _load_or_generate_prep_pack(cfg: dict, path: Path) -> tuple[dict[str, Any], bool]:
-    if path.is_file():
+    if path.is_file() and not cfg.get("regenerate_prep_pack"):
         return json.loads(path.read_text()), False
     return _generate_prep_pack(cfg, path), True
 
@@ -724,28 +962,16 @@ def cmd_prep_pack(cfg: dict) -> dict:
     path = _prep_pack_path(cfg)
     try:
         payload, generated = _load_or_generate_prep_pack(cfg, path)
+        payload = _validate_pydantic_json(LiveEvidencePrepPack, payload)
     except Exception as exc:
         return {
             "schema": "curate_client.prep_pack_receipt.v1",
             "status": "FAIL",
             "path": str(path),
-            "triage": _triage(f"curate-client prep-pack failed: {type(exc).__name__}: {exc}"),
-            "error": f"prep pack regeneration failed: {type(exc).__name__}: {exc}",
+            "triage": _triage(f"curate-client prep-pack pydantic validation failed: {type(exc).__name__}: {exc}"),
+            "error": f"prep pack pydantic validation failed: {type(exc).__name__}: {exc}",
+            "next_command": "regenerate or repair prep-pack JSON and rerun prep-pack",
         }
-    if payload.get("schema") != "live_evidence.prep_pack.v1":
-        return {
-            "schema": "curate_client.prep_pack_receipt.v1",
-            "status": "FAIL",
-            "path": str(path),
-            "error": "prep pack schema must be live_evidence.prep_pack.v1",
-        }
-    payload.setdefault("producer", {
-        "skill": "curate-client",
-        "client_scope": f"client:{cfg['client']}",
-        "kb_root": cfg["kb_root"],
-        "knowledge_dir": str(Path(cfg["kb_root"]) / "knowledge"),
-        "live_evidence_repos_append": cfg["kb_root"],
-    })
     return {
         "schema": "curate_client.prep_pack_receipt.v1",
         "status": "PASS",
@@ -762,48 +988,210 @@ def cmd_prep_pack(cfg: dict) -> dict:
     }
 
 
+def _oracle_tags(cfg: dict) -> list[str]:
+    configured = [str(item) for item in (cfg.get("oracle_recall_tags") or [])]
+    if configured:
+        return configured
+    return [_slug(str(cfg["client"])) + "-kb"]
+
+
+def cmd_validate_memory_recall(cfg: dict) -> dict[str, Any]:
+    prep = cmd_prep_pack(cfg)
+    if prep.get("status") != "PASS":
+        return {
+            "schema": "curate_client.memory_recall_validation.v1",
+            "status": "FAIL",
+            "pack_path": str(_prep_pack_path(cfg)),
+            "pack_id": "unknown",
+            "memory_url": str(cfg.get("memory_daemon") or "http://127.0.0.1:8601"),
+            "collections": _oracle_collections(cfg),
+            "tags": _oracle_tags(cfg),
+            "probe_count": 0,
+            "pass_count": 0,
+            "fail_count": 1,
+            "probes": [],
+        }
+    pack = prep["prep_pack"]
+    daemon = str(cfg.get("memory_daemon") or "http://127.0.0.1:8601").rstrip("/")
+    collections = [str(item) for item in (cfg.get("memory_recall_collections") or cfg.get("oracle_recall_collections") or ["lessons"])]
+    tags = _oracle_tags(cfg)
+    probes: list[dict[str, Any]] = []
+    for oracle in pack.get("question_oracles") or []:
+        body = {"q": oracle.get("canonical_question"), "k": int(cfg.get("memory_recall_k") or 8), "collections": collections, "tags": tags}
+        req = urllib.request.Request(daemon + "/recall", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}, method="POST")
+        with urllib.request.urlopen(req, timeout=30) as response:
+            payload = json.loads(response.read())
+            status_code = response.status
+        items = [item for item in payload.get("items", []) if isinstance(item, dict)]
+        tagged = [item for item in items if any(tag in (item.get("tags") or []) for tag in tags)]
+        probes.append({
+            "question_id": str(oracle.get("question_id") or "unknown"),
+            "canonical_question": str(oracle.get("canonical_question") or ""),
+            "status_code": int(status_code),
+            "found": bool(payload.get("found")),
+            "confidence": payload.get("confidence"),
+            "item_count": len(items),
+            "tagged_item_count": len(tagged),
+            "returned_keys": [str(item.get("_key")) for item in items if item.get("_key")],
+            "ok": status_code == 200 and bool(payload.get("found")) and bool(tagged),
+        })
+    receipt = {
+        "schema": "curate_client.memory_recall_validation.v1",
+        "status": "PASS" if probes and all(probe["ok"] for probe in probes) else "FAIL",
+        "pack_path": str(_prep_pack_path(cfg)),
+        "pack_id": str(pack.get("pack_id") or "unknown"),
+        "memory_url": daemon,
+        "collections": collections,
+        "tags": tags,
+        "probe_count": len(probes),
+        "pass_count": sum(1 for probe in probes if probe["ok"]),
+        "fail_count": sum(1 for probe in probes if not probe["ok"]),
+        "probes": probes,
+    }
+    receipt = _validate_pydantic_json(CurateClientMemoryRecallReceipt, receipt)
+    receipt_path = _path_from_cfg(cfg, "memory_recall_receipt")
+    if receipt_path is not None:
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    return receipt
+
+
+def _report_model_path(cfg: dict) -> Path:
+    configured = _path_from_cfg(cfg, "report_model_json")
+    if configured is not None:
+        return configured
+    html_path = _path_from_cfg(cfg, "html_report") or (Path(cfg["kb_root"]) / "reports" / f"{_slug(cfg['client'])}.html")
+    return html_path.with_suffix(".json")
+
+
 def cmd_report(cfg: dict) -> dict[str, Any]:
     receipt = cmd_validate_canonical(cfg)
     if receipt.get("status") != "PASS":
         return receipt
+    recall = cmd_validate_memory_recall(cfg)
+    if recall.get("status") != "PASS":
+        return recall
     data = _load_canonical(cfg)
     assert data is not None
     out = _path_from_cfg(cfg, "html_report") or (Path(cfg["kb_root"]) / "reports" / f"{_slug(data.client)}.html")
-    rows = "\n".join(
-        f"<tr><td>{html.escape(o.question_id)}</td><td>{html.escape(o.scenario)}</td>"
-        f"<td>{html.escape(o.rubric_dimension)}</td><td>{html.escape(o.classification)}</td></tr>"
-        for o in data.question_oracles
-    )
+    model_path = _report_model_path(cfg)
+    recall_by_question = {probe["canonical_question"]: probe for probe in recall["probes"]}
+    scenarios: list[dict[str, Any]] = []
+    for point in data.briefing_points:
+        oracles = []
+        for oracle in data.question_oracles:
+            if oracle.scenario != point.title:
+                continue
+            probe = recall_by_question.get(oracle.canonical_question, {})
+            oracles.append({
+                "classification": oracle.classification,
+                "question_id": oracle.question_id,
+                "canonical_question": oracle.canonical_question,
+                "answer_thesis": oracle.answer_thesis,
+                "architecture_components": oracle.architecture_components,
+                "failure_cases": oracle.failure_cases,
+                "tradeoffs": oracle.tradeoffs,
+                "graham_project_bridge": oracle.graham_project_bridge,
+                "memory_recall_ok": bool(probe.get("ok")),
+            })
+        if oracles:
+            scenarios.append({
+                "classification": point.classification,
+                "point_id": point.point_id,
+                "title": point.title,
+                "hook": point.hook,
+                "story": point.story,
+                "oracles": oracles,
+            })
+    report_model = _validate_pydantic_json(CurateClientReportModel, {
+        "schema": "curate_client.report_model.v1",
+        "classification": "curate_client_report_model",
+        "client": data.client,
+        "canonical_json": str(_canonical_path(cfg)),
+        "prep_pack": str(_prep_pack_path(cfg)),
+        "memory_recall_receipt": str(cfg.get("memory_recall_receipt") or "inline"),
+        "memory_recall_status": str(recall.get("status")),
+        "scenarios": scenarios,
+        "non_claims": [
+            "This report does not prove that every source claim is still current on OpenAI's website.",
+            "This report does not prove production deployment outside local Live Evidence rehearsal.",
+            "This report does not replace human interview preparation judgment.",
+        ],
+    })
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    model_path.write_text(json.dumps(report_model, indent=2) + "\n", encoding="utf-8")
+
+    def esc(value: Any) -> str:
+        return html.escape(str(value))
+
+    def li(items: list[str]) -> str:
+        return "".join(f"<li>{esc(item)}</li>" for item in items)
+
     source_rows = "\n".join(
-        f"<tr><td>{html.escape(s.source_id)}</td><td>{html.escape(s.title)}</td>"
-        f"<td>{html.escape(s.classification)}</td><td>{html.escape(s.authority)}</td></tr>"
+        f"<tr><td>{esc(s.source_id)}</td><td>{esc(s.title)}</td><td>{esc(s.classification)}</td><td>{esc(s.authority)}</td><td>{esc(s.summary)}</td></tr>"
         for s in data.sources
     )
+    scenario_sections = []
+    for scenario in report_model["scenarios"]:
+        oracle_blocks = []
+        for oracle in scenario["oracles"]:
+            oracle_blocks.append(f"""
+<article class=\"oracle\">
+<h4>{esc(oracle['question_id'])}: {esc(oracle['canonical_question'])}</h4>
+<p><strong>Answer thesis:</strong> {esc(oracle['answer_thesis'])}</p>
+<p><strong>Architecture components:</strong></p><ul>{li(oracle['architecture_components'])}</ul>
+<p><strong>Failure cases:</strong></p><ul>{li(oracle['failure_cases'])}</ul>
+<p><strong>Tradeoffs:</strong></p><ul>{li(oracle['tradeoffs'])}</ul>
+<p><strong>Graham project bridge:</strong> {esc(oracle['graham_project_bridge'])}</p>
+<p><strong>Memory recall:</strong> {'PASS' if oracle['memory_recall_ok'] else 'FAIL'}</p>
+</article>""")
+        scenario_sections.append(f"""
+<section class=\"scenario\">
+<h3>{esc(scenario['title'])}</h3>
+<p><strong>Classification:</strong> {esc(scenario['classification'])}</p>
+<p><strong>Opening hook:</strong> {esc(scenario['hook'])}</p>
+<p><strong>Scenario story:</strong> {esc(scenario['story'])}</p>
+{''.join(oracle_blocks)}
+</section>""")
     body = f"""<!doctype html>
-<html lang=\"en\"><head><meta charset=\"utf-8\"><title>{html.escape(data.client)} curate-client report</title>
+<html lang=\"en\"><head><meta charset=\"utf-8\"><title>{esc(data.client)} interview prep report</title>
 <style>
-body{{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.5;margin:2rem;max-width:1100px}}
-table{{border-collapse:collapse;width:100%;margin:1rem 0}}td,th{{border:1px solid #ddd;padding:.45rem;text-align:left;vertical-align:top}}
-th{{background:#f5f5f5}}code{{background:#f6f8fa;padding:.1rem .25rem}}.warn{{border-left:4px solid #b45309;padding-left:1rem}}
-</style></head><body>
-<h1>{html.escape(data.client)} curate-client report</h1>
+body{{font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.62;margin:0;color:#111827;background:#fff}}main{{max-width:1040px;margin:0 auto;padding:36px 24px 72px}}h1{{font-size:30px;line-height:1.2}}h2{{font-size:22px;border-top:1px solid #d1d5db;padding-top:20px;margin-top:34px}}h3{{font-size:18px;margin-top:24px}}h4{{font-size:16px;margin:18px 0 8px}}table{{border-collapse:collapse;width:100%;font-size:14px}}td,th{{border:1px solid #d1d5db;padding:8px 10px;vertical-align:top;text-align:left}}th{{background:#f3f4f6}}code{{background:#f3f4f6;padding:1px 4px;border-radius:3px}}.evidence{{border-left:4px solid #1d4ed8;background:#eff6ff;padding:12px 14px}}.constraint{{border-left:4px solid #92400e;background:#fffbeb;padding:12px 14px}}.oracle{{border-left:3px solid #d1d5db;padding-left:14px;margin:18px 0}}.nonclaims{{border-left:4px solid #6b7280;background:#f9fafb;padding:12px 14px}}
+</style></head><body><main>
+<h1>{esc(data.client)} interview prep report</h1>
 <h2>Report Summary</h2>
-<p>Canonical source is validated JSON: <code>{html.escape(str(_canonical_path(cfg)))}</code>. It contains {len(data.sources)} sources, {len(data.briefing_points)} briefing points, and {len(data.question_oracles)} question oracles.</p>
-<h2>Scope</h2><p>Client prep data for Memory ingest, Live Evidence prep-pack generation, and rehearsal report rendering.</p>
-<h2>Source-of-Truth Inventory</h2><table><thead><tr><th>Source</th><th>Title</th><th>Classification</th><th>Authority</th></tr></thead><tbody>{source_rows}</tbody></table>
-<h2>Findings</h2><p>Every source, briefing point, question oracle, and reviewed answer in the canonical JSON carries a classification field because Pydantic validation is the acceptance gate.</p>
-<h2>Question Oracles</h2><table><thead><tr><th>ID</th><th>Scenario</th><th>Rubric</th><th>Classification</th></tr></thead><tbody>{rows}</tbody></table>
-<h2>Finished / Pending / Outstanding / Broken / Blocked / Unproven</h2><p>Finished: canonical JSON validation and HTML report generation. Unproven: browser visual rendering until a screenshot/CDP check is run.</p>
-<h2>Plan-Ready Next Actions</h2><p>If visual publication matters, open this HTML report and capture a screenshot/CDP receipt. If not, the JSON receipt is the source of truth.</p>
-<h2>Non-Claims</h2><p>This report does not prove the full iterative dogpile/Tau research loop or Chrome rendering.</p>
-</body></html>"""
+<p><strong>Overall Finding:</strong> Needs human review before use, with Memory recall passing for the generated question oracles.</p>
+<p><strong>Core Conclusion:</strong> The useful artifact is the Q-A interview prep below: five privacy scenarios, answer theses, architecture components, failure cases, tradeoffs, and Graham project bridges. The report model JSON was Pydantic validated before this HTML was written.</p>
+<p><strong>Evidence Basis:</strong> Canonical JSON <code>{esc(_canonical_path(cfg))}</code>; Pydantic report model <code>{esc(model_path)}</code>; Memory recall validation status <code>{esc(recall['status'])}</code> with {recall['pass_count']} of {recall['probe_count']} question probes passing through <code>/recall</code>.</p>
+<h2>Scope</h2><p>OpenAI privacy interview rehearsal content and its Memory recall proof. Excluded: live refetch of OpenAI pages and external reviewer judgment.</p>
+<h2>Project Context</h2><p>Persona: Graham preparing for an OpenAI privacy engineering interview. Primary object: source-bound privacy engineering Q-A chunks retrievable during Live Evidence.</p>
+<h2>Source-of-Truth Inventory</h2><table><thead><tr><th>Source</th><th>Title</th><th>Classification</th><th>Authority</th><th>Summary</th></tr></thead><tbody>{source_rows}</tbody></table>
+<h2>Findings</h2>
+<p><strong>F-001 Verified:</strong> Pydantic validation accepted the canonical JSON, prep-pack JSON, Memory recall receipt JSON, and report-model JSON before writing this report.</p>
+<p><strong>F-002 Verified:</strong> Question-shaped Memory recall passed for {recall['pass_count']} of {recall['probe_count']} generated question oracles using tags {esc(recall['tags'])} and collections {esc(recall['collections'])}.</p>
+<p><strong>F-003 Needs Human:</strong> Graham must decide whether the interview content is substantively useful and whether any source claims need live refetch before the call.</p>
+<h2>Surface / Module Contracts</h2><table><tbody><tr><td>System Surface Name</td><td>OpenAI privacy interview prep report</td></tr><tr><td>Owning Persona</td><td>Graham, interview candidate</td></tr><tr><td>Core Purpose</td><td>Review and rehearse source-bound privacy engineering answers retrievable by Live Evidence.</td></tr><tr><td>Primary Object</td><td>Pydantic validated report model generated from canonical-client.json.</td></tr><tr><td>Source of Truth</td><td>canonical-client.json and Memory recall validation receipt.</td></tr><tr><td>Valid Actions</td><td>accept for rehearsal; request source refresh; request scenario edits; reject unsupported content.</td></tr><tr><td>Outstanding / Broken / Constraints</td><td>Human substantive review required; live OpenAI refetch not performed.</td></tr></tbody></table>
+<h2>Interview Prep Content</h2>
+{''.join(scenario_sections)}
+<h2>Finished / Pending / Outstanding / Broken / Blocked / Unproven</h2><table><tbody><tr><td>Finished</td><td>Pydantic JSON validation and Memory recall validation for generated question oracles.</td></tr><tr><td>Pending</td><td>Human review of content usefulness.</td></tr><tr><td>Outstanding</td><td>Optional live source refetch.</td></tr><tr><td>Broken</td><td>None proven in this report.</td></tr><tr><td>Blocked</td><td>None for local rehearsal.</td></tr><tr><td>Unproven</td><td>Production use and current live source freshness.</td></tr></tbody></table>
+<h2>Plan-Ready Next Actions</h2><table><thead><tr><th>Action ID</th><th>Finding</th><th>Action</th><th>Acceptance Check</th></tr></thead><tbody><tr><td>A-001</td><td>F-003</td><td>Human reads this report in Chrome and marks weak or missing interview content.</td><td>Human decision recorded.</td></tr><tr><td>A-002</td><td>F-003</td><td>Refresh sources if human needs current external source proof.</td><td>Source receipts replace Not verified freshness claims.</td></tr></tbody></table>
+<h2>Plan-Iterate Seed</h2><p><strong>Objective:</strong> Improve only the content Graham rejects after human review. <strong>Gate:</strong> Pydantic report model validation, Memory recall validation, Chrome screenshot, and human acceptance.</p>
+<h2>New Plan-Iterate Instructions</h2><p><strong>Recommended phase id:</strong> <code>openai-privacy-interview-content-review</code>. Stop if human says the content is useful enough for rehearsal; otherwise edit canonical JSON and rerun report, recall, and Chrome gates.</p>
+<h2>Non-Claims</h2><div class=\"nonclaims\"><ul>{li(report_model['non_claims'])}</ul></div>
+</main></body></html>"""
+    required = ["Answer thesis:", "Architecture components:", "Failure cases:", "Tradeoffs:", "Memory recall:", "Plan-Iterate Seed", "New Plan-Iterate Instructions"]
+    missing = [term for term in required if term not in body]
+    if missing:
+        return {"schema": "curate_client.html_report_receipt.v1", "status": "FAIL", "path": str(out), "source": str(_canonical_path(cfg)), "triage": _triage(f"curate-client report content missing {missing}"), "errors": missing}
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(body, encoding="utf-8")
     return {
         "schema": "curate_client.html_report_receipt.v1",
         "status": "PASS",
         "canonical_validation": receipt,
+        "memory_recall_validation": {k: recall[k] for k in ("status", "probe_count", "pass_count", "fail_count", "collections", "tags")},
         "path": str(out),
+        "report_model_json": str(model_path),
         "source": str(_canonical_path(cfg)),
     }
 
@@ -894,7 +1282,7 @@ def cmd_research_plan(cfg: dict) -> dict:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("usage: curate.py plan|chunks|ingest|verify|prep-pack|report|validate-canonical|build --config <yaml>", file=sys.stderr)
+        print("usage: curate.py plan|chunks|ingest|verify|prep-pack|report|validate-canonical|validate-memory-recall|build --config <yaml>", file=sys.stderr)
         sys.exit(2)
     cmd = sys.argv[1]
     if "--config" not in sys.argv:
@@ -925,11 +1313,13 @@ def main() -> None:
         out = cmd_research_plan(cfg)
     elif cmd == "prep-pack":
         out = cmd_prep_pack(cfg)
+    elif cmd == "validate-memory-recall":
+        out = cmd_validate_memory_recall(cfg)
     elif cmd == "report":
         out = cmd_report(cfg)
     elif cmd == "build":
-        out = {"canonical_validation": cmd_validate_canonical(cfg), "chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg), "prep_pack": cmd_prep_pack(cfg)}
-        out["status"] = "PASS" if out["canonical_validation"].get("status") == "PASS" and out["verify"].get("status") == "PASS" and out["prep_pack"].get("status") == "PASS" else "FAIL"
+        out = {"canonical_validation": cmd_validate_canonical(cfg), "chunks": cmd_chunks(cfg), "ingest": cmd_ingest(cfg), "verify": cmd_verify(cfg), "prep_pack": cmd_prep_pack(cfg), "memory_recall": cmd_validate_memory_recall(cfg)}
+        out["status"] = "PASS" if out["canonical_validation"].get("status") == "PASS" and out["verify"].get("status") == "PASS" and out["prep_pack"].get("status") == "PASS" and out["memory_recall"].get("status") == "PASS" else "FAIL"
     else:
         print(f"unknown command {cmd}", file=sys.stderr)
         sys.exit(2)

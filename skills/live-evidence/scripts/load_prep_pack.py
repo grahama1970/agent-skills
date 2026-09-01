@@ -60,11 +60,19 @@ def _post_json(base_url: str, path: str, body: dict[str, Any], *, timeout_s: flo
     return status, payload
 
 
+def _strip_classification(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {k: _strip_classification(v) for k, v in value.items() if k != "classification"}
+    if isinstance(value, list):
+        return [_strip_classification(item) for item in value]
+    return value
+
+
 def _post_briefing(backend_url: str, briefing_pack: dict[str, Any], *, timeout_s: float) -> dict[str, Any]:
     status, payload = _post_json(
         backend_url,
         "/api/briefing/load",
-        briefing_pack,
+        _strip_classification(briefing_pack),
         timeout_s=timeout_s,
     )
     return {
