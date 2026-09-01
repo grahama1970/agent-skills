@@ -142,8 +142,8 @@ type Candidate = {
 };
 
 function stripStatusJson(content: unknown, statusJsonText: string): unknown {
-  // Remove the fenced block containing the validated status object from the
-  // displayed message. Humans see prose; the machine already consumed the JSON.
+  // The model supplies data; the extension renders the human status. Drop the
+  // final machine JSON and any model-authored Status Report block before it.
   const removeFrom = (text: string): string => {
     const fenceStart = text.lastIndexOf("```json");
     if (fenceStart === -1) return text;
@@ -151,7 +151,11 @@ function stripStatusJson(content: unknown, statusJsonText: string): unknown {
     if (fenceEnd === -1) return text;
     const block = text.slice(fenceStart, fenceEnd + 3);
     if (!block.includes('"pi.agent_status.v1"')) return text;
-    return (text.slice(0, fenceStart) + text.slice(fenceEnd + 3)).trimEnd();
+    const beforeJson = text.slice(0, fenceStart).trimEnd();
+    const afterJson = text.slice(fenceEnd + 3);
+    const reportAt = Math.max(beforeJson.lastIndexOf("\nStatus Report"), beforeJson.startsWith("Status Report") ? 0 : -1);
+    const beforeReport = reportAt >= 0 ? beforeJson.slice(0, reportAt).trimEnd() : beforeJson;
+    return (beforeReport + afterJson).trimEnd();
   };
   if (typeof content === "string") return removeFrom(content);
   if (!Array.isArray(content)) return content;
@@ -511,8 +515,12 @@ function makeReviewPacket(candidate: Candidate, check: CheckResult, retried: boo
       "/shame warn jargon_no_status -- needs clearer proof",
     ],
     correction_contract: {
-      instruction: "Agent rewrites the answer plainly; human labels the raw rejected candidate after reviewing the correction.",
-      required_footer: ["Status Report", "- Changed:", "- Verified:", "- Proof:", "- Not done:"],
+      instruction: "Agent rewrites the answer plainly, then ends with a Status Report derived from the final pi.agent_status.v1 JSON object.",
+      required_status: {
+        prose_labels: ["Goal", "State", "Changed", "Verified", "Proof", "Not done"],
+        json_schema: "pi.agent_status.v1",
+        continuing_rule: "If work remains and no exact human action is required, use state=continuing with not_done[].next_command so the extension can queue the next command.",
+      },
     },
   };
 }
@@ -553,9 +561,12 @@ function rejectionNotice(candidate: Candidate, check: CheckResult, retried: bool
     ? "The bad answer was hidden. One automatic retry was already used for this turn, so no second automatic retry was queued."
     : "The bad answer was hidden and one rewrite request was queued.";
   const footerFailures = check.footer_failures.length ? check.footer_failures.join(", ") : "none";
+  const next = check.reason_codes.includes("continuation_guard_unresolved_work")
+    ? String(check.features?.next_action || "Continue the active goal until unresolved work is closed or blocked.")
+    : "Human may label the raw candidate with /shame review after the corrected answer.";
   return `🦥 REJECTED_BY_SLOTH_COURT
 
-The last answer was rejected because it did not give a plain status report.
+The last answer failed the pi.agent_status.v1 status contract.
 
 Machine check
 - Candidate: ${candidate.response_sha256}
@@ -569,15 +580,17 @@ ${excerpt ? `> ${excerpt}` : "> (no text extracted)"}
 Correction workflow
 - ${disposition}
 - The review packet was saved for human approval and survives extension reloads.
-- The rewrite must give the corrected answer, not more gate JSON.
-- After the corrected answer, use \`/shame review\` for an interactive label picker or label directly with \`/shame reject|allow|warn <reason> -- <note>\`.
-- Use \`/shame show\` to inspect the raw candidate that will be labeled.
+- The rewrite must give the corrected answer, then a Status Report derived from final pi.agent_status.v1 JSON.
+- If work remains and no exact human action is required, use state=continuing with not_done[].next_command.
+- Use \`/shame show\` or \`/shame review\` to label the raw candidate.
 
 Status Report
-- Changed: The bad status answer was replaced with a correction workflow instead of standing as the final answer.
-- Verified: report-check.mjs returned ${check.decision}; checker ${check.checker_version}; footer failures: ${footerFailures}.
-- Proof: ${reviewPacketPath}; rejected candidate ${candidate.response_sha256}; excerpt shown above.
-- Not done: ${check.reason_codes.includes("continuation_guard_unresolved_work") ? (String(check.features?.next_action || "Continue the active goal until unresolved work is closed or blocked.")) : "Human review can label the raw candidate with /shame reject|allow|warn after the corrected answer."}`;
+- Goal: repair rejected status report
+- State: ${retried ? "needs_human" : "continuing"}
+- Changed: The rejected answer was hidden and replaced with this correction packet.
+- Verified: status-json-check.mjs -> ${check.decision}; checker ${check.checker_version}; footer failures: ${footerFailures}.
+- Proof: ${reviewPacketPath}; rejected candidate ${candidate.response_sha256}.
+- Not done: ${next}`;
 }
 
 function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string): string {
@@ -585,7 +598,7 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
   const footerFailures = check.footer_failures.length ? check.footer_failures.join(", ") : "none";
   return `UNLAZY_FORCED_RETRY
 
-Your previous answer was rejected by lazy-report-shame-shame-shame because it looked like a delivery/status report but did not end with a clear report title and plain-English bullet summary.
+Your previous answer was rejected by lazy-report-shame-shame-shame because it failed the pi.agent_status.v1 status contract.
 
 Machine check
 - Candidate: ${candidate.response_sha256}
@@ -597,23 +610,15 @@ ${check.diagnostics ? `- Diagnostics: ${check.diagnostics}\n` : ""}- Review pack
 Rejected response:
 ${excerpt ? `> ${excerpt.replace(/\n/g, "\n> ")}` : "> (no text extracted)"}
 
-Rewrite the answer now. Preserve only supported facts. Do not invent commands, results, receipts, or proof. Use “Not verified” or “Missing” when evidence does not exist. Do not answer with another gate failure unless a gate command actually failed and you have the receipt.
+Rewrite the answer now. Preserve only supported facts. Do not invent commands, results, receipts, or proof. Use "Not verified" or "Missing" when evidence does not exist.
 
-Collaborative correction flow:
-- Give the corrected answer first.
-- End with a prose section named exactly Status Report and a final fenced json block containing one valid pi.agent_status.v1 object.
-- If work remains and no exact human action is required, state must be "continuing" and not_done[0].next_command must be the next runnable command.
-- If the same failure survived twice, stop retrying: either ask one plain human question with state="needs_human", cite a valid debugger.proof.v1 path, or cite a lazy_report_shame.debugger_failure_handoff.v1 path with exact file:line and error.
-- The human can inspect the raw rejected candidate with \`/shame show\`.
-- The human can label that candidate with \`/shame review\` or \`/shame reject|allow|warn <reason> -- <note>\`.
+Required ending:
+1. A final fenced \`\`\`json block containing one valid pi.agent_status.v1 object.
+2. If work remains and no exact human action is required, state must be "continuing" and not_done[0].next_command must be the next runnable command. Do not stop on a Not done bullet alone.
+3. Use "needs_human" only when a specific human action is required; use "failed" only with a triage-error code.
+4. If the same failure survived twice, stop retrying: either ask one plain human question with state="needs_human", or cite a valid debugger.proof.v1 path; if $debugger failed, cite a lazy_report_shame.debugger_failure_handoff.v1 path with exact file:line and error.
 
 Minimum continuing example:
-Status Report
-- Goal: continue active goal
-- State: continuing
-- Changed: no change: previous answer was rejected
-- Not done: run the next check -> exact command here
-
 \`\`\`json
 {"schema":"pi.agent_status.v1","goal":"continue active goal","state":"continuing","changed":["no change: previous answer was rejected"],"not_done":[{"item":"run the next check","next_command":"exact command here"}]}
 \`\`\``;
@@ -854,7 +859,7 @@ export default function lazyReportShameShameShame(pi: any) {
     if (!sessionGuardActive && !turnGuardActive && !activatesGuard(prompt)) return;
     turnGuardActive = true;
     const shameSelfCorrection = shameSelfCorrectTurn
-      ? "\n\n[Lazy Report Shame Self-Correction]\nThe user invoked $shame or a forced shame retry. Do not answer with meta-commentary about shame. Give the corrected answer in plain spoken English for the human to approve or correct. If the previous answer lacked proof, say Not verified or Missing instead of pretending it was proven. End with a prose section named exactly Status Report followed by a fenced json block containing one valid pi.agent_status.v1 object. If work remains and no exact human action is required, use state=continuing with not_done[0].next_command so the extension queues the next command. Use state=needs_human only for a specific human action, and state=failed only with a triage-error code."
+      ? "\n\n[Lazy Report Shame Self-Correction]\nThe user invoked $shame. Do not answer with meta-commentary about shame. Give the corrected answer first, then end with a fenced json block containing one valid pi.agent_status.v1 object. If work remains and no exact human action is required, use state=continuing with not_done[0].next_command so the extension queues the next command. Use state=needs_human only for a specific human action, and state=failed only with a triage-error code."
       : "";
     return {
       systemPrompt:
