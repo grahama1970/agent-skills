@@ -69,7 +69,7 @@ One JSON object per report-like turn, validated by `scripts/agent_status_schema.
 
 | state | required payload | enforces |
 | --- | --- | --- |
-| `done` | `verified[]` + `proof[]` | no proof-less completion |
+| `done` | `verified[]` + `proof[]` + empty `not_done` | no proof-less completion; parked work cannot hide in a done report |
 | `continuing` | `not_done[].next_command` | deterministic keep-going; the extension queues the command |
 | `needs_human` | `needs_human.action` + `reason` | exact human action; no auto follow-up |
 | `failed` | `failure.triage.code` | triage-error catalog or minted `*_unclassified_<8hex>` code; ambiguous labels fail validation |
@@ -78,6 +78,8 @@ One JSON object per report-like turn, validated by `scripts/agent_status_schema.
 | `needs_webgpt` | `question` + both prior rung receipt paths | rung 2; the ladder cannot be skipped |
 | `needs_roundtable` | `immutable_goal` + >=3 `handlers` | $ask roundtable quorum floor |
 | `needs_competition` | `immutable_goal` + >=2 `handlers` + `criteria[]` | $ask compete candidate floor |
+
+Two invariants hold for every report regardless of state: `changed` must be non-empty (say what is different, or explicitly `no change: <reason>`), and unfinished work cannot coexist with `done`. A report with `not_done` items and no human gate must use `state=continuing`, whose `not_done[0].next_command` the extension queues deterministically; the only ways to stop with open items are `needs_human` (exact action) or `failed` (triage code).
 
 `compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension queues the compiled command as a follow-up on `message_end`.
 

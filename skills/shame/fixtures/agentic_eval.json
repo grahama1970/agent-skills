@@ -2655,6 +2655,31 @@
           "\"decision\":\"reject\""
         ]
       }
+    },
+    {
+      "name": "schema-rejects-parked-done-and-empty-changed",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.status_report_rendering"
+      ],
+      "seams": [
+        "status-report-rendering"
+      ],
+      "timeout_seconds": 60,
+      "notes": "Operator 2026-09-01: a done report with not_done items parked work without a human gate (observed live on the agent-skills#1585 turn), and changed could be empty. Both are now unrepresentable: done+not_done and empty changed fail pydantic validation; continuing with next_command remains the deterministic keep-going path the extension queues.",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && python3 - <<'PY'\nimport json, subprocess, sys\ndef val(obj, expect):\n    r = subprocess.run(['uv','run','--with','pydantic','python3','skills/shame/scripts/agent_status_schema.py','validate','-'],\n                       input=json.dumps(obj), capture_output=True, text=True)\n    if r.returncode != expect:\n        print('UNEXPECTED rc', r.returncode, 'stdout', r.stdout, 'stderr', r.stderr, file=sys.stderr)\n        sys.exit(1)\nbase = {'schema':'pi.agent_status.v1','goal':'g','state':'done','changed':['x'],\n        'verified':[{'command':'c','result':'r'}],'proof':['p']}\nval(base, 0)\nparked = dict(base); parked['not_done']=[{'item':'i','next_command':'cmd'}]\nval(parked, 1)\nempty = dict(base); empty['changed']=[]\nval(empty, 1)\ncont = {'schema':'pi.agent_status.v1','goal':'g','state':'continuing','changed':['x'],\n        'not_done':[{'item':'i','next_command':'cmd'}]}\nval(cont, 0)\nprint('PARKED_WORK_UNREPRESENTABLE')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PARKED_WORK_UNREPRESENTABLE"
+        ]
+      }
     }
   ],
   "seams": [

@@ -175,11 +175,22 @@ class AgentStatus(BaseModel):
                 raise ValueError(f"state={state_name} requires the {field_name} payload")
             if self.state != state_name and value is not None:
                 raise ValueError(f"{field_name} is only legal with state={state_name}")
+        if not self.changed:
+            raise ValueError(
+                "every report requires non-empty changed; state what is now different "
+                "(or explicitly 'no change: <reason>')"
+            )
         if self.state == "done":
             if not self.verified:
                 raise ValueError("state=done requires non-empty verified")
             if not self.proof:
                 raise ValueError("state=done requires non-empty proof")
+            if self.not_done:
+                raise ValueError(
+                    "state=done with not_done items parks work without a human gate: "
+                    "use state=continuing so not_done[0].next_command is queued "
+                    "deterministically, or state=needs_human with the exact action"
+                )
         return self
 
 
