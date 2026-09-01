@@ -3,9 +3,9 @@
   "skill": "debugger",
   "trials": 2,
   "eval_tier": "standard",
-  "proof_scope": "The run.sh front door: one line drives every debugger capability from any skill, agent, or human with zero env assembly -- headless breakpoint proof (break), live bridge stop (stop), narrated walkthrough (walkthrough), proof validation (validate), self-check (verify) -- and unknown subcommands fail closed with usage. The break subcommand puts the caller's cwd on PYTHONPATH so multi-module scenarios work from their own directory. Live cases are capability-gated on an open, trusted VS Code workspace with the bridge extension. Includes the foreign-cwd multi-module case: the in-process capture harness must put the script's own directory on sys.path like `python3 script.py` does.",
+  "proof_scope": "The run.sh front door: one line drives every debugger capability from any skill, agent, or human with zero env assembly -- headless breakpoint proof (break), live bridge stop (stop), narrated walkthrough (walkthrough), editor reveal (open), proof validation (validate), self-check (verify) -- and unknown subcommands fail closed with usage. The break subcommand puts the caller's cwd on PYTHONPATH so multi-module scenarios work from their own directory. Live cases are capability-gated on an open, trusted VS Code workspace with the bridge extension. Includes the foreign-cwd multi-module case: the in-process capture harness must put the script's own directory on sys.path like `python3 script.py` does.",
   "claims": {
-    "proves": "run.sh break produces a validating debugger.proof.v1 with real hit locals from the scenario directory with no exported env; run.sh stop settles a live bridge pause and prints the runtime status path + terminal STATUS; run.sh walkthrough completes a 2-stop live tour; run.sh verify passes the deterministic self-check; run.sh validate accepts the canonical proof; and an unknown subcommand exits 2 with usage",
+    "proves": "run.sh break produces a validating debugger.proof.v1 with real hit locals from the scenario directory with no exported env; run.sh stop settles a live bridge pause and prints the runtime status path + terminal STATUS; run.sh walkthrough completes a 2-stop live tour; run.sh open resolves JSON fields through the front door; run.sh verify passes the deterministic self-check; run.sh validate accepts the canonical proof; and an unknown subcommand exits 2 with usage",
     "does_not_prove": "the voice/two-model layers through the front door (owned by walkthrough-voice/voice-delivery/walkthrough-e2e), or matrix suite completeness (owned by run_eval_matrix receipts)"
   },
   "cases": [
@@ -71,6 +71,25 @@
         "exit_code": 0,
         "stdout_contains": [
           "WALKTHROUGH-COMPLETE"
+        ]
+      }
+    },
+    {
+      "name": "open-json-field-front-door",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "One line through the debugger front door resolves a JSON field to the exact line/column used for VS Code reveal.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; D=\"$(mktemp -d)\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; ../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --print-only"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "RESOLVED report.json:3:26-3:34 (json field cases[].trials[].stderr)"
         ]
       }
     },

@@ -73,7 +73,7 @@ MATRIX: dict[str, dict] = {
     },
     "vscode-session": {
         "capability": "vscode-live",
-        "fixtures": ["vscode-session.json", "open-in-vscode.json"],
+        "fixtures": ["vscode-session.json", "open-in-vscode.json", "vscode-selection.json"],
     },
     "vscode-races": {
         "capability": "vscode-live",

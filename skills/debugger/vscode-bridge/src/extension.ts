@@ -454,6 +454,18 @@ async function processBridgeRequestForOutput(
     return;
   }
 
+  if (action === 'reveal') {
+    const reveal = await revealRequestedRange(folder, request);
+    await writeOwnedStatus(outputPath, requestId, requestHash, {
+      ...statusBase,
+      status: 'revealed',
+      proofValid: reveal.selected,
+      reveal,
+      updatedAt: new Date().toISOString(),
+    }, requirePendingStatus);
+    return;
+  }
+
   if (action !== 'start' && action !== 'restart' && action !== 'process') {
     throw new Error(`Unsupported debugger bridge action: ${action}`);
   }
@@ -519,6 +531,36 @@ async function processBridgeRequestForOutput(
     }, requirePendingStatus);
     throw error;
   }
+}
+
+async function revealRequestedRange(folder: vscode.WorkspaceFolder, request: BridgeRequest) {
+  if (!request.reveal) {
+    throw new Error('Debugger bridge reveal requires a reveal target.');
+  }
+  const target = request.reveal;
+  const filePath = resolveContainedWorkspacePath(folder.uri.fsPath, target.file, 'reveal.file');
+  const startLine = target.line - 1;
+  const startColumn = Math.max((target.column ?? 1) - 1, 0);
+  const endLine = Math.max((target.endLine ?? target.line) - 1, startLine);
+  const endColumn = Math.max((target.endColumn ?? target.column ?? 1) - 1, startColumn);
+  const selection = new vscode.Selection(startLine, startColumn, endLine, endColumn);
+  const range = new vscode.Range(startLine, startColumn, endLine, endColumn);
+  const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
+  const editor = await vscode.window.showTextDocument(document, {
+    preview: false,
+    selection,
+  });
+  editor.selection = selection;
+  editor.revealRange(range, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+  return {
+    file: filePath,
+    line: target.line,
+    column: target.column ?? 1,
+    endLine: target.endLine ?? target.line,
+    endColumn: target.endColumn ?? target.column ?? 1,
+    selected: editor.selection.isEqual(selection),
+    api: ['workspace.openTextDocument', 'window.showTextDocument', 'TextEditor.selection', 'TextEditor.revealRange'],
+  };
 }
 
 function isSessionControlAction(action: string) {

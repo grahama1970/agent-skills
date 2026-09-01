@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "skill": "debugger",
+  "trials": 2,
+  "eval_tier": "standard",
+  "proof_scope": "VS Code selected-range reveal: the debugger bridge opens a file in the trusted workspace, selects the requested JSON/code range with VS Code API calls, reveals it in the editor, and writes a readback receipt proving the active editor selection matched the requested range. Capability-gated on an open trusted VS Code workspace with the debugger bridge extension.",
+  "claims": {
+    "proves": "run.sh open --bridge requests a VS Code bridge reveal action, and the bridge uses VS Code editor APIs to set and read back the exact selected range when the live bridge is available; absent bridge/workspace fails closed instead of claiming selection",
+    "does_not_prove": "that the human looked at the highlighted range, or semantic correctness of the selected JSON field"
+  },
+  "cases": [
+    {
+      "name": "live-selected-json-field-range",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Select the stderr JSON key in a real editor via the VS Code bridge and read back SELECTED from the bridge status. Capability-gated: BLOCKED without DEBUGGER_VSCODE_WORKSPACE + active bridge.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; D=\"$WS/.vscode/debugger-bridge/selection-eval\"; mkdir -p \"$D\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; ../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --bridge --workspace \"$WS\" --wait-seconds 12"
+      ],
+      "timeout_seconds": 40,
+      "blocked_when_stdout_contains": ["BRIDGE_BLOCKED"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["SELECTED report.json:3:26-3:34 -- VS Code API selection active"]
+      }
+    },
+    {
+      "name": "missing-bridge-fails-closed",
+      "type": "negative",
+      "required": true,
+      "real_world": true,
+      "description": "With a workspace that is not open in VS Code, bridge selection must fail closed with BRIDGE_BLOCKED rather than falling back to a fake selection claim.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; WS=\"$(mktemp -d)\"; printf '{\"readiness\":\"READY\"}\n' > \"$WS/report.json\"; ../run.sh open \"$WS/report.json\" --json-field readiness --bridge --workspace \"$WS\" --wait-seconds 1"
+      ],
+      "timeout_seconds": 20,
+      "expected": {
+        "exit_code": 3,
+        "stderr_contains": ["BRIDGE_BLOCKED"]
+      }
+    }
+  ]
+}

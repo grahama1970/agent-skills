@@ -6,6 +6,7 @@
 #   ./run.sh stop <file:line> [--local NAME ...] [--expand NAME[:D]]    live VS Code bridge stop
 #   ./run.sh walkthrough <spec.json> [--speak] [--voice] [--commands S] narrated breakpoint tour
 #   ./run.sh session [--wait-seconds N]                                 collaborative live session
+#   ./run.sh open <file> --line N|--function F|--json-field K            reveal code/data in VS Code
 #   ./run.sh validate <proof.json> [--expect-valid|--expect-invalid] [--repo-root P]
 #   ./run.sh matrix [--suite NAME ...]                                  capability-gated eval matrix
 #   ./run.sh spec-from-proof <proof.json> --out spec.json          session -> walkthrough spec
@@ -89,6 +90,11 @@ case "$cmd" in
         shift
         exec env DEBUGGER_VSCODE_WORKSPACE="$(default_workspace)" \
             uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/vscode_bridge_session.py" "$@"
+        ;;
+    open)
+        shift
+        [ "$#" -ge 1 ] || { echo "usage: ./run.sh open <file> --line N|--function F|--json-field K" >&2; exit 2; }
+        exec uv run --project "$SKILL_DIR" python "$SKILL_DIR/scripts/open_in_vscode.py" "$@"
         ;;
     validate)
         shift

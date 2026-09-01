@@ -3,10 +3,10 @@
   "skill": "debugger",
   "trials": 2,
   "eval_tier": "standard",
-  "proof_scope": "Reveal-in-editor collaboration surface: the agent (or human) names a file and a line/function/class of the problem code, and the debugger opens it in the human's VS Code at that location -- so a stuck agent can point the human straight at the code, and the human can then ask for a debug session. Symbol resolution is deterministic; the live reveal is capability-gated on a display + the code CLI.",
+  "proof_scope": "Reveal-in-editor collaboration surface: the agent (or human) names a file and a line/function/class/JSON field of the problem code or report data, and the debugger opens it in the human's VS Code at that location -- so a stuck agent can point the human straight at the relevant code or receipt field, and the human can then ask for a debug session. Symbol and JSON-field resolution are deterministic; the live reveal is capability-gated on a display + the code CLI.",
   "claims": {
-    "proves": "open_in_vscode.py resolves a function/class to its exact line (Python ast), rejects an unknown symbol, and reveals the file at that line in the running VS Code (title-confirmed) when a display is present",
-    "does_not_prove": "that the human actually looked, or multi-file cross-reference navigation beyond a single symbol"
+    "proves": "open_in_vscode.py resolves a function/class to its exact line (Python ast), resolves JSON keys to line/column targets for editor highlighting, rejects unknown symbols, and reveals the file at that line in the running VS Code (title-confirmed) when a display is present",
+    "does_not_prove": "that the human actually looked, or multi-file cross-reference navigation beyond a single symbol or JSON field"
   },
   "cases": [
     {
@@ -22,7 +22,53 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["RESOLVED tally.py:10 (running_total)"]
+        "stdout_contains": ["RESOLVED tally.py:10:1-10:1 (running_total)"]
+      }
+    },
+    {
+      "name": "resolve-json-field-to-line-column",
+      "type": "positive",
+      "required": true,
+      "real_world": true,
+      "description": "Resolve a JSON report field to the exact line/column VS Code should reveal/highlight, without opening anything.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; export UV_PROJECT_ENVIRONMENT=\"${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}\"; export UV_LINK_MODE=copy; D=\"$(mktemp -d)\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; ../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --print-only"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["RESOLVED report.json:3:26-3:34 (json field cases[].trials[].stderr)"]
+      }
+    },
+    {
+      "name": "reject-unknown-json-field",
+      "type": "negative",
+      "required": true,
+      "description": "A missing JSON field must fail closed with JSON_FIELD_NOT_FOUND rather than opening a nearby or arbitrary key.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; D=\"$(mktemp -d)\"; printf '{\"readiness\":\"READY\"}\n' > \"$D/report.json\"; ../run.sh open \"$D/report.json\" --json-field missing.path --print-only"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["JSON_FIELD_NOT_FOUND"]
+      }
+    },
+    {
+      "name": "reject-directory-path",
+      "type": "negative",
+      "required": true,
+      "description": "A directory with a .json suffix must fail closed instead of being treated as a JSON file.",
+      "command": [
+        "bash",
+        "-c",
+        "set -uo pipefail; D=\"$(mktemp -d --suffix=.json)\"; ../run.sh open \"$D\" --json-field readiness --print-only"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["NO_SUCH_FILE"]
       }
     },
     {

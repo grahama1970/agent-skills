@@ -53,6 +53,14 @@ export type BridgeBreakpointEvidence = {
   reason: string;
 };
 
+export type BridgeRevealRange = {
+  file: string;
+  line: number;
+  column?: number;
+  endLine?: number;
+  endColumn?: number;
+};
+
 export type BridgeAction =
   | 'start'
   | 'restart'
@@ -66,6 +74,7 @@ export type BridgeAction =
   | 'runTo'
   | 'addBreakpoints'
   | 'removeBreakpoints'
+  | 'reveal'
   | 'selectFrame'
   | 'selectThread'
   | 'terminate';
@@ -80,6 +89,7 @@ export type BridgeRequest = {
   breakpoints?: BridgeBreakpoint[];
   removeBreakpoints?: BridgeBreakpoint[];
   runTo?: BridgeBreakpoint;
+  reveal?: BridgeRevealRange;
   locals?: string[];
   watches?: string[];
   allowWatchEval?: boolean;
@@ -263,6 +273,7 @@ export function validateRequest(request: BridgeRequest) {
     'runTo',
     'addBreakpoints',
     'removeBreakpoints',
+    'reveal',
     'selectFrame',
     'selectThread',
     'terminate',
@@ -301,6 +312,20 @@ export function validateRequest(request: BridgeRequest) {
   }
   if (request.runTo !== undefined && (!request.runTo.file || !Number.isInteger(request.runTo.line) || request.runTo.line < 1)) {
     throw new Error(`Invalid debugger bridge runTo breakpoint: ${JSON.stringify(request.runTo)}`);
+  }
+  if (request.reveal !== undefined) {
+    if (!request.reveal.file || !Number.isInteger(request.reveal.line) || request.reveal.line < 1) {
+      throw new Error(`Invalid debugger bridge reveal target: ${JSON.stringify(request.reveal)}`);
+    }
+    for (const [name, value] of Object.entries({
+      column: request.reveal.column,
+      endLine: request.reveal.endLine,
+      endColumn: request.reveal.endColumn,
+    })) {
+      if (value !== undefined && (!Number.isInteger(value) || value < 1)) {
+        throw new Error(`Invalid debugger bridge reveal ${name}: ${JSON.stringify(request.reveal)}`);
+      }
+    }
   }
   if (request.locals !== undefined && !Array.isArray(request.locals)) {
     throw new Error('Debugger bridge locals must be an array.');

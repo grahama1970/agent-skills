@@ -8,20 +8,25 @@ then eyeball it and, if they want, ask the agent to start a debug session there
 (scripts/vscode_bridge_session.py) and discuss the paused state.
 
 Locating the code:
-    --line N          go to line N
-    --function NAME   first `def NAME` / `function NAME` / `fn NAME`
-    --class NAME      first `class NAME`
-    --symbol NAME     a function OR class named NAME
+    --line N              go to line N
+    --function NAME       first `def NAME` / `function NAME` / `fn NAME`
+    --class NAME          first `class NAME`
+    --symbol NAME         a function OR class named NAME
+    --json-field NAME     first JSON object key named NAME; dotted paths use the
+                          final key (for example cases[].trials[].stderr -> stderr)
 
 For Python files symbols are resolved with the ast (robust to formatting); for
-other languages a line-based scan handles def/function/fn/class. `--print-only`
-resolves and prints the location without opening anything (deterministic, needs
-no display).
+other languages a line-based scan handles def/function/fn/class. JSON fields use
+a textual key locator so malformed eval reports can still be opened at the raw
+field. `--print-only` resolves and prints the location without opening anything
+(deterministic, needs no display).
 
-Reveal uses `code --reuse-window --goto <file>:<line>:1`. It is capability-gated:
-without the `code` CLI or a display it prints REVEAL_UNAVAILABLE and exits 3
-(so an eval marks the case BLOCKED, never a false PASS). On a successful reveal
-it best-effort confirms via the window title and prints REVEALED, else OPENED.
+Reveal uses `code --reuse-window --goto <file>:<line>:<col>`. VS Code places the
+cursor on the requested line/column and highlights the active line. It is
+capability-gated: without the `code` CLI or a display it prints REVEAL_UNAVAILABLE
+and exits 3 (so an eval marks the case BLOCKED, never a false PASS). On a
+successful reveal it best-effort confirms via the window title and prints
+REVEALED, else OPENED.
 """
 
 from __future__ import annotations
@@ -35,6 +40,14 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import NamedTuple
+
+
+class Location(NamedTuple):
+    line: int
+    col: int
+    end_line: int
+    end_col: int
 
 
 def resolve_python_symbol(source: str, *, function: str | None, klass: str | None, symbol: str | None) -> int | None:
@@ -64,15 +77,91 @@ def resolve_text_symbol(source: str, *, function: str | None, klass: str | None,
     return None
 
 
-def resolve_line(path: Path, *, line: int | None, function: str | None, klass: str | None, symbol: str | None) -> int | None:
+def json_field_key(field: str) -> str:
+    return field.split(".")[-1].replace("[]", "")
+
+
+def resolve_json_field(source: str, field: str) -> Location | None:
+    key = json_field_key(field)
+    pattern = re.compile(rf'"{re.escape(key)}"\s*:')
+    for index, row in enumerate(source.splitlines(), start=1):
+        match = pattern.search(row)
+        if match:
+            return Location(index, match.start() + 1, index, match.start() + len(key) + 3)
+    return None
+
+
+def resolve_location(
+    path: Path,
+    *,
+    line: int | None,
+    function: str | None,
+    klass: str | None,
+    symbol: str | None,
+    json_field: str | None,
+) -> Location | None:
     if line is not None:
-        return line
+        return Location(line, 1, line, 1)
     source = path.read_text(encoding="utf-8", errors="replace")
+    if json_field:
+        return resolve_json_field(source, json_field)
     if path.suffix == ".py":
         found = resolve_python_symbol(source, function=function, klass=klass, symbol=symbol)
         if found is not None:
-            return found
-    return resolve_text_symbol(source, function=function, klass=klass, symbol=symbol)
+            return Location(found, 1, found, 1)
+    found = resolve_text_symbol(source, function=function, klass=klass, symbol=symbol)
+    return Location(found, 1, found, 1) if found is not None else None
+
+
+def bridge_reveal(path: Path, location: Location, workspace: Path | None, wait_seconds: int) -> int:
+    root = workspace or Path.cwd()
+    request_script = Path(__file__).with_name("request_vscode_bridge.py")
+    reveal = f"{path}:{location.line}:{location.col}:{location.end_line}:{location.end_col}"
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(request_script),
+            "--workspace",
+            str(root),
+            "--action",
+            "reveal",
+            "--reveal",
+            reveal,
+            "--expect-extension-host-kind",
+            os.environ.get("DEBUGGER_VSCODE_HOST_KIND", "ui"),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    if proc.returncode != 0:
+        print(proc.stderr.strip() or proc.stdout.strip(), file=sys.stderr)
+        return proc.returncode
+    status_path = proc.stdout.strip().splitlines()[-1]
+    status = "pending"
+    data = {}
+    for _ in range(max(wait_seconds, 1) * 2):
+        try:
+            import json
+
+            data = json.loads(Path(status_path).read_text())
+            status = str(data.get("status"))
+            if status != "pending":
+                break
+        except Exception:
+            pass
+        time.sleep(0.5)
+    if status == "revealed" and data.get("reveal", {}).get("selected") is True:
+        print(
+            f"SELECTED {path.name}:{location.line}:{location.col}-{location.end_line}:{location.end_col} -- "
+            f"VS Code API selection active"
+        )
+        return 0
+    print(
+        f"BRIDGE_BLOCKED reveal did not complete (status={status}; status_path={status_path})",
+        file=sys.stderr,
+    )
+    return 3
 
 
 def window_title_has(basename: str) -> bool:
@@ -93,6 +182,10 @@ def main() -> int:
     parser.add_argument("--function")
     parser.add_argument("--class", dest="klass")
     parser.add_argument("--symbol")
+    parser.add_argument("--json-field", help="Reveal the first JSON object key matching this field name or dotted path.")
+    parser.add_argument("--bridge", action="store_true", help="Use the VS Code bridge API for exact selected-range reveal.")
+    parser.add_argument("--workspace", type=Path, help="Open trusted VS Code workspace for --bridge; defaults to cwd.")
+    parser.add_argument("--wait-seconds", type=int, default=10, help="Seconds to wait for the bridge reveal status.")
     parser.add_argument("--print-only", action="store_true", help="Resolve and print the location; do not open anything.")
     args = parser.parse_args()
 
@@ -100,20 +193,32 @@ def main() -> int:
     if not path.is_file():
         print(f"NO_SUCH_FILE {path}", file=sys.stderr)
         return 1
-    if not any((args.line, args.function, args.klass, args.symbol)):
-        print("give one of --line/--function/--class/--symbol", file=sys.stderr)
+    if not any((args.line, args.function, args.klass, args.symbol, args.json_field)):
+        print("give one of --line/--function/--class/--symbol/--json-field", file=sys.stderr)
         return 2
 
-    line = resolve_line(path, line=args.line, function=args.function, klass=args.klass, symbol=args.symbol)
-    if line is None:
-        target = args.function or args.klass or args.symbol
-        print(f"SYMBOL_NOT_FOUND {target!r} in {path}", file=sys.stderr)
+    location = resolve_location(
+        path,
+        line=args.line,
+        function=args.function,
+        klass=args.klass,
+        symbol=args.symbol,
+        json_field=args.json_field,
+    )
+    if location is None:
+        target = args.function or args.klass or args.symbol or args.json_field
+        kind = "JSON_FIELD_NOT_FOUND" if args.json_field else "SYMBOL_NOT_FOUND"
+        print(f"{kind} {target!r} in {path}", file=sys.stderr)
         return 1
 
-    label = args.function or args.klass or args.symbol or f"line {line}"
+    line, col, end_line, end_col = location
+    label = args.function or args.klass or args.symbol or (f"json field {args.json_field}" if args.json_field else f"line {line}")
     if args.print_only:
-        print(f"RESOLVED {path.name}:{line} ({label})")
+        print(f"RESOLVED {path.name}:{line}:{col}-{end_line}:{end_col} ({label})")
         return 0
+
+    if args.bridge:
+        return bridge_reveal(path, location, args.workspace, args.wait_seconds)
 
     code = shutil.which("code")
     if not code or not os.environ.get("DISPLAY"):
@@ -126,7 +231,7 @@ def main() -> int:
         return 3
 
     try:
-        subprocess.run([code, "--reuse-window", "--goto", f"{path}:{line}:1"], check=True, capture_output=True, text=True, timeout=20)
+        subprocess.run([code, "--reuse-window", "--goto", f"{path}:{line}:{col}"], check=True, capture_output=True, text=True, timeout=20)
     except (OSError, subprocess.SubprocessError) as exc:
         print(f"REVEAL_FAILED {exc}", file=sys.stderr)
         return 1
@@ -138,9 +243,9 @@ def main() -> int:
             break
         time.sleep(0.5)
     if confirmed:
-        print(f"REVEALED {path.name}:{line} ({label}) -- editor showing {path.name}")
+        print(f"REVEALED {path.name}:{line}:{col}-{end_line}:{end_col} ({label}) -- editor showing {path.name}")
     else:
-        print(f"OPENED {path.name}:{line} ({label}) -- goto issued (title unconfirmed)")
+        print(f"OPENED {path.name}:{line}:{col}-{end_line}:{end_col} ({label}) -- goto issued (title unconfirmed)")
     return 0
 
 

@@ -26,6 +26,32 @@ def parse_breakpoint(raw: str) -> dict[str, int | str]:
     return {"file": file_part, "line": line}
 
 
+def parse_reveal(raw: str) -> dict[str, int | str]:
+    parts = raw.split(":")
+    if len(parts) < 2:
+        raise typer.BadParameter(f"--reveal must be file:line[:column[:endLine[:endColumn]]], got {raw!r}")
+    file_part = ":".join(parts[:-1]) if len(parts) == 2 else ":".join(parts[:-4])
+    nums = parts[-1:] if len(parts) == 2 else parts[-4:]
+    if len(parts) == 3:
+        file_part = ":".join(parts[:-2])
+        nums = parts[-2:]
+    elif len(parts) == 4:
+        file_part = ":".join(parts[:-3])
+        nums = parts[-3:]
+    try:
+        values = [int(value) for value in nums]
+    except ValueError as exc:
+        raise typer.BadParameter(f"invalid reveal location in {raw!r}") from exc
+    reveal: dict[str, int | str] = {"file": file_part, "line": values[0]}
+    if len(values) > 1:
+        reveal["column"] = values[1]
+    if len(values) > 2:
+        reveal["endLine"] = values[2]
+    if len(values) > 3:
+        reveal["endColumn"] = values[3]
+    return reveal
+
+
 def canonical_request_hash(request: dict[str, object]) -> str:
     payload = {key: value for key, value in request.items() if key != "requestHash"}
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
@@ -61,6 +87,7 @@ def main(
             "runTo",
             "addBreakpoints",
             "removeBreakpoints",
+            "reveal",
             "selectFrame",
             "selectThread",
             "terminate",
@@ -78,6 +105,9 @@ def main(
     ] = None,
     run_to: Annotated[
         str | None, typer.Option("--run-to", help="Temporary run-to breakpoint as file:line.")
+    ] = None,
+    reveal: Annotated[
+        str | None, typer.Option("--reveal", help="Editor reveal range as file:line[:column[:endLine[:endColumn]]].")
     ] = None,
     local: Annotated[list[str] | None, typer.Option("--local", help="Local variable names to capture.")] = None,
     watch: Annotated[list[str] | None, typer.Option("--watch", help="Watch expression to evaluate while stopped.")] = None,
@@ -166,6 +196,7 @@ def main(
         "breakpoints": [parse_breakpoint(item) for item in breakpoint or []],
         "removeBreakpoints": [parse_breakpoint(item) for item in remove_breakpoint or []],
         "runTo": parse_breakpoint(run_to) if run_to else None,
+        "reveal": parse_reveal(reveal) if reveal else None,
         "locals": local or [],
         "watches": watch or [],
         "allowWatchEval": allow_watch_eval,
