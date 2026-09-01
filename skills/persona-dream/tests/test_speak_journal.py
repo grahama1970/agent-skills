@@ -97,7 +97,7 @@ def _args(tmp_path, **overrides):
 def test_chatterbox_failed_gates_are_preserved_in_journal_audio_receipt(tmp_path, monkeypatch):
     (tmp_path / "journal_spoken.txt").write_text("I woke carrying the dream.\n", encoding="utf-8")
     monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
-        "text": "[sigh]... I woke carrying the dream. [sniff]",
+        "text": "[sigh] ... I woke carrying the dream. [sniff]",
         "tags": ["[sigh]", "[sniff]"],
         "source": "test",
     })
@@ -143,7 +143,7 @@ def test_chatterbox_failed_gates_are_preserved_in_journal_audio_receipt(tmp_path
 
 def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, monkeypatch):
     monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
-        "text": "[sigh]... First sentence. [sniff] Second sentence.",
+        "text": "[sigh] ... First sentence. [sniff] Second sentence.",
         "tags": ["[sigh]", "[sniff]"],
         "source": "test",
     })
@@ -198,7 +198,7 @@ def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, mo
     assert receipt["asr_wer"] == 0.1
     assert receipt["asr_ok"] is True
     assert receipt["audio_bytes"] > 0
-    assert receipt["chatterbox_utterance_text"] == "[sigh]... First sentence. [sniff] Second sentence."
+    assert receipt["chatterbox_utterance_text"] == "[sigh] ... First sentence. [sniff] Second sentence."
     assert receipt["pause_markup_present"] is True
     assert Path(receipt["chatterbox_utterance_artifact"]).is_file()
     assert Path(receipt["chatterbox_utterance_markdown"]).is_file()
@@ -212,7 +212,7 @@ def test_journal_utterance_is_the_text_sent_to_chatterbox(tmp_path, monkeypatch)
     wav.write_bytes(b"RIFF....WAVE")
     monkeypatch.setattr(speak, "CHATTERBOX_OUT_HOST_ROOT", host_root)
     monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
-        "text": "[sigh] I woke carrying the dream... [sniff] and I kept listening.",
+        "text": "[sigh] I woke carrying the dream ... [sniff] and I kept listening.",
         "tags": ["[sigh]", "[sniff]"],
         "source": "model_authored",
     })
@@ -236,7 +236,7 @@ def test_journal_utterance_is_the_text_sent_to_chatterbox(tmp_path, monkeypatch)
 
     receipt = speak.run(_args(tmp_path, asr_verify=False))
 
-    assert captured["payload"]["answer_text"] == "[sigh] I woke carrying the dream... [sniff] and I kept listening."
+    assert captured["payload"]["answer_text"] == "[sigh] I woke carrying the dream ... [sniff] and I kept listening."
     assert receipt["chatterbox_utterance_source"] == "model_authored"
     assert receipt["emotional_utterance_tags"] == ["[sigh]", "[sniff]"]
 

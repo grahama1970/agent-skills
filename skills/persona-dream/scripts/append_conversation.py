@@ -100,6 +100,16 @@ def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any],
             turn["chatterbox_utterance_text"] = chatterbox_utterance_text.strip()
         if emotional_utterance_tags:
             turn["emotional_utterance_tags"] = [tag.strip() for tag in emotional_utterance_tags.split(",") if tag.strip()]
+        chatterbox_pause_plan = getattr(args, "chatterbox_pause_plan", None)
+        if chatterbox_pause_plan:
+            try:
+                parsed_pause_plan = json.loads(chatterbox_pause_plan)
+                if isinstance(parsed_pause_plan, list):
+                    turn["chatterbox_pause_plan"] = parsed_pause_plan
+                else:
+                    failed.append("chatterbox_pause_plan_not_list")
+            except json.JSONDecodeError:
+                failed.append("chatterbox_pause_plan_not_json")
         turn["tone_boundary"] = (
             "requested_delivery_tone is the delivery preset, not achieved emotion by itself; "
             "emotional_utterance_tags are native Chatterbox Turbo inline event tags injected into answer_text"
@@ -205,6 +215,7 @@ def main() -> int:
     ap.add_argument("--audio", help="voiced turns (embry/horus) only: rendered audio for this turn")
     ap.add_argument("--chatterbox-utterance-text", help="exact answer_text sent to Chatterbox, including inline event tags")
     ap.add_argument("--emotional-utterance-tags", help="comma-separated native Chatterbox event tags injected into answer_text")
+    ap.add_argument("--chatterbox-pause-plan", help="JSON list of Chatterbox render chunks with pause_after_ms")
     ap.add_argument("--created-at", help="override the timestamp (tests, backfill)")
     ap.add_argument("--out", type=Path)
     ap.add_argument("--json", action="store_true")

@@ -27,6 +27,7 @@ import pytest
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
+import chatterbox_utterances  # noqa: E402
 import speak_reply  # noqa: E402
 
 
@@ -80,13 +81,23 @@ def test_memory_uncertain_injects_multiple_native_chatterbox_event_tags():
         "I do not land cleanly. I am afraid the warmth will become proof.",
         "memory_uncertain",
     )
-    assert spoken.startswith("[sigh]... I do not land cleanly.")
+    assert spoken.startswith("[sniff] [sniff] ... I do not land cleanly.")
     assert len(tags) >= 2
     assert "[sigh]" in tags
-    assert any(tag in {"[sniff]", "[gasp]", "[chuckle]"} for tag in tags)
+    assert "[sniff]" in tags
 
 
 def test_existing_native_event_tag_is_not_duplicated():
     spoken, tags = speak_reply.inject_emotional_utterance("[sniff] I am still here.", "memory_uncertain")
-    assert spoken == "[sniff]... I am still here."
+    assert spoken == "[sniff] ... I am still here."
     assert tags == ["[sniff]"]
+
+
+def test_collect_herself_cue_becomes_exact_programmatic_pause():
+    text = chatterbox_utterances.normalize_collect_cues(
+        "This is tender. [sniff] [sniff] give me a second. I can keep going."
+    )
+    chunks = chatterbox_utterances.compile_render_chunks(text, "memory_uncertain")
+    assert "[sniff] [sniff] ... give me a second" in text
+    assert len(chunks) >= 2
+    assert any(int(chunk["pause_after_ms"]) >= 900 for chunk in chunks[:-1])

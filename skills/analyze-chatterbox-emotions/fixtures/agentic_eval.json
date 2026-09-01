@@ -1,0 +1,160 @@
+{
+  "version": 2,
+  "skill": "analyze-chatterbox-emotions",
+  "trials": 3,
+  "proof_scope": "live Chatterbox render analysis plus deterministic WAV fixture coverage for pause, prosody, intelligibility-input, and quality metrics",
+  "claims": {
+    "proves": "the skill analyzes a live Chatterbox render from waveform read-back, detects planned-vs-measured pause behavior, computes prosody/quality metrics, and writes inspectable JSON plus Markdown reports",
+    "does_not_prove": "human-perceived emotional quality, real speaker emotion, SpeechBrain/openSMILE availability, or full ASR fidelity unless a transcript is supplied"
+  },
+  "capability_claims": [
+    {
+      "id": "analyze_chatterbox_emotions.waveform_pause_quality",
+      "description": "Evaluate generated Chatterbox audio as a waveform artifact with pause, prosody, intelligibility-input, and quality metrics.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "audio_decode_metrics",
+      "seam_type": "audio-processing",
+      "criticality": "critical",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "pause_plan_comparison",
+      "seam_type": "contract-readback",
+      "criticality": "high",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "live-chatterbox-render-analysis-readback",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "analyze_chatterbox_emotions.waveform_pause_quality"
+      ],
+      "seams": [
+        "audio_decode_metrics",
+        "pause_plan_comparison"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/analyze-chatterbox-emotions && ./run.sh fixture-wav --out /tmp/analyze-chatterbox-emotions-agentic.wav >/dev/null; ./scripts/render_live_chatterbox_sample.py --out-receipt /tmp/analyze-chatterbox-emotions-live-render.json --out-audio-path /tmp/analyze-chatterbox-emotions-live-audio-path.txt >/tmp/analyze-chatterbox-emotions-live-render.stdout; audio=$(cat /tmp/analyze-chatterbox-emotions-live-audio-path.txt); ./run.sh analyze --audio \"$audio\" --expected-text '[sniff] [sniff] ... give me a second. This is tender, and I can keep going.' --target-label tender --render-plan /tmp/analyze-chatterbox-emotions-live-render.json --out /tmp/analyze-chatterbox-emotions-live-analysis.json --report /tmp/analyze-chatterbox-emotions-live-analysis.md >/tmp/analyze-chatterbox-emotions-live-analysis.stdout; python3 - <<'PY2'\nimport json, pathlib\np=json.loads(pathlib.Path('/tmp/analyze-chatterbox-emotions-live-analysis.json').read_text())\nassert p['schema']=='analyze_chatterbox_emotions.voice_eval.v1'\nassert p['mocked'] is False and p['live'] is True\nassert p['pauses']['planned_pause_count'] == 1\nassert p['pauses']['measured_long_pause_count'] >= 1\nassert p['quality']['clipping_fraction'] == 0\nprint('PASS_LIVE_CHATTERBOX_VOICE_ANALYSIS_READBACK')\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_LIVE_CHATTERBOX_VOICE_ANALYSIS_READBACK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-live-analysis.json",
+            "json_pointer": "/schema",
+            "equals": "analyze_chatterbox_emotions.voice_eval.v1"
+          },
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-live-analysis.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-live-analysis.json",
+            "json_pointer": "/live",
+            "equals": true
+          },
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-live-analysis.json",
+            "json_pointer": "/pauses/planned_pause_count",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-live-analysis.json",
+            "json_pointer": "/quality/clipping_fraction",
+            "equals": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "name": "synthetic-wav-json-report-readback",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "analyze_chatterbox_emotions.waveform_pause_quality"
+      ],
+      "seams": [
+        "audio_decode_metrics",
+        "pause_plan_comparison"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/analyze-chatterbox-emotions && ./run.sh fixture-wav --out /tmp/analyze-chatterbox-emotions-agentic.wav >/dev/null && printf '{\"chatterbox_pause_plan\":[{\"pause_after_ms\":400}]}' >/tmp/analyze-chatterbox-emotions-plan.json && ./run.sh analyze --audio /tmp/analyze-chatterbox-emotions-agentic.wav --expected-text 'hello tender voice' --transcript 'hello tender voice' --target-label tender --render-plan /tmp/analyze-chatterbox-emotions-plan.json --out /tmp/analyze-chatterbox-emotions-agentic.json --report /tmp/analyze-chatterbox-emotions-agentic.md >/tmp/analyze-chatterbox-emotions-agentic.stdout && python3 - <<'PY'\nimport json, pathlib\np=json.loads(pathlib.Path('/tmp/analyze-chatterbox-emotions-agentic.json').read_text())\nassert p['schema']=='analyze_chatterbox_emotions.voice_eval.v1'\nassert p['mocked'] is False\nassert p['pauses']['planned_pause_after_ms']==[400]\nassert p['pauses']['pause_count']>=1\nassert p['quality']['clipping_fraction']==0\nassert pathlib.Path('/tmp/analyze-chatterbox-emotions-agentic.md').is_file()\nprint('PASS_ANALYZE_CHATTERBOX_EMOTIONS_READBACK')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_ANALYZE_CHATTERBOX_EMOTIONS_READBACK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-agentic.json",
+            "json_pointer": "/schema",
+            "equals": "analyze_chatterbox_emotions.voice_eval.v1"
+          },
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-agentic.json",
+            "json_pointer": "/mocked",
+            "equals": false
+          },
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-agentic.json",
+            "json_pointer": "/pauses/planned_pause_count",
+            "equals": 1
+          },
+          {
+            "path": "/tmp/analyze-chatterbox-emotions-agentic.json",
+            "json_pointer": "/intelligibility/text_similarity",
+            "equals": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-audio-fails-closed",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "analyze_chatterbox_emotions.waveform_pause_quality"
+      ],
+      "seams": [
+        "audio_decode_metrics"
+      ],
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/analyze-chatterbox-emotions && ./run.sh analyze --audio /tmp/does-not-exist-chatterbox.wav --json || true"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "FAIL_MISSING_AUDIO",
+          "audio_file_exists"
+        ]
+      }
+    }
+  ]
+}

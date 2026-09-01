@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "skill": "best-practices-chatterbox",
+  "trials": 3,
+  "proof_scope": "retained guidance contract for Chatterbox emotional rendering, memory grounding, spaced ellipsis pauses, render_chunks silence, and analyzer evaluation",
+  "claims": {
+    "proves": "the skill document preserves the Chatterbox render-quality contract and exposes concrete JSON examples for agents",
+    "does_not_prove": "live Chatterbox synthesis quality, human preference, or waveform measurements; those belong to analyze-chatterbox-emotions and Chatterbox retained evals"
+  },
+  "cases": [
+    {
+      "name": "skill-contract-real-entrypoint",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/best-practices-chatterbox && ./run.sh check-contract --out /tmp/best-practices-chatterbox-contract.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_BEST_PRACTICES_CHATTERBOX_CONTRACT"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/best-practices-chatterbox-contract.json",
+            "json_pointer": "/schema",
+            "equals": "best_practices_chatterbox.contract_check.v1"
+          },
+          {
+            "path": "/tmp/best-practices-chatterbox-contract.json",
+            "json_pointer": "/pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/best-practices-chatterbox-contract.json",
+            "json_pointer": "/checks/memory_route",
+            "equals": true
+          },
+          {
+            "path": "/tmp/best-practices-chatterbox-contract.json",
+            "json_pointer": "/checks/spaced_ellipsis",
+            "equals": true
+          },
+          {
+            "path": "/tmp/best-practices-chatterbox-contract.json",
+            "json_pointer": "/checks/pause_after_ms",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-required-contract-fails-adversarially",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/best-practices-chatterbox && python3 - <<'PY'\nfrom scripts import check_contract\nresult=check_contract.evaluate('name: best-practices-chatterbox\\n')\nassert result['pass'] is False\nassert 'memory_route' in result['missing']\nassert 'pause_after_ms' in result['missing']\nprint('PASS_ADVERSARIAL_CONTRACT_MISSING_REQUIRED_TEXT')\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_ADVERSARIAL_CONTRACT_MISSING_REQUIRED_TEXT"
+        ]
+      }
+    }
+  ]
+}

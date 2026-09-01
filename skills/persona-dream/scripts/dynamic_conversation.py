@@ -139,7 +139,8 @@ def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> Path:
 
 def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | None,
            chatterbox_utterance_text: str | None = None,
-           emotional_utterance_tags: list[str] | None = None) -> None:
+           emotional_utterance_tags: list[str] | None = None,
+           chatterbox_pause_plan: list[dict[str, Any]] | None = None) -> None:
     cmd = [sys.executable, str(ROOT / "scripts" / "append_conversation.py"),
            "--run-dir", str(run_dir), "--role", role, "--text", text, "--json"]
     if tone:
@@ -150,6 +151,8 @@ def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | 
         cmd += ["--chatterbox-utterance-text", chatterbox_utterance_text]
     if emotional_utterance_tags:
         cmd += ["--emotional-utterance-tags", ",".join(emotional_utterance_tags)]
+    if chatterbox_pause_plan:
+        cmd += ["--chatterbox-pause-plan", json.dumps(chatterbox_pause_plan)]
     out = subprocess.run(cmd, capture_output=True, text=True)
     receipt = json.loads(out.stdout or "{}")
     if receipt.get("status") != "PASS_CONVERSATION_APPENDED":
@@ -183,7 +186,8 @@ def main() -> int:
         if embry.get("status") != "PASS_REPLY_SPOKEN":
             raise SystemExit(f"BLOCKED_EMBRY_TURN: {json.dumps(embry)[:300]}")
         append(run_dir, "embry", embry["text"], embry["tone"], run_dir / embry["audio"],
-               embry.get("chatterbox_utterance_text"), embry.get("emotional_utterance_tags") or [])
+               embry.get("chatterbox_utterance_text"), embry.get("emotional_utterance_tags") or [],
+               embry.get("chatterbox_pause_plan") or [])
 
         receipt["turn_pairs"].append({
             "pair": i,
@@ -192,6 +196,7 @@ def main() -> int:
             "embry": {"text": embry["text"], "tone": embry["tone"], "audio": embry["audio"],
                       "chatterbox_utterance_text": embry.get("chatterbox_utterance_text"),
                       "emotional_utterance_tags": embry.get("emotional_utterance_tags") or [],
+                      "chatterbox_pause_plan": embry.get("chatterbox_pause_plan") or [],
                       "audio_bytes": (run_dir / embry["audio"]).stat().st_size},
         })
 

@@ -113,10 +113,11 @@ def prepare_journal_utterance(text: str, tone: str, mood_label: str | None,
     utterances = _load_sibling("chatterbox_utterances")
     prompt = f"""You are preparing Embry's journal for Chatterbox Turbo narration.
 
-Keep the wording and meaning of the journal excerpt. Add two or three relevant
-native Chatterbox Turbo paralinguistic event tags inline, exactly where Embry
-would vocalize them, and add natural spoken pauses with punctuation where useful.
-Do not add new facts. Do not use markdown. Do not use stage directions.
+Keep the wording and meaning of the journal excerpt. Add affect beats, not just
+sparse decoration: use two to five relevant inline Chatterbox tokens exactly
+where Embry would vocalize them, and add natural spoken pauses where she has to
+think, soften, steady herself, or collect herself. Do not add new facts. Do not
+use markdown. Do not use stage directions.
 
 Native vocal event tags available: [clear throat], [sigh], [shush], [cough],
 [groan], [sniff], [gasp], [chuckle], [laugh].
@@ -130,6 +131,12 @@ varies.
 Delay and cadence marks available: comma for short breath, semicolon or period
 for sentence pause, ellipsis (...) for hesitation/longer pause, em dash or -- for
 an abrupt break. Put pauses where Embry is thinking or feeling, not mechanically.
+Do not end the utterance on an ellipsis, dash, tag, or unfinished thought.
+For tenderness, grief, fear, or a moment where she has to collect herself, prefer
+repeated embodied cues such as "[sniff] [sniff]... give me a second" and use
+[crying] only when the line genuinely carries tears. Persona Dream will convert
+these ellipses and collection cues into exact Chatterbox render_chunks
+pause_after_ms silence; your job is to put the affect beats at honest locations.
 
 Use the context packet to choose relevant utterances and pauses. Embry is not a
 generic narrator: she is thinking through her dream, Memory residue, extracted
@@ -155,23 +162,23 @@ Return JSON: {{"chatterbox_utterance_text": "..."}}"""
             timeout_s=180.0,
         )
     except Exception as exc:
-        tagged, tags = utterances.inject_event_tags(text, tone, max_tags=3)
+        tagged, tags = utterances.inject_event_tags(text, tone, max_tags=5)
         return {
             "text": tagged,
             "tags": tags,
             "source": "agent_repaired_tau_failure",
             "tau_error": str(exc),
         }
-    proposed = str((parsed or {}).get("chatterbox_utterance_text") or "").strip()
+    proposed = utterances.normalize_collect_cues(str((parsed or {}).get("chatterbox_utterance_text") or "").strip())
     tags = utterances.existing_event_tags(proposed)
-    if len(tags) >= 2:
+    if len(tags) >= 2 and utterances.has_delay_markup(proposed) and not utterances.has_unfinished_tail(proposed):
         return {
             "text": utterances.ensure_delay_markup(proposed),
             "tags": tags,
             "source": "model_authored",
             "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
         }
-    tagged, tags = utterances.inject_event_tags(text, tone, max_tags=3)
+    tagged, tags = utterances.inject_event_tags(text, tone, max_tags=5)
     return {
         "text": tagged,
         "tags": tags,
@@ -295,6 +302,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     utterance = prepare_journal_utterance(rendered_spoken, requested, mood_label, source_packet)
     chatterbox_utterance_text = str(utterance.get("text") or rendered_spoken).strip()
     emotional_utterance_tags = list(utterance.get("tags") or [])
+    render_chunks = _load_sibling("chatterbox_utterances").compile_render_chunks(chatterbox_utterance_text, requested)
 
     utterance_artifact = {
         "schema": "persona_dream.journal_chatterbox_utterance.v1",
@@ -318,6 +326,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "chatterbox_utterance_source": utterance.get("source"),
         "chatterbox_utterance_tau_receipt": utterance.get("tau_receipt"),
         "pause_markup_present": bool(_load_sibling("chatterbox_utterances").has_delay_markup(chatterbox_utterance_text)),
+        "chatterbox_pause_plan": render_chunks,
     }
     (run_dir / "journal_chatterbox_utterance.json").write_text(
         json.dumps(utterance_artifact, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -328,6 +337,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         f"Source: `{utterance.get('source')}`\n\n"
         "## Exact Chatterbox answer_text\n\n"
         f"{chatterbox_utterance_text}\n\n"
+        "## Programmatic silence plan\n\n"
+        f"```json\n{json.dumps(render_chunks, indent=2, sort_keys=True)}\n```\n\n"
         "## Source context used for utterance placement\n\n"
         f"{source_packet}\n",
         encoding="utf-8")
@@ -335,6 +346,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     label = args.label or f"pd_journal_{run_dir.name}"
     request = {
         "answer_text": chatterbox_utterance_text,
+        "render_chunks": render_chunks,
         "label": label,
         "use_blessed_qra_cache": False,
         "asr_verify": bool(args.asr_verify),
@@ -452,6 +464,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "source_context_packet": source_packet,
         "source_context_counts": utterance_artifact["source_context_counts"],
         "pause_markup_present": bool(_load_sibling("chatterbox_utterances").has_delay_markup(chatterbox_utterance_text)),
+        "chatterbox_pause_plan": (response.get("render_plan") or {}).get("chunks") or render_chunks,
         "spoken_chars": len(rendered_spoken),
         "truncated_to": args.max_chars if len(spoken) > args.max_chars else None,
         "audio": rel(dest) if dest.is_file() else None,

@@ -157,8 +157,9 @@ do not pick a confident tone -- your voice contradicting your words is worse
 than a plain delivery.
 
 Now write the exact Chatterbox utterance text that should be rendered. It must
-be the same reply, but with two or three relevant Chatterbox tags placed inline
-where the vocal events belong, plus natural punctuation pauses.
+be the same reply, but with two to five relevant Chatterbox tokens placed inline
+where the vocal events belong, plus natural punctuation pauses. Treat tags as
+affect beats, not decoration.
 
 Native vocal event tags available: [clear throat], [sigh], [shush], [cough],
 [groan], [sniff], [gasp], [chuckle], [laugh].
@@ -172,6 +173,12 @@ varies.
 Delay and cadence marks available: comma for short breath, semicolon or period
 for sentence pause, ellipsis (...) for hesitation/longer pause, em dash or -- for
 an abrupt break. Put pauses where Embry is thinking or feeling, not mechanically.
+Do not end the utterance on an ellipsis, dash, tag, or unfinished thought.
+For tenderness, grief, fear, or a moment where she has to collect herself, prefer
+repeated embodied cues such as "[sniff] [sniff]... give me a second" and use
+[crying] only when the line genuinely carries tears. Persona Dream will convert
+these ellipses and collection cues into exact Chatterbox render_chunks
+pause_after_ms silence; your job is to put the affect beats at honest locations.
 Do not prefix every line with the same tag. Put tags where Embry would actually
 sigh, gasp, sniff, chuckle, or clear her throat.
 
@@ -239,14 +246,17 @@ def resolve_host_audio(container_path: str) -> Path | None:
 def inject_emotional_utterance(text: str, tone: str) -> tuple[str, list[str]]:
     """Add native Chatterbox Turbo event tags to the spoken text."""
     utterances = _load("chatterbox_utterances")
-    return utterances.inject_event_tags(text, tone, max_tags=3)
+    return utterances.inject_event_tags(text, tone, max_tags=5)
 
 
 def speak(text: str, voice_delivery: dict[str, Any], run_dir: Path,
           label: str) -> tuple[Path | None, dict[str, Any]]:
     """Render through Chatterbox. Returns (audio_path, response)."""
+    utterances = _load("chatterbox_utterances")
+    render_chunks = utterances.compile_render_chunks(text[:MAX_REPLY_CHARS], voice_delivery.get("tone") or "neutral_warm")
     request = {
         "answer_text": text[:MAX_REPLY_CHARS],
+        "render_chunks": render_chunks,
         "label": label,
         "use_blessed_qra_cache": False,
         "asr_verify": False,
@@ -310,10 +320,11 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         text, day_grounding_injected = grounding.ground_day_if_needed(text, grounding_context, role="embry")
 
     tone, voice_delivery = choose_tone(run_dir, felt)
-    proposed_utterance = str((parsed or {}).get("chatterbox_utterance_text") or "").strip()
     utterances = _load("chatterbox_utterances")
+    proposed_utterance = utterances.normalize_collect_cues(str((parsed or {}).get("chatterbox_utterance_text") or "").strip())
     proposed_tags = utterances.existing_event_tags(proposed_utterance)
-    if len(proposed_tags) >= 2:
+    if (len(proposed_tags) >= 2 and utterances.has_delay_markup(proposed_utterance)
+            and not utterances.has_unfinished_tail(proposed_utterance)):
         chatterbox_utterance_text, emotional_utterance_tags = proposed_utterance, proposed_tags
         utterance_source = "model_authored"
     else:
@@ -347,6 +358,7 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         "text": text,
         "chatterbox_utterance_text": chatterbox_utterance_text,
         "emotional_utterance_tags": emotional_utterance_tags,
+        "chatterbox_pause_plan": (response.get("render_plan") or {}).get("chunks") or [],
         "chatterbox_utterance_source": utterance_source,
         "chose_tone": felt,
         "tone_was_in_vocabulary": felt in _load("map_delivery_tone").ALLOWED_TONES,
