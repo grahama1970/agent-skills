@@ -1013,8 +1013,385 @@
       "use": null
     },
     {
+      "classification": "public_official_source",
+      "source_id": "flask-web-security",
+      "title": "Security Considerations \u2014 Flask Documentation (3.1.x)",
+      "authority": "official_flask_security",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "5b70c6f115263b7c7b75d59983ec15ff59f353389f3924160a268652f8fe3d8d",
+      "url": "https://flask.palletsprojects.com/en/stable/web-security/",
+      "path": null,
+      "summary": "Flask documents request resource limits, XSS, CSRF, security headers, trusted hosts, and deployment security considerations.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "werkzeug-utils",
+      "title": "Utilities \u2014 Werkzeug Documentation (3.1.x)",
+      "authority": "official_werkzeug_utils",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "9ef274eeed33e97fd8cfb972d8856092372ff5242a648c1a614008c30651904c",
+      "url": "https://werkzeug.palletsprojects.com/en/stable/utils/",
+      "path": null,
+      "summary": "Werkzeug documents safe utility helpers relevant to paths, redirects, and response handling.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "python-hmac",
+      "title": "hmac \u2014 Keyed-Hashing for Message Authentication",
+      "authority": "official_python_stdlib",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "4dfdcd6c4c505088ae1b8793c04bac599d3d0249e15054cbf8311524f4b80e00",
+      "url": "https://docs.python.org/3/library/hmac.html",
+      "path": null,
+      "summary": "Python hmac documents keyed hashing and compare_digest for signature verification.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "python-secrets",
+      "title": "secrets \u2014 Generate secure random numbers for managing secrets",
+      "authority": "official_python_stdlib",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "3cb5753c8f7050ff54b0b8271af974b7c949218658dc85f20b532360e3756d75",
+      "url": "https://docs.python.org/3/library/secrets.html",
+      "path": null,
+      "summary": "Python secrets documents cryptographically strong token generation and comparison helpers.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "python-sqlite3",
+      "title": "sqlite3 \u2014 DB-API 2.0 interface for SQLite databases",
+      "authority": "official_python_stdlib",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "f2215572ba20f05c4a9a1cde8a1594ca5d245e5a96a0d043a71f3a4aaf590351",
+      "url": "https://docs.python.org/3/library/sqlite3.html",
+      "path": null,
+      "summary": "Python sqlite3 documents parameter substitution and database API behavior.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "python-ipaddress",
+      "title": "ipaddress \u2014 IPv4/IPv6 manipulation library",
+      "authority": "official_python_stdlib",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "6b9451ed7055859e120227d1bf31e1808617545ab394b65624dbe37e7f74dec4",
+      "url": "https://docs.python.org/3/library/ipaddress.html",
+      "path": null,
+      "summary": "Python ipaddress documents IP classification including private, loopback, link-local, and related address properties.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "pydantic-validators",
+      "title": "Validators \u2014 Pydantic Documentation",
+      "authority": "official_pydantic",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "b7af88e77872ce9ba705577334d82038a73f3fa7e02db7f70bfa169c573ad16a",
+      "url": "https://docs.pydantic.dev/latest/concepts/validators/",
+      "path": null,
+      "summary": "Pydantic documents field and model validators for explicit data validation.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "owasp-ssrf",
+      "title": "Server Side Request Forgery Prevention Cheat Sheet \u2014 OWASP",
+      "authority": "owasp_cheat_sheet",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "4c835afed3e433deb956128926f577c3a671ed5f7e3a4d77f754a620470b99f1",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+      "path": null,
+      "summary": "OWASP documents SSRF prevention controls including allowlists and network address validation.",
+      "kind": null,
+      "use": null
+    },
+    {
+      "classification": "public_official_source",
+      "source_id": "owasp-logging",
+      "title": "Logging Cheat Sheet \u2014 OWASP",
+      "authority": "owasp_cheat_sheet",
+      "retrieved_at": "2026-09-01T17:33:24.448298+00:00",
+      "digest": "313f6e2c05d89b802808084454126c1176abac8db0d9da1d194440be804e2a1d",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "path": null,
+      "summary": "OWASP documents application logging, event attributes, exclusion/redaction, and monitoring considerations.",
+      "kind": null,
+      "use": null
+    },
+    {
       "classification": "curate_client_knowledge_chunk",
       "source_id": "openai-privacy_knowledge_1",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "1ce426e3b5f3c3f3c7069e3675fc460b4c9d81c6633cfe7df6d6df25787a6bc0",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-01.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_2",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "4c146d24a528c599bef8d296b5a16f6a98f491391b6586843549bfca401e1bae",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-02.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_3",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "1403606755fd99bcd948575828f4adf26a0785d14e4ec19c255813a389c84a92",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-03.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_4",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "2b38ee4b16b229fa53fec2da9b4cf731ce173bf8c9d76ef41e92b7fe616ed7c8",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-04.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_5",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "ef0f3d9bdb93786bc682c296201c75a8666692f7d1bee80b3178e51f0c55de68",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-05.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_6",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "4a91e34d855bc6b6a3e9bde13bc7bcf9ec72d6e8a9433c359367b2b265e8a103",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-06.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_7",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "a2e44c0048b52992759247d80124f2c566c29b26da0113ee2d1bf9a9ec0132f5",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-07.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_8",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "c49ed549e86963fb2147fab23aae7946a1b7b99afbc5eb5ce11236f3025af789",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-08.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_9",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "9756dd69edd0731b51dee8b2cbb751fcf8c68650cb8491b2b62897c20faa983d",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-09.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_10",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "b46e90cef4739201aa6e46e579a8f99b75595d41c914ea6a362edda4bf2df0c8",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-10.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_11",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "e5f85dc0cef5b8ad4eb8b792dc8fbd8696d98479468f041853cd3f8c0a77ec57",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-11.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_12",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "216efb9031e6453c5b77100c1248f7ce1ef326015346db089cfd3fcd7fb63689",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-12.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_13",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "0d83eb0ce2aec8c1b41520b13279ae81561ef2e5c6882fec65141ecbbb831fad",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-13.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_14",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "2d534b0e0c3d57e993208b2ab3ecb27a0a2be67ffdddc0d52060c34b7be621d9",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-14.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_15",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "91c7293923a0088de0f5a93c301f5dc64395cef7d2f5a9170b10ca1d79dc7226",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-15.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_16",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "96c00c5ae08f71fa2a9b2b0519408927fa57e51b75b7d8ff2c6dac8689ecc25e",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-16.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_17",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "6f3788c164c740674a5f31515b6029b207cc38c7296708e17393f41c40973161",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-17.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_18",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "60ee3d7a3e8ae61dcb449dc555b3f69bebcfdfde4b22341c9d565c2658002b6f",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-18.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_19",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "4a4d6b86d08a11072dee53b9f3d96bf057b09a9ca8def1927fe971b2cef99383",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-19.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_20",
+      "title": null,
+      "authority": null,
+      "retrieved_at": null,
+      "digest": "73f2786a79feb2d3c46f4964ee6f04bd90a530036110f0b284f778ae4d60307a",
+      "url": null,
+      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-20.md",
+      "summary": null,
+      "kind": "knowledge_chunk",
+      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
+    },
+    {
+      "classification": "curate_client_knowledge_chunk",
+      "source_id": "openai-privacy_knowledge_21",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1027,7 +1404,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_2",
+      "source_id": "openai-privacy_knowledge_22",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1040,7 +1417,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_3",
+      "source_id": "openai-privacy_knowledge_23",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1053,7 +1430,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_4",
+      "source_id": "openai-privacy_knowledge_24",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1066,7 +1443,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_5",
+      "source_id": "openai-privacy_knowledge_25",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1079,7 +1456,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_6",
+      "source_id": "openai-privacy_knowledge_26",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1092,7 +1469,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_7",
+      "source_id": "openai-privacy_knowledge_27",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1105,7 +1482,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_8",
+      "source_id": "openai-privacy_knowledge_28",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1118,7 +1495,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_9",
+      "source_id": "openai-privacy_knowledge_29",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1131,7 +1508,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_10",
+      "source_id": "openai-privacy_knowledge_30",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1144,7 +1521,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_11",
+      "source_id": "openai-privacy_knowledge_31",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1157,7 +1534,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_12",
+      "source_id": "openai-privacy_knowledge_32",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1170,7 +1547,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_13",
+      "source_id": "openai-privacy_knowledge_33",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1183,7 +1560,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_14",
+      "source_id": "openai-privacy_knowledge_34",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1196,7 +1573,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_15",
+      "source_id": "openai-privacy_knowledge_35",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1209,7 +1586,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_16",
+      "source_id": "openai-privacy_knowledge_36",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1222,7 +1599,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_17",
+      "source_id": "openai-privacy_knowledge_37",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1235,7 +1612,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_18",
+      "source_id": "openai-privacy_knowledge_38",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1248,7 +1625,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_19",
+      "source_id": "openai-privacy_knowledge_39",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1261,7 +1638,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_20",
+      "source_id": "openai-privacy_knowledge_40",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1274,7 +1651,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_21",
+      "source_id": "openai-privacy_knowledge_41",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1287,7 +1664,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_22",
+      "source_id": "openai-privacy_knowledge_42",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1300,7 +1677,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_23",
+      "source_id": "openai-privacy_knowledge_43",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1313,7 +1690,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_24",
+      "source_id": "openai-privacy_knowledge_44",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1326,7 +1703,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_25",
+      "source_id": "openai-privacy_knowledge_45",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1339,7 +1716,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_26",
+      "source_id": "openai-privacy_knowledge_46",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1352,7 +1729,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_27",
+      "source_id": "openai-privacy_knowledge_47",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1365,7 +1742,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_28",
+      "source_id": "openai-privacy_knowledge_48",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1378,7 +1755,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_29",
+      "source_id": "openai-privacy_knowledge_49",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1391,7 +1768,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_30",
+      "source_id": "openai-privacy_knowledge_50",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1404,7 +1781,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_31",
+      "source_id": "openai-privacy_knowledge_51",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1417,7 +1794,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_32",
+      "source_id": "openai-privacy_knowledge_52",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1430,7 +1807,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_33",
+      "source_id": "openai-privacy_knowledge_53",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1443,7 +1820,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_34",
+      "source_id": "openai-privacy_knowledge_54",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1456,7 +1833,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_35",
+      "source_id": "openai-privacy_knowledge_55",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1469,7 +1846,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_36",
+      "source_id": "openai-privacy_knowledge_56",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1482,7 +1859,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_37",
+      "source_id": "openai-privacy_knowledge_57",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1495,7 +1872,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_38",
+      "source_id": "openai-privacy_knowledge_58",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1508,7 +1885,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_39",
+      "source_id": "openai-privacy_knowledge_59",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1521,7 +1898,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_40",
+      "source_id": "openai-privacy_knowledge_60",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1534,7 +1911,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_41",
+      "source_id": "openai-privacy_knowledge_61",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1547,7 +1924,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_42",
+      "source_id": "openai-privacy_knowledge_62",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1560,7 +1937,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_43",
+      "source_id": "openai-privacy_knowledge_63",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1573,7 +1950,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_44",
+      "source_id": "openai-privacy_knowledge_64",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1586,7 +1963,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_45",
+      "source_id": "openai-privacy_knowledge_65",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1599,7 +1976,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_46",
+      "source_id": "openai-privacy_knowledge_66",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1612,7 +1989,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_47",
+      "source_id": "openai-privacy_knowledge_67",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1625,7 +2002,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_48",
+      "source_id": "openai-privacy_knowledge_68",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1638,7 +2015,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_49",
+      "source_id": "openai-privacy_knowledge_69",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1651,7 +2028,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_50",
+      "source_id": "openai-privacy_knowledge_70",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1664,7 +2041,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_51",
+      "source_id": "openai-privacy_knowledge_71",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1677,7 +2054,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_52",
+      "source_id": "openai-privacy_knowledge_72",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1690,7 +2067,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_53",
+      "source_id": "openai-privacy_knowledge_73",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1703,7 +2080,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_54",
+      "source_id": "openai-privacy_knowledge_74",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1716,7 +2093,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_55",
+      "source_id": "openai-privacy_knowledge_75",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1729,7 +2106,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_56",
+      "source_id": "openai-privacy_knowledge_76",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1742,7 +2119,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_57",
+      "source_id": "openai-privacy_knowledge_77",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1755,7 +2132,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_58",
+      "source_id": "openai-privacy_knowledge_78",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1768,7 +2145,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_59",
+      "source_id": "openai-privacy_knowledge_79",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1781,7 +2158,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_60",
+      "source_id": "openai-privacy_knowledge_80",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1794,7 +2171,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_61",
+      "source_id": "openai-privacy_knowledge_81",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1807,7 +2184,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_62",
+      "source_id": "openai-privacy_knowledge_82",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1820,7 +2197,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_63",
+      "source_id": "openai-privacy_knowledge_83",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1833,7 +2210,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_64",
+      "source_id": "openai-privacy_knowledge_84",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1846,7 +2223,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_65",
+      "source_id": "openai-privacy_knowledge_85",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1859,7 +2236,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_66",
+      "source_id": "openai-privacy_knowledge_86",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1872,7 +2249,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_67",
+      "source_id": "openai-privacy_knowledge_87",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1885,7 +2262,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_68",
+      "source_id": "openai-privacy_knowledge_88",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1898,7 +2275,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_69",
+      "source_id": "openai-privacy_knowledge_89",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1911,7 +2288,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_70",
+      "source_id": "openai-privacy_knowledge_90",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1924,7 +2301,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_71",
+      "source_id": "openai-privacy_knowledge_91",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1937,7 +2314,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_72",
+      "source_id": "openai-privacy_knowledge_92",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1950,7 +2327,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_73",
+      "source_id": "openai-privacy_knowledge_93",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1963,7 +2340,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_74",
+      "source_id": "openai-privacy_knowledge_94",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1976,7 +2353,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_75",
+      "source_id": "openai-privacy_knowledge_95",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -1989,7 +2366,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_76",
+      "source_id": "openai-privacy_knowledge_96",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2002,7 +2379,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_77",
+      "source_id": "openai-privacy_knowledge_97",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2015,7 +2392,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_78",
+      "source_id": "openai-privacy_knowledge_98",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2028,7 +2405,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_79",
+      "source_id": "openai-privacy_knowledge_99",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2041,7 +2418,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_80",
+      "source_id": "openai-privacy_knowledge_100",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2054,7 +2431,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_81",
+      "source_id": "openai-privacy_knowledge_101",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2067,7 +2444,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_82",
+      "source_id": "openai-privacy_knowledge_102",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2080,7 +2457,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_83",
+      "source_id": "openai-privacy_knowledge_103",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2093,7 +2470,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_84",
+      "source_id": "openai-privacy_knowledge_104",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2106,7 +2483,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_85",
+      "source_id": "openai-privacy_knowledge_105",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2119,7 +2496,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_86",
+      "source_id": "openai-privacy_knowledge_106",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2132,7 +2509,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_87",
+      "source_id": "openai-privacy_knowledge_107",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2145,7 +2522,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_88",
+      "source_id": "openai-privacy_knowledge_108",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2158,7 +2535,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_89",
+      "source_id": "openai-privacy_knowledge_109",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2171,7 +2548,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_90",
+      "source_id": "openai-privacy_knowledge_110",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2184,7 +2561,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_91",
+      "source_id": "openai-privacy_knowledge_111",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2197,7 +2574,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_92",
+      "source_id": "openai-privacy_knowledge_112",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2210,7 +2587,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_93",
+      "source_id": "openai-privacy_knowledge_113",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2223,7 +2600,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_94",
+      "source_id": "openai-privacy_knowledge_114",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2236,7 +2613,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_95",
+      "source_id": "openai-privacy_knowledge_115",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2249,7 +2626,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_96",
+      "source_id": "openai-privacy_knowledge_116",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2262,7 +2639,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_97",
+      "source_id": "openai-privacy_knowledge_117",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2275,7 +2652,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_98",
+      "source_id": "openai-privacy_knowledge_118",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2288,7 +2665,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_99",
+      "source_id": "openai-privacy_knowledge_119",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2301,7 +2678,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_100",
+      "source_id": "openai-privacy_knowledge_120",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2314,7 +2691,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_101",
+      "source_id": "openai-privacy_knowledge_121",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2327,7 +2704,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_102",
+      "source_id": "openai-privacy_knowledge_122",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2340,7 +2717,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_103",
+      "source_id": "openai-privacy_knowledge_123",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2353,7 +2730,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_104",
+      "source_id": "openai-privacy_knowledge_124",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2366,7 +2743,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_105",
+      "source_id": "openai-privacy_knowledge_125",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2379,7 +2756,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_106",
+      "source_id": "openai-privacy_knowledge_126",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2392,7 +2769,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_107",
+      "source_id": "openai-privacy_knowledge_127",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2405,7 +2782,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_108",
+      "source_id": "openai-privacy_knowledge_128",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2418,7 +2795,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_109",
+      "source_id": "openai-privacy_knowledge_129",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2431,7 +2808,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_110",
+      "source_id": "openai-privacy_knowledge_130",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2444,7 +2821,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_111",
+      "source_id": "openai-privacy_knowledge_131",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2457,7 +2834,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_112",
+      "source_id": "openai-privacy_knowledge_132",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2470,7 +2847,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_113",
+      "source_id": "openai-privacy_knowledge_133",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2483,7 +2860,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_114",
+      "source_id": "openai-privacy_knowledge_134",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2496,7 +2873,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_115",
+      "source_id": "openai-privacy_knowledge_135",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2509,7 +2886,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_116",
+      "source_id": "openai-privacy_knowledge_136",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2522,7 +2899,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_117",
+      "source_id": "openai-privacy_knowledge_137",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2535,7 +2912,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_118",
+      "source_id": "openai-privacy_knowledge_138",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2548,7 +2925,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_119",
+      "source_id": "openai-privacy_knowledge_139",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2561,7 +2938,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_120",
+      "source_id": "openai-privacy_knowledge_140",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2574,7 +2951,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_121",
+      "source_id": "openai-privacy_knowledge_141",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2587,7 +2964,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_122",
+      "source_id": "openai-privacy_knowledge_142",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2600,7 +2977,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_123",
+      "source_id": "openai-privacy_knowledge_143",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2613,7 +2990,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_124",
+      "source_id": "openai-privacy_knowledge_144",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2626,7 +3003,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_125",
+      "source_id": "openai-privacy_knowledge_145",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2639,7 +3016,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_126",
+      "source_id": "openai-privacy_knowledge_146",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2652,7 +3029,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_127",
+      "source_id": "openai-privacy_knowledge_147",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2665,7 +3042,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_128",
+      "source_id": "openai-privacy_knowledge_148",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2678,7 +3055,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_129",
+      "source_id": "openai-privacy_knowledge_149",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2691,7 +3068,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_130",
+      "source_id": "openai-privacy_knowledge_150",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2704,7 +3081,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_131",
+      "source_id": "openai-privacy_knowledge_151",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2717,7 +3094,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_132",
+      "source_id": "openai-privacy_knowledge_152",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2730,7 +3107,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_133",
+      "source_id": "openai-privacy_knowledge_153",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2743,7 +3120,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_134",
+      "source_id": "openai-privacy_knowledge_154",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2756,7 +3133,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_135",
+      "source_id": "openai-privacy_knowledge_155",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2769,7 +3146,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_136",
+      "source_id": "openai-privacy_knowledge_156",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2782,7 +3159,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_137",
+      "source_id": "openai-privacy_knowledge_157",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2795,7 +3172,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_138",
+      "source_id": "openai-privacy_knowledge_158",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2808,7 +3185,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_139",
+      "source_id": "openai-privacy_knowledge_159",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2821,7 +3198,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_140",
+      "source_id": "openai-privacy_knowledge_160",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2834,7 +3211,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_141",
+      "source_id": "openai-privacy_knowledge_161",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2847,7 +3224,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_142",
+      "source_id": "openai-privacy_knowledge_162",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2860,7 +3237,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_143",
+      "source_id": "openai-privacy_knowledge_163",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2873,7 +3250,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_144",
+      "source_id": "openai-privacy_knowledge_164",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2886,7 +3263,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_145",
+      "source_id": "openai-privacy_knowledge_165",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2899,7 +3276,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_146",
+      "source_id": "openai-privacy_knowledge_166",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2912,7 +3289,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_147",
+      "source_id": "openai-privacy_knowledge_167",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2925,7 +3302,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_148",
+      "source_id": "openai-privacy_knowledge_168",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2938,7 +3315,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_149",
+      "source_id": "openai-privacy_knowledge_169",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2951,7 +3328,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_150",
+      "source_id": "openai-privacy_knowledge_170",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2964,7 +3341,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_151",
+      "source_id": "openai-privacy_knowledge_171",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2977,7 +3354,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_152",
+      "source_id": "openai-privacy_knowledge_172",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -2990,7 +3367,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_153",
+      "source_id": "openai-privacy_knowledge_173",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3003,7 +3380,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_154",
+      "source_id": "openai-privacy_knowledge_174",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3016,7 +3393,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_155",
+      "source_id": "openai-privacy_knowledge_175",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3029,7 +3406,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_156",
+      "source_id": "openai-privacy_knowledge_176",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3042,7 +3419,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_157",
+      "source_id": "openai-privacy_knowledge_177",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3055,7 +3432,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_158",
+      "source_id": "openai-privacy_knowledge_178",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3068,7 +3445,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_159",
+      "source_id": "openai-privacy_knowledge_179",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3081,7 +3458,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_160",
+      "source_id": "openai-privacy_knowledge_180",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3094,7 +3471,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_161",
+      "source_id": "openai-privacy_knowledge_181",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3107,7 +3484,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_162",
+      "source_id": "openai-privacy_knowledge_182",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3120,7 +3497,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_163",
+      "source_id": "openai-privacy_knowledge_183",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3133,7 +3510,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_164",
+      "source_id": "openai-privacy_knowledge_184",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3146,7 +3523,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_165",
+      "source_id": "openai-privacy_knowledge_185",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3159,7 +3536,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_166",
+      "source_id": "openai-privacy_knowledge_186",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3172,7 +3549,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_167",
+      "source_id": "openai-privacy_knowledge_187",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3185,7 +3562,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_168",
+      "source_id": "openai-privacy_knowledge_188",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3198,7 +3575,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_169",
+      "source_id": "openai-privacy_knowledge_189",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3211,7 +3588,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_170",
+      "source_id": "openai-privacy_knowledge_190",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3224,7 +3601,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_171",
+      "source_id": "openai-privacy_knowledge_191",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3237,7 +3614,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_172",
+      "source_id": "openai-privacy_knowledge_192",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3250,7 +3627,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_173",
+      "source_id": "openai-privacy_knowledge_193",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3263,7 +3640,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_174",
+      "source_id": "openai-privacy_knowledge_194",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3276,7 +3653,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_175",
+      "source_id": "openai-privacy_knowledge_195",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3289,7 +3666,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_176",
+      "source_id": "openai-privacy_knowledge_196",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3302,7 +3679,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_177",
+      "source_id": "openai-privacy_knowledge_197",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3315,7 +3692,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_178",
+      "source_id": "openai-privacy_knowledge_198",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3328,7 +3705,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_179",
+      "source_id": "openai-privacy_knowledge_199",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3341,7 +3718,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_180",
+      "source_id": "openai-privacy_knowledge_200",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3354,7 +3731,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_181",
+      "source_id": "openai-privacy_knowledge_201",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3367,7 +3744,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_182",
+      "source_id": "openai-privacy_knowledge_202",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3380,7 +3757,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_183",
+      "source_id": "openai-privacy_knowledge_203",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3393,7 +3770,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_184",
+      "source_id": "openai-privacy_knowledge_204",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3406,7 +3783,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_185",
+      "source_id": "openai-privacy_knowledge_205",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3419,7 +3796,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_186",
+      "source_id": "openai-privacy_knowledge_206",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3432,7 +3809,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_187",
+      "source_id": "openai-privacy_knowledge_207",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3445,7 +3822,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_188",
+      "source_id": "openai-privacy_knowledge_208",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3458,7 +3835,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_189",
+      "source_id": "openai-privacy_knowledge_209",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3471,7 +3848,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_190",
+      "source_id": "openai-privacy_knowledge_210",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3484,7 +3861,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_191",
+      "source_id": "openai-privacy_knowledge_211",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3497,7 +3874,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_192",
+      "source_id": "openai-privacy_knowledge_212",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3510,7 +3887,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_193",
+      "source_id": "openai-privacy_knowledge_213",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3523,7 +3900,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_194",
+      "source_id": "openai-privacy_knowledge_214",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3536,7 +3913,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_195",
+      "source_id": "openai-privacy_knowledge_215",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3549,7 +3926,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_196",
+      "source_id": "openai-privacy_knowledge_216",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3562,7 +3939,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_197",
+      "source_id": "openai-privacy_knowledge_217",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3575,7 +3952,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_198",
+      "source_id": "openai-privacy_knowledge_218",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3588,7 +3965,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_199",
+      "source_id": "openai-privacy_knowledge_219",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3601,7 +3978,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_200",
+      "source_id": "openai-privacy_knowledge_220",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3614,7 +3991,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_201",
+      "source_id": "openai-privacy_knowledge_221",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3627,7 +4004,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_202",
+      "source_id": "openai-privacy_knowledge_222",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3640,7 +4017,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_203",
+      "source_id": "openai-privacy_knowledge_223",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3653,7 +4030,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_204",
+      "source_id": "openai-privacy_knowledge_224",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3666,7 +4043,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_205",
+      "source_id": "openai-privacy_knowledge_225",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3679,7 +4056,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_206",
+      "source_id": "openai-privacy_knowledge_226",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3692,7 +4069,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_207",
+      "source_id": "openai-privacy_knowledge_227",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3705,7 +4082,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_208",
+      "source_id": "openai-privacy_knowledge_228",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3718,7 +4095,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_209",
+      "source_id": "openai-privacy_knowledge_229",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3731,7 +4108,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_210",
+      "source_id": "openai-privacy_knowledge_230",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3744,7 +4121,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_211",
+      "source_id": "openai-privacy_knowledge_231",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3757,7 +4134,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_212",
+      "source_id": "openai-privacy_knowledge_232",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3770,7 +4147,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_213",
+      "source_id": "openai-privacy_knowledge_233",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3783,7 +4160,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_214",
+      "source_id": "openai-privacy_knowledge_234",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3796,7 +4173,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_215",
+      "source_id": "openai-privacy_knowledge_235",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3809,7 +4186,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_216",
+      "source_id": "openai-privacy_knowledge_236",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3822,7 +4199,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_217",
+      "source_id": "openai-privacy_knowledge_237",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3835,7 +4212,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_218",
+      "source_id": "openai-privacy_knowledge_238",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3848,7 +4225,7 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_219",
+      "source_id": "openai-privacy_knowledge_239",
       "title": null,
       "authority": null,
       "retrieved_at": null,
@@ -3861,260 +4238,13 @@
     },
     {
       "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_220",
+      "source_id": "openai-privacy_knowledge_240",
       "title": null,
       "authority": null,
       "retrieved_at": null,
       "digest": "2dd204ef667e7544a42218a9251d931141c518964224ea6dba32a3c9b80049c1",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-private-safety-11.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_221",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "e28d09494709528b46d58abf7c3aa979fdedb4e06b61aa8238c05544a3386d9c",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-private-safety-12.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_222",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "2766559139b2a38bbb588159681e415c746bdf1bd31c1971e0cfb8e2e4e62908",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-private-safety-13.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_223",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "02c5852f90f33be60985c91f2b97e242d58ffff9b09cdb5f63f0d4bce7e82712",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-private-safety-14.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_224",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "b4ca968ad18962adbd06e4dc65ac0c9ecb4e101fe788af83a34efd70602efd8a",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-private-safety-15.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_225",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "7947d90f84172cb6066ef048624f5d3e0532679cf37d7c29d6f5ff9086c0e319",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-01.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_226",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "871cccce444b48f8c5227d51a3af6a9cf2fd5b4b95c0dd88668baf3ffe5e7c95",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-02.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_227",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "b427f7e021b0d9c5688d60d0c41a44edc71b2dedf4713d52ca4871ea35099ded",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-03.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_228",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "ab7c44cae0481141e76e4308fb60765ec4a73a53ff8fd395b5b0d444b8e2755c",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-04.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_229",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "f136f1329190c431714fcdb7801a45875df9f39813005b6f20ab1d7f9df76093",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-05.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_230",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "edc7e810ec94aa0a8b9eba7c0c1ec30ee00e077d99bf79b402292094e0049395",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-06.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_231",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "8f0b28d853934f5146fe8447a1a50f03708dbb466faa7b9fc78ac3a8fa617c70",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-07.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_232",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "84c1054831696c26b64d8268e6ceb8a1411fb297f7c00bf8ec923c08f173d862",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-08.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_233",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "87a17fb4210d696bea6fb41f4af748804919f8ecee37951c74986c17e567a043",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-09.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_234",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "0fa2c7fe148ab9b484413bc2b1aefd508377843a0944856cda76e92380b8b3b2",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-10.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_235",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "59e1ea2acb30b08a2fe9a4fadafbeeefb4397a513d5406aabbbb49f8cf2bc070",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-11.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_236",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "2449efaf8b98108d889968cdcf0667692679c77fabed5bfb983ea9c666be08cc",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-12.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_237",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "50ced3697c7a295024154070e0058f78690ff876bab002f6c8b91a5b491b326c",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-13.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_238",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "287a88b126f3a6ae8a573309c269e51aace5e2b233cab1d53f45128f626f3c02",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-14.md",
-      "summary": null,
-      "kind": "knowledge_chunk",
-      "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
-    },
-    {
-      "classification": "curate_client_knowledge_chunk",
-      "source_id": "openai-privacy_knowledge_239",
-      "title": null,
-      "authority": null,
-      "retrieved_at": null,
-      "digest": "1f144bda8da16eec7fb7080a12cba9d49f91def75e6ecc34c13308778be258b4",
-      "url": null,
-      "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/webgpt-oracles/oai-purpose-access-15.md",
       "summary": null,
       "kind": "knowledge_chunk",
       "use": "source-attributed Q-A knowledge chunk for local ripgrep fallback"
@@ -4387,6 +4517,34 @@
           "openai-api-agent-safety",
           "openai-api-safety-best-practices",
           "openai-deployment-safety-home"
+        ]
+      },
+      {
+        "classification": "internal_interview_rehearsal_challenge_corpus",
+        "point_id": "flask-python-security-coding-challenges",
+        "title": "Python/Flask security and privacy coding challenge corpus",
+        "opening_triggers": [
+          [
+            "flask"
+          ],
+          [
+            "python"
+          ],
+          [
+            "coding challenge"
+          ],
+          [
+            "privacy security implementation"
+          ]
+        ],
+        "hook": "I would treat the exercise as delegation, verification, and safe failure under time pressure, not just endpoint coding.",
+        "story": "Twenty source-bound Python/Flask privacy and security challenge families are prepared for 25-minute agent-assisted rehearsal.",
+        "sources": [
+          "flask-web-security",
+          "flask-testing",
+          "pydantic-validators",
+          "owasp-ssrf",
+          "owasp-logging"
         ]
       }
     ]
@@ -4685,7 +4843,7 @@
         "bc8b3df0a19da79cfd5259da233154327db8c9ff",
         "d11bb82860f8654048edb8edb083c7bb3ae11cde",
         "885938bc4777eaf0bf5dd80d4ea6d6bd917a1277",
-        "8117e9054ca0c10d04f37aeac10c619735ee50d5"
+        "812800ba670918a8c58306121eb359a931fc53a6"
       ]
     },
     {
@@ -15391,6 +15549,1309 @@
       "memory_keys": [
         "oai_private_safety_15",
         "oai_private_safety_15_answer"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-01",
+      "canonical_question": "Implement POST /v1/privacy-requests with idempotent creation and conflict detection for reused keys with different bodies.",
+      "spoken_variants": [
+        "Implement POST /v1/privacy-requests with idempotent creation and conflict detection for reused keys with different bodies.",
+        "In the local Flask app, implement POST /v1/privacy-requests with idempotent creation and conflict detection for reused keys with different bodies.",
+        "Use the coding agent to implement and verify this: Implement POST /v1/privacy-requests with idempotent creation and conflict detection for reused keys with different bodies."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "privacy lifecycle and deletion",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Validate Idempotency-Key and authenticated principal",
+      "architecture_components": [
+        "Validate Idempotency-Key and authenticated principal",
+        "Hash canonical request body with stable ordering",
+        "Use an atomic repository keyed by principal and idempotency key",
+        "Persist response body/status with the digest"
+      ],
+      "failure_cases": [
+        "Trust request-provided principal",
+        "Compare raw body strings only",
+        "Use process-local lock as distributed proof",
+        "Return a new ID on replay"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "flask-testing",
+        "pydantic-validators",
+        "openai-dpa",
+        "openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Tau receipt IDs and idempotent run resumes map directly to privacy-request replay safety.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_5b2ae69cfe597cda4247ec30f83802eb",
+        "openai_privacy_flask_challenge_detail_5b2ae69cfe597cda4247ec30f83802eb"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-02",
+      "canonical_question": "Add a deletion endpoint that refuses to delete records while a valid legal hold is active.",
+      "spoken_variants": [
+        "Add a deletion endpoint that refuses to delete records while a valid legal hold is active.",
+        "In the local Flask app, add a deletion endpoint that refuses to delete records while a valid legal hold is active.",
+        "Use the coding agent to implement and verify this: Add a deletion endpoint that refuses to delete records while a valid legal hold is active."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "privacy lifecycle and deletion",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Model legal holds separately from deletion requests",
+      "architecture_components": [
+        "Model legal holds separately from deletion requests",
+        "Check active holds before effects",
+        "Return blocked with hold identifiers and reason code",
+        "Write an audit event without raw subject data"
+      ],
+      "failure_cases": [
+        "Trust caller-supplied no_hold flag",
+        "Delete then check holds",
+        "Hide block behind 200 success"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "openai-dpa",
+        "openai-civil-user-data-requests",
+        "openai-enterprise-privacy"
+      ],
+      "graham_project_bridge": "Evidence-case blocked states and triage codes mirror legal-hold blocked privacy workflows.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_5eeadaab8d8efd46f4166a2fb2bee32c",
+        "openai_privacy_flask_challenge_detail_5eeadaab8d8efd46f4166a2fb2bee32c"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-03",
+      "canonical_question": "Implement a privacy-request transition table with received, verified, planned, executing, verifying, completed, failed, and blocked states.",
+      "spoken_variants": [
+        "Implement a privacy-request transition table with received, verified, planned, executing, verifying, completed, failed, and blocked states.",
+        "In the local Flask app, implement a privacy-request transition table with received, verified, planned, executing, verifying, completed, failed, and blocked states.",
+        "Use the coding agent to implement and verify this: Implement a privacy-request transition table with received, verified, planned, executing, verifying, completed, failed, and blocked states."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "privacy lifecycle and deletion",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Define allowed transition table",
+      "architecture_components": [
+        "Define allowed transition table",
+        "Validate transition events server-side",
+        "Persist previous and next state with actor and time",
+        "Return illegal_transition for skipped or forbidden states"
+      ],
+      "failure_cases": [
+        "Accept state from JSON blindly",
+        "Overwrite state with no history",
+        "Let completed move back to executing"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "flask-testing",
+        "pydantic-validators",
+        "openai-api-data-controls"
+      ],
+      "graham_project_bridge": "Tau DAG state legality and pi.agent_status states are directly reusable examples.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_41c30270d089b092543f2cd3f220bd5f",
+        "openai_privacy_flask_challenge_detail_41c30270d089b092543f2cd3f220bd5f"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-04",
+      "canonical_question": "Execute deletion across three simulated storage connectors and report per-store results without marking complete on partial failure.",
+      "spoken_variants": [
+        "Execute deletion across three simulated storage connectors and report per-store results without marking complete on partial failure.",
+        "In the local Flask app, execute deletion across three simulated storage connectors and report per-store results without marking complete on partial failure.",
+        "Use the coding agent to implement and verify this: Execute deletion across three simulated storage connectors and report per-store results without marking complete on partial failure."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "privacy lifecycle and deletion",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Create connector interface with idempotent delete",
+      "architecture_components": [
+        "Create connector interface with idempotent delete",
+        "Record each target result",
+        "Aggregate overall status as partial_failure until all required stores succeed",
+        "Expose retry plan"
+      ],
+      "failure_cases": [
+        "Mark request complete after first success",
+        "Swallow connector exceptions",
+        "Retry non-idempotent effects without operation IDs"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "openai-api-data-controls",
+        "openai-subprocessor-list",
+        "owasp-logging"
+      ],
+      "graham_project_bridge": "Project-watchdog lane recovery and partial receipt handling bridge to this problem.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_da195eb94ee033114a253da4ff4194c6",
+        "openai_privacy_flask_challenge_detail_da195eb94ee033114a253da4ff4194c6"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-05",
+      "canonical_question": "Add a verifier that checks expected records are absent after deletion; the deletion worker cannot certify itself.",
+      "spoken_variants": [
+        "Add a verifier that checks expected records are absent after deletion; the deletion worker cannot certify itself.",
+        "In the local Flask app, add a verifier that checks expected records are absent after deletion; the deletion worker cannot certify itself.",
+        "Use the coding agent to implement and verify this: Add a verifier that checks expected records are absent after deletion; the deletion worker cannot certify itself."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "privacy lifecycle and deletion",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Create verifier service reading store state independently",
+      "architecture_components": [
+        "Create verifier service reading store state independently",
+        "Record absence checks and unsupported targets",
+        "Require verifier evidence before completed",
+        "Report missing evidence"
+      ],
+      "failure_cases": [
+        "Trust connector deleted=true flag",
+        "Let worker write verified=true",
+        "Ignore unsupported stores"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "openai-api-data-controls",
+        "openai-help-compliance-platform",
+        "owasp-logging"
+      ],
+      "graham_project_bridge": "The operator rule \u201csuccess signal from thing under test is worth nothing\u201d is the exact design principle.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_362b4bb3eb64d1745658369c5da680bd",
+        "openai_privacy_flask_challenge_detail_362b4bb3eb64d1745658369c5da680bd"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-06",
+      "canonical_question": "Implement bounded JSON or CSV ingestion that normalizes records and returns per-record errors.",
+      "spoken_variants": [
+        "Implement bounded JSON or CSV ingestion that normalizes records and returns per-record errors.",
+        "In the local Flask app, implement bounded JSON or CSV ingestion that normalizes records and returns per-record errors.",
+        "Use the coding agent to implement and verify this: Implement bounded JSON or CSV ingestion that normalizes records and returns per-record errors."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "data formats classification and redaction",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Use parser registry keyed by content type",
+      "architecture_components": [
+        "Use parser registry keyed by content type",
+        "Validate JSON object/list and CSV headers",
+        "Return accepted and rejected records with reasons",
+        "Bound bytes, records, and field lengths"
+      ],
+      "failure_cases": [
+        "Infer format from filename only",
+        "Drop bad rows silently",
+        "Accept unlimited body size"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "flask-web-security",
+        "flask-testing",
+        "pydantic-validators"
+      ],
+      "graham_project_bridge": "Extractor and clean-text style parsers map to bounded ingestion with explicit unsupported states.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_6ea1174b18d9009eaf55b9e84df2bdcf",
+        "openai_privacy_flask_challenge_detail_6ea1174b18d9009eaf55b9e84df2bdcf"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-07",
+      "canonical_question": "Redact configured sensitive fields from nested JSON while preserving structure and returning redaction paths.",
+      "spoken_variants": [
+        "Redact configured sensitive fields from nested JSON while preserving structure and returning redaction paths.",
+        "In the local Flask app, redact configured sensitive fields from nested JSON while preserving structure and returning redaction paths.",
+        "Use the coding agent to implement and verify this: Redact configured sensitive fields from nested JSON while preserving structure and returning redaction paths."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "data formats classification and redaction",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Walk dicts and lists recursively",
+      "architecture_components": [
+        "Walk dicts and lists recursively",
+        "Match configured field names case-insensitively where specified",
+        "Replace sensitive values with fixed marker",
+        "Stop at max depth with review_required"
+      ],
+      "failure_cases": [
+        "Convert whole payload to string",
+        "Regex raw JSON only",
+        "Log original payload on error"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "flask-web-security",
+        "owasp-logging",
+        "pydantic-validators"
+      ],
+      "graham_project_bridge": "Clean-text and CUI marking are Graham-side analogs for preserving structure while removing unsafe content.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_255d5135f35ba21651e0291f8606fbad",
+        "openai_privacy_flask_challenge_detail_255d5135f35ba21651e0291f8606fbad"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-08",
+      "canonical_question": "Implement a small personal-data classifier with sensitive, not_sensitive, unknown, and review_required states.",
+      "spoken_variants": [
+        "Implement a small personal-data classifier with sensitive, not_sensitive, unknown, and review_required states.",
+        "In the local Flask app, implement a small personal-data classifier with sensitive, not_sensitive, unknown, and review_required states.",
+        "Use the coding agent to implement and verify this: Implement a small personal-data classifier with sensitive, not_sensitive, unknown, and review_required states."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "data formats classification and redaction",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Separate parsing from classification",
+      "architecture_components": [
+        "Separate parsing from classification",
+        "Return confidence and reason code",
+        "Use review_required for ambiguous identifiers",
+        "Store minimal derived label"
+      ],
+      "failure_cases": [
+        "Return not_sensitive on parse error",
+        "Treat empty input as safe",
+        "Hide confidence"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "pydantic-validators",
+        "openai-research-privacy-role",
+        "openai-data-model-performance"
+      ],
+      "graham_project_bridge": "SPARTA QRA validator uncertainty states bridge to classifier unknown/review_required behavior.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_bded8b513c53458d72d97122b8f6434a",
+        "openai_privacy_flask_challenge_detail_bded8b513c53458d72d97122b8f6434a"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-09",
+      "canonical_question": "Build an export endpoint that deduplicates records and emits a manifest with source identifiers and checksums.",
+      "spoken_variants": [
+        "Build an export endpoint that deduplicates records and emits a manifest with source identifiers and checksums.",
+        "In the local Flask app, build an export endpoint that deduplicates records and emits a manifest with source identifiers and checksums.",
+        "Use the coding agent to implement and verify this: Build an export endpoint that deduplicates records and emits a manifest with source identifiers and checksums."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "data formats classification and redaction",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Canonicalize records for hashing",
+      "architecture_components": [
+        "Canonicalize records for hashing",
+        "Sort by stable key",
+        "Detect exact duplicates separately from conflicts",
+        "Emit export checksum over final bytes"
+      ],
+      "failure_cases": [
+        "Merge records by display name",
+        "Use nondeterministic dict ordering",
+        "Omit unresolved conflicts"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "python-json",
+        "pydantic-validators",
+        "openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "OSCAL/GSN export discipline maps to provenance-preserving privacy exports.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_239ce4c7e76002a7322038f9df4450ec",
+        "openai_privacy_flask_challenge_detail_239ce4c7e76002a7322038f9df4450ec"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-10",
+      "canonical_question": "Modify a Flask endpoint so processing is observable without logging personal data, secrets, authorization headers, or raw bodies.",
+      "spoken_variants": [
+        "Modify a Flask endpoint so processing is observable without logging personal data, secrets, authorization headers, or raw bodies.",
+        "In the local Flask app, modify a Flask endpoint so processing is observable without logging personal data, secrets, authorization headers, or raw bodies.",
+        "Use the coding agent to implement and verify this: Modify a Flask endpoint so processing is observable without logging personal data, secrets, authorization headers, or raw bodies."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "data formats classification and redaction",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Install structured logger around request handling",
+      "architecture_components": [
+        "Install structured logger around request handling",
+        "Redact configured header names",
+        "Log status, route, actor class, correlation ID, and reason code",
+        "Test captured logs"
+      ],
+      "failure_cases": [
+        "Log request.json for debugging",
+        "Log Authorization header",
+        "Assert only response body"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "owasp-logging",
+        "flask-web-security",
+        "python-secrets"
+      ],
+      "graham_project_bridge": "Eval-guard and status receipts show the same pattern: enough evidence to debug, not raw sensitive payloads.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_cfb54f6fd60e100a68bcef7d1998e019",
+        "openai_privacy_flask_challenge_detail_cfb54f6fd60e100a68bcef7d1998e019"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-11",
+      "canonical_question": "Implement POST /v1/authorize using actor, action, resource classification, and processing purpose.",
+      "spoken_variants": [
+        "Implement POST /v1/authorize using actor, action, resource classification, and processing purpose.",
+        "In the local Flask app, implement POST /v1/authorize using actor, action, resource classification, and processing purpose.",
+        "Use the coding agent to implement and verify this: Implement POST /v1/authorize using actor, action, resource classification, and processing purpose."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "identity authorization and auditability",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Load trusted actor from header/session fixture",
+      "architecture_components": [
+        "Load trusted actor from header/session fixture",
+        "Evaluate allowlisted action/resource/purpose matrix",
+        "Return decision, policy version, and reason",
+        "Audit decision without secrets"
+      ],
+      "failure_cases": [
+        "Trust actor roles in request JSON",
+        "Default allow unknown purposes",
+        "Return only true/false"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "openai-api-rbac",
+        "openai-api-wif",
+        "openai-app-developer-terms"
+      ],
+      "graham_project_bridge": "SPARTA control mapping and Tau policy gates bridge to purpose-aware enforcement.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_5da68a5e7bb53f5c54f3764936dd9194",
+        "openai_privacy_flask_challenge_detail_5da68a5e7bb53f5c54f3764936dd9194"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-12",
+      "canonical_question": "Add emergency access requiring a reason, approval, expiration, and audit event.",
+      "spoken_variants": [
+        "Add emergency access requiring a reason, approval, expiration, and audit event.",
+        "In the local Flask app, add emergency access requiring a reason, approval, expiration, and audit event.",
+        "Use the coding agent to implement and verify this: Add emergency access requiring a reason, approval, expiration, and audit event."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "identity authorization and auditability",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Create approval record with requester/approver separation",
+      "architecture_components": [
+        "Create approval record with requester/approver separation",
+        "Check expiration and scope on use",
+        "Emit audit event for request and use",
+        "Deny expired or mismatched approvals"
+      ],
+      "failure_cases": [
+        "Boolean is_admin_emergency bypass",
+        "No expiration",
+        "Requester approves self"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "openai-api-rbac",
+        "openai-help-rbac",
+        "owasp-logging"
+      ],
+      "graham_project_bridge": "Human checkpoint policy in Memory/Tau maps to emergency access gates.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_14e90723056528d7dfbb09f5533cd414",
+        "openai_privacy_flask_challenge_detail_14e90723056528d7dfbb09f5533cd414"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-13",
+      "canonical_question": "Protect an endpoint with a service credential carrying narrow scopes.",
+      "spoken_variants": [
+        "Protect an endpoint with a service credential carrying narrow scopes.",
+        "In the local Flask app, protect an endpoint with a service credential carrying narrow scopes.",
+        "Use the coding agent to implement and verify this: Protect an endpoint with a service credential carrying narrow scopes."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "identity authorization and auditability",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Parse Authorization bearer token only",
+      "architecture_components": [
+        "Parse Authorization bearer token only",
+        "Hash token with server-side salt or compare stored digest",
+        "Check scope, audience, expiry",
+        "Return generic unauthorized errors"
+      ],
+      "failure_cases": [
+        "Store plaintext token",
+        "Accept token in URL",
+        "Leak whether credential ID exists"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "python-secrets",
+        "openai-api-wif",
+        "openai-api-admin"
+      ],
+      "graham_project_bridge": "Workload identity and scoped credentials align with Graham\u2019s bounded tool permissions.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_e76180d391773423c6f18223cd2b5c9f",
+        "openai_privacy_flask_challenge_detail_e76180d391773423c6f18223cd2b5c9f"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-14",
+      "canonical_question": "Verify an incoming webhook using HMAC, timestamp, and delivery identifier.",
+      "spoken_variants": [
+        "Verify an incoming webhook using HMAC, timestamp, and delivery identifier.",
+        "In the local Flask app, verify an incoming webhook using HMAC, timestamp, and delivery identifier.",
+        "Use the coding agent to implement and verify this: Verify an incoming webhook using HMAC, timestamp, and delivery identifier."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "identity authorization and auditability",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Read raw body before parsing",
+      "architecture_components": [
+        "Read raw body before parsing",
+        "Build signed payload from timestamp and bytes",
+        "Use hmac.new and compare_digest",
+        "Store delivery ID after successful verification"
+      ],
+      "failure_cases": [
+        "Sign parsed JSON instead of raw bytes",
+        "Use == for signatures",
+        "Check replay after side effects"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "python-hmac",
+        "python-secrets",
+        "flask-testing"
+      ],
+      "graham_project_bridge": "Webhook replay receipts mirror deterministic event ingestion and idempotency in Graham systems.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_ed39dbd9b9ccae4a318d298ec0214ebb",
+        "openai_privacy_flask_challenge_detail_ed39dbd9b9ccae4a318d298ec0214ebb"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-15",
+      "canonical_question": "Add a minimal append-only audit trail with a hash chain and verifier.",
+      "spoken_variants": [
+        "Add a minimal append-only audit trail with a hash chain and verifier.",
+        "In the local Flask app, add a minimal append-only audit trail with a hash chain and verifier.",
+        "Use the coding agent to implement and verify this: Add a minimal append-only audit trail with a hash chain and verifier."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "identity authorization and auditability",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Append event with actor/action/policy/outcome",
+      "architecture_components": [
+        "Append event with actor/action/policy/outcome",
+        "Hash canonical event plus previous digest",
+        "Expose verifier scanning sequence",
+        "Store reason codes not raw payloads"
+      ],
+      "failure_cases": [
+        "Mutable audit list with no verifier",
+        "Hash pretty JSON nondeterministically",
+        "Include raw personal data"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "python-json",
+        "owasp-logging",
+        "openai-help-compliance-platform"
+      ],
+      "graham_project_bridge": "Receipt hash chains and proof manifests are Graham\u2019s direct analog.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_b842d347da4072091c5ba1489572c856",
+        "openai_privacy_flask_challenge_detail_b842d347da4072091c5ba1489572c856"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-16",
+      "canonical_question": "Implement URL metadata retrieval without allowing SSRF to internal networks.",
+      "spoken_variants": [
+        "Implement URL metadata retrieval without allowing SSRF to internal networks.",
+        "In the local Flask app, implement URL metadata retrieval without allowing SSRF to internal networks.",
+        "Use the coding agent to implement and verify this: Implement URL metadata retrieval without allowing SSRF to internal networks."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "Flask and Python security",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Parse URL and resolve host",
+      "architecture_components": [
+        "Parse URL and resolve host",
+        "Reject forbidden IP ranges with ipaddress",
+        "Fetch with short timeout and byte cap",
+        "Validate every redirect target"
+      ],
+      "failure_cases": [
+        "Block only localhost string",
+        "Follow redirects blindly",
+        "No timeout or size cap"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "owasp-ssrf",
+        "python-ipaddress",
+        "flask-web-security"
+      ],
+      "graham_project_bridge": "Fetcher/debug-fetcher safety boundaries map directly to SSRF-safe retrieval.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_3ba1828b8f665907850379905859f911",
+        "openai_privacy_flask_challenge_detail_3ba1828b8f665907850379905859f911"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-17",
+      "canonical_question": "Serve a requested report from a configured directory without path traversal.",
+      "spoken_variants": [
+        "Serve a requested report from a configured directory without path traversal.",
+        "In the local Flask app, serve a requested report from a configured directory without path traversal.",
+        "Use the coding agent to implement and verify this: Serve a requested report from a configured directory without path traversal."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "Flask and Python security",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Decode once through framework",
+      "architecture_components": [
+        "Decode once through framework",
+        "Resolve root and candidate path",
+        "Check relative_to root",
+        "Serve only files with allowed suffixes"
+      ],
+      "failure_cases": [
+        "String prefix check",
+        "Concatenate path segments",
+        "Ignore symlinks"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "werkzeug-utils",
+        "flask-web-security",
+        "flask-testing"
+      ],
+      "graham_project_bridge": "Report artifact boundaries and source-root checks mirror this exactly.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_8d0108e7a60b008aec1544d1859a0fda",
+        "openai_privacy_flask_challenge_detail_8d0108e7a60b008aec1544d1859a0fda"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-18",
+      "canonical_question": "Implement filtered SQLite search with parameterized values and allowlisted sorting.",
+      "spoken_variants": [
+        "Implement filtered SQLite search with parameterized values and allowlisted sorting.",
+        "In the local Flask app, implement filtered SQLite search with parameterized values and allowlisted sorting.",
+        "Use the coding agent to implement and verify this: Implement filtered SQLite search with parameterized values and allowlisted sorting."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "Flask and Python security",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Build WHERE with placeholders",
+      "architecture_components": [
+        "Build WHERE with placeholders",
+        "Map sort names to known columns",
+        "Clamp limit/offset",
+        "Return generic error on sqlite exceptions"
+      ],
+      "failure_cases": [
+        "F-string SQL values",
+        "Pass arbitrary sort column",
+        "Unlimited result size"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "python-sqlite3",
+        "flask-testing",
+        "pydantic-validators"
+      ],
+      "graham_project_bridge": "Memory forbids raw AQL outside the owner layer; the same query-boundary rule applies.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_43c9e4c8dbfd4fb22107b355ca2345c3",
+        "openai_privacy_flask_challenge_detail_43c9e4c8dbfd4fb22107b355ca2345c3"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-19",
+      "canonical_question": "Accept configuration or data documents without unsafe Python deserialization.",
+      "spoken_variants": [
+        "Accept configuration or data documents without unsafe Python deserialization.",
+        "In the local Flask app, accept configuration or data documents without unsafe Python deserialization.",
+        "Use the coding agent to implement and verify this: Accept configuration or data documents without unsafe Python deserialization."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "Flask and Python security",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Validate content type",
+      "architecture_components": [
+        "Validate content type",
+        "Parse JSON with size limit",
+        "Use Pydantic model validators",
+        "Reject arbitrary object construction"
+      ],
+      "failure_cases": [
+        "pickle.loads untrusted bytes",
+        "yaml.load unsafe loader",
+        "No nesting cap"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "pydantic-validators",
+        "flask-web-security",
+        "python-json"
+      ],
+      "graham_project_bridge": "Pydantic-validated curate-client artifacts are the direct preparation example.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_62750066b62dab391acf43f7f720b60a",
+        "openai_privacy_flask_challenge_detail_62750066b62dab391acf43f7f720b60a"
+      ]
+    },
+    {
+      "classification": "internal_interview_rehearsal_challenge",
+      "question_id": "oai-flask-20",
+      "canonical_question": "Build a Flask endpoint that receives untrusted text and asks an agent to perform one of several backend actions safely.",
+      "spoken_variants": [
+        "Build a Flask endpoint that receives untrusted text and asks an agent to perform one of several backend actions safely.",
+        "In the local Flask app, build a Flask endpoint that receives untrusted text and asks an agent to perform one of several backend actions safely.",
+        "Use the coding agent to implement and verify this: Build a Flask endpoint that receives untrusted text and asks an agent to perform one of several backend actions safely."
+      ],
+      "scenario": "Python/Flask security and privacy coding challenge corpus",
+      "category": null,
+      "rubric_dimension": "agent security and privacy-preserving processing",
+      "clarifications_expected_before_answering": [
+        "Who is the authenticated actor and where do trusted attributes come from?",
+        "What are the data size and concurrency bounds?",
+        "What is the exact proof standard for success?",
+        "Which inputs are untrusted and which effects require approval?"
+      ],
+      "answer_thesis": "Separate system instruction from quoted user content",
+      "architecture_components": [
+        "Separate system instruction from quoted user content",
+        "Map requested action to allowed tool schema",
+        "Require approval token for effects",
+        "Validate returned action/result before side effect"
+      ],
+      "failure_cases": [
+        "Concatenate user text into system prompt",
+        "Let model choose any shell command",
+        "Execute model JSON without schema validation"
+      ],
+      "tradeoffs": [
+        "SQLite transaction instead of in-memory map when concurrency crosses process boundaries",
+        "Pydantic model validation instead of hand-written validation when schema complexity warrants it",
+        "Return explicit unresolved/blocked states instead of throwing generic 500s"
+      ],
+      "source_references": [
+        "openai-api-agent-safety",
+        "openai-api-guardrails-approvals",
+        "openai-api-secure-mcp",
+        "openai-zdr-private-safety"
+      ],
+      "graham_project_bridge": "This is the cleanest bridge to Graham\u2019s agent harness: delegated agents are useful only inside explicit tool, approval, and verification boundaries.",
+      "skill_chain": [
+        "memory",
+        "curate-client",
+        "live-evidence",
+        "test",
+        "review-code"
+      ],
+      "hold_answer_clarify_disposition": "Ask clarifying questions about trust boundary, data bounds, and proof standard; then implement the smallest verified slice.",
+      "reviewed_answer": {
+        "classification": "internal_interview_rehearsal_challenge_review",
+        "review_status": "reviewed",
+        "expected_response_shape": "source_bound_coding_challenge_solution",
+        "quality_bar": [
+          "states trust boundary and privacy/security invariant",
+          "delegates implementation with focused prompts",
+          "includes positive, negative, replay/concurrency tests",
+          "verifies effects rather than accepting agent claims"
+        ]
+      },
+      "memory_keys": [
+        "openai_privacy_flask_challenge_7c668f72f530a1ab5550cd9a234deff9",
+        "openai_privacy_flask_challenge_detail_7c668f72f530a1ab5550cd9a234deff9"
       ]
     }
   ],

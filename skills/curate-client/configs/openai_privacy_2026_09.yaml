@@ -10,7 +10,7 @@ question_oracles_file: /home/graham/workspace/experiments/openai-privacy-kb/ques
 briefing_points_file: /home/graham/workspace/experiments/openai-privacy-kb/briefing-points.json
 source_context_limit: 240
 briefing_points_limit: 20
-question_oracles_limit: 150
+question_oracles_limit: 170
 probes:
   - what domains does OpenAI privacy engineering cover
   - how should distributed deletion prove completion
