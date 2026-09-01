@@ -178,6 +178,30 @@
       "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog handler path observed from issue #1519 receipts."
     },
     {
+      "name": "closure-auditors-use-local-claude-not-webclaude",
+      "category": "closure-auditors-use-local-claude-not-webclaude",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 120,
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "pytest",
+        "../tests/test_project_watchdog.py::test_default_closure_auditors_use_local_claude_not_webclaude",
+        "-q"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "1 passed"
+        ]
+      },
+      "proves": "The default project-watchdog closure-audit roster uses the local Ask/Tau Claude Opus low-reasoning lane instead of the webclaude browser test seat.",
+      "does_not_prove": "A live closure audit provider call succeeds; this is a deterministic configuration guard."
+    },
+    {
       "name": "targeted-issue-does-not-lose-target-to-earlier-issue",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",

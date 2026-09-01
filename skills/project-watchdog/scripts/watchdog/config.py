@@ -444,7 +444,11 @@ NOOP_ESCALATION_SECONDS = _env_seconds("PROJECT_WATCHDOG_IDLE_ESCALATION_SECONDS
 #: a single model that systematically over-accepts would both pass bad repairs
 #: and uphold bad closures, and nothing downstream would catch it. Two seats
 #: make that require two models to fail the same way at once.
-DEFAULT_CLOSURE_AUDITORS = ("webclaude", "gpt-5.5-xhigh")
+#:
+#: ``webclaude`` is a browser transport test seat, not a better closure auditor:
+#: it has no Ask-controlled reasoning effort and consumes Chrome/SURF capacity.
+#: Use the local Claude Ask/Tau lane for Anthropic-family closure review.
+DEFAULT_CLOSURE_AUDITORS = ("claude-opus-5-low", "gpt-5.5-xhigh")
 
 
 def closure_auditors(project: dict[str, Any] | None = None) -> list[str]:

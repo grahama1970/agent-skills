@@ -419,7 +419,9 @@ completed with no proof artifact and no commit.
 Two seats (`closure_auditors`, at least two distinct) judge each `COMPLETED`
 closure against the ticket's own acceptance criterion and required proof, using
 the closing comments plus the proof artifacts named in the closure-evidence JSON,
-read from disk.
+read from disk. The Anthropic-family default is a local Ask/Tau Claude lane,
+not `webclaude`; `webclaude` is a browser-transport test seat and should be used
+only when explicitly testing the browser path.
 
 - any FAIL → reopened, `agent-work` restored, the repair lane takes it again
 - every seat PASS → `closure-verified`, stays closed

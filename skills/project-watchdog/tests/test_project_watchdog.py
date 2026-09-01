@@ -1692,6 +1692,12 @@ def test_the_two_default_seats_are_different_families() -> None:
     assert not (all("gpt" in s for s in seats) or all("claude" in s for s in seats))
 
 
+def test_default_closure_auditors_use_local_claude_not_webclaude() -> None:
+    seats = config.closure_auditors()
+    assert "webclaude" not in seats
+    assert "claude-opus-5-low" in seats
+
+
 # --------------------------------------------------------------------------- #
 # Completion attestation — an empty queue is not proof of a finished project
 # --------------------------------------------------------------------------- #
