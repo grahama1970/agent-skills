@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 CATALOG_PATH = Path(__file__).resolve().parents[3] / "skills/triage-error/failure_codes.json"
 
@@ -77,6 +77,14 @@ class ReceiptEnvelope(BaseModel):
         if value is not None and not valid_sha256(value):
             raise ValueError("goal_hash must be sha256: plus 64 lowercase hex chars")
         return value
+
+    @model_validator(mode="after")
+    def parent_refs_require_goal_hash(self) -> "ReceiptEnvelope":
+        # Reviewer ruling (R3): an escalation-evidence edge without a shared
+        # goal is untrusted. Require goal_hash whenever parent_refs is nonempty.
+        if self.parent_refs and self.goal_hash is None:
+            raise ValueError("parent_refs require goal_hash; an evidence edge without a shared goal is untrusted")
+        return self
 
     @field_validator("triage_code")
     @classmethod

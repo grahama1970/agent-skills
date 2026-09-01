@@ -16,6 +16,7 @@ composes:
   - tau
   - ask
   - project-watchdog
+  - ops-herdr
 complies:
   - best-practices-skills
 taxonomy:
@@ -30,8 +31,7 @@ disciplines:
 
 One layered governance loop. Each component owns exactly one concern; they
 couple only through typed JSON contracts, never by importing each other's
-state machines. Externally reviewed 2026-09-01 (WebGPT, VERDICT: ECOSYSTEM_YES);
-the review artifact is cited in ECOSYSTEM.md.
+state machines.
 
 ## The graph
 
@@ -85,7 +85,7 @@ flowchart TB
 | project-watchdog | scheduled dispatch | tick receipts, proof gates, locks | GitHub tickets, tau verdicts |
 | ops-herdr | cross-session transport | inbox records, dead-letters | triage codes |
 | ponytail | generation minimalism | `ponytail:` debt comments (not receipts) | nothing from the receipt world |
-| Memory | recall | readback receipts | everything durable |
+| Memory | recall | store/recall readback responses (not envelope receipts; recalls are observations, never wrapped) | everything durable |
 
 ## pi.receipt_envelope.v1 - the boundary envelope
 
@@ -122,9 +122,14 @@ Rules enforced by `scripts/receipt_envelope.py` (pydantic, extra=forbid):
 - `triage_code`, when present, must be a triage-error catalog code or a minted
   `*_unclassified_<8hex>` code - same rule as `pi.agent_status.v1.failure`.
 - `goal_hash` and `parent_refs[].digest` must be `sha256:` + 64 lowercase hex.
-- `parent_refs` are the typed escalation evidence edge: a consumer verifies the
-  referenced receipt exists, matches `expected_schema`/`expected_producer`, and
-  shares the goal before trusting an escalation (replaces ad hoc file paths).
+- `parent_refs` require `goal_hash`: an evidence edge without a shared goal is
+  untrusted and fails validation.
+- Pydantic proves STRUCTURE only. Reference RESOLUTION (the referenced receipt
+  exists, matches `expected_schema`/`expected_producer`, digest verifies) is a
+  separate consumer-side step; a structurally valid envelope is not yet a
+  trusted one.
+- Field-set changes to any `extra=forbid` schema are breaking by construction;
+  they require a new schema version, never an in-place edit.
 
 ## Shared JSON field conventions
 
@@ -141,6 +146,7 @@ when it emits or validates the same name, shape, and semantics as the owner.
 | `proof[]` | concrete paths/URLs/ids | shame | status objects; watchdog proof gates name the same artifacts |
 | `parent_refs[]` | `{receipt_id, expected_schema, expected_producer, digest?}` | agent-ecosystem envelope | escalation evidence (replaces ad hoc paths in `needs_webgpt`) |
 | `producer` / `receipt_id` / `emitted_at` | string / stable id / RFC3339 | agent-ecosystem envelope | any boundary-wrapped receipt |
+| `payload_schema` | versioned id; must equal `payload.schema` when the payload declares one | agent-ecosystem envelope | any boundary-wrapped receipt |
 | terminal verdicts | `PASS FAIL BLOCKED NEEDS_ATTENTION` | tau | ask joins, watchdog proof gates, stream monitors |
 | `recoverable` / `not_this` | bool / exclusion list | triage-error catalog | consumers deciding retry vs escalate |
 
@@ -149,11 +155,17 @@ when it emits or validates the same name, shape, and semantics as the owner.
 1. One raw signal maps to ONE `{code, cause, next_command}`; a generic code at
    a layer boundary is a bug, not a classification.
 2. Catalog entries live in `skills/triage-error/failure_codes.json` with
-   `{code, layer, match[], cause, next_command, recoverable, not_this[]}`;
-   matching is lowercase substring tokens, never regex, never LLM judgment.
-3. Unmatched signals mint `<prefix>_unclassified_<8hex>` deterministically and
-   open the ticket + agentic-eval + memory loop; a recurring minted code gets
-   promoted to the catalog or aliased, never left to sprawl.
+   `{code, layer, match[], cause, next_command, recoverable, not_this[]}`.
+   Matching is deterministic: the signal is lowercased and
+   whitespace-normalized; an entry matches when ANY of its `match[]` tokens is
+   a substring; when `--layer` is given, entries with a different `layer` are
+   skipped; the FIRST matching entry in file order wins. Never regex, never
+   LLM judgment.
+3. Unmatched signals mint `<layer-or-unknown>_unclassified_<8hex>` where the
+   8 hex chars are the first 8 of sha256 over the normalized signal text, so
+   the same signal always mints the same code. Minting opens the ticket +
+   agentic-eval + memory loop; a minted code that recurs gets promoted to the
+   catalog or aliased to an existing code, never left to sprawl.
 4. Every ecosystem component that names a failure uses a catalog or minted
    code. Both pydantic validators (status schema, envelope) enforce this at
    parse time, so an ambiguous label cannot exist in a valid object.
