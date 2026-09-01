@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/project-state-uv-env}"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/project-state-uv-env-$$}"
 
 # Load .env if present
 if [ -f "$PROJECT_ROOT/.env" ]; then
@@ -31,6 +31,8 @@ Commands:
     --cleanup-receipt FILE  Existing cleanup receipt JSON
     --output-dir DIR        Destination for report.json, report.md, index.html
 
+  schema          Emit a pydantic JSON Schema for a project-state payload
+  validate-report Validate a saved report JSON with pydantic; failures route through triage-error
   config doctor   Check non-secret project-state configuration without prompting
 
   Default (no flag) runs Phases 1-4 + 6 (~30s):
@@ -43,6 +45,8 @@ Examples:
   ./run.sh report --json       # JSON output
   ./run.sh report --output state.json --json
   ./run.sh report --cleanup-tail --cleanup-receipt artifacts/cleanup/<run>/receipt.json --json --output artifacts/cleanup/project_state_after.json
+  ./run.sh schema project_state.report.v1
+  ./run.sh validate-report state.json
   ./run.sh config doctor --json
 EOF
 }
@@ -72,6 +76,12 @@ main() {
             ;;
         cleanup-tail)
             "${EXEC[@]}" "$SCRIPT_DIR/project_state.py" cleanup-tail "$@"
+            ;;
+        schema)
+            "${EXEC[@]}" "$SCRIPT_DIR/project_state.py" schema "$@"
+            ;;
+        validate-report)
+            "${EXEC[@]}" "$SCRIPT_DIR/project_state.py" validate-report "$@"
             ;;
         config)
             "${EXEC[@]}" "$SCRIPT_DIR/project_state.py" config "$@"

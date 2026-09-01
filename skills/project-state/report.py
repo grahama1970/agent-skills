@@ -25,6 +25,7 @@ from infrastructure import (
 )
 from memory_recall import collect_memory
 from research import collect_competitive
+from schemas import validate_project_state_report
 
 
 def generate_report(quick: bool = False, full: bool = False) -> dict[str, Any]:
@@ -90,7 +91,7 @@ def generate_report(quick: bool = False, full: bool = False) -> dict[str, Any]:
         research=research,
     )
 
-    return report
+    return validate_project_state_report(report)
 
 
 def format_markdown(report: dict) -> str:

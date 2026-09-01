@@ -84,6 +84,12 @@ from infrastructure import (  # noqa: F401
 from memory_recall import collect_memory  # noqa: F401
 from report import format_markdown, generate_report  # noqa: F401
 from research import collect_competitive  # noqa: F401
+from schemas import (  # noqa: F401
+    ProjectStateSchemaError,
+    validate_config_doctor_report,
+    validate_project_state_report,
+    validate_readiness_report,
+)
 
 # ── Checkpoint integration ───────────────────────────────────────────────────
 
@@ -273,7 +279,15 @@ def cmd_report(
             return
         logger.info("No fresh cached checkpoint, running live")
 
-    report = generate_report(quick=quick, full=full)
+    try:
+        report = generate_report(quick=quick, full=full)
+    except ProjectStateSchemaError as exc:
+        print(json.dumps({
+            "schema": "project_state.validation_failure.v1",
+            "triage": exc.triage,
+            "error": str(exc),
+        }, indent=2), file=sys.stderr)
+        raise typer.Exit(code=1) from exc
 
     if json_output:
         text = json.dumps(report, indent=2)
@@ -923,13 +937,21 @@ def _emit_cleanup_tail(
     project_sanity_cmd: Optional[str],
     best_practices_checks: list[str],
 ) -> None:
-    report = _build_cleanup_tail_report(
-        cleanup_receipt=cleanup_receipt,
-        quick=quick,
-        project_root=project_root,
-        project_sanity_cmd=project_sanity_cmd,
-        best_practices_checks=best_practices_checks,
-    )
+    try:
+        report = validate_readiness_report(_build_cleanup_tail_report(
+            cleanup_receipt=cleanup_receipt,
+            quick=quick,
+            project_root=project_root,
+            project_sanity_cmd=project_sanity_cmd,
+            best_practices_checks=best_practices_checks,
+        ))
+    except ProjectStateSchemaError as exc:
+        print(json.dumps({
+            "schema": "project_state.validation_failure.v1",
+            "triage": exc.triage,
+            "error": str(exc),
+        }, indent=2), file=sys.stderr)
+        raise typer.Exit(code=1) from exc
     out_dir = output_dir or (Path.cwd() / "artifacts" / "project-state" / "readiness" / report["run_id"])
     artifacts = _write_readiness_artifacts(report, out_dir)
     report["artifacts"] = artifacts
@@ -975,6 +997,60 @@ def cmd_cleanup_tail(
     )
 
 
+@app.command("schema")
+def cmd_schema(
+    schema_name: str = typer.Argument("project_state.report.v1", help="Schema to emit: project_state.report.v1, skill.readiness_report.v1, or project_state.config_doctor.v1"),
+):
+    """Emit the pydantic JSON Schema for a project-state payload."""
+    from schemas import ConfigDoctorReport, ProjectStateReport, ReadinessReport
+
+    models = {
+        "project_state.report.v1": ProjectStateReport,
+        "skill.readiness_report.v1": ReadinessReport,
+        "project_state.config_doctor.v1": ConfigDoctorReport,
+    }
+    model = models.get(schema_name)
+    if model is None:
+        raise typer.BadParameter(f"unknown schema {schema_name}")
+    print(json.dumps(model.model_json_schema(), indent=2))
+
+
+@app.command("validate-report")
+def cmd_validate_report(
+    input_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, readable=True),
+):
+    """Validate a report JSON with pydantic; route failures through triage-error."""
+    payload = json.loads(input_file.read_text())
+    schema_name = payload.get("schema")
+    validators = {
+        "project_state.report.v1": validate_project_state_report,
+        "skill.readiness_report.v1": validate_readiness_report,
+        "project_state.config_doctor.v1": validate_config_doctor_report,
+    }
+    validator = validators.get(schema_name)
+    if validator is None:
+        print(json.dumps({
+            "schema": "project_state.validation_failure.v1",
+            "triage": {
+                "code": "project-state_unclassified_00000000",
+                "cause": f"unknown project-state schema: {schema_name}",
+                "next_command": "skills/triage-error/run.sh classify --text '<unknown project-state schema>' --layer project-state",
+            },
+            "error": f"unknown schema {schema_name}",
+        }, indent=2), file=sys.stderr)
+        raise typer.Exit(code=1)
+    try:
+        validator(payload)
+    except ProjectStateSchemaError as exc:
+        print(json.dumps({
+            "schema": "project_state.validation_failure.v1",
+            "triage": exc.triage,
+            "error": str(exc),
+        }, indent=2), file=sys.stderr)
+        raise typer.Exit(code=1) from exc
+    print(json.dumps({"schema": "project_state.validation_result.v1", "valid": True, "validated_schema": schema_name}))
+
+
 @config_app.command("doctor")
 def cmd_config_doctor(
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
@@ -1002,12 +1078,20 @@ def cmd_config_doctor(
         for check in checks
         if check["status"] != "pass"
     ]
-    result = {
-        "schema": "project_state.config_doctor.v1",
-        "status": "pass" if not needs_attention else "needs_attention",
-        "checks": checks,
-        "needs_attention": needs_attention,
-    }
+    try:
+        result = validate_config_doctor_report({
+            "schema": "project_state.config_doctor.v1",
+            "status": "pass" if not needs_attention else "needs_attention",
+            "checks": checks,
+            "needs_attention": needs_attention,
+        })
+    except ProjectStateSchemaError as exc:
+        print(json.dumps({
+            "schema": "project_state.validation_failure.v1",
+            "triage": exc.triage,
+            "error": str(exc),
+        }, indent=2), file=sys.stderr)
+        raise typer.Exit(code=1) from exc
     if json_output:
         print(json.dumps(result, indent=2))
     else:

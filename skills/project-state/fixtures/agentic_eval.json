@@ -79,6 +79,14 @@
       "evidence_required": {
         "live_e2e": true
       }
+    },
+    {
+      "id": "project_state.pydantic_report_contract",
+      "description": "project-state reports are generated through pydantic models with a JSON Schema contract, and schema failures are routed through triage-error.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -195,6 +203,24 @@
       "seam_type": "contract/schema",
       "criticality": "critical",
       "claim_id": "project_state.standard_report_schema",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "pydantic_report_model",
+      "seam_type": "contract/schema",
+      "criticality": "critical",
+      "claim_id": "project_state.pydantic_report_contract",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "triage_error_on_schema_failure",
+      "seam_type": "error-boundary",
+      "criticality": "critical",
+      "claim_id": "project_state.pydantic_report_contract",
       "required_evidence": [
         "live_e2e"
       ]
@@ -498,6 +524,60 @@
           "QUICK_BOUNDARY_OK=True",
           "STANDARD_BOUNDARY_OK=True",
           "STANDARD_RESEARCH_SKIPPED=True"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "pydantic-json-schema-validates-generated-report",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.pydantic_report_contract"
+      ],
+      "seams": [
+        "pydantic_report_model"
+      ],
+      "timeout_seconds": 900,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; PROJECT_STATE_ROOT=/home/graham/workspace/experiments/agent-skills/skills/pitchdeck ./run.sh report --quick --json --output \"$tmp/report.json\" >/dev/null; ./run.sh validate-report \"$tmp/report.json\" > \"$tmp/validation.json\"; ./run.sh schema project_state.report.v1 > \"$tmp/schema.json\"; python - \"$tmp/report.json\" \"$tmp/validation.json\" \"$tmp/schema.json\" <<'PY2'\nimport json, sys\nr=json.loads(open(sys.argv[1]).read())\nv=json.loads(open(sys.argv[2]).read())\ns=json.loads(open(sys.argv[3]).read())\nok = r.get('schema') == 'project_state.report.v1' and v.get('valid') is True and s['properties']['schema']['const'] == 'project_state.report.v1'\nprint('PYDANTIC_REPORT_OK=%s SCHEMA=%s MODE=%s' % (ok, r.get('schema'), r.get('mode')))\nraise SystemExit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PYDANTIC_REPORT_OK=True",
+          "SCHEMA=project_state.report.v1"
+        ],
+        "stderr_contains": []
+      }
+    },
+    {
+      "name": "pydantic-validation-failure-routes-through-triage-error",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "project_state.pydantic_report_contract"
+      ],
+      "seams": [
+        "triage_error_on_schema_failure"
+      ],
+      "timeout_seconds": 120,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills/skills/project-state; printf '{\"schema\":\"project_state.report.v1\",\"project\":\"x\",\"project_root\":\"/tmp\",\"project_profile\":\"generic\",\"timestamp\":\"bad\",\"mode\":\"quick\",\"phase_1_infrastructure\":{}}' > \"$tmp/bad.json\"; if ./run.sh validate-report \"$tmp/bad.json\" > \"$tmp/stdout.txt\" 2> \"$tmp/stderr.json\"; then echo 'validation unexpectedly passed'; exit 1; fi; python - \"$tmp/stderr.json\" <<'PY2'\nimport json, sys\nraw=open(sys.argv[1]).read()\ndata=json.loads(raw[raw.find('{'):])\ncode=data.get('triage',{}).get('code')\nok=data.get('schema') == 'project_state.validation_failure.v1' and bool(code and ('unclassified' in code or data.get('triage',{}).get('cause')))\nprint('TRIAGE_ERROR_OK=%s CODE=%s' % (ok, code))\nraise SystemExit(0 if ok else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "TRIAGE_ERROR_OK=True",
+          "CODE="
         ],
         "stderr_contains": []
       }

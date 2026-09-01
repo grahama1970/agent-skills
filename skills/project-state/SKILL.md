@@ -120,6 +120,10 @@ PROJECT_STATE_ROOT=/path/to/project ./run.sh report --json
 ./run.sh cleanup-tail --cleanup-receipt artifacts/cleanup/<run-id>/receipt.json \
   --output-dir artifacts/project-state/readiness/<run-id> --json
 
+# Emit or validate pydantic-backed report contracts
+./run.sh schema project_state.report.v1
+./run.sh validate-report state.json
+
 # Non-interactive configuration check
 ./run.sh config doctor --json
 ```
@@ -136,8 +140,9 @@ artifacts/project-state/readiness/<run-id>/
 ```
 
 `report.json` is the source of truth. The HTML page is only a view. The report
-uses schema `skill.readiness_report.v1`, profile `cleanup-tail`, explicit
-feature rows, case rows, `needs_attention`, and source receipt paths.
+uses a pydantic-validated JSON contract: schema `skill.readiness_report.v1`,
+profile `cleanup-tail`, explicit feature rows, case rows, `needs_attention`, and
+source receipt paths.
 
 Release readiness is always `NOT_ESTABLISHED` for cleanup-tail because it is a
 state/gap receipt, not project acceptance. If the cleanup receipt shows
@@ -233,10 +238,13 @@ machine-readable report and command receipts.
 ## Ecosystem
 
 `$project-state` is a reporting component in the agent-governance ecosystem. It
-produces `project_state.report.v1`, `skill.readiness_report.v1`, and
-`project_state.config_doctor.v1` payloads. It consumes local worktree evidence,
-Memory recall observations, optional cleanup receipts, and optional current
-research receipts.
+produces pydantic-validated `project_state.report.v1`,
+`skill.readiness_report.v1`, and `project_state.config_doctor.v1` JSON payloads.
+`./run.sh schema <schema>` emits the JSON Schema; `./run.sh validate-report
+<report.json>` validates a saved report and routes validation failures through
+`$triage-error`. Human prose/HTML is generated only from those JSON payloads. It
+consumes local worktree evidence, Memory recall observations, optional cleanup
+receipts, and optional current research receipts.
 
 Per `$agent-ecosystem`, Memory recall output remains an observation and is not
 wrapped. Standard/quick/full reports are state payloads, not acceptance or
