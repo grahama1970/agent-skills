@@ -1419,6 +1419,18 @@ def test_audit_skips_closures_already_verified_or_owned_by_a_human() -> None:
     assert [i["number"] for i in pending] == [1]
 
 
+def test_closure_unverified_is_retryable_not_a_permanent_hold() -> None:
+    import datetime as _dt
+
+    now = _dt.datetime(2026, 7, 28, tzinfo=_dt.UTC)
+    recent = (now - _dt.timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    pending = _audit_scan(
+        [_closed(4, labels=["agent-work", config.CLOSURE_UNVERIFIED_LABEL], closed_at=recent)],
+        now.timestamp(),
+    )
+    assert [i["number"] for i in pending] == [4]
+
+
 def test_audit_ignores_closures_older_than_the_window() -> None:
     import datetime as _dt
 

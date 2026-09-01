@@ -2004,7 +2004,12 @@ def handle_closure_audit(
         # failed edit is not cosmetic. Observed: `closure-verified` existed in no
         # repo and was absent from ensure-labels, so the first unanimous PASS
         # marked nothing.
-        mark = github.issue_edit(repo, issue_number, add=[config.CLOSURE_VERIFIED_LABEL])
+        mark = github.issue_edit(
+            repo,
+            issue_number,
+            add=[config.CLOSURE_VERIFIED_LABEL],
+            remove=[config.CLOSURE_UNVERIFIED_LABEL],
+        )
         result["commands"].append(mark)
         if mark.get("exit_code") != 0:
             result.update(
@@ -2079,9 +2084,11 @@ def handle_closure_audit(
                 ),
             )
         )
-        # Same durability rule as closure-verified: without a label the scan
-        # selects this closure again next tick and the panel re-answers the
-        # identical question every minute (observed as a window-flash loop).
+        # Same durability rule as closure-verified for the current cooldown:
+        # without a label/readable state the scan selects this closure again next
+        # tick and the panel re-answers the identical question every minute
+        # (observed as a window-flash loop). The persisted retry timestamp, not
+        # this label, decides when a later tick may try again.
         mark = github.issue_edit(repo, issue_number, add=[config.CLOSURE_UNVERIFIED_LABEL])
         result["commands"].append(mark)
         if mark.get("exit_code") != 0:
@@ -2171,7 +2178,10 @@ def handle_closure_audit(
     result["commands"].append(github.issue_reopen(repo, issue_number))
     result["commands"].append(
         github.issue_edit(
-            repo, issue_number, add=[config.READY_LABEL], remove=[config.CLOSURE_VERIFIED_LABEL]
+            repo,
+            issue_number,
+            add=[config.READY_LABEL],
+            remove=[config.CLOSURE_VERIFIED_LABEL, config.CLOSURE_UNVERIFIED_LABEL],
         )
     )
     result.update(

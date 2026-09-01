@@ -596,7 +596,8 @@ def list_closed_for_audit(
     Excludes tickets already carrying ``closure-verified`` (checked and
     accepted) or ``needs-human`` (a person already owns it), and anything closed
     longer ago than the audit window, since an old closure is history rather
-    than something to reopen.
+    than something to reopen. ``closure-unverified`` remains eligible; the
+    persisted retry timestamp cools it down instead of parking it forever.
     """
     repo = project_repo(project)
     result = run_cmd(
@@ -619,7 +620,6 @@ def list_closed_for_audit(
             continue
         if (
             config.CLOSURE_VERIFIED_LABEL in labels
-            or config.CLOSURE_UNVERIFIED_LABEL in labels
             or labels & config.HUMAN_HOLD_LABELS
         ):
             continue

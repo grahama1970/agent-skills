@@ -509,9 +509,10 @@ CLOSURE_AUDIT_RETRY_COOLDOWN_SECONDS = _env_seconds(
 CLOSURE_VERIFIED_LABEL = "closure-verified"
 
 #: Applied when the audit panel returned NEEDS_ATTENTION: the closure could not
-#: be judged from the thread and stays closed-unverified. Durable for the same
-#: reason as closure-verified — without it the panel re-answers the identical
-#: question every tick (observed: one-minute window flash loop, 2026-07-31).
+#: be judged from the thread and stays closed-unverified during the retry
+#: cooldown. Durable for the same reason as closure-verified — without it the
+#: panel re-answers the identical question every tick (observed: one-minute
+#: window flash loop, 2026-07-31). It is not a permanent hold label.
 CLOSURE_UNVERIFIED_LABEL = "closure-unverified"
 
 #: How far back the closure audit looks. A closure from months ago is history,
