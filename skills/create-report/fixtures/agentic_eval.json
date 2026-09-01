@@ -247,13 +247,14 @@
       "command": [
         "bash",
         "-lc",
-        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; printf '{\"schema\":\"create_report.report.v1\",\"report_id\":\"bad\"}' > \"$tmp/bad.json\"; if skills/create-report/run.sh validate \"$tmp/bad.json\" > \"$tmp/stdout.txt\" 2> \"$tmp/stderr.txt\"; then exit 1; fi; python3 - \"$tmp/stderr.txt\" <<'PY'\nimport json, sys\nraw=open(sys.argv[1]).read(); data=json.loads(raw[raw.find('{'):]); code=data.get('triage',{}).get('code'); ok=data.get('schema')=='create_report.validation_failure.v1' and bool(code); print('TRIAGE_ERROR_OK=%s CODE=%s' % (ok, code)); raise SystemExit(0 if ok else 1)\nPY"
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; printf '{\"schema\":\"create_report.report.v1\",\"report_id\":\"bad\"}' > \"$tmp/bad.json\"; if skills/create-report/run.sh validate \"$tmp/bad.json\" > \"$tmp/stdout.txt\" 2> \"$tmp/stderr.txt\"; then exit 1; fi; python3 - \"$tmp/stderr.txt\" <<'PY'\nimport json, sys\nraw=open(sys.argv[1]).read(); data=json.loads(raw[raw.find('{'):]); triage=data.get('triage',{}); code=triage.get('code'); ambiguous=triage.get('ambiguous'); ok=data.get('schema')=='create_report.validation_failure.v1' and bool(code) and ambiguous is False; print('TRIAGE_ERROR_OK=%s CODE=%s AMBIGUOUS=%s' % (ok, code, ambiguous)); raise SystemExit(0 if ok else 1)\nPY"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "TRIAGE_ERROR_OK=True",
-          "CODE="
+          "CODE=",
+          "AMBIGUOUS=False"
         ]
       }
     },
@@ -275,13 +276,14 @@
       "command": [
         "bash",
         "-lc",
-        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; printf '{\"schema\":\"create_report.report.v1\",\"report_id\":\"bad\",\"title\":\"Broken Draft\"}' > \"$tmp/bad.json\"; skills/create-report/run.sh repair \"$tmp/bad.json\" --output \"$tmp/repaired.json\" > \"$tmp/repair.json\"; skills/create-report/run.sh validate \"$tmp/repaired.json\" > \"$tmp/validate.json\"; python3 - \"$tmp/repair.json\" \"$tmp/validate.json\" \"$tmp/repaired.json\" <<'PY2'\nimport json, sys\nrepair=json.load(open(sys.argv[1])); valid=json.load(open(sys.argv[2])); repaired=json.load(open(sys.argv[3]))\ncode=repair.get('triage',{}).get('code')\nok=repair.get('repaired') is True and repair.get('valid') is True and bool(code) and valid.get('valid') is True and repaired.get('overall_finding')=='Needs Changes' and repaired['source_of_truth_inventory'][0]['kind']=='invalid-input'\nprint('SELF_REPAIR_OK=%s CODE=%s VALID=%s FINDING=%s SOURCE_KIND=%s' % (ok, code, valid.get('valid'), repaired.get('overall_finding'), repaired['source_of_truth_inventory'][0]['kind']))\nraise SystemExit(0 if ok else 1)\nPY2"
+        "set -euo pipefail; tmp=$(mktemp -d); cd /home/graham/workspace/experiments/agent-skills; printf '{\"schema\":\"create_report.report.v1\",\"report_id\":\"bad\",\"title\":\"Broken Draft\"}' > \"$tmp/bad.json\"; skills/create-report/run.sh repair \"$tmp/bad.json\" --output \"$tmp/repaired.json\" > \"$tmp/repair.json\"; skills/create-report/run.sh validate \"$tmp/repaired.json\" > \"$tmp/validate.json\"; python3 - \"$tmp/repair.json\" \"$tmp/validate.json\" \"$tmp/repaired.json\" <<'PY2'\nimport json, sys\nrepair=json.load(open(sys.argv[1])); valid=json.load(open(sys.argv[2])); repaired=json.load(open(sys.argv[3]))\ntriage=repair.get('triage',{}); code=triage.get('code'); ambiguous=triage.get('ambiguous')\nok=repair.get('repaired') is True and repair.get('valid') is True and bool(code) and ambiguous is False and valid.get('valid') is True and repaired.get('overall_finding')=='Needs Changes' and repaired['source_of_truth_inventory'][0]['kind']=='invalid-input'\nprint('SELF_REPAIR_OK=%s CODE=%s AMBIGUOUS=%s VALID=%s FINDING=%s SOURCE_KIND=%s' % (ok, code, ambiguous, valid.get('valid'), repaired.get('overall_finding'), repaired['source_of_truth_inventory'][0]['kind']))\nraise SystemExit(0 if ok else 1)\nPY2"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "SELF_REPAIR_OK=True",
           "CODE=",
+          "AMBIGUOUS=False",
           "VALID=True",
           "FINDING=Needs Changes",
           "SOURCE_KIND=invalid-input"

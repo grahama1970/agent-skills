@@ -875,6 +875,24 @@
         "browser transport failure",
         "semantic reviewer disagreement"
       ]
+    },
+    {
+      "code": "create_report_pydantic_validation_failed",
+      "layer": "create-report",
+      "match": [
+        "create-report pydantic validation failed",
+        "create_report.report.v1 validation failed",
+        "validation error for CreateReport",
+        "validation errors for CreateReport"
+      ],
+      "cause": "A create-report JSON payload failed the pydantic create_report.report.v1 contract, so it cannot be rendered or used as a report source of truth.",
+      "next_command": "Run skills/create-report/run.sh repair <bad-report.json> --output <repaired-report.json>, replace repair-skeleton fields with evidence-backed data, then rerun skills/create-report/run.sh validate <repaired-report.json>.",
+      "recoverable": true,
+      "not_this": [
+        "missing reviewer receipt",
+        "provider timeout",
+        "visual screenshot failure"
+      ]
     }
   ],
   "aliases": {}
