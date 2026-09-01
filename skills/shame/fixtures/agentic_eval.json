@@ -106,7 +106,7 @@
     },
     {
       "id": "shame.status_report_rendering",
-      "description": "The Pi extension requires a prose Status Report section whose Goal and State match the final pi.agent_status.v1 JSON; JSON-only and mismatched renderings are rejected.",
+      "description": "Every pi.agent_status.v1 report must include an assistant-owned visible prose Status Report section whose values are bound to the matching final JSON labels; hidden HTML, code fences, reference definitions, pseudo-fences, JSON-only reports, and mismatched renderings are rejected.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -114,7 +114,7 @@
     },
     {
       "id": "shame.webgpt_status_report_adversarial_50",
-      "description": "A WebGPT-derived suite of 50 deterministic adversarial cases attacks Status Report binding, JSON validity, duplicate-key laundering, What-remains bypasses, state legality, terminality, and transcript/quoted-heading laundering.",
+      "description": "A WebGPT-derived adversarial suite plus repeated blunt-review follow-up probes attacks Status Report ownership, label-bound JSON-to-prose projection, JSON validity, duplicate-key laundering, What-remains bypasses, CommonMark fence confusion, hidden HTML/reference laundering, validator fail-open behavior, state legality, and terminality.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -643,7 +643,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"mode\":\"markdown-h2-heading\"",
+          "\"ok\":true",
           "\"decision\":\"pass\""
         ]
       }
@@ -1379,7 +1379,7 @@
       "real_world": true,
       "evidence_class": "deterministic",
       "supports_claims": [
-        "lrsss.webgpt_status_report_adversarial_50"
+        "shame.webgpt_status_report_adversarial_50"
       ],
       "seams": [
         "webgpt-status-report-adversarial-50"
@@ -1393,8 +1393,8 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"mode\":\"remaining-fixes-continuing\"",
-          "\"banned_unresolved_stop_without_needs_human\""
+          "\"ok\":true",
+          "\"decision\":\"reject\""
         ]
       }
     },
@@ -1779,7 +1779,7 @@
       "real_world": true,
       "evidence_class": "deterministic",
       "supports_claims": [
-        "lrsss.strict_checker_contract"
+        "shame.guard_interlock"
       ],
       "seams": [
         "report-check-policy"
@@ -1795,6 +1795,786 @@
         "stdout_contains": [
           "\"mode\":\"namespaced-mutating-tool-forces-status\"",
           "\"missing_agent_status_json\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-hidden-div-heading",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs hidden-div-heading"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-hidden-html-attribute-values",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs hidden-html-attribute-values"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-indented-pseudofenced-json",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs indented-pseudofenced-json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-markdown-reference-values",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs markdown-reference-values"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-midline-pseudofenced-json",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs midline-pseudofenced-json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-quoted-values-wrong-labels",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs quoted-values-wrong-labels"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-unequal-length-fenced-heading",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs unequal-length-fenced-heading"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-validator-nonzero-with-valid-true",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs validator-nonzero-with-valid-true"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-what-remains-html-comment-inside-word-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs what-remains-html-comment-inside-word-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-duplicate-changed-contradiction",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs duplicate-changed-contradiction"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-pre-heading",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs pre-heading"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-pre-json-fence",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs pre-json-fence"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-substring-negated-changed",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs substring-negated-changed"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-trailing-html-comment-after-json",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs trailing-html-comment-after-json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-trailing-reference-after-json",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs trailing-reference-after-json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-trailing-template-after-json",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs trailing-template-after-json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-what-remains-html-entity-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs what-remains-html-entity-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-multiline-html-comment-status-report",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs multiline-html-comment-status-report"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-what-remains-nobreak-entity-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs what-remains-nobreak-entity-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-what-remains-word-joiner-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs what-remains-word-joiner-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-bidi-heading",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs bidi-heading"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-what-remains-bidi-rlo-entity-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs what-remains-bidi-rlo-entity-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-what-remains-bidi-rlo-raw-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs what-remains-bidi-rlo-raw-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-bdo-reversed-what-remains",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs bdo-reversed-what-remains"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-bdo-visible-projection-mismatch",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs bdo-visible-projection-mismatch"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-inline-css-bidi-override",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs inline-css-bidi-override"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-bdo-ancestor-reversed-what-remains",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs bdo-ancestor-reversed-what-remains"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-css-bidi-ancestor-reversed-what-remains",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs css-bidi-ancestor-reversed-what-remains"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-markdown-image-title-hidden-status-report",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs markdown-image-title-hidden-status-report"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-markdown-link-title-hidden-status-report",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs markdown-link-title-hidden-status-report"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
         ]
       }
     }

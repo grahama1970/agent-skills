@@ -636,6 +636,8 @@ export default function lazyReportShameShameShame(pi: any) {
   let turnGuardActive = false;
   let shameSelfCorrectTurn = false;
   let mutatingTurn = false;
+  let shameSkillContractRequired = false;
+  let shameSkillContractRead = false;
   let currentUserText = "";
   let retryInProgress = false;
   let lastCandidate: Candidate | null = null;
@@ -650,14 +652,40 @@ export default function lazyReportShameShameShame(pi: any) {
     mutatingTurn = false;
     if (event.source !== "extension") retryInProgress = false;
     if (activatesGuard(text)) turnGuardActive = true;
-    if (activatesShameSelfCorrection(text)) shameSelfCorrectTurn = true;
+    if (activatesShameSelfCorrection(text)) {
+      shameSelfCorrectTurn = true;
+      shameSkillContractRequired = true;
+      shameSkillContractRead = false;
+    }
     return { action: "continue" };
+  });
+
+  pi.on("tool_result", async (event: any) => {
+    const tool = baseToolName(event.toolName);
+    const input = event.input || {};
+    const path = String(input.path || "");
+    if (tool === "read" && path.endsWith("/skills/shame/SKILL.md") && !event.isError) {
+      shameSkillContractRead = true;
+    }
   });
 
   pi.on("tool_call", async (event: any) => {
     const tool = baseToolName(event.toolName);
     const input = event.input || {};
     const command = String(input.command || "");
+    if (shameSkillContractRequired && !shameSkillContractRead && tool !== "read") {
+      return {
+        block: true,
+        reason: JSON.stringify({
+          code: "skill_contract_unread",
+          skill: "shame",
+          next_steps: [{
+            next_command: "Read /home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md before acting on $shame or /shame.",
+            sha256: sha256(readFileSync("/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md", "utf8")),
+          }],
+        }),
+      };
+    }
     if (["edit", "write"].includes(tool)) mutatingTurn = true;
     if (tool === "bash" && isMutatingShellCommand(command)) {
       mutatingTurn = true;

@@ -50,6 +50,7 @@ function ctx(branch = []) {
 }
 
 async function markShameSkillRead(handlers, c) {
+  if (!handlers.tool_result?.[0]) return;
   await handlers.tool_result[0]({
     toolName: 'read',
     input: { path: '/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md' },
@@ -150,7 +151,7 @@ async function runContinuationGuardOpenTicket() {
   });
   const goodLookingFinal = (
     'The continuation guard is handled.\n\n'
-    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n\n'
+    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n- Verified: probe -> probe\n- Proof: /tmp/probe\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-premature', message: { id: 'assistant-premature', role: 'assistant', content: [{ type: 'text', text: goodLookingFinal }] } }, c);
@@ -188,7 +189,7 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
   });
   const finalText = (
     'Done.\n\n'
-    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n\n'
+    + 'Status Report\n- Goal: continuation guard probe\n- State: done\n- Verified: live-replay -> PASS\n- Proof: /tmp/proof.json\n\n'
     + '```json\n' + okStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-ok', message: { id: 'assistant-ok', role: 'assistant', content: [{ type: 'text', text: finalText }] } }, c);
@@ -196,6 +197,24 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
   assert(sent.length === 0, 'allowed final should not queue follow-up', { sent });
   rmSync(guardFile, { force: true });
   console.log(JSON.stringify({ ok: true, mode: 'continuation-closed-ticket-allows-final', followup_injected: false, ticket_gate: 'closed_or_passed' }));
+}
+
+
+async function runNamespacedMutatingToolForcesStatus() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-namespaced-mutating-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'publish the scoped fix', source: 'user' }, c);
+  await handlers.tool_call[0]({ toolName: 'functions.bash', input: { command: 'git push origin HEAD:main' } }, c);
+  const result = await handlers.message_end[0]({ id: 'assistant-mutating-no-status', message: { id: 'assistant-mutating-no-status', role: 'assistant', content: [{ type: 'text', text: 'Done.' }] } }, c);
+  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(notice.includes('missing_agent_status_json'), 'namespaced mutating tool did not force missing-status rejection', { notice, sent });
+  assert(sent.length === 1, 'namespaced mutating rejection did not queue one retry', { sentCount: sent.length, sent });
+  assert(existsSync(packet), 'namespaced mutating rejection did not write pending packet', { packet });
+  const saved = JSON.parse(readFileSync(packet, 'utf8'));
+  assert(saved.machine?.reason_codes?.includes('missing_agent_status_json'), 'pending packet omitted missing status reason for namespaced mutating tool', saved);
+  console.log(JSON.stringify({ ok: true, mode: 'namespaced-mutating-tool-forces-status', retryMessages: sent.length, reasons: saved.machine?.reason_codes }));
 }
 
 async function runWhatRemainsRejectedWithoutNeedsHuman() {
@@ -212,7 +231,7 @@ async function runWhatRemainsRejectedWithoutNeedsHuman() {
   });
   const badText = (
     'Result text.\n\n'
-    + 'Status Report\n- Goal: what remains ban probe\n- State: continuing\n\n'
+    + 'Status Report\n- Goal: what remains ban probe\n- State: continuing\n- Not done: continue work -> run the next deterministic command\n\n'
     + 'What remains:\n- keep working\n\n'
     + '```json\n' + continuingStatus + '\n```'
   );
@@ -241,7 +260,7 @@ async function runWhatRemainsAllowedWithNeedsHuman() {
   });
   const okText = (
     'Result text.\n\n'
-    + 'Status Report\n- Goal: what remains ban probe\n- State: needs_human\n\n'
+    + 'Status Report\n- Goal: what remains ban probe\n- State: needs_human\n- Needs Human: choose the next target because the next action requires a human decision\n\n'
     + 'What remains:\n- human decision required\n\n'
     + '```json\n' + needsHumanStatus + '\n```'
   );
@@ -290,7 +309,7 @@ async function runStatusReportMismatchRejected() {
     proof: ['/tmp/proof.json'],
   });
   const text = (
-    'Status Report\n- Goal: status report mismatch probe\n- State: continuing\n\n'
+    'Status Report\n- Goal: status report mismatch probe\n- State: continuing\n- Verified: probe -> PASS\n- Proof: /tmp/proof.json\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-mismatch', message: { id: 'assistant-mismatch', role: 'assistant', content: [{ type: 'text', text }] } }, c);
@@ -313,7 +332,7 @@ async function runStatusReportMatchesJsonAllowed() {
     proof: ['/tmp/proof.json'],
   });
   const text = (
-    'Status Report\n- Goal: status report derived from json probe\n- State: done\n\n'
+    'Status Report\n- Goal: status report derived from json probe\n- State: done\n- Verified: probe -> PASS\n- Proof: /tmp/proof.json\n\n'
     + '```json\n' + doneStatus + '\n```'
   );
   const result = await handlers.message_end[0]({ id: 'assistant-status-report-ok', message: { id: 'assistant-status-report-ok', role: 'assistant', content: [{ type: 'text', text }] } }, c);
@@ -353,7 +372,7 @@ async function runSkillReadGuardAllowsActionAfterFullRead() {
   const { handlers } = await loadExtension();
   const c = ctx();
   await handlers.input[0]({ text: '$shame update the guard', source: 'user' }, c);
-  await handlers.tool_result[0]({ toolName: 'read', input: { path: '/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md' }, isError: false, content: readFileSync('/home/graham/workspace/experiments/agent-skills/skills/shame/SKILL.md', 'utf8') }, c);
+  await markShameSkillRead(handlers, c);
   const result = await handlers.tool_call[0]({ toolName: 'bash', input: { command: 'echo allowed-after-read' } }, c);
   assert(result === undefined, 'skill-read guard blocked after full SKILL.md read', { result });
   console.log(JSON.stringify({ ok: true, mode: 'skill-read-guard-allows-action-after-full-read', allowed: true }));
@@ -391,6 +410,7 @@ const modes = {
   'skill-read-guard-allows-action-after-full-read': runSkillReadGuardAllowsActionAfterFullRead,
   'continuation-open-ticket': runContinuationGuardOpenTicket,
   'continuation-closed-ticket-allows-final': runContinuationGuardClosedTicketAllowsFinal,
+  'namespaced-mutating-tool-forces-status': runNamespacedMutatingToolForcesStatus,
   'what-remains-rejected-without-needs-human': runWhatRemainsRejectedWithoutNeedsHuman,
   'what-remains-allowed-with-needs-human': runWhatRemainsAllowedWithNeedsHuman,
   'status-report-required-with-json': runStatusReportRequiredWithJson,

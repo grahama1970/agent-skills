@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // JSON-first report checker for lazy-report-shame-shame-shame.
-// NO prose classification. NO regex over assistant text. Decision inputs:
+// Decision inputs:
 //   1. a trailing fenced ```json block containing {"schema":"pi.agent_status.v1",...}
 //   2. LRSSS_MUTATING_TURN / LRSSS_FORCE_STATUS env flags (set from tool events)
 // The JSON block is validated by the pydantic model in
 // skills/shame/scripts/agent_status_schema.py (catalog-checked triage codes,
-// state legality). Ambiguous blocker labels are a validation failure there.
+// state legality). The prose Status Report must visibly project the final JSON.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -19,7 +19,7 @@ const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
 const FORCE_STATUS = flagEnabled(process.env.LRSSS_FORCE_STATUS);
 const STRICT_STATUS = flagEnabled(process.env.LRSSS_STRICT_STATUS);
 
-const VALIDATOR = join(
+const VALIDATOR = process.env.LRSSS_VALIDATOR || join(
   homedir(),
   'workspace/experiments/agent-skills/skills/shame/scripts/agent_status_schema.py',
 );
@@ -41,25 +41,93 @@ const BANNED_UNRESOLVED_STOP_PHRASES = [
   'still remains',
   'left to do',
 ];
-const ZERO_WIDTH_CHARS = new Set(['\u200b', '\u200c', '\u200d', '\ufeff']);
-function normalizePolicyText(input) {
+const HTML_ENTITIES = new Map([
+  ['nbsp', ' '],
+  ['#32', ' '],
+  ['#x20', ' '],
+  ['amp', '&'],
+  ['lt', '<'],
+  ['gt', '>'],
+  ['nobreak', '\u2060'],
+]);
+
+function stripHtmlComments(line, active = false) {
+  let rest = String(line || '');
+  let output = '';
+  let inComment = active;
+  while (rest) {
+    if (inComment) {
+      const end = rest.indexOf('-->');
+      if (end === -1) return { text: output, active: true };
+      rest = rest.slice(end + 3);
+      inComment = false;
+      continue;
+    }
+    const start = rest.indexOf('<!--');
+    if (start === -1) {
+      output += rest;
+      return { text: output, active: false };
+    }
+    output += rest.slice(0, start);
+    rest = rest.slice(start + 4);
+    inComment = true;
+  }
+  return { text: output, active: inComment };
+}
+
+const BIDI_CONTROL_RE = /[\u061c\u200e-\u200f\u202a-\u202e\u2066-\u2069]/i;
+const NON_ASCII_RE = /[^\x00-\x7f]/;
+
+function stripDefaultIgnorables(input) {
+  return String(input || '').replaceAll(/[\p{Cf}\p{Default_Ignorable_Code_Point}]/gu, '');
+}
+
+function hasBidiControls(input) {
+  return BIDI_CONTROL_RE.test(decodeBasicHtmlEntities(input));
+}
+
+function hasNonAsciiAfterEntityDecode(input) {
+  return NON_ASCII_RE.test(decodeBasicHtmlEntities(input));
+}
+
+function hasRawHtmlTag(input) {
+  return /<[a-z!/][^>]*>/i.test(decodeBasicHtmlEntities(input));
+}
+
+function hasMarkdownLinkOrImage(input) {
+  return /!?\[[^\]]*\]\(/.test(String(input || ''));
+}
+
+function collectJsonStrings(value, out = []) {
+  if (typeof value === 'string') out.push(value);
+  else if (Array.isArray(value)) value.forEach((item) => collectJsonStrings(item, out));
+  else if (value && typeof value === 'object') Object.values(value).forEach((item) => collectJsonStrings(item, out));
+  return out;
+}
+
+function decodeBasicHtmlEntities(input) {
   return String(input || '')
-    .normalize('NFKC')
-    .split('')
-    .filter((char) => !ZERO_WIDTH_CHARS.has(char))
-    .join('')
+    .replaceAll(/<!--[\s\S]*?-->/g, '')
+    .replaceAll(/&([a-zA-Z]+|#[0-9]+|#x[0-9a-fA-F]+);/g, (match, key) => {
+      const normalized = key.toLowerCase();
+      if (HTML_ENTITIES.has(normalized)) return HTML_ENTITIES.get(normalized);
+      if (normalized.startsWith('#x')) {
+        const code = Number.parseInt(normalized.slice(2), 16);
+        return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+      }
+      if (normalized.startsWith('#')) {
+        const code = Number.parseInt(normalized.slice(1), 10);
+        return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+      }
+      return match;
+    });
+}
+
+function normalizePolicyText(input) {
+  return stripDefaultIgnorables(decodeBasicHtmlEntities(input).normalize('NFKC'))
+    .replaceAll(/[\\`*_~\[\](){}<>|:;.,!?#+=-]/g, ' ')
     .replaceAll(/\s+/g, ' ')
     .toLowerCase();
-}
-
-function matchedBannedUnresolvedStopPhrase(input) {
-  const normalized = normalizePolicyText(input);
-  if (normalized.includes(BANNED_SECTION_PHRASE)) return BANNED_SECTION_PHRASE;
-  return BANNED_UNRESOLVED_STOP_PHRASES.find((phrase) => normalized.includes(phrase)) || null;
-}
-
-function mentionsBannedWhatRemains(input) {
-  return matchedBannedUnresolvedStopPhrase(input) === BANNED_SECTION_PHRASE;
 }
 
 function parseStatus(raw) {
@@ -77,28 +145,126 @@ function statusStateFromJson(raw) {
 }
 
 function statusReportHeadingSignal(line) {
-  return normalizePolicyText(line).includes('status report');
+  return normalizePolicyText(line) === 'status report';
+}
+
+function fenceMarker(trimmed) {
+  const match = String(trimmed || '').match(/^(`{3,}|~{3,})/);
+  if (!match) return null;
+  return { char: match[1][0], len: match[1].length };
+}
+
+function applyFenceTransition(activeFence, trimmed) {
+  const marker = fenceMarker(trimmed);
+  if (!marker) return { activeFence, fenceLine: false };
+  if (!activeFence) return { activeFence: marker, fenceLine: true };
+  const close = String(trimmed || '').match(/^(`{3,}|~{3,})[ \t]*$/);
+  if (close && close[1][0] === activeFence.char && close[1].length >= activeFence.len) {
+    return { activeFence: null, fenceLine: true };
+  }
+  return { activeFence, fenceLine: true };
+}
+
+const NON_OWNED_HTML_CONTAINERS = new Set(['pre', 'textarea', 'template', 'script', 'style', 'details', 'dialog', 'bdo']);
+
+function applyHiddenHtmlTransition(hiddenTags, trimmed) {
+  const tags = [...hiddenTags];
+  const line = String(trimmed || '');
+  const opens = line.matchAll(/<([a-z][a-z0-9:-]*)\b[^>]*>/gi);
+  for (const tag of opens) {
+    const name = tag[1].toLowerCase();
+    const raw = tag[0];
+    if (raw.endsWith('/>')) continue;
+    if (
+      NON_OWNED_HTML_CONTAINERS.has(name)
+      || /\shidden\b/i.test(raw)
+      || /aria-hidden\s*=\s*["']?true/i.test(raw)
+      || /\sdir\s*=\s*["']?(rtl|ltr)/i.test(raw)
+      || /direction\s*:\s*(rtl|ltr)/i.test(raw)
+      || /unicode-bidi\s*:/i.test(raw)
+      || /display\s*:\s*none/i.test(raw)
+    ) {
+      tags.push(name);
+    }
+  }
+  for (let i = tags.length - 1; i >= 0; i -= 1) {
+    if (new RegExp(`</${tags[i]}[^>]*>`, 'i').test(line)) tags.splice(i, 1);
+  }
+  return tags;
+}
+
+function isOwnedHeading(trimmed) {
+  const plain = trimmed === 'Status Report';
+  const atx = /^(#{1,6}) Status Report\s*#*$/.test(trimmed);
+  return plain || atx;
+}
+
+function visibleOwnedLines(rawLines) {
+  const visible = [];
+  let activeFence = null;
+  let hiddenTags = [];
+  let htmlCommentActive = false;
+  for (const rawLine of rawLines) {
+    const originalLine = String(rawLine || '').replaceAll('\r', '');
+    const strippedComment = stripHtmlComments(originalLine, htmlCommentActive);
+    htmlCommentActive = strippedComment.active;
+    const line = strippedComment.text;
+    const trimmed = line.trim();
+    const fenceTransition = applyFenceTransition(activeFence, trimmed);
+    if (fenceTransition.fenceLine) {
+      activeFence = fenceTransition.activeFence;
+      continue;
+    }
+    const wasHidden = hiddenTags.length > 0;
+    hiddenTags = applyHiddenHtmlTransition(hiddenTags, trimmed);
+    const commentStripped = trimmed;
+    const indentedCode = /^ {4,}\S/.test(line) || /^\t\S/.test(line);
+    const blockquote = trimmed.startsWith('>');
+    const htmlLine = commentStripped.includes('<') && commentStripped.includes('>');
+    const referenceDefinition = /^\[[^\]]+\]:/.test(commentStripped);
+    if (activeFence || wasHidden || hiddenTags.length > 0 || indentedCode || blockquote || htmlLine || referenceDefinition || !commentStripped) continue;
+    visible.push(commentStripped);
+  }
+  return visible;
 }
 
 function extractStatusReportSection(input, extracted) {
   if (!extracted) return { failure: 'missing_status_report_section' };
   const beforeJson = input.slice(0, extracted.start);
   const lines = beforeJson.split('\n');
-  let inFence = false;
+  let activeFence = null;
+  let hiddenTags = [];
+  let htmlCommentActive = false;
   let headingIndex = -1;
   let badHeadingFailure = null;
   for (let i = 0; i < lines.length; i += 1) {
-    const trimmed = String(lines[i] || '').replaceAll('\r', '').trim();
-    if (trimmed.startsWith('```')) {
-      inFence = !inFence;
+    const originalLine = String(lines[i] || '').replaceAll('\r', '');
+    const strippedComment = stripHtmlComments(originalLine, htmlCommentActive);
+    htmlCommentActive = strippedComment.active;
+    const line = strippedComment.text;
+    const trimmed = line.trim();
+    const fenceTransition = applyFenceTransition(activeFence, trimmed);
+    if (fenceTransition.fenceLine) {
+      activeFence = fenceTransition.activeFence;
       continue;
     }
-    if (trimmed === 'Status Report' && !inFence) {
+    const wasHidden = hiddenTags.length > 0;
+    hiddenTags = applyHiddenHtmlTransition(hiddenTags, trimmed);
+    const notOwned = Boolean(activeFence)
+      || wasHidden
+      || hiddenTags.length > 0
+      || trimmed.startsWith('>')
+      || /^ {4,}\S/.test(line)
+      || /^\t\S/.test(line)
+      || htmlCommentActive
+      || (trimmed.includes('<') && trimmed.includes('>'))
+      || /^\[[^\]]+\]:/.test(trimmed);
+    if (isOwnedHeading(trimmed) && !notOwned) {
       headingIndex = i;
       continue;
     }
     if (statusReportHeadingSignal(trimmed)) {
-      if (inFence || trimmed.startsWith('>') || trimmed.startsWith('<!--')) {
+      if (notOwned) {
         badHeadingFailure ||= 'status_report_not_owned';
       } else {
         badHeadingFailure ||= 'status_report_heading_not_exact';
@@ -108,8 +274,38 @@ function extractStatusReportSection(input, extracted) {
   if (headingIndex === -1) {
     return { failure: badHeadingFailure || 'missing_status_report_section' };
   }
-  const body = lines.slice(headingIndex + 1).join('\n').trim();
-  return { body, headingIndex };
+  let bodyEnd = lines.length;
+  for (let i = headingIndex + 1; i < lines.length; i += 1) {
+    const trimmed = String(lines[i] || '').replaceAll('\r', '').trim();
+    if (/^#{1,6} /.test(trimmed) && !isOwnedHeading(trimmed)) {
+      bodyEnd = i;
+      break;
+    }
+  }
+  const bodyLines = lines.slice(headingIndex + 1, bodyEnd);
+  return { body: bodyLines.join('\n').trim(), visibleLines: visibleOwnedLines(bodyLines), headingIndex };
+}
+
+function labelValues(visibleLines, label) {
+  const prefix = `${label}:`;
+  const bulletPrefix = `- ${prefix}`;
+  return visibleLines.flatMap((line) => {
+    if (line.startsWith(bulletPrefix)) return [line.slice(bulletPrefix.length).trim()];
+    if (line.startsWith(prefix)) return [line.slice(prefix.length).trim()];
+    return [];
+  });
+}
+
+function requireExactLabeledValues(failures, actual, expected, code) {
+  const actualValues = actual.map((value) => stripDefaultIgnorables(decodeBasicHtmlEntities(value).normalize('NFKC')).trim());
+  const expectedValues = expected.map((value) => stripDefaultIgnorables(decodeBasicHtmlEntities(value).normalize('NFKC')).trim()).filter(Boolean);
+  if (actualValues.length !== expectedValues.length) {
+    failures.push(code);
+    return;
+  }
+  for (const value of expectedValues) {
+    if (!actualValues.includes(value)) failures.push(code);
+  }
 }
 
 function statusReportFailures(input, extracted, status) {
@@ -117,46 +313,127 @@ function statusReportFailures(input, extracted, status) {
   const section = extractStatusReportSection(input, extracted);
   if (section.failure) return [section.failure];
   const failures = [];
-  const bodyLines = section.body.split('\n').map((line) => line.trim());
-  const hasLine = (value) => bodyLines.includes(value) || bodyLines.includes(`- ${value}`);
-  if (!hasLine(`Goal: ${status.goal}`)) {
+  const visibleLines = section.visibleLines;
+  const goals = labelValues(visibleLines, 'Goal');
+  if (goals.length !== 1 || goals[0] !== status.goal) {
     failures.push('status_report_goal_mismatch');
   }
-  if (!hasLine(`State: ${status.state}`)) {
+  const states = labelValues(visibleLines, 'State');
+  if (states.length !== 1 || states[0] !== status.state) {
     failures.push('status_report_state_mismatch');
   }
-  return failures;
+  const changedLines = labelValues(visibleLines, 'Changed');
+  requireExactLabeledValues(failures, changedLines, status.changed || [], 'status_report_changed_mismatch');
+  const verifiedLines = labelValues(visibleLines, 'Verified');
+  requireExactLabeledValues(
+    failures,
+    verifiedLines,
+    (status.verified || []).map((item) => `${item.command} -> ${item.result}`),
+    'status_report_verified_mismatch',
+  );
+  const proofLines = labelValues(visibleLines, 'Proof');
+  requireExactLabeledValues(failures, proofLines, status.proof || [], 'status_report_proof_mismatch');
+  const notDoneLines = labelValues(visibleLines, 'Not done');
+  requireExactLabeledValues(
+    failures,
+    notDoneLines,
+    (status.not_done || []).map((item) => `${item.item} -> ${item.next_command}`),
+    'status_report_not_done_mismatch',
+  );
+  if (status.failure?.triage) {
+    const failureLines = labelValues(visibleLines, 'Failure');
+    requireExactLabeledValues(
+      failures,
+      failureLines,
+      [`${status.failure.triage.code} -> ${status.failure.triage.cause} -> ${status.failure.triage.next_command}`],
+      'status_report_failure_mismatch',
+    );
+  }
+  if (status.needs_human) {
+    const needsHumanLines = labelValues(visibleLines, 'Needs Human');
+    requireExactLabeledValues(
+      failures,
+      needsHumanLines,
+      [`${status.needs_human.action} because ${status.needs_human.reason}`],
+      'status_report_needs_human_mismatch',
+    );
+  }
+  const payloadLabels = {
+    needs_brave_search: 'needs_brave_search',
+    needs_agent: 'needs_agent',
+    needs_webgpt: 'needs_webgpt',
+    needs_roundtable: 'needs_roundtable',
+    needs_competition: 'needs_competition',
+  };
+  for (const [field, label] of Object.entries(payloadLabels)) {
+    const payload = status[field];
+    if (!payload) continue;
+    const values = labelValues(visibleLines, label);
+    requireExactLabeledValues(failures, values, Object.values(payload).flat(), `status_report_${field}_mismatch`);
+  }
+  return Array.from(new Set(failures));
 }
 
-// Extract the LAST fenced json block whose parsed object declares the schema.
-// This is structural extraction (fence markers + JSON.parse), not prose classification.
+function matchedBannedUnresolvedStopPhraseInVisibleReport(input, extracted) {
+  const scanText = extracted ? input.slice(0, extracted.start) : input;
+  const normalized = normalizePolicyText(visibleOwnedLines(scanText.split('\n')).join('\n'));
+  if (normalized.includes(BANNED_SECTION_PHRASE)) return BANNED_SECTION_PHRASE;
+  return BANNED_UNRESOLVED_STOP_PHRASES.find((phrase) => normalized.includes(phrase)) || null;
+}
+
 function extractStatusJson(input) {
   const fences = [];
-  let idx = 0;
-  while (true) {
-    const start = input.indexOf('```json', idx);
-    if (start === -1) break;
-    const bodyStart = input.indexOf('\n', start);
-    if (bodyStart === -1) break;
-    const end = input.indexOf('```', bodyStart);
-    if (end === -1) break;
-    fences.push({ body: input.slice(bodyStart + 1, end), start, end: end + 3 });
-    idx = end + 3;
+  const lines = String(input || '').split(/(?<=\n)/);
+  let offset = 0;
+  let activeJson = null;
+  let activeOuterFence = null;
+  let hiddenTags = [];
+  let htmlCommentActive = false;
+  for (const line of lines) {
+    const lineStart = offset;
+    const lineEnd = offset + line.length;
+    const originalWithoutNewline = line.replace(/\r?\n$/, '');
+    const strippedComment = stripHtmlComments(originalWithoutNewline, htmlCommentActive);
+    htmlCommentActive = strippedComment.active;
+    const withoutNewline = strippedComment.text;
+    const trimmed = withoutNewline.trim();
+    if (activeJson) {
+      const close = withoutNewline.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      if (close && close[1][0] === activeJson.char && close[1].length >= activeJson.len) {
+        fences.push({ body: input.slice(activeJson.bodyStart, lineStart), start: activeJson.start, end: lineEnd });
+        activeJson = null;
+      }
+      offset = lineEnd;
+      continue;
+    }
+    if (activeOuterFence) {
+      const outerTransition = applyFenceTransition(activeOuterFence, trimmed);
+      activeOuterFence = outerTransition.activeFence;
+      offset = lineEnd;
+      continue;
+    }
+    const wasHidden = hiddenTags.length > 0;
+    hiddenTags = applyHiddenHtmlTransition(hiddenTags, trimmed);
+    if (htmlCommentActive || wasHidden || hiddenTags.length > 0 || (trimmed.includes('<') && trimmed.includes('>'))) {
+      offset = lineEnd;
+      continue;
+    }
+    const open = withoutNewline.match(/^ {0,3}(`{3,}|~{3,})([^`~]*)$/);
+    if (open) {
+      const info = open[2].trim().toLowerCase();
+      if (info === 'json') {
+        activeJson = { char: open[1][0], len: open[1].length, start: lineStart, bodyStart: lineEnd };
+      } else {
+        activeOuterFence = { char: open[1][0], len: open[1].length };
+      }
+    }
+    offset = lineEnd;
   }
   for (let i = fences.length - 1; i >= 0; i -= 1) {
     try {
       const parsed = JSON.parse(fences[i].body);
       if (parsed && parsed.schema === 'pi.agent_status.v1') return fences[i];
     } catch { /* not JSON; skip */ }
-  }
-  // Also accept a bare trailing JSON object (no fence).
-  const braceStart = input.lastIndexOf('{"schema":"pi.agent_status.v1"');
-  if (braceStart !== -1) {
-    const candidate = input.slice(braceStart);
-    try {
-      JSON.parse(candidate);
-      return { body: candidate, start: braceStart, end: input.length };
-    } catch { /* fallthrough */ }
   }
   return null;
 }
@@ -176,13 +453,13 @@ function emit(decision, reasonCodes, extra = {}, footerFailures = []) {
     footer_failures: footerFailures,
   };
   console.log(JSON.stringify(result, null, 2));
-  process.exit(decision === 'reject' ? 1 : 0);
+  process.exit(decision === 'pass' ? 0 : 1);
 }
 
 const extractedStatus = extractStatusJson(text);
 const statusJson = extractedStatus?.body || null;
 const statusState = statusStateFromJson(statusJson);
-const bannedUnresolvedStopPhrase = matchedBannedUnresolvedStopPhrase(text);
+const bannedUnresolvedStopPhrase = matchedBannedUnresolvedStopPhraseInVisibleReport(text, extractedStatus);
 if (bannedUnresolvedStopPhrase && statusState !== 'needs_human') {
   const reason = bannedUnresolvedStopPhrase === BANNED_SECTION_PHRASE
     ? 'banned_what_remains_without_needs_human'
@@ -206,6 +483,36 @@ if (!statusJson) {
   emit('pass', ['no_status_required_non_mutating_turn']);
 }
 
+const parsedStatusForBidi = parseStatus(statusJson);
+const preJsonText = text.slice(0, extractedStatus.start);
+const statusStringsForUnicode = collectJsonStrings(parsedStatusForBidi);
+if (hasRawHtmlTag(preJsonText)) {
+  emit('reject', ['raw_html_in_status_report'], {
+    correction: 'Remove raw HTML from the Status Report region; tags, comments, attributes, and CSS can hide or visually reorder the report the human sees.',
+  });
+}
+if (hasMarkdownLinkOrImage(preJsonText)) {
+  emit('reject', ['markdown_link_in_status_report'], {
+    correction: 'Remove Markdown links/images from the Status Report region; link titles, destinations, image alt text, and generated attributes are not plain owned report prose.',
+  });
+}
+if (
+  hasBidiControls(preJsonText)
+  || statusStringsForUnicode.some((value) => hasBidiControls(value))
+) {
+  emit('reject', ['bidi_control_in_status_report'], {
+    correction: 'Remove Unicode bidirectional controls from Status Report prose and pi.agent_status.v1 string values; they can render a different visible order than the logical text being checked.',
+  });
+}
+if (
+  hasNonAsciiAfterEntityDecode(preJsonText)
+  || statusStringsForUnicode.some((value) => hasNonAsciiAfterEntityDecode(value))
+) {
+  emit('reject', ['non_ascii_status_report_text'], {
+    correction: 'Use ASCII-only Status Report prose and pi.agent_status.v1 string values; non-ASCII glyphs can spoof required labels or banned phrases.',
+  });
+}
+
 if (!existsSync(VALIDATOR)) {
   emit('error', ['validator_script_missing'], { validator: VALIDATOR });
 }
@@ -220,22 +527,25 @@ def hook(pairs):
             seen_duplicates.append(key)
         seen.add(key)
     return dict(pairs)
-try:
-    json.loads(sys.stdin.read(), object_pairs_hook=hook)
-except Exception:
-    pass
+json.loads(sys.stdin.read(), object_pairs_hook=hook)
 print(json.dumps(seen_duplicates))
 `], {
   input: statusJson,
   encoding: 'utf8',
   timeout: 15000,
 });
+if (duplicateCheck.error || duplicateCheck.status !== 0) {
+  emit('reject', ['duplicate_detector_failed'], { stderr: String(duplicateCheck.stderr || duplicateCheck.error || '').slice(0, 500) });
+}
+let duplicates = null;
 try {
-  const duplicates = JSON.parse(String(duplicateCheck.stdout || '[]'));
-  if (Array.isArray(duplicates) && duplicates.length) {
-    emit('reject', ['duplicate_agent_status_key'], { duplicates });
-  }
-} catch { /* duplicate detector failure falls through to validator */ }
+  duplicates = JSON.parse(String(duplicateCheck.stdout || '[]'));
+} catch {
+  emit('reject', ['duplicate_detector_failed'], { stdout: String(duplicateCheck.stdout || '').slice(0, 500) });
+}
+if (Array.isArray(duplicates) && duplicates.length) {
+  emit('reject', ['duplicate_agent_status_key'], { duplicates });
+}
 
 const run = spawnSync(PYTHON, [VALIDATOR, 'validate', '-'], {
   input: statusJson,
@@ -243,17 +553,22 @@ const run = spawnSync(PYTHON, [VALIDATOR, 'validate', '-'], {
   timeout: 15000,
 });
 
-if (run.error || run.status === 2) {
+if (run.error || (run.status !== 0 && run.status !== 1)) {
   emit('error', ['validator_invocation_failed'], { stderr: String(run.stderr || run.error || '').slice(0, 500) });
 }
 
 let verdict = null;
 try { verdict = JSON.parse(String(run.stdout || '').trim().split('\n').pop()); } catch { verdict = null; }
 
-// A crash (no parseable verdict) is a checker error, never a rejection of the
-// agent's answer. Only a parsed {"valid": false} rejects.
 if (!verdict || typeof verdict.valid !== 'boolean') {
   emit('error', ['validator_crashed'], {
+    exit_status: run.status,
+    stderr: String(run.stderr || '').slice(0, 500),
+  });
+}
+
+if (verdict.valid === true && run.status !== 0) {
+  emit('reject', ['validator_nonzero_with_valid_true'], {
     exit_status: run.status,
     stderr: String(run.stderr || '').slice(0, 500),
   });
@@ -273,8 +588,8 @@ if (reportFailures.length) {
     reportFailures,
     {
       correction: (
-        'Add a prose section named Status Report before the JSON, with Goal '
-        + 'and State lines copied from pi.agent_status.v1.'
+        'Add an assistant-owned Status Report section before the final JSON. '
+        + 'Every reportable value in pi.agent_status.v1 must appear under its matching Status Report label.'
       ),
     },
     reportFailures,
@@ -285,4 +600,3 @@ emit('pass', ['valid_agent_status_json', 'valid_status_report_section'], {
   state: verdict.state,
   status: parsedStatus,
 });
-
