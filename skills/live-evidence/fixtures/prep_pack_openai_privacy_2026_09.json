@@ -1135,7 +1135,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "1ce426e3b5f3c3f3c7069e3675fc460b4c9d81c6633cfe7df6d6df25787a6bc0",
+      "digest": "64e714a4c82f0a0233d59e0a40173ff1dd1b2b021f283d64f8f6fc7b304f212d",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-01.md",
       "summary": null,
@@ -1148,7 +1148,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "4c146d24a528c599bef8d296b5a16f6a98f491391b6586843549bfca401e1bae",
+      "digest": "f64d90c3c85ad94c2a22ed7b8e2b323816b8e3ec88e4edd09daf8d81612c2e12",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-02.md",
       "summary": null,
@@ -1161,7 +1161,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "1403606755fd99bcd948575828f4adf26a0785d14e4ec19c255813a389c84a92",
+      "digest": "981fd584e893cffdc63defa0d6c39695ccdf38a8475d2d8a351eddd392367964",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-03.md",
       "summary": null,
@@ -1174,7 +1174,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "2b38ee4b16b229fa53fec2da9b4cf731ce173bf8c9d76ef41e92b7fe616ed7c8",
+      "digest": "06d474e05815ad1cfac2a52409f477cec1869329b3c844dcb0d88a39cedd2b1b",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-04.md",
       "summary": null,
@@ -1187,7 +1187,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "ef0f3d9bdb93786bc682c296201c75a8666692f7d1bee80b3178e51f0c55de68",
+      "digest": "7f9a1f71e482f7a7598a65e6f0edf5cab53cd19af765cf676d3a76343623bd3d",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-05.md",
       "summary": null,
@@ -1200,7 +1200,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "4a91e34d855bc6b6a3e9bde13bc7bcf9ec72d6e8a9433c359367b2b265e8a103",
+      "digest": "7b717a7e262316b3224e276863e7d9a2ff2ed37dae3088030c528aec7b6ea81a",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-06.md",
       "summary": null,
@@ -1213,7 +1213,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "a2e44c0048b52992759247d80124f2c566c29b26da0113ee2d1bf9a9ec0132f5",
+      "digest": "64b1f43999f1a59f731618a8007c8fca5957f3761516d6d4e30967af4b381d08",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-07.md",
       "summary": null,
@@ -1226,7 +1226,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "c49ed549e86963fb2147fab23aae7946a1b7b99afbc5eb5ce11236f3025af789",
+      "digest": "45f0fd671e3a3b785c69b3712d381c687ce533315ee0340bf5f1101a16076240",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-08.md",
       "summary": null,
@@ -1239,7 +1239,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "9756dd69edd0731b51dee8b2cbb751fcf8c68650cb8491b2b62897c20faa983d",
+      "digest": "2c185c87064100a2abaa4e0f17088a80a2dc9928d1868957cc1cca170a74b7b6",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-09.md",
       "summary": null,
@@ -1252,7 +1252,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "b46e90cef4739201aa6e46e579a8f99b75595d41c914ea6a362edda4bf2df0c8",
+      "digest": "6a6cfda89bab8a9b65e6a01c1670167e21d4bc2e7d27554b3f81407cd879c991",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-10.md",
       "summary": null,
@@ -1265,7 +1265,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "e5f85dc0cef5b8ad4eb8b792dc8fbd8696d98479468f041853cd3f8c0a77ec57",
+      "digest": "148185efb8350beecb40249c49ab23e9dda50c0fe90671a5294d56204d03430a",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-11.md",
       "summary": null,
@@ -1278,7 +1278,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "216efb9031e6453c5b77100c1248f7ce1ef326015346db089cfd3fcd7fb63689",
+      "digest": "6ca304360354703afb22b25bce7c1b670bbda587a430f7ebec2bbc0a42de8505",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-12.md",
       "summary": null,
@@ -1291,7 +1291,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "0d83eb0ce2aec8c1b41520b13279ae81561ef2e5c6882fec65141ecbbb831fad",
+      "digest": "4dd74edcea03e866d2b51a7583915c11985ed00fc521aea349ff5e5a6bd1d744",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-13.md",
       "summary": null,
@@ -1304,7 +1304,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "2d534b0e0c3d57e993208b2ab3ecb27a0a2be67ffdddc0d52060c34b7be621d9",
+      "digest": "f437aa25e3446bcc3a444777d04ea05dbf5258d5d6c5dd74b1c33a837f93ad64",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-14.md",
       "summary": null,
@@ -1317,7 +1317,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "91c7293923a0088de0f5a93c301f5dc64395cef7d2f5a9170b10ca1d79dc7226",
+      "digest": "f931c356628372db9c10f816842f055cacdd91d81c5dea29d5e3fd8ff865889e",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-15.md",
       "summary": null,
@@ -1330,7 +1330,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "96c00c5ae08f71fa2a9b2b0519408927fa57e51b75b7d8ff2c6dac8689ecc25e",
+      "digest": "1e2651c146c6f1efe28f284cdf909dacb3d97c9d285f1ab9c38be70f994cf3bb",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-16.md",
       "summary": null,
@@ -1343,7 +1343,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "6f3788c164c740674a5f31515b6029b207cc38c7296708e17393f41c40973161",
+      "digest": "73370833aaf67f885926a5f0aa447155b65130f7b1687214a25f53ada4c60486",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-17.md",
       "summary": null,
@@ -1356,7 +1356,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "60ee3d7a3e8ae61dcb449dc555b3f69bebcfdfde4b22341c9d565c2658002b6f",
+      "digest": "783b0e325d41dd0230b82331e6037421aca02afd6d2ea17eca671e2e7591c9bb",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-18.md",
       "summary": null,
@@ -1369,7 +1369,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "4a4d6b86d08a11072dee53b9f3d96bf057b09a9ca8def1927fe971b2cef99383",
+      "digest": "76ce00682347c59c9aacb57d19f8c6fc91b19c041c65331c2b2043b7957d6fe2",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-19.md",
       "summary": null,
@@ -1382,7 +1382,7 @@
       "title": null,
       "authority": null,
       "retrieved_at": null,
-      "digest": "73f2786a79feb2d3c46f4964ee6f04bd90a530036110f0b284f778ae4d60307a",
+      "digest": "f4c6aeab47f520567e794c830f45da5389cc4aefe2f52fa2646f6298e5314ec9",
       "url": null,
       "path": "/home/graham/workspace/experiments/openai-privacy-kb/knowledge/flask-security-challenges/oai-flask-20.md",
       "summary": null,
@@ -15574,7 +15574,8 @@
         "Validate Idempotency-Key and authenticated principal",
         "Hash canonical request body with stable ordering",
         "Use an atomic repository keyed by principal and idempotency key",
-        "Persist response body/status with the digest"
+        "Persist response body/status with the digest",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_01."
       ],
       "failure_cases": [
         "Trust request-provided principal",
@@ -15641,7 +15642,8 @@
         "Model legal holds separately from deletion requests",
         "Check active holds before effects",
         "Return blocked with hold identifiers and reason code",
-        "Write an audit event without raw subject data"
+        "Write an audit event without raw subject data",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_02."
       ],
       "failure_cases": [
         "Trust caller-supplied no_hold flag",
@@ -15706,7 +15708,8 @@
         "Define allowed transition table",
         "Validate transition events server-side",
         "Persist previous and next state with actor and time",
-        "Return illegal_transition for skipped or forbidden states"
+        "Return illegal_transition for skipped or forbidden states",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_03."
       ],
       "failure_cases": [
         "Accept state from JSON blindly",
@@ -15771,7 +15774,8 @@
         "Create connector interface with idempotent delete",
         "Record each target result",
         "Aggregate overall status as partial_failure until all required stores succeed",
-        "Expose retry plan"
+        "Expose retry plan",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_04."
       ],
       "failure_cases": [
         "Mark request complete after first success",
@@ -15836,7 +15840,8 @@
         "Create verifier service reading store state independently",
         "Record absence checks and unsupported targets",
         "Require verifier evidence before completed",
-        "Report missing evidence"
+        "Report missing evidence",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_05."
       ],
       "failure_cases": [
         "Trust connector deleted=true flag",
@@ -15901,7 +15906,8 @@
         "Use parser registry keyed by content type",
         "Validate JSON object/list and CSV headers",
         "Return accepted and rejected records with reasons",
-        "Bound bytes, records, and field lengths"
+        "Bound bytes, records, and field lengths",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_06."
       ],
       "failure_cases": [
         "Infer format from filename only",
@@ -15966,7 +15972,8 @@
         "Walk dicts and lists recursively",
         "Match configured field names case-insensitively where specified",
         "Replace sensitive values with fixed marker",
-        "Stop at max depth with review_required"
+        "Stop at max depth with review_required",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_07."
       ],
       "failure_cases": [
         "Convert whole payload to string",
@@ -16031,7 +16038,8 @@
         "Separate parsing from classification",
         "Return confidence and reason code",
         "Use review_required for ambiguous identifiers",
-        "Store minimal derived label"
+        "Store minimal derived label",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_08."
       ],
       "failure_cases": [
         "Return not_sensitive on parse error",
@@ -16096,7 +16104,8 @@
         "Canonicalize records for hashing",
         "Sort by stable key",
         "Detect exact duplicates separately from conflicts",
-        "Emit export checksum over final bytes"
+        "Emit export checksum over final bytes",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_09."
       ],
       "failure_cases": [
         "Merge records by display name",
@@ -16161,7 +16170,8 @@
         "Install structured logger around request handling",
         "Redact configured header names",
         "Log status, route, actor class, correlation ID, and reason code",
-        "Test captured logs"
+        "Test captured logs",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_10."
       ],
       "failure_cases": [
         "Log request.json for debugging",
@@ -16226,7 +16236,8 @@
         "Load trusted actor from header/session fixture",
         "Evaluate allowlisted action/resource/purpose matrix",
         "Return decision, policy version, and reason",
-        "Audit decision without secrets"
+        "Audit decision without secrets",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_11."
       ],
       "failure_cases": [
         "Trust actor roles in request JSON",
@@ -16291,7 +16302,8 @@
         "Create approval record with requester/approver separation",
         "Check expiration and scope on use",
         "Emit audit event for request and use",
-        "Deny expired or mismatched approvals"
+        "Deny expired or mismatched approvals",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_12."
       ],
       "failure_cases": [
         "Boolean is_admin_emergency bypass",
@@ -16356,7 +16368,8 @@
         "Parse Authorization bearer token only",
         "Hash token with server-side salt or compare stored digest",
         "Check scope, audience, expiry",
-        "Return generic unauthorized errors"
+        "Return generic unauthorized errors",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_13."
       ],
       "failure_cases": [
         "Store plaintext token",
@@ -16421,7 +16434,8 @@
         "Read raw body before parsing",
         "Build signed payload from timestamp and bytes",
         "Use hmac.new and compare_digest",
-        "Store delivery ID after successful verification"
+        "Store delivery ID after successful verification",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_14."
       ],
       "failure_cases": [
         "Sign parsed JSON instead of raw bytes",
@@ -16486,7 +16500,8 @@
         "Append event with actor/action/policy/outcome",
         "Hash canonical event plus previous digest",
         "Expose verifier scanning sequence",
-        "Store reason codes not raw payloads"
+        "Store reason codes not raw payloads",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_15."
       ],
       "failure_cases": [
         "Mutable audit list with no verifier",
@@ -16551,7 +16566,8 @@
         "Parse URL and resolve host",
         "Reject forbidden IP ranges with ipaddress",
         "Fetch with short timeout and byte cap",
-        "Validate every redirect target"
+        "Validate every redirect target",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_16."
       ],
       "failure_cases": [
         "Block only localhost string",
@@ -16616,7 +16632,8 @@
         "Decode once through framework",
         "Resolve root and candidate path",
         "Check relative_to root",
-        "Serve only files with allowed suffixes"
+        "Serve only files with allowed suffixes",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_17."
       ],
       "failure_cases": [
         "String prefix check",
@@ -16681,7 +16698,8 @@
         "Build WHERE with placeholders",
         "Map sort names to known columns",
         "Clamp limit/offset",
-        "Return generic error on sqlite exceptions"
+        "Return generic error on sqlite exceptions",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_18."
       ],
       "failure_cases": [
         "F-string SQL values",
@@ -16746,7 +16764,8 @@
         "Validate content type",
         "Parse JSON with size limit",
         "Use Pydantic model validators",
-        "Reject arbitrary object construction"
+        "Reject arbitrary object construction",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_19."
       ],
       "failure_cases": [
         "pickle.loads untrusted bytes",
@@ -16811,7 +16830,8 @@
         "Separate system instruction from quoted user content",
         "Map requested action to allowed tool schema",
         "Require approval token for effects",
-        "Validate returned action/result before side effect"
+        "Validate returned action/result before side effect",
+        "Runnable reference implementation: challenges/runnable/reference_app.py with test_reference_app.py::test_oai_flask_20."
       ],
       "failure_cases": [
         "Concatenate user text into system prompt",
