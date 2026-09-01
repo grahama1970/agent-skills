@@ -96,7 +96,11 @@ function hasRawHtmlTag(input) {
 
 function hasMarkdownLinkOrImage(input) {
   const raw = String(input || '');
-  return /!?\[[^\]]*\]\(/.test(raw) || /^\s*\[[^\]]+\]:/m.test(raw);
+  return /\]\(/.test(raw) || /^\s*\[[^\]]+\]:/m.test(raw);
+}
+
+function hasUnknownNamedHtmlEntity(input) {
+  return /&([a-zA-Z][a-zA-Z0-9]+);/.test(String(input || '').replaceAll(/&(${Array.from(HTML_ENTITIES.keys()).join('|')});/gi, ''));
 }
 
 function collectJsonStrings(value, out = []) {
@@ -300,12 +304,19 @@ function labelValues(visibleLines, label) {
 function requireExactLabeledValues(failures, actual, expected, code) {
   const actualValues = actual.map((value) => stripDefaultIgnorables(decodeBasicHtmlEntities(value).normalize('NFKC')).trim());
   const expectedValues = expected.map((value) => stripDefaultIgnorables(decodeBasicHtmlEntities(value).normalize('NFKC')).trim()).filter(Boolean);
-  if (actualValues.length !== expectedValues.length) {
+  if (actualValues.length !== expectedValues.length || new Set(expectedValues).size !== expectedValues.length) {
     failures.push(code);
     return;
   }
+  const counts = new Map();
+  for (const value of actualValues) counts.set(value, (counts.get(value) || 0) + 1);
   for (const value of expectedValues) {
-    if (!actualValues.includes(value)) failures.push(code);
+    const count = counts.get(value) || 0;
+    if (count < 1) failures.push(code);
+    else counts.set(value, count - 1);
+  }
+  for (const count of counts.values()) {
+    if (count !== 0) failures.push(code);
   }
 }
 
@@ -495,6 +506,14 @@ if (hasRawHtmlTag(preJsonText)) {
 if (hasMarkdownLinkOrImage(preJsonText)) {
   emit('reject', ['markdown_link_in_status_report'], {
     correction: 'Remove Markdown links/images from the Status Report region; link titles, destinations, image alt text, and generated attributes are not plain owned report prose.',
+  });
+}
+if (
+  hasUnknownNamedHtmlEntity(preJsonText)
+  || statusStringsForUnicode.some((value) => hasUnknownNamedHtmlEntity(value))
+) {
+  emit('reject', ['unknown_html_entity_in_status_report'], {
+    correction: 'Use plain ASCII text in Status Report prose and pi.agent_status.v1 string values; unrecognized named HTML entities can render hidden whitespace or controls.',
   });
 }
 if (

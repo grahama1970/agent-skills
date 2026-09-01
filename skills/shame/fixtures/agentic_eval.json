@@ -2577,6 +2577,84 @@
           "\"decision\":\"reject\""
         ]
       }
+    },
+    {
+      "name": "webgpt-hardening-duplicate-array-multiset-laundering",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs duplicate-array-multiset-laundering"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-markdown-nested-link-title-hidden-status-report",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs markdown-nested-link-title-hidden-status-report"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "webgpt-hardening-what-remains-tab-entity-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50",
+        "webgpt-blunt-review-followup"
+      ],
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs what-remains-tab-entity-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\":true",
+          "\"decision\":\"reject\""
+        ]
+      }
     }
   ],
   "seams": [
