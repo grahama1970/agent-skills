@@ -341,6 +341,25 @@ was exercised and what remains unverified. A status page, latest-proof list, or
 unit test is not an end-to-end claim unless the required live lane receipts are
 present.
 
+### Adversarial Trust-Gate Agentic Eval Lane
+
+The retained adversarial trust-boundary fixture is:
+
+```bash
+cd ${HOME}/workspace/experiments/tau
+/home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh run \
+  evals/tau_webgpt_adversarial_trust_agentic_eval.json \
+  --output /tmp/tau-webgpt-adversarial-trust-now.json
+```
+
+This lane exists to make Tau fail closed when agents lie: forged receipts,
+stale or cross-run lineage, verifier/reviewer bypass, join forgery, machine-made
+human acceptance, provider substitution, proof laundering, and post-proof
+artifact mutation. `READY` means those declared attacks were blocked or accepted
+exactly as expected; it does not prove live browser semantic quality,
+production-load provider identity, full five-DAG product completion, or human
+acceptance.
+
 ### DAG Visualization / Browser Inspection Lane
 
 Use Tau's packaged read-only React Flow viewer when a human or project agent

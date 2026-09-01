@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 // Data-first report checker for lazy-report-shame-shame-shame.
 // The only report contract is the final pi.agent_status.v1 JSON object.
-// Pydantic owns state legality; this file only extracts, duplicate-checks,
-// validates, and returns the validated object for the extension renderer.
+// Pydantic owns state/proof legality; this file only extracts, duplicate-checks,
+// invokes validation, and returns the validated object for the extension renderer.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
+import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-01.status-json-data-first.v5';
+const CHECKER_VERSION = '2026-09-01.status-json-data-first.v6';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
@@ -172,23 +172,18 @@ if (verdict.valid === true && run.status !== 0) {
 }
 
 if (verdict.valid !== true) {
-  emit('reject', ['invalid_agent_status_json'], {
-    pydantic_error: String(verdict.error || '').slice(0, 800),
+  const pydanticError = String(verdict.error || '');
+  const reason = pydanticError.includes('proof path does not exist')
+    ? 'proof_path_missing'
+    : pydanticError.includes('verified item is not backed by proof text')
+      ? 'verified_not_backed_by_proof'
+      : 'invalid_agent_status_json';
+  emit('reject', [reason], {
+    pydantic_error: pydanticError.slice(0, 800),
   });
 }
 
 const parsedStatus = JSON.parse(statusJson);
-const proofFailures = [];
-for (const proofPath of parsedStatus.proof || []) {
-  const path = isAbsolute(proofPath) ? proofPath : join(process.cwd(), proofPath);
-  try { statSync(path); } catch { proofFailures.push(proofPath); }
-}
-if (proofFailures.length) {
-  emit('reject', ['proof_path_missing'], {
-    missing_proof: proofFailures,
-    correction: 'Every proof[] entry must point at an existing local file or directory read back in this turn.',
-  });
-}
 emit('pass', ['valid_agent_status_json'], {
   state: verdict.state,
   status: parsedStatus,
