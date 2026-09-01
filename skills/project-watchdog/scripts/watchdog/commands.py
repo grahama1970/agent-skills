@@ -708,9 +708,15 @@ def _tick_locked(
     deadline = tick_deadline_seconds()
     started = time.monotonic()
     dispatch_plan: list[dict[str, Any]] = []
-    for index, issue in enumerate(issues[:max_tickets]):
+    # A lock-skipped issue must not burn a dispatch slot: one long-running
+    # repair otherwise starves every other routable ticket for its duration
+    # (observed 2026-09-01: #1553's held target consumed the slot on every
+    # tick for hours). Iterate the full routable list until the plan is full.
+    for index, issue in enumerate(issues):
+        if len(dispatch_plan) >= max_tickets:
+            break
         if defer_for_deadline(index, time.monotonic() - started, deadline):
-            receipt["deadline_deferred"] = [int(i["number"]) for i in issues[index:max_tickets]]
+            receipt["deadline_deferred"] = [int(i["number"]) for i in issues[index:]]
             receipt["stop_reason"] = "tick_deadline"
             log_event(
                 run_id, "tick_deadline_reached",
