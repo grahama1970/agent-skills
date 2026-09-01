@@ -125,6 +125,17 @@ def bridge_reveal(
 ) -> int:
     root = workspace or Path.cwd()
     request_script = Path(__file__).with_name("request_vscode_bridge.py")
+    target_desktop = current_desktop() if (place_window or frontmost) else None
+    if place_window or frontmost:
+        adjust_vscode_window(
+            path,
+            root,
+            monitor=monitor,
+            layout=layout,
+            place_window=place_window,
+            frontmost=False,
+            target_desktop=target_desktop,
+        )
     reveal = f"{path}:{location.line}:{location.col}:{location.end_line}:{location.end_col}"
     proc = subprocess.run(
         [
@@ -161,7 +172,15 @@ def bridge_reveal(
             pass
         time.sleep(0.5)
     if status == "revealed" and data.get("reveal", {}).get("selected") is True:
-        suffix = adjust_vscode_window(path, root, monitor=monitor, layout=layout, place_window=place_window, frontmost=frontmost)
+        suffix = adjust_vscode_window(
+            path,
+            root,
+            monitor=monitor,
+            layout=layout,
+            place_window=place_window,
+            frontmost=frontmost,
+            target_desktop=target_desktop,
+        )
         print(
             f"SELECTED {path.name}:{location.line}:{location.col}-{location.end_line}:{location.end_col} -- "
             f"VS Code API selection active; {suffix}"
@@ -194,6 +213,17 @@ def window_title_has(basename: str) -> bool:
     return any(basename in title for _, title in vscode_windows())
 
 
+def current_desktop() -> int | None:
+    xdotool = shutil.which("xdotool")
+    if not xdotool:
+        return None
+    try:
+        out = subprocess.run([xdotool, "get_desktop"], capture_output=True, text=True, timeout=5).stdout.strip()
+        return int(out)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+
+
 def monitor_geometry(which: str, layout: str) -> tuple[int, int, int, int] | None:
     xrandr = shutil.which("xrandr")
     if not xrandr:
@@ -224,8 +254,9 @@ def adjust_vscode_window(
     layout: str = "half-vertical",
     place_window: bool = False,
     frontmost: bool = False,
+    target_desktop: int | None = None,
 ) -> str:
-    if not place_window and not frontmost:
+    if not place_window and not frontmost and target_desktop is None:
         return "window unchanged"
     wmctrl = shutil.which("wmctrl")
     if not wmctrl or not os.environ.get("DISPLAY"):
@@ -235,6 +266,9 @@ def adjust_vscode_window(
         if path.name in title or (workspace_name and workspace_name in title):
             try:
                 parts: list[str] = []
+                if target_desktop is not None:
+                    subprocess.run([wmctrl, "-ir", window_id, "-t", str(target_desktop)], check=True, capture_output=True, text=True, timeout=5)
+                    parts.append(f"desktop {target_desktop}")
                 if place_window:
                     box = monitor_geometry(monitor, layout)
                     if box:
@@ -340,6 +374,7 @@ def main() -> int:
         layout=args.window_layout,
         place_window=args.place_window,
         frontmost=args.frontmost,
+        target_desktop=current_desktop() if args.frontmost else None,
     )
     if confirmed:
         print(f"REVEALED {path.name}:{line}:{col}-{end_line}:{end_col} ({label}) -- editor showing {path.name}; {suffix}")

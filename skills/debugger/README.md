@@ -129,6 +129,11 @@ The close command refuses unfiltered requests and does not include Remote SSH
 windows unless explicitly asked, so it is safe for project agents to show a plan
 before closing anything.
 
+If `--frontmost` is explicitly requested, `$debugger` resolves the current
+virtual desktop first and moves the VS Code window there before activation. KDE,
+`wmctrl`, and `xdotool` report desktop indexes from zero, so raw desktop `6` is
+"Desktop 7".
+
 Human prompt examples:
 
 - "Use `$debugger` to open the eval report at the failing `stderr` field, but do not steal focus."

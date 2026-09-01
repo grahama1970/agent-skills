@@ -98,6 +98,11 @@ VS Code window hygiene:
 `--include-remote` is explicitly supplied. Use this after a debugger handoff if
 VS Code windows accumulated, but do not close a human's unrelated project window.
 
+When `--frontmost` is explicitly requested, `$debugger` first reads the current
+virtual desktop with `xdotool get_desktop`, moves the VS Code window to that
+same desktop with `wmctrl -t`, and only then activates it. `wmctrl` and `xdotool`
+use zero-based desktop indexes: desktop `6` is the visible "Desktop 7".
+
 Prompt examples for humans:
 
 - "Use `$debugger` to open the failing receipt at `cases[].trials[].stderr`, but do not steal focus."

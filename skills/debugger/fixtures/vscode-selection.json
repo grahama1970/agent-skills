@@ -59,11 +59,11 @@
       "type": "positive",
       "required": true,
       "real_world": true,
-      "description": "Select the stderr JSON key, raise VS Code frontmost, and place it on the right monitor at half horizontal width and full vertical height.",
+      "description": "Select the stderr JSON key, raise VS Code frontmost on the current virtual desktop, and place it on the right monitor at half horizontal width and full vertical height.",
       "command": [
         "bash",
         "-c",
-        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; D=\"$WS/.vscode/debugger-bridge/selection-eval\"; mkdir -p \"$D\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; ../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --bridge --workspace \"$WS\" --monitor right --window-layout half-vertical --place-window --frontmost --wait-seconds 12"
+        "set -uo pipefail; WS=\"${DEBUGGER_VSCODE_WORKSPACE:-}\"; [ -z \"$WS\" ] && { echo BRIDGE_BLOCKED; exit 0; }; command -v xdotool >/dev/null || { echo BRIDGE_BLOCKED; exit 0; }; BEFORE_DESKTOP=$(xdotool get_desktop); D=\"$WS/.vscode/debugger-bridge/selection-eval\"; mkdir -p \"$D\"; printf '{\n  \"readiness\": \"READY\",\n  \"cases\": [{\"trials\": [{\"stderr\": \"boom\"}]}]\n}\n' > \"$D/report.json\"; OUT=$(../run.sh open \"$D/report.json\" --json-field cases[].trials[].stderr --bridge --workspace \"$WS\" --monitor right --window-layout half-vertical --place-window --frontmost --wait-seconds 12); AFTER_DESKTOP=$(xdotool get_desktop); printf '%s\n' \"$OUT\"; [ \"$BEFORE_DESKTOP\" = \"$AFTER_DESKTOP\" ] && echo DESKTOP_PRESERVED || { echo \"DESKTOP_SWITCHED before=$BEFORE_DESKTOP after=$AFTER_DESKTOP\"; exit 1; }"
       ],
       "timeout_seconds": 40,
       "blocked_when_stdout_contains": [
@@ -72,7 +72,9 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "SELECTED report.json:3:26-3:34 -- VS Code API selection active; frontmost; geometry 3840,0 1920x2160"
+          "SELECTED report.json:3:26-3:34 -- VS Code API selection active; frontmost",
+          "geometry 3840,0 1920x2160",
+          "DESKTOP_PRESERVED"
         ]
       }
     },
