@@ -643,8 +643,8 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"ok\":true",
-          "\"decision\":\"reject\""
+          "\"mode\":\"markdown-h2-heading\"",
+          "\"decision\":\"pass\""
         ]
       }
     },
@@ -1374,6 +1374,31 @@
       }
     },
     {
+      "name": "webgpt-hardening-remaining-fixes-continuing",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.webgpt_status_report_adversarial_50"
+      ],
+      "seams": [
+        "webgpt-status-report-adversarial-50"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && REPORT_CHECK=extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs skills/shame/scripts/probe-status-report-adversarial.mjs remaining-fixes-continuing"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"mode\":\"remaining-fixes-continuing\"",
+          "\"banned_unresolved_stop_without_needs_human\""
+        ]
+      }
+    },
+    {
       "name": "webgpt-50-what-remains-heading-continuing",
       "type": "adversarial",
       "real_world": true,
@@ -1745,6 +1770,31 @@
         "stdout_contains": [
           "\"ok\":true",
           "\"decision\":\"reject\""
+        ]
+      }
+    },
+    {
+      "name": "namespaced-mutating-tool-forces-status",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.strict_checker_contract"
+      ],
+      "seams": [
+        "report-check-policy"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && skills/shame/run.sh path >/dev/null && LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET=/tmp/lrsss-namespaced-mutating-packet.json skills/shame/scripts/probe-shame-extension.sh namespaced-mutating-tool-forces-status"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"mode\":\"namespaced-mutating-tool-forces-status\"",
+          "\"missing_agent_status_json\""
         ]
       }
     }

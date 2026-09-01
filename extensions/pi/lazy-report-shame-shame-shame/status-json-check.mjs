@@ -12,7 +12,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-01.status-report-json.v2';
+const CHECKER_VERSION = '2026-09-01.status-report-json.v3';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
@@ -35,6 +35,12 @@ const text = await new Promise((resolve) => {
 });
 
 const BANNED_SECTION_PHRASE = 'what remains';
+const BANNED_UNRESOLVED_STOP_PHRASES = [
+  'remaining work',
+  'remaining fixes',
+  'still remains',
+  'left to do',
+];
 const ZERO_WIDTH_CHARS = new Set(['\u200b', '\u200c', '\u200d', '\ufeff']);
 function normalizePolicyText(input) {
   return String(input || '')
@@ -46,8 +52,14 @@ function normalizePolicyText(input) {
     .toLowerCase();
 }
 
+function matchedBannedUnresolvedStopPhrase(input) {
+  const normalized = normalizePolicyText(input);
+  if (normalized.includes(BANNED_SECTION_PHRASE)) return BANNED_SECTION_PHRASE;
+  return BANNED_UNRESOLVED_STOP_PHRASES.find((phrase) => normalized.includes(phrase)) || null;
+}
+
 function mentionsBannedWhatRemains(input) {
-  return normalizePolicyText(input).includes(BANNED_SECTION_PHRASE);
+  return matchedBannedUnresolvedStopPhrase(input) === BANNED_SECTION_PHRASE;
 }
 
 function parseStatus(raw) {
@@ -170,10 +182,15 @@ function emit(decision, reasonCodes, extra = {}, footerFailures = []) {
 const extractedStatus = extractStatusJson(text);
 const statusJson = extractedStatus?.body || null;
 const statusState = statusStateFromJson(statusJson);
-if (mentionsBannedWhatRemains(text) && statusState !== 'needs_human') {
-  emit('reject', ['banned_what_remains_without_needs_human'], {
+const bannedUnresolvedStopPhrase = matchedBannedUnresolvedStopPhrase(text);
+if (bannedUnresolvedStopPhrase && statusState !== 'needs_human') {
+  const reason = bannedUnresolvedStopPhrase === BANNED_SECTION_PHRASE
+    ? 'banned_what_remains_without_needs_human'
+    : 'banned_unresolved_stop_without_needs_human';
+  emit('reject', [reason], {
     state: statusState,
-    correction: 'Do not use a "What remains" section unless pi.agent_status.v1 state is needs_human. Use continuing.not_done[].next_command for executable next work.',
+    phrase: bannedUnresolvedStopPhrase,
+    correction: 'Do not use unresolved-work stop sections unless pi.agent_status.v1 state is needs_human. Use continuing.not_done[].next_command for executable next work.',
   });
 }
 

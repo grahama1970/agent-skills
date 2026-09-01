@@ -41,6 +41,13 @@ function tokenize(text: unknown): string[] {
 function hasAnyToken(text: unknown, tokens: Set<string>): boolean {
   return tokenize(text).some((token) => tokens.has(token));
 }
+function baseToolName(toolName: unknown): string {
+  const raw = String(toolName || "").trim();
+  if (!raw) return "";
+  const dotted = raw.split(".").pop() || raw;
+  const slashed = dotted.split("/").pop() || dotted;
+  return slashed;
+}
 const SHAME_TOKENS = new Set(["$shame", "/shame"]);
 const GUARD_TOKENS = new Set(["$shame", "/shame", "$unlazy", "/unlazy"]);
 const CLOSED_TICKET_STATUSES = new Set(["closed", "done", "complete", "completed", "merged"]);
@@ -648,7 +655,7 @@ export default function lazyReportShameShameShame(pi: any) {
   });
 
   pi.on("tool_call", async (event: any) => {
-    const tool = String(event.toolName || "");
+    const tool = baseToolName(event.toolName);
     const input = event.input || {};
     const command = String(input.command || "");
     if (["edit", "write"].includes(tool)) mutatingTurn = true;
@@ -677,7 +684,7 @@ export default function lazyReportShameShameShame(pi: any) {
     if (event.message?.role !== "assistant") return;
     const text = contentToText(event.message.content);
     if (!text.trim()) return;
-    const forceStatus = sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
+    const forceStatus = mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
