@@ -95,7 +95,11 @@ def build_turn(args: argparse.Namespace, run_dir: Path) -> tuple[dict[str, Any],
             failed.append(f"{args.role}_turn_requires_audio")
         turn["requested_delivery_tone"] = args.tone
         chatterbox_utterance_text = getattr(args, "chatterbox_utterance_text", None)
+        tts_render_text = getattr(args, "tts_render_text", None) or chatterbox_utterance_text or text
         emotional_utterance_tags = getattr(args, "emotional_utterance_tags", None)
+        turn["answer_text_hash"] = "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+        turn["tts_render_text"] = str(tts_render_text).strip()
+        turn["tts_render_text_hash"] = "sha256:" + hashlib.sha256(turn["tts_render_text"].encode("utf-8")).hexdigest()
         if chatterbox_utterance_text:
             turn["chatterbox_utterance_text"] = chatterbox_utterance_text.strip()
         if emotional_utterance_tags:
@@ -214,6 +218,7 @@ def main() -> int:
     ap.add_argument("--tone", help="voiced turns (embry/horus) only: the delivery tone requested")
     ap.add_argument("--audio", help="voiced turns (embry/horus) only: rendered audio for this turn")
     ap.add_argument("--chatterbox-utterance-text", help="exact answer_text sent to Chatterbox, including inline event tags")
+    ap.add_argument("--tts-render-text", help="exact text submitted to TTS; defaults to chatterbox utterance text or clean text")
     ap.add_argument("--emotional-utterance-tags", help="comma-separated native Chatterbox event tags injected into answer_text")
     ap.add_argument("--chatterbox-pause-plan", help="JSON list of Chatterbox render chunks with pause_after_ms")
     ap.add_argument("--created-at", help="override the timestamp (tests, backfill)")

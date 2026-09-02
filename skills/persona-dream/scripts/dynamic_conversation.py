@@ -114,9 +114,10 @@ Return strict JSON: {{"question": "...", "tone": "<one tone from the list>"}}"""
             "grounding_observation_count": context.get("observation_count")}, receipt
 
 
-def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> Path:
+def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> dict[str, Any]:
+    tts_render_text = text[:700]
     request = {
-        "answer_text": text[:700], "label": label,
+        "answer_text": tts_render_text, "label": label,
         "use_blessed_qra_cache": False, "asr_verify": False,
         "voice_delivery": {"tone": tone, "pace": "measured", "pause_after_ms": 0},
         "ref_audio": HORUS_REF,
@@ -134,11 +135,21 @@ def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> Path:
     dest = run_dir / f"{label}.wav"
     import shutil
     shutil.copyfile(source, dest)
-    return dest
+    return {
+        "audio_path": dest,
+        "tts_render_text": tts_render_text,
+        "response": response,
+        "render_effects": {
+            "affect_effect": response.get("affect_effect"),
+            "pace_effect": response.get("pace_effect"),
+            "tag_handling": response.get("tag_handling"),
+        },
+    }
 
 
 def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | None,
            chatterbox_utterance_text: str | None = None,
+           tts_render_text: str | None = None,
            emotional_utterance_tags: list[str] | None = None,
            chatterbox_pause_plan: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     cmd = [sys.executable, str(ROOT / "scripts" / "append_conversation.py"),
@@ -149,6 +160,8 @@ def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | 
         cmd += ["--audio", str(audio)]
     if chatterbox_utterance_text:
         cmd += ["--chatterbox-utterance-text", chatterbox_utterance_text]
+    if tts_render_text:
+        cmd += ["--tts-render-text", tts_render_text]
     if emotional_utterance_tags:
         cmd += ["--emotional-utterance-tags", ",".join(emotional_utterance_tags)]
     if chatterbox_pause_plan:
@@ -179,29 +192,39 @@ def main() -> int:
     }
     for i in range(1, args.turns + 1):
         horus, tau_receipt = draft_horus_turn(run_dir, adapter, tones, args.opening_topic)
-        h_wav = speak_horus(sr, horus["question"], horus["tone"], run_dir,
-                            f"pd_horus_{run_dir.name}_t{i}_{abs(hash(horus['question'])) % 10**8}")
-        horus_append = append(run_dir, "horus", horus["question"], horus["tone"], h_wav)
+        horus_speech = speak_horus(sr, horus["question"], horus["tone"], run_dir,
+                                   f"pd_horus_{run_dir.name}_t{i}_{abs(hash(horus['question'])) % 10**8}")
+        h_wav = horus_speech["audio_path"]
+        horus_append = append(run_dir, "horus", horus["question"], horus["tone"], h_wav,
+                              tts_render_text=horus_speech["tts_render_text"])
         horus_turn = dict(horus_append.get("appended") or {})
 
         embry = sr.generate_and_speak(run_dir=run_dir, prompt_text=horus["question"])
         if embry.get("status") != "PASS_REPLY_SPOKEN":
             raise SystemExit(f"BLOCKED_EMBRY_TURN: {json.dumps(embry)[:300]}")
+        embry_tts_render_text = embry.get("tts_render_text") or embry.get("chatterbox_utterance_text")
         embry_append = append(run_dir, "embry", embry["text"], embry["tone"], run_dir / embry["audio"],
-                              embry.get("chatterbox_utterance_text"), embry.get("emotional_utterance_tags") or [],
+                              embry.get("chatterbox_utterance_text"), embry_tts_render_text,
+                              embry.get("emotional_utterance_tags") or [],
                               embry.get("chatterbox_pause_plan") or [])
         embry_turn = dict(embry_append.get("appended") or {})
 
         receipt["turn_pairs"].append({
             "pair": i,
             "horus": {**horus, "audio": h_wav.name, "audio_bytes": h_wav.stat().st_size,
+                      "tts_render_text": horus_speech.get("tts_render_text"),
+                      "tts_render_text_hash": horus_turn.get("tts_render_text_hash"),
                       "audio_sha256": horus_turn.get("audio_sha256"),
                       "tone_boundary": horus_turn.get("tone_boundary"),
+                      "render_effects": horus_speech.get("render_effects"),
                       "append_read_back": bool(horus_append.get("read_back")),
                       "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {}},
             "embry": {"text": embry["text"], "tone": embry["tone"], "audio": embry["audio"],
+                      "tts_render_text": embry_tts_render_text,
+                      "tts_render_text_hash": embry_turn.get("tts_render_text_hash"),
                       "audio_sha256": embry_turn.get("audio_sha256"),
                       "tone_boundary": embry_turn.get("tone_boundary"),
+                      "render_effects": {"affect_effect": embry.get("affect_effect"), "pace_effect": embry.get("pace_effect"), "tag_handling": embry.get("tag_handling")},
                       "append_read_back": bool(embry_append.get("read_back")),
                       "chatterbox_utterance_text": embry.get("chatterbox_utterance_text"),
                       "emotional_utterance_tags": embry.get("emotional_utterance_tags") or [],

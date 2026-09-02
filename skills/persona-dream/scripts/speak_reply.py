@@ -359,6 +359,7 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         "live": True,
         "asked": asked,
         "text": text,
+        "tts_render_text": chatterbox_utterance_text[:MAX_REPLY_CHARS],
         "chatterbox_utterance_text": chatterbox_utterance_text,
         "emotional_utterance_tags": emotional_utterance_tags,
         "chatterbox_pause_plan": (response.get("render_plan") or {}).get("chunks") or [],
@@ -381,6 +382,7 @@ def generate_and_speak(*, run_dir: Path, prompt_text: str | None = None) -> dict
         # What proves the tone was applied, as opposed to merely requested.
         "affect_effect": response.get("affect_effect"),
         "pace_effect": response.get("pace_effect"),
+        "tag_handling": response.get("tag_handling"),
         "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
         "boundary": (
             "She speaks only about her own inner state. Nothing she says here is "

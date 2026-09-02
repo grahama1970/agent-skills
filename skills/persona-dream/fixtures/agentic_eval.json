@@ -216,6 +216,15 @@
         "live_e2e": true
       },
       "id": "persona_dream.full_cycle.live"
+    },
+    {
+      "criticality": "critical",
+      "description": "Persona Dream requires an agent Chatterbox listening-signoff gate before any human listener collection; the gate consumes ops-chatterbox, ASR, audio hash, and analyze-chatterbox-emotions receipts and refuses human-perception claims from machine evidence alone.",
+      "evidence_required": {
+        "deterministic": true,
+        "live_e2e": true
+      },
+      "id": "persona_dream.agent_listening_signoff_prescreen"
     }
   ],
   "cases": [
@@ -1492,6 +1501,29 @@
       "supports_claims": [
         "persona_dream.panel_repair_work_order_executor"
       ],
+      "type": "positive"
+    },
+    {
+      "command": [
+        "bash",
+        "-lc",
+        "set -euo pipefail\nTMP=$(mktemp -d /tmp/persona-dream-agent-signoff-eval.XXXXXX)\nKEY=$(docker exec whisper sh -lc 'cat /var/lib/whisper/.api_key')\n../../ops-chatterbox/run.sh doctor --json > \"$TMP/doctor.json\"\n../../ops-chatterbox/run.sh health --url http://127.0.0.1:8018/health --json > \"$TMP/health.json\"\n../../ops-chatterbox/run.sh render-smoke --live --text 'Persona Dream agent signoff eval.' --json > \"$TMP/render_smoke.json\"\n../../ops-chatterbox/run.sh assess ../scripts/dynamic_conversation.py --json > \"$TMP/assess.json\"\n../run.sh validate-blinded-listener-study --asr --asr-api-key \"$KEY\" --json --out \"$TMP/validation.json\"\nmkdir -p \"$TMP/analyzer\"\npython3 - \"$TMP\" <<'PYSUB'\nimport json, subprocess, sys\nfrom pathlib import Path\ntmp=Path(sys.argv[1])\nvalidation=json.loads((tmp/'validation.json').read_text())\nprereg=json.loads(Path('../reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json').read_text())\nexpected=(prereg.get('stimulus_source') or {}).get('answer_text') or ''\nlabel_map={'neutral':'neutral','careful_concerned':'serious','firm_boundary':'angry','cheerful':'happy'}\nfor row in validation['stimuli']:\n    tone=(row.get('voice_delivery') or {}).get('tone') or 'neutral'\n    out=tmp/'analyzer'/f\"{row['stimulus_id']}_{row['condition']}.json\"\n    cmd=['../../analyze-chatterbox-emotions/run.sh','analyze','--audio',str((Path('../../..')/row['audio']['path']).resolve()),'--expected-text',expected,'--transcript',(row.get('asr') or {}).get('transcript') or '', '--target-label', label_map.get(tone,'neutral'), '--out', str(out), '--json']\n    subprocess.run(cmd, check=True)\nPYSUB\n../run.sh agent-listening-signoff --validation-receipt \"$TMP/validation.json\" --ops-doctor \"$TMP/doctor.json\" --ops-health \"$TMP/health.json\" --ops-render-smoke \"$TMP/render_smoke.json\" --ops-assess \"$TMP/assess.json\" --analyzer-dir \"$TMP/analyzer\" --out \"$TMP/signoff.json\" --json\npython3 - \"$TMP/signoff.json\" <<'PYSUB'\nimport json, sys\nr=json.load(open(sys.argv[1]))\nassert r['schema']=='persona_dream.agent_listening_signoff.v1'\nassert r['status']=='PASS_AGENT_LISTENING_SIGNOFF'\nassert r['human_collection_permitted'] is True\nassert r['passed_stimulus_count']==r['stimulus_count']==4\nassert not r['failed_gates']\nprint('PASS_AGENT_LISTENING_SIGNOFF_EVAL')\nPYSUB"
+      ],
+      "evidence_class": "live_e2e",
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_AGENT_LISTENING_SIGNOFF_EVAL"
+        ]
+      },
+      "name": "agent-listening-signoff-live-prescreen",
+      "notes": "Runs ops-chatterbox doctor/health/live render smoke/assess, validates the current listener-study stimuli with live ASR, analyzes each WAV with analyze-chatterbox-emotions, then requires agent-listening-signoff to permit human collection. This proves agent prescreen, not human perception.",
+      "readback": true,
+      "real_world": true,
+      "supports_claims": [
+        "persona_dream.agent_listening_signoff_prescreen"
+      ],
+      "timeout_seconds": 900,
       "type": "positive"
     }
   ],

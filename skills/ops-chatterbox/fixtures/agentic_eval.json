@@ -1,54 +1,44 @@
 {
-  "version": 2,
-  "skill": "ops-chatterbox",
-  "trials": 3,
-  "proof_scope": "deterministic ops-chatterbox CLI and receipt behavior",
-  "claims": {
-    "proves": "the skill entrypoint emits structured receipts for health failure, usage assessment, and live-render gating",
-    "does_not_prove": "live Chatterbox availability, model loading, acoustic effect, ASR accuracy, or Persona Dream emotional correctness"
-  },
   "cases": [
     {
-      "name": "live-doctor-receipt-readback",
-      "type": "positive",
-      "real_world": true,
       "command": [
         "bash",
         "-lc",
         "../run.sh doctor --json --out /tmp/ops-chatterbox-agentic-doctor.json >/tmp/ops-chatterbox-agentic-doctor.stdout && jq -e '.schema == \"ops_chatterbox.doctor_receipt.v1\" and .status == \"PASS_CHATTERBOX_DOCTOR\" and .live == true and .mocked == false and .checks.health_ok == true and .checks.container_running == true' /tmp/ops-chatterbox-agentic-doctor.json >/dev/null && echo PASS_LIVE_CHATTERBOX_DOCTOR_READBACK"
       ],
       "expected": {
+        "artifacts": [
+          {
+            "equals": "ops_chatterbox.doctor_receipt.v1",
+            "json_pointer": "/schema",
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json"
+          },
+          {
+            "equals": "PASS_CHATTERBOX_DOCTOR",
+            "json_pointer": "/status",
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json"
+          },
+          {
+            "equals": true,
+            "json_pointer": "/ok",
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json"
+          },
+          {
+            "equals": false,
+            "json_pointer": "/mocked",
+            "path": "/tmp/ops-chatterbox-agentic-doctor.json"
+          }
+        ],
         "exit_code": 0,
         "stdout_contains": [
           "PASS_LIVE_CHATTERBOX_DOCTOR_READBACK"
-        ],
-        "artifacts": [
-          {
-            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
-            "json_pointer": "/schema",
-            "equals": "ops_chatterbox.doctor_receipt.v1"
-          },
-          {
-            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
-            "json_pointer": "/status",
-            "equals": "PASS_CHATTERBOX_DOCTOR"
-          },
-          {
-            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
-            "json_pointer": "/ok",
-            "equals": true
-          },
-          {
-            "path": "/tmp/ops-chatterbox-agentic-doctor.json",
-            "json_pointer": "/mocked",
-            "equals": false
-          }
         ]
-      }
+      },
+      "name": "live-doctor-receipt-readback",
+      "real_world": true,
+      "type": "positive"
     },
     {
-      "name": "unreachable-health-receipt",
-      "type": "negative",
       "command": [
         "bash",
         "-lc",
@@ -61,11 +51,11 @@
           "\"status\": \"NEEDS_ATTENTION\"",
           "health_unreachable"
         ]
-      }
+      },
+      "name": "unreachable-health-receipt",
+      "type": "negative"
     },
     {
-      "name": "render-smoke-requires-live-flag",
-      "type": "adversarial",
       "command": [
         "bash",
         "-lc",
@@ -77,7 +67,45 @@
           "\"status\": \"BLOCKED_LIVE_FLAG_REQUIRED\"",
           "\"live\": false"
         ]
-      }
+      },
+      "name": "render-smoke-requires-live-flag",
+      "type": "adversarial"
+    },
+    {
+      "command": [
+        "bash",
+        "-lc",
+        "T=$(mktemp -d /tmp/ops-chatterbox-assess-good.XXXXXX)\ncat > \"$T/good.py\" <<'PYSUB'\nrequest = {\"answer_text\": clean_answer, \"tts_render_text\": rendered_text, \"voice_delivery\": policy}\nresponse = call_chatterbox(request)\naudio_ref = response.get(\"finished_response_audio\")\naudio_sha256 = sha_file(copy_audio_to_receipt_dir(audio_ref))\neffects = {\"affect_effect\": response.get(\"affect_effect\"), \"pace_effect\": response.get(\"pace_effect\")}\nPYSUB\n../run.sh assess \"$T/good.py\" --json --out \"$T/receipt.json\" >/tmp/ops-chatterbox-assess-good.stdout\njq -e '.schema == \"ops_chatterbox.assess_receipt.v1\" and .status == \"PASS_CHATTERBOX_USAGE_ASSESSMENT\" and .ok == true and (.issues | length == 0)' \"$T/receipt.json\" >/dev/null\ncp \"$T/receipt.json\" /tmp/ops-chatterbox-assess-good.json\necho PASS_CHATTERBOX_ASSESS_GOOD_READBACK"
+      ],
+      "expected": {
+        "artifacts": [
+          {
+            "equals": "PASS_CHATTERBOX_USAGE_ASSESSMENT",
+            "json_pointer": "/status",
+            "path": "/tmp/ops-chatterbox-assess-good.json"
+          },
+          {
+            "equals": true,
+            "json_pointer": "/ok",
+            "path": "/tmp/ops-chatterbox-assess-good.json"
+          }
+        ],
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_CHATTERBOX_ASSESS_GOOD_READBACK"
+        ]
+      },
+      "name": "usage-assessment-allows-receipt-backed-callers",
+      "notes": "The static assess command must allow a caller that keeps answer_text/tts_render_text separate, hashes copied audio, and records effect readbacks.",
+      "type": "positive"
     }
-  ]
+  ],
+  "claims": {
+    "does_not_prove": "live Chatterbox availability, model loading, acoustic effect, ASR accuracy, or Persona Dream emotional correctness",
+    "proves": "the skill entrypoint emits structured receipts for health failure, usage assessment, and live-render gating"
+  },
+  "proof_scope": "deterministic ops-chatterbox CLI and receipt behavior",
+  "skill": "ops-chatterbox",
+  "trials": 3,
+  "version": 2
 }

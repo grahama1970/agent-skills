@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""diagnose - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -258,13 +264,27 @@ def assess(
     patterns = [
         ("tag_echo_as_proof", r"tags_interpreted", "warning", "Do not treat tag_handling.tags_interpreted alone as acoustic proof; require ASR or per-render effect evidence."),
         ("raw_paralinguistic_tag", r"\[(laugh|chuckle|sigh|gasp|whispering|clear throat|cough|groan|sniff|shush)\]", "warning", "Normalize and gate Chatterbox tags; do not pass raw user controls directly."),
-        ("audio_without_hash", r"finished_response_audio", "warning", "Copy or hash rendered audio before using it as proof."),
-        ("voice_delivery_without_effect_readback", r"voice_delivery", "warning", "Read back affect_effect, pace_effect, tag_handling, or transcript evidence for voice_delivery claims."),
     ]
     for name, pattern, severity, message in patterns:
         for match in re.finditer(pattern, text, re.I):
             line = text[: match.start()].count("\n") + 1
             issues.append({"line": line, "pattern": name, "severity": severity, "message": message})
+    if "finished_response_audio" in text and "audio_sha256" not in text and "sha_file" not in text:
+        line = text.lower().find("finished_response_audio")
+        issues.append({
+            "line": text[:line].count("\n") + 1 if line >= 0 else 1,
+            "pattern": "audio_without_hash",
+            "severity": "warning",
+            "message": "Copy or hash rendered audio before using it as proof.",
+        })
+    if "voice_delivery" in text and not any(marker in text for marker in ("affect_effect", "pace_effect", "tag_handling", "transcript", "asr")):
+        line = text.find("voice_delivery")
+        issues.append({
+            "line": text[:line].count("\n") + 1 if line >= 0 else 1,
+            "pattern": "voice_delivery_without_effect_readback",
+            "severity": "warning",
+            "message": "Read back affect_effect, pace_effect, tag_handling, or transcript evidence for voice_delivery claims.",
+        })
     if "answer_text" in text and "tts_render_text" not in text:
         issues.append({
             "line": 1,

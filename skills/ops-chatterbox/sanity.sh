@@ -42,6 +42,23 @@ assert data["status"] == "NEEDS_ATTENTION"
 assert data["issues"]
 PY
 
+cat > "$tmpdir/good_chatterbox_call.py" <<'PY'
+request = {"answer_text": clean_answer, "tts_render_text": rendered_text, "voice_delivery": policy}
+response = call_chatterbox(request)
+audio_ref = response.get("finished_response_audio")
+audio_sha256 = sha_file(copy_audio_to_receipt_dir(audio_ref))
+effects = {"affect_effect": response.get("affect_effect"), "pace_effect": response.get("pace_effect")}
+PY
+"$SCRIPT_DIR/run.sh" assess "$tmpdir/good_chatterbox_call.py" --json > "$tmpdir/assess_good.json"
+python3 - "$tmpdir/assess_good.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1]))
+assert data["schema"] == "ops_chatterbox.assess_receipt.v1"
+assert data["status"] == "PASS_CHATTERBOX_USAGE_ASSESSMENT"
+assert data["ok"] is True
+assert data["issues"] == []
+PY
+
 "$SCRIPT_DIR/run.sh" render-smoke --text "sanity" --json > "$tmpdir/render_blocked.json"
 python3 - "$tmpdir/render_blocked.json" <<'PY'
 import json, sys
