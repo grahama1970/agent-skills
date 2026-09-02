@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "ops-docker",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "Docker operational readiness for the OpenAI FastAPI interview container handoff: dry-run redeploy discipline and fail-closed missing-stack behavior.",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "ops-docker can inspect the OpenAI interview compose handoff in dry-run mode and fail closed when an execute redeploy targets a missing stack.",
+    "does_not_prove": "actual production redeploy, registry pushes, Docker daemon health beyond invoked CLI checks, or cloud runtime readiness."
   },
   "cases": [
     {
@@ -17,7 +17,96 @@
       ],
       "expected": {
         "exit_code": 0
+      },
+      "evidence_class": "deterministic",
+      "real_world": true
+    },
+    {
+      "name": "openai-compose-redeploy-dry-run",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "ops_docker.openai_compose_dry_run"
+      ],
+      "seams": [
+        "ops_docker.redeploy_dry_run_openai"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh redeploy --stack /home/graham/workspace/experiments/openai-interview/docker-compose.yml --service control-plane"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Dry run complete",
+          "docker compose"
+        ]
+      },
+      "timeout_seconds": 60
+    },
+    {
+      "name": "execute-missing-stack-fails-closed",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "ops_docker.execute_missing_stack_fails"
+      ],
+      "seams": [
+        "ops_docker.redeploy_missing_stack"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh redeploy --stack /tmp/definitely-missing-openai-compose.yml --execute; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stderr_contains": [
+          "not found"
+        ]
+      },
+      "timeout_seconds": 30
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "ops_docker.openai_compose_dry_run",
+      "description": "ops-docker can produce a dry-run redeploy plan for the OpenAI interview docker-compose handoff without mutating containers.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
       }
+    },
+    {
+      "id": "ops_docker.execute_missing_stack_fails",
+      "description": "ops-docker refuses execute redeploy when the requested compose stack is missing.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "ops_docker.redeploy_dry_run_openai",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "ops_docker.openai_compose_dry_run",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "ops_docker.redeploy_missing_stack",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "ops_docker.execute_missing_stack_fails",
+      "required_evidence": [
+        "deterministic"
+      ]
     }
   ]
 }

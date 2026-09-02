@@ -1,93 +1,146 @@
 {
- "version": 2,
- "skill": "ops-terraform",
- "trials": 3,
- "proof_scope": "live terraform doctor/validate against a real cloned module, saved-plan summary math, and fail-closed outcomes without the binary or module; live public Registry API search and typed fail-closed HCP api/v2 token posture (401 path live)",
- "claims": {
-  "proves": "the skill detects real terraform posture through its CLI, summarizes a saved plan deterministically, and fails closed with typed failure_codes",
-  "does_not_prove": "plan against live state, apply, backend/state health, or provider authentication; authenticated HCP account details (needs a real TFE_TOKEN)"
- },
- "cases": [
-  {
-   "name": "live-check-real-module",
-   "type": "positive",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "export PATH=$HOME/.local/bin:$PATH; ../run.sh doctor && ../run.sh check $HOME/workspace/experiments/dwt-terraform-aws-helm-release"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"valid\": true"
-    ]
-   }
+  "version": 2,
+  "skill": "ops-terraform",
+  "trials": 3,
+  "proof_scope": "live terraform doctor/validate against a real cloned module, saved-plan summary math, and fail-closed outcomes without the binary or module; live public Registry API search and typed fail-closed HCP api/v2 token posture (401 path live)",
+  "claims": {
+    "proves": "the skill detects real terraform posture through its CLI, summarizes a saved plan deterministically, and fails closed with typed failure_codes",
+    "does_not_prove": "plan against live state, apply, backend/state health, or provider authentication; authenticated HCP account details (needs a real TFE_TOKEN)"
   },
-  {
-   "name": "plan-summary-counts",
-   "type": "positive",
-   "command": [
-    "bash",
-    "-c",
-    "../run.sh plan-summary ../fixtures/sample_plan.json"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"destroys\": 1",
-     "\"destructive\": true"
-    ]
-   }
-  },
-  {
-   "name": "missing-module-fails-closed",
-   "type": "negative",
-   "command": [
-    "bash",
-    "-c",
-    "export PATH=$HOME/.local/bin:$PATH; ../run.sh check /tmp/definitely-not-a-module-xyz; test $? -eq 1"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "no_terraform_module"
-    ]
-   }
-  },
-  {
-   "name": "live-registry-search",
-   "type": "positive",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "../run.sh registry vpc"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"status\": \"PASS\"",
-     "downloads"
-    ]
-   }
-  },
-  {
-   "name": "hcp-bad-token-typed-401",
-   "type": "negative",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "TFE_TOKEN=deliberately-bad ../run.sh hcp-status; test $? -eq 1"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "hcp_token_unauthorized"
-    ]
-   }
-  }
- ],
- "eval_kind": "skill_behavior"
+  "cases": [
+    {
+      "name": "live-check-real-module",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "export PATH=$HOME/.local/bin:$PATH; ../run.sh doctor && ../run.sh check $HOME/workspace/experiments/dwt-terraform-aws-helm-release"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"valid\": true"
+        ]
+      },
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "plan-summary-counts",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh plan-summary ../fixtures/sample_plan.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"destroys\": 1",
+          "\"destructive\": true"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "real_world": true
+    },
+    {
+      "name": "missing-module-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "export PATH=$HOME/.local/bin:$PATH; ../run.sh check /tmp/definitely-not-a-module-xyz; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "no_terraform_module"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "real_world": true
+    },
+    {
+      "name": "live-registry-search",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh registry vpc"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "downloads"
+        ]
+      },
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "hcp-bad-token-typed-401",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "TFE_TOKEN=deliberately-bad ../run.sh hcp-status; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "hcp_token_unauthorized"
+        ]
+      },
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "openai-terraform-check",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "ops_terraform.openai_validate_no_apply"
+      ],
+      "seams": [
+        "ops_terraform.openai_check"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "export PATH=$HOME/.local/bin:$PATH; ../run.sh check /home/graham/workspace/experiments/openai-interview/infra/terraform"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ops_terraform.check.v1",
+          "\"status\": \"PASS\""
+        ]
+      },
+      "timeout_seconds": 120
+    }
+  ],
+  "eval_kind": "skill_behavior",
+  "capability_claims": [
+    {
+      "id": "ops_terraform.openai_validate_no_apply",
+      "description": "ops-terraform validates the OpenAI interview Terraform module and reports typed PASS without planning or applying live state.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "ops_terraform.openai_check",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "ops_terraform.openai_validate_no_apply",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ]
 }

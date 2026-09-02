@@ -1,92 +1,158 @@
 {
- "version": 2,
- "skill": "terraform",
- "trials": 3,
- "proof_scope": "live terraform binary through scaffold->organize->check->deploy(plan gate) on a real temp root, plus typed fail-closed refusals (non-empty scaffold target, messy layout, apply without --yes) and the interview question artifact",
- "claims": {
-  "proves": "the skill scaffolds a valid best-practice layout that real `terraform validate` accepts, audits layout violations deterministically, gates apply behind --yes, and emits typed outcome envelopes",
-  "does_not_prove": "apply against a real cloud provider/backend, remote state health, or a completed human interview session (needs a live human in the /interview UI)"
- },
- "cases": [
-  {
-   "name": "scaffold-validate-live",
-   "type": "positive",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "export PATH=$HOME/.local/bin:$PATH; W=$(mktemp -d); trap 'rm -rf $W' EXIT; ../run.sh scaffold $W/p >/dev/null && ../run.sh check $W/p"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "\"status\": \"PASS\""
-    ]
-   }
+  "version": 2,
+  "skill": "terraform",
+  "trials": 3,
+  "proof_scope": "live terraform binary through scaffold->organize->check->deploy(plan gate) on a real temp root, plus typed fail-closed refusals (non-empty scaffold target, messy layout, apply without --yes) and the interview question artifact",
+  "claims": {
+    "proves": "the skill scaffolds a valid best-practice layout that real `terraform validate` accepts, audits layout violations deterministically, gates apply behind --yes, and emits typed outcome envelopes",
+    "does_not_prove": "apply against a real cloud provider/backend, remote state health, or a completed human interview session (needs a live human in the /interview UI)"
   },
-  {
-   "name": "organize-flags-messy-root",
-   "type": "negative",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "W=$(mktemp -d); trap 'rm -rf $W' EXIT; echo 'resource \"null_resource\" \"x\" {}' > $W/all.tf; touch $W/terraform.tfstate; ../run.sh organize $W; test $? -eq 1"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "layout_violations",
-     "no-state-in-root-vcs"
-    ]
-   }
-  },
-  {
-   "name": "apply-without-yes-fails-closed",
-   "type": "adversarial",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "export PATH=$HOME/.local/bin:$PATH; W=$(mktemp -d); trap 'rm -rf $W' EXIT; ../run.sh scaffold $W/p >/dev/null; cp $W/p/envs/dev.tfvars.example $W/p/envs/dev.tfvars; ../run.sh deploy $W/p --var-file $W/p/envs/dev.tfvars; RC=$?; test $RC -eq 1 && test ! -f $W/p/terraform.tfstate"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "apply_not_confirmed"
-    ]
-   }
-  },
-  {
-   "name": "scaffold-refuses-non-empty",
-   "type": "negative",
-   "real_world": true,
-   "command": [
-    "bash",
-    "-c",
-    "W=$(mktemp -d); trap 'rm -rf $W' EXIT; echo '' > $W/main.tf; ../run.sh scaffold $W; test $? -eq 1"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "target_not_empty"
-    ]
-   }
-  },
-  {
-   "name": "interview-artifact-shape",
-   "type": "positive",
-   "command": [
-    "bash",
-    "-c",
-    "W=$(mktemp -d); trap 'rm -rf $W' EXIT; ../run.sh interview --out $W/q.json --no-launch >/dev/null && grep -c '\"id\"' $W/q.json | awk '{ if ($1 >= 5) print \"interview_ok\"; else exit 1 }'"
-   ],
-   "expected": {
-    "exit_code": 0,
-    "stdout_contains": [
-     "interview_ok"
-    ]
-   }
-  }
- ]
+  "cases": [
+    {
+      "name": "scaffold-validate-live",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "export PATH=$HOME/.local/bin:$PATH; W=$(mktemp -d); trap 'rm -rf $W' EXIT; ../run.sh scaffold $W/p >/dev/null && ../run.sh check $W/p"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\""
+        ]
+      },
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "organize-flags-messy-root",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "W=$(mktemp -d); trap 'rm -rf $W' EXIT; echo 'resource \"null_resource\" \"x\" {}' > $W/all.tf; touch $W/terraform.tfstate; ../run.sh organize $W; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "layout_violations",
+          "no-state-in-root-vcs"
+        ]
+      },
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "apply-without-yes-fails-closed",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "export PATH=$HOME/.local/bin:$PATH; W=$(mktemp -d); trap 'rm -rf $W' EXIT; ../run.sh scaffold $W/p >/dev/null; cp $W/p/envs/dev.tfvars.example $W/p/envs/dev.tfvars; ../run.sh deploy $W/p --var-file $W/p/envs/dev.tfvars; RC=$?; test $RC -eq 1 && test ! -f $W/p/terraform.tfstate"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "apply_not_confirmed"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "terraform.openai_plan_only_handoff"
+      ],
+      "seams": [
+        "terraform.apply_confirmation_gate"
+      ]
+    },
+    {
+      "name": "scaffold-refuses-non-empty",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "W=$(mktemp -d); trap 'rm -rf $W' EXIT; echo '' > $W/main.tf; ../run.sh scaffold $W; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "target_not_empty"
+        ]
+      },
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "interview-artifact-shape",
+      "type": "positive",
+      "command": [
+        "bash",
+        "-c",
+        "W=$(mktemp -d); trap 'rm -rf $W' EXIT; ../run.sh interview --out $W/q.json --no-launch >/dev/null && grep -c '\"id\"' $W/q.json | awk '{ if ($1 >= 5) print \"interview_ok\"; else exit 1 }'"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "interview_ok"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "real_world": true
+    },
+    {
+      "name": "openai-terraform-module-check",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "terraform.openai_plan_only_handoff"
+      ],
+      "seams": [
+        "terraform.openai_module_check"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "export PATH=$HOME/.local/bin:$PATH; ../run.sh check /home/graham/workspace/experiments/openai-interview/infra/terraform"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\""
+        ]
+      },
+      "timeout_seconds": 120
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "terraform.openai_plan_only_handoff",
+      "description": "terraform skill validates the OpenAI interview module as a plan-only handoff and preserves apply behind an explicit confirmation gate.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "terraform.openai_module_check",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "terraform.openai_plan_only_handoff",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "terraform.apply_confirmation_gate",
+      "seam_type": "security/compliance/human-authority",
+      "criticality": "critical",
+      "claim_id": "terraform.openai_plan_only_handoff",
+      "required_evidence": [
+        "deterministic"
+      ]
+    }
+  ]
 }

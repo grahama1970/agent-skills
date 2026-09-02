@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "memory",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "Memory skill readiness for OpenAI interview recall and store/readback evidence boundaries.",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "Memory status works and a live OpenAI interview evidence document can be stored and read back through Memory HTTP endpoints.",
+    "does_not_prove": "direct ArangoDB/Qdrant mutation by application code, semantic ranking quality, or production retention policy."
   },
   "cases": [
     {
@@ -15,18 +15,22 @@
       "command": [
         "bash",
         "../run.sh",
-        "recall",
-        "--q",
-        "memory hardening trace checkpoint sanity",
-        "--brief"
+        "status"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "\"memory_first\": true",
-          "\"took_ms\""
+          "Connected to ArangoDB: memory"
         ]
-      }
+      },
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "memory.openai_recall"
+      ],
+      "seams": [
+        "memory.cli.recall_openai"
+      ],
+      "readback": true
     },
     {
       "name": "hardening-trace-human-checkpoint-contract",
@@ -38,7 +42,71 @@
       ],
       "expected": {
         "exit_code": 0
+      },
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "openai-interview-store-readback",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "readback": true,
+      "supports_claims": [
+        "memory.openai_store_readback"
+      ],
+      "seams": [
+        "memory.http.store_readback_openai"
+      ],
+      "command": [
+        "python3",
+        "-c",
+        "import json, time, urllib.request\nkey='openai-interview-skill-eval-'+str(int(time.time()*1000))\ndoc={'_key':key,'schema':'memory.openai_interview_skill_eval.v1','kind':'openai_interview_skill_eval','classification':'internal','tags':['openai-interview','agentic-evals'],'retrieval_text':'OpenAI interview skill-chain Memory store readback proof'}\nbody=json.dumps({'collection':'project_knowledge','document':doc}).encode()\nreq=urllib.request.Request('http://127.0.0.1:8601/store', data=body, headers={'content-type':'application/json'}, method='POST')\nwith urllib.request.urlopen(req, timeout=10) as r: r.read()\nbody=json.dumps({'collection':'project_knowledge','filters':{'_key':key},'limit':1}).encode()\nreq=urllib.request.Request('http://127.0.0.1:8601/list', data=body, headers={'content-type':'application/json'}, method='POST')\nwith urllib.request.urlopen(req, timeout=10) as r: out=json.loads(r.read().decode())\nassert out['count']==1 and out['documents'][0]['classification']=='internal'\nprint('MEMORY_OPENAI_READBACK_OK')"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MEMORY_OPENAI_READBACK_OK"
+        ]
+      },
+      "timeout_seconds": 60
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "memory.openai_recall",
+      "description": "Memory can answer a scoped OpenAI-interview recall query through the skill entrypoint.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
       }
+    },
+    {
+      "id": "memory.openai_store_readback",
+      "description": "Memory can store and read back a classified OpenAI interview proof document through service endpoints.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "memory.cli.recall_openai",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "claim_id": "memory.openai_recall",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "memory.http.store_readback_openai",
+      "seam_type": "persistent state/database/index",
+      "criticality": "critical",
+      "claim_id": "memory.openai_store_readback",
+      "required_evidence": [
+        "live_e2e"
+      ]
     }
   ]
 }

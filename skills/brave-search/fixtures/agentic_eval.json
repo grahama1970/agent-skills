@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "brave-search",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "OpenAI interview context grounding through Brave raw web search plus CLI wiring.",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "brave-search can ground the public OpenAI/Astra interview context with raw web results and a retained readback oracle.",
+    "does_not_prove": "Brave Summarizer/LLM Context entitlement, paid Answers access, or correctness beyond returned public search results."
   },
   "cases": [
     {
@@ -17,7 +17,77 @@
       ],
       "expected": {
         "exit_code": 0
+      },
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [],
+      "seams": []
+    },
+    {
+      "name": "openai-astra-public-context-search",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "readback": true,
+      "supports_claims": [
+        "brave_search.openai_context_grounding"
+      ],
+      "seams": [
+        "brave.web.openai_astra"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp); ../run.sh web 'OpenAI Astra Critical cybersecurity capability threshold Preparedness Framework' --count 5 --json > $OUT && python3 - $OUT <<'PYCODE'\nimport json, sys\nd=json.load(open(sys.argv[1]))\ntext=json.dumps(d).lower()\nassert 'openai.com' in text and 'astra' in text and 'preparedness framework' in text\nprint('OPENAI_ASTRA_CONTEXT_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OPENAI_ASTRA_CONTEXT_OK"
+        ]
+      },
+      "timeout_seconds": 180
+    },
+    {
+      "name": "missing-query-fails-closed",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [],
+      "seams": [],
+      "command": [
+        "bash",
+        "-c",
+        "../run.sh web; test $? -eq 2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stderr_contains": [
+          "Missing argument"
+        ]
+      },
+      "timeout_seconds": 60
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "brave_search.openai_context_grounding",
+      "description": "Brave raw web search returns public OpenAI/Astra context usable to ground Graham\u2019s interview skill chain.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
       }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "brave.web.openai_astra",
+      "seam_type": "external HTTP/API/provider",
+      "criticality": "critical",
+      "claim_id": "brave_search.openai_context_grounding",
+      "required_evidence": [
+        "live_e2e"
+      ]
     }
   ]
 }

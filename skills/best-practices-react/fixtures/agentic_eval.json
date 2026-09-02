@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "best-practices-react",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "React operator-surface standards for the OpenAI interview demo: data-qid, data-qs-action, title, and project verifier coverage.",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "best-practices-react can guard the OpenAI demo UI for data-qid/action/title affordances through the project verifier.",
+    "does_not_prove": "visual design quality, browser screenshot fidelity, full accessibility, or production UX readiness."
   },
   "cases": [
     {
@@ -17,7 +17,56 @@
       ],
       "expected": {
         "exit_code": 0
+      },
+      "evidence_class": "deterministic",
+      "real_world": true
+    },
+    {
+      "name": "openai-react-qid-action-title",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_react.openai_operator_surface"
+      ],
+      "seams": [
+        "react.openai_data_qid"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cat > /tmp/check_openai_react.py <<'PYCODE'\nfrom pathlib import Path\ntext='\\n'.join(p.read_text() for p in Path('/home/graham/workspace/experiments/openai-interview/web/src').rglob('*.tsx'))\nassert 'data-qid' in text and 'data-qs-action' in text and 'title=' in text\nprint('OPENAI_REACT_SOURCE_OK')\nPYCODE\npython3 /tmp/check_openai_react.py && cd /home/graham/workspace/experiments/openai-interview/web && npm run --silent test && npm run --silent verify:data-qid && grep -R 'data-qs-action' -n src && grep -R 'title=' -n src"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OK:",
+          "data-qs-action",
+          "title="
+        ]
+      },
+      "timeout_seconds": 120
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "best_practices_react.openai_operator_surface",
+      "description": "The OpenAI interview React surface exposes stable agent-testable controls using data-qid, data-qs-action, and title.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
       }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "react.openai_data_qid",
+      "seam_type": "browser/UI transport",
+      "criticality": "critical",
+      "claim_id": "best_practices_react.openai_operator_surface",
+      "required_evidence": [
+        "deterministic"
+      ]
     }
   ]
 }

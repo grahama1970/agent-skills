@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "best-practices-python",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "Python standards coverage for the OpenAI FastAPI interview service: Pydantic contracts, pyproject, module docstrings, file-size ceiling, and no obvious forbidden backend/storage patterns.",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "best-practices-python can guard the OpenAI FastAPI service for pyproject packaging, module docstrings, bounded file size, Pydantic contracts, and no PostgreSQL dependency.",
+    "does_not_prove": "full semantic correctness, production security, or complete static analysis."
   },
   "cases": [
     {
@@ -17,7 +17,55 @@
       ],
       "expected": {
         "exit_code": 0
+      },
+      "evidence_class": "deterministic",
+      "real_world": true
+    },
+    {
+      "name": "openai-python-service-standards",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_python.openai_fastapi_service"
+      ],
+      "seams": [
+        "python.openai_project_standards"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/openai-interview && uv run --extra dev python scripts/check_python_standards.py && python3 - <<'PYCODE'\nfrom pathlib import Path\ntext=Path('pyproject.toml').read_text().lower()\nassert 'fastapi' in text and 'pydantic' in text and 'postgres' not in text and 'sqlalchemy' not in text\nassert all(len(p.read_text().splitlines()) <= 800 for p in Path('src').rglob('*.py'))\nprint('OPENAI_PYTHON_STANDARDS_OK')\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PYTHON_STANDARDS_OK",
+          "OPENAI_PYTHON_STANDARDS_OK"
+        ]
+      },
+      "timeout_seconds": 120
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "best_practices_python.openai_fastapi_service",
+      "description": "The OpenAI interview Python service satisfies core Python project standards relevant to a FastAPI skill-chain demo.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
       }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "python.openai_project_standards",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "claim_id": "best_practices_python.openai_fastapi_service",
+      "required_evidence": [
+        "deterministic"
+      ]
     }
   ]
 }

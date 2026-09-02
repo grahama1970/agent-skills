@@ -12,34 +12,168 @@
       "name": "sanity",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "../sanity.sh"],
-      "expected": {"exit_code": 0, "stdout_contains": ["Result: PASS"]}
+      "command": [
+        "bash",
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Result: PASS"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_fastapi.openai_control_plane"
+      ],
+      "seams": [
+        "fastapi.docs.openai_control_plane"
+      ]
     },
     {
       "name": "convert-to-flask-generates-adapter",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh convert-to-flask route_manifest.json --out $OUT && grep -q \"@app.route('/eval/batch'\" $OUT && grep -q \"contracts.EvalBatchRequest.model_validate\" $OUT"],
-      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\""]}
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp); ../run.sh convert-to-flask route_manifest.json --out $OUT && grep -q \"@app.route('/eval/batch'\" $OUT && grep -q \"contracts.EvalBatchRequest.model_validate\" $OUT"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\""
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_fastapi.fallback_adapter"
+      ],
+      "seams": [
+        "fastapi.converter.flask_adapter"
+      ]
     },
     {
       "name": "invalid-manifest-fails-closed",
       "type": "negative",
       "real_world": true,
-      "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh convert-to-flask invalid_route_manifest.json --out $OUT; test $? -eq 1"],
-      "expected": {"exit_code": 0, "stderr_contains": ["manifest validation failed"]}
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp); ../run.sh convert-to-flask invalid_route_manifest.json --out $OUT; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stderr_contains": [
+          "manifest validation failed"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_fastapi.fallback_adapter"
+      ],
+      "seams": [
+        "fastapi.converter.flask_adapter"
+      ]
     },
     {
       "name": "skill-documents-memory-default-boundary",
       "type": "adversarial",
-      "command": ["bash", "-c", "grep -Fq 'default persistence boundary' ../SKILL.md && grep -Fq 'Qdrant directly' ../SKILL.md && grep -Fq 'Do not add a second database' ../SKILL.md && grep -Fq 'Memory-native method' ../SKILL.md"],
-      "expected": {"exit_code": 0}
+      "command": [
+        "bash",
+        "-c",
+        "grep -Fq 'default persistence boundary' ../SKILL.md && grep -Fq 'Qdrant directly' ../SKILL.md && grep -Fq 'Do not add a second database' ../SKILL.md && grep -Fq 'Memory-native method' ../SKILL.md"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_fastapi.openai_control_plane"
+      ],
+      "seams": [
+        "fastapi.docs.openai_control_plane"
+      ]
     },
     {
       "name": "skill-documents-terraform-external-boundary",
       "type": "adversarial",
-      "command": ["bash", "-c", "grep -q \"Terraform stays outside the app\" ../SKILL.md && grep -q \"Never reimplement\" ../SKILL.md"],
-      "expected": {"exit_code": 0}
+      "command": [
+        "bash",
+        "-c",
+        "grep -q \"Terraform stays outside the app\" ../SKILL.md && grep -q \"Never reimplement\" ../SKILL.md"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_fastapi.openai_control_plane"
+      ],
+      "seams": [
+        "fastapi.docs.openai_control_plane"
+      ]
+    },
+    {
+      "name": "openai-control-plane-contract-shape",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_fastapi.openai_control_plane"
+      ],
+      "seams": [
+        "fastapi.docs.openai_control_plane"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "grep -Fq 'Cyber-safety eval control-plane slice' ../SKILL.md && grep -Fq 'Memory stack' ../SKILL.md && grep -Fq 'Terraform stays outside the app' ../SKILL.md && grep -Fq 'FastAPI/React code is the demo surface' /home/graham/workspace/experiments/openai-interview/README.md"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "timeout_seconds": 30
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "best_practices_fastapi.openai_control_plane",
+      "description": "The skill encodes the FastAPI/Pydantic/Memory boundaries needed to quickly shape Graham\u2019s OpenAI interview control-plane artifact.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "best_practices_fastapi.fallback_adapter",
+      "description": "The skill can generate a Flask fallback adapter over shared Pydantic contracts/service logic without moving business logic into Flask.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "fastapi.docs.openai_control_plane",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "claim_id": "best_practices_fastapi.openai_control_plane",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "fastapi.converter.flask_adapter",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "best_practices_fastapi.fallback_adapter",
+      "required_evidence": [
+        "deterministic"
+      ]
     }
   ]
 }
