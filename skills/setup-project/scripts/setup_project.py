@@ -33,22 +33,59 @@ def load_config(path: Path) -> Config:
     return Config.model_validate(yaml.safe_load(path.read_text()))
 
 
-def curate_plan(config: Config) -> dict | None:
+def curate_receipt(config: Config, command: str) -> dict | None:
     if not config.curate_client_config:
         return None
     skill_dir = Path(__file__).resolve().parents[1]
     run = skill_dir.parent / "curate-client" / "run.sh"
     proc = subprocess.run(
-        [str(run), "plan", "--config", str(config.curate_client_config)],
+        [str(run), command, "--config", str(config.curate_client_config)],
         check=False,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        timeout=120,
+        timeout=180,
     )
     if proc.returncode != 0:
         return {"status": "FAIL", "returncode": proc.returncode, "stderr": proc.stderr[-2000:]}
     return json.loads(proc.stdout)
+
+
+def curate_plan(config: Config) -> dict | None:
+    return curate_receipt(config, "plan")
+
+
+def curate_verify(config: Config) -> dict | None:
+    return curate_receipt(config, "verify")
+
+
+def git_value(root: Path, *args: str) -> str:
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=root,
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=30,
+    )
+    return proc.stdout.strip()
+
+
+def assembly_evidence(root: Path) -> dict:
+    first = git_value(root, "rev-list", "--max-parents=0", "HEAD").splitlines()[0]
+    head = git_value(root, "rev-parse", "HEAD")
+    first_ts = int(git_value(root, "show", "-s", "--format=%ct", first))
+    head_ts = int(git_value(root, "show", "-s", "--format=%ct", head))
+    return {
+        "schema": "setup_project.assembly_evidence.v1",
+        "first_commit": first,
+        "head_commit": head,
+        "first_commit_unix": first_ts,
+        "head_commit_unix": head_ts,
+        "elapsed_seconds": max(0, head_ts - first_ts),
+        "commit_count": int(git_value(root, "rev-list", "--count", "HEAD")),
+    }
 
 
 def plan(config: Config) -> dict:
@@ -72,6 +109,7 @@ def plan(config: Config) -> dict:
         "required_skills": config.required_skills,
         "steps": steps,
         "curate_client_plan": curate_plan(config),
+        "assembly_evidence": assembly_evidence(config.project_root),
         "writes": False,
     }
 
@@ -90,6 +128,7 @@ def audit(config: Config) -> dict:
         except json.JSONDecodeError:
             goal_ok = False
     curate = curate_plan(config)
+    curate_check = curate_verify(config)
     problems = []
     if missing_files:
         problems.append({"code": "missing_files", "items": missing_files})
@@ -99,6 +138,8 @@ def audit(config: Config) -> dict:
         problems.append({"code": "immutable_goal_invalid", "path": str(goal_path)})
     if curate and curate.get("status") != "PASS":
         problems.append({"code": "curate_client_plan_failed", "detail": curate})
+    if curate_check and curate_check.get("status") != "PASS":
+        problems.append({"code": "curate_client_verify_failed", "detail": curate_check})
     return {
         "schema": "setup_project.audit_receipt.v1",
         "status": "PASS" if not problems else "FAIL",
@@ -107,6 +148,9 @@ def audit(config: Config) -> dict:
         "project_root": str(root),
         "required_skills": config.required_skills,
         "curate_client_plan_status": curate.get("status") if curate else None,
+        "curate_client_verify_status": curate_check.get("status") if curate_check else None,
+        "curate_client_probe_count": len(curate_check.get("probes", [])) if curate_check else 0,
+        "assembly_evidence": assembly_evidence(root),
         "missing_files": missing_files,
         "missing_readme_terms": missing_readme,
         "immutable_goal_valid": goal_ok,

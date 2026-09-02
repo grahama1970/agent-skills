@@ -32,6 +32,8 @@ readme_must_contain:
   - $best-practices-readme
   - $agentic-evals
   - Ask targeted questions
+  - Assembly evidence
+  - skills/curate-client/run.sh verify --config skills/curate-client/configs/openai_privacy_2026_09.yaml
   - Not claimed
 proof_commands:
   - bash scripts/verify.sh
