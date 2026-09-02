@@ -24,10 +24,12 @@
       },
       "evidence_class": "deterministic",
       "supports_claims": [
-        "best_practices_fastapi.openai_control_plane"
+        "best_practices_fastapi.openai_control_plane",
+        "best_practices_fastapi.swagger_openapi_harness"
       ],
       "seams": [
-        "fastapi.docs.openai_control_plane"
+        "fastapi.docs.openai_control_plane",
+        "fastapi.docs.swagger_openapi_harness"
       ]
     },
     {
@@ -122,15 +124,38 @@
       "evidence_class": "deterministic",
       "real_world": true,
       "supports_claims": [
-        "best_practices_fastapi.openai_control_plane"
+        "best_practices_fastapi.openai_control_plane",
+        "best_practices_fastapi.swagger_openapi_harness"
       ],
       "seams": [
-        "fastapi.docs.openai_control_plane"
+        "fastapi.docs.openai_control_plane",
+        "fastapi.docs.swagger_openapi_harness"
       ],
       "command": [
         "bash",
         "-c",
         "grep -Fq 'Cyber-safety eval control-plane slice' ../SKILL.md && grep -Fq 'Memory stack' ../SKILL.md && grep -Fq 'Terraform stays outside the app' ../SKILL.md && grep -Fq 'FastAPI/React code is the demo surface' /home/graham/workspace/experiments/openai-interview/README.md"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "timeout_seconds": 30
+    },
+    {
+      "name": "skill-documents-swagger-openapi-demo-harness",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": [
+        "best_practices_fastapi.swagger_openapi_harness"
+      ],
+      "seams": [
+        "fastapi.docs.swagger_openapi_harness"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "grep -Fq 'Swagger/OpenAPI as a demo harness' ../SKILL.md && grep -Fq 'Body(..., openapi_examples' ../SKILL.md && grep -Fq 'tryItOutEnabled' ../SKILL.md && grep -Fq 'API-key security scheme' ../SKILL.md && grep -Fq 'data-qid' ../SKILL.md && grep -Fq 'externalDocs' ../SKILL.md && grep -Fq 'x-code-location' ../SKILL.md && grep -Fq 'Uvicorn reload restarts the server' ../SKILL.md && grep -Fq 'OpenAI Actions' ../SKILL.md"
       ],
       "expected": {
         "exit_code": 0
@@ -154,6 +179,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "best_practices_fastapi.swagger_openapi_harness",
+      "description": "The skill encodes how to turn standard FastAPI Swagger/OpenAPI into a purposeful interview/demo harness without custom frontend work.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "seams": [
@@ -171,6 +204,15 @@
       "seam_type": "filesystem/process",
       "criticality": "critical",
       "claim_id": "best_practices_fastapi.fallback_adapter",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "fastapi.docs.swagger_openapi_harness",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "claim_id": "best_practices_fastapi.swagger_openapi_harness",
       "required_evidence": [
         "deterministic"
       ]

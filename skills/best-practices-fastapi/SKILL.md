@@ -85,10 +85,52 @@ a team requires Flask.
   Terraform inside FastAPI.
 - `/docs` is acceptable for an interview demo; lock it down or disable it for a
   production deployment.
+- When `/docs` is the demo surface, make OpenAPI carry the story: concise
+  Markdown `description`, purpose-named `openapi_tags`, route `summary` and
+  `description`, reusable request examples, `tryItOutEnabled`, request duration
+  display, and a real API-key security scheme so Swagger has one **Authorize**
+  flow instead of repeated header fields.
+
+## Swagger/OpenAPI as a demo harness
+
+Use standard Swagger UI before building a custom frontend when the audience
+needs to inspect and execute API contracts. The minimum useful layer is:
+
+1. `FastAPI(description=...)` with a short mission, quickstart, skill chain, and
+   explicit non-claims.
+2. `openapi_tags` that group routes by user meaning, not default module names.
+3. Route-level `summary` and `description` that state what skill boundary is
+   crossed and what the endpoint deliberately does not prove.
+4. `Body(..., openapi_examples={...})` for every non-trivial request body so a
+   live demo uses named dropdown scenarios instead of hand-typed JSON.
+5. `swagger_ui_parameters={"tryItOutEnabled": True, "displayRequestDuration": True,
+   "docExpansion": "list"}` for low-friction interview walkthroughs.
+6. A dependency-backed API-key scheme, such as `APIKeyHeader` plus `Security`, so
+   Swagger exposes one **Authorize** button.
+7. One optional zero-body readiness route, for example `/v1/eval/test-all`, only
+   when it composes already-existing checks. Do not add a new backend subsystem
+   just to make a demo button.
+8. If a project agent must operate Swagger, inject stable `data-qid` attributes
+   into the generated page and keep the injector tiny: authorize input/button,
+   operation blocks, summaries, and the visible Execute/Try-it-out controls.
+9. If a human must jump from Swagger to code, use FastAPI/OpenAPI's built-in
+   `externalDocs` route metadata for a stable GitHub/source link.
+10. If a project agent must jump from a route to local code, add
+   `x-code-location` to each OpenAPI operation with `file`, `line`, `symbol`,
+   and a `$debugger open ... --function ... --bridge` command.
+11. If live editing matters, add a small `/docs` polling script that fetches
+    `/openapi.json` with `cache: 'no-store'` and reloads only when that schema
+    changes. Uvicorn reload restarts the server; it does not refresh an already
+    open Swagger browser tab.
+
+Do not build a bespoke dashboard until standard OpenAPI cannot answer the
+interview question. The machine-facing contract is `/openapi.json`; Tau, MCP
+bridges, OpenAI Actions, or other agent harnesses can consume that schema
+directly. Swagger is for humans, OpenAPI is for agents.
 
 ## Cyber-safety eval control-plane slice
 
-For the OpenAI/Astra-style prep artifact, v1 should do only this:
+For an OpenAI-relevant prep artifact, v1 should do only this:
 
 1. `POST /eval/batch` accepts a Pydantic batch request.
 2. The service runs one authorized skill path, such as bounded `$hack` probe or
