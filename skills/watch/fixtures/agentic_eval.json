@@ -1,22 +1,67 @@
 {
   "version": 2,
   "skill": "watch",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "trials": 2,
+  "proof_scope": "live entrypoint behavior: full sanity e2e (memory recall, scene elements, persona records) plus fail-closed source resolution",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "sanity.sh e2e passes live (memory daemon, watch_content recall, scene element pipeline), and run.sh fails closed with clear errors on unresolvable or non-media sources",
+    "does_not_prove": "movie acquisition via ingest-movie/Radarr, diarization runtime, YOLO identity ledger behavior (covered by the npm immutable-goal gate), or long-video rolling-window quality"
   },
+  "capability_claims": [
+    {
+      "id": "watch.sanity.e2e_live",
+      "description": "End-to-end sanity: CLI loads, memory recall over watch_content answers questions, scene element and persona records are recallable",
+      "criticality": "critical",
+      "evidence_required": {"live_e2e": true}
+    },
+    {
+      "id": "watch.source_resolution.fail_closed",
+      "description": "Unresolvable or non-media sources exit non-zero with an explanatory error instead of silently succeeding",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    }
+  ],
   "cases": [
     {
-      "name": "sanity",
+      "name": "sanity-e2e-live",
       "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["watch.sanity.e2e_live"],
+      "command": ["bash", "-c", "mkdir -p out && OUT=$PWD/out && cd .. && ./sanity.sh && curl -sf -X POST http://127.0.0.1:8601/recall -H 'Content-Type: application/json' -d '{\"q\":\"watch scene elements\",\"collections\":[\"watch_content\"],\"k\":1}' > \"$OUT/recall_readback.json\""],
+      "timeout_seconds": 600,
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "stdout_contains": ["e2e sanity PASS", "0 failed"],
+        "artifacts": [
+          {"path": "out/recall_readback.json", "json_pointer": "/found", "equals": true}
+        ]
+      }
+    },
+    {
+      "name": "unresolvable-source-fails-closed",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["watch.source_resolution.fail_closed"],
+      "command": ["bash", "-c", "cd .. && ./run.sh /nonexistent/video.mp4"],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["cannot resolve"]
+      }
+    },
+    {
+      "name": "directory-as-source-fails-closed",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": ["watch.source_resolution.fail_closed"],
+      "command": ["bash", "-c", "cd .. && ./run.sh /tmp"],
+      "timeout_seconds": 120,
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": ["ffprobe failed"]
       }
     }
   ]

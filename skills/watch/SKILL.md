@@ -41,6 +41,7 @@ complies:
   - best-practices-python
   - best-practices-agent
   - best-practices-scillm
+  - best-practices-react
 disciplines:
   - data-engineering
   - extraction
