@@ -91,6 +91,7 @@ def _snapshot(ip: str) -> dict[str, Any]:
         ("player", "getPlayerStatus"),
         ("eq_stat", "EQGetStat"),
         ("output_mode", "getNewAudioOutputHardwareMode"),
+        ("subwoofer", "getSubLPF"),
     ]:
         ok, val = _api(ip, cmd)
         if not ok or (isinstance(val, str) and "unknown command" in val.lower()):
@@ -201,6 +202,16 @@ def _findings(snap: dict[str, Any]) -> list[dict[str, str]]:
     if isinstance(out, dict) and not out.get("not_supported"):
         findings.append({"finding": "output_mode", "detail": str(out),
                          "next": "verify speaker-out (not fixed line-out) mode is expected"})
+    sub = snap.get("subwoofer")
+    if isinstance(sub, dict) and not sub.get("not_supported"):
+        if str(sub.get("status")) == "0":
+            findings.append({"finding": "sub_out_disabled",
+                             "detail": f"SUB OUT toggle is OFF (known firmware bug: amp drops it after standby): {sub}",
+                             "next": "re-enable with `setSubLPF:status:1` (or WiiM Home app) and retest"})
+        elif str(sub.get("plugged")) == "0":
+            findings.append({"finding": "sub_not_plugged",
+                             "detail": f"amp does not sense a cable in SUB OUT: {sub}",
+                             "next": "reseat the RCA at the amp SUB OUT jack"})
     if not findings:
         findings.append({"finding": "no_config_cause_observed",
                          "detail": "no mute/low-volume/EQ cause visible in reported state",

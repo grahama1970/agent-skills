@@ -26,6 +26,7 @@
           "ops_wiim.diagnosis.v1",
           "\"status\": \"up\"",
           "findings",
+          "subwoofer",
           "not_observable"
         ]
       }
