@@ -155,7 +155,7 @@
       "command": [
         "bash",
         "-c",
-        "grep -Fq 'Swagger/OpenAPI as a demo harness' ../SKILL.md && grep -Fq 'Body(..., openapi_examples' ../SKILL.md && grep -Fq 'tryItOutEnabled' ../SKILL.md && grep -Fq 'API-key security scheme' ../SKILL.md && grep -Fq 'data-qid' ../SKILL.md && grep -Fq 'externalDocs' ../SKILL.md && grep -Fq 'x-code-location' ../SKILL.md && grep -Fq 'Uvicorn reload restarts the server' ../SKILL.md && grep -Fq 'OpenAI Actions' ../SKILL.md"
+        "grep -Fq 'Swagger/OpenAPI as a demo harness' ../SKILL.md && grep -Fq 'Body(..., openapi_examples' ../SKILL.md && grep -Fq 'tryItOutEnabled' ../SKILL.md && grep -Fq 'API-key security scheme' ../SKILL.md && grep -Fq 'data-qid' ../SKILL.md && grep -Fq 'externalDocs' ../SKILL.md && grep -Fq 'x-code-location' ../SKILL.md && grep -Fq 'x-artifact-location' ../SKILL.md && grep -Fq 'Uvicorn reload restarts the server' ../SKILL.md && grep -Fq 'OpenAI Actions' ../SKILL.md"
       ],
       "expected": {
         "exit_code": 0

@@ -22,6 +22,7 @@ grep -q "Authorize" "$SCRIPT_DIR/SKILL.md"
 grep -q "data-qid" "$SCRIPT_DIR/SKILL.md"
 grep -q "externalDocs" "$SCRIPT_DIR/SKILL.md"
 grep -q "x-code-location" "$SCRIPT_DIR/SKILL.md"
+grep -q "x-artifact-location" "$SCRIPT_DIR/SKILL.md"
 grep -q "Uvicorn reload restarts the server" "$SCRIPT_DIR/SKILL.md"
 echo "PASS"
 

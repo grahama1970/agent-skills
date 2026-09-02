@@ -118,7 +118,11 @@ needs to inspect and execute API contracts. The minimum useful layer is:
 10. If a project agent must jump from a route to local code, add
    `x-code-location` to each OpenAPI operation with `file`, `line`, `symbol`,
    and a `$debugger open ... --function ... --bridge` command.
-11. If live editing matters, add a small `/docs` polling script that fetches
+11. If an endpoint returns a generated artifact such as SVG, HTML, JSON, or a
+   report, also add `x-artifact-location` with the artifact file, line, source
+   link, and `$debugger open ... --line ... --bridge` command. The endpoint
+   handler and the returned artifact both need a local code jump.
+12. If live editing matters, add a small `/docs` polling script that fetches
     `/openapi.json` with `cache: 'no-store'` and reloads only when that schema
     changes. Uvicorn reload restarts the server; it does not refresh an already
     open Swagger browser tab.
