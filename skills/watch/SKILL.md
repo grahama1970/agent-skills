@@ -33,6 +33,7 @@ composes:
   - ingest-movie          # Acquisition + SRT scene analysis (owns search, Radarr, subtitle quality)
   - scillm
   - task-monitor
+  - ops-worktrees          # clean-worktree gate runs via wt-managed worktrees
   - voice-segment-selector # Orpheus candidate review/export and synthetic SFX gap-fill
   - unsloth-studio       # downstream train/eval loop ownership
   - agentic-evals
@@ -301,6 +302,29 @@ npm --prefix skills/watch/ui run prove:immutable-goal
 ```
 
 `sanity.sh` does not replace the live immutable goal gate.
+
+### Running the gate from a dirty primary checkout ($ops-worktrees)
+
+The gate's `assertCleanWorktree` requires a clean monorepo tree, but the
+primary agent-skills checkout is permanently dirty by policy. Do not weaken
+the gate and do not clean the primary checkout. Compose `$ops-worktrees`:
+
+```bash
+cd ${HOME}/workspace/experiments/agent-skills
+~/.local/bin/wt switch --create --base origin/main watch-immutable-gate
+skills/ops-worktrees/run.sh register ../agent-skills.watch-immutable-gate --purpose "watch immutable gate"
+cd ../agent-skills.watch-immutable-gate
+npm --prefix skills/watch/ui ci
+npm --prefix skills/watch/ui run prove:immutable-goal
+git add skills/watch/proofs/immutable-goal && git commit -m "watch: immutable gate PASS at <sha>"
+git push origin watch-immutable-gate:main
+~/.local/bin/wt remove   # or leave it; the hourly worktree-reap cron archives/removes safely
+```
+
+Known live-gate precondition: the `watch-diarization` container silently loses
+CUDA after host driver updates while `/healthz` still reports `ok:true` with
+`model_loaded:false`. `docker restart watch-diarization`, then one warm-up
+POST to `/v1/audio/diarizations`, restores `model_loaded:true` on cuda.
 
 ## Commands
 
