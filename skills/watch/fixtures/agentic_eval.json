@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "watch",
   "trials": 2,
-  "proof_scope": "live entrypoint behavior: full sanity e2e (memory recall, scene elements, persona records) plus fail-closed source resolution",
+  "proof_scope": "live entrypoint behavior: full sanity e2e (memory recall, scene elements, persona records), per-feature pipeline runs (frames, SRT transcript, emotion analysis, reports), and fail-closed source resolution",
   "claims": {
-    "proves": "sanity.sh e2e passes live (memory daemon, watch_content recall, scene element pipeline), and run.sh fails closed with clear errors on unresolvable or non-media sources",
+    "proves": "sanity.sh e2e passes live; the pipeline extracts frames, parses English SRT transcript, detects SRT emotion cues, and writes report.json/md/html on a real video; run.sh fails closed on bad sources",
     "does_not_prove": "movie acquisition via ingest-movie/Radarr, diarization runtime, YOLO identity ledger behavior (covered by the npm immutable-goal gate), or long-video rolling-window quality"
   },
   "capability_claims": [
@@ -12,13 +12,49 @@
       "id": "watch.sanity.e2e_live",
       "description": "End-to-end sanity: CLI loads, memory recall over watch_content answers questions, scene element and persona records are recallable",
       "criticality": "critical",
-      "evidence_required": {"live_e2e": true}
+      "evidence_required": {
+        "live_e2e": true
+      }
     },
     {
       "id": "watch.source_resolution.fail_closed",
       "description": "Unresolvable or non-media sources exit non-zero with an explanatory error instead of silently succeeding",
       "criticality": "critical",
-      "evidence_required": {"deterministic": true}
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "watch.frames.extraction",
+      "description": "Uniform/scene-change frame extraction produces a frames manifest with real frame files",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "watch.transcript.srt_parse",
+      "description": "English SRT is parsed into transcript.json segments",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "watch.scenes.emotion_analysis",
+      "description": "SRT emotion/cue analysis finds tagged scenes (shout/rage cues)",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "watch.report.generation",
+      "description": "Every run writes report.json, report.md, and report.html with scene rows",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -27,14 +63,27 @@
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "supports_claims": ["watch.sanity.e2e_live"],
-      "command": ["bash", "-c", "mkdir -p out && OUT=$PWD/out && cd .. && ./sanity.sh && curl -sf -X POST http://127.0.0.1:8601/recall -H 'Content-Type: application/json' -d '{\"q\":\"watch scene elements\",\"collections\":[\"watch_content\"],\"k\":1}' > \"$OUT/recall_readback.json\""],
+      "supports_claims": [
+        "watch.sanity.e2e_live"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p out && OUT=$PWD/out && cd .. && ./sanity.sh && curl -sf -X POST http://127.0.0.1:8601/recall -H 'Content-Type: application/json' -d '{\"q\":\"watch scene elements\",\"collections\":[\"watch_content\"],\"k\":1}' > \"$OUT/recall_readback.json\""
+      ],
       "timeout_seconds": 600,
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["e2e sanity PASS", "0 failed"],
+        "stdout_contains": [
+          "e2e sanity PASS",
+          "0 failed"
+        ],
         "artifacts": [
-          {"path": "out/recall_readback.json", "json_pointer": "/found", "equals": true}
+          {
+            "path": "out/recall_readback.json",
+            "json_pointer": "/found",
+            "equals": true
+          }
         ]
       }
     },
@@ -43,12 +92,20 @@
       "type": "negative",
       "real_world": true,
       "evidence_class": "deterministic",
-      "supports_claims": ["watch.source_resolution.fail_closed"],
-      "command": ["bash", "-c", "cd .. && ./run.sh /nonexistent/video.mp4"],
+      "supports_claims": [
+        "watch.source_resolution.fail_closed"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh /nonexistent/video.mp4"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 1,
-        "stderr_contains": ["cannot resolve"]
+        "stderr_contains": [
+          "cannot resolve"
+        ]
       }
     },
     {
@@ -56,12 +113,75 @@
       "type": "adversarial",
       "real_world": true,
       "evidence_class": "deterministic",
-      "supports_claims": ["watch.source_resolution.fail_closed"],
-      "command": ["bash", "-c", "cd .. && ./run.sh /tmp"],
+      "supports_claims": [
+        "watch.source_resolution.fail_closed"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh /tmp"
+      ],
       "timeout_seconds": 120,
       "expected": {
         "exit_code": 1,
-        "stderr_contains": ["ffprobe failed"]
+        "stderr_contains": [
+          "ffprobe failed"
+        ]
+      }
+    },
+    {
+      "name": "pipeline-per-feature-real-video",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "watch.frames.extraction",
+        "watch.transcript.srt_parse",
+        "watch.scenes.emotion_analysis",
+        "watch.report.generation"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$PWD/out/feat && rm -rf \"$OUT\" && mkdir -p \"$OUT\" && cd .. && ffmpeg -y -loglevel error -f lavfi -i testsrc=duration=8:size=320x240:rate=10 -f lavfi -i sine=frequency=440:duration=8 -shortest \"$OUT/test.mp4\" && printf '1\\n00:00:01,000 --> 00:00:03,000\\n[SHOUTING] I WILL DESTROY YOU\\n\\n2\\n00:00:04,000 --> 00:00:06,000\\ncalm line here\\n' > \"$OUT/test.srt\" && ./run.sh \"$OUT/test.mp4\" --subtitle \"$OUT/test.srt\" --emotion rage --fps 1 --no-whisper --out-dir \"$OUT/run\" --json > /dev/null"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "out/feat/run/frames_manifest.json",
+            "json_pointer": "/sampling_mode",
+            "equals": "uniform"
+          },
+          {
+            "path": "out/feat/run/frames_manifest.json",
+            "json_pointer": "/frame_count",
+            "equals": 8
+          },
+          {
+            "path": "out/feat/run/transcript.json",
+            "json_pointer": "/segments/1/text",
+            "equals": "calm line here"
+          },
+          {
+            "path": "out/feat/run/scenes.json",
+            "json_pointer": "/matches/0/tags/0",
+            "equals": "shout"
+          },
+          {
+            "path": "out/feat/run/report.json",
+            "min_bytes": 200
+          },
+          {
+            "path": "out/feat/run/report.md",
+            "min_bytes": 200
+          },
+          {
+            "path": "out/feat/run/report.html",
+            "min_bytes": 500
+          }
+        ]
       }
     }
   ]
