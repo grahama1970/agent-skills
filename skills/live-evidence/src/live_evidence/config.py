@@ -119,7 +119,7 @@ class AppSettings(BaseModel):
     request_timeout_s: float = Field(default=4.0, gt=0.1, le=120.0)
     subprocess_timeout_s: float = Field(default=5.0, gt=0.1, le=120.0)
     max_cards: int = Field(default=40, ge=5, le=200)
-    max_transcript_events: int = Field(default=160, ge=20, le=500)
+    max_transcript_events: int = Field(default=500, ge=20, le=500)
 
     @classmethod
     def from_env(
@@ -190,7 +190,7 @@ class AppSettings(BaseModel):
             request_timeout_s=float(os.getenv("LIVE_EVIDENCE_HTTP_TIMEOUT", "4")),
             subprocess_timeout_s=float(os.getenv("LIVE_EVIDENCE_PROCESS_TIMEOUT", "5")),
             max_cards=int(os.getenv("LIVE_EVIDENCE_MAX_CARDS", "40")),
-            max_transcript_events=int(os.getenv("LIVE_EVIDENCE_MAX_TRANSCRIPT_EVENTS", "160")),
+            max_transcript_events=int(os.getenv("LIVE_EVIDENCE_MAX_TRANSCRIPT_EVENTS", "500")),
         )
 
     def load_profile(self) -> InterviewProfile:

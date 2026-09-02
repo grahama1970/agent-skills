@@ -515,6 +515,60 @@
       "notes": "Compiles all available DriveWealth 5-10 minute mock interviews into Memory-shaped interview/question/reviewed-answer/skill-chain/source nodes plus edge docs for Memory /live-evidence/oracle-pack and known-or-similar-question recall."
     },
     {
+      "name": "drivewealth-synthetic-interviews-pydantic-receipt",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "readback": true,
+      "command": [
+        "bash",
+        "-c",
+        "E=\"$(mktemp -d \"${TMPDIR:-/tmp}/live-evidence-agentic-eval-XXXXXX\")\"; O=\"${TMPDIR:-/tmp}/live-evidence-drivewealth-synthetic-interviews-current.json\"; rm -f \"$O\"; trap 'rm -rf \"$E\"' EXIT; UV_PROJECT_ENVIRONMENT=\"$E\" bash ../run.sh eval-synthetic-interviews --gap 1 --output \"$O\""
+      ],
+      "timeout_seconds": 420,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "pydantic receipt validation: PASS",
+          "\"schema\": \"live_evidence.synthetic_interview_eval_receipt.v1\"",
+          "\"status\": \"PASS\"",
+          "synthetic interviews: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-drivewealth-synthetic-interviews-current.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-synthetic-interviews-current.json",
+            "json_pointer": "/totals/interviews",
+            "equals": 10
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-synthetic-interviews-current.json",
+            "json_pointer": "/totals/turns",
+            "equals": 90
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-synthetic-interviews-current.json",
+            "json_pointer": "/results/0/pass_floor",
+            "equals": 7
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-synthetic-interviews-current.json",
+            "json_pointer": "/results/0/ok",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-synthetic-interviews-current.json",
+            "json_pointer": "/results/9/ok",
+            "equals": true
+          }
+        ]
+      },
+      "notes": "DriveWealth mock interview replay through a real Live Evidence server with fixture transcript turns. Pydantic computes pass_floor, per-interview ok, aggregate totals, and receipt status; the agentic-evals case reads the JSON receipt back instead of trusting stdout prose. This proves scanner/card behavior for scripted text, not live audio/STT."
+    },
+    {
       "name": "drivewealth-mock-interview-memory-upsert-recall-readback",
       "type": "adversarial",
       "real_world": true,
@@ -643,6 +697,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "pydantic receipt validation: PASS",
           "drivewealth meeting quality: PASS",
           "DriveWealth meeting 15/15"
         ],
@@ -651,6 +706,11 @@
             "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
             "json_pointer": "/status",
             "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
+            "json_pointer": "/pydantic_validated",
+            "equals": true
           },
           {
             "path": "/tmp/live-evidence-drivewealth-meeting-quality-current/campaign-report.json",
@@ -719,6 +779,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "pydantic receipt validation: PASS",
           "DriveWealth meeting 1/1: dw-principal-core-07",
           "drivewealth meeting quality: PASS"
         ],
@@ -727,6 +788,11 @@
             "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
             "json_pointer": "/status",
             "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/pydantic_validated",
+            "equals": true
           },
           {
             "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
@@ -752,6 +818,11 @@
             "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
             "json_pointer": "/question_total",
             "equals": 4
+          },
+          {
+            "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
+            "json_pointer": "/whole_transcript_pass_count",
+            "equals": 1
           },
           {
             "path": "/tmp/live-evidence-drivewealth-meeting07-livecoding-current/campaign-report.json",
@@ -2066,6 +2137,101 @@
         ]
       },
       "notes": "Regression for DriveWealth 8799 failure: older lessons rows must not outrank client_interview_qa answer-bank rows for client-scoped HUD searches."
+    },
+    {
+      "name": "timeline-shows-questions-not-transcript",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && node --experimental-strip-types scripts/eval_question_lineage.mts"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "question-lineage eval: PASS"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/live-evidence-question-lineage-eval.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/tmp/live-evidence-question-lineage-eval.json",
+            "json_pointer": "/checks/statement_closing_filtered",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-question-lineage-eval.json",
+            "json_pointer": "/checks/lineage_collapsed_to_latest",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-question-lineage-eval.json",
+            "json_pointer": "/checks/scenario_prompt_survives",
+            "equals": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "resolver-ledger-dedupe-contract",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest tests/test_question_ledger.py -q"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "three-agent-scanner-and-leases",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest tests/test_scanner.py tests/test_answer_leases.py tests/test_question_ledger.py -q"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "course-correction-prefill-safe-and-pydantic-validated",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest tests/test_scanner.py tests/test_reviewer.py -q"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0
+      }
+    },
+    {
+      "name": "reviewer-fires-on-any-published-answer",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run --project . pytest tests/test_reviewer_hook.py tests/test_reviewer.py -q"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0
+      }
     }
   ]
 }

@@ -22,7 +22,9 @@ import sys
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
 SKILL = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL / "scripts"))
@@ -65,6 +67,58 @@ INTERVIEW_CONTEXT = {
 }
 
 DEFAULT_OUT = Path("/mnt/storage12tb/skills/live-evidence/drivewealth-meeting-quality")
+
+
+class CampaignThresholds(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    min_meeting_pass_rate: float = Field(ge=0.0, le=1.0)
+    min_question_pass_rate: float = Field(ge=0.0, le=1.0)
+
+
+class DriveWealthMeetingQualityReceipt(BaseModel):
+    """Validate that the campaign verdict follows the numeric oracle fields."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+
+    schema_: Literal["live_evidence.drivewealth_meeting_quality_eval.v1"] = Field(
+        alias="schema"
+    )
+    status: Literal["PASS", "FAIL"]
+    mocked: Literal[False]
+    live: Literal[True]
+    requested_meetings: NonNegativeInt
+    attempted_meetings: NonNegativeInt
+    meeting_pass_count: NonNegativeInt
+    question_pass_count: NonNegativeInt
+    question_total: NonNegativeInt
+    whole_transcript_pass_count: NonNegativeInt
+    meeting_pass_rate: float = Field(ge=0.0, le=1.0)
+    question_pass_rate: float = Field(ge=0.0, le=1.0)
+    whole_transcript_pass_rate: float = Field(ge=0.0, le=1.0)
+    thresholds: CampaignThresholds
+    oracle_memory_prep: dict[str, Any]
+    reports: list[dict[str, Any]]
+    failures: list[dict[str, Any]]
+
+    @model_validator(mode="after")
+    def verdict_matches_counts(self) -> "DriveWealthMeetingQualityReceipt":
+        if self.meeting_pass_count > self.attempted_meetings:
+            raise ValueError("meeting_pass_count cannot exceed attempted_meetings")
+        if self.question_pass_count > self.question_total:
+            raise ValueError("question_pass_count cannot exceed question_total")
+        if self.whole_transcript_pass_count > self.attempted_meetings:
+            raise ValueError("whole_transcript_pass_count cannot exceed attempted_meetings")
+        expected = "PASS" if (
+            self.oracle_memory_prep.get("ok") is True
+            and self.attempted_meetings == self.requested_meetings
+            and self.question_total > 0
+            and self.meeting_pass_rate >= self.thresholds.min_meeting_pass_rate
+            and self.whole_transcript_pass_rate >= self.thresholds.min_question_pass_rate
+        ) else "FAIL"
+        if self.status != expected:
+            raise ValueError(f"status {self.status} does not match computed {expected}")
+        return self
 
 
 def _words(text: str, *, limit: int = 5) -> list[str]:
@@ -196,10 +250,6 @@ def _meeting_from_turns(meeting_id: str, title: str, turns: list[dict[str, Any]]
     oracles = []
     for index, turn in enumerate(turns):
         transcript.append({"speaker": "Interviewer", "text": turn["text"]})
-        transcript.append({
-            "speaker": "Candidate",
-            "text": "I would talk through the tradeoffs, write the smallest safe design, and verify it with receipts before expanding scope.",
-        })
         oracles.append(_oracle_from_turn(turn, meeting_id=meeting_id, index=index, root=root))
     transcript.append({
         "speaker": "Interviewer",
@@ -220,6 +270,34 @@ def _meeting_from_turns(meeting_id: str, title: str, turns: list[dict[str, Any]]
         "transcript": transcript,
         "oracle": oracles,
     }
+
+
+def _whole_transcript_similarity(
+    meeting: dict[str, Any], rows: list[dict[str, Any]], key: str
+) -> dict[str, Any]:
+    """Judge the whole transcript's expected Q/A bundle against all produced cards."""
+
+    expected = "\n\n".join(
+        f"{item['id']}\nQuestion: {item['question']}\nExpected: {item['expected_answer']}"
+        for item in meeting.get("oracle") or []
+    )
+    cards = [row.get("payload") or {} for row in rows if row.get("kind") == "evidence_card"]
+    actual = "\n\n".join(
+        f"Card {index + 1}\nQuestion: {card.get('question') or card.get('query') or ''}\n"
+        f"Answer: {card.get('answer') or ''}\nEvidence: {card.get('evidence') or ''}"
+        for index, card in enumerate(cards)
+    )
+    if not cards:
+        return {"similar": False, "reason": "no evidence cards were produced", "card_count": 0}
+    verdict = transcript_eval.judge_similarity(
+        "Do these Live Evidence cards answer the complete DriveWealth meeting transcript?",
+        expected,
+        actual,
+        "",
+        key,
+    )
+    verdict["card_count"] = len(cards)
+    return verdict
 
 
 def build_meetings(root: Path, *, meeting_count: int, questions_per_meeting: int) -> list[dict[str, Any]]:
@@ -383,10 +461,18 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
                     "prep_pack": meeting.get("prep_pack"),
                     "profile": "drivewealth",
                     "script": [{"text": turn["text"]} for turn in meeting["transcript"]],
+                    "oracle": meeting.get("oracle") or [],
                 }
                 try:
                     rows, invocation = meeting_campaign.capture_live_session(session, meeting_dir)
                     report = transcript_eval.score_meeting(meeting, rows, key, meeting_dir)
+                    whole = _whole_transcript_similarity(meeting, rows, key)
+                    report["whole_transcript_similarity"] = whole
+                    report["whole_transcript_answer_similar"] = bool(whole.get("similar"))
+                    report["status"] = "PASS" if whole.get("similar") else "FAIL"
+                    (meeting_dir / "meeting-report.json").write_text(
+                        json.dumps(report, indent=1) + "\n", encoding="utf-8"
+                    )
                     report["bridge_invocation"] = invocation
                 except RuntimeError as exc:
                     report = {
@@ -418,9 +504,13 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
         if q.get("detected") and q.get("answer_similar")
     )
     meeting_pass = sum(1 for r in reports if r.get("status") == "PASS")
+    whole_transcript_pass = sum(
+        1 for r in reports if r.get("whole_transcript_answer_similar") is True
+    )
     attempted = len(reports)
     question_pass_rate = round(question_pass / question_total, 3) if question_total else 0.0
     meeting_pass_rate = round(meeting_pass / attempted, 3) if attempted else 0.0
+    whole_transcript_pass_rate = round(whole_transcript_pass / attempted, 3) if attempted else 0.0
     status = "PASS" if (
         prep["ok"]
         and attempted == expected_meetings
@@ -442,8 +532,10 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
         "meeting_pass_count": meeting_pass,
         "question_pass_count": question_pass,
         "question_total": question_total,
+        "whole_transcript_pass_count": whole_transcript_pass,
         "meeting_pass_rate": meeting_pass_rate,
         "question_pass_rate": question_pass_rate,
+        "whole_transcript_pass_rate": whole_transcript_pass_rate,
         "family_counts": dict(family_counts),
         "family_pass": dict(family_pass),
         "thresholds": {
@@ -454,10 +546,15 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
         "reports": reports,
         "failures": failures,
     }
-    (out_dir / "campaign-report.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
-    print(f"drivewealth meeting quality: {status} meetings={meeting_pass}/{attempted} questions={question_pass}/{question_total}")
+    validated = DriveWealthMeetingQualityReceipt.model_validate(receipt).model_dump(
+        by_alias=True
+    )
+    validated["pydantic_validated"] = True
+    (out_dir / "campaign-report.json").write_text(json.dumps(validated, indent=2) + "\n", encoding="utf-8")
+    print("pydantic receipt validation: PASS")
+    print(f"drivewealth meeting quality: {validated['status']} meetings={meeting_pass}/{attempted} questions={question_pass}/{question_total}")
     print(f"drivewealth meeting quality receipt: {out_dir / 'campaign-report.json'}")
-    return receipt
+    return validated
 
 
 def main() -> int:

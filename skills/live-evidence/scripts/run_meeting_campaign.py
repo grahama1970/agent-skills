@@ -31,6 +31,7 @@ import os
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -105,18 +106,25 @@ def synthesize_script(lines: list[dict[str, Any]], work: Path) -> Path:
             "tone": "curious" if speaker == "interviewer" else "careful",
             "pace": "neutral" if speaker == "interviewer" else "measured",
         }
-        request = urllib.request.Request(
-            f"{CHATTERBOX}/synthesize",
-            data=json.dumps(payload).encode(),
-            headers={"Content-Type": "application/json"}, method="POST",
-        )
-        with urllib.request.urlopen(request, timeout=180) as response:
-            payload = json.loads(response.read().decode())
         wav = CHATTERBOX_LOGS / f"{label}.wav"
         if not wav.is_file():
-            wav = Path(str(payload.get("path") or ""))
-        if not wav.is_file():
-            raise RuntimeError(f"chatterbox produced no wav for line {index}")
+            last_error = None
+            for attempt in range(3):
+                request = urllib.request.Request(
+                    f"{CHATTERBOX}/synthesize",
+                    data=json.dumps(payload).encode(),
+                    headers={"Content-Type": "application/json"}, method="POST",
+                )
+                try:
+                    with urllib.request.urlopen(request, timeout=180) as response:
+                        response_payload = json.loads(response.read().decode())
+                    wav = Path(str(response_payload.get("path") or wav))
+                    break
+                except (urllib.error.URLError, ConnectionError, TimeoutError, OSError) as exc:
+                    last_error = exc
+                    time.sleep(2 * (attempt + 1))
+            if not wav.is_file():
+                raise RuntimeError(f"chatterbox produced no wav for line {index}: {last_error}")
         pieces.append(wav)
     # Keep the demo human-audible and mechanically distinguishable: interviewer
     # turns are panned left, candidate turns are panned right. RealtimeSTT still
@@ -218,22 +226,18 @@ def capture_live_session(
             playback_target=sink, capture_target=sink, capture_kind="sink-monitor",
             docker_image="live-evidence-realtimestt-gpu:local",
             max_seconds=max_seconds, tail_seconds=2.5,
-            model="base.en", realtime_model="tiny.en", compute_type="int8",
+            model="base.en", realtime_model="tiny.en", device="cpu", compute_type="int8",
         )
         invocation = oracle_mod.run_bridge(
             bridge_args, backend_url=server.url, source_wav=wav, output_dir=out_dir,
         )
         # Let late resolver/solver work land: the last question often arrives
-        # in the final flushed at stream end, so wait for the journal to
-        # QUIESCE (no growth for 12s) instead of a fixed sleep that races the
-        # in-flight solve (observed live: the QRA card lost to a 30s cutoff).
-        # A solve journals nothing between its ledger opening and its card, so
-        # size-quiescence alone still races the last in-flight answer. Wait
-        # until every OPENED question has a card or an explicit discard, then
-        # a short idle, capped hard at 120s.
+        # in the final flushed at stream end. Duplicate cards can satisfy a raw
+        # count before the final distinct question is scanned, so wait for real
+        # journal quiescence plus settled opened questions, capped hard.
         journal_path = None
         rows: list[dict[str, Any]] = []
-        deadline = time.monotonic() + 120
+        deadline = time.monotonic() + 180
         last_size, quiet_since = -1, time.monotonic()
         while time.monotonic() < deadline:
             journal_path = next(server.data_dir.glob("*/session.jsonl"), None)
@@ -247,7 +251,7 @@ def capture_live_session(
             settled = {r["payload"].get("question_id") for r in rows
                        if r.get("kind") == "evidence_card"
                        or "discard" in str(r.get("kind"))}
-            if not (opened - settled) and time.monotonic() - quiet_since >= 8:
+            if not (opened - settled) and time.monotonic() - quiet_since >= 30:
                 break
             time.sleep(2)
     finally:

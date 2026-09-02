@@ -1,6 +1,8 @@
 """Transcript-to-evidence orchestration."""
 from __future__ import annotations
 import asyncio
+import json
+import os
 from time import monotonic
 from loguru import logger
 from .config import AppSettings, InterviewProfile
@@ -43,6 +45,11 @@ from .summarizer import ExtractiveSummarizer
 from .surface_selector import SurfaceSelector
 from .surface_policy import should_force_surface_source_backed_code
 from .question_window import QuestionWindowBuilder, candidate_thread
+from .reviewer import AnswerReviewer
+from .scanner import QuestionScanner, scanner_key
+from . import scanner_fallback
+from .coordinator_review import review_published_answer
+from .coordinator_retrieve import _should_solve_with_ask, retrieve
 from .query_bounds import bounded_query
 from .trigger import TriggerDecision
 class EvidenceCoordinator:
@@ -75,6 +82,270 @@ class EvidenceCoordinator:
         self._solved_revisions: set[tuple[str, int]] = set()
         self._held: dict[tuple[str, int], dict] = {}
         self._assistant_utterances: list[str] = []
+        # 3-agent architecture: one scanner owns question identity; two answer
+        # workers hold exclusive per-question leases. Scanner mode replaces the
+        # grammar-trigger path when enabled (default on).
+        self._scanner = QuestionScanner()
+        self._ready_queue: asyncio.Queue[tuple[str, int, TriggerDecision]] = asyncio.Queue()
+        self._answer_workers: list[asyncio.Task[None]] = []
+        self._scan_in_flight = False
+        self._scan_requested = False
+        self._scan_cursor = 0
+        self._dispatched_questions: set[str] = set()
+        # question_id -> canonical text for every question this session has
+        # dispatched or carded; the scanner ledger misses in-flight questions,
+        # so restatement dedupe must consult THIS map (live dup bug 2026-09-01).
+        self._dispatched_texts: dict[str, str] = {}
+        # follow-up question id -> parent question id (rendered in parent card)
+        self._follow_up_parents: dict[str, str] = {}
+        # scanner-decided category per question id (drives solver mode)
+        self._question_categories: dict[str, str] = {}
+        # Scan triggers (decision 4): pause OR char interval OR wake word.
+        self._chars_since_scan = 0
+        self._scan_char_interval = int(os.getenv("LIVE_EVIDENCE_SCAN_CHAR_INTERVAL", "300"))
+        self._wake_words = tuple(
+            word.strip().lower()
+            for word in os.getenv("LIVE_EVIDENCE_SCAN_WAKE_WORDS", "let me see").split(",")
+            if word.strip()
+        )
+
+    @staticmethod
+    def _scanner_mode() -> bool:
+        return os.getenv("LIVE_EVIDENCE_SCANNER_MODE", "true").lower() not in {"0", "false", "no"}
+
+    def _ensure_answer_workers(self) -> None:
+        if self._answer_workers:
+            return
+        for index in range(2):
+            worker = asyncio.create_task(self._answer_worker(f"answer-worker-{index + 1}"))
+            self._answer_workers.append(worker)
+
+    async def _answer_worker(self, worker_id: str) -> None:
+        """Pull complete questions and answer them under an exclusive lease."""
+
+        while True:
+            question_id, revision, decision = await self._ready_queue.get()
+            acquired = await self._state.acquire_lease(question_id, worker_id)
+            if not acquired:
+                # Another worker owns this question; never write over its card.
+                self._ready_queue.task_done()
+                continue
+            try:
+                await self._retrieve(
+                    decision,
+                    question_id,
+                    revision,
+                    session_id=self._state.session_id(),
+                    policy_digest=self._state.session_policy_digest(),
+                )
+            except Exception:  # noqa: BLE001 - a worker crash must not kill the pool
+                logger.exception("answer worker {} failed on {}", worker_id, question_id[:8])
+            finally:
+                await self._state.release_lease(question_id, worker_id)
+                self._dispatched_questions.discard(question_id)
+                self._ready_queue.task_done()
+
+    _review_published_answer = review_published_answer
+
+    def _scanner_client_context(self) -> str:
+        """Compact curate-client context for the question agent.
+
+        The scanner should recognize prepared/expected questions and
+        canonicalize garbled speech toward the phrasings curated in the
+        client KB - not judge legitimacy in a vacuum (operator, 2026-08-31).
+        Bounded: profile identity, watch terms, briefing point titles.
+        """
+
+        lines: list[str] = [f"profile: {self._profile.name}"]
+        if self._profile.watch_terms:
+            lines.append("watch_terms: " + ", ".join(self._profile.watch_terms[:24]))
+        if self.briefing is not None:
+            titles = [point.title for point in self.briefing.pack.points[:16]]
+            if titles:
+                lines.append("prepared_briefing_topics:")
+                lines.extend(f"- {title}" for title in titles)
+        return "\n".join(lines)
+
+    _same_progressive_question = staticmethod(scanner_fallback.same_progressive_question)
+    _fallback_question_key = staticmethod(scanner_fallback.fallback_question_key)
+
+    def _restatement_match(self, text: str) -> str | None:
+        """Return the id of an already-dispatched question this text restates."""
+
+        key = self._fallback_question_key(text)
+        for known_id, known_text in self._dispatched_texts.items():
+            if self._same_progressive_question(known_text, text):
+                return known_id
+            if key == self._fallback_question_key(known_text):
+                return known_id
+        return None
+    _scanner_skip_text = staticmethod(scanner_fallback.scanner_skip_text)
+    _matching_progressive_question_id = staticmethod(scanner_fallback.matching_progressive_question_id)
+    _ledger_text = staticmethod(scanner_fallback.ledger_text)
+    _fallback_scan = staticmethod(scanner_fallback.fallback_scan)
+
+    async def _run_scan(self) -> None:
+        """One scanner pass: classify asks, dispatch complete ones."""
+
+        if self._scan_in_flight:
+            self._scan_requested = True
+            return
+        self._scan_in_flight = True
+        try:
+            snapshot = await self._state.snapshot()
+            new_events = [
+                item for item in snapshot.transcript
+                if int(item.sequence or 0) > self._scan_cursor
+            ]
+            tail_events = (new_events or snapshot.transcript[-12:])[-24:]
+            turns = [
+                {
+                    "turn_id": item.turn_id or item.event_id,
+                    "sequence": item.sequence or index + 1,
+                    "speaker": item.speaker.value,
+                    "text": item.text,
+                }
+                for index, item in enumerate(tail_events)
+            ]
+            if not any(str(turn.get("text") or "").strip() for turn in turns):
+                return
+            ledger = await self._state.question_ledger()
+            outcome = await asyncio.to_thread(
+                self._scanner.scan, turns, ledger, self._scanner_client_context(), self._scan_cursor
+            )
+            digest = self._state.session_policy_digest()
+            questions = outcome.questions
+            if outcome.error is not None:
+                await self._journal.append(
+                    self._state.session_id(), "scanner_error",
+                    {"error": outcome.error, "raw": outcome.raw[:500]},
+                    policy_digest=digest,
+                )
+                questions = self._fallback_scan(turns, ledger)
+                if not questions:
+                    return
+            if turns:
+                self._scan_cursor = max(
+                    self._scan_cursor,
+                    *(int(turn.get("sequence") or 0) for turn in turns),
+                )
+            # Every scan outcome is journaled: a silent forming-only scan was
+            # undiagnosable when a question vanished live (2026-09-01 q02 miss).
+            await self._journal.append(
+                self._state.session_id(), "scan_completed",
+                {"window": [int(turn.get("sequence") or 0) for turn in turns[:1] + turns[-1:]],
+                 "cursor": self._scan_cursor,
+                 "fallback": outcome.error is not None,
+                 "results": [{"status": q.status, "id": q.question_id,
+                              "text": q.text[:80]} for q in questions]},
+                policy_digest=digest,
+            )
+            answered_ids = {
+                str(entry["id"]) for entry in ledger if entry.get("answered")
+            }
+            for question in questions:
+                if self._scanner_skip_text(question.text):
+                    continue
+                scanned_question_id = (
+                    question.question_id
+                    or self._matching_progressive_question_id(question.text, ledger)
+                    or self._restatement_match(question.text)
+                )
+                if question.status == "already_answered":
+                    await self._journal.append(
+                        self._state.session_id(), "question_skipped_already_answered",
+                        {"matches_question_id": scanned_question_id, "text": question.text},
+                        policy_digest=digest,
+                    )
+                    continue
+                if question.status == "forming":
+                    continue
+                parent_question_id: str | None = None
+                if question.status == "follow_up":
+                    # New linked question: own answer lifecycle, rendered in the
+                    # parent's flashcard. The parent stays answered/terminal.
+                    parent_question_id = scanned_question_id
+                    from uuid import uuid4
+
+                    question_id, revision = await self._state.adopt_question(
+                        uuid4().hex, question.text
+                    )
+                    await self._journal.append(
+                        self._state.session_id(), "follow_up_question_opened",
+                        {"parent_question_id": parent_question_id,
+                         "question_id": question_id, "text": question.text},
+                        policy_digest=digest,
+                    )
+                    self._dispatched_questions.add(question_id)
+                    self._dispatched_texts[question_id] = question.text
+                    self._follow_up_parents[question_id] = parent_question_id
+                    self._question_categories[question_id] = question.category
+                    decision = TriggerDecision(
+                        event_id=question_id,
+                        query=question.text,
+                        thread=question.text[:60],
+                        reason="scanner_complete",
+                        source_event_ids=tuple(item.event_id for item in tail_events[-4:]),
+                        candidate_fingerprint=None,
+                    )
+                    await self._state.set_thread(decision.thread)
+                    self._ensure_answer_workers()
+                    await self._ready_queue.put((question_id, revision, decision))
+                    continue
+                if scanned_question_id and scanned_question_id in answered_ids:
+                    known_text = self._ledger_text(scanned_question_id, ledger) \
+                        or self._dispatched_texts.get(scanned_question_id, "")
+                    if self._same_progressive_question(known_text, question.text) \
+                            or known_text.strip().casefold() == question.text.strip().casefold():
+                        # A restatement of an answered question is not a new ask.
+                        continue
+                if scanned_question_id and (
+                    scanned_question_id in self._dispatched_questions
+                    or await self._state.lease_holder(scanned_question_id) is not None
+                ):
+                    # Already queued or being answered; a refinement mid-flight
+                    # is NOT redispatched - the revision fence governs staleness.
+                    continue
+                if scanned_question_id:
+                    question_id, revision = await self._state.adopt_question(
+                        scanned_question_id, question.text
+                    )
+                else:
+                    from uuid import uuid4
+
+                    question_id, revision = await self._state.adopt_question(
+                        uuid4().hex, question.text
+                    )
+                self._dispatched_questions.add(question_id)
+                self._dispatched_texts[question_id] = question.text
+                self._question_categories[question_id] = question.category
+                await self._journal.append(
+                    self._state.session_id(), "question_classified",
+                    {"question_id": question_id, "category": question.category,
+                     "skills": list(question.skills)},
+                    policy_digest=digest,
+                )
+                decision = TriggerDecision(
+                    event_id=question_id,
+                    query=question.text,
+                    thread=question.text[:60],
+                    reason="scanner_complete",
+                    # The question was assembled from the scanned tail; those
+                    # events are its provenance (requirement ledger requires
+                    # source events for STATED entries).
+                    source_event_ids=tuple(item.event_id for item in tail_events[-4:]),
+                    candidate_fingerprint=None,
+                )
+                await self._state.set_thread(decision.thread)
+                self._ensure_answer_workers()
+                await self._ready_queue.put((question_id, revision, decision))
+        finally:
+            self._scan_in_flight = False
+            if self._scan_requested:
+                self._scan_requested = False
+                scan_task = asyncio.create_task(self._run_scan())
+                self._tasks.add(scan_task)
+                scan_task.add_done_callback(self._task_done)
     async def accept_transcript(self, event: TranscriptEvent) -> None:
         """Persist and project a transcript event, then schedule retrieval."""
         snapshot = await self._state.append_transcript(event)
@@ -109,6 +380,35 @@ class EvidenceCoordinator:
                     self._state.session_id(), "briefing_point_surfaced", hit,
                     policy_digest=self._state.session_policy_digest(),
                 )
+        if self._scanner_mode() and (os.getenv("LIVE_EVIDENCE_SCANNER_FIXTURE") or scanner_key()):
+            # Scanner triggers (decision 4: both + wake word):
+            # 1. silence pause - any final interviewer turn;
+            # 2. char interval - N new final chars since the last scan, so a
+            #    long uninterrupted monologue still gets scanned mid-flow;
+            # 3. wake word - the human says e.g. 'let me see' (either speaker),
+            #    an explicit on-demand trigger.
+            is_final = event.kind.value == "final"
+            if is_final:
+                self._chars_since_scan += len(event.text)
+            text_lower = event.text.lower()
+            wake_hit = is_final and any(word in text_lower for word in self._wake_words)
+            should_scan = (
+                (is_final and event.speaker.value == "interviewer")
+                or self._chars_since_scan >= self._scan_char_interval
+                or wake_hit
+            )
+            if should_scan:
+                self._chars_since_scan = 0
+                if wake_hit:
+                    await self._journal.append(
+                        self._state.session_id(), "scan_wake_word_triggered",
+                        {"event_id": event.event_id, "text": event.text[:120]},
+                        policy_digest=self._state.session_policy_digest(),
+                    )
+                scan_task = asyncio.create_task(self._run_scan())
+                self._tasks.add(scan_task)
+                scan_task.add_done_callback(self._task_done)
+            return
         outcome = self._question_window.ingest(event)
         if outcome.candidate is None or outcome.duplicate:
             if (
@@ -370,7 +670,9 @@ class EvidenceCoordinator:
             policy_digest=self._state.session_policy_digest(),
         )
         return {"result": "amended", "blocking_remaining": 0, "published": True}
-    async def _resolve_readiness(self, query: str) -> ReadinessVerdict | None:
+    async def _resolve_readiness(
+        self, query: str, ledger: list[dict[str, object]] | None = None
+    ) -> ReadinessVerdict | None:
         """Run the stage-1 gate, surfacing the decision as soon as it streams.
         The resolver is a blocking HTTP client, so it runs off the event loop.
         The gate arrives in the first content delta and is logged the moment it
@@ -382,7 +684,7 @@ class EvidenceCoordinator:
         """
         def run() -> tuple[GateEvent | None, ReadinessVerdict | None, str | None, float | None]:
             gate: GateEvent | None = None
-            for event in self._resolver.stream(query):
+            for event in self._resolver.stream(query, known_questions=ledger):
                 if isinstance(event, GateEvent):
                     gate = event
                     continue
@@ -473,313 +775,8 @@ class EvidenceCoordinator:
             policy_digest=self._state.session_policy_digest(),
         )
         return card
-    async def _retrieve(
-        self,
-        decision: TriggerDecision,
-        question_id: str,
-        question_revision: int,
-        *,
-        session_id: str,
-        policy_digest: str,
-    ) -> None:
-        await self._state.set_lane(RetrievalLane.MEMORY, LaneState.RUNNING, decision.reason)
-        await self._state.set_lane(RetrievalLane.CODE, LaneState.RUNNING, "Indexed code")
-        await self._state.set_lane(RetrievalLane.RIPGREP, LaneState.RUNNING, "Current source")
-        started = monotonic()
-        verdict = await self._resolve_readiness(decision.query)
-        display_query = decision.query
-        query = bounded_query(display_query, verdict)
-        memory_result, ripgrep_result = await asyncio.gather(
-            self._memory.retrieve(query),
-            self._ripgrep.retrieve(query),
-            return_exceptions=True,
-        )
-        sources: list[EvidenceSource] = []
-        if isinstance(memory_result, Exception):
-            await self._state.set_lane(
-                RetrievalLane.MEMORY,
-                LaneState.ERROR,
-                f"Memory error: {type(memory_result).__name__}",
-            )
-            await self._state.set_lane(
-                RetrievalLane.CODE,
-                LaneState.ERROR,
-                "Indexed code unavailable with Memory lane",
-            )
-        else:
-            await self._state.set_lane(
-                RetrievalLane.MEMORY,
-                LaneState.OK if memory_result.ok else LaneState.DEGRADED,
-                memory_result.detail,
-                latency_ms=memory_result.latency_ms,
-                result_count=len(
-                    [
-                        source
-                        for source in memory_result.sources
-                        if source.lane is RetrievalLane.MEMORY
-                    ]
-                ),
-            )
-            code_sources = [
-                source
-                for source in memory_result.sources
-                if source.lane is RetrievalLane.CODE
-            ]
-            await self._state.set_lane(
-                RetrievalLane.CODE,
-                LaneState.OK if code_sources else LaneState.DEGRADED,
-                f"Indexed code {len(code_sources)}" if code_sources else "No indexed source",
-                latency_ms=memory_result.latency_ms,
-                result_count=len(code_sources),
-            )
-            sources.extend(memory_result.sources)
-        if isinstance(ripgrep_result, Exception):
-            await self._state.set_lane(
-                RetrievalLane.RIPGREP,
-                LaneState.ERROR,
-                f"Current-source error: {type(ripgrep_result).__name__}",
-            )
-        else:
-            await self._state.set_lane(
-                RetrievalLane.RIPGREP,
-                LaneState.OK if ripgrep_result.ok else LaneState.DEGRADED,
-                ripgrep_result.detail,
-                latency_ms=ripgrep_result.latency_ms,
-                result_count=len(ripgrep_result.sources),
-            )
-            sources.extend(ripgrep_result.sources)
-        if not any(source.lane is RetrievalLane.RIPGREP for source in sources):
-            expanded_query = current_source_query_from_memory(query, sources)
-            if expanded_query:
-                expanded = await self._ripgrep.retrieve(expanded_query)
-                await self._journal.append(
-                    session_id,
-                    "current_source_query_expanded",
-                    {"query": expanded_query, "result_count": len(expanded.sources)},
-                    policy_digest=policy_digest,
-                )
-                await self._state.set_lane(
-                    RetrievalLane.RIPGREP,
-                    LaneState.OK if expanded.ok else LaneState.DEGRADED,
-                    f"{expanded.detail}; expanded from Memory code context",
-                    latency_ms=expanded.latency_ms,
-                    result_count=len(expanded.sources),
-                )
-                sources.extend(expanded.sources)
-        ranked = rank_sources(sources, query, self._profile, repo_scope=self._repo_scope)
-        policy = self._state.session_policy()
-        await self._propose_actions(verdict, decision, question_id, question_revision, policy)
-        ranked, surface = await self._surface_order(
-            query,
-            decision.thread,
-            ranked,
-            session_id=session_id,
-            policy_digest=policy_digest,
-        )
-        ranked = prefer_reviewed_oracle_answers(ranked, query)
-        if not surface:
-            if decision.candidate_fingerprint:
-                self._question_window.forget(decision.candidate_fingerprint)
-            await self._state.set_lane(RetrievalLane.ASK, LaneState.IDLE,
-                                       "Suppressed: not card-worthy")
-            return
-        await self._journal.append(
-            session_id,
-            "answer_needed_moment",
-            {
-                "schema": "live_evidence.answer_needed_moment.v1",
-                "question_id": question_id,
-                "question_revision": question_revision,
-                "query": query,
-                "display_query": display_query,
-                "source_event_ids": list(decision.source_event_ids),
-                "trigger_reason": decision.reason,
-                "surface_gate": "accepted",
-            },
-            policy_digest=policy_digest,
-        )
-        reviewed_oracle_answer = has_reviewed_oracle_answer(ranked)
-        may_ask = (
-            verdict.may_invoke_ask
-            if verdict is not None
-            else _should_solve_with_ask(query, ranked)
-        )
-        if reviewed_oracle_answer:
-            may_ask = False
-        if not policy.candidate_answer_generation:
-            may_ask = False
-            await self._state.set_lane(
-                RetrievalLane.ASK, LaneState.DISABLED, "Disabled by session policy"
-            )
-        entries = build_requirement_entries(
-            question_id, question_revision, display_query, decision, verdict
-        )
-        digest = await self._state.open_ledger(question_id, question_revision, entries)
-        await self._journal.append(
-            session_id,
-            "requirement_ledger_opened",
-            {"question_id": question_id, "question_revision": question_revision,
-             "ledger_digest": digest,
-             "entries": [e.model_dump(mode="json") for e in entries]},
-            policy_digest=policy_digest,
-        )
-        blocking = await self._state.blocking_unresolved(question_id, question_revision)
-        if blocking:
-            may_ask = False
-            self._held[(question_id, question_revision)] = {
-                "query": query,
-                "card_query": query,
-                "display_query": display_query,
-                "thread": decision.thread,
-                "sources": sources,
-                "verdict": verdict,
-            }
-            await self._state.set_lane(
-                RetrievalLane.ASK,
-                LaneState.IDLE,
-                f"Holding: {len(blocking)} unresolved requirement(s)",
-            )
-        if (question_id, question_revision) in self._solved_revisions:
-            may_ask = False
-        fast_pending = False
-        if may_ask:
-            self._solved_revisions.add((question_id, question_revision))
-            if FastSolver.available():
-                fast_pending = True
-                await self._state.set_lane(
-                    RetrievalLane.ASK, LaneState.RUNNING, "Fast solver streaming"
-                )
-            else:
-                await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
-                ask_result = await self._ask.solve(query, ranked[:4])
-                await self._state.set_lane(
-                    RetrievalLane.ASK,
-                    LaneState.OK if ask_result.ok else LaneState.DEGRADED,
-                    ask_result.detail,
-                    latency_ms=ask_result.latency_ms,
-                    result_count=len(ask_result.sources),
-                )
-                ranked = rank_sources([*sources, *ask_result.sources], query, self._profile, repo_scope=self._repo_scope)
-                ranked = prefer_reviewed_oracle_answers(ranked, query)
-        elif reviewed_oracle_answer:
-            await self._state.set_lane(
-                RetrievalLane.ASK,
-                LaneState.IDLE,
-                "Using reviewed oracle answer",
-            )
-        elif verdict is not None:
-            await self._state.set_lane(
-                RetrievalLane.ASK,
-                LaneState.IDLE,
-                f"Holding: {verdict.blocking_reason}",
-            )
-        card_query = query if ranked else display_query
-        card = self._summarizer.build(card_query, decision.thread, ranked)
-        if verdict is not None and verdict.clarifying_questions:
-            card = card.model_copy(
-                update={
-                    "clarifications": [
-                        ClarificationItem(
-                            id=item.id,
-                            question=item.question,
-                            why_it_matters=item.why_it_matters,
-                            default_assumption=item.default_assumption,
-                            blocking=item.blocking,
-                        )
-                        for item in verdict.clarifying_questions
-                    ]
-                }
-            )
-        ledger_entries = await self._state.ledger_entries(question_id, question_revision)
-        card = card.model_copy(
-            update={
-                "question_id": question_id,
-                "question_revision": question_revision,
-                "policy_digest": policy_digest,
-                "ledger_digest": ledger_digest(ledger_entries) if ledger_entries else None,
-                "assumptions": [
-                    entry.text
-                    for entry in ledger_entries
-                    if entry.status is RequirementStatus.ASSUMED
-                ][:8],
-            }
-        )
-        snapshot = await self._state.publish_card_fenced(card)
-        await self._journal_latest_publication_decision(session_id, policy_digest)
-        if snapshot is None:
-            publication_decision = await self._state.latest_card_publication_decision()
-            hidden_fast_draft = (
-                fast_pending
-                and publication_decision is not None
-                and publication_decision.status.value == "held"
-                and "insufficient_card_not_publishable"
-                in publication_decision.reason_codes
-            )
-            if not hidden_fast_draft:
-                await self._journal.append(
-                    session_id,
-                    "evidence_card_discarded_stale_revision",
-                    card,
-                    policy_digest=policy_digest,
-                )
-                logger.info(
-                    "discarded stale result question_id={} revision={} latency_ms={}",
-                    question_id,
-                    question_revision,
-                    int((monotonic() - started) * 1000),
-                )
-                return
-        else:
-            await self._journal.append(
-                session_id,
-                "evidence_card",
-                card,
-                policy_digest=policy_digest,
-            )
-            from .actions import propose_research, research_warranted
-            if policy.external_search and research_warranted(card, verdict, ranked):
-                await propose_research(
-                    self, self._state, self._journal, query=query,
-                    trigger_event_ids=list(decision.source_event_ids),
-                    question_id=question_id, question_revision=question_revision,
-                    policy=policy,
-                )
-        if fast_pending:
-            outcome = await stream_fast_answer(
-                state=self._state, journal=self._journal, solver=FastSolver(),
-                card=card, query=query,
-                evidence_excerpts=[source.excerpt[:1_200] for source in ranked[:4]],
-                question_id=question_id, question_revision=question_revision,
-                session_id=session_id,
-                policy_digest=policy_digest,
-            )
-            lane_state = (
-                LaneState.OK if outcome is not None and outcome.ok else LaneState.DEGRADED
-            )
-            detail = (
-                f"Fast answer in {outcome.total_s:.1f}s" if outcome is not None and outcome.ok
-                else "Fast solver unavailable or superseded"
-            )
-            await self._state.set_lane(RetrievalLane.ASK, lane_state, detail)
-            if outcome is not None and not outcome.ok:
-                await self._journal.append(
-                    session_id,
-                    "fast_solver_fallback_ask_skipped",
-                    {
-                        "question_id": question_id,
-                        "question_revision": question_revision,
-                        "error": outcome.error,
-                        "reason": "live_fast_path_must_fail_closed_not_block_on_slow_ask",
-                    },
-                    policy_digest=policy_digest,
-                )
-        logger.info(
-            "evidence card status={} sources={} revision={} latency_ms={}",
-            card.status.value,
-            len(card.sources),
-            question_revision,
-            int((monotonic() - started) * 1000),
-        )
+    _retrieve = retrieve
+
     async def close(self) -> None:
         """Cancel unfinished retrieval tasks during service shutdown."""
         tasks = list(self._tasks)
@@ -794,7 +791,4 @@ class EvidenceCoordinator:
             task.result()
         except Exception as exc:  # surfaced as lane error, service remains available
             logger.exception("background evidence retrieval failed: {}", exc)
-def _should_solve_with_ask(query: str, sources: list[EvidenceSource]) -> bool:
-    if has_reviewed_oracle_answer(sources):
-        return False
-    return any(source.lane in {RetrievalLane.CODE, RetrievalLane.RIPGREP} for source in sources)
+
