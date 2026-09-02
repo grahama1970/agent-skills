@@ -1,0 +1,116 @@
+{
+  "schema": "watch.row_text_materialization_receipt.v1",
+  "plan_ref": "docs/architecture/generated/bad_santa_marcus_0248_row_text_materialization_receipt_plan/watch_row_text_materialization_receipt_plan.bad_santa_marcus.json",
+  "created_at": "2026-09-02T19:42:02.718968+00:00",
+  "status": "MATERIALIZED_WITH_DISCREPANCY",
+  "asset_uid": "movie_bad_santa_2003_unrated",
+  "segment_id": "seg_0007",
+  "track_id": "track_07",
+  "time_range": {
+    "start": "02:48",
+    "end": "03:12",
+    "start_seconds": 168,
+    "end_seconds": 192
+  },
+  "channels": [
+    {
+      "channel": "scene_marker_text",
+      "status": "READ",
+      "source_ref": {
+        "source_type": "watch_content",
+        "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+        "field": "visual_description"
+      },
+      "materialized_text": "This frame shows a person viewed from behind walking down a dimly lit, shadowed indoor corridor with dark walls and a smooth, reflective floor. The individual wears a white Santa hat, a dark red long-sleeved top, a white apron-style lower garment, and shorts, with targeted lighting illuminating them",
+      "materialized_text_hash": "sha256:a130d9d2d0e84652542ed41d267144ff76544a9c7bc1e816ab024472bc869e96",
+      "materialized_text_present": true,
+      "read_receipt_required": true,
+      "promotion_allowed": false
+    },
+    {
+      "channel": "srt_text",
+      "status": "READ",
+      "source_ref": {
+        "source_type": "official_srt_file",
+        "ref": "/mnt/storage12tb/media/movies/Bad Santa (2003)/Bad.Santa.Unrated.2003.BRRip.XvidHD.720p-NPW.en.srt",
+        "cue_indexes": [
+          "29",
+          "30",
+          "31",
+          "32",
+          "33"
+        ]
+      },
+      "materialized_text": "00:02:48,272 --> 00:02:50,023 (RETCHING)\n00:02:51,484 --> 00:02:53,735 (COUGHING)\n00:03:02,328 --> 00:03:04,746 There's Santa Claus over there.\n00:03:09,251 --> 00:03:10,835 Wow.\n00:03:10,961 --> 00:03:12,796 (CHILDREN CHATTERING)",
+      "materialized_text_hash": "sha256:632a6acdbd2ee00ffcdcdce1a76a263660632eeb53f422b9b40397f23b4da605",
+      "materialized_text_present": true,
+      "read_receipt_required": true,
+      "promotion_allowed": false,
+      "note": "DISCREPANCY: watch_content.srt_text holds the opening monologue text, which does not match the official on-disk SRT cues for 02:48-03:12 (retching/coughing/'There's Santa Claus over there.'). Official SRT file is the authority for this channel; stored segment srt_text appears offset/misaligned and must not be used as scene truth for this row."
+    },
+    {
+      "channel": "whisper_text",
+      "status": "READ",
+      "source_ref": {
+        "source_type": "watch_content",
+        "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+        "field": "whisper_text"
+      },
+      "materialized_text": "My dad never did shit with his life, so he took it out on me. You could say I'm no different and I'd have to say you were right, but at this point, it's too late to start over. Funny how things work out, it's fucking hi...",
+      "materialized_text_hash": "sha256:9e2a971aa345dfd797836cddadf5c30acc6c1771bc0a8894049a0ab3533cf972",
+      "materialized_text_present": true,
+      "read_receipt_required": true,
+      "promotion_allowed": false,
+      "note": "whisper_text matches stored monologue, corroborating that stored segment text channels are offset relative to the 02:48-03:12 window; treat as evidence of the offset, not scene truth."
+    },
+    {
+      "channel": "vlm_description",
+      "status": "READ",
+      "source_ref": {
+        "source_type": "watch_content",
+        "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+        "field": "visual_description"
+      },
+      "materialized_text": "This frame shows a person viewed from behind walking down a dimly lit, shadowed indoor corridor with dark walls and a smooth, reflective floor. The individual wears a white Santa hat, a dark red long-sleeved top, a white apron-style lower garment, and shorts, with targeted lighting illuminating them",
+      "materialized_text_hash": "sha256:a130d9d2d0e84652542ed41d267144ff76544a9c7bc1e816ab024472bc869e96",
+      "materialized_text_present": true,
+      "read_receipt_required": true,
+      "promotion_allowed": false
+    }
+  ],
+  "counts": {
+    "required_channel_count": 4,
+    "materialized_text_channel_count": 4,
+    "blocked_source_ref_count": 0
+  },
+  "discrepancies": [
+    {
+      "code": "segment_text_offset_mismatch",
+      "detail": "watch_content srt_text/whisper_text for row 7 contain the film's opening monologue, but official SRT cues 29-32 for 168-192s contain retching/coughing and 'There's Santa Claus over there.' Stored segment text is offset; re-hydration of watch_content segment text alignment is required before entity span extraction can support identity for this row.",
+      "next_command": "./run.sh '/mnt/storage12tb/media/movies/Bad Santa (2003)/Bad.Santa.Unrated.2003.BRRip.XvidHD.720p-NPW.avi' --subtitle '/mnt/storage12tb/media/movies/Bad Santa (2003)/Bad.Santa.Unrated.2003.BRRip.XvidHD.720p-NPW.en.srt' --start 2:40 --end 3:20 --no-whisper"
+    }
+  ],
+  "memory_recall_proof": {
+    "path": "$memory recall",
+    "query": "badsantaunrated2003brripxvidhd720p-npw row 0007 timecode 02:48",
+    "items_key_used": true,
+    "target_key_found_in_items": true,
+    "found": true,
+    "confidence": 0.733
+  },
+  "claims": {
+    "proves": [
+      "all 4 required channels read and hashed from named sources",
+      "official SRT window text materialized with cue-level source refs",
+      "stored segment text offset discrepancy detected and recorded",
+      "$memory recall over items returns this row"
+    ],
+    "does_not_prove": [
+      "entity span extraction",
+      "supported character identity",
+      "correct watch_content segment alignment (known broken for this row)",
+      "crop/reference similarity"
+    ]
+  },
+  "promotion_allowed": false
+}
