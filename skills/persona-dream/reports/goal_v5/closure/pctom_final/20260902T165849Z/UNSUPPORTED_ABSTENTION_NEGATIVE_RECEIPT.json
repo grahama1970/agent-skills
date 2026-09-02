@@ -1,0 +1,60 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "four_families_exercised": true,
+    "gate2_unsupported_abstention_passed": false,
+    "gate5_abstention_scored": false,
+    "human_content_judgment_absent": true,
+    "llm_judge_absent": true,
+    "negative_gate2_blocks": true,
+    "unsupported_evidence_abstention_exercised": false,
+    "unsupported_writes_absent": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau generation of an abstention response",
+      "paid provider execution",
+      "semantic dream quality",
+      "complete Phase 01-16 media runtime execution"
+    ],
+    "proves": [
+      "the unsupported-evidence abstention checker failed closed before accepting the abstention claim"
+    ]
+  },
+  "corpus_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/research/prospective-tom/evidence/external-proof-archive/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json",
+  "corpus_sha256": "sha256:e29475d5f02db694cac595e26347ebcaef5a44ebbd24ef0fc19598eb1e8e2419",
+  "counts": {
+    "abstained_rows": 0,
+    "case_rows": 4,
+    "families": 4,
+    "gate2_blocked": 4,
+    "gate2_pass": 0,
+    "gate5_pass": 0,
+    "risk_coverage_rows": 0,
+    "unsupported_distribution_rows": 8
+  },
+  "created_at": "2026-09-02T16:57:35Z",
+  "deterministic_gate_receipts_consumed": true,
+  "elapsed_s": 0.15322,
+  "errors": [
+    "negative_mode_triggered_fail_closed:marked_supported"
+  ],
+  "fixture_backed": true,
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_tau_reexecuted": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_mode": "marked_supported",
+  "output_root": "/tmp/persona-dream-pctom-final-negative-fixtures/unsupported",
+  "provider_call_attempts": 0,
+  "receipt_path": "/tmp/persona-dream-pctom-final-negative-fixtures/unsupported/pctom_unsupported_evidence_abstention_receipt.v1.json",
+  "receipt_sha256": "sha256:314c1d3e89e1ded48b2f2c41f992d5fd9eb65fdf701b28d3eaa059d02f38113c",
+  "row_artifact_path": "/tmp/persona-dream-pctom-final-negative-fixtures/unsupported/artifacts/unsupported_evidence_abstention_rows.v1.json",
+  "row_artifact_sha256": "sha256:a6aca522f264e40bd0dc5249303cc9cef17dbd713327119599552428d94b56e1",
+  "schema": "persona_dream.research.prospective_tom.unsupported_evidence_abstention_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "BLOCKED_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION"
+}

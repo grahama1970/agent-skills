@@ -41,10 +41,12 @@ def test_claim_registry_keeps_media_pipeline_and_human_perception_unclosed():
     assert "repeatable full-pipeline reliability" in media["does_not_prove"]
 
     perception = claims["human_perceived_emotion_and_identity"]
-    assert perception["status"] == "AWAITING_HUMAN_LISTENER_COLLECTION"
+    assert perception["status"] == "MACHINE_PROXY_SIGNOFF_PASSED_HUMAN_PERCEPTION_UNMEASURED"
+    assert perception["machine_proxy_disposition"] == "MACHINE_PROXY_ONLY"
+    assert perception["human_collection_permitted_after_agent_signoff"] is True
     assert perception["valid_human_responses"] == "0/20"
-    assert "20 valid human listener rows in responses_v2.jsonl" in perception["blocked_by"]
-    assert "SIGNED_INTERPRETATION.json" in perception["blocked_by"]
+    assert "20 valid human listener rows in responses_v2.jsonl for perceptual claims only" in perception["blocked_by"]
+    assert "SIGNED_INTERPRETATION.json for perceptual claims only" in perception["blocked_by"]
 
 
 def test_next_step_is_corrected_goal_pair_not_provider_or_kling_work():

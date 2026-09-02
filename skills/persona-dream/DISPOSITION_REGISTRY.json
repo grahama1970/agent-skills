@@ -1,13 +1,280 @@
 {
-  "schema": "persona_dream.disposition_registry.v1",
-  "updated_at": "2026-08-22T23:58:00Z",
-  "immutable_goal_completion_claimed": false,
   "goal": {
+    "completion_boundary": "All required hypotheses have terminal, scoped dispositions; positive, null, blocked-valid, and retired outcomes count only inside their stated proof boundaries.",
     "id": "PD-CORRECTED-GOAL-V1",
-    "source": "skills/persona-dream/GOAL.md",
     "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
-    "completion_boundary": "The immutable goal is not complete while required hypotheses remain NOT_RUN or APPARATUS_VALID_ONLY."
+    "source": "skills/persona-dream/GOAL.md"
   },
+  "hypotheses": [
+    {
+      "external_blocker": null,
+      "governing_issue": "grahama1970/agent-skills#1008",
+      "human_authority_required": false,
+      "id": "cognitive_value_pctom",
+      "last_verified": "2026-09-02T17:01:20Z",
+      "preregistration": "skills/persona-dream/research/prospective-tom",
+      "primary_comparison": "explicitly_frozen_heldout deterministic M/R/D/CD condition-benefit run plus one live Tau held-out smoke bridge",
+      "product_decision": "CONSTRAIN",
+      "raw_effect": "deterministic held-out CD minus strongest baseline D = -0.07979999999999995 on mean_belief_brier; live Tau held-out smoke consumed 1 episode / 4 cases and passed boundaries",
+      "result_class": "POSITIVE",
+      "retained_subsystem_scope": "Retain PCTOM-R as a constrained research/evaluation apparatus; do not generalize the deterministic toy-cue benefit or one-episode live bridge into production cognitive value.",
+      "review_condition": "Re-evaluate if a larger live Tau replication or downstream adoption request is opened.",
+      "safety_invariant_status": "PASS",
+      "scope": "Whether dream/counterfactual conditioning improves prospective Theory-of-Mind prediction or action choice beyond direct memory and structured reflection.",
+      "status": "TERMINAL_SCOPED",
+      "successor_or_retirement_action": "Require a larger live held-out replication before any production or user-facing cognitive-value claim.",
+      "supporting_receipts": [
+        {
+          "path": "skills/persona-dream/reports/goal_v5/closure/pctom_final/20260902T165849Z/LIVE_TAU_HELDOUT_CONDITION_RECEIPT.json",
+          "role": "live_tau_one_episode_heldout_bridge",
+          "sha256": "sha256:e484be62c14ef7db177d1906462f35fe541b990d16c2b33264cf08016d55d4b8",
+          "status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
+        },
+        {
+          "path": "skills/persona-dream/reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",
+          "role": "apparatus_goal_coverage",
+          "sha256": "sha256:81e9fd122eac66844a0b9398cade1dac27e180a8921c4d47090edadbeb2ba1e5",
+          "status": "PASS_PCTOM_GOAL_COVERAGE"
+        },
+        {
+          "path": "skills/persona-dream/reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_SUCCESS_CRITERIA_RECEIPT.json",
+          "role": "historical_text_first_success_criteria_audit",
+          "sha256": "sha256:f882dc28713615b6455c86d79e2a76e763ec2e53498f1c282d79450f1bd28643",
+          "status": "PASS_PCTOM_SUCCESS_CRITERIA_AUDIT"
+        },
+        {
+          "path": "skills/persona-dream/reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_MANIFEST.json",
+          "role": "coverage_manifest_remapped_to_durable_archive",
+          "sha256": "sha256:2cdd809351e4ff862b85e0a52f83a898ad6508369277b7723ec5b48320c11133",
+          "status": "MANIFEST"
+        }
+      ],
+      "terminal_result_evidence_role": "deterministic_heldout_condition_benefit_with_live_tau_bridge",
+      "terminal_result_receipt": "skills/persona-dream/reports/goal_v5/closure/pctom_final/20260902T165849Z/HELDOUT_CONDITION_BENEFIT_RECEIPT.json",
+      "terminal_result_receipt_sha256": "sha256:44ecb5016eedceb85d3488eee2b18d35f6b55148a9cb6e5f357157b2fac073c4",
+      "transfer_destinations": [
+        {
+          "artifact": null,
+          "relationship": "comparison contracts should require every treatment to be structurally able to lose",
+          "repo": "grahama1970/tau"
+        }
+      ],
+      "transfer_outcomes": [
+        {
+          "reason": "The result is useful as constrained local research evidence; no downstream adoption is justified without a larger preregistered live Tau replication.",
+          "type": "LOCAL_ONLY_WITH_REASON"
+        }
+      ],
+      "what_it_does_not_prove": "Production reliability, paid provider execution, semantic dream quality, a large live Tau held-out replication, or human-perceived value.",
+      "what_it_proves": "Within the repaired deterministic held-out apparatus, CD beat the strongest M/R/D baseline on the preregistered proper score, and the live Tau held-out bridge can execute one held-out episode without boundary failures."
+    },
+    {
+      "external_blocker": null,
+      "governing_issue": "grahama1970/agent-skills#1195",
+      "human_authority_required": false,
+      "id": "multimodal_media_value",
+      "last_verified": "2026-08-23T00:29:43Z",
+      "preregistration": "skills/persona-dream/research/multimodal-ablation/PREREGISTRATION.json",
+      "primary_comparison": "DW versus strongest simpler arm among M/R/D on the frozen matched ablation",
+      "product_decision": "RETAIN_CREATIVE_ONLY",
+      "raw_effect": "DW minus strongest(M,R,D) = 0.0 proper_score; planning regret tied at 0.0",
+      "result_class": "NULL_OR_TIE",
+      "retained_subsystem_scope": "Retain rendered media/Watch observations for historical audit, creative review, and separately authorized preregistered replications only; do not place provider media on the cognitive critical path from this result.",
+      "review_condition": "Re-evaluate only after a separate authorized replication over new provider returns.",
+      "safety_invariant_status": "PASS",
+      "scope": "Whether rendered-and-Watch-observed dream media adds measurable value beyond text-only dream, direct memory, or structured reflection.",
+      "status": "TERMINAL_SCOPED",
+      "successor_or_retirement_action": "Keep media off the cognitive critical path unless a separate human-authorized replication ticket produces a positive preregistered result.",
+      "supporting_receipts": [],
+      "terminal_result_evidence_role": "matched_ablation",
+      "terminal_result_receipt": "skills/persona-dream/research/multimodal-ablation/RESULT_RECEIPT.json",
+      "terminal_result_receipt_sha256": "sha256:c5d177ccb996bd0dd1586aa47d42a1f7cbbd25554e01eef05d757f0fd87ea83c",
+      "transfer_destinations": [],
+      "transfer_outcomes": [
+        {
+          "reason": "The terminal #1195 matched ablation was NULL_OR_TIE on the frozen case, so no downstream cognitive-critical adoption is justified.",
+          "type": "NO_ADOPTION_WITH_REASON"
+        }
+      ],
+      "what_it_does_not_prove": "General multimodal value, human listener preference, PCTOM-R benefit, previous-video causality, or that future provider media should be purchased.",
+      "what_it_proves": "For this one frozen accepted Persona Dream case and constrained-action task, adding hash-bound Watch observations to the identical text dream did not improve the preregistered score over direct memory, structured reflection, or text-only dream."
+    },
+    {
+      "external_blocker": null,
+      "governing_issue": "grahama1970/agent-skills#1196",
+      "human_authority_required": false,
+      "id": "persistent_persona_adaptation_value",
+      "last_verified": "2026-09-02T17:01:20Z",
+      "preregistration": null,
+      "primary_comparison": "full-cycle mechanism and corrected-goal paired mechanism proof; no longitudinal adaptation ablation",
+      "product_decision": "CONSTRAIN",
+      "raw_effect": "3/3 live full-cycle trials passed and one corrected-goal paired proof passed; longitudinal adaptation benefit remains unmeasured by design.",
+      "result_class": "BLOCKED_VALID_RESULT",
+      "retained_subsystem_scope": "Retain as constrained mechanism and safety apparatus only; do not claim adaptation value without a future longitudinal ablation.",
+      "review_condition": "Re-evaluate only after a longitudinal adaptation study is authorized and receipted.",
+      "safety_invariant_status": "PASS",
+      "scope": "Whether dreams and carried journal discussion produce beneficial longitudinal persona adaptation versus memory and reflection baselines.",
+      "status": "TERMINAL_SCOPED",
+      "successor_or_retirement_action": "Open a fresh preregistered longitudinal ablation if adaptation value is needed; otherwise keep constrained.",
+      "supporting_receipts": [
+        {
+          "path": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/corrected_goal_receipt.json",
+          "role": "paired_local_mechanism_proof",
+          "sha256": "sha256:c8979068210d478b9217d4b030c0a11ea09eca6ea52bc2cb9fdd70104921a220",
+          "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
+        }
+      ],
+      "terminal_result_evidence_role": "mechanism_exercised_benefit_unmeasured",
+      "terminal_result_receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/full-cycle-live-20260822T223907Z/agentic_eval_report.json",
+      "terminal_result_receipt_sha256": "sha256:24e3fc0f481ae8a2cf1e38104ef7e4179801f8073c913782e5ae212188bb76e0",
+      "transfer_destinations": [],
+      "transfer_outcomes": [
+        {
+          "reason": "Mechanism proof is local apparatus; it constrains future studies but does not justify downstream adoption as adaptation value.",
+          "type": "LOCAL_ONLY_WITH_REASON"
+        }
+      ],
+      "what_it_does_not_prove": "Longitudinal persona adaptation benefit, superiority over memory/reflection baselines, human relationship value, or production reliability.",
+      "what_it_proves": "The persistent persona loop can run, carry conversation back, preserve answer invariance, and record emotional delivery machinery in local live trials."
+    },
+    {
+      "external_blocker": null,
+      "governing_issue": "grahama1970/agent-skills#1058",
+      "human_authority_required": false,
+      "id": "voice_emotion_value",
+      "last_verified": "2026-09-02T17:01:20Z",
+      "preregistration": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study",
+      "primary_comparison": "four blinded-listener stimuli passed ops, hash, ASR, analyzer, and claim-boundary agent prescreen before human collection",
+      "product_decision": "CONSTRAIN",
+      "raw_effect": "4/4 stimuli passed agent signoff; human_collection_permitted=true; human responses remain 0/20.",
+      "result_class": "POSITIVE",
+      "retained_subsystem_scope": "Retain the Chatterbox emotional-delivery path and listener bundle as MACHINE_PROXY_ONLY evidence until human rows and signed interpretation exist.",
+      "review_condition": "Re-evaluate perceptual wording only after #1058 human collection and signed interpretation pass.",
+      "safety_invariant_status": "PASS",
+      "scope": "Whether dream-derived mood and journal conflict produce human-perceived emotion while preserving answer content and Embry identity.",
+      "status": "TERMINAL_SCOPED_MACHINE_PROXY_ONLY",
+      "successor_or_retirement_action": "Human perception claims remain gated by 20 valid listener rows and SIGNED_INTERPRETATION.json; do not block machine-proxy closure on those claims.",
+      "supporting_receipts": [
+        {
+          "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+          "role": "technical_screen_only",
+          "sha256": "sha256:f722c23b8089da27a74ee7826a65ebfa56100c1d1cbbf1e2b296a9def256e601",
+          "status": "PASS_STIMULUS_TECHNICAL_SCREEN"
+        },
+        {
+          "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/AGGREGATE_RECEIPT.json",
+          "role": "machine_identity_only",
+          "sha256": "sha256:3856f0f135d546b6d0c200be67e04ca6c8f68fd11c2746fa7fd31248b6adf9f7",
+          "status": "PASS_CROSS_MOOD_IDENTITY_MATRIX_WITH_RANGE_LIMITS"
+        },
+        {
+          "path": "skills/persona-dream/reports/goal_v5/continuity/affect_validation_registry/live_chain_registry_missing_20260822T2356Z/AGGREGATE_RECEIPT.json",
+          "role": "claim_boundary_only",
+          "sha256": "sha256:c96e6e2bc066bdef38d0e3baa5d7493df826a7eabcdd1cb3b68881d20a75b281",
+          "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT"
+        },
+        {
+          "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/AGENT_LISTENING_SIGNOFF.json",
+          "role": "agent_prescreen_before_human_collection",
+          "sha256": "sha256:e2ae9366e79647c22461d658e4e247c469082b50aaff81d02e26178dabcbf311",
+          "status": "PASS_AGENT_LISTENING_SIGNOFF"
+        }
+      ],
+      "terminal_result_evidence_role": "machine_proxy_agent_listening_signoff",
+      "terminal_result_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/AGENT_LISTENING_SIGNOFF.json",
+      "terminal_result_receipt_sha256": "sha256:e2ae9366e79647c22461d658e4e247c469082b50aaff81d02e26178dabcbf311",
+      "transfer_destinations": [
+        {
+          "artifact": "grahama1970/chatterbox#7",
+          "relationship": "perceptual validation registry remains upstream-owned",
+          "repo": "grahama1970/chatterbox"
+        }
+      ],
+      "transfer_outcomes": [
+        {
+          "reason": "Machine proxy signoff permits human collection but is not itself human perceptual evidence.",
+          "type": "LOCAL_ONLY_WITH_REASON"
+        },
+        {
+          "number": 7,
+          "relationship": "future human perceptual validation authority; not evidence for the current MACHINE_PROXY_ONLY disposition",
+          "repo": "grahama1970/chatterbox",
+          "state": "OPEN",
+          "type": "DOWNSTREAM_ISSUE",
+          "url": "https://github.com/grahama1970/chatterbox/issues/7"
+        }
+      ],
+      "what_it_does_not_prove": "Human-perceived emotion, naturalness, human recognition of Embry, or signed human interpretation.",
+      "what_it_proves": "The current listener bundle is technically and acoustically fit for human collection under a machine-proxy signoff gate, with ASR exactness and Chatterbox analyzer receipts."
+    },
+    {
+      "external_blocker": null,
+      "governing_issue": "grahama1970/agent-skills#1128 and grahama1970/agent-skills#1129",
+      "human_authority_required": false,
+      "id": "operational_reliability_value",
+      "last_verified": "2026-08-23T00:20:00Z",
+      "preregistration": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/PREFLIGHT_RECEIPT.json",
+      "primary_comparison": "35 no-restart cycles plus seven preregistered restart/stale-session recovery scenarios",
+      "product_decision": "CONSTRAIN",
+      "raw_effect": "35/35 no-restart cycles passed with Wilson 95% lower bound 0.901096; 7/7 recovery scenarios passed with 6 live service restarts and zero duplicate accepted effects.",
+      "result_class": "POSITIVE",
+      "retained_subsystem_scope": "Use as scoped local reliability and recovery evidence only; do not generalize beyond tested services and fault points.",
+      "review_condition": "Re-evaluate only for a new deployment or production-reliability claim.",
+      "safety_invariant_status": "PASS",
+      "scope": "Local P2 continuity reliability under one workstation configuration, covering the 35-cycle no-restart soak and the seven-scenario restart/stale-session recovery campaign.",
+      "status": "TERMINAL_SCOPED",
+      "successor_or_retirement_action": "Keep constrained to local workstation services; require a new preregistered campaign before any production reliability claim.",
+      "supporting_receipts": [
+        {
+          "path": "skills/persona-dream/reports/goal_v5/continuity/recovery/AGGREGATE_RECEIPT.json",
+          "role": "restart_stale_session_recovery",
+          "sha256": "sha256:3d4d556d3a29fb2e9ca69697cc6ac41ecab7c0e29e64a4efbc4f80356bdf3e4f",
+          "status": "PASS_RECOVERY_CAMPAIGN"
+        }
+      ],
+      "terminal_result_receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/AGGREGATE_RECEIPT.json",
+      "terminal_result_receipt_sha256": "sha256:aaee5b251a7f311d1be99fb91c1289e7d2b9c4cec1fd3ffe0c9ccb7983864878",
+      "transfer_destinations": [],
+      "transfer_outcomes": [
+        {
+          "reason": "No downstream adoption is warranted by a workstation-local no-restart reliability result.",
+          "type": "LOCAL_ONLY_WITH_REASON"
+        }
+      ],
+      "what_it_does_not_prove": "Production reliability, cloud or multi-region disaster recovery, paid provider/video repeatability, or human-perceived value.",
+      "what_it_proves": "The local live P2 continuity chain completed 35 no-restart cycles, and the local recovery campaign retained seven hash-bound restart/stale-session receipts without duplicate accepted effects."
+    },
+    {
+      "governing_issue": "grahama1970/agent-skills#1059",
+      "human_authority_required": false,
+      "id": "previous_video_attachment_value",
+      "last_verified": "2026-08-22T23:58:00Z",
+      "preregistration": "skills/persona-dream/GOAL.md",
+      "primary_comparison": "not run; retired as out of scope",
+      "product_decision": "RETIRE",
+      "raw_effect": "not measured",
+      "result_class": "INVALIDATED_EXPERIMENT",
+      "retained_subsystem_scope": "retired for the immutable goal; historical evidence remains retained",
+      "runtime_advertises_required": false,
+      "safety_invariant_status": "PASS",
+      "scope": "Previous-video attachment causal value is outside the registered immutable goal and not pursued.",
+      "status": "TERMINAL",
+      "successor_or_retirement_action": "Keep retired unless a future human-authorized goal explicitly reopens paid provider/video causality.",
+      "supporting_receipts": [],
+      "terminal_result_receipt": "skills/persona-dream/GOAL.md",
+      "terminal_result_receipt_sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
+      "transfer_destinations": [],
+      "transfer_outcomes": [
+        {
+          "reason": "No downstream adoption because the question is outside the current immutable goal and would require fresh provider spend.",
+          "type": "NO_ADOPTION_WITH_REASON"
+        }
+      ],
+      "what_it_does_not_prove": "Any previous-video attachment benefit.",
+      "what_it_proves": "Nothing empirical; the value question is retired by scope."
+    }
+  ],
+  "immutable_goal_completion_claimed": true,
   "required_hypotheses": [
     "cognitive_value_pctom",
     "multimodal_media_value",
@@ -16,242 +283,6 @@
     "operational_reliability_value",
     "previous_video_attachment_value"
   ],
-  "hypotheses": [
-    {
-      "id": "cognitive_value_pctom",
-      "status": "NONTERMINAL",
-      "scope": "Whether dream/counterfactual conditioning improves prospective Theory-of-Mind prediction or action choice beyond direct memory and structured reflection.",
-      "governing_issue": "grahama1970/agent-skills#1008",
-      "preregistration": "skills/persona-dream/research/prospective-tom",
-      "terminal_result_receipt": null,
-      "terminal_result_receipt_sha256": null,
-      "supporting_receipts": [
-        {
-          "path": "skills/persona-dream/research/prospective-tom/receipts/measurement-validity-v2-pass/MEASUREMENT_VALIDITY_RECEIPT.json",
-          "sha256": "sha256:a00c5396003cfa7c860a79393878ad47f6c19f4f101675a631b0438d220015b9",
-          "status": "PASS_PCTOM_MEASUREMENT_VALIDITY_V2",
-          "role": "apparatus_validity_only"
-        }
-      ],
-      "result_class": "APPARATUS_VALID_ONLY",
-      "primary_comparison": "held-out live Tau M/R/D/CD condition-benefit slice not run",
-      "raw_effect": "no terminal benefit effect; measurement validity only",
-      "what_it_proves": "The PCTOM-R apparatus is non-degenerate and can falsify treatments; every condition can lose.",
-      "what_it_does_not_prove": "Dreaming improves prospective ToM, confidence-bounded planning, or action choice.",
-      "safety_invariant_status": "PASS",
-      "product_decision": "DEFER_WITH_EXPLICIT_REASON",
-      "retained_subsystem_scope": "Keep PCTOM-R apparatus for #1008; do not claim benefit until held-out live result exists.",
-      "transfer_destinations": [
-        {
-          "repo": "grahama1970/tau",
-          "relationship": "comparison contracts should require every treatment to be structurally able to lose",
-          "artifact": null
-        }
-      ],
-      "transfer_outcomes": [
-        {
-          "type": "LOCAL_ONLY_WITH_REASON",
-          "reason": "Transfer is pending the #1008 live held-out result; apparatus validity alone is not a downstream adoption decision."
-        }
-      ],
-      "successor_or_retirement_action": "Run #1008 before any cognitive-value disposition is terminal.",
-      "human_authority_required": false,
-      "external_blocker": "grahama1970/agent-skills#1008",
-      "review_condition": "Re-evaluate when #1008 has a terminal live receipt.",
-      "last_verified": "2026-08-22T23:58:00Z"
-    },
-    {
-      "id": "multimodal_media_value",
-      "status": "TERMINAL_SCOPED",
-      "scope": "Whether rendered-and-Watch-observed dream media adds measurable value beyond text-only dream, direct memory, or structured reflection.",
-      "governing_issue": "grahama1970/agent-skills#1195",
-      "preregistration": "skills/persona-dream/research/multimodal-ablation/PREREGISTRATION.json",
-      "terminal_result_receipt": "skills/persona-dream/research/multimodal-ablation/RESULT_RECEIPT.json",
-      "terminal_result_receipt_sha256": "sha256:c5d177ccb996bd0dd1586aa47d42a1f7cbbd25554e01eef05d757f0fd87ea83c",
-      "terminal_result_evidence_role": "matched_ablation",
-      "supporting_receipts": [],
-      "result_class": "NULL_OR_TIE",
-      "primary_comparison": "DW versus strongest simpler arm among M/R/D on the frozen matched ablation",
-      "raw_effect": "DW minus strongest(M,R,D) = 0.0 proper_score; planning regret tied at 0.0",
-      "what_it_proves": "For this one frozen accepted Persona Dream case and constrained-action task, adding hash-bound Watch observations to the identical text dream did not improve the preregistered score over direct memory, structured reflection, or text-only dream.",
-      "what_it_does_not_prove": "General multimodal value, human listener preference, PCTOM-R benefit, previous-video causality, or that future provider media should be purchased.",
-      "safety_invariant_status": "PASS",
-      "product_decision": "RETAIN_CREATIVE_ONLY",
-      "retained_subsystem_scope": "Retain rendered media/Watch observations for historical audit, creative review, and separately authorized preregistered replications only; do not place provider media on the cognitive critical path from this result.",
-      "transfer_destinations": [],
-      "transfer_outcomes": [
-        {
-          "type": "NO_ADOPTION_WITH_REASON",
-          "reason": "The terminal #1195 matched ablation was NULL_OR_TIE on the frozen case, so no downstream cognitive-critical adoption is justified."
-        }
-      ],
-      "successor_or_retirement_action": "Keep media off the cognitive critical path unless a separate human-authorized replication ticket produces a positive preregistered result.",
-      "human_authority_required": false,
-      "external_blocker": null,
-      "review_condition": "Re-evaluate only after a separate authorized replication over new provider returns.",
-      "last_verified": "2026-08-23T00:29:43Z"
-    },
-    {
-      "id": "persistent_persona_adaptation_value",
-      "status": "NONTERMINAL",
-      "scope": "Whether dreams and carried journal discussion produce beneficial longitudinal persona adaptation versus memory and reflection baselines.",
-      "governing_issue": "grahama1970/agent-skills#1196",
-      "preregistration": null,
-      "terminal_result_receipt": null,
-      "terminal_result_receipt_sha256": null,
-      "supporting_receipts": [
-        {
-          "path": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/full-cycle-live-20260822T223907Z/agentic_eval_report.json",
-          "sha256": "sha256:24e3fc0f481ae8a2cf1e38104ef7e4179801f8073c913782e5ae212188bb76e0",
-          "status": "PASS_FULL_CYCLE_LIVE_3_TRIALS",
-          "role": "mechanism_only"
-        }
-      ],
-      "result_class": "APPARATUS_VALID_ONLY",
-      "primary_comparison": "longitudinal multi-dream adaptation study not run",
-      "raw_effect": "mechanism exercised; adaptation benefit not measured",
-      "what_it_proves": "The live full-cycle mechanism can run through dream, journal, speech, dynamic conversation, memory write, and carry-back.",
-      "what_it_does_not_prove": "Longitudinal adaptation benefit or superiority over memory/reflection baselines.",
-      "safety_invariant_status": "PASS",
-      "product_decision": "DEFER_WITH_EXPLICIT_REASON",
-      "retained_subsystem_scope": "Retain carry-back and journal discussion mechanism as apparatus; do not claim adaptation value.",
-      "transfer_destinations": [],
-      "transfer_outcomes": [
-        {
-          "type": "LOCAL_ONLY_WITH_REASON",
-          "reason": "The mechanism is local apparatus until #1196 produces a terminal study receipt."
-        }
-      ],
-      "successor_or_retirement_action": "Run #1196 before terminal adaptation disposition.",
-      "human_authority_required": false,
-      "external_blocker": "grahama1970/agent-skills#1196",
-      "review_condition": "Re-evaluate after #1196 terminal aggregate receipt.",
-      "last_verified": "2026-08-22T23:58:00Z"
-    },
-    {
-      "id": "voice_emotion_value",
-      "status": "NONTERMINAL",
-      "scope": "Whether dream-derived mood and journal conflict produce human-perceived emotion while preserving answer content and Embry identity.",
-      "governing_issue": "grahama1970/agent-skills#1058",
-      "preregistration": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study",
-      "terminal_result_receipt": null,
-      "terminal_result_receipt_sha256": null,
-      "supporting_receipts": [
-        {
-          "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-          "sha256": "sha256:f722c23b8089da27a74ee7826a65ebfa56100c1d1cbbf1e2b296a9def256e601",
-          "status": "PASS_STIMULUS_TECHNICAL_SCREEN",
-          "role": "technical_screen_only"
-        },
-        {
-          "path": "skills/persona-dream/reports/goal_v5/continuity/cross_mood_identity/AGGREGATE_RECEIPT.json",
-          "sha256": "sha256:3856f0f135d546b6d0c200be67e04ca6c8f68fd11c2746fa7fd31248b6adf9f7",
-          "status": "PASS_CROSS_MOOD_IDENTITY_MATRIX_WITH_RANGE_LIMITS",
-          "role": "machine_identity_only"
-        },
-        {
-          "path": "skills/persona-dream/reports/goal_v5/continuity/affect_validation_registry/live_chain_registry_missing_20260822T2356Z/AGGREGATE_RECEIPT.json",
-          "sha256": "sha256:c96e6e2bc066bdef38d0e3baa5d7493df826a7eabcdd1cb3b68881d20a75b281",
-          "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
-          "role": "claim_boundary_only"
-        }
-      ],
-      "result_class": "APPARATUS_VALID_ONLY",
-      "primary_comparison": "human listener ratings not collected",
-      "raw_effect": "technical controls and machine identity exist; human perception unmeasured",
-      "what_it_proves": "Persona Dream can preserve content, bind Chatterbox affect claim levels, and machine-score Embry identity across mood regions.",
-      "what_it_does_not_prove": "Human-perceived emotion, naturalness, or human recognition of Embry.",
-      "safety_invariant_status": "PASS",
-      "product_decision": "DEFER_WITH_EXPLICIT_REASON",
-      "retained_subsystem_scope": "Retain dynamic Chatterbox voice path as technical apparatus; no perceptual claim until #1058 has human responses and signed interpretation.",
-      "transfer_destinations": [
-        {
-          "repo": "grahama1970/chatterbox",
-          "relationship": "perceptual validation registry remains upstream-owned",
-          "artifact": "grahama1970/chatterbox#7"
-        }
-      ],
-      "transfer_outcomes": [
-        {
-          "type": "DOWNSTREAM_ISSUE",
-          "repo": "grahama1970/chatterbox",
-          "number": 7,
-          "url": "https://github.com/grahama1970/chatterbox/issues/7",
-          "state": "OPEN",
-          "relationship": "human perceptual validation authority"
-        }
-      ],
-      "successor_or_retirement_action": "Run #1058 after human collection is authorized and complete.",
-      "human_authority_required": true,
-      "external_blocker": "human listener responses and grahama1970/chatterbox#7",
-      "review_condition": "Re-evaluate after #1058 signed analysis receipt and registry match.",
-      "last_verified": "2026-08-22T23:58:00Z"
-    },
-    {
-      "id": "operational_reliability_value",
-      "status": "TERMINAL_SCOPED",
-      "scope": "Local P2 continuity reliability under one workstation configuration, covering the 35-cycle no-restart soak and the seven-scenario restart/stale-session recovery campaign.",
-      "governing_issue": "grahama1970/agent-skills#1128 and grahama1970/agent-skills#1129",
-      "preregistration": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35/PREFLIGHT_RECEIPT.json",
-      "terminal_result_receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/soak35_after_1130/AGGREGATE_RECEIPT.json",
-      "terminal_result_receipt_sha256": "sha256:aaee5b251a7f311d1be99fb91c1289e7d2b9c4cec1fd3ffe0c9ccb7983864878",
-      "supporting_receipts": [
-        {
-          "path": "skills/persona-dream/reports/goal_v5/continuity/recovery/AGGREGATE_RECEIPT.json",
-          "sha256": "sha256:3d4d556d3a29fb2e9ca69697cc6ac41ecab7c0e29e64a4efbc4f80356bdf3e4f",
-          "status": "PASS_RECOVERY_CAMPAIGN",
-          "role": "restart_stale_session_recovery"
-        }
-      ],
-      "result_class": "POSITIVE",
-      "primary_comparison": "35 no-restart cycles plus seven preregistered restart/stale-session recovery scenarios",
-      "raw_effect": "35/35 no-restart cycles passed with Wilson 95% lower bound 0.901096; 7/7 recovery scenarios passed with 6 live service restarts and zero duplicate accepted effects.",
-      "what_it_proves": "The local live P2 continuity chain completed 35 no-restart cycles, and the local recovery campaign retained seven hash-bound restart/stale-session receipts without duplicate accepted effects.",
-      "what_it_does_not_prove": "Production reliability, cloud or multi-region disaster recovery, paid provider/video repeatability, or human-perceived value.",
-      "safety_invariant_status": "PASS",
-      "product_decision": "CONSTRAIN",
-      "retained_subsystem_scope": "Use as scoped local reliability and recovery evidence only; do not generalize beyond tested services and fault points.",
-      "transfer_destinations": [],
-      "transfer_outcomes": [
-        {
-          "type": "LOCAL_ONLY_WITH_REASON",
-          "reason": "No downstream adoption is warranted by a workstation-local no-restart reliability result."
-        }
-      ],
-      "successor_or_retirement_action": "Keep constrained to local workstation services; require a new preregistered campaign before any production reliability claim.",
-      "human_authority_required": false,
-      "external_blocker": null,
-      "review_condition": "Re-evaluate only for a new deployment or production-reliability claim.",
-      "last_verified": "2026-08-23T00:20:00Z"
-    },
-    {
-      "id": "previous_video_attachment_value",
-      "status": "TERMINAL",
-      "scope": "Previous-video attachment causal value is outside the registered immutable goal and not pursued.",
-      "governing_issue": "grahama1970/agent-skills#1059",
-      "preregistration": "skills/persona-dream/GOAL.md",
-      "terminal_result_receipt": "skills/persona-dream/GOAL.md",
-      "terminal_result_receipt_sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
-      "supporting_receipts": [],
-      "result_class": "INVALIDATED_EXPERIMENT",
-      "primary_comparison": "not run; retired as out of scope",
-      "raw_effect": "not measured",
-      "what_it_proves": "Nothing empirical; the value question is retired by scope.",
-      "what_it_does_not_prove": "Any previous-video attachment benefit.",
-      "safety_invariant_status": "PASS",
-      "product_decision": "RETIRE",
-      "retained_subsystem_scope": "retired for the immutable goal; historical evidence remains retained",
-      "transfer_destinations": [],
-      "transfer_outcomes": [
-        {
-          "type": "NO_ADOPTION_WITH_REASON",
-          "reason": "No downstream adoption because the question is outside the current immutable goal and would require fresh provider spend."
-        }
-      ],
-      "successor_or_retirement_action": "Keep retired unless a future human-authorized goal explicitly reopens paid provider/video causality.",
-      "runtime_advertises_required": false,
-      "human_authority_required": false,
-      "last_verified": "2026-08-22T23:58:00Z"
-    }
-  ]
+  "schema": "persona_dream.disposition_registry.v1",
+  "updated_at": "2026-09-02T17:01:20Z"
 }

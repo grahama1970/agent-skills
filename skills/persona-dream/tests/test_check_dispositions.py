@@ -45,8 +45,10 @@ def test_current_registry_passes_strict_contract():
     assert report["status"] == "PASS_DISPOSITION_REGISTRY"
     assert report["required_hypothesis_count"] == 6
     assert "previous_video_attachment_value" in report["terminal_hypotheses"]
-    assert "cognitive_value_pctom" in report["nonterminal_hypotheses"]
-    assert report["immutable_goal_completion_claimed"] is False
+    assert "cognitive_value_pctom" in report["terminal_hypotheses"]
+    assert "voice_emotion_value" in report["terminal_hypotheses"]
+    assert report["nonterminal_hypotheses"] == []
+    assert report["immutable_goal_completion_claimed"] is True
     assert report["live"] is False
 
 
@@ -175,6 +177,7 @@ def test_terminal_receipt_hash_mutation_blocks():
 def test_defer_without_external_blocker_or_review_condition_blocks():
     doc = _registry()
     row = _row(doc, "cognitive_value_pctom")
+    row["product_decision"] = "DEFER_WITH_EXPLICIT_REASON"
     row["external_blocker"] = ""
     row["review_condition"] = ""
 
@@ -185,6 +188,8 @@ def test_defer_without_external_blocker_or_review_condition_blocks():
 
 def test_immutable_goal_completion_with_nonterminal_hypothesis_blocks():
     doc = _registry()
+    row = _row(doc, "cognitive_value_pctom")
+    row["result_class"] = "APPARATUS_VALID_ONLY"
     doc["immutable_goal_completion_claimed"] = True
 
     assert "immutable_goal_completion_claimed_with_nonterminal_hypothesis" in _codes(

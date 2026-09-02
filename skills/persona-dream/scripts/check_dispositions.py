@@ -246,7 +246,9 @@ def validate_registry(
         "claims": {
             "proves": [
                 "disposition registry hashes and result/product/transfer combinations are internally consistent",
-                "immutable-goal completion is not claimed while required hypotheses remain nonterminal",
+                "immutable-goal completion is claimed only when no required hypothesis remains nonterminal"
+                if doc.get("immutable_goal_completion_claimed") is True
+                else "immutable-goal completion is not claimed while required hypotheses remain nonterminal",
             ],
             "does_not_prove": [
                 "any new experimental result",

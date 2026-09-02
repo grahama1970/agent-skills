@@ -1,0 +1,65 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "semantic dream quality",
+      "paid provider execution",
+      "complete live Phase 01-16 runtime execution",
+      "all possible future receipts unless they are passed through this audit"
+    ],
+    "proves": [
+      "selected PCTOM-R receipts on this machine explicitly avoid human content judgment or fail closed if such a flag is true",
+      "selected PCTOM-R receipts are not mocked and do not use an LLM judge as a scorer",
+      "the aggregate audit rejects PASS-like evidence when a forbidden human/LLM judgment flag or mocked receipt is introduced"
+    ]
+  },
+  "counts": {
+    "explicit_human_content_judgment_false": 0,
+    "fixture_backed_true": 0,
+    "human_flag_mentions": 1,
+    "human_forbidden_true": 1,
+    "live_false": 1,
+    "live_true": 0,
+    "llm_judge_absent": 0,
+    "llm_judge_false": 1,
+    "llm_judge_mentions": 1,
+    "llm_judge_true": 0,
+    "mocked_false": 1,
+    "mocked_true": 0,
+    "pass_status_receipts": 1,
+    "provider_or_canonical_write_counters": 0,
+    "receipts_seen": 1
+  },
+  "elapsed_s": 0.000401,
+  "errors": [
+    "receipt_human_content_judgment_required_true:/tmp/persona-dream-pctom-final-negative-fixtures/input/human_required_pass_fixture.json",
+    "receipt_human_flag_true:/tmp/persona-dream-pctom-final-negative-fixtures/input/human_required_pass_fixture.json:$.human_content_judgment_required",
+    "human_forbidden_true_count_nonzero:1"
+  ],
+  "expect_receipts": 1,
+  "fixture_backed": true,
+  "generated_at": "2026-09-02T16:57:35Z",
+  "human_content_judgment_required": false,
+  "live": false,
+  "live_originated_artifacts_consumed": false,
+  "llm_judge_used": false,
+  "mocked": false,
+  "output_root": "/tmp/persona-dream-pctom-final-negative-fixtures/autonomous",
+  "receipt_path": "/tmp/persona-dream-pctom-final-negative-fixtures/autonomous/autonomous_no_human_judgment_surface_receipt.v1.json",
+  "receipt_sha256": "sha256:9dbe584cfc42a65423581f717571427c81f9abf02499fc778831f532a38fb371",
+  "receipts": [
+    {
+      "fixture_backed": false,
+      "human_content_judgment_required": true,
+      "live": false,
+      "llm_judge_used": false,
+      "mocked": false,
+      "path": "/tmp/persona-dream-pctom-final-negative-fixtures/input/human_required_pass_fixture.json",
+      "schema": "persona_dream.test.receipt.v1",
+      "sha256": "sha256:d20c153f335ff2ab4b03b4f04413e46264a843ab1cd9d12a4dac444fafd3a6fa",
+      "status": "PASS_TEST_FIXTURE_FOR_NEGATIVE_AUDIT"
+    }
+  ],
+  "require_explicit_human_content_judgment_false": true,
+  "schema": "persona_dream.research.prospective_tom.autonomous_no_human_judgment_surface_receipt.v1",
+  "status": "BLOCKED_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE"
+}

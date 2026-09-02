@@ -101,7 +101,7 @@
     },
     {
       "criticality": "critical",
-      "description": "Persona Dream research hypotheses terminate through a machine-readable registry that recomputes receipt hashes, checks result/product/transfer consistency, and refuses immutable-goal completion while required hypotheses remain nonterminal.",
+      "description": "Persona Dream research hypotheses terminate through a machine-readable registry that recomputes receipt hashes, checks result/product/transfer consistency, permits immutable-goal completion only when all required hypotheses are terminal, and refuses completion while any required hypothesis remains nonterminal.",
       "evidence_required": {
         "deterministic": true,
         "live_e2e": true
@@ -886,7 +886,7 @@
         "stdout_contains": [
           "passed",
           "PASS_DISPOSITION_REGISTRY",
-          "\"immutable_goal_completion_claimed\": false",
+          "\"immutable_goal_completion_claimed\": true",
           "DISPOSITION_LIVE_READBACK_OK"
         ]
       },

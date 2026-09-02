@@ -12,8 +12,9 @@ ledger is required to be positive.
 The machine-readable source for current research dispositions is
 `DISPOSITION_REGISTRY.json`. This prose ledger is historical context; the strict
 gate is `./run.sh check-dispositions --strict --json`, which recomputes receipt
-hashes and refuses immutable-goal completion while required hypotheses remain
-nonterminal.
+hashes and now reports all required hypotheses terminal inside their stated
+proof boundaries. Terminal does not mean universally positive: `BLOCKED_VALID_RESULT`,
+`NULL_OR_TIE`, and retired scope decisions are valid closure outcomes.
 
 The discipline is mechanized, not aspirational. Four gates run in CI and fail
 closed:
@@ -103,22 +104,89 @@ that dreaming helps.
 - **Destination repository:** `grahama1970/tau` — the "every treatment must be
   structurally able to lose" predicate belongs in any Tau-run comparison
   contract, not only this one.
-- **Downstream:** no PR yet; transfer decision pending #1008's live result.
+- **Downstream:** no PR yet; #1008 now has a scoped local result, but no
+  downstream adoption is justified without a larger preregistered live Tau
+  replication.
 - **Serves criterion:** `cognitive_value_disposition`.
 
 ---
 
-## Open dispositions
+## #1008 — Scoped PCTOM-R held-out benefit: CONSTRAIN, not production adoption
+
+```text
+Finding:
+The repaired deterministic held-out apparatus reports a positive CD effect, and
+a one-episode live Tau held-out bridge executes without boundary failures.
+
+What was falsified:
+The prior state "measurement valid but held-out benefit not run" is no longer
+current. The result does not falsify the production skepticism: the live bridge
+is a smoke-sized bridge, not a large live replication.
+
+Transferable lesson:
+A PCTOM result must carry its scope: deterministic held-out benefit, live Tau
+bridge size, coverage receipt, and success-criteria receipt are separate facts.
+
+Decision:
+CONSTRAIN. Retain the PCTOM-R apparatus as local research evidence and require a
+larger preregistered live Tau replication before any production cognitive-value
+claim or downstream adoption.
+```
+
+- **Evidence:** `reports/goal_v5/closure/pctom_final/20260902T165849Z/HELDOUT_CONDITION_BENEFIT_RECEIPT.json`
+  = `PASS_PCTOM_HELDOUT_CONDITION_BENEFIT`, `cd_minus_strongest_baseline=-0.07979999999999995`, strongest baseline `D`.
+- **Bridge evidence:** `reports/goal_v5/closure/pctom_final/20260902T165849Z/LIVE_TAU_HELDOUT_CONDITION_RECEIPT.json`
+  = `PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON`, one held-out episode / four cases.
+- **Coverage evidence:** `reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json`
+  = `PASS_PCTOM_GOAL_COVERAGE`, 15/15 coverage ids, 43 evidence receipts, 12 negative receipts, 0 unbound receipts.
+- **Success-criteria evidence:** `reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_SUCCESS_CRITERIA_RECEIPT.json`
+  = `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` within the historical text-first PCTOM-R success-criteria contract.
+- **Destination repository:** none yet.
+- **Downstream:** local-only with reason. No adoption until a larger live Tau replication exists.
+- **Serves criterion:** `cognitive_value_disposition`.
+
+---
+
+## 2026-09-02 — Agent listening signoff: MACHINE_PROXY_ONLY, not human perception
+
+```text
+Finding:
+All four blinded listener stimuli passed the agent prescreen gate before human
+collection.
+
+What was falsified:
+The old ordering that treated human listener collection as the next direct step.
+Human listeners are now downstream of a machine/ops signoff gate.
+
+Transferable lesson:
+Chatterbox emotional-quality evidence must distinguish technical/acoustic proxy
+fitness from human-perceived emotion, naturalness, or identity.
+
+Decision:
+CONSTRAIN. Human collection is permitted, but only machine-proxy voice evidence
+is closed. Human-perception claims remain forbidden until 20 valid listener rows
+and `SIGNED_INTERPRETATION.json` exist.
+```
+
+- **Evidence:** `reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/AGENT_LISTENING_SIGNOFF.json`
+  = `PASS_AGENT_LISTENING_SIGNOFF`, 4/4 stimuli passed, `human_collection_permitted=true`, `failed_gates=[]`.
+- **Destination repository:** none for the machine-proxy disposition. Chatterbox-side human perceptual validation remains future work only if perception wording is needed.
+- **Downstream:** local-only with reason. The bundle may go to human raters, but machine proof is not human proof.
+- **Serves criterion:** `voice_value_disposition`.
+
+---
+
+## Current dispositions
 
 | Criterion | Status | Owner |
 |---|---|---|
-| `cognitive_value_disposition` | apparatus valid, no result | #1008 |
-| `voice_value_disposition` | stimuli rejected (#1127); requested tone measured NOT audible (#1209) | #1179 re-render, then #1130 → #1058 |
-| `persistent_persona_value_disposition` | N=5 feasibility only | #1128 |
-| `operational_value_disposition` | not started | #1129 → #1128 |
-| `transfer_record` | this ledger | ongoing |
-| `experimental_invariants_preserved` | holding | every lane |
-| `ablation_retirement` | first retirement recorded (#1059) | ongoing |
+| `cognitive_value_disposition` | terminal scoped positive: deterministic held-out CD beats strongest D; one live Tau held-out bridge passed; production cognitive value not claimed | #1008 |
+| `voice_value_disposition` | terminal scoped `MACHINE_PROXY_ONLY`: 4/4 stimuli passed agent signoff before human collection; human perception remains unmeasured | #1058 for optional human-perception wording |
+| `persistent_persona_value_disposition` | terminal scoped `BLOCKED_VALID_RESULT`: mechanism works locally, longitudinal adaptation benefit unmeasured | future authorized longitudinal ablation only |
+| `operational_value_disposition` | terminal scoped local reliability/recovery only | #1128/#1129 closed |
+| `transfer_record` | this ledger plus `DISPOSITION_REGISTRY.json` | current |
+| `experimental_invariants_preserved` | holding; strict disposition and current-state gates pass | every lane |
+| `ablation_retirement` | previous-video causality retired; media retained creative-only | current |
 
 ---
 

@@ -22,11 +22,7 @@ is the authority; the current-state block below is generated from it.
 
 ## Current state
 
-Phase **P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN**. A live
-Kling/Fal provider return exists for request
-`sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4`,
-the successor dream passes Phase 16 recall/behavior evaluation, and the request
-must not be resubmitted. The digest below is generated from
+Phase **P2_CORRECTED_GOAL_PAIR_PROOF**. The digest below is generated from
 `CURRENT_STATUS.json`, which holds the authoritative blockers, next step, and
 every figure. `./run.sh check-current-state-consistency --strict` fails if this
 file drifts from it.
@@ -55,10 +51,10 @@ Figures, receipt paths, and revision ids are in
 run `./run.sh generate-readme-research-state`. Full claim dispositions live in
 the JSON, not here.*
 
-- **Phase:** `P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN`
-- **Open claims:** #1008 (PCTOM-R held-out benefit), #1058 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
+- **Phase:** `P2_CORRECTED_GOAL_PAIR_PROOF`
+- **Open claims:** #1058 (Blinded listener study), #1128 (Continuity reliability soak), #1129 (Restart / recovery)
 - **Current blocker:** #1058 is ready for human listener collection from the current v2 bundle: rater page, stimulus validation, and technical screen pass, but analysis rem…
-- **Next step:** Kling/Phase 11 and Phase 16 recall/behavior are no longer the active blocker. The remaining goal blockers are human listener collection/signature, PC…
+- **Next step:** Run PD-CORRECTED-GOAL-V1: one paired structured-reflection control and dream-journal treatment through the existing dynamic Horus/Embry and Chatterbo…
 
 <!-- END GENERATED CURRENT RESEARCH STATE -->
 

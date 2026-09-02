@@ -1,282 +1,476 @@
 {
-  "schema": "persona_dream.current_status.v1",
-  "created_at": "2026-07-27T12:07:30Z",
-  "updated_at": "2026-08-28T19:47:51Z",
-  "controlling_goal": {
-    "source": "skills/persona-dream/GOAL.md",
-    "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
-    "summary": "Determine through preregistered, falsifiable, fail-closed experiments whether provenance-bound synthetic dreaming adds measurable value over direct memory and structured reflection, while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries; transfer validated mechanisms and failure modes into Graph Memory Operator, Tau, SPARTA, and Chatterbox, and retire or simplify components that fail controlled ablation.",
-    "registered_with": "skills/goal-drift/run.sh goal --project persona-dream",
-    "registered_source": "human_prompt",
-    "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
-  },
-  "current_phase": "P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN",
-  "corrected_goal_pair_proof": {
-    "proof_id": "PD-CORRECTED-GOAL-V1",
-    "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF",
-    "mocked": false,
-    "live": true,
-    "receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/corrected_goal_receipt.json",
-    "receipt_sha256": "sha256:c8979068210d478b9217d4b030c0a11ea09eca6ea52bc2cb9fdd70104921a220",
-    "service_preflight": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/service_preflight.json",
-    "service_preflight_sha256": "sha256:7ba5327966534bbc89e1c54833f6438074f76aacfcd34af3825fd3ca9ebf7809",
-    "gates": {
-      "answer_invariance": "PASS_ANSWER_INVARIANCE",
-      "emotional_carryover": "PASS_EMOTION_LINEAGE",
-      "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY"
-    },
-    "claim_boundary": "One local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body; does not prove reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal."
-  },
-  "latest_full_cycle_live_eval": {
-    "status": "PASS_FULL_CYCLE_LIVE_3_TRIALS",
-    "mocked": false,
-    "live": true,
-    "fixture_backed": true,
-    "agentic_eval_receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/full-cycle-live-20260822T223907Z/agentic_eval_report.json",
-    "agentic_eval_receipt_sha256": "sha256:24e3fc0f481ae8a2cf1e38104ef7e4179801f8073c913782e5ae212188bb76e0",
-    "run_id": "43bc87d1bc6c",
-    "generated_at": "2026-08-22T22:39:07.957907+00:00",
-    "commit": "4d83860d50f26e42b7c18b629a4d3215f9a4a41f",
-    "case": "full-cycle-live",
-    "readiness": "READY",
-    "case_count": 1,
-    "trial_count": 3,
-    "passed_trials": 3,
-    "outcome_counts": {
-      "PASS": 1,
-      "FAIL": 0,
-      "BLOCKED": 0,
-      "NOT_TESTED": 0
-    },
-    "trial_runs": [
-      {
-        "trial_id": "43bc87d1bc6c-c000-t00",
-        "run": "eval-full-cycle-20260822T220339Z",
-        "dream_cycle": "cycle_20260822T220341Z",
-        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T220339Z day_ingested dream_spine_pass:cycle_20260822T220341Z journal_rendered journal_spoken:833614b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6"
-      },
-      {
-        "trial_id": "43bc87d1bc6c-c000-t01",
-        "run": "eval-full-cycle-20260822T221510Z",
-        "dream_cycle": "cycle_20260822T221512Z",
-        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T221510Z day_ingested dream_spine_pass:cycle_20260822T221512Z journal_rendered journal_spoken:783950b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6"
-      },
-      {
-        "trial_id": "43bc87d1bc6c-c000-t02",
-        "run": "eval-full-cycle-20260822T222750Z",
-        "dream_cycle": "cycle_20260822T222752Z",
-        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T222750Z day_ingested dream_spine_pass:cycle_20260822T222752Z journal_rendered journal_spoken:735822b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6"
-      }
-    ],
-    "what_was_exercised": "Three live trials through day ingest, Tau dream spine, journal render, ASR-verified spoken journal, memory write and artifact store, fully voiced dynamic Horus/Embry conversation, and carry-back.",
-    "boundary": "Supports the full-cycle-live pipeline claim for three local live trials after #1495 and #1496; does not prove 35-cycle no-restart reliability, human-perceived emotional value, human listener identity, separate mediation by dream versus journal, or production readiness."
-  },
-  "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
-  "latest_accepted_dream_cycle": {
-    "status": "HISTORICAL_ACCEPTED_SINGLE_LOOP",
-    "evidence_boundary": "One accepted canonical dream persistence path is meaningful history, not repeated pipeline reliability.",
-    "unverified": [
-      "fresh Phase 01-16 rerun",
-      "fresh full Phase 01-16 five-cycle media-pipeline reliability study (scope: full_phase01_16_media_pipeline_reliability; the completed 5/5 result is the downstream P2 continuity pilot, scope: p2_continuity_feasibility_pilot)",
-      "previous-video attachment A/B proof"
-    ]
-  },
+  "active_blockers": [
+    "#1058 is ready for human listener collection from the current v2 bundle: rater page, stimulus validation, and technical screen pass, but analysis remains fail-closed until 20 valid human response rows and SIGNED_INTERPRETATION.json exist.",
+    "SPARTA has local live API proof of consuming the Persona Dream session_arc_bias artifact, but deployed production operation beyond that local receipt remains unproven.",
+    "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
+    "PCTOM-R does not yet prove confidence-bounded planning advantage.",
+    "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
+  ],
   "continuity_state": {
-    "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
-    "mocked": false,
-    "live": true,
-    "status": "LIVE_CHAIN_SESSION_ARC_BIAS_SPARTA_LOCAL_LIVE_CONSUMED_AND_N5_RELIABILITY_PILOT_PASSED_NOT_PERCEPTUAL",
+    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; SPARTA arc-bias handoff contract publication with hash-bound session_arc_bias source, explicit consumer fields, no tone emission, no answer-text authority, and 7/7 fail-closed negative controls; SPARTA-owned local live API consumption of the current session_arc_bias artifact before the first turn, stable reuse of the same artifact across three turns without resupplying it, canonical answer-text preservation, per-turn tone-category preservation, and neutral fallback when no Persona Dream artifact is supplied; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes, response schema and rater instructions are present, response validation rejects empty/malformed rater rows, live ASR validates all four stimuli with WER 0.0, and a static blinded rater page now copies those WAVs into stimulus-id filenames S01-S04 without condition-labelled audio paths in the HTML; the separate listener-study analysis guard writes BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS until human_responses_complete and signed_human_interpretation_missing are cleared; valid human responses remain 0/20",
+    "latest_agent_listening_signoff": {
+      "boundary": "agent machine-proxy prescreen only; not human perceptual evidence",
+      "human_collection_permitted": true,
+      "passed_stimulus_count": "4/4",
+      "status": "PASS_AGENT_LISTENING_SIGNOFF"
+    },
+    "latest_agent_listening_signoff_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/AGENT_LISTENING_SIGNOFF.json",
+    "latest_agent_listening_signoff_receipt_sha256": "sha256:e2ae9366e79647c22461d658e4e247c469082b50aaff81d02e26178dabcbf311",
     "latest_authority_receipt": "skills/persona-dream/reports/goal_v5/continuity/ledger_hardening/RECEIPT.json",
     "latest_authority_receipt_sha256": "sha256:02f866e0b208c531902129cff2cd385ba29b28d6170d3ea027993fea01f7502b",
-    "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
-    "latest_session_mood_binding_receipt_sha256": "sha256:5ad61984b0f77022b8d62a57d2791d11eb800bf5509320dbb82b42f51f218edc",
-    "latest_session_mood_chatterbox_live_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
-    "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:4827cb0ff7ebeb74363ff0ee9d6d3d62fe487caecf3c3802c15eb8f4e6e97260",
-    "latest_session_mood_chatterbox_long_identity_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json",
-    "latest_session_mood_chatterbox_long_identity_receipt_sha256": "sha256:b7ddbfd0592fc9376ca2e01c4cbb2caeae5222b519ac5f9287edd0d880846875",
-    "latest_voice_recognition_preflight_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json",
-    "latest_voice_recognition_preflight_receipt_sha256": "sha256:f0cf2723f7d04486a1277c191d000e7e9ad822480d71d04b19693e177beaf941",
-    "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
-    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
-    "latest_voice_recognition_receipt_sha256": "sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd",
-    "exercised": "local ledger read validation, Embry schema normalization, atomic append writes, expected-epoch compare-and-set, dream-cycle idempotency, recomputed identity-core hash guard, accepted historical dream/source Watch evidence bound to a fresh live-chain cycle id, live Memory writes and exact rereads for accepted synthetic dream, Watch binding, journal, and ledger snapshot, first-person synthetic journal validation, one bounded arc delta append/reread, deterministic session mood selected before turn 1, stable mood id across three turns, answer text exact-match invariance, live Chatterbox /synthesize-batch rendering of the session-derived voice_delivery envelope through chatterbox_base with strict ASR WER 0.0 on all three turns, durable WAV snapshots copied into the live-chain report directory, and resemblyzer speaker-recognition/adversarial scoring with failed_gates=[] and separation=0.159977; session arc-bias artifact publication from ledger epoch 2 with bounded intensity_delta=0.18 and valence_delta=-0.18, no emitted tone category, and 7/7 fail-closed negative controls for missing/stale/mutated/unbound ledger inputs; SPARTA arc-bias handoff contract publication with hash-bound session_arc_bias source, explicit consumer fields, no tone emission, no answer-text authority, and 7/7 fail-closed negative controls; SPARTA-owned local live API consumption of the current session_arc_bias artifact before the first turn, stable reuse of the same artifact across three turns without resupplying it, canonical answer-text preservation, per-turn tone-category preservation, and neutral fallback when no Persona Dream artifact is supplied; five-cycle live-chain reliability pilot with 5 attempted, 5 completed, 5 passed, 0 blocked, 0 errored, 0 duplicate accepted effects, Wilson 95% lower bound 0.565509, and per-cycle live Memory/Chatterbox/recognition receipts bound by recomputed SHA-256; blinded-listener study stimuli restored from exact preregistered Chatterbox WAV hashes, response schema and rater instructions are present, response validation rejects empty/malformed rater rows, live ASR validates all four stimuli with WER 0.0, and a static blinded rater page now copies those WAVs into stimulus-id filenames S01-S04 without condition-labelled audio paths in the HTML; the separate listener-study analysis guard writes BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS until human_responses_complete and signed_human_interpretation_missing are cleared; valid human responses remain 0/20",
-    "unverified": [
-      "perceived target emotion, naturalness, or human listener acceptance; blinded listener responses remain 0/20 even though the static rater page is ready, and the analysis receipt blocks without signed human interpretation",
-      "recognition check across multiple moods by human listeners",
-      "SPARTA production deployment beyond the local live API receipt",
-      "production reliability beyond an N=5 pilot"
-    ],
-    "latest_live_chain_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
-    "latest_live_chain_receipt_sha256": "sha256:e414712551e43d727996b065ca250b2221bbbf60824d6fbbeae3a177e144e2fd",
+    "latest_blinded_listener_study_analysis": {
+      "boundary": "analysis false-green guard only; does not supply human ratings or perceptual evidence",
+      "failed_gates": [
+        "human_responses_complete",
+        "signed_human_interpretation_missing"
+      ],
+      "live": false,
+      "mocked": false,
+      "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
+      "valid_human_responses": "0/20"
+    },
+    "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
+    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:d57d8e8a6f2e442444a5c327c3c13bb59ab40f5b04976475159bf6817842e50e",
+    "latest_blinded_listener_study_design": {
+      "boundary": "v2 design repair only (#1126): per-rater counterbalanced order, intention-to-treat primary, independent attention check; provides no human perceptual evidence",
+      "preregistration_v2": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
+      "preregistration_v2_sha256": "sha256:3348a10b5242c63cf4ae30f92451fb21821d1004953882d6d0f87ff108758ef0",
+      "status": "PASS_BLINDED_LISTENER_STUDY_DESIGN_V2"
+    },
+    "latest_blinded_listener_study_design_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STUDY_DESIGN_RECEIPT_V2.json",
+    "latest_blinded_listener_study_design_receipt_sha256": "sha256:937600b2f01c2022ee1143f45d13612182f589d82bd0d1a46b6eb529c66ff636",
+    "latest_blinded_listener_study_readiness": {
+      "human_collection_permitted": true,
+      "human_responses": "0/20 valid",
+      "rater_instructions_sha256": "sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5",
+      "rater_page": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html",
+      "rater_page_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json",
+      "rater_page_receipt_sha256": "sha256:0b001b324d2a77db29f4a420042639276265ec01c7b3b122892942e58b15564d",
+      "rater_page_sha256": "sha256:aaf80e065138bee35f28751c8fa36c7951d7b276f40ae96efaec8b8ea6b92450",
+      "rater_page_status": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
+      "remaining_failed_gate": "human_responses_complete",
+      "response_schema_sha256": "sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e",
+      "status": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
+      "stimulus_asr_wer": "0.0/0.0/0.0/0.0",
+      "stimulus_hashes_matched": "4/4",
+      "superseded_by": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+      "superseded_on": "2026-08-22",
+      "supersession_note": "#1179 re-rendered all four target stimuli under one shared Chatterbox norm_loudness policy and one shared ffmpeg loudnorm post-processing policy; the frozen technical screen now reports PASS_STIMULUS_TECHNICAL_SCREEN with failed_gates=[] and nuisance_rows_outside_neutral_spread=0. The remaining gate is human collection plus signed interpretation under #1058."
+    },
+    "latest_blinded_listener_study_validation_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json",
+    "latest_blinded_listener_study_validation_receipt_sha256": "sha256:75853f97732bac95b6b03e60aee544eeee0f465ef78370a30c8990ce3f3f5c2f",
     "latest_live_chain_chatterbox_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
     "latest_live_chain_chatterbox_receipt_sha256": "sha256:7947ecdce50c0ddab47301bfda37225683dfcf2196a1dfed0e75d6321e9e43fb",
+    "latest_live_chain_dream_cycle_id": "live_chain_20260729t130950z",
+    "latest_live_chain_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+    "latest_live_chain_receipt_sha256": "sha256:e414712551e43d727996b065ca250b2221bbbf60824d6fbbeae3a177e144e2fd",
+    "latest_live_chain_session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
     "latest_live_chain_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
     "latest_live_chain_voice_recognition_receipt_sha256": "sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e",
-    "latest_live_chain_dream_cycle_id": "live_chain_20260729t130950z",
-    "latest_live_chain_session_mood_id": "session_mood:f65062c26b4b30d507f793f9",
-    "latest_session_arc_bias_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
-    "latest_session_arc_bias_receipt_sha256": "sha256:3949f62a8306e5a6040b66fd6982d396748e239745e665bc66a357ab3337d3d3",
-    "latest_session_arc_bias_artifact": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
-    "latest_session_arc_bias_artifact_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
-    "latest_session_arc_bias": {
-      "status": "PASS_SESSION_ARC_BIAS_RECEIPT",
-      "source_dream_cycle_id": "live_chain_20260729t130950z",
-      "ledger_epoch": 2,
-      "ledger_sha256": "sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b",
-      "arc_delta_id": "arc_1_55a79f6ef25f",
-      "intensity_delta": 0.18,
-      "valence_delta": -0.18,
-      "emits_tone": false,
-      "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED"
-    },
-    "latest_sparta_arc_bias_handoff_receipt": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json",
-    "latest_sparta_arc_bias_handoff_receipt_sha256": "sha256:722c0b605c39611df553b354593fb0867275aa4780e1d0b04dc9c6404ea6530c",
-    "latest_sparta_arc_bias_handoff_contract": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json",
-    "latest_sparta_arc_bias_handoff_contract_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
-    "latest_sparta_arc_bias_handoff": {
-      "status": "PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT",
-      "source_artifact_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
-      "contract_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
-      "mocked": false,
-      "live": false,
-      "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
-      "boundary": "proves Persona Dream's machine-checkable handoff; SPARTA local live consumption is separately receipted in grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716"
-    },
     "latest_reliability_aggregate_receipt": "skills/persona-dream/reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
     "latest_reliability_aggregate_receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
     "latest_reliability_pilot": {
-      "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
-      "campaign_id": "live_chain_reliability_20260729t133501z",
       "attempted": 5,
-      "completed": 5,
-      "passed": 5,
       "blocked": 0,
-      "errored": 0,
-      "duplicate_accepted_effect_count": 0,
-      "wilson_95_lower": 0.565509,
+      "campaign_id": "live_chain_reliability_20260729t133501z",
+      "completed": 5,
       "cycle_receipts": [
         "sha256:77ab4d73cf376cf7532d828ca251adcb244b96ee1e5df1a91a2720aef1c35437",
         "sha256:1b8d338850b43d2edfcab455836376ed015ccef09d3376648af4bcfdb6580c16",
         "sha256:2544988bed01b419ed22222d677ec637f5c2b2198d33ec4ed6ed2ef529c1f5d1",
         "sha256:85f36a690c10c16d3f53bbf659d9ea21ea4e4cafd7c687fda6bbb55c28c5b3d1",
         "sha256:8cac02308458c2c6fd64150e59fbbdf070579440a491bfb2a54a3f8a7f55ecf3"
-      ]
-    },
-    "latest_blinded_listener_study_validation_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STIMULUS_VALIDATION_RECEIPT.json",
-    "latest_blinded_listener_study_validation_receipt_sha256": "sha256:75853f97732bac95b6b03e60aee544eeee0f465ef78370a30c8990ce3f3f5c2f",
-    "latest_blinded_listener_study_readiness": {
-      "status": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
-      "stimulus_hashes_matched": "4/4",
-      "stimulus_asr_wer": "0.0/0.0/0.0/0.0",
-      "response_schema_sha256": "sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e",
-      "rater_instructions_sha256": "sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5",
-      "rater_page": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html",
-      "rater_page_sha256": "sha256:aaf80e065138bee35f28751c8fa36c7951d7b276f40ae96efaec8b8ea6b92450",
-      "rater_page_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json",
-      "rater_page_receipt_sha256": "sha256:0b001b324d2a77db29f4a420042639276265ec01c7b3b122892942e58b15564d",
-      "rater_page_status": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
-      "human_responses": "0/20 valid",
-      "remaining_failed_gate": "human_responses_complete",
-      "superseded_by": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-      "superseded_on": "2026-08-22",
-      "supersession_note": "#1179 re-rendered all four target stimuli under one shared Chatterbox norm_loudness policy and one shared ffmpeg loudnorm post-processing policy; the frozen technical screen now reports PASS_STIMULUS_TECHNICAL_SCREEN with failed_gates=[] and nuisance_rows_outside_neutral_spread=0. The remaining gate is human collection plus signed interpretation under #1058.",
-      "human_collection_permitted": true
-    },
-    "latest_blinded_listener_study_analysis_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-    "latest_blinded_listener_study_analysis_receipt_sha256": "sha256:d57d8e8a6f2e442444a5c327c3c13bb59ab40f5b04976475159bf6817842e50e",
-    "latest_blinded_listener_study_analysis": {
-      "status": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
-      "mocked": false,
-      "live": false,
-      "valid_human_responses": "0/20",
-      "failed_gates": [
-        "human_responses_complete",
-        "signed_human_interpretation_missing"
       ],
-      "boundary": "analysis false-green guard only; does not supply human ratings or perceptual evidence"
+      "duplicate_accepted_effect_count": 0,
+      "errored": 0,
+      "passed": 5,
+      "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+      "wilson_95_lower": 0.565509
     },
+    "latest_session_arc_bias": {
+      "arc_delta_id": "arc_1_55a79f6ef25f",
+      "emits_tone": false,
+      "intensity_delta": 0.18,
+      "ledger_epoch": 2,
+      "ledger_sha256": "sha256:a9e98db6b62a44697ce16b26878d30e3f9a4862a72ddfc3d1d1b31379d23321b",
+      "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
+      "source_dream_cycle_id": "live_chain_20260729t130950z",
+      "status": "PASS_SESSION_ARC_BIAS_RECEIPT",
+      "valence_delta": -0.18
+    },
+    "latest_session_arc_bias_artifact": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
+    "latest_session_arc_bias_artifact_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
+    "latest_session_arc_bias_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/RECEIPT.json",
+    "latest_session_arc_bias_receipt_sha256": "sha256:3949f62a8306e5a6040b66fd6982d396748e239745e665bc66a357ab3337d3d3",
+    "latest_session_mood_binding_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_binding/RECEIPT.json",
+    "latest_session_mood_binding_receipt_sha256": "sha256:5ad61984b0f77022b8d62a57d2791d11eb800bf5509320dbb82b42f51f218edc",
+    "latest_session_mood_chatterbox_live_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live/RECEIPT.json",
+    "latest_session_mood_chatterbox_live_receipt_sha256": "sha256:4827cb0ff7ebeb74363ff0ee9d6d3d62fe487caecf3c3802c15eb8f4e6e97260",
+    "latest_session_mood_chatterbox_long_identity_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_chatterbox_live_long_identity/RECEIPT.json",
+    "latest_session_mood_chatterbox_long_identity_receipt_sha256": "sha256:b7ddbfd0592fc9376ca2e01c4cbb2caeae5222b519ac5f9287edd0d880846875",
     "latest_sparta_arc_bias_consumption_receipt": {
-      "external_repo": "grahama1970/sparta",
+      "answer_text_unchanged": true,
+      "api_root": "http://127.0.0.1:3011",
+      "arc_bias_applied_before_first_turn": true,
+      "arc_bias_file_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
+      "boundary": "proves local live SPARTA API consumption of the current Persona Dream session_arc_bias artifact; does not prove human-perceived emotion, human listener recognition, SPARTA deployment beyond the local live API, or immutable-goal closure",
       "commit": "2fe1a67221da4b5f07d32b9136f4578f38d4e716",
+      "contract_file_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
+      "external_repo": "grahama1970/sparta",
+      "failures": [],
+      "live": true,
+      "local_mirror": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_consumption/RECEIPT.json",
+      "local_mirror_sha256": "sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813",
+      "local_mirror_sha256s": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_consumption/SHA256SUMS.txt",
+      "mocked": false,
+      "neutral_fallback_checked": true,
       "path": "artifacts/persona_dream_arc_bias_consumer/20260729T180334Z/RECEIPT.json",
       "receipt_sha256": "sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813",
-      "status": "PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED",
-      "mocked": false,
-      "live": true,
-      "api_root": "http://127.0.0.1:3011",
+      "same_arc_bias_artifact_all_turns": true,
       "session_id": "persona-dream-arc-bias-1785348214041",
+      "status": "PASS_SPARTA_PERSONA_DREAM_ARC_BIAS_CONSUMED",
+      "tone_category_unchanged_by_arc_bias": true,
       "turn_ids": [
         "persona-dream-arc-bias-1785348214041:turn-001",
         "persona-dream-arc-bias-1785348214041:turn-002",
         "persona-dream-arc-bias-1785348214041:turn-003"
-      ],
-      "arc_bias_file_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
-      "contract_file_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
-      "arc_bias_applied_before_first_turn": true,
-      "same_arc_bias_artifact_all_turns": true,
-      "answer_text_unchanged": true,
-      "tone_category_unchanged_by_arc_bias": true,
-      "neutral_fallback_checked": true,
-      "failures": [],
-      "boundary": "proves local live SPARTA API consumption of the current Persona Dream session_arc_bias artifact; does not prove human-perceived emotion, human listener recognition, SPARTA deployment beyond the local live API, or immutable-goal closure",
-      "local_mirror": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_consumption/RECEIPT.json",
-      "local_mirror_sha256": "sha256:ca05bb17feb508e5996a9bd46123b8cffebbeb44a39465a1a09e9a64faf30813",
-      "local_mirror_sha256s": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_consumption/SHA256SUMS.txt"
+      ]
     },
-    "latest_blinded_listener_study_design_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/STUDY_DESIGN_RECEIPT_V2.json",
-    "latest_blinded_listener_study_design_receipt_sha256": "sha256:937600b2f01c2022ee1143f45d13612182f589d82bd0d1a46b6eb529c66ff636",
-    "latest_blinded_listener_study_design": {
-      "status": "PASS_BLINDED_LISTENER_STUDY_DESIGN_V2",
-      "preregistration_v2": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
-      "preregistration_v2_sha256": "sha256:3348a10b5242c63cf4ae30f92451fb21821d1004953882d6d0f87ff108758ef0",
-      "boundary": "v2 design repair only (#1126): per-rater counterbalanced order, intention-to-treat primary, independent attention check; provides no human perceptual evidence"
+    "latest_sparta_arc_bias_handoff": {
+      "boundary": "proves Persona Dream's machine-checkable handoff; SPARTA local live consumption is separately receipted in grahama1970/sparta@2fe1a67221da4b5f07d32b9136f4578f38d4e716",
+      "contract_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
+      "live": false,
+      "mocked": false,
+      "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
+      "source_artifact_sha256": "sha256:a978509c4e3fc54501c43f67f08afd7a506734ad1955d54db99325056ecc8152",
+      "status": "PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT"
+    },
+    "latest_sparta_arc_bias_handoff_contract": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json",
+    "latest_sparta_arc_bias_handoff_contract_sha256": "sha256:38eff20c657188c0d16cb6cbe74e78d97e4ba4c2ec87312f32d11679e69042df",
+    "latest_sparta_arc_bias_handoff_receipt": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/RECEIPT.json",
+    "latest_sparta_arc_bias_handoff_receipt_sha256": "sha256:722c0b605c39611df553b354593fb0867275aa4780e1d0b04dc9c6404ea6530c",
+    "latest_technical_screen": {
+      "boundary": "technical comparability screening only; proves collection readiness, not perceived emotion, naturalness, or identity",
+      "cleared": "the earlier #1127 loudness and duration confounds are cleared for the current v2 bundle; live ASR WER is 0.0 for all four stimuli in STIMULUS_VALIDATION_RECEIPT.json",
+      "finding": "After #1179/#1497 all four target stimuli are rendered under one shared Chatterbox norm_loudness policy and one shared ffmpeg loudnorm post-processing policy; the frozen screen reports failed_gates=[] and nuisance_rows_outside_neutral_spread=0.",
+      "issue": "grahama1970/agent-skills#1179",
+      "neutral_render_count": 8,
+      "status": "PASS_STIMULUS_TECHNICAL_SCREEN"
     },
     "latest_technical_screen_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
     "latest_technical_screen_receipt_sha256": "sha256:f722c23b8089da27a74ee7826a65ebfa56100c1d1cbbf1e2b296a9def256e601",
-    "latest_technical_screen": {
-      "status": "PASS_STIMULUS_TECHNICAL_SCREEN",
-      "issue": "grahama1970/agent-skills#1179",
-      "neutral_render_count": 8,
-      "finding": "After #1179/#1497 all four target stimuli are rendered under one shared Chatterbox norm_loudness policy and one shared ffmpeg loudnorm post-processing policy; the frozen screen reports failed_gates=[] and nuisance_rows_outside_neutral_spread=0.",
-      "cleared": "the earlier #1127 loudness and duration confounds are cleared for the current v2 bundle; live ASR WER is 0.0 for all four stimuli in STIMULUS_VALIDATION_RECEIPT.json",
-      "boundary": "technical comparability screening only; proves collection readiness, not perceived emotion, naturalness, or identity"
+    "latest_voice_recognition_preflight_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_preflight/RECEIPT.json",
+    "latest_voice_recognition_preflight_receipt_sha256": "sha256:f0cf2723f7d04486a1277c191d000e7e9ad822480d71d04b19693e177beaf941",
+    "latest_voice_recognition_preflight_runtime": "/home/graham/workspace/experiments/chatterbox/.venv/bin/python",
+    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json",
+    "latest_voice_recognition_receipt_sha256": "sha256:9a1e6de22b0b608570d0458394b64746be8737154d886f8a91dc9cf4c2e159bd",
+    "live": true,
+    "mocked": false,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/embry.continuity_state.v1.json",
+    "status": "LIVE_CHAIN_SESSION_ARC_BIAS_SPARTA_LOCAL_LIVE_CONSUMED_AND_N5_RELIABILITY_PILOT_PASSED_NOT_PERCEPTUAL",
+    "unverified": [
+      "perceived target emotion, naturalness, or human listener acceptance; blinded listener responses remain 0/20 even though the static rater page is ready, and the analysis receipt blocks without signed human interpretation",
+      "recognition check across multiple moods by human listeners",
+      "SPARTA production deployment beyond the local live API receipt",
+      "production reliability beyond an N=5 pilot"
+    ]
+  },
+  "controlling_goal": {
+    "registered_source": "human_prompt",
+    "registered_with": "skills/goal-drift/run.sh goal --project persona-dream",
+    "sha256": "sha256:3914e022fdf9c283a623b801dc3f7914f97be5496808115c1db1360d82a24ec2",
+    "source": "skills/persona-dream/GOAL.md",
+    "summary": "Determine through preregistered, falsifiable, fail-closed experiments whether provenance-bound synthetic dreaming adds measurable value over direct memory and structured reflection, while preserving identity, factual competence, answer content, and synthetic-versus-literal boundaries; transfer validated mechanisms and failure modes into Graph Memory Operator, Tau, SPARTA, and Chatterbox, and retire or simplify components that fail controlled ablation.",
+    "superseded_goal_note": "The prior 'build and verify Embry' objective is demoted to the Persistent-Persona Safety Hypothesis in GOAL.md; it is a safety constraint, not the research conclusion."
+  },
+  "corrected_goal_pair_proof": {
+    "claim_boundary": "One local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body; does not prove reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal.",
+    "gates": {
+      "answer_invariance": "PASS_ANSWER_INVARIANCE",
+      "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
+      "emotional_carryover": "PASS_EMOTION_LINEAGE"
+    },
+    "live": true,
+    "mocked": false,
+    "proof_id": "PD-CORRECTED-GOAL-V1",
+    "receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/corrected_goal_receipt.json",
+    "receipt_sha256": "sha256:c8979068210d478b9217d4b030c0a11ea09eca6ea52bc2cb9fdd70104921a220",
+    "service_preflight": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/live-pair-20260822T170000Z/service_preflight.json",
+    "service_preflight_sha256": "sha256:7ba5327966534bbc89e1c54833f6438074f76aacfcd34af3825fd3ca9ebf7809",
+    "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
+  },
+  "created_at": "2026-07-27T12:07:30Z",
+  "current_claims": {
+    "_comment": "Scoped claim registry required by grahama1970/agent-skills#1132. One object per present-tense claim; check_current_state_consistency.py fails closed on missing ids, PASS without receipt, PASS while a successor issue is open, and the named scope conflations.",
+    "daily_event_ingestion": {
+      "does_not_prove": "that the dreams are better, only that they differ and are grounded in the day; longitudinal persona adaptation over many days remains unrun",
+      "proves": "the day's code, project-state and affect events are written to memory, read back, and blended into the dream by quota per stratum; two consecutive days produce journals with different sha256, ending the byte-identical-journal defect",
+      "receipt": "reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json",
+      "receipt_sha256": "sha256:c73c3474715fd80a24ff74f7ef9d52029f4c9d705cb253e478f9d0d712b800d4",
+      "scope": "two consecutive days under one local configuration; not a longitudinal study",
+      "status": "PASS_CONSECUTIVE_DAYS_DIFFER"
+    },
+    "dream_accumulation": {
+      "does_not_prove": "that accumulation improves anything, or that the persona measurably changes over many days; both remain unrun",
+      "proves": "a dream's interpretation and its media are written to memory, retrieved by a later dream, and remain distinguishable from lived memory without reading metadata",
+      "receipt": "reports/goal_v5/accumulation/ACCUMULATION_RECEIPT.json",
+      "receipt_sha256": "sha256:777a268cb83c03dd85b30b492c48d139623e66b2573937e5a817d82cc35018da",
+      "scope": "one persona, one day, mechanism only",
+      "status": "PASS_DREAMS_ACCUMULATE_AS_MEMORY"
+    },
+    "full_phase01_16_media_pipeline_reliability": {
+      "does_not_prove": "repeatable full-pipeline reliability; downstream continuity receipts are not evidence for this scope",
+      "historical": true,
+      "proves": "one accepted canonical dream persistence path exists as meaningful history",
+      "sample_count": 1,
+      "scope": "fresh complete Phase 01-16 dream/media generation reliability; distinct from the downstream P2 continuity chain",
+      "status": "HISTORICAL_N1_UNPROVEN"
+    },
+    "human_perceived_emotion_and_identity": {
+      "blocked_by": [
+        "20 valid human listener rows in responses_v2.jsonl for perceptual claims only",
+        "SIGNED_INTERPRETATION.json for perceptual claims only"
+      ],
+      "blocking_receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
+      "does_not_prove": "human-perceived emotion, naturalness, or human identity; valid human responses remain 0/20 and signed human interpretation is still absent.",
+      "human_collection_permitted_after_agent_signoff": true,
+      "machine_proxy_disposition": "MACHINE_PROXY_ONLY",
+      "proves": "the four current stimuli passed agent listening signoff before human collection, including ops receipts, stimulus hashes, ASR exactness, Chatterbox analyzer receipts, and claim-boundary checks",
+      "receipt": "reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/AGENT_LISTENING_SIGNOFF.json",
+      "receipt_sha256": "sha256:e2ae9366e79647c22461d658e4e247c469082b50aaff81d02e26178dabcbf311",
+      "resolved_prerequisite": "grahama1970/agent-skills#1179 CLOSED: current v2 stimuli pass the frozen technical screen and rater-page/stimulus-validation guards",
+      "sample_count": 0,
+      "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness; v2 design (per-rater counterbalancing, intention-to-treat primary, independent attention check) preregistered under #1126",
+      "status": "MACHINE_PROXY_SIGNOFF_PASSED_HUMAN_PERCEPTION_UNMEASURED",
+      "successor_issue": "grahama1970/agent-skills#1058",
+      "successor_resolved": false,
+      "surface_token": "#1058",
+      "valid_human_responses": "0/20"
+    },
+    "journal_conversation_persistence": {
+      "does_not_prove": "that a later dream is improved by the conversation; the arc now closes mechanically -- see return_arc_closed -- but benefit is unproven",
+      "proves": "human, agent and embry turns are appended to conversation.jsonl under an exclusive lock, survive the browser, read back after write, and are bound by hash to the journal they discuss; an embry turn is refused unless it carries a requested delivery tone and rendered audio",
+      "receipt": "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json",
+      "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd",
+      "scope": "durability of the discussion record on disk; not its return into memory",
+      "status": "PASS_CONVERSATION_PERSISTED"
+    },
+    "journal_delivery_request": {
+      "does_not_prove": "any acoustic or perceptual consequence; see journal_tone_effect, which measured none",
+      "proves": "the dream's dominant tension maps to a delivery tone Chatterbox accepts, and that tone survives normalization instead of collapsing to neutral_warm",
+      "receipt": "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json",
+      "receipt_sha256": "sha256:3321fa0867f9d048d1a4d33bfc7dcdb1530e519758f331788a061a8493ecde04",
+      "scope": "request handling between persona-dream and Chatterbox; metadata only",
+      "status": "PASS_REQUESTED_TONE_SURVIVED"
+    },
+    "journal_publication": {
+      "does_not_prove": "that successive days produce meaningfully different journals; the five-cycle pilot produced byte-identical entries (see daily_event_ingestion)",
+      "proves": "the entry is published as a readable first-person journal.md carrying tone annotations and provenance footnotes, plus a hash-bound annotation-stripped journal_spoken.txt; no annotation reaches the renderer input",
+      "receipt": "reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json",
+      "receipt_sha256": "sha256:789a6a717257427ad09b5352f68e13c083bec08bb92eb81a2a520c0eaf250dcf",
+      "scope": "one live run's journal artifacts; artifact shape and speech binding only",
+      "status": "PASS_JOURNAL_PUBLISHED"
+    },
+    "journal_spoken_audio": {
+      "does_not_prove": "requested tone audibility, perceived emotion, naturalness, or human acceptance",
+      "proves": "Embry reads her own journal aloud: a live render is stored run-local as journal.wav, bound by sha256 to the exact spoken text, with an independent ASR transcript captured",
+      "receipt": "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json",
+      "receipt_sha256": "sha256:3321fa0867f9d048d1a4d33bfc7dcdb1530e519758f331788a061a8493ecde04",
+      "scope": "one live Chatterbox render into the run directory",
+      "status": "PASS_JOURNAL_SPOKEN"
+    },
+    "journal_tone_effect": {
+      "does_not_prove": "anything about the current renderer. Publishing this negative with a reproduction led to grahama1970/chatterbox#20, #21 and #22: pace was made a real time stretch, a per-render affect_effect receipt was added, and the tone vocabulary was calibrated. Tone now derives distinct affect per tone name, verified live. Human perception remains untested (chatterbox#7).",
+      "proves": "as measured on 2026-08-04, no requested tone moved any acoustic metric beyond the renderer own same-parameter stochastic spread, and the engine listed the affect parameters among those it ignored",
+      "receipt": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json",
+      "receipt_sha256": "sha256:93c85255440e53d22dccb2798aa62e2861e0aca77e4dadecdda956b0e012fa99",
+      "resolved_by_issue": "grahama1970/agent-skills#1209",
+      "sample_count": 10,
+      "scope": "three requested TONES on one text against 10 same-parameter neutral repeats, engine chatterbox_turbo",
+      "status": "SUPERSEDED_TONE_NOW_CALIBRATED_UPSTREAM",
+      "superseded_by": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json is historical; see chatterbox#20/#21/#22"
+    },
+    "journal_ux_browser_proof": {
+      "does_not_prove": "visual design quality, other viewports, accessibility, or that a human finds it usable",
+      "proves": "the page renders in Chrome at 1440x900 with journal prose, tone chips and provenance footnotes; footnote links resolve to their anchors; the audio player resolves its source and loads the journal audio at its true 17.48s duration",
+      "receipt": "reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json",
+      "receipt_sha256": "sha256:38113d74578245963b0e36b9f9604898545d02b346535f2949f5a1ab2f97e0a0",
+      "scope": "the static journal/chat page rendered in a real browser",
+      "status": "PASS_JOURNAL_UX_RENDERED_IN_BROWSER"
+    },
+    "machine_speaker_identity_by_receipt_and_condition": {
+      "does_not_prove": "human listener recognition, perceived emotion, cross-mood identity, or a universal separation threshold",
+      "next_scope_issue": "grahama1970/agent-skills#1130",
+      "proves": "condition-scoped machine speaker separation for one dream-derived session mood",
+      "receipt": "reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
+      "receipt_sha256": "sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e",
+      "sample_count": 3,
+      "scope": "resemblyzer machine scoring, per exact receipt and render condition only: joined live-chain three-turn renders (4.64-5.32s) separation 0.159977 in reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json; long 4.68-6.0s renders separation 0.208427 in reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json; neither value is a universal threshold",
+      "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION"
+    },
+    "p2_continuity_feasibility_pilot": {
+      "does_not_prove": "production reliability, no-restart soak behavior, cumulative-state corruption resistance, or anything about the full Phase 01-16 media pipeline",
+      "next_scope_issue": "grahama1970/agent-skills#1128",
+      "proves": "five consecutive live continuity cycles completed and passed with zero duplicate accepted effects; Wilson 95% lower bound 0.565509 as a preregistered acceptance index",
+      "receipt": "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
+      "receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
+      "sample_count": 5,
+      "scope": "downstream P2 continuity chain only; N=5 engineering feasibility pilot under one local configuration",
+      "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
+      "surface_token": "#1128"
+    },
+    "p2_continuity_reliability_soak": {
+      "does_not_prove": "anything; the campaign has not started",
+      "proves": "nothing yet",
+      "sample_count": 0,
+      "scope": "35+ consecutive no-restart live P2 continuity cycles against long-lived Memory and Chatterbox instances",
+      "status": "PLANNED_NOT_RUN",
+      "successor_issue": "grahama1970/agent-skills#1128",
+      "successor_resolved": false
+    },
+    "p2_restart_recovery": {
+      "does_not_prove": "anything; the campaign has not started",
+      "proves": "nothing yet",
+      "sample_count": 0,
+      "scope": "deterministic restart/partial-receipt/stale-session fault campaign, separate from the reliability soak denominator",
+      "status": "PLANNED_NOT_RUN",
+      "successor_issue": "grahama1970/agent-skills#1129",
+      "successor_resolved": false
+    },
+    "pctom_apparatus_integrity": {
+      "does_not_prove": "measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate",
+      "proves": "the experiment apparatus runs deterministically within its text-first scope; historical GOAL.md snapshot counts are subordinate to this registry",
+      "rebound_note": "was bound to reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json, a downstream P2 continuity receipt. A continuity run passing says nothing about whether the PCTOM apparatus scores deterministically; it is the wrong apparatus.",
+      "receipt": "research/prospective-tom/receipts/pctom-deterministic-scoring-covered.v1.json",
+      "receipt_sha256": "sha256:67f2346dd14f89614336444b29329f292fb09a51114b1e3c67753560bcf7a158",
+      "sample_count": 43,
+      "scope": "deterministic receipt machinery, coverage, and fail-closed controls of the PCTOM-R apparatus only",
+      "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE"
+    },
+    "pctom_heldout_benefit": {
+      "does_not_prove": "production cognitive value, large live Tau replication, human-perceived value, paid provider execution, or semantic dream quality.",
+      "proves": "CD beat strongest baseline D on the preregistered mean_belief_brier score in the deterministic held-out run; the live Tau held-out bridge separately passed one episode / four cases.",
+      "receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/HELDOUT_CONDITION_BENEFIT_RECEIPT.json",
+      "receipt_sha256": "sha256:44ecb5016eedceb85d3488eee2b18d35f6b55148a9cb6e5f357157b2fac073c4",
+      "sample_count": 24,
+      "scope": "explicitly frozen deterministic held-out M/R/D/CD condition-benefit run, with a separate one-episode live Tau held-out bridge; constrained research evidence only",
+      "status": "PASS_PCTOM_HELDOUT_CONDITION_BENEFIT_SCOPED",
+      "successor_issue": "grahama1970/agent-skills#1008",
+      "successor_resolved": true,
+      "supporting_receipts": [
+        "reports/goal_v5/closure/pctom_final/20260902T165849Z/LIVE_TAU_HELDOUT_CONDITION_RECEIPT.json",
+        "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",
+        "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_SUCCESS_CRITERIA_RECEIPT.json"
+      ],
+      "surface_token": "#1008"
+    },
+    "pctom_measurement_validity": {
+      "does_not_prove": "that counterfactual dreaming helps; CD winning here is a property of the toy cue structure",
+      "next_scope_issue": "grahama1970/agent-skills#1008",
+      "proves": "the corpus and estimator are non-degenerate and the all-TRUE constant control still blocks; 11/11 adversarial controls behave",
+      "receipt": "research/prospective-tom/receipts/measurement-validity-v2-pass/MEASUREMENT_VALIDITY_RECEIPT.json",
+      "receipt_sha256": "sha256:a00c5396003cfa7c860a79393878ad47f6c19f4f101675a631b0438d220015b9",
+      "resolved_by": "grahama1970/agent-skills#1131",
+      "sample_count": 96,
+      "scope": "the PCTOM-R apparatus can now measure something: held-out split has 96 labels {TRUE 40, FALSE 24, UNKNOWN 32}, distinct distributions M4/R8/D16/CD30, and CD loses on 4 episodes so the treatment can be falsified",
+      "status": "PASS_MEASUREMENT_VALIDITY_V2",
+      "surface_token": "#1008"
+    },
+    "previous_video_attachment_causality": {
+      "disposition": "skills/persona-dream/TRANSFER_LEDGER.md",
+      "does_not_prove": "any previous-video benefit. The question is closed as out of scope rather than answered",
+      "paired_receipt": false,
+      "proves": "nothing; this is a scope disposition, not an experimental result",
+      "retired_by": "grahama1970/agent-skills#1059",
+      "sample_count": 0,
+      "scope": "retired 2026-08-04 under the registered goal's non-requirements; not pursued, no provider spend authorized",
+      "status": "RETIRED_OUT_OF_SCOPE"
+    },
+    "return_arc_closed": {
+      "does_not_prove": "that the later dream is better for it; that is the research question the controlled ablations exist to answer, and it remains unrun",
+      "proves": "a discussion about a dream is carried into memory, retrieved by a later dream, and recalled as attributed speech rather than as an event that occurred",
+      "receipt": "reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json",
+      "receipt_sha256": "sha256:91fcee1fae43ca8102f13489ed389f5d8fe7923fa7fc30661a756ce1d75a3742",
+      "scope": "one persona, one day, one local configuration; mechanism only",
+      "status": "PASS_RETURN_ARC_CLOSED"
     }
   },
-  "latest_voice_proof": {
-    "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
-    "mocked": false,
+  "current_phase": "P2_CORRECTED_GOAL_PAIR_PROOF",
+  "latest_accepted_dream_cycle": {
+    "evidence_boundary": "One accepted canonical dream persistence path is meaningful history, not repeated pipeline reliability.",
+    "status": "HISTORICAL_ACCEPTED_SINGLE_LOOP",
+    "unverified": [
+      "fresh Phase 01-16 rerun",
+      "fresh full Phase 01-16 five-cycle media-pipeline reliability study (scope: full_phase01_16_media_pipeline_reliability; the completed 5/5 result is the downstream P2 continuity pilot, scope: p2_continuity_feasibility_pilot)",
+      "previous-video attachment A/B proof"
+    ]
+  },
+  "latest_alignment_repair_receipt": "skills/persona-dream/reports/goal_v5/alignment_repair/RECEIPT.json",
+  "latest_full_cycle_live_eval": {
+    "agentic_eval_receipt": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/full-cycle-live-20260822T223907Z/agentic_eval_report.json",
+    "agentic_eval_receipt_sha256": "sha256:24e3fc0f481ae8a2cf1e38104ef7e4179801f8073c913782e5ae212188bb76e0",
+    "boundary": "Supports the full-cycle-live pipeline claim for three local live trials after #1495 and #1496; does not prove 35-cycle no-restart reliability, human-perceived emotional value, human listener identity, separate mediation by dream versus journal, or production readiness.",
+    "case": "full-cycle-live",
+    "case_count": 1,
+    "commit": "4d83860d50f26e42b7c18b629a4d3215f9a4a41f",
+    "fixture_backed": true,
+    "generated_at": "2026-08-22T22:39:07.957907+00:00",
     "live": true,
-    "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
-    "engine": "chatterbox_base",
-    "tone": "firm_boundary",
-    "intensity": 0.72,
-    "valence": -0.25,
-    "wer": [
-      0.0,
-      0.0,
-      0.0
+    "mocked": false,
+    "outcome_counts": {
+      "BLOCKED": 0,
+      "FAIL": 0,
+      "NOT_TESTED": 0,
+      "PASS": 1
+    },
+    "passed_trials": 3,
+    "readiness": "READY",
+    "run_id": "43bc87d1bc6c",
+    "status": "PASS_FULL_CYCLE_LIVE_3_TRIALS",
+    "trial_count": 3,
+    "trial_runs": [
+      {
+        "dream_cycle": "cycle_20260822T220341Z",
+        "run": "eval-full-cycle-20260822T220339Z",
+        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T220339Z day_ingested dream_spine_pass:cycle_20260822T220341Z journal_rendered journal_spoken:833614b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6",
+        "trial_id": "43bc87d1bc6c-c000-t00"
+      },
+      {
+        "dream_cycle": "cycle_20260822T221512Z",
+        "run": "eval-full-cycle-20260822T221510Z",
+        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T221510Z day_ingested dream_spine_pass:cycle_20260822T221512Z journal_rendered journal_spoken:783950b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6",
+        "trial_id": "43bc87d1bc6c-c000-t01"
+      },
+      {
+        "dream_cycle": "cycle_20260822T222752Z",
+        "run": "eval-full-cycle-20260822T222750Z",
+        "stdout": "FULL_CYCLE_OK stages=7 run=eval-full-cycle-20260822T222750Z day_ingested dream_spine_pass:cycle_20260822T222752Z journal_rendered journal_spoken:735822b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced carried:6",
+        "trial_id": "43bc87d1bc6c-c000-t02"
+      }
+    ],
+    "what_was_exercised": "Three live trials through day ingest, Tau dream spine, journal render, ASR-verified spoken journal, memory write and artifact store, fully voiced dynamic Horus/Embry conversation, and carry-back."
+  },
+  "latest_voice_proof": {
+    "audio_snapshots": [
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_001_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_002_finished_response.wav",
+      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_003_finished_response.wav"
     ],
     "durations_seconds": [
       5.32,
       5.24,
       4.64
     ],
-    "audio_snapshots": [
-      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_001_finished_response.wav",
-      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_002_finished_response.wav",
-      "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/turn_003_finished_response.wav"
-    ],
-    "source": "continuity_session_mood",
-    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
-    "voice_recognition_status": "PASS_SESSION_MOOD_VOICE_RECOGNITION",
-    "voice_recognition_engine": "resemblyzer",
-    "voice_recognition_similarity_to_embry": [
-      0.850468,
-      0.872958,
-      0.793123
-    ],
-    "voice_recognition_separation": 0.159977,
+    "endpoint": "POST http://127.0.0.1:8018/synthesize-batch",
+    "engine": "chatterbox_base",
     "exercised": "live-chain session-derived voice_delivery survived ASR batch rendering for three turns, used chatterbox_base, passed strict WER 0.0 ASR checks, preserved durable report-local WAV snapshots, and passed resemblyzer speaker-recognition/adversarial scoring",
+    "intensity": 0.72,
+    "latest_voice_recognition_receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
+    "live": true,
+    "mocked": false,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/live_chain/chatterbox_live/RECEIPT.json",
+    "source": "continuity_session_mood",
+    "tone": "firm_boundary",
     "unverified": [
       "perceived target emotion",
       "naturalness",
@@ -284,27 +478,58 @@
       "recognition across multiple moods",
       "browser and microphone path",
       "durable dream-derived session mood"
+    ],
+    "valence": -0.25,
+    "voice_recognition_engine": "resemblyzer",
+    "voice_recognition_separation": 0.159977,
+    "voice_recognition_similarity_to_embry": [
+      0.850468,
+      0.872958,
+      0.793123
+    ],
+    "voice_recognition_status": "PASS_SESSION_MOOD_VOICE_RECOGNITION",
+    "wer": [
+      0.0,
+      0.0,
+      0.0
     ]
   },
+  "next_step": {
+    "default": "Run PD-CORRECTED-GOAL-V1: one paired structured-reflection control and dream-journal treatment through the existing dynamic Horus/Embry and Chatterbox paths, then emit a fail-closed corrected_goal_receipt.json.",
+    "ordered_steps": [
+      "PD-CORRECTED-GOAL-V1: validate the operational goal and sealed manifest fixture.",
+      "PD-CORRECTED-GOAL-V1: run C0_STRUCTURED_REFLECTION and C1_DREAM_JOURNAL against the same source-memory and answer capsule.",
+      "PD-CORRECTED-GOAL-V1: adjudicate answer invariance before emotional lineage or delivery effects.",
+      "#1058 human listener collection, PCTOM expansion, Kling/video/provider work, and human perception claims remain deferred until the paired proof exists and the relevant human/external evidence exists."
+    ],
+    "receipt_target": "skills/persona-dream/local/proofs/pd-corrected-goal-v1/corrected_goal_receipt.json"
+  },
   "pctom_r_workstream": {
-    "status": "MACHINERY_STRONG_HEADLINE_BENEFIT_UNPROVEN",
-    "recorded_evidence_source": "skills/persona-dream/GOAL.md",
+    "latest_goal_coverage_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",
+    "latest_goal_coverage_receipt_sha256": "sha256:81e9fd122eac66844a0b9398cade1dac27e180a8921c4d47090edadbeb2ba1e5",
+    "latest_heldout_benefit_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/HELDOUT_CONDITION_BENEFIT_RECEIPT.json",
+    "latest_heldout_benefit_receipt_sha256": "sha256:44ecb5016eedceb85d3488eee2b18d35f6b55148a9cb6e5f357157b2fac073c4",
+    "latest_live_tau_heldout_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/LIVE_TAU_HELDOUT_CONDITION_RECEIPT.json",
+    "latest_live_tau_heldout_receipt_sha256": "sha256:e484be62c14ef7db177d1906462f35fe541b990d16c2b33264cf08016d55d4b8",
+    "latest_success_criteria_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_SUCCESS_CRITERIA_RECEIPT.json",
+    "latest_success_criteria_receipt_sha256": "sha256:f882dc28713615b6455c86d79e2a76e763ec2e53498f1c282d79450f1bd28643",
     "recorded_counts": {
-      "coverage_ids_seen": "15/15",
       "child_evidence_receipts": 43,
-      "live_positive_rows": 19,
-      "negative_rows": 12,
+      "coverage_ids_seen": "15/15",
       "deterministic_social_episodes": 128,
-      "live_tau_planning_calls": "32/32"
+      "live_positive_rows": 19,
+      "live_tau_planning_calls": "32/32",
+      "negative_rows": 12
     },
+    "recorded_evidence_source": "skills/persona-dream/GOAL.md",
+    "status": "SCOPED_HELDOUT_BENEFIT_WITH_LIMITED_LIVE_BRIDGE",
     "unverified": [
-      "confidence-bounded counterfactual-dreaming planning advantage",
-      "scaled held-out replication",
-      "connection to Embry continuity ledger and relationship state"
+      "production cognitive value beyond the constrained deterministic held-out apparatus",
+      "large live Tau held-out replication beyond the one-episode smoke bridge",
+      "human-perceived value or semantic dream quality"
     ]
   },
   "sanity": {
-    "status": "PASS",
     "focused_checks": [
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_tau_routing_boundary.py -q",
@@ -312,10 +537,10 @@
       },
       {
         "command": "./skills/persona-dream/run.sh check-tau-routing-boundary --strict --json",
-        "result": "PASS",
         "hard_violations": 0,
-        "temporary_debt": 0,
-        "stale_allow_entries": 0
+        "result": "PASS",
+        "stale_allow_entries": 0,
+        "temporary_debt": 0
       },
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_tau_routing_boundary.py -q",
@@ -335,10 +560,10 @@
       },
       {
         "command": "./skills/persona-dream/run.sh live-chain --json",
-        "result": "PASS_PERSONA_DREAM_LIVE_CHAIN",
         "dream_cycle_id": "live_chain_20260729t130950z",
         "negative_controls": "13/13 PASS_NEGATIVE_BLOCKED",
-        "receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json"
+        "receipt": "skills/persona-dream/reports/goal_v5/continuity/live_chain/RECEIPT.json",
+        "result": "PASS_PERSONA_DREAM_LIVE_CHAIN"
       },
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_live_chain_receipt.py skills/persona-dream/tests/test_current_state_consistency.py skills/persona-dream/tests/test_continuity_ledger_hardening.py skills/persona-dream/tests/test_session_mood_binding.py skills/persona-dream/tests/test_session_mood_chatterbox_live.py skills/persona-dream/tests/test_session_mood_voice_recognition_preflight.py -q",
@@ -346,9 +571,9 @@
       },
       {
         "command": "./skills/persona-dream/run.sh check-current-state-consistency --strict --json",
+        "mismatch_count": 0,
         "result": "PASS_CURRENT_STATE_CONSISTENT",
-        "stage_count": 5,
-        "mismatch_count": 0
+        "stage_count": 5
       },
       {
         "command": "python3 scripts/check_mock_evidence_claims.py",
@@ -359,10 +584,10 @@
         "result": "PASS"
       },
       {
+        "artifact": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json",
         "command": "./skills/persona-dream/run.sh session-arc-bias --json",
-        "result": "PASS_SESSION_ARC_BIAS_RECEIPT",
         "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
-        "artifact": "skills/persona-dream/reports/goal_v5/continuity/session_arc_bias/session_arc_bias.v1.json"
+        "result": "PASS_SESSION_ARC_BIAS_RECEIPT"
       },
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_session_arc_bias.py -q",
@@ -370,9 +595,9 @@
       },
       {
         "command": "./skills/persona-dream/run.sh validate-sparta-arc-bias-handoff --json",
-        "result": "PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT",
+        "contract": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json",
         "negative_controls": "7/7 PASS_NEGATIVE_BLOCKED",
-        "contract": "skills/persona-dream/reports/goal_v5/continuity/sparta_arc_bias_handoff/SPARTA_CONSUMER_CONTRACT.json"
+        "result": "PASS_SPARTA_ARC_BIAS_HANDOFF_RECEIPT"
       },
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_sparta_arc_bias_handoff.py skills/persona-dream/tests/test_session_arc_bias.py -q",
@@ -384,11 +609,11 @@
       },
       {
         "command": "./skills/persona-dream/run.sh analyze-blinded-listener-study --json",
-        "result": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
         "failed_gates": [
           "human_responses_complete",
           "signed_human_interpretation_missing"
         ],
+        "result": "BLOCKED_BLINDED_LISTENER_STUDY_ANALYSIS",
         "valid_human_responses": "0/20"
       },
       {
@@ -397,37 +622,37 @@
       },
       {
         "command": "WHISPER_API_KEY=<redacted> ./skills/persona-dream/run.sh validate-blinded-listener-study --asr --json",
-        "result": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
         "failed_gates": [
           "human_responses_complete"
         ],
-        "valid_human_responses": "0/20",
-        "stimulus_asr_wer": "0.0/0.0/0.0/0.0"
+        "result": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
+        "stimulus_asr_wer": "0.0/0.0/0.0/0.0",
+        "valid_human_responses": "0/20"
       },
       {
+        "boundary": "static collection UX only; does not provide human ratings or perceptual proof",
         "command": "./skills/persona-dream/run.sh render-blinded-listener-rater-page --json",
-        "result": "PASS_BLINDED_LISTENER_RATER_PAGE_READY",
         "page": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/rater_page.html",
         "receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_PAGE_RECEIPT.json",
-        "boundary": "static collection UX only; does not provide human ratings or perceptual proof"
+        "result": "PASS_BLINDED_LISTENER_RATER_PAGE_READY"
       },
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_render_blinded_listener_rater_page.py skills/persona-dream/tests/test_validate_blinded_listener_study.py skills/persona-dream/tests/test_analyze_blinded_listener_study.py -q",
         "result": "10 passed"
       },
       {
-        "command": "durably copy agentic-eval fixture output into Persona Dream report evidence",
-        "result": "READY",
-        "case_count": 2,
-        "trial_count": 6,
         "boundary": "fixture-backed mechanical collection workflow only",
+        "case_count": 2,
+        "command": "durably copy agentic-eval fixture output into Persona Dream report evidence",
         "durable_output": "skills/persona-dream/reports/goal_v5/continuity/sanity_evidence/agentic_eval.json",
-        "durable_output_sha256": "sha256:b2778f3004b75716060da048c190e3ffbe1c7b0d646a5e92f6761c6d2ee2da70"
+        "durable_output_sha256": "sha256:b2778f3004b75716060da048c190e3ffbe1c7b0d646a5e92f6761c6d2ee2da70",
+        "result": "READY",
+        "trial_count": 6
       },
       {
         "command": "~/.codex/hooks/verify-ui-cdp.sh --url http://127.0.0.1:8876/rater_page.html --name persona-dream-listener-rater",
-        "result": "UI marker written",
         "marker": ".codex/ui-verification/latest.json",
+        "result": "UI marker written",
         "screenshot": "skills/persona-dream/reports/goal_v5/continuity/sanity_evidence/rater_page_ui_cdp_20260729T151347Z.png",
         "screenshot_sha256": "sha256:cc7bfb5cf11fc77972ab319431f91bc4cdeb6bf5672978489009ca5d3d0c879c"
       },
@@ -437,20 +662,20 @@
       },
       {
         "command": "./skills/persona-dream/sanity.sh",
-        "result": "587 passed, 9 subtests passed",
-        "current_state_stage_count": 8
+        "current_state_stage_count": 8,
+        "result": "587 passed, 9 subtests passed"
       },
       {
+        "boundary": "generated current-state file matches receipt-derived output, including mirrored SPARTA arc-bias consumption receipt",
         "command": "python3 skills/persona-dream/scripts/generate_current_state.py --check",
-        "result": "CURRENT_STATE.md matches receipts",
-        "boundary": "generated current-state file matches receipt-derived output, including mirrored SPARTA arc-bias consumption receipt"
+        "result": "CURRENT_STATE.md matches receipts"
       },
       {
         "command": "./skills/persona-dream/run.sh check-current-state-consistency --strict --json",
-        "result": "PASS_CURRENT_STATE_CONSISTENT",
-        "stage_count": 9,
         "mismatch_count": 0,
-        "new_stage": "P2_sparta_arc_bias_consumption"
+        "new_stage": "P2_sparta_arc_bias_consumption",
+        "result": "PASS_CURRENT_STATE_CONSISTENT",
+        "stage_count": 9
       },
       {
         "command": "uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_current_state_consistency.py -q",
@@ -466,278 +691,22 @@
       },
       {
         "command": "./skills/persona-dream/sanity.sh",
-        "result": "588 passed, 9 subtests passed",
-        "current_state_stage_count": 9
+        "current_state_stage_count": 9,
+        "result": "588 passed, 9 subtests passed"
       }
     ],
     "full_sanity_command": "./skills/persona-dream/sanity.sh",
-    "full_sanity_status": "PASS",
-    "full_sanity_result": "588 passed, 9 subtests passed",
     "full_sanity_notes": [
       "static dream fixture produced 10 required artifacts and 6 frame prompts",
       "video_plan fixture produced 4 shots at 7.5 seconds and 121 frames each",
       "panel and contact-sheet negative fixtures failed closed as expected",
       "Tau-only routing boundary returned PASS with 0 hard violations and 0 temporary debt"
-    ]
-  },
-  "active_blockers": [
-    "#1058 is ready for human listener collection from the current v2 bundle: rater page, stimulus validation, and technical screen pass, but analysis remains fail-closed until 20 valid human response rows and SIGNED_INTERPRETATION.json exist.",
-    "SPARTA has local live API proof of consuming the Persona Dream session_arc_bias artifact, but deployed production operation beyond that local receipt remains unproven.",
-    "The five-cycle reliability result is an N=5 engineering pilot, not production reliability.",
-    "PCTOM-R does not yet prove confidence-bounded planning advantage.",
-    "Previous-video attachment A/B proof remains unrun and is not on the current critical path."
-  ],
-  "next_step": {
-    "default": "Kling/Phase 11 and Phase 16 recall/behavior are no longer the active blocker. The remaining goal blockers are human listener collection/signature, PCTOM-R held-out benefit/disposition, and larger reliability/recovery gates.",
-    "ordered_steps": [
-      "collect 20 valid human listener rows for #1058 and write SIGNED_INTERPRETATION.json",
-      "run PCTOM-R held-out benefit/disposition gate for #1008",
-      "run no-restart reliability soak / restart-recovery campaign where not already accepted",
-      "record transfer/adopt/constrain/reject decisions after each completed experiment"
     ],
-    "blocked_by": [
-      "human_responses_complete:0/20",
-      "signed_human_interpretation_missing",
-      "pctom_heldout_benefit_unrun"
-    ]
+    "full_sanity_result": "588 passed, 9 subtests passed",
+    "full_sanity_status": "PASS",
+    "status": "PASS"
   },
-  "current_claims": {
-    "_comment": "Scoped claim registry required by grahama1970/agent-skills#1132. One object per present-tense claim; check_current_state_consistency.py fails closed on missing ids, PASS without receipt, PASS while a successor issue is open, and the named scope conflations.",
-    "p2_continuity_feasibility_pilot": {
-      "status": "PASS_LIVE_CHAIN_RELIABILITY_PILOT",
-      "scope": "downstream P2 continuity chain only; N=5 engineering feasibility pilot under one local configuration",
-      "receipt": "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json",
-      "receipt_sha256": "sha256:9ca2bc211fc12cb6033d45b4f7c7b1e2b9c1ba9ec4bc8cb0dd64784c0228ce2f",
-      "sample_count": 5,
-      "proves": "five consecutive live continuity cycles completed and passed with zero duplicate accepted effects; Wilson 95% lower bound 0.565509 as a preregistered acceptance index",
-      "does_not_prove": "production reliability, no-restart soak behavior, cumulative-state corruption resistance, or anything about the full Phase 01-16 media pipeline",
-      "next_scope_issue": "grahama1970/agent-skills#1128",
-      "surface_token": "#1128"
-    },
-    "p2_continuity_reliability_soak": {
-      "status": "PLANNED_NOT_RUN",
-      "scope": "35+ consecutive no-restart live P2 continuity cycles against long-lived Memory and Chatterbox instances",
-      "sample_count": 0,
-      "proves": "nothing yet",
-      "does_not_prove": "anything; the campaign has not started",
-      "successor_issue": "grahama1970/agent-skills#1128",
-      "successor_resolved": false
-    },
-    "p2_restart_recovery": {
-      "status": "PLANNED_NOT_RUN",
-      "scope": "deterministic restart/partial-receipt/stale-session fault campaign, separate from the reliability soak denominator",
-      "sample_count": 0,
-      "proves": "nothing yet",
-      "does_not_prove": "anything; the campaign has not started",
-      "successor_issue": "grahama1970/agent-skills#1129",
-      "successor_resolved": false
-    },
-    "full_phase01_16_media_pipeline_reliability": {
-      "status": "HISTORICAL_N1_UNPROVEN",
-      "scope": "fresh complete Phase 01-16 dream/media generation reliability; distinct from the downstream P2 continuity chain",
-      "sample_count": 1,
-      "proves": "one accepted canonical dream persistence path exists as meaningful history",
-      "does_not_prove": "repeatable full-pipeline reliability; downstream continuity receipts are not evidence for this scope",
-      "historical": true
-    },
-    "machine_speaker_identity_by_receipt_and_condition": {
-      "status": "PASS_SESSION_MOOD_VOICE_RECOGNITION",
-      "scope": "resemblyzer machine scoring, per exact receipt and render condition only: joined live-chain three-turn renders (4.64-5.32s) separation 0.159977 in reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json; long 4.68-6.0s renders separation 0.208427 in reports/goal_v5/continuity/session_mood_voice_recognition_long_identity/RECEIPT.json; neither value is a universal threshold",
-      "receipt": "reports/goal_v5/continuity/live_chain/voice_recognition/RECEIPT.json",
-      "receipt_sha256": "sha256:b034c4c5520676cfe263af3c618638a9d17317eb51be7bfa1c0973cb2992689e",
-      "sample_count": 3,
-      "proves": "condition-scoped machine speaker separation for one dream-derived session mood",
-      "does_not_prove": "human listener recognition, perceived emotion, cross-mood identity, or a universal separation threshold",
-      "next_scope_issue": "grahama1970/agent-skills#1130"
-    },
-    "human_perceived_emotion_and_identity": {
-      "status": "AWAITING_HUMAN_LISTENER_COLLECTION",
-      "scope": "blinded human listener study of dream-derived emotion, Embry identity, and naturalness; v2 design (per-rater counterbalancing, intention-to-treat primary, independent attention check) preregistered under #1126",
-      "receipt": "reports/goal_v5/continuity/blinded_listener_study/RECEIPT.json",
-      "receipt_sha256": "sha256:d57d8e8a6f2e442444a5c327c3c13bb59ab40f5b04976475159bf6817842e50e",
-      "valid_human_responses": "0/20",
-      "sample_count": 0,
-      "proves": "only that the analysis guard fails closed without human rows and signed interpretation",
-      "does_not_prove": "any perceptual emotion, naturalness, or human identity result; the v2 bundle is technically ready for raters, but valid human responses remain 0/20 and the signed human interpretation record is missing.",
-      "successor_issue": "grahama1970/agent-skills#1058",
-      "successor_resolved": false,
-      "surface_token": "#1058",
-      "blocking_receipt": "reports/goal_v5/continuity/blinded_listener_study/TECHNICAL_SCREEN_RECEIPT.json",
-      "resolved_prerequisite": "grahama1970/agent-skills#1179 CLOSED: current v2 stimuli pass the frozen technical screen and rater-page/stimulus-validation guards",
-      "blocked_by": [
-        "20 valid human listener rows in responses_v2.jsonl",
-        "SIGNED_INTERPRETATION.json"
-      ]
-    },
-    "pctom_apparatus_integrity": {
-      "status": "PASS_APPARATUS_WITHIN_TEXT_FIRST_SCOPE",
-      "scope": "deterministic receipt machinery, coverage, and fail-closed controls of the PCTOM-R apparatus only",
-      "receipt": "research/prospective-tom/receipts/pctom-deterministic-scoring-covered.v1.json",
-      "receipt_sha256": "sha256:67f2346dd14f89614336444b29329f292fb09a51114b1e3c67753560bcf7a158",
-      "sample_count": 43,
-      "proves": "the experiment apparatus runs deterministically within its text-first scope; historical GOAL.md snapshot counts are subordinate to this registry",
-      "does_not_prove": "measurement validity or held-out benefit; #1056 proved the benefit estimator degenerate",
-      "rebound_note": "was bound to reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json, a downstream P2 continuity receipt. A continuity run passing says nothing about whether the PCTOM apparatus scores deterministically; it is the wrong apparatus."
-    },
-    "pctom_measurement_validity": {
-      "status": "PASS_MEASUREMENT_VALIDITY_V2",
-      "scope": "the PCTOM-R apparatus can now measure something: held-out split has 96 labels {TRUE 40, FALSE 24, UNKNOWN 32}, distinct distributions M4/R8/D16/CD30, and CD loses on 4 episodes so the treatment can be falsified",
-      "sample_count": 96,
-      "proves": "the corpus and estimator are non-degenerate and the all-TRUE constant control still blocks; 11/11 adversarial controls behave",
-      "does_not_prove": "that counterfactual dreaming helps; CD winning here is a property of the toy cue structure",
-      "surface_token": "#1008",
-      "receipt": "research/prospective-tom/receipts/measurement-validity-v2-pass/MEASUREMENT_VALIDITY_RECEIPT.json",
-      "receipt_sha256": "sha256:a00c5396003cfa7c860a79393878ad47f6c19f4f101675a631b0438d220015b9",
-      "resolved_by": "grahama1970/agent-skills#1131",
-      "next_scope_issue": "grahama1970/agent-skills#1008"
-    },
-    "pctom_heldout_benefit": {
-      "status": "UNPROVEN",
-      "scope": "live held-out condition comparison on the repaired apparatus",
-      "sample_count": 0,
-      "proves": "nothing yet",
-      "does_not_prove": "nothing is proven yet. Measurement validity is no longer the blocker -- #1131 passes and pctom_measurement_validity is PASS_MEASUREMENT_VALIDITY_V2. What remains is running the held-out benefit comparison itself.",
-      "successor_issue": "grahama1970/agent-skills#1008",
-      "successor_resolved": false,
-      "surface_token": "#1008"
-    },
-    "previous_video_attachment_causality": {
-      "status": "RETIRED_OUT_OF_SCOPE",
-      "scope": "retired 2026-08-04 under the registered goal's non-requirements; not pursued, no provider spend authorized",
-      "sample_count": 0,
-      "paired_receipt": false,
-      "proves": "nothing; this is a scope disposition, not an experimental result",
-      "does_not_prove": "any previous-video benefit. The question is closed as out of scope rather than answered",
-      "retired_by": "grahama1970/agent-skills#1059",
-      "disposition": "skills/persona-dream/TRANSFER_LEDGER.md"
-    },
-    "journal_publication": {
-      "status": "PASS_JOURNAL_PUBLISHED",
-      "scope": "one live run's journal artifacts; artifact shape and speech binding only",
-      "receipt": "reports/goal_v5/journal/JOURNAL_RENDER_RECEIPT.json",
-      "receipt_sha256": "sha256:789a6a717257427ad09b5352f68e13c083bec08bb92eb81a2a520c0eaf250dcf",
-      "proves": "the entry is published as a readable first-person journal.md carrying tone annotations and provenance footnotes, plus a hash-bound annotation-stripped journal_spoken.txt; no annotation reaches the renderer input",
-      "does_not_prove": "that successive days produce meaningfully different journals; the five-cycle pilot produced byte-identical entries (see daily_event_ingestion)"
-    },
-    "journal_spoken_audio": {
-      "status": "PASS_JOURNAL_SPOKEN",
-      "scope": "one live Chatterbox render into the run directory",
-      "receipt": "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json",
-      "receipt_sha256": "sha256:3321fa0867f9d048d1a4d33bfc7dcdb1530e519758f331788a061a8493ecde04",
-      "proves": "Embry reads her own journal aloud: a live render is stored run-local as journal.wav, bound by sha256 to the exact spoken text, with an independent ASR transcript captured",
-      "does_not_prove": "requested tone audibility, perceived emotion, naturalness, or human acceptance"
-    },
-    "journal_delivery_request": {
-      "status": "PASS_REQUESTED_TONE_SURVIVED",
-      "scope": "request handling between persona-dream and Chatterbox; metadata only",
-      "receipt": "reports/goal_v5/journal/JOURNAL_AUDIO_RECEIPT.json",
-      "receipt_sha256": "sha256:3321fa0867f9d048d1a4d33bfc7dcdb1530e519758f331788a061a8493ecde04",
-      "proves": "the dream's dominant tension maps to a delivery tone Chatterbox accepts, and that tone survives normalization instead of collapsing to neutral_warm",
-      "does_not_prove": "any acoustic or perceptual consequence; see journal_tone_effect, which measured none"
-    },
-    "journal_tone_effect": {
-      "status": "SUPERSEDED_TONE_NOW_CALIBRATED_UPSTREAM",
-      "scope": "three requested TONES on one text against 10 same-parameter neutral repeats, engine chatterbox_turbo",
-      "receipt": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json",
-      "receipt_sha256": "sha256:93c85255440e53d22dccb2798aa62e2861e0aca77e4dadecdda956b0e012fa99",
-      "sample_count": 10,
-      "proves": "as measured on 2026-08-04, no requested tone moved any acoustic metric beyond the renderer own same-parameter stochastic spread, and the engine listed the affect parameters among those it ignored",
-      "does_not_prove": "anything about the current renderer. Publishing this negative with a reproduction led to grahama1970/chatterbox#20, #21 and #22: pace was made a real time stretch, a per-render affect_effect receipt was added, and the tone vocabulary was calibrated. Tone now derives distinct affect per tone name, verified live. Human perception remains untested (chatterbox#7).",
-      "resolved_by_issue": "grahama1970/agent-skills#1209",
-      "superseded_by": "reports/goal_v5/journal/TONE_EFFECT_RECEIPT.json is historical; see chatterbox#20/#21/#22"
-    },
-    "journal_conversation_persistence": {
-      "status": "PASS_CONVERSATION_PERSISTED",
-      "scope": "durability of the discussion record on disk; not its return into memory",
-      "receipt": "reports/goal_v5/conversation/CONVERSATION_APPEND_RECEIPT.json",
-      "proves": "human, agent and embry turns are appended to conversation.jsonl under an exclusive lock, survive the browser, read back after write, and are bound by hash to the journal they discuss; an embry turn is refused unless it carries a requested delivery tone and rendered audio",
-      "does_not_prove": "that a later dream is improved by the conversation; the arc now closes mechanically -- see return_arc_closed -- but benefit is unproven",
-      "receipt_sha256": "sha256:e9093ad7b32c8f76d5760a5efc8bd9021e2f059eb027761a66d7cd89301dcbcd"
-    },
-    "daily_event_ingestion": {
-      "status": "PASS_CONSECUTIVE_DAYS_DIFFER",
-      "scope": "two consecutive days under one local configuration; not a longitudinal study",
-      "receipt": "reports/goal_v5/day_events/DAY_BLEND_RECEIPT.json",
-      "proves": "the day's code, project-state and affect events are written to memory, read back, and blended into the dream by quota per stratum; two consecutive days produce journals with different sha256, ending the byte-identical-journal defect",
-      "does_not_prove": "that the dreams are better, only that they differ and are grounded in the day; longitudinal persona adaptation over many days remains unrun",
-      "receipt_sha256": "sha256:c73c3474715fd80a24ff74f7ef9d52029f4c9d705cb253e478f9d0d712b800d4"
-    },
-    "journal_ux_browser_proof": {
-      "status": "PASS_JOURNAL_UX_RENDERED_IN_BROWSER",
-      "scope": "the static journal/chat page rendered in a real browser",
-      "receipt": "reports/goal_v5/journal_ux/BROWSER_PROOF_RECEIPT.json",
-      "proves": "the page renders in Chrome at 1440x900 with journal prose, tone chips and provenance footnotes; footnote links resolve to their anchors; the audio player resolves its source and loads the journal audio at its true 17.48s duration",
-      "does_not_prove": "visual design quality, other viewports, accessibility, or that a human finds it usable",
-      "receipt_sha256": "sha256:38113d74578245963b0e36b9f9604898545d02b346535f2949f5a1ab2f97e0a0"
-    },
-    "return_arc_closed": {
-      "status": "PASS_RETURN_ARC_CLOSED",
-      "scope": "one persona, one day, one local configuration; mechanism only",
-      "receipt": "reports/goal_v5/closed_loop/CLOSED_LOOP_RECEIPT.json",
-      "receipt_sha256": "sha256:91fcee1fae43ca8102f13489ed389f5d8fe7923fa7fc30661a756ce1d75a3742",
-      "proves": "a discussion about a dream is carried into memory, retrieved by a later dream, and recalled as attributed speech rather than as an event that occurred",
-      "does_not_prove": "that the later dream is better for it; that is the research question the controlled ablations exist to answer, and it remains unrun"
-    },
-    "dream_accumulation": {
-      "status": "PASS_DREAMS_ACCUMULATE_AS_MEMORY",
-      "scope": "one persona, one day, mechanism only",
-      "receipt": "reports/goal_v5/accumulation/ACCUMULATION_RECEIPT.json",
-      "receipt_sha256": "sha256:777a268cb83c03dd85b30b492c48d139623e66b2573937e5a817d82cc35018da",
-      "proves": "a dream's interpretation and its media are written to memory, retrieved by a later dream, and remain distinguishable from lived memory without reading metadata",
-      "does_not_prove": "that accumulation improves anything, or that the persona measurably changes over many days; both remain unrun"
-    }
-  },
+  "schema": "persona_dream.current_status.v1",
   "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md",
-  "phase11_kling_return": {
-    "status": "PASS_PHASE11_PROVIDER_RETURN_RECEIVED",
-    "mocked": false,
-    "live": true,
-    "submitted": true,
-    "actual_provider_call_attempts": 1,
-    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
-    "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
-    "request_id": "019f77f0-a75b-7012-8cc1-fbc24f58f388",
-    "return_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
-    "muxed_video_sha256": "sha256:e31788caba34c51aa8ed9b7e16332cce91cfcec35a9d42ed036975164530fa97",
-    "return_duration_s": 10.041667,
-    "provider_return_envelope": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_provider_return_envelope.v1.json",
-    "download_ffprobe_receipt": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_download_ffprobe_receipt.v1.json",
-    "post_return_acceptance_receipt": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/post_return_acceptance_receipt.v2.json",
-    "boundary": "One Kling/Fal standard image-to-video provider return exists and is agent-level accepted. Do not resubmit this request hash; human subjective acceptance remains not claimed."
-  },
-  "phase16_behavior_evaluation": {
-    "status": "PASS",
-    "receipt": "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json",
-    "receipt_sha256": "sha256:772869da3c348f4cfe246acbc30f7bec37c863a4ea47bff6891111df9715f0bc",
-    "mocked": false,
-    "live": true,
-    "contract_items_proven": {
-      "10_chatterbox_voice_expression": false,
-      "6_semantic_recall": true,
-      "7_multihop_traversal": true,
-      "8_grounded_use_and_synthetic_distinction": true,
-      "9_identity_consistency": true
-    },
-    "memory_evidence": [
-      {
-        "collection": "persona_dream_pipeline_steps",
-        "exact_reread_match": true,
-        "key": "persona_dream_phase16_behavior_evaluation_step",
-        "reread_sha256": "sha256:3c7abe7f280400777f20744e094bfbdc9c62efb1deb9ef8d82f7ff6baa35eb80",
-        "written_sha256": "sha256:3c7abe7f280400777f20744e094bfbdc9c62efb1deb9ef8d82f7ff6baa35eb80"
-      },
-      {
-        "collection": "persona_dream_governance",
-        "exact_reread_match": true,
-        "key": "persona_dream_phase16_governance_20260718",
-        "reread_sha256": "sha256:4ced56a6891d8f22bd74ae33f85359bf56b6534694c3ce51f7e330931e6d2c74",
-        "written_sha256": "sha256:4ced56a6891d8f22bd74ae33f85359bf56b6534694c3ce51f7e330931e6d2c74"
-      }
-    ],
-    "does_not_prove": [
-      "(f) Chatterbox / voice expression of the resulting persona state - no Chatterbox or voice runtime was exercised in this slice; factually out of scope (contract item 10).",
-      "Human subjective acceptance of the dream video and persona behavior - remains the human's; not machine-decidable here.",
-      "Full 12-frame Watch observation-packet re-embedding via the Tau VLM layer - the observation packet remains DEGRADED (step-36 v2 receipt carries the authoritative verdicts); recall/traversal here use the persisted DEGRADED packet references."
-    ]
-  }
+  "updated_at": "2026-09-02T17:01:20Z"
 }

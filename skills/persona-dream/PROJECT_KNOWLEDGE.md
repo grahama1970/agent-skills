@@ -1,20 +1,20 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-08-28 UTC (P11 Kling/Fal provider return exists and P16 recall/behavior evaluation now PASS for successor dream; do not resubmit request `sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4`) by Codex
+**Last updated:** 2026-09-02 UTC (Persona Dream closure reconciliation: agent listening signoff passed before human collection; #1008 now has scoped deterministic held-out benefit plus one live Tau held-out bridge; human perception remains unmeasured) by Codex
 **Status:** Active development
-**Current phase:** `P16_BEHAVIOR_EVALUATION_PASS_WITH_RESEARCH_GATES_OPEN`
-**Active successor issues (own the open claims; see `CURRENT_STATUS.json` `current_claims`):**
+**Current phase:** `P2_LIVE_CONTINUITY_CHAIN` with closure dispositions reconciled in `DISPOSITION_REGISTRY.json`
+**Active successor issues and proof boundaries (see `CURRENT_STATUS.json` `current_claims`):**
 #1126/#1127/#1179 listener-study technical prerequisites CLOSED — the current
-v2 stimuli pass the frozen technical screen and the refreshed rater page validates
-against current blinded stimulus bytes; #1058 remains open for 20 valid human
-listener rows plus signed interpretation,
-#1128 no-restart reliability soak and #1130 cross-mood machine identity are
-closed in GitHub; retain their proof boundaries when making reliability or
-speaker-identity claims,
-#1129 restart/recovery fault campaign,
-#1131 PCTOM-R corpus/estimator repair CLOSED (apparatus now valid; the live
-held-out benefit result is #1008 and does not exist yet),
-#1059 previous-video causality deferred with no provider spend.
+v2 stimuli pass the frozen technical screen, refreshed rater-page validation,
+and the 2026-09-02 agent listening signoff gate; #1058 remains open only for
+human-perception wording: 20 valid human listener rows plus signed interpretation,
+#1128 no-restart reliability soak, #1129 restart/recovery, and #1130 cross-mood
+machine identity are closed in GitHub; retain their proof boundaries when making
+reliability or speaker-identity claims,
+#1131 PCTOM-R corpus/estimator repair CLOSED and #1008 now has a scoped result:
+`PASS_PCTOM_HELDOUT_CONDITION_BENEFIT_SCOPED` for deterministic held-out evidence
+plus a one-episode live Tau held-out bridge, not production cognitive value,
+#1059 previous-video causality retired with no provider spend.
 
 ## 2026-08-19 — DreamWorkspace blank page, surf-run recovery, stratified board, and eval guards
 

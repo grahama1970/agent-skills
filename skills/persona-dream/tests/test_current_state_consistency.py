@@ -275,16 +275,14 @@ def test_completed_pilot_listed_unverified_without_scope_blocks(tmp_path):
 def test_claim_pass_while_successor_open_blocks(tmp_path):
     """A claim cannot report PASS while the issue that would establish it is open.
 
-    Retargeted 2026-08-03: this previously used pctom_measurement_validity
-    against open #1131. #1131 closed -- the apparatus is repaired and the claim
-    legitimately passes -- so the rule is now exercised against
-    pctom_heldout_benefit, whose successor #1008 has not run. The rule under
-    test is unchanged; only the claim that still has an open successor moved.
+    Retargeted 2026-09-02: #1008 now has a scoped result, so the rule is
+    exercised against the restart/recovery claim, whose successor remains open
+    in CURRENT_STATUS.json. The rule under test is unchanged.
     """
     doc = _status_doc()
-    claim = doc["current_claims"]["pctom_heldout_benefit"]
-    claim["status"] = "PASS_HELDOUT_BENEFIT"
-    claim["receipt"] = "reports/goal_v5/continuity/reliability/AGGREGATE_RECEIPT.json"
+    claim = doc["current_claims"]["p2_restart_recovery"]
+    claim["status"] = "PASS_RESTART_RECOVERY"
+    claim["receipt"] = "reports/goal_v5/continuity/recovery/AGGREGATE_RECEIPT.json"
     claim.pop("receipt_sha256", None)
 
     got = _run(tmp_path, doc)
@@ -457,7 +455,7 @@ def test_readme_generated_block_tracks_machine_state_changes(tmp_path):
     assert generator.render(status) != before
 
     status = json.loads((ROOT / "CURRENT_STATUS.json").read_text(encoding="utf-8"))
-    status["current_claims"]["pctom_heldout_benefit"]["successor_issue"] = "owner/repo#4242"
+    status["current_claims"]["p2_restart_recovery"]["successor_issue"] = "owner/repo#4242"
     assert generator.render(status) != before
     assert "#4242" in generator.render(status)
 
