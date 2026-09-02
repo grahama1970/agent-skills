@@ -245,6 +245,37 @@ def memory_recall(query: str, scope: str = "hack_skill", k: int = 3) -> dict | N
         return None
 
 
+def memory_store_document(document: dict[str, Any], collection: str = "hack_audit_summaries") -> str | None:
+    """Store one canonical Hack document through Memory /store and return its key/ref."""
+    @with_retries(max_attempts=3, base_delay=0.5)
+    def _store_with_retry() -> str | None:
+        _memory_limiter.acquire()
+        payload = {"collection": collection, "document": document}
+        try:
+            import httpx
+            with httpx.Client(base_url="http://127.0.0.1:8601", timeout=float(MEMORY_TIMEOUT)) as client:
+                resp = client.post("/store", json=payload)
+                resp.raise_for_status()
+                data = resp.json()
+        except ModuleNotFoundError:
+            from urllib import request
+            req = request.Request(
+                "http://127.0.0.1:8601/store",
+                data=json.dumps(payload).encode(),
+                headers={"content-type": "application/json"},
+                method="POST",
+            )
+            with request.urlopen(req, timeout=float(MEMORY_TIMEOUT)) as resp:
+                data = json.loads(resp.read().decode())
+        return data.get("_id") or data.get("id") or data.get("key") or document.get("_key")
+
+    try:
+        return _store_with_retry()
+    except Exception as exc:
+        logger.warning("Memory /store failed for {}: {}", collection, exc)
+        return None
+
+
 def memory_store(
     content: str, scope: str = "hack_skill", context: str = "security"
 ) -> bool:
@@ -321,6 +352,7 @@ __all__ = [
     "end_task_session",
     "add_task_accomplishment",
     "memory_recall",
+    "memory_store_document",
     "memory_store",
     "show_memory_context",
 ]

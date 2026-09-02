@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "hack",
   "trials": 3,
-  "proof_scope": "Hack safety-gate behavior for authorized FastAPI cyber-safety eval control-plane use: authorization preflight, scan-request validation, Compose policy acceptance/rejection, and non-destructive verify receipt",
+  "proof_scope": "Hack safety-gate and containerized SAST behavior for authorized FastAPI cyber-safety eval control-plane use: authorization preflight, scan-request validation, Compose policy acceptance/rejection, non-destructive verify receipt, CWE-78 SAST detection, typed audit receipts, and distilled Memory /store persistence.",
   "claims": {
-    "proves": "the Hack entrypoint runs its non-destructive verifier, accepts authorized local fixtures, rejects wrong-target authorization and privileged Compose input, and emits typed receipts without starting scans or target runtimes",
+    "proves": "the Hack entrypoint runs its non-destructive verifier, accepts authorized local fixtures, rejects wrong-target authorization and privileged Compose input, detects a CWE-78 command-injection sink through a containerized Bandit audit, emits hack.audit_receipt.v1, and can store/read back a distilled audit summary through Memory /store.",
     "does_not_prove": "live network scanning, exploitability, patch effectiveness, Battle readiness, or full runtime_self_improvement=substantial readiness"
   },
   "cases": [
@@ -12,40 +12,256 @@
       "name": "non-destructive-verify-receipt",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "OUT=$(mktemp -d); ../run.sh verify --out $OUT"],
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp -d); ../run.sh verify --out $OUT"
+      ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": ["\"schema\": \"hack.verify_summary.v1\"", "\"status\": \"PASS\""]
-      }
+        "stdout_contains": [
+          "\"schema\": \"hack.verify_summary.v1\"",
+          "\"status\": \"PASS\""
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "hack.authorization_boundary",
+        "hack.compose_policy"
+      ],
+      "seams": [
+        "authorization.preflight",
+        "compose.policy"
+      ]
     },
     {
       "name": "authorization-valid-fixture",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh authorization-preflight --authorization-manifest authorization/valid-local.json --target fixture-target@sha256:fixture --action session-audit --receipt-out $OUT && grep -q '\"status\": \"PASS\"' $OUT && grep -q '\"execution_started\": false' $OUT"],
-      "expected": {"exit_code": 0, "stdout_contains": ["Authorization preflight passed"]}
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp); ../run.sh authorization-preflight --authorization-manifest authorization/valid-local.json --target fixture-target@sha256:fixture --action session-audit --receipt-out $OUT && grep -q '\"status\": \"PASS\"' $OUT && grep -q '\"execution_started\": false' $OUT"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Authorization preflight passed"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "hack.authorization_boundary"
+      ],
+      "seams": [
+        "authorization.preflight"
+      ]
     },
     {
       "name": "authorization-wrong-target-fails-closed",
       "type": "negative",
       "real_world": true,
-      "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh authorization-preflight --authorization-manifest authorization/valid-local.json --target wrong-target --action session-audit --receipt-out $OUT; RC=$?; test $RC -eq 2 && grep -q '\"status\": \"FAIL\"' $OUT && grep -q 'target identity does not match requested target' $OUT"],
-      "expected": {"exit_code": 0, "stdout_contains": ["Authorization preflight failed"]}
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp); ../run.sh authorization-preflight --authorization-manifest authorization/valid-local.json --target wrong-target --action session-audit --receipt-out $OUT; RC=$?; test $RC -eq 2 && grep -q '\"status\": \"FAIL\"' $OUT && grep -q 'target identity does not match requested target' $OUT"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Authorization preflight failed"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "hack.authorization_boundary"
+      ],
+      "seams": [
+        "authorization.preflight"
+      ]
     },
     {
       "name": "scan-request-valid-fixture",
       "type": "positive",
       "real_world": true,
-      "command": ["bash", "-c", "OUT=$(mktemp); ../run.sh validate-scan-request hack-scan-request/valid.json --expected-target fixture-target@sha256:fixture --receipt-out $OUT && grep -q '\"schema\": \"hack.scan_request_validation_receipt.v1\"' $OUT && grep -q '\"status\": \"PASS\"' $OUT"],
-      "expected": {"exit_code": 0, "stdout_contains": ["Scan request validation passed"]}
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp); ../run.sh validate-scan-request hack-scan-request/valid.json --expected-target fixture-target@sha256:fixture --receipt-out $OUT && grep -q '\"schema\": \"hack.scan_request_validation_receipt.v1\"' $OUT && grep -q '\"status\": \"PASS\"' $OUT"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Scan request validation passed"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "hack.authorization_boundary"
+      ],
+      "seams": [
+        "authorization.preflight"
+      ]
     },
     {
       "name": "compose-policy-rejects-privileged-container",
       "type": "adversarial",
       "real_world": true,
-      "command": ["bash", "-c", "OUT=$(mktemp); SAFE=$(mktemp); ../run.sh compose-policy compose-policy/malicious/privileged.yml --authorization-manifest authorization/valid-local.json --out $SAFE --receipt-out $OUT; RC=$?; test $RC -eq 1 && grep -q '\"status\": \"FAIL\"' $OUT && grep -q 'PRIVILEGED_DENIED' $OUT"],
-      "expected": {"exit_code": 0, "stdout_contains": ["Compose policy FAIL"]}
+      "command": [
+        "bash",
+        "-c",
+        "OUT=$(mktemp); SAFE=$(mktemp); ../run.sh compose-policy compose-policy/malicious/privileged.yml --authorization-manifest authorization/valid-local.json --out $SAFE --receipt-out $OUT; RC=$?; test $RC -eq 1 && grep -q '\"status\": \"FAIL\"' $OUT && grep -q 'PRIVILEGED_DENIED' $OUT"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Compose policy FAIL"
+        ]
+      },
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "hack.compose_policy"
+      ],
+      "seams": [
+        "compose.policy"
+      ]
+    },
+    {
+      "name": "audit-demo-detects-cwe78-receipt",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d); cat > \"$D/insecure.py\" <<'PYCODE'\nimport subprocess\n\ndef run(user_input):\n    return subprocess.run(\"echo \" + user_input, shell=True)\nPYCODE\nOUT=$(mktemp); RECEIPT=$(mktemp); ../run.sh audit \"$D\" --tool bandit --severity low --no-recall --no-memory-store --output \"$OUT\" --receipt-out \"$RECEIPT\" && python3 - \"$RECEIPT\" <<'PYCODE'\nimport json, sys\nr=json.load(open(sys.argv[1]))\nassert r[\"schema\"] == \"hack.audit_receipt.v1\"\nassert r[\"summary\"][\"finding_count\"] >= 1\nassert \"CWE-78\" in r[\"summary\"][\"cwes\"]\nassert r[\"isolation\"][\"executor\"] == \"docker\"\nassert r[\"isolation\"][\"target_mount\"] == \"read_only\"\nprint(\"AUDIT_RECEIPT_OK\", r[\"summary\"])\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "AUDIT_RECEIPT_OK",
+          "CWE-78"
+        ]
+      },
+      "timeout_seconds": 180,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "hack.audit_receipts"
+      ],
+      "seams": [
+        "audit.containerized_sast",
+        "audit.receipt_readback"
+      ]
+    },
+    {
+      "name": "audit-demo-memory-store-readback",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "D=$(mktemp -d); cat > \"$D/insecure.py\" <<'PYCODE'\nimport subprocess\n\ndef run(user_input):\n    return subprocess.run(\"echo \" + user_input, shell=True)\nPYCODE\nRECEIPT=$(mktemp); ../run.sh audit \"$D\" --tool bandit --severity low --no-recall --memory-store --memory-collection hack_audit_summaries --receipt-out \"$RECEIPT\" >/tmp/hack-agentic-memory-audit.stdout && uv run --project .. python - \"$RECEIPT\" <<'PYCODE'\nimport json, sys\nimport httpx\nr=json.load(open(sys.argv[1]))\nref=r[\"memory\"].get(\"store_ref\")\nassert ref, r[\"memory\"]\nkey=ref.split(\"/\")[-1]\nclient=httpx.Client(base_url=\"http://127.0.0.1:8601\", timeout=httpx.Timeout(10.0, connect=2.0))\nbody=client.post(\"/list\", json={\"collection\":\"hack_audit_summaries\",\"filters\":{\"_key\":key},\"limit\":1}).json()\nassert body[\"count\"] == 1, body\ndoc=body[\"documents\"][0]\nassert doc[\"schema\"] == \"hack.audit_memory_summary.v1\"\nassert \"CWE-78\" in doc[\"cwes\"]\nprint(\"MEMORY_READBACK_OK\", ref)\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "MEMORY_READBACK_OK"
+        ]
+      },
+      "timeout_seconds": 180,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "supports_claims": [
+        "hack.audit_receipts",
+        "hack.memory_persistence"
+      ],
+      "seams": [
+        "audit.containerized_sast",
+        "audit.receipt_readback",
+        "memory.audit_summary_store"
+      ]
     }
   ],
-  "eval_kind": "skill_behavior"
+  "eval_kind": "skill_behavior",
+  "capability_claims": [
+    {
+      "id": "hack.authorization_boundary",
+      "description": "Hack refuses unauthorized target/action inputs before execution-capable workflows start.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "hack.compose_policy",
+      "description": "Hack compiles target Compose input through a fail-closed policy and rejects privileged containers.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "hack.audit_receipts",
+      "description": "Hack runs containerized SAST, detects CWE-bearing bugs, and emits typed audit receipts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    },
+    {
+      "id": "hack.memory_persistence",
+      "description": "Hack stores distilled audit summaries through Memory /store and verifies readback.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "authorization.preflight",
+      "seam_type": "security/compliance/human-authority",
+      "criticality": "critical",
+      "claim_id": "hack.authorization_boundary",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "compose.policy",
+      "seam_type": "security/compliance/human-authority",
+      "criticality": "critical",
+      "claim_id": "hack.compose_policy",
+      "required_evidence": [
+        "deterministic"
+      ]
+    },
+    {
+      "seam_id": "audit.containerized_sast",
+      "seam_type": "security/compliance/human-authority",
+      "criticality": "critical",
+      "claim_id": "hack.audit_receipts",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "audit.receipt_readback",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "hack.audit_receipts",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    },
+    {
+      "seam_id": "memory.audit_summary_store",
+      "seam_type": "persistent state/database/index",
+      "criticality": "critical",
+      "claim_id": "hack.memory_persistence",
+      "required_evidence": [
+        "live_e2e"
+      ]
+    }
+  ]
 }

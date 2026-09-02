@@ -14,6 +14,7 @@ echo "--- Module Structure ---"
 MODULES=(
     "config.py"
     "utils.py"
+    "audit_receipts.py"
     "container_manager.py"
     "commands.py"
     "hack.py"

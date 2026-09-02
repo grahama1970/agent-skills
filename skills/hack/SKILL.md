@@ -62,16 +62,19 @@ All security operations run in **isolated Docker containers** - no tools execute
 
 Current readiness is `USABLE_WITH_GAPS`: Hack has an executable `run.sh`, Docker
 isolation, authorization-bound target workflows, fixtures, schemas, tests, a
-`sanity.sh` smoke check, and `./run.sh verify` for non-destructive safety-gate
-verification. It is not yet a fully self-maintaining substantial runtime skill.
+`sanity.sh` smoke check, `./run.sh verify` for non-destructive safety-gate
+verification, and typed `hack.audit_receipt.v1` SAST audit receipts with
+distilled Memory `/store` persistence. It is not yet a fully self-maintaining
+substantial runtime skill.
 
 Agentic eval posture is provided by `fixtures/agentic_eval.json` and should be
 run through `/agentic-evals` when checking Hack readiness. The fixture includes
 positive, negative, and adversarial safety-boundary cases for the FastAPI
-cyber-safety eval control-plane context. Hack does not list `agentic-evals` in
-`composes:` because it does not delegate to that skill during normal security
-workflows; `composes:` is runtime delegation, while eval posture is a standards
-gate.
+cyber-safety eval control-plane context, including a containerized Bandit scan
+that detects a retained CWE-78 fixture and reads back the Memory-stored audit
+summary. Hack does not list `agentic-evals` in `composes:` because it does not
+delegate to that skill during normal security workflows; `composes:` is runtime
+delegation, while eval posture is a standards gate.
 
 Required next-step updates before declaring `runtime_self_improvement:
 substantial`:
@@ -106,21 +109,42 @@ substantial`:
 ### Static Application Security Testing (SAST)
 
 ```bash
-# Full audit (Semgrep + Bandit)
-./run.sh audit /path/to/code
+# Full audit (Semgrep + Bandit), with typed receipt and Memory summary by default
+./run.sh audit /path/to/code --receipt-out /tmp/hack-audit-receipt.json
 
 # Semgrep only
-./run.sh audit /path/to/code --tool semgrep
+./run.sh audit /path/to/code --tool semgrep --receipt-out /tmp/semgrep-receipt.json
 
 # Bandit only (Python)
-./run.sh audit /path/to/code --tool bandit
+./run.sh audit /path/to/code --tool bandit --receipt-out /tmp/bandit-receipt.json
 
 # Filter by severity
-./run.sh audit /path/to/code --severity high
+./run.sh audit /path/to/code --severity high --receipt-out /tmp/high-receipt.json
+
+# Disable Memory persistence for disposable local probes
+./run.sh audit /path/to/code --no-memory-store
+
+# Store the distilled summary in a specific Memory collection
+./run.sh audit /path/to/code --memory-collection hack_audit_summaries
 
 # Use threat profile for deeper audit
 ./run.sh audit /path/to/code --profile state-actor
 ```
+
+### Audit Receipts and Memory Persistence
+
+Every `audit` run writes a typed `hack.audit_receipt.v1` receipt when
+`--receipt-out` is provided, or beside `--output` as `*.receipt.json` otherwise.
+The receipt records target path, selected tool, profile, Docker isolation,
+read-only `/scan` mount, `--network=none` for SAST, per-tool return codes,
+parsed findings, severity counts, CWE IDs, and explicit non-claims. A SAST
+finding is not an exploit proof: receipts set audit status only and keep
+`does_not_confirm_exploitability` in `non_claims`.
+
+By default `audit` stores a distilled `hack.audit_memory_summary.v1` through
+Memory `/store` into `hack_audit_summaries`. Raw scanner output stays in local
+artifacts and is not embedded into Memory. Use `--no-memory-store` for
+disposable probes.
 
 ### Hybrid Correlation
 
