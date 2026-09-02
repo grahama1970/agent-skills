@@ -1,0 +1,18 @@
+{
+  "checks": {
+    "issue_count": 0,
+    "target_file_read": true
+  },
+  "command": "assess",
+  "created_at_ms": 1788366926212,
+  "failures": [],
+  "issues": [],
+  "live": false,
+  "mocked": false,
+  "next_actions": [],
+  "ok": true,
+  "schema": "ops_chatterbox.assess_receipt.v1",
+  "skill": "ops-chatterbox",
+  "status": "PASS_CHATTERBOX_USAGE_ASSESSMENT",
+  "target_file": "skills/persona-dream/scripts/dynamic_conversation.py"
+}

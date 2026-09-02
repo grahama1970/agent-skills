@@ -1,0 +1,185 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "target emotion is perceived by humans",
+      "human listener recognition of Embry",
+      "naturalness",
+      "the study result, until append-only human responses and signed interpretation exist"
+    ],
+    "proves": [
+      "preregistered stimulus files exist and match their exact hashes",
+      "stimulus content ASR is within the configured WER limit"
+    ]
+  },
+  "created_at": "2026-09-02T16:37:01Z",
+  "failed_gates": [
+    "human_responses_complete"
+  ],
+  "live": true,
+  "mocked": false,
+  "preregistration": {
+    "bytes": 10418,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
+    "sha256": "sha256:863d69f2c3aa57df7b95823f2986a20628cf20228e4639435dc99f675f061ad0"
+  },
+  "response_contract": {
+    "rater_instructions": {
+      "bytes": 711,
+      "exists": true,
+      "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RATER_INSTRUCTIONS.md",
+      "sha256": "sha256:cf830dcd68338ca37e0e2a0d0778c18031cf7a4fa767a06921bce417a9ddf6e5"
+    },
+    "response_schema": {
+      "bytes": 2672,
+      "exists": true,
+      "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/RESPONSE_SCHEMA.json",
+      "sha256": "sha256:21e51f2392ab9a9c4d6bfb8d15907fa36eb292f443cbc2861c61be2d4650850e"
+    }
+  },
+  "responses": {
+    "bytes": 0,
+    "exists": true,
+    "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/responses.jsonl",
+    "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "responses_summary": {
+    "allowed_tone_choices": [
+      "careful_concerned",
+      "cheerful",
+      "firm_boundary",
+      "neutral"
+    ],
+    "duplicate_rater_ids": [],
+    "enough_human_responses": false,
+    "expected_stimulus_ids": [
+      "S01",
+      "S02",
+      "S03",
+      "S04"
+    ],
+    "required_raters": 20,
+    "response_count": 0,
+    "response_errors": [],
+    "unique_rater_count": 0,
+    "unique_valid_rater_count": 0,
+    "valid_response_count": 0
+  },
+  "schema": "persona_dream.blinded_listener_study_validation.v1",
+  "status": "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS",
+  "stimuli": [
+    {
+      "asr": {
+        "base_url": "http://127.0.0.1:9000",
+        "live": true,
+        "mocked": false,
+        "ok": true,
+        "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 309198,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
+        "sha256": "sha256:5d965e029d4173e20626728974bba897512c37699f683f34363f23a06e9058bd"
+      },
+      "bytes_match": true,
+      "condition": "control",
+      "engine": "chatterbox_base",
+      "expected_bytes": 309198,
+      "expected_sha256": "sha256:5d965e029d4173e20626728974bba897512c37699f683f34363f23a06e9058bd",
+      "hash_match": true,
+      "stimulus_id": "S01",
+      "voice_delivery": {
+        "intensity": 0.0,
+        "tone": "neutral",
+        "valence": 0.0
+      }
+    },
+    {
+      "asr": {
+        "base_url": "http://127.0.0.1:9000",
+        "live": true,
+        "mocked": false,
+        "ok": true,
+        "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 238158,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
+        "sha256": "sha256:8ee4bd1cbe020bb6ac05521660031573cd2f3bbf940f95ae31c0e0f7bd11ebf6"
+      },
+      "bytes_match": true,
+      "condition": "baseline",
+      "engine": "chatterbox_base",
+      "expected_bytes": 238158,
+      "expected_sha256": "sha256:8ee4bd1cbe020bb6ac05521660031573cd2f3bbf940f95ae31c0e0f7bd11ebf6",
+      "hash_match": true,
+      "stimulus_id": "S04",
+      "voice_delivery": {
+        "intensity": 0.4,
+        "tone": "careful_concerned",
+        "valence": -0.1
+      }
+    },
+    {
+      "asr": {
+        "base_url": "http://127.0.0.1:9000",
+        "live": true,
+        "mocked": false,
+        "ok": true,
+        "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 314958,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
+        "sha256": "sha256:18e4a9435d1c7b25a79aa728c54d59631bfa8ab7331d225e02357f893fe046b2"
+      },
+      "bytes_match": true,
+      "condition": "dream",
+      "engine": "chatterbox_base",
+      "expected_bytes": 314958,
+      "expected_sha256": "sha256:18e4a9435d1c7b25a79aa728c54d59631bfa8ab7331d225e02357f893fe046b2",
+      "hash_match": true,
+      "stimulus_id": "S02",
+      "voice_delivery": {
+        "intensity": 0.72,
+        "tone": "firm_boundary",
+        "valence": -0.25
+      }
+    },
+    {
+      "asr": {
+        "base_url": "http://127.0.0.1:9000",
+        "live": true,
+        "mocked": false,
+        "ok": true,
+        "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning.",
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 259278,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
+        "sha256": "sha256:7bd52044a67928dbcaa28baaa174b1463ef9ff5b9488724fed7cfbaadda2d5f3"
+      },
+      "bytes_match": true,
+      "condition": "adversarial",
+      "engine": "chatterbox_base",
+      "expected_bytes": 259278,
+      "expected_sha256": "sha256:7bd52044a67928dbcaa28baaa174b1463ef9ff5b9488724fed7cfbaadda2d5f3",
+      "hash_match": true,
+      "stimulus_id": "S03",
+      "voice_delivery": {
+        "intensity": 0.95,
+        "tone": "cheerful",
+        "valence": 0.9
+      }
+    }
+  ],
+  "study_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study"
+}

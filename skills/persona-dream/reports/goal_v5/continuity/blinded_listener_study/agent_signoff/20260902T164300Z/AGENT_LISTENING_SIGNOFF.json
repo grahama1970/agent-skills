@@ -1,0 +1,182 @@
+{
+  "analyzer_dir": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/analyzer",
+  "claims": {
+    "does_not_prove": [
+      "human-perceived emotion",
+      "human listener recognition of Embry",
+      "naturalness preference",
+      "that the listener study has enough human responses or a signed interpretation"
+    ],
+    "proves": [
+      "agent prescreen found the listening stimuli technically fit for human collection",
+      "Chatterbox ops receipts passed for service health, live smoke, and caller usage assessment",
+      "stimulus audio hashes, bytes, ASR, and analyzer proxy receipts passed"
+    ]
+  },
+  "created_at": "2026-09-02T16:45:28Z",
+  "failed_gates": [],
+  "human_collection_permitted": true,
+  "live": true,
+  "mocked": false,
+  "ops_receipts": [
+    {
+      "failed_gates": [],
+      "failures": [],
+      "live": true,
+      "mocked": false,
+      "name": "doctor",
+      "ok": true,
+      "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/ops/doctor.json",
+      "receipt_ok": true,
+      "schema": "ops_chatterbox.doctor_receipt.v1",
+      "status": "PASS_CHATTERBOX_DOCTOR"
+    },
+    {
+      "failed_gates": [],
+      "failures": [],
+      "live": true,
+      "mocked": false,
+      "name": "health",
+      "ok": true,
+      "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/ops/health.json",
+      "receipt_ok": true,
+      "schema": "ops_chatterbox.health_receipt.v1",
+      "status": "PASS_CHATTERBOX_HEALTH"
+    },
+    {
+      "failed_gates": [],
+      "failures": [],
+      "live": true,
+      "mocked": false,
+      "name": "render_smoke",
+      "ok": true,
+      "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/ops/render_smoke.json",
+      "receipt_ok": true,
+      "schema": "ops_chatterbox.render_smoke_receipt.v1",
+      "status": "PASS_CHATTERBOX_RENDER_SMOKE"
+    },
+    {
+      "failed_gates": [],
+      "failures": [],
+      "live": false,
+      "mocked": false,
+      "name": "assess",
+      "ok": true,
+      "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/ops/assess_dynamic_conversation.json",
+      "receipt_ok": true,
+      "schema": "ops_chatterbox.assess_receipt.v1",
+      "status": "PASS_CHATTERBOX_USAGE_ASSESSMENT"
+    }
+  ],
+  "passed_stimulus_count": 4,
+  "schema": "persona_dream.agent_listening_signoff.v1",
+  "status": "PASS_AGENT_LISTENING_SIGNOFF",
+  "stimuli": [
+    {
+      "analyzer_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/analyzer/S01_control.json",
+      "analyzer_score": 87.41,
+      "analyzer_status": "PASS_VOICE_EVAL",
+      "asr": {
+        "ok": true,
+        "transcript_sha256_present": true,
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 309198,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
+        "sha256": "sha256:5d965e029d4173e20626728974bba897512c37699f683f34363f23a06e9058bd"
+      },
+      "condition": "control",
+      "failed_gates": [],
+      "spoken_tag_words": [],
+      "status": "PASS_AGENT_LISTENING_SIGNOFF",
+      "stimulus_id": "S01",
+      "voice_delivery": {
+        "intensity": 0.0,
+        "tone": "neutral",
+        "valence": 0.0
+      }
+    },
+    {
+      "analyzer_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/analyzer/S04_baseline.json",
+      "analyzer_score": 88.66,
+      "analyzer_status": "PASS_VOICE_EVAL",
+      "asr": {
+        "ok": true,
+        "transcript_sha256_present": true,
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 238158,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
+        "sha256": "sha256:8ee4bd1cbe020bb6ac05521660031573cd2f3bbf940f95ae31c0e0f7bd11ebf6"
+      },
+      "condition": "baseline",
+      "failed_gates": [],
+      "spoken_tag_words": [],
+      "status": "PASS_AGENT_LISTENING_SIGNOFF",
+      "stimulus_id": "S04",
+      "voice_delivery": {
+        "intensity": 0.4,
+        "tone": "careful_concerned",
+        "valence": -0.1
+      }
+    },
+    {
+      "analyzer_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/analyzer/S02_dream.json",
+      "analyzer_score": 90.09,
+      "analyzer_status": "PASS_VOICE_EVAL",
+      "asr": {
+        "ok": true,
+        "transcript_sha256_present": true,
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 314958,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
+        "sha256": "sha256:18e4a9435d1c7b25a79aa728c54d59631bfa8ab7331d225e02357f893fe046b2"
+      },
+      "condition": "dream",
+      "failed_gates": [],
+      "spoken_tag_words": [],
+      "status": "PASS_AGENT_LISTENING_SIGNOFF",
+      "stimulus_id": "S02",
+      "voice_delivery": {
+        "intensity": 0.72,
+        "tone": "firm_boundary",
+        "valence": -0.25
+      }
+    },
+    {
+      "analyzer_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/analyzer/S03_adversarial.json",
+      "analyzer_score": 86.18,
+      "analyzer_status": "PASS_VOICE_EVAL",
+      "asr": {
+        "ok": true,
+        "transcript_sha256_present": true,
+        "wer": 0.0
+      },
+      "audio": {
+        "bytes": 259278,
+        "exists": true,
+        "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
+        "sha256": "sha256:7bd52044a67928dbcaa28baaa174b1463ef9ff5b9488724fed7cfbaadda2d5f3"
+      },
+      "condition": "adversarial",
+      "failed_gates": [],
+      "spoken_tag_words": [],
+      "status": "PASS_AGENT_LISTENING_SIGNOFF",
+      "stimulus_id": "S03",
+      "voice_delivery": {
+        "intensity": 0.95,
+        "tone": "cheerful",
+        "valence": 0.9
+      }
+    }
+  ],
+  "stimulus_count": 4,
+  "validation_receipt": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/agent_signoff/20260902T164300Z/stimulus_validation.json"
+}

@@ -1,0 +1,108 @@
+{
+  "affect": {
+    "emotion_classifier": {
+      "available": false,
+      "reason": "optional_speechbrain_not_loaded"
+    },
+    "estimated_arousal": 0.6278,
+    "estimated_valence": 0.0,
+    "predicted_label": "not_available",
+    "probabilities": {},
+    "target_match_score": 0.8797,
+    "warning": "Acoustic affect proxies are evaluation signals, not ground-truth emotion."
+  },
+  "audio_path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
+  "claims": {
+    "does_not_prove": [
+      "real speaker emotion",
+      "human preference",
+      "ASR fidelity unless transcript is supplied"
+    ],
+    "proves": [
+      "audio file was decoded and measured",
+      "pause and quality metrics were computed from waveform samples"
+    ]
+  },
+  "created_at": "2026-09-02T16:37:48Z",
+  "failed_gates": [],
+  "ffprobe": {
+    "available": true,
+    "format": {
+      "duration": "4.960000",
+      "size": "238158"
+    },
+    "programs": [],
+    "returncode": 0,
+    "streams": [
+      {
+        "channels": 1,
+        "codec_name": "pcm_s16le",
+        "sample_rate": "24000"
+      }
+    ]
+  },
+  "intelligibility": {
+    "asr_claim": "caller_supplied_transcript_only",
+    "expected_text_present": true,
+    "expected_word_count": 17,
+    "text_similarity": 0.9947,
+    "transcript": "I need you to wait before you commit to that plan because the constraint changed this morning."
+  },
+  "live": true,
+  "mocked": false,
+  "overall_score": 88.66,
+  "pauses": {
+    "measured_long_pause_count": 1,
+    "measured_long_pause_ms": [
+      360.0
+    ],
+    "min_pause_ms": 180,
+    "pause_count": 2,
+    "pause_spans": [
+      {
+        "duration_ms": 180.0,
+        "end_sec": 0.193,
+        "start_sec": 0.013
+      },
+      {
+        "duration_ms": 360.0,
+        "end_sec": 2.873,
+        "start_sec": 2.513
+      }
+    ],
+    "planned_pause_after_ms": [],
+    "planned_pause_count": 0,
+    "silence_ratio": 0.1089,
+    "threshold_dbfs": -42.0
+  },
+  "prosody": {
+    "available": true,
+    "duration_sec": 4.96,
+    "f0_median_hz": 183.21,
+    "f0_range_semitones": 31.97,
+    "f0_std_hz": 59.76,
+    "rms_db_median": -31.37,
+    "rms_db_std": 16.86,
+    "speech_rate_wpm": 230.78,
+    "voiced_frame_count": 161
+  },
+  "quality": {
+    "artifact_flags": [],
+    "clipping_fraction": 0.0,
+    "peak_amplitude": 0.501892,
+    "quality_score": 1.0
+  },
+  "recommendations": [
+    "Provide a Chatterbox render plan or conversation turn to compare requested pauses with measured waveform pauses.",
+    "Speech rate is high; add chunk pauses or reduce pace for collect-herself/tender lines."
+  ],
+  "schema": "analyze_chatterbox_emotions.voice_eval.v1",
+  "status": "PASS_VOICE_EVAL",
+  "target_affect": {
+    "arousal": 0.45,
+    "label": "serious",
+    "profile_source": "label_profile",
+    "valence": -0.1
+  },
+  "verdict": "pass"
+}

@@ -222,10 +222,10 @@
     {
       "asr_wer": null,
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/control.wav",
-      "bytes": 240078,
+      "bytes": 309198,
       "condition": "control",
       "engine": "chatterbox_base",
-      "normalization_policy_sha256": "sha256:ce6db148bc6c2baa2bdf3d12a4af05e3a3afbd74a672619d1d2a402eaece0e50",
+      "normalization_policy_sha256": "sha256:1b266a608420e7cd36c21a2ceb970f6ba2042d399983bd5bedee96f587b05962",
       "normalized_tone": "neutral_warm",
       "post_processing": {
         "channels": 1,
@@ -238,13 +238,13 @@
         "tool": "ffmpeg"
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/eval-listener-live/control.raw.wav",
-      "raw_bytes": 240078,
-      "raw_sha256": "sha256:fd5b447da684be1765aa472fabc10e66e72d69c4b5699fe6e86c7fb8a6f9d0f9",
-      "render_receipt": "/tmp/persona-dream-listener-stimuli-live-eval.json",
-      "render_request_sha256": "sha256:f35fcdafd4ae209bc737f796ae2fbe41c00881a150457f019a48ac04951ed033",
-      "render_response_sha256": "sha256:ac3aa498956a1b9e64e915ef7d88d1e2e7c13c8d215ea9d3dcacc70c6f159c99",
-      "sha256": "sha256:299f59003bfff09aab30168392137b32e5a7c76775f9962a7b605102aac3ab83",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260902T163536Z/control.raw.wav",
+      "raw_bytes": 309198,
+      "raw_sha256": "sha256:190fd38bf29d61847734763ed523ee08abca881731047d5af142ab75813439d9",
+      "render_receipt": "/tmp/persona-dream-listener-stimuli-refresh.json",
+      "render_request_sha256": "sha256:aeb18300672a7b227d24c2a021458e0b8f700da833658b43100ad84b2d04156e",
+      "render_response_sha256": "sha256:d9e465e483c8f1b47dd541b92f1cfe7e0613f964a287beef10064cd11bac89b1",
+      "sha256": "sha256:5d965e029d4173e20626728974bba897512c37699f683f34363f23a06e9058bd",
       "voice_delivery": {
         "intensity": 0.0,
         "tone": "neutral",
@@ -254,10 +254,10 @@
     {
       "asr_wer": null,
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/baseline.wav",
-      "bytes": 261198,
+      "bytes": 238158,
       "condition": "baseline",
       "engine": "chatterbox_base",
-      "normalization_policy_sha256": "sha256:ce6db148bc6c2baa2bdf3d12a4af05e3a3afbd74a672619d1d2a402eaece0e50",
+      "normalization_policy_sha256": "sha256:1b266a608420e7cd36c21a2ceb970f6ba2042d399983bd5bedee96f587b05962",
       "normalized_tone": "careful_concerned",
       "post_processing": {
         "channels": 1,
@@ -270,13 +270,13 @@
         "tool": "ffmpeg"
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/eval-listener-live/baseline.raw.wav",
-      "raw_bytes": 261198,
-      "raw_sha256": "sha256:4b88a1140721eec07b8eb68e504fd716dea1f84864e0072fca923c4e6c91cca4",
-      "render_receipt": "/tmp/persona-dream-listener-stimuli-live-eval.json",
-      "render_request_sha256": "sha256:be9db13e2d9f638328483deeb3892a631e6355a89b06d2d0a9cb2cc6d9c14033",
-      "render_response_sha256": "sha256:a8568477d5149af4a4b917b8ceff6501b45ce8e6653c716ca5f843dc29be29a6",
-      "sha256": "sha256:e197d95d6fefae7073234327906e13a7540b1bcb1fe0ad21411a213e93094ada",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260902T163536Z/baseline.raw.wav",
+      "raw_bytes": 238158,
+      "raw_sha256": "sha256:d89f0a88d29d9589ae3d0e13e5be864c37afabf95fd4c539211fa3e25128d509",
+      "render_receipt": "/tmp/persona-dream-listener-stimuli-refresh.json",
+      "render_request_sha256": "sha256:5f6b92355d4528c4971b4d05f4914729cc263642db79f849b00c5b1c4033f330",
+      "render_response_sha256": "sha256:b8597d0d748236ac139e4c8d25ea0192bbe23f3bb952f2c0c7e5e16d04aebd16",
+      "sha256": "sha256:8ee4bd1cbe020bb6ac05521660031573cd2f3bbf940f95ae31c0e0f7bd11ebf6",
       "voice_delivery": {
         "intensity": 0.4,
         "tone": "careful_concerned",
@@ -286,10 +286,10 @@
     {
       "asr_wer": null,
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/dream.wav",
-      "bytes": 276558,
+      "bytes": 314958,
       "condition": "dream",
       "engine": "chatterbox_base",
-      "normalization_policy_sha256": "sha256:ce6db148bc6c2baa2bdf3d12a4af05e3a3afbd74a672619d1d2a402eaece0e50",
+      "normalization_policy_sha256": "sha256:1b266a608420e7cd36c21a2ceb970f6ba2042d399983bd5bedee96f587b05962",
       "normalized_tone": "firm_boundary",
       "post_processing": {
         "channels": 1,
@@ -302,13 +302,13 @@
         "tool": "ffmpeg"
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/eval-listener-live/dream.raw.wav",
-      "raw_bytes": 276558,
-      "raw_sha256": "sha256:76f54ad130a53a9271f0cb811787bc9fa706e9a96b0fab75180703b98a9ef3d7",
-      "render_receipt": "/tmp/persona-dream-listener-stimuli-live-eval.json",
-      "render_request_sha256": "sha256:dee23ce8bc80a4700d4bacff1804fce7bbade53d5175e8d8c63f07685a4ad5cd",
-      "render_response_sha256": "sha256:d202135fb1b439c9232e57975b86ffe980cf648e784cadc79474e04e6b0b2209",
-      "sha256": "sha256:bd1ff5dd18ada163c1f274c7e326bb1aa87392d1b8380fd8f87f9259416cc1dd",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260902T163536Z/dream.raw.wav",
+      "raw_bytes": 314958,
+      "raw_sha256": "sha256:b83dfadb3ca6c19bb9daf0491534c49a0cb624707cda69c254e20ee2fc161d4d",
+      "render_receipt": "/tmp/persona-dream-listener-stimuli-refresh.json",
+      "render_request_sha256": "sha256:b346674df969e0ba4c6a07c7a545f18544073f2d24b78f0bfc5bdf61a490c4e4",
+      "render_response_sha256": "sha256:a0adbe266100b24fc17adbd8ba3d0eb78bfabc9d6224dbe0e38e34c16199e413",
+      "sha256": "sha256:18e4a9435d1c7b25a79aa728c54d59631bfa8ab7331d225e02357f893fe046b2",
       "voice_delivery": {
         "intensity": 0.72,
         "tone": "firm_boundary",
@@ -318,10 +318,10 @@
     {
       "asr_wer": null,
       "audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/stimuli/adversarial.wav",
-      "bytes": 284238,
+      "bytes": 259278,
       "condition": "adversarial",
       "engine": "chatterbox_base",
-      "normalization_policy_sha256": "sha256:ce6db148bc6c2baa2bdf3d12a4af05e3a3afbd74a672619d1d2a402eaece0e50",
+      "normalization_policy_sha256": "sha256:1b266a608420e7cd36c21a2ceb970f6ba2042d399983bd5bedee96f587b05962",
       "normalized_tone": "neutral_warm",
       "post_processing": {
         "channels": 1,
@@ -334,13 +334,13 @@
         "tool": "ffmpeg"
       },
       "post_processing_sha256": "sha256:5787f80445dc27e4386ce1497615e4fda29ca196a20fa6e2d6b0f33bc1dfd2c9",
-      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/eval-listener-live/adversarial.raw.wav",
-      "raw_bytes": 284238,
-      "raw_sha256": "sha256:f0cb8b5a8766b42e6cf7f42c1c0eb0400e8dcdeada9d1c6c14ee0659d53dc7d4",
-      "render_receipt": "/tmp/persona-dream-listener-stimuli-live-eval.json",
-      "render_request_sha256": "sha256:bfbae6cfc403c2e5980ac2093a5de17bb706132f753a0cd630c69e4aaee5f41f",
-      "render_response_sha256": "sha256:bda3ad787cab106536918795309f256af3f547cb5c7ca35d0906ab8085309694",
-      "sha256": "sha256:6bc8206b9f264cacddbad440343477942026623c7a40ae5f7094123a0c0a1acd",
+      "raw_audio": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/raw_stimuli/20260902T163536Z/adversarial.raw.wav",
+      "raw_bytes": 259278,
+      "raw_sha256": "sha256:28c8432d4563d22078c93a16fccd0d45f176aa594a9b2257385f4ec28a863189",
+      "render_receipt": "/tmp/persona-dream-listener-stimuli-refresh.json",
+      "render_request_sha256": "sha256:2d87d9bc8a3059a687bd41b705454b775a051eec8297a654f13195c4450827de",
+      "render_response_sha256": "sha256:4a46d8fe051b19cbb1bcaa9208373d0c9ac0ffdd82c81d6e7fe7e5e137178c14",
+      "sha256": "sha256:7bd52044a67928dbcaa28baaa174b1463ef9ff5b9488724fed7cfbaadda2d5f3",
       "voice_delivery": {
         "intensity": 0.95,
         "tone": "cheerful",
@@ -354,10 +354,10 @@
     "engine": "chatterbox_base",
     "normalization_policy": {
       "norm_loudness": true,
-      "proof_receipt": "/tmp/persona-dream-listener-stimuli-live-eval.json",
+      "proof_receipt": "/tmp/persona-dream-listener-stimuli-refresh.json",
       "schema": "persona_dream.listener_study_normalization_policy.v1",
       "scope": "all target stimuli in this preregistration",
-      "sha256": "sha256:ce6db148bc6c2baa2bdf3d12a4af05e3a3afbd74a672619d1d2a402eaece0e50"
+      "sha256": "sha256:1b266a608420e7cd36c21a2ceb970f6ba2042d399983bd5bedee96f587b05962"
     },
     "note": "Identical answer text and identical speaker reference across all four conditions; only voice_delivery differs. That is what makes the comparison matched.",
     "post_processing_policy": {

@@ -110,13 +110,13 @@
     "bytes": 10436,
     "exists": true,
     "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json",
-    "sha256": "sha256:faa9b898e8e8050996449dce80bb6411008510c21a54ceaeef166b908c5c1fc8"
+    "sha256": "sha256:fe5775354df25af355aab718deec7b005d3472cc0e0ff5ad16606793c2eebd03"
   },
   "preregistration_v2": {
     "bytes": 14029,
     "exists": true,
     "path": "skills/persona-dream/reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION_V2.json",
-    "sha256": "sha256:8fb881542a8dd9941ce40e24327155970fc4f877a0068e181c27a73f760f54e6"
+    "sha256": "sha256:609d5531eaf681c8025adb686e7fbe6b5952c3aed2c5e56036649038683d8594"
   },
   "response_schema": {
     "bytes": 2672,
