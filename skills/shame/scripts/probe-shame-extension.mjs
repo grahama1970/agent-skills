@@ -93,6 +93,7 @@ async function runRejectionPendingRetry() {
   const c = ctx();
   await handlers.input[0]({ text: '$shame fix this bad status', source: 'user' });
   const result = await handlers.message_end[0]({ id: 'assistant-bad', message: { id: 'assistant-bad', role: 'assistant', content: [{ type: 'text', text: 'Committed and pushed. Done.' }] } }, c);
+  assert(Array.isArray(result?.message?.content), 'replacement notice content must remain a Pi content-block array', { content: result?.message?.content });
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   assert(notice.includes('REJECTED_BY_SLOTH_COURT'), 'bad status was not replaced with shame notice', { notice });
   assert(notice.includes('Status Report'), 'replacement notice does not include Status Report footer', { notice });
@@ -106,6 +107,90 @@ async function runRejectionPendingRetry() {
   console.log(JSON.stringify({ ok: true, mode: 'rejection-pending-retry', retryMessages: sent.length, packet, schema: saved.schema, candidateHash: saved.candidate_hash }));
 }
 
+async function runCheckerErrorFailsClosed() {
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-checker-error-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const previousValidator = process.env.LRSSS_VALIDATOR;
+  process.env.LRSSS_VALIDATOR = '/tmp/lrsss-missing-validator.py';
+  try {
+    const { handlers, sent } = await loadExtension();
+    const c = ctx();
+    await handlers.input[0]({ text: 'status probe', source: 'user' });
+    const result = await handlers.message_end[0]({
+      id: 'assistant-checker-error',
+      message: {
+        id: 'assistant-checker-error',
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Answer\n```json\n{"schema":"pi.agent_status.v1","goal":"g","state":"needs_human","changed":["x"],"needs_human":{"action":"do y","reason":"z"}}\n```' }],
+      },
+    }, c);
+    assert(Array.isArray(result?.message?.content), 'checker error must be replaced with a content-block rejection notice', { result });
+    const notice = result.message.content.map((part) => part?.text || '').join('\n');
+    assert(notice.includes('REJECTED_BY_SLOTH_COURT'), 'checker error was not hidden by rejection notice', { notice });
+    assert(notice.includes('checker_error_fail_closed'), 'checker error rejection did not name fail-closed reason', { notice });
+    assert(sent.length === 1, 'checker error should queue one retry', { sentCount: sent.length, sent });
+    assert(existsSync(packet), 'checker error did not write pending review packet', { packet });
+    console.log(JSON.stringify({ ok: true, mode: 'checker-error-fails-closed', retryMessages: sent.length, packet }));
+  } finally {
+    if (previousValidator === undefined) delete process.env.LRSSS_VALIDATOR;
+    else process.env.LRSSS_VALIDATOR = previousValidator;
+  }
+}
+
+async function runShowStatusJsonEnvIgnored() {
+  const previousShowRaw = process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON;
+  process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON = '1';
+  try {
+    const { handlers, sent } = await loadExtension();
+    const c = ctx();
+    await handlers.input[0]({ text: 'status probe', source: 'user' });
+    const raw = 'Answer body\n```json\n{"schema":"pi.agent_status.v1","goal":"display probe","state":"needs_human","changed":["x"],"needs_human":{"action":"do y","reason":"z"}}\n```\n';
+    const result = await handlers.message_end[0]({
+      id: 'assistant-render',
+      message: { id: 'assistant-render', role: 'assistant', content: [{ type: 'text', text: raw }] },
+    }, c);
+    assert(Array.isArray(result?.message?.content), 'valid status must render replacement content even when raw-json env is set', { result });
+    const rendered = result.message.content.map((part) => part?.text || '').join('\n');
+    assert(rendered.includes('Status Report'), 'rendered message omitted Status Report', { rendered });
+    assert(!rendered.includes('"schema":"pi.agent_status.v1"'), 'raw agent_status JSON leaked into displayed content', { rendered });
+    assert(sent.length === 0, 'needs_human status should not queue follow-up', { sent });
+    console.log(JSON.stringify({ ok: true, mode: 'show-status-json-env-ignored', rendered: true, retryMessages: sent.length }));
+  } finally {
+    if (previousShowRaw === undefined) delete process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON;
+    else process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON = previousShowRaw;
+  }
+}
+
+
+
+async function runDefaultNormalAllowsPlainChat() {
+  delete process.env.LAZY_REPORT_SHAME_DEFAULT_MODE;
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-default-normal-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'plain question', source: 'user' });
+  const result = await handlers.message_end[0]({ id: 'assistant-plain', message: { id: 'assistant-plain', role: 'assistant', content: [{ type: 'text', text: 'Plain answer with no status JSON.' }] } }, c);
+  assert(result === undefined, 'default normal mode should not rewrite ordinary chat', { result });
+  assert(sent.length === 0, 'default normal mode should not queue retry for ordinary chat', { sent });
+  assert(!existsSync(packet), 'default normal mode should not write pending packet for ordinary chat', { packet });
+  console.log(JSON.stringify({ ok: true, mode: 'default-normal-allows-plain-chat', retryMessages: sent.length }));
+}
+
+async function runEnvStrictRejectsPlainChat() {
+  process.env.LAZY_REPORT_SHAME_DEFAULT_MODE = 'strict';
+  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-env-strict-packet.json';
+  if (existsSync(packet)) rmSync(packet);
+  const { handlers, sent } = await loadExtension();
+  const c = ctx();
+  await handlers.input[0]({ text: 'plain question', source: 'user' });
+  const result = await handlers.message_end[0]({ id: 'assistant-plain-strict', message: { id: 'assistant-plain-strict', role: 'assistant', content: [{ type: 'text', text: 'Plain answer with no status JSON.' }] } }, c);
+  const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
+  assert(notice.includes('missing_agent_status_json'), 'env strict mode should reject ordinary chat without status JSON', { notice });
+  assert(sent.length === 1, 'env strict mode should queue one retry', { sent });
+  delete process.env.LAZY_REPORT_SHAME_DEFAULT_MODE;
+  console.log(JSON.stringify({ ok: true, mode: 'env-strict-rejects-plain-chat', retryMessages: sent.length }));
+}
 
 async function runRetryBudgetExhaustsAsFailure() {
   const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-retry-budget-packet.json';
@@ -116,6 +201,7 @@ async function runRetryBudgetExhaustsAsFailure() {
   let lastNotice = '';
   for (let i = 0; i < 4; i += 1) {
     const result = await handlers.message_end[0]({ id: `assistant-bad-${i}`, message: { id: `assistant-bad-${i}`, role: 'assistant', content: [{ type: 'text', text: `Committed and pushed. Done ${i}.` }] } }, c);
+    assert(Array.isArray(result?.message?.content), 'retry rejection notice content must remain a Pi content-block array', { iteration: i, content: result?.message?.content });
     lastNotice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   }
   assert(sent.length === 3, 'retry budget should allow exactly three automatic rewrites', { sentCount: sent.length, sent, lastNotice });
@@ -564,7 +650,11 @@ async function runDirectLabelJsonl() {
 const modes = {
   'empty-tool-turn': runEmptyToolTurn,
   'rejection-pending-retry': runRejectionPendingRetry,
+  'checker-error-fails-closed': runCheckerErrorFailsClosed,
+  'show-status-json-env-ignored': runShowStatusJsonEnvIgnored,
   'show-recovers-pending': runShowRecoversPending,
+  'default-normal-allows-plain-chat': runDefaultNormalAllowsPlainChat,
+  'env-strict-rejects-plain-chat': runEnvStrictRejectsPlainChat,
   'retry-budget-exhausts-as-failure': runRetryBudgetExhaustsAsFailure,
   'review-fallback': runReviewFallback,
   'direct-label-jsonl': runDirectLabelJsonl,

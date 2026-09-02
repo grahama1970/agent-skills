@@ -162,8 +162,16 @@
       }
     },
     {
-      "id": "shame.extension_default_mode_is_strict",
-      "description": "project-agent extension sessions default to strict mode unless explicitly overridden",
+      "id": "shame.extension_default_mode_is_normal",
+      "description": "ordinary chat is not forced through the status contract unless a guard trigger, continuation ledger, mutating tool, /shame strict, or LAZY_REPORT_SHAME_DEFAULT_MODE=strict enables it",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "shame.extension_env_strict_mode_for_project_agents",
+      "description": "project-agent panes can opt into strict status enforcement with LAZY_REPORT_SHAME_DEFAULT_MODE=strict",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -2990,6 +2998,50 @@
       "real_world": true
     },
     {
+      "name": "checker-error-fails-closed",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.strict_checker_contract"
+      ],
+      "seams": [
+        "extension-message-end",
+        "status-json-check"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh checker-error-fails-closed | grep -q '\"mode\":\"checker-error-fails-closed\"'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "show-status-json-env-cannot-leak-raw-json",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "lrsss.status_report_rendering"
+      ],
+      "seams": [
+        "extension-message-end",
+        "extension-renderer"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh show-status-json-env-ignored | grep -q '\"rendered\":true'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
       "name": "retry-budget-exhausts-as-failure",
       "type": "adversarial",
       "evidence_class": "deterministic",
@@ -3012,11 +3064,11 @@
       "real_world": true
     },
     {
-      "name": "extension-default-mode-strict-rejects-plain-status",
-      "type": "adversarial",
+      "name": "extension-default-normal-allows-plain-chat",
+      "type": "positive",
       "evidence_class": "deterministic",
       "supports_claims": [
-        "shame.extension_default_mode_is_strict"
+        "shame.extension_default_mode_is_normal"
       ],
       "seams": [
         "extension-message-end"
@@ -3025,7 +3077,28 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh rejection-pending-retry | grep -q '\"retryMessages\":1'"
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh default-normal-allows-plain-chat | grep -q '\"retryMessages\":0'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
+      "name": "extension-env-strict-rejects-plain-chat",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.extension_env_strict_mode_for_project_agents"
+      ],
+      "seams": [
+        "extension-message-end"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh env-strict-rejects-plain-chat | grep -q '\"retryMessages\":1'"
       ],
       "expected": {
         "exit_code": 0

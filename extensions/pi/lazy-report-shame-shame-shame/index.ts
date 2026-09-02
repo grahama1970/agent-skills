@@ -191,7 +191,7 @@ function renderStatusLine(status: any): string {
 const SHAME_MODES = new Set(["off", "normal", "strict"]);
 const DEFAULT_SHAME_MODE = SHAME_MODES.has(String(process.env.LAZY_REPORT_SHAME_DEFAULT_MODE || "").trim().toLowerCase())
   ? String(process.env.LAZY_REPORT_SHAME_DEFAULT_MODE).trim().toLowerCase()
-  : "strict";
+  : "normal";
 
 function contentToText(content: unknown): string {
   if (typeof content === "string") return content;
@@ -206,9 +206,16 @@ function contentToText(content: unknown): string {
     .join("\n");
 }
 
+function textBlock(text: string): { type: "text"; text: string } {
+  return { type: "text", text };
+}
+
 function appendText(content: unknown, text: string): unknown {
-  if (typeof content === "string") return `${content.trimEnd()}\n\n${text}`;
-  if (!Array.isArray(content)) return text;
+  if (typeof content === "string") {
+    const base = content.trimEnd();
+    return [textBlock(base ? `${base}\n\n${text}` : text)];
+  }
+  if (!Array.isArray(content)) return [textBlock(text)];
   return [...content, { type: "text", text: `\n\n${text}` }];
 }
 
@@ -896,7 +903,13 @@ export default function lazyReportShameShameShame(pi: any) {
 
       if (check.decision === "error") {
         ctx?.ui?.notify?.(`lazy-report-shame-shame-shame checker error: ${check.diagnostics || check.reason_codes.join(", ")}`, "warning");
-        return;
+        check = {
+          ...check,
+          decision: "reject",
+          reason_codes: ["checker_error_fail_closed", ...check.reason_codes],
+          footer_failures: ["checker_error_fail_closed", ...check.footer_failures],
+        };
+        lastCandidate = makeCandidate(ctx, currentUserText, String(event.message.id || event.id || "unknown"), text, check, forceStatus);
       }
       if (check.decision !== "reject") {
         // JSON-first keep-going and escalation: every validated status compiles
@@ -905,15 +918,12 @@ export default function lazyReportShameShameShame(pi: any) {
         // command; done/needs_human/failed compile to null and end the turn.
         let displayReturn: any = undefined;
         if (status && typeof statusState === "string") {
-          // Human directive (2026-08-31): agent output is not polluted with JSON
-          // unless the human asks. Validate, act, persist -- then strip the block
-          // and show a one-line rendering. LAZY_REPORT_SHAME_SHOW_STATUS_JSON=1 keeps raw.
-          const showRaw = ["1", "true", "yes"].includes(String(process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON || "").trim().toLowerCase());
-          if (!showRaw) {
-            const strippedContent = stripStatusJson(event.message.content, "");
-            const line = renderStatusLine(status);
-            displayReturn = { message: { ...event.message, content: appendText(strippedContent, line) } };
-          }
+          // Human directive (2026-08-31): agent output is not polluted with JSON.
+          // Validate, act, persist, then strip the model JSON and render status
+          // from the pydantic-validated object.
+          const strippedContent = stripStatusJson(event.message.content, "");
+          const line = renderStatusLine(status);
+          displayReturn = { message: { ...event.message, content: appendText(strippedContent, line) } };
           try { ctx?.ui?.setStatus?.("shame", `\ud83e\udda5 ${sessionMode} \u00b7 ${statusState}`); } catch { /* status bar optional */ }
           const compiled = compileStatusCommand(status);
           if (compiled?.command) {
@@ -977,7 +987,7 @@ export default function lazyReportShameShameShame(pi: any) {
       return {
         message: {
           ...event.message,
-          content: notice,
+          content: [textBlock(notice)],
         },
       };
     } finally {
