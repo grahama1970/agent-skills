@@ -4,15 +4,41 @@
   "trials": 3,
   "proof_scope": "retained guidance contract for Chatterbox emotional rendering, memory grounding, spaced ellipsis pauses, render_chunks silence, and analyzer evaluation",
   "claims": {
-    "proves": "the skill document preserves the Chatterbox render-quality contract and exposes concrete JSON examples for agents",
+    "proves": "the skill document preserves the Chatterbox render-quality contract and exposes concrete helper commands and JSON examples for agents",
     "does_not_prove": "live Chatterbox synthesis quality, human preference, or waveform measurements; those belong to analyze-chatterbox-emotions and Chatterbox retained evals"
   },
+  "capability_claims": [
+    {
+      "id": "best_practices_chatterbox.guidance_contract",
+      "description": "Guide agents to produce Chatterbox-ready emotional utterances with memory grounding, inline tags, spaced ellipses, exact render_chunks pauses, and retained voice-quality checks.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "guidance_contract_text",
+      "seam_type": "documentation-contract",
+      "criticality": "critical",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "helper_command_json",
+      "seam_type": "cli-contract",
+      "criticality": "high",
+      "required_evidence": ["deterministic"]
+    }
+  ],
   "cases": [
     {
       "name": "skill-contract-real-entrypoint",
       "type": "positive",
       "real_world": true,
       "evidence_class": "deterministic",
+      "supports_claims": ["best_practices_chatterbox.guidance_contract"],
+      "seams": ["guidance_contract_text"],
       "command": [
         "bash",
         "-lc",
@@ -20,35 +46,13 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "PASS_BEST_PRACTICES_CHATTERBOX_CONTRACT"
-        ],
+        "stdout_contains": ["PASS_BEST_PRACTICES_CHATTERBOX_CONTRACT"],
         "artifacts": [
-          {
-            "path": "/tmp/best-practices-chatterbox-contract.json",
-            "json_pointer": "/schema",
-            "equals": "best_practices_chatterbox.contract_check.v1"
-          },
-          {
-            "path": "/tmp/best-practices-chatterbox-contract.json",
-            "json_pointer": "/pass",
-            "equals": true
-          },
-          {
-            "path": "/tmp/best-practices-chatterbox-contract.json",
-            "json_pointer": "/checks/memory_route",
-            "equals": true
-          },
-          {
-            "path": "/tmp/best-practices-chatterbox-contract.json",
-            "json_pointer": "/checks/spaced_ellipsis",
-            "equals": true
-          },
-          {
-            "path": "/tmp/best-practices-chatterbox-contract.json",
-            "json_pointer": "/checks/pause_after_ms",
-            "equals": true
-          }
+          {"path": "/tmp/best-practices-chatterbox-contract.json", "json_pointer": "/schema", "equals": "best_practices_chatterbox.contract_check.v1"},
+          {"path": "/tmp/best-practices-chatterbox-contract.json", "json_pointer": "/pass", "equals": true},
+          {"path": "/tmp/best-practices-chatterbox-contract.json", "json_pointer": "/checks/memory_route", "equals": true},
+          {"path": "/tmp/best-practices-chatterbox-contract.json", "json_pointer": "/checks/spaced_ellipsis", "equals": true},
+          {"path": "/tmp/best-practices-chatterbox-contract.json", "json_pointer": "/checks/pause_after_ms", "equals": true}
         ]
       }
     },
@@ -56,6 +60,8 @@
       "name": "missing-required-contract-fails-adversarially",
       "type": "adversarial",
       "evidence_class": "deterministic",
+      "supports_claims": ["best_practices_chatterbox.guidance_contract"],
+      "seams": ["guidance_contract_text"],
       "command": [
         "bash",
         "-lc",
@@ -63,9 +69,7 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "PASS_ADVERSARIAL_CONTRACT_MISSING_REQUIRED_TEXT"
-        ]
+        "stdout_contains": ["PASS_ADVERSARIAL_CONTRACT_MISSING_REQUIRED_TEXT"]
       }
     },
     {
@@ -73,6 +77,8 @@
       "type": "positive",
       "real_world": true,
       "evidence_class": "deterministic",
+      "supports_claims": ["best_practices_chatterbox.guidance_contract"],
+      "seams": ["helper_command_json"],
       "command": [
         "bash",
         "-lc",
@@ -80,30 +86,12 @@
       ],
       "expected": {
         "exit_code": 0,
-        "stdout_contains": [
-          "PASS_CHATTERBOX_CONTRACT_TOOLS"
-        ],
+        "stdout_contains": ["PASS_CHATTERBOX_CONTRACT_TOOLS"],
         "artifacts": [
-          {
-            "path": "/tmp/best-practices-chatterbox-render-plan.json",
-            "json_pointer": "/schema",
-            "equals": "best_practices_chatterbox.render_plan.v1"
-          },
-          {
-            "path": "/tmp/best-practices-chatterbox-render-plan.json",
-            "json_pointer": "/render_chunks/0/pause_after_ms",
-            "equals": 1200
-          },
-          {
-            "path": "/tmp/best-practices-chatterbox-sweep-plan.json",
-            "json_pointer": "/run_count",
-            "equals": 16
-          },
-          {
-            "path": "/tmp/best-practices-chatterbox-ssml.json",
-            "json_pointer": "/schema",
-            "equals": "best_practices_chatterbox.ssml_conversion.v1"
-          }
+          {"path": "/tmp/best-practices-chatterbox-render-plan.json", "json_pointer": "/schema", "equals": "best_practices_chatterbox.render_plan.v1"},
+          {"path": "/tmp/best-practices-chatterbox-render-plan.json", "json_pointer": "/render_chunks/0/pause_after_ms", "equals": 1200},
+          {"path": "/tmp/best-practices-chatterbox-sweep-plan.json", "json_pointer": "/run_count", "equals": 16},
+          {"path": "/tmp/best-practices-chatterbox-ssml.json", "json_pointer": "/schema", "equals": "best_practices_chatterbox.ssml_conversion.v1"}
         ]
       }
     }

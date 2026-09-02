@@ -37,6 +37,7 @@ ARTIFACTS = [
     ("storyboard_contact_sheet.png", "image", "the watched storyboard imagery from the dream spine"),
     ("journal.wav", "audio", "my own voice reading the journal entry aloud"),
     ("journal_chatterbox_utterance.json", "text", "the exact Chatterbox utterance plan for my journal: tone, tags, pauses, source context, and spoken text"),
+    ("journal_chatterbox_utterance.md", "text", "the human-readable Chatterbox utterance plan for my journal"),
     ("provider_return.mp4", "video", "the dream rendered as moving image"),
 ]
 
@@ -62,6 +63,35 @@ def sha_file(path: Path) -> str:
         for chunk in iter(lambda: fh.read(1024 * 1024), b""):
             h.update(chunk)
     return "sha256:" + h.hexdigest()
+
+
+def source_context_counts(payload: Any) -> dict[str, int | None]:
+    """Return the stable source-context count field written by speak_journal."""
+    raw = payload.get("source_context_counts") if isinstance(payload, dict) else {}
+    if not isinstance(raw, dict):
+        raw = {}
+    out: dict[str, int | None] = {}
+    for key in (
+        "memory_residue",
+        "day_events",
+        "mined_transcript_items",
+        "dream_panels",
+        "observed_entity_frames",
+    ):
+        value = raw.get(key)
+        out[key] = int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+    if out["day_events"] is None:
+        out["day_events"] = 0
+    return out
+
+
+def load_chatterbox_utterance_payload(run_dir: Path) -> dict[str, Any]:
+    utterance = run_dir / "journal_chatterbox_utterance.json"
+    try:
+        payload = json.loads(utterance.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 def describe(run_dir: Path, name: str, modality: str, base: str) -> str:
@@ -96,16 +126,12 @@ def describe(run_dir: Path, name: str, modality: str, base: str) -> str:
             text = " ".join(spoken.read_text(encoding="utf-8").split())
             if text:
                 detail = f" I said: {text[:200]}"
-    elif name == "journal_chatterbox_utterance.json":
-        utterance = run_dir / name
-        try:
-            payload = json.loads(utterance.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            payload = {}
+    elif name in {"journal_chatterbox_utterance.json", "journal_chatterbox_utterance.md"}:
+        payload = load_chatterbox_utterance_payload(run_dir)
         tags = ", ".join(str(t) for t in (payload.get("emotional_utterance_tags") or []))
         tone = str(payload.get("requested_delivery_tone") or "")
         spoken = " ".join(str(payload.get("chatterbox_utterance_text") or "").split())
-        context = payload.get("source_context_counts") if isinstance(payload.get("source_context_counts"), dict) else {}
+        context = source_context_counts(payload)
         detail = (
             f" Tone: {tone}. Tags: {tags}. Context counts: {context}. "
             f"Chatterbox answer_text: {spoken[:260]}"
@@ -162,6 +188,18 @@ def build_documents(run_dir: Path, persona: str, day: str, run_id: str) -> list[
         if digest in seen_digests:
             continue
         seen_digests.add(digest)
+        extra: dict[str, Any] = {}
+        if name in {"journal_chatterbox_utterance.json", "journal_chatterbox_utterance.md"}:
+            payload = load_chatterbox_utterance_payload(run_dir)
+            extra = {
+                "chatterbox_utterance_text_sha256": payload.get("chatterbox_utterance_text_sha256"),
+                "chatterbox_utterance_source": payload.get("chatterbox_utterance_source"),
+                "emotional_utterance_tags": payload.get("emotional_utterance_tags") or [],
+                "requested_delivery_tone": payload.get("requested_delivery_tone"),
+                "source_context_packet_sha256": payload.get("source_context_packet_sha256"),
+                "source_context_packet_present": bool(payload.get("source_context_packet_present")),
+                "source_context_counts": source_context_counts(payload),
+            }
         docs.append({
             "_key": "pd_art_" + hashlib.sha256(f"{persona}:{digest}".encode()).hexdigest()[:24],
             "problem": f"A dream artifact {persona} produced on {day}",
@@ -170,7 +208,7 @@ def build_documents(run_dir: Path, persona: str, day: str, run_id: str) -> list[
             "tags": ["persona-dream", "dream-artifact", f"modality:{modality}",
                      f"persona:{persona}", f"day:{day}"]
                     + (["journal-utterance-plan", "chatterbox-tags", "memory-context"]
-                       if name == "journal_chatterbox_utterance.json" else []),
+                       if name in {"journal_chatterbox_utterance.json", "journal_chatterbox_utterance.md"} else []),
             "persona_id": persona,
             "record_type": "dream_artifact",
             "kind": "dream_artifact",
@@ -190,6 +228,7 @@ def build_documents(run_dir: Path, persona: str, day: str, run_id: str) -> list[
             # memory -> reflection -> the imagery and audio it produced.
             "source_ids": [parent] if parent else [],
             "interprets_dream": parent,
+            **extra,
         })
     return docs
 

@@ -41,16 +41,7 @@ disciplines:
 
 Use this skill when an agent writes, reviews, or evaluates text that Chatterbox will speak.
 
-Chatterbox is the renderer. The agent owns context, affect intent, utterance text, pause plans, receipts, and quality gates.
-
-## Core rule
-
-Do not put emotion only in `voice_delivery.tone`. The text sent to Chatterbox must carry the spoken affect:
-
-- native event tags in `answer_text`;
-- spaced ellipsis beats such as `bottle rocket ... a room`;
-- caller-owned `render_chunks` with exact `pause_after_ms` when silence matters;
-- a retained voice-quality analysis artifact after rendering.
+Chatterbox is the renderer. The agent owns context, affect intent, utterance text, pause plans, receipts, and quality gates. Do not put emotion only in `voice_delivery.tone`; Chatterbox Turbo needs affect in the spoken payload and exact pauses in the render plan.
 
 ## Required pipeline
 
@@ -67,15 +58,12 @@ clean text
   -> store JSON receipt + waveform metrics
 ```
 
-## Inputs the planner should receive
+Minimum planner inputs:
 
-- Clean text to speak.
-- Extracted entities and source context from `$memory recall`.
-- Target affect label from the product vocabulary, not only SER labels.
-- Intensity from `0.0` to `1.0`.
-- Valence/arousal intent when available.
-- Available Chatterbox tone names and tag vocabulary from the live backend.
-- Reference-audio constraints.
+- clean text to speak;
+- grounded source context from `$memory recall`;
+- target affect label, intensity, valence, and arousal when available;
+- live Chatterbox tone names, supported tag vocabulary, backend support, and reference-audio constraints.
 
 ## Tag vocabulary
 
@@ -91,19 +79,19 @@ Extended tokenizer tokens may be used sparingly when the line genuinely needs th
 [angry], [fear], [surprised], [whispering], [advertisement], [dramatic], [narration], [crying], [happy], [sarcastic]
 ```
 
-Use tags where the vocal event belongs, usually before a breath, turn, interruption, or affect shift. Do not prefix every sentence with the same tag.
+Use tags where the vocal event belongs, usually before a breath, turn, interruption, or affect shift. Do not prefix every sentence with the same tag, and do not place a tag inside a noun phrase or immediately before a proper name.
 
 ## Text preprocessing and SSML import
 
 Normalize renderer text before it reaches Chatterbox:
 
-- Convert markdown emphasis to vocal stress only when the source intentionally emphasized the word: `*cannot*` becomes `CANNOT`.
+- Convert intentional markdown emphasis to vocal stress: `*cannot*` becomes `CANNOT`.
 - Normalize ASCII dashes to em dashes when the dash is meant as a breath or interruption.
 - Preserve explicit pause controls as `[pause:750ms]` or `[pause:1.2s]` for the pause compiler.
-- Convert small SSML fragments into Chatterbox-native text at the boundary: `<break time="800ms"/>` becomes `[pause:800ms]`, `<emphasis>` becomes uppercase, and `<express-as type="gasp">` becomes a native inline tag.
-- Reject broad SSML passthrough. Chatterbox is not an SSML engine; the conversion must produce plain `answer_text` plus `render_chunks`.
+- Convert small SSML fragments at the boundary: `<break time="800ms"/>` becomes `[pause:800ms]`, `<emphasis>` becomes uppercase, and `<express-as type="gasp">` becomes a native inline tag.
+- Reject broad SSML passthrough. Chatterbox is not an SSML engine; conversion must produce plain `answer_text` plus `render_chunks`.
 
-Use the helper commands for deterministic transformations:
+Helper commands:
 
 ```bash
 ./run.sh preprocess --text 'I *cannot* -- [SIGH] keep pretending.'
@@ -119,35 +107,25 @@ Good:  bottle rocket ... a room where grief could sit down
 Bad:   bottle rocket... a room where grief could sit down
 ```
 
-When the pause matters, do not rely on punctuation alone. Split the utterance into `render_chunks` and set `pause_after_ms`. `[pause:500ms]` and `[pause:1.2s]` are source-side directives that must be compiled out of `answer_text` and into chunk metadata before render:
+When a pause matters, do not rely on punctuation alone. Split the utterance into `render_chunks` and set `pause_after_ms`. `[pause:500ms]` and `[pause:1.2s]` are source-side directives that must be compiled out of `answer_text` and into chunk metadata before render:
 
 ```json
 {
   "answer_text": "[sniff] [sniff] ... give me a second. This is tender, and I can keep going.",
   "render_chunks": [
-    {
-      "text": "[sniff] [sniff] ...",
-      "pause_after_ms": 1400,
-      "tone": "grief_safe",
-      "role": "collect_herself"
-    },
-    {
-      "text": "give me a second. This is tender, and I can keep going.",
-      "pause_after_ms": 0,
-      "tone": "grief_safe",
-      "role": "recover"
-    }
+    {"text": "[sniff] [sniff] ...", "pause_after_ms": 1400, "tone": "grief_safe", "role": "collect_herself"},
+    {"text": "give me a second. This is tender, and I can keep going.", "pause_after_ms": 0, "tone": "grief_safe", "role": "recover"}
   ]
 }
 ```
 
-Compile the plan with the helper when exact silence matters:
+Compile exact silence with:
 
 ```bash
 ./run.sh plan-silence --text 'I need a second. [pause:1.2s] [sniff] [sniff] ... give me a second.' --tone grief_safe
 ```
 
-Use longer pauses for collect-herself beats:
+Suggested pause bands:
 
 | Situation | Suggested pause |
 |---|---:|
@@ -172,7 +150,7 @@ Advisory starting points for backends that actually honor the knobs:
 - Fast reference speaker: lower `cfg_weight` toward `0.3` to reduce rushed cadence.
 - Cross-language cloning: consider `cfg_weight=0.0` only after backend support is verified.
 
-Parameter sweeps are useful only when the backend exposes those parameters. Hold seed, text, reference audio, temperature, and pause plan constant so the comparison isolates `exaggeration` and `cfg_weight`:
+Sweep only when the backend exposes those parameters:
 
 ```bash
 ./run.sh sweep-plan \
@@ -180,7 +158,7 @@ Parameter sweeps are useful only when the backend exposes those parameters. Hold
   --text 'I cannot believe you pulled this off! ... [gasp] That was incredible.'
 ```
 
-Do not sweep by repeatedly rerunning the same failing prompt and hoping for luck. Use the sweep manifest, render each cell once through the supported backend, run `/analyze-chatterbox-emotions`, and pick from measured pause, clipping, F0 variation, transcript similarity, and human listening notes.
+Do not rerun the same failing prompt hoping for luck. Use the sweep manifest, render each cell once through the supported backend, run `/analyze-chatterbox-emotions`, and pick from measured pause, clipping, F0 variation, transcript similarity, and human listening notes.
 
 ## Intensity example
 
@@ -203,18 +181,8 @@ Do not sweep by repeatedly rerunning the same failing prompt and hoping for luck
     "answer_text": "[sniff] [sniff] ... give me a second. This is tender, and I can keep going.",
     "tags": ["[sniff]", "[sigh]", "[crying]"],
     "render_chunks": [
-      {
-        "text": "[sniff] [sniff] ...",
-        "pause_after_ms": 1400,
-        "tone": "grief_safe",
-        "role": "collect_herself"
-      },
-      {
-        "text": "give me a second. This is tender, and I can keep going.",
-        "pause_after_ms": 0,
-        "tone": "grief_safe",
-        "role": "recover"
-      }
+      {"text": "[sniff] [sniff] ...", "pause_after_ms": 1400, "tone": "grief_safe", "role": "collect_herself"},
+      {"text": "give me a second. This is tender, and I can keep going.", "pause_after_ms": 0, "tone": "grief_safe", "role": "recover"}
     ]
   }
 }

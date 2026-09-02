@@ -117,10 +117,50 @@ def post_json(url: str, payload: dict[str, Any], timeout: int = 900) -> dict[str
         return json.loads(resp.read().decode("utf-8"))
 
 
+SOURCE_CONTEXT_COUNT_KEYS = (
+    "memory_residue",
+    "day_events",
+    "mined_transcript_items",
+    "dream_panels",
+    "observed_entity_frames",
+)
+
+
+def normalize_source_context_counts(counts: Any) -> dict[str, int | None]:
+    """Keep journal source-context counts stable in receipts and artifacts."""
+    raw = counts if isinstance(counts, dict) else {}
+    normalized: dict[str, int | None] = {}
+    for key in SOURCE_CONTEXT_COUNT_KEYS:
+        value = raw.get(key)
+        normalized[key] = int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+    if normalized["day_events"] is None:
+        normalized["day_events"] = 0
+    return normalized
+
+
+def journal_source_context(run_dir: Path | None) -> tuple[str, dict[str, int | None]]:
+    """Load the same run-root context the journal renderer had, from a run path."""
+    if run_dir is None:
+        return "", normalize_source_context_counts({})
+    grounding = _load_sibling("conversation_grounding")
+    context = grounding.load_context(Path(run_dir))
+    return grounding.format_for_prompt(context, max_chars=3000), normalize_source_context_counts({
+        "memory_residue": context.get("source_count"),
+        "day_events": len(context.get("day_lines") or []),
+        "mined_transcript_items": context.get("transcript_count"),
+        "dream_panels": context.get("panel_count"),
+        "observed_entity_frames": context.get("observation_count"),
+    })
+
+
 def prepare_journal_utterance(text: str, tone: str, mood_label: str | None,
-                              source_packet: str = "") -> dict[str, Any]:
+                              run_dir: Path | None = None,
+                              source_packet: str | None = None) -> dict[str, Any]:
     """Ask Tau to add Chatterbox event tags and punctuation to journal speech."""
     utterances = _load_sibling("chatterbox_utterances")
+    loaded_source_packet, source_context_counts = journal_source_context(run_dir)
+    if source_packet is None:
+        source_packet = loaded_source_packet
     prompt = f"""You are preparing Embry's journal for Chatterbox Turbo narration.
 
 Keep the wording and meaning of the journal excerpt. Add affect beats, not just
@@ -129,27 +169,7 @@ where Embry would vocalize them, and add natural spoken pauses where she has to
 think, soften, steady herself, or collect herself. Do not add new facts. Do not
 use markdown. Do not use stage directions.
 
-Native vocal event tags available: [clear throat], [sigh], [shush], [cough],
-[groan], [sniff], [gasp], [chuckle], [laugh].
-
-Extended tokenizer style/emotion tokens available when genuinely relevant:
-[angry], [fear], [surprised], [whispering], [advertisement], [dramatic],
-[narration], [crying], [happy], [sarcastic]. Prefer the native vocal event tags
-for audible utterances; use extended style tokens sparingly because their effect
-varies.
-
-Delay and cadence marks available: comma for short breath, semicolon or period
-for sentence pause, ellipsis (...) for hesitation/longer pause, em dash or -- for
-an abrupt break. Put pauses where Embry is thinking or feeling, not mechanically.
-Do not end the utterance on an ellipsis, dash, tag, or unfinished thought.
-For tenderness, grief, fear, or a moment where she has to collect herself, prefer
-repeated embodied cues such as "[sniff] [sniff] ... give me a second" and use
-[crying] only when the line genuinely carries tears. Persona Dream will convert
-these ellipses and collection cues into exact Chatterbox render_chunks
-pause_after_ms silence; your job is to put the affect beats at honest locations.
-Do not place a tag inside a noun phrase or immediately before a proper name/object;
-write "I thought about Kai. [sniff]" or "[sniff] I thought about Kai", not
-"I thought about [sniff] Kai".
+{utterances.prompt_guidance()}
 
 Use the context packet to choose relevant utterances and pauses. Embry is not a
 generic narrator: she is thinking through her dream, Memory residue, extracted
@@ -181,17 +201,22 @@ Return JSON: {{"chatterbox_utterance_text": "..."}}"""
             "tags": tags,
             "source": "agent_repaired_tau_failure",
             "tau_error": str(exc),
+            "source_context_packet": source_packet,
+            "source_context_counts": source_context_counts,
         }
     proposed = utterances.normalize_collect_cues(str((parsed or {}).get("chatterbox_utterance_text") or "").strip())
     tags = utterances.existing_event_tags(proposed)
     if (len(tags) >= 2 and utterances.has_delay_markup(proposed)
             and not utterances.has_unfinished_tail(proposed)
-            and not has_bad_chatterbox_tag_boundary(proposed)):
+            and not has_bad_chatterbox_tag_boundary(proposed)
+            and utterances.preserves_source_words(text, proposed)):
         return {
             "text": utterances.ensure_delay_markup(proposed),
             "tags": tags,
             "source": "model_authored",
             "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
+            "source_context_packet": source_packet,
+            "source_context_counts": source_context_counts,
         }
     tagged, tags = utterances.inject_event_tags(text, tone, max_tags=5)
     return {
@@ -199,6 +224,8 @@ Return JSON: {{"chatterbox_utterance_text": "..."}}"""
         "tags": tags,
         "source": "agent_repaired_model_missing_tags",
         "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {},
+        "source_context_packet": source_packet,
+        "source_context_counts": source_context_counts,
     }
 
 
@@ -311,13 +338,14 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
                 mood_label = sm.get("mood_label")
     mapping = mapper.map_mood(mood_label, contradictions, args.intensity, args.valence)
     requested = mapping["voice_delivery"]["tone"]
-    grounding = _load_sibling("conversation_grounding")
-    grounding_context = grounding.load_context(run_dir)
-    source_packet = grounding.format_for_prompt(grounding_context, max_chars=3000)
-    utterance = prepare_journal_utterance(rendered_spoken, requested, mood_label, source_packet)
+    utterance = prepare_journal_utterance(rendered_spoken, requested, mood_label, run_dir=run_dir)
+    source_packet = str(utterance.get("source_context_packet") or "")
+    source_context_counts = normalize_source_context_counts(utterance.get("source_context_counts"))
     chatterbox_utterance_text = str(utterance.get("text") or rendered_spoken).strip()
     emotional_utterance_tags = list(utterance.get("tags") or [])
-    render_chunks = _load_sibling("chatterbox_utterances").compile_render_chunks(chatterbox_utterance_text, requested)
+    utterances = _load_sibling("chatterbox_utterances")
+    render_chunks = utterances.compile_render_chunks(chatterbox_utterance_text, requested)
+    pause_request_fields = utterances.exact_pause_request_fields()
 
     utterance_artifact = {
         "schema": "persona_dream.journal_chatterbox_utterance.v1",
@@ -325,13 +353,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "source_spoken_text": rel(spoken_path),
         "source_spoken_text_sha256": sha_text(rendered_spoken),
         "source_context_packet": source_packet,
-        "source_context_counts": {
-            "memory_residue": grounding_context.get("source_count"),
-            "day_events": len(grounding_context.get("day_lines") or []),
-            "mined_transcript_items": grounding_context.get("transcript_count"),
-            "dream_panels": grounding_context.get("panel_count"),
-            "observed_entity_frames": grounding_context.get("observation_count"),
-        },
+        "source_context_packet_sha256": sha_text(source_packet),
+        "source_context_packet_present": bool(source_packet.strip()),
+        "source_context_counts": source_context_counts,
         "requested_delivery_tone": requested,
         "persona_mood_label": mapping["persona_mood_label"],
         "dominant_tension_axis": mapping["dominant_tension_axis"],
@@ -340,12 +364,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "emotional_utterance_tags": emotional_utterance_tags,
         "chatterbox_utterance_source": utterance.get("source"),
         "chatterbox_utterance_tau_receipt": utterance.get("tau_receipt"),
-        "pause_markup_present": bool(_load_sibling("chatterbox_utterances").has_delay_markup(chatterbox_utterance_text)),
+        "pause_markup_present": bool(utterances.has_delay_markup(chatterbox_utterance_text)),
         "chatterbox_pause_plan": render_chunks,
+        **utterances.exact_pause_receipt_fields(),
     }
-    (run_dir / "journal_chatterbox_utterance.json").write_text(
+    utterance_json_path = run_dir / "journal_chatterbox_utterance.json"
+    utterance_md_path = run_dir / "journal_chatterbox_utterance.md"
+    utterance_json_path.write_text(
         json.dumps(utterance_artifact, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    (run_dir / "journal_chatterbox_utterance.md").write_text(
+    utterance_md_path.write_text(
         "# Embry journal Chatterbox utterance\n\n"
         f"Tone: `{requested}`\n\n"
         f"Tags: {', '.join(emotional_utterance_tags)}\n\n"
@@ -353,10 +380,27 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "## Exact Chatterbox answer_text\n\n"
         f"{chatterbox_utterance_text}\n\n"
         "## Programmatic silence plan\n\n"
+        f"Implementation: {utterances.PAUSE_IMPLEMENTATION}; Chatterbox `/synthesize-batch` receives caller-owned `render_chunks`; "
+        f"each chunk's `pause_after_ms` is inserted as post-render stitched silence, with `crossfade_ms={utterances.EXACT_PAUSE_CROSSFADE_MS}` for exact gaps.\n\n"
         f"```json\n{json.dumps(render_chunks, indent=2, sort_keys=True)}\n```\n\n"
         "## Source context used for utterance placement\n\n"
         f"{source_packet}\n",
         encoding="utf-8")
+    utterance_json_read_back = False
+    utterance_md_read_back = False
+    try:
+        utterance_json_read_back = (
+            json.loads(utterance_json_path.read_text(encoding="utf-8"))
+            .get("chatterbox_utterance_text_sha256") == sha_text(chatterbox_utterance_text)
+        )
+        utterance_md_read_back = chatterbox_utterance_text in utterance_md_path.read_text(encoding="utf-8")
+    except (OSError, json.JSONDecodeError):
+        utterance_json_read_back = False
+        utterance_md_read_back = False
+    if not utterance_json_read_back:
+        failed.append("chatterbox_utterance_json_not_read_back")
+    if not utterance_md_read_back:
+        failed.append("chatterbox_utterance_markdown_not_read_back")
 
     label = args.label or f"pd_journal_{run_dir.name}"
     request = {
@@ -371,6 +415,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "asr_max_duration_ratio": ASR_MAX_DURATION_RATIO,
         "voice_delivery": mapping["voice_delivery"],
         "ref_audio": args.ref_audio,
+        **pause_request_fields,
     }
     dest = run_dir / "journal.wav"
     response: dict[str, Any] = {}
@@ -391,11 +436,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         transcripts = [str(item["transcript"]).strip() for item in chunk_asr if item.get("transcript")]
         transcript = "\n".join(transcripts) if transcripts else None
         wers = [float(item["wer"]) for item in chunk_asr if item.get("wer") is not None]
-        if not (
+        retryable_asr_failure = bool(
             args.asr_verify
             and chunk_asr
-            and any("asr_transcription_ok" in (item.get("failed_gates") or []) for item in chunk_asr)
-        ):
+            and any(item.get("ok") is not True for item in chunk_asr)
+        )
+        if not retryable_asr_failure:
             break
 
     if response.get("ok") is False:
@@ -474,12 +520,19 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "emotional_utterance_tags": emotional_utterance_tags,
         "chatterbox_utterance_source": utterance.get("source"),
         "chatterbox_utterance_tau_receipt": utterance.get("tau_receipt"),
-        "chatterbox_utterance_artifact": rel(run_dir / "journal_chatterbox_utterance.json"),
-        "chatterbox_utterance_markdown": rel(run_dir / "journal_chatterbox_utterance.md"),
+        "chatterbox_utterance_artifact": rel(utterance_json_path),
+        "chatterbox_utterance_artifact_sha256": sha_file(utterance_json_path) if utterance_json_path.is_file() else None,
+        "chatterbox_utterance_markdown": rel(utterance_md_path),
+        "chatterbox_utterance_markdown_sha256": sha_file(utterance_md_path) if utterance_md_path.is_file() else None,
+        "chatterbox_utterance_artifact_read_back": utterance_json_read_back,
+        "chatterbox_utterance_markdown_read_back": utterance_md_read_back,
         "source_context_packet": source_packet,
+        "source_context_packet_sha256": utterance_artifact["source_context_packet_sha256"],
+        "source_context_packet_present": utterance_artifact["source_context_packet_present"],
         "source_context_counts": utterance_artifact["source_context_counts"],
-        "pause_markup_present": bool(_load_sibling("chatterbox_utterances").has_delay_markup(chatterbox_utterance_text)),
+        "pause_markup_present": bool(utterances.has_delay_markup(chatterbox_utterance_text)),
         "chatterbox_pause_plan": (response.get("render_plan") or {}).get("chunks") or render_chunks,
+        **utterances.exact_pause_receipt_fields(response.get("crossfade_ms")),
         "spoken_chars": len(rendered_spoken),
         "truncated_to": args.max_chars if len(spoken) > args.max_chars else None,
         "audio": rel(dest) if dest.is_file() else None,

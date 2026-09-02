@@ -99,6 +99,76 @@ def test_model_authored_tags_must_not_split_names_or_noun_phrases():
     assert speak_reply.has_bad_chatterbox_tag_boundary("[sniff] I thought about Kai.") is False
 
 
+def test_reply_utterance_must_preserve_clean_reply_words():
+    source = "Kai and the glowing box stayed with me because the room felt tender."
+    assert chatterbox_utterances.preserves_source_words(source, "[sigh] Kai and the glowing box stayed with me ... because the room felt tender.") is True
+    assert chatterbox_utterances.preserves_source_words(source, "[sigh] Marcus changed the meeting ... and I wanted breakfast.") is False
+
+
+def test_shared_chatterbox_prompt_guidance_names_exact_pause_contract():
+    guidance = chatterbox_utterances.prompt_guidance(include_clean_reply_rule=True)
+
+    assert "Write the clean reply field with no Chatterbox bracket tags" in guidance
+    assert "spaced ellipsis ( ... )" in guidance
+    assert "crossfade_ms=0" in guidance
+    assert "I thought about [sniff] Kai" in guidance
+
+
+def test_reply_prompt_keeps_clean_text_separate_from_chatterbox_markup(tmp_path):
+    (tmp_path / "journal.md").write_text("Kai and the glowing box stayed with me.\n", encoding="utf-8")
+    prompt, asked = speak_reply.build_prompt(tmp_path, "What did the box change?")
+
+    assert asked == "What did the box change?"
+    assert "no Chatterbox\nbracket tags in the clean reply field" in prompt
+    assert "The voice renderer reads this field, not the tone metadata" in prompt
+    assert "Use spaces around ellipses" in prompt
+    assert "Tags belong before a clause or\nafter a complete phrase" in prompt
+    assert "clean transcript text with no Chatterbox tags" in prompt
+    assert "pause_after_ms silence, stitched after each generated segment with crossfade_ms=0" in prompt
+
+
+def test_speak_uses_zero_crossfade_for_exact_programmatic_pauses(tmp_path, monkeypatch):
+    import json
+
+    captured = {}
+    source = tmp_path / "source.wav"
+    source.write_bytes(b"RIFF....WAVE")
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self):
+            return json.dumps({
+                "ok": True,
+                "engine": "chatterbox_turbo",
+                "finished_response_audio": str(source),
+                "render_plan": {"chunks": [{"pause_after_ms": 900}]},
+                "crossfade_ms": 0,
+            }).encode("utf-8")
+
+    def fake_urlopen(req, timeout=300):
+        captured["payload"] = json.loads(req.data.decode("utf-8"))
+        return FakeResponse()
+
+    monkeypatch.setattr(speak_reply.urllib.request, "urlopen", fake_urlopen)
+    audio, response = speak_reply.speak(
+        "[sigh] Kai stayed ... [sniff] and I noticed.",
+        {"tone": "neutral_warm"},
+        tmp_path,
+        "reply-proof",
+    )
+
+    assert captured["payload"]["crossfade_ms"] == chatterbox_utterances.EXACT_PAUSE_CROSSFADE_MS
+    assert captured["payload"]["render_chunks"]
+    assert response["crossfade_ms"] == chatterbox_utterances.EXACT_PAUSE_CROSSFADE_MS
+    assert audio == tmp_path / "reply-proof.wav"
+    assert audio.is_file()
+
+
 def test_collect_herself_cue_becomes_exact_programmatic_pause():
     text = chatterbox_utterances.normalize_collect_cues(
         "This is tender. [sniff] [sniff] give me a second. I can keep going."

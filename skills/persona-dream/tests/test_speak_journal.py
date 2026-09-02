@@ -21,6 +21,7 @@ def _load(name: str):
 
 
 speak = _load("speak_journal")
+utterances = _load("chatterbox_utterances")
 
 
 def test_missing_spoken_text_blocks_without_calling_the_renderer(tmp_path):
@@ -96,7 +97,7 @@ def _args(tmp_path, **overrides):
 
 def test_chatterbox_failed_gates_are_preserved_in_journal_audio_receipt(tmp_path, monkeypatch):
     (tmp_path / "journal_spoken.txt").write_text("I woke carrying the dream.\n", encoding="utf-8")
-    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
+    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, run_dir=None, source_packet=None: {
         "text": "[sigh] ... I woke carrying the dream. [sniff]",
         "tags": ["[sigh]", "[sniff]"],
         "source": "test",
@@ -142,7 +143,7 @@ def test_chatterbox_failed_gates_are_preserved_in_journal_audio_receipt(tmp_path
 
 
 def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, monkeypatch):
-    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
+    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, run_dir=None, source_packet=None: {
         "text": "[sigh] ... First sentence. [sniff] Second sentence.",
         "tags": ["[sigh]", "[sniff]"],
         "source": "test",
@@ -202,13 +203,42 @@ def test_chunk_asr_transcripts_are_aggregated_for_the_whole_journal(tmp_path, mo
     assert receipt["pause_markup_present"] is True
     assert Path(receipt["chatterbox_utterance_artifact"]).is_file()
     assert Path(receipt["chatterbox_utterance_markdown"]).is_file()
+    assert receipt["chatterbox_utterance_artifact_read_back"] is True
+    assert receipt["chatterbox_utterance_markdown_read_back"] is True
+    assert receipt["chatterbox_utterance_artifact_sha256"].startswith("sha256:")
+    assert receipt["chatterbox_utterance_markdown_sha256"].startswith("sha256:")
+    assert receipt["source_context_packet_sha256"].startswith("sha256:")
+    assert receipt["source_context_packet_present"] is False
     assert receipt["emotional_utterance_tags"] == ["[sigh]", "[sniff]"]
+
+
+def test_source_context_counts_are_stable_for_partial_or_empty_inputs():
+    assert speak.normalize_source_context_counts({}) == {
+        "memory_residue": None,
+        "day_events": 0,
+        "mined_transcript_items": None,
+        "dream_panels": None,
+        "observed_entity_frames": None,
+    }
+    assert speak.normalize_source_context_counts({"day_events": 1}) == {
+        "memory_residue": None,
+        "day_events": 1,
+        "mined_transcript_items": None,
+        "dream_panels": None,
+        "observed_entity_frames": None,
+    }
 
 
 def test_journal_chatterbox_tags_must_not_split_names_or_noun_phrases():
     assert speak.has_bad_chatterbox_tag_boundary("I thought about [sniff] Kai.") is True
     assert speak.has_bad_chatterbox_tag_boundary("I thought about Kai. [sniff]") is False
     assert speak.has_bad_chatterbox_tag_boundary("[sniff] I thought about Kai.") is False
+
+
+def test_journal_utterance_must_preserve_source_words():
+    source = "I thought about Kai and the glowing box because the room still felt tender."
+    assert utterances.preserves_source_words(source, "[sigh] I thought about Kai ... and the glowing box because the room still felt tender.") is True
+    assert utterances.preserves_source_words(source, "[sigh] The weather changed ... and I wanted breakfast.") is False
 
 
 def test_bad_model_tag_boundary_is_repaired_before_journal_render(monkeypatch):
@@ -236,9 +266,10 @@ def test_bad_model_tag_boundary_is_repaired_before_journal_render(monkeypatch):
         "I thought about Kai and the glowing box. The warmth felt tender.",
         "memory_uncertain",
         "guarded_soft_yearning",
-        "SOURCE CONTEXT",
+        source_packet="SOURCE CONTEXT",
     )
 
+    assert result["source_context_packet"] == "SOURCE CONTEXT"
     assert result["source"] == "agent_repaired_model_missing_tags"
     assert speak.has_bad_chatterbox_tag_boundary(result["text"]) is False
     assert "[sniff] Kai" not in result["text"]
@@ -251,13 +282,21 @@ def test_journal_utterance_is_the_text_sent_to_chatterbox(tmp_path, monkeypatch)
     wav.parent.mkdir(parents=True)
     wav.write_bytes(b"RIFF....WAVE")
     monkeypatch.setattr(speak, "CHATTERBOX_OUT_HOST_ROOT", host_root)
-    monkeypatch.setattr(speak, "prepare_journal_utterance", lambda text, tone, mood, source_packet="": {
-        "text": "[sigh] I woke carrying the dream ... [sniff] and I kept listening.",
-        "tags": ["[sigh]", "[sniff]"],
-        "source": "model_authored",
-    })
-    (tmp_path / "journal_spoken.txt").write_text("I woke carrying the dream. And I kept listening.\n", encoding="utf-8")
     captured = {}
+
+    def fake_prepare(text, tone, mood, run_dir=None, source_packet=None):
+        captured["prepare_run_dir"] = run_dir
+        captured["prepare_source_packet"] = source_packet
+        return {
+            "text": "[sigh] I woke carrying the dream ... [sniff] and I kept listening.",
+            "tags": ["[sigh]", "[sniff]"],
+            "source": "model_authored",
+            "source_context_packet": "prepared from run path",
+            "source_context_counts": {"day_events": 1},
+        }
+
+    monkeypatch.setattr(speak, "prepare_journal_utterance", fake_prepare)
+    (tmp_path / "journal_spoken.txt").write_text("I woke carrying the dream. And I kept listening.\n", encoding="utf-8")
 
     def fake_post_json(url, payload):
         captured["payload"] = payload
@@ -276,12 +315,29 @@ def test_journal_utterance_is_the_text_sent_to_chatterbox(tmp_path, monkeypatch)
 
     receipt = speak.run(_args(tmp_path, asr_verify=False))
 
+    assert captured["prepare_run_dir"] == tmp_path
+    assert captured["prepare_source_packet"] is None
     assert captured["payload"]["answer_text"] == "[sigh] I woke carrying the dream ... [sniff] and I kept listening."
+    assert captured["payload"]["crossfade_ms"] == utterances.EXACT_PAUSE_CROSSFADE_MS
     assert captured["payload"]["render_chunks"]
     assert any(int(chunk["pause_after_ms"]) >= 900 for chunk in captured["payload"]["render_chunks"][:-1])
     assert receipt["chatterbox_utterance_source"] == "model_authored"
+    assert receipt["chatterbox_utterance_artifact_read_back"] is True
+    assert receipt["chatterbox_utterance_markdown_read_back"] is True
+    assert receipt["chatterbox_utterance_artifact_sha256"].startswith("sha256:")
+    assert receipt["chatterbox_utterance_markdown_sha256"].startswith("sha256:")
+    assert receipt["source_context_packet_present"] is True
+    assert receipt["source_context_counts"] == {
+        "memory_residue": None,
+        "day_events": 1,
+        "mined_transcript_items": None,
+        "dream_panels": None,
+        "observed_entity_frames": None,
+    }
     assert receipt["emotional_utterance_tags"] == ["[sigh]", "[sniff]"]
     assert receipt["chatterbox_pause_plan"]
+    assert receipt["pause_implementation"] == utterances.PAUSE_IMPLEMENTATION
+    assert receipt["requested_crossfade_ms"] == utterances.EXACT_PAUSE_CROSSFADE_MS
 
 
 def test_live_receipt_binds_audio_to_text_and_disclaims_achieved_tone():

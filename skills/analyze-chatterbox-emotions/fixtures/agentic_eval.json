@@ -2,9 +2,9 @@
   "version": 2,
   "skill": "analyze-chatterbox-emotions",
   "trials": 3,
-  "proof_scope": "live Chatterbox render analysis plus deterministic WAV fixture coverage for pause, prosody, intelligibility-input, and quality metrics",
+  "proof_scope": "canonical Chatterbox emotional-quality render analysis plus deterministic WAV fixture coverage for pause, prosody, intelligibility-input, and quality metrics",
   "claims": {
-    "proves": "the skill analyzes a live Chatterbox render from waveform read-back, detects planned-vs-measured pause behavior, computes prosody/quality metrics, and writes inspectable JSON plus Markdown reports",
+    "proves": "the skill analyzes the canonical live Chatterbox emotional_quality_variety artifact from waveform read-back, detects planned-vs-measured pause behavior, computes prosody/quality metrics, and writes inspectable JSON plus Markdown reports; deterministic fixture coverage keeps missing-audio and render-plan parsing fail-closed",
     "does_not_prove": "human-perceived emotional quality, real speaker emotion, SpeechBrain/openSMILE availability, or full ASR fidelity unless a transcript is supplied"
   },
   "capability_claims": [
@@ -52,11 +52,12 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills/skills/analyze-chatterbox-emotions && ./run.sh fixture-wav --out /tmp/analyze-chatterbox-emotions-agentic.wav >/dev/null; ./scripts/render_live_chatterbox_sample.py --out-receipt /tmp/analyze-chatterbox-emotions-live-render.json --out-audio-path /tmp/analyze-chatterbox-emotions-live-audio-path.txt >/tmp/analyze-chatterbox-emotions-live-render.stdout; audio=$(cat /tmp/analyze-chatterbox-emotions-live-audio-path.txt); ./run.sh analyze --audio \"$audio\" --expected-text '[sniff] [sniff] ... give me a second. This is tender, and I can keep going.' --target-label tender --render-plan /tmp/analyze-chatterbox-emotions-live-render.json --out /tmp/analyze-chatterbox-emotions-live-analysis.json --report /tmp/analyze-chatterbox-emotions-live-analysis.md >/tmp/analyze-chatterbox-emotions-live-analysis.stdout; python3 - <<'PY2'\nimport json, pathlib\np=json.loads(pathlib.Path('/tmp/analyze-chatterbox-emotions-live-analysis.json').read_text())\nassert p['schema']=='analyze_chatterbox_emotions.voice_eval.v1'\nassert p['mocked'] is False and p['live'] is True\nassert p['pauses']['planned_pause_count'] == 1\nassert p['pauses']['measured_long_pause_count'] >= 1\nassert p['quality']['clipping_fraction'] == 0\nprint('PASS_LIVE_CHATTERBOX_VOICE_ANALYSIS_READBACK')\nPY2"
+        "cd /home/graham/workspace/experiments/agent-skills/skills/analyze-chatterbox-emotions && /home/graham/workspace/experiments/chatterbox/.venv/bin/python /home/graham/workspace/experiments/chatterbox/scripts/eval_emotional_quality.py --out /tmp/chatterbox-emotional-quality-variety-for-analyzer.json >/tmp/chatterbox-emotional-quality-variety-for-analyzer.stdout && python3 - <<'PY0'\nimport json, pathlib\nsrc=json.loads(pathlib.Path('/tmp/chatterbox-emotional-quality-variety-for-analyzer.json').read_text())\nassert src['schema']=='chatterbox.emotional_quality_variety.v1'\nassert src['pass'] is True\ntender=src['per_utterance']['tender_collect']\npathlib.Path('/tmp/analyze-chatterbox-emotions-live-audio-path.txt').write_text(tender['path']+'\\n')\npathlib.Path('/tmp/analyze-chatterbox-emotions-live-render.json').write_text(json.dumps({'render_plan': {'chunks': tender['target']['render_chunks']}, 'source_schema': src['schema'], 'source_pass': src['pass'], 'source_case': src['case']}, indent=2)+'\\n')\nprint('PASS_CANONICAL_CHATTERBOX_EMOTIONAL_QUALITY_READBACK')\nPY0\naudio=$(cat /tmp/analyze-chatterbox-emotions-live-audio-path.txt); ./run.sh analyze --audio \"$audio\" --expected-text '[sniff] [sniff] ... give me a second. This is tender, and I can keep going.' --target-label tender --render-plan /tmp/analyze-chatterbox-emotions-live-render.json --out /tmp/analyze-chatterbox-emotions-live-analysis.json --report /tmp/analyze-chatterbox-emotions-live-analysis.md >/tmp/analyze-chatterbox-emotions-live-analysis.stdout; python3 - <<'PY2'\nimport json, pathlib\np=json.loads(pathlib.Path('/tmp/analyze-chatterbox-emotions-live-analysis.json').read_text())\nassert p['schema']=='analyze_chatterbox_emotions.voice_eval.v1'\nassert p['mocked'] is False and p['live'] is True\nassert p['pauses']['planned_pause_count'] == 1\nassert p['pauses']['measured_long_pause_count'] >= 1\nassert p['quality']['clipping_fraction'] == 0\nsrc=json.loads(pathlib.Path('/tmp/chatterbox-emotional-quality-variety-for-analyzer.json').read_text())\nassert src['per_utterance']['tender_collect']['checks']['pause_realized'] is True\nprint('PASS_LIVE_CHATTERBOX_VOICE_ANALYSIS_READBACK')\nPY2"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "PASS_CANONICAL_CHATTERBOX_EMOTIONAL_QUALITY_READBACK",
           "PASS_LIVE_CHATTERBOX_VOICE_ANALYSIS_READBACK"
         ],
         "artifacts": [
@@ -84,6 +85,21 @@
             "path": "/tmp/analyze-chatterbox-emotions-live-analysis.json",
             "json_pointer": "/quality/clipping_fraction",
             "equals": 0.0
+          },
+          {
+            "path": "/tmp/chatterbox-emotional-quality-variety-for-analyzer.json",
+            "json_pointer": "/schema",
+            "equals": "chatterbox.emotional_quality_variety.v1"
+          },
+          {
+            "path": "/tmp/chatterbox-emotional-quality-variety-for-analyzer.json",
+            "json_pointer": "/pass",
+            "equals": true
+          },
+          {
+            "path": "/tmp/chatterbox-emotional-quality-variety-for-analyzer.json",
+            "json_pointer": "/per_utterance/tender_collect/checks/pause_realized",
+            "equals": true
           }
         ]
       }

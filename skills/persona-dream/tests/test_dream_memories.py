@@ -118,6 +118,50 @@ def test_a_run_with_no_media_is_not_an_error(tmp_path):
     assert sda.build_documents(run, "embry", "2026-08-04", "run-1") == []
 
 
+def test_chatterbox_utterance_json_and_markdown_are_memory_artifacts(tmp_path):
+    run = tmp_path / "run"
+    run.mkdir()
+    payload = {
+        "chatterbox_utterance_text": "[sigh] I remembered Kai ... [sniff] and stayed.",
+        "chatterbox_utterance_text_sha256": "sha256:" + "1" * 64,
+        "chatterbox_utterance_source": "model_authored",
+        "emotional_utterance_tags": ["[sigh]", "[sniff]"],
+        "requested_delivery_tone": "neutral_warm",
+        "source_context_packet_sha256": "sha256:" + "2" * 64,
+        "source_context_packet_present": True,
+        "source_context_counts": {"day_events": 2, "memory_residue": 3},
+    }
+    (run / "journal_chatterbox_utterance.json").write_text(json_text(payload), encoding="utf-8")
+    (run / "journal_chatterbox_utterance.md").write_text(
+        "# Embry journal Chatterbox utterance\n\n[sigh] I remembered Kai ... [sniff] and stayed.\n",
+        encoding="utf-8",
+    )
+
+    docs = sda.build_documents(run, "embry", "2026-08-04", "run-1")
+    by_path = {Path(doc["artifact_path"]).name: doc for doc in docs}
+
+    assert {"journal_chatterbox_utterance.json", "journal_chatterbox_utterance.md"} <= set(by_path)
+    for name in ("journal_chatterbox_utterance.json", "journal_chatterbox_utterance.md"):
+        doc = by_path[name]
+        assert doc["modality"] == "text"
+        assert {"journal-utterance-plan", "chatterbox-tags", "memory-context"} <= set(doc["tags"])
+        assert doc["source_context_packet_present"] is True
+        assert doc["source_context_counts"] == {
+            "memory_residue": 3,
+            "day_events": 2,
+            "mined_transcript_items": None,
+            "dream_panels": None,
+            "observed_entity_frames": None,
+        }
+        assert doc["chatterbox_utterance_text_sha256"] == payload["chatterbox_utterance_text_sha256"]
+        assert doc["source_context_packet_sha256"] == payload["source_context_packet_sha256"]
+
+
+def json_text(payload):
+    import json
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
 def test_the_same_interpretation_is_one_memory_however_often_it_is_generated():
     """Keying on run_id wrote a fresh duplicate on every re-run.
 

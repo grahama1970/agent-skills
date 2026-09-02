@@ -21,6 +21,84 @@ EXTENDED_STYLE_TOKENS = {
 }
 
 ALL_SUPPORTED_INLINE_TOKENS = ACCEPTED_EVENT_TAGS | EXTENDED_STYLE_TOKENS
+PAUSE_IMPLEMENTATION = "chatterbox_render_chunks_post_render_stitching"
+EXACT_PAUSE_CROSSFADE_MS = 0
+
+
+def exact_pause_request_fields() -> dict[str, int]:
+    """Request fields that keep render_chunks pauses exact after stitching."""
+    return {"crossfade_ms": EXACT_PAUSE_CROSSFADE_MS}
+
+
+def exact_pause_receipt_fields(actual_crossfade_ms: object = None) -> dict[str, object]:
+    """Receipt fields proving the renderer used the exact-pause path."""
+    return {
+        "pause_implementation": PAUSE_IMPLEMENTATION,
+        "requested_crossfade_ms": EXACT_PAUSE_CROSSFADE_MS,
+        "actual_crossfade_ms": actual_crossfade_ms,
+    }
+
+
+def strip_inline_markup(text: str) -> str:
+    """Remove Chatterbox-only markup before comparing rendered text to source text."""
+    tagless = re.sub(r"\[[^\]]+\]", " ", str(text or ""))
+    tagless = tagless.replace("...", " ").replace("—", " ").replace("--", " ")
+    return " ".join(tagless.split())
+
+
+def preserves_source_words(source: str, utterance: str, *, min_ratio: float = 0.55) -> bool:
+    """Return true when Chatterbox markup preserved enough source words.
+
+    The model may add bracket tags and cadence marks, but it must not rewrite the
+    journal or clean reply into a different utterance.
+    """
+    source_words = {
+        word.lower()
+        for word in re.findall(r"[A-Za-z][A-Za-z']{3,}", str(source or ""))
+        if word.lower() not in {"that", "with", "from", "this", "they", "were", "have", "been"}
+    }
+    if len(source_words) < 6:
+        return True
+    utterance_words = {
+        word.lower()
+        for word in re.findall(r"[A-Za-z][A-Za-z']{3,}", strip_inline_markup(utterance))
+    }
+    return len(source_words & utterance_words) / len(source_words) >= min_ratio
+
+
+def prompt_guidance(*, include_clean_reply_rule: bool = False) -> str:
+    """Shared Chatterbox prompt contract for journal and reply utterances."""
+    clean_rule = (
+        "Write the clean reply field with no Chatterbox bracket tags; only the "
+        "chatterbox_utterance_text field may contain inline renderer tags.\n\n"
+        if include_clean_reply_rule else ""
+    )
+    return f"""{clean_rule}Native vocal event tags available: [clear throat], [sigh], [shush], [cough],
+[groan], [sniff], [gasp], [chuckle], [laugh].
+
+Extended tokenizer style/emotion tokens available when genuinely relevant:
+[angry], [fear], [surprised], [whispering], [advertisement], [dramatic],
+[narration], [crying], [happy], [sarcastic]. Prefer the native vocal event tags
+for audible utterances; use extended style tokens sparingly because their effect
+varies.
+
+Delay and cadence marks available: comma for short breath, semicolon or period
+for sentence pause, spaced ellipsis ( ... ) for hesitation/longer pause, em dash
+or -- for an abrupt break. Use spaces around ellipses: write "Kai ... and I",
+not "Kai...and I". Put pauses where Embry is thinking or feeling, not mechanically.
+Do not end the utterance on an ellipsis, dash, tag, or unfinished thought.
+For tenderness, grief, fear, or a moment where she has to collect herself, prefer
+repeated embodied cues such as "[sniff] [sniff] ... give me a second" and use
+[crying] only when the line genuinely carries tears. Persona Dream will convert
+these ellipses and collection cues into exact Chatterbox render_chunks
+pause_after_ms silence, stitched after each generated segment with crossfade_ms={EXACT_PAUSE_CROSSFADE_MS};
+your job is to put the affect beats at honest locations.
+Do not prefix every line with the same tag. Put tags where Embry would actually
+sigh, gasp, sniff, chuckle, or clear her throat. Tags belong before a clause or
+after a complete phrase, never inside a noun phrase or immediately before a
+proper name/object. Write "I thought about Kai. [sniff]" or "[sniff] I thought
+about Kai", not "I thought about [sniff] Kai"."""
+
 
 _PRIMARY_BY_TONE = {
     "memory_uncertain": "[sigh]",
