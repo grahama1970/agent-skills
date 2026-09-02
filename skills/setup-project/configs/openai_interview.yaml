@@ -1,0 +1,38 @@
+schema: setup_project.config.v1
+classification: internal
+project: openai-interview
+project_root: /home/graham/workspace/experiments/openai-interview
+purpose: Show interviewers how quickly a skills-first FastAPI cyber-safety eval control-plane demo can be set up and proven.
+curate_client_config: /home/graham/workspace/experiments/agent-skills/skills/curate-client/configs/openai_privacy_2026_09.yaml
+required_skills:
+  - curate-client
+  - best-practices-readme
+  - best-practices-fastapi
+  - best-practices-python
+  - best-practices-react
+  - memory
+  - hack
+  - agentic-evals
+  - terraform
+  - ops-terraform
+required_files:
+  - README.md
+  - immutable_goal.json
+  - pyproject.toml
+  - Dockerfile
+  - docker-compose.yml
+  - infra/terraform/main.tf
+  - infra/terraform/variables.tf
+  - fixtures/agentic_eval.json
+  - scripts/verify.sh
+  - docs/INTERVIEW_PLAYBOOK.md
+readme_must_contain:
+  - How this project was set up with skills
+  - $curate-client
+  - $best-practices-readme
+  - $agentic-evals
+  - Ask targeted questions
+  - Not claimed
+proof_commands:
+  - bash scripts/verify.sh
+  - /home/graham/workspace/experiments/agent-skills/skills/agentic-evals/run.sh run fixtures/agentic_eval.json --output /tmp/openai-interview-agentic-eval.json

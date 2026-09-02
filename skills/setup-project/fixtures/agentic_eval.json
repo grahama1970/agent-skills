@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "skill": "setup-project",
+  "trials": 3,
+  "proof_scope": "Skills-first project setup planning/auditing for the OpenAI interview repo, including curate-client brief handoff, README provenance, immutable goal, Docker/Terraform handoff, and retained eval proof.",
+  "claims": {
+    "proves": "setup-project can emit a read-only setup plan and audit the openai-interview repo for the setup surfaces interviewers need to inspect.",
+    "does_not_prove": "full project generation, production deployment, or cloud apply."
+  },
+  "capability_claims": [
+    {
+      "id": "setup_project.openai_plan",
+      "description": "The skill emits a typed read-only plan for setting up the OpenAI interview project with the required skill chain.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    },
+    {
+      "id": "setup_project.openai_audit",
+      "description": "The skill audits the OpenAI interview repo for README skill provenance, curate-client handoff, immutable goal, Docker/Terraform files, and retained eval fixture.",
+      "criticality": "critical",
+      "evidence_required": {"deterministic": true}
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "setup_project.plan_openai",
+      "seam_type": "pure deterministic transform",
+      "criticality": "critical",
+      "claim_id": "setup_project.openai_plan",
+      "required_evidence": ["deterministic"]
+    },
+    {
+      "seam_id": "setup_project.audit_openai",
+      "seam_type": "filesystem/process",
+      "criticality": "critical",
+      "claim_id": "setup_project.openai_audit",
+      "required_evidence": ["deterministic"]
+    }
+  ],
+  "cases": [
+    {
+      "name": "sanity",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": ["setup_project.openai_plan", "setup_project.openai_audit"],
+      "seams": ["setup_project.plan_openai", "setup_project.audit_openai"],
+      "command": ["bash", "../sanity.sh"],
+      "expected": {"exit_code": 0, "stdout_contains": ["Result: PASS"]},
+      "timeout_seconds": 180
+    },
+    {
+      "name": "openai-plan-includes-curate-client",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": ["setup_project.openai_plan"],
+      "seams": ["setup_project.plan_openai"],
+      "command": ["bash", "-c", "../run.sh plan --config ../configs/openai_interview.yaml | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"schema\"]==\"setup_project.plan_receipt.v1\" and d[\"status\"]==\"PASS\"; assert \"curate-client\" in d[\"required_skills\"]; assert d[\"curate_client_plan\"][\"status\"]==\"PASS\"; print(\"SETUP_PLAN_OK\")'"],
+      "expected": {"exit_code": 0, "stdout_contains": ["SETUP_PLAN_OK"]},
+      "timeout_seconds": 180
+    },
+    {
+      "name": "openai-audit-proves-readme-and-goal",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": ["setup_project.openai_audit"],
+      "seams": ["setup_project.audit_openai"],
+      "command": ["bash", "-c", "../run.sh audit --config ../configs/openai_interview.yaml | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"schema\"]==\"setup_project.audit_receipt.v1\" and d[\"status\"]==\"PASS\"; assert d[\"curate_client_plan_status\"]==\"PASS\"; assert d[\"immutable_goal_valid\"] is True; assert not d[\"missing_readme_terms\"]; print(\"SETUP_AUDIT_OK\")'"],
+      "expected": {"exit_code": 0, "stdout_contains": ["SETUP_AUDIT_OK"]},
+      "timeout_seconds": 180
+    },
+    {
+      "name": "missing-config-fails-closed",
+      "type": "negative",
+      "evidence_class": "deterministic",
+      "real_world": true,
+      "supports_claims": ["setup_project.openai_audit"],
+      "seams": ["setup_project.audit_openai"],
+      "command": ["bash", "-c", "../run.sh audit --config /tmp/definitely-missing-setup-project.yaml; test $? -ne 0"],
+      "expected": {"exit_code": 0},
+      "timeout_seconds": 60
+    }
+  ]
+}
