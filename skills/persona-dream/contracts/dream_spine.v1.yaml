@@ -6,16 +6,20 @@
 # be executed, cannot be diffed, and cannot be compiled into a Tau DAG. So the
 # definition moves here and the audit script keeps only its own job.
 #
-# Scope is the SPINE: the pipeline terminates when the dream is produced and
-# journaled. The video/Kling lane (42-step numbers 6-38) is an optional branch
-# off the dream packet, not the spine -- a run that produces a journal without
-# video is a COMPLETE run, not a failed one. That reframing is deliberate: the
-# old ledger reported BLOCKED_FINAL_ACCEPTANCE because a movie did not finish,
-# and agents routed around the blocker rather than stopping at it.
+# Scope is the SPINE: the pipeline terminates when the dream is produced,
+# journaled, spoken, and discussed in a short Chatterbox conversation. The
+# video/Kling lane (42-step numbers 6-38) is an optional branch off the dream
+# packet, not the spine -- a run that produces a journal and conversation
+# without video is a COMPLETE run, not a failed one. That reframing is
+# deliberate: the old ledger reported BLOCKED_FINAL_ACCEPTANCE because a movie
+# did not finish, and agents routed around the blocker rather than stopping at
+# it.
 #
-# Conversation is NOT here. Chatting with her about the dream consumes the
-# finished journal and appends only to conversation.jsonl; it is a downstream
-# surface, not a step.
+# Conversation is now part of the spine because Embry's voiced response is the
+# place where dream/session mood must become audible, grounded dialogue instead
+# of only a journal artifact. The conversation appends conversation.jsonl and a
+# dynamic_conversation_receipt.v1.json receipt; it remains bounded and does not
+# claim human-perceived voice quality.
 #
 # Every step declares the artifacts it must produce. A step that exits 0 without
 # producing them FAILS -- exit status is what a script claims, artifacts are what
@@ -24,13 +28,14 @@
 schema: persona_dream.dream_spine.v1
 version: 1
 
-terminates_at: spoken_journal
+terminates_at: chatterbox_conversation
 # The run dir IS the cycle dir: reports/goal_v3/cycles/<cycle_id>. Both
 # autonomous-dream-cycle and write-dream-journal hardcode that location.
 #
 # TWO LANES, AND THIS IS THE COGNITION ONE.
 #
 #   cycle lane (here)  autonomous-dream-cycle -> write-dream-journal -> speak-journal
+#                      -> chatterbox-conversation
 #                      Rich cognition: ToM validation, certified persistence,
 #                      identity subgates, instruments frozen pre-dream.
 #                      write-dream-journal emits BOTH dream_journal.v1.json and
@@ -38,6 +43,8 @@ terminates_at: spoken_journal
 #                      speak-journal derives journal_spoken.txt from the cycle
 #                      journal when the generate-lane renderer is absent, then
 #                      writes journal.wav and JOURNAL_AUDIO_RECEIPT.json.
+#                      chatterbox-conversation consumes the same cycle context
+#                      and writes grounded voiced turns as the terminal step.
 #
 #   generate lane      generate -> render-journal-entry -> speak-journal
 #                      Produces dream_packet.json and contradiction_report.json,
@@ -89,12 +96,20 @@ steps:
     proves: the cycle-lane journal text was rendered to a hash-bound spoken journal artifact
     does_not_prove: that the requested tone was perceptually achieved or accepted by a human listener
 
+  - id: chatterbox_conversation
+    name: Chatterbox Conversation
+    command: chatterbox-conversation
+    run_dir_arg: "--run-dir"
+    args: ["--turns", "3", "--opening-topic", "her dream last night, how today actually went, and how holding the two together moves her mood"]
+    produces: [conversation.jsonl, dynamic_conversation_receipt.v1.json]
+    proves: the spoken journal is followed by a grounded, voiced Horus and Embry Chatterbox conversation
+    does_not_prove: that the conversation is human-approved, that perceived emotion matched the requested tone, or that synthetic dreaming outperforms controls
+
 
 # Artifacts a run directory may hold that no step produces. Anything else found
 # there is reported as undeclared -- that is how a bespoked side path becomes
 # visible instead of blending in.
 permitted_unowned:
-  - conversation.jsonl        # downstream chat surface, appended post-pipeline
   - dream_pipeline_receipt.json
   - contradiction_report.json
   - "*.wav"                   # reply audio from the chat surface

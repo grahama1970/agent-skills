@@ -196,6 +196,7 @@ Commands:
   live-chain-reliability  Run the five-cycle live continuity-chain repeatability pilot
   curate-transcript-context Curate $mine-transcripts output into conversation grounding context
   converse-dynamic        Run dynamic voiced Horus/Embry conversation for a dream run
+  chatterbox-conversation Alias for converse-dynamic; terminal dream-spine speech step
   render-blinded-listener-rater-page Render the static blinded listener-study rater page
   render-blinded-listener-stimuli Render all target stimuli with one Chatterbox normalization policy
   validate-blinded-listener-study  Validate stimulus hashes/ASR and human-response readiness
@@ -845,7 +846,7 @@ case "$COMMAND" in
   curate-transcript-context)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/curate_transcript_context.py" "$@"
     ;;
-  converse-dynamic)
+  converse-dynamic|chatterbox-conversation)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/dynamic_conversation.py" "$@"
     ;;
   append-conversation)

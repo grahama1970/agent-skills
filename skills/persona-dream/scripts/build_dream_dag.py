@@ -58,7 +58,7 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         raise SystemExit(f"BLOCKED_BAD_CONTRACT: {contract} has no steps")
 
     receipts_dir = run_dir / "dag_receipts"
-    # Both spine steps that own artifacts write into the persona-dream cycle
+    # Spine steps that own artifacts write into the persona-dream cycle
     # directory, which they hardcode. The DAG's --run-dir holds only its own
     # bookkeeping, so the artifact check must look where the files actually go.
     cycle_dir = ROOT / "reports" / "goal_v3" / "cycles" / cycle_id
@@ -68,9 +68,9 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         "goal_id": "persona-dream-spine",
         "goal_version": 1,
         "summary": (
-            "Produce a dream from memory residue, journal it, and speak the "
-            "journal. Terminates at the spoken journal; the video lane is an optional branch and "
-            "conversation is a downstream consumer, not a step."
+            "Produce a dream from memory residue, journal it, speak the journal, "
+            "and close with a grounded Chatterbox conversation. The video lane is "
+            "an optional branch."
         ),
         "completion_criteria": [
             "every spine node returns a schema-valid PASS node receipt",

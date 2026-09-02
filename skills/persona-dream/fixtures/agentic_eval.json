@@ -52,7 +52,7 @@
     },
     {
       "criticality": "critical",
-      "description": "The executable Persona Dream spine carries the autonomous cycle journal into a spoken_journal terminal node without requiring generate-lane dream_packet artifacts.",
+      "description": "The executable Persona Dream spine carries the autonomous cycle journal into spoken journal audio and then terminates with a grounded Chatterbox conversation without requiring generate-lane dream_packet artifacts.",
       "evidence_required": {
         "deterministic": true,
         "live_e2e": true
@@ -712,7 +712,7 @@
       "real_world": true,
       "seams": [
         "pipeline.full_cycle.e2e",
-        "pipeline.cycle_journal_to_spoken_journal"
+        "pipeline.cycle_journal_to_chatterbox_conversation"
       ],
       "supports_claims": [
         "persona_dream.full_cycle.live",
@@ -1214,27 +1214,27 @@
       "command": [
         "bash",
         "-lc",
-        "D=/tmp/persona-dream-spoken-spine-eval-agentic; rm -rf \"$D\"; mkdir -p \"$D\"; export D; uv run --project .. pytest ../tests/test_speak_journal.py ../tests/test_run_dream_pipeline.py ../tests/test_pipeline_contract_and_phase10_reproducibility.py -q && bash ../run.sh check-pipeline-contract --json --receipt-out \"$D/pipeline_contract_receipt.json\" && bash ../run.sh dream-spec --run-dir \"$D/run\" --persona embry --idea 'kai and what I never said' --timeout-seconds 120 --out \"$D/dag-spec.json\" && python3 - <<'PY'\nimport json\nimport os\nfrom pathlib import Path\nroot = Path(os.environ['D'])\ncontract = json.loads((root / 'pipeline_contract_receipt.json').read_text(encoding='utf-8'))\nspec = json.loads((root / 'dag-spec.json').read_text(encoding='utf-8'))\nassert contract['status'] == 'PASS_PERSONA_DREAM_PIPELINE_CONTRACT'\nassert contract['terminal_step'] == 'spoken_journal'\nassert 'journal.wav' in contract['produced_artifacts']\nassert 'JOURNAL_SPOKEN_TEXT_RECEIPT.json' in contract['produced_artifacts']\nassert not contract['active_competing_contracts']\nnodes = spec['nodes']\nassert [node['node_id'] for node in nodes] == ['dream_cycle', 'journal_entry', 'spoken_journal']\nfinal = nodes[-1]\nargv = final['command']\nassert '--command' in argv and argv[argv.index('--command') + 1] == 'speak-journal'\nproduces = argv[argv.index('--produces') + 1]\nassert 'journal.wav' in produces\nassert 'journal_spoken.txt' in produces\nprint('CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK')\nPY"
+        "D=/tmp/persona-dream-spoken-spine-eval-agentic; rm -rf \"$D\"; mkdir -p \"$D\"; export D; uv run --project .. pytest ../tests/test_speak_journal.py ../tests/test_run_dream_pipeline.py ../tests/test_pipeline_contract_and_phase10_reproducibility.py -q && bash ../run.sh check-pipeline-contract --json --receipt-out \"$D/pipeline_contract_receipt.json\" && bash ../run.sh dream-spec --run-dir \"$D/run\" --persona embry --idea 'kai and what I never said' --timeout-seconds 120 --out \"$D/dag-spec.json\" && python3 - <<'PY'\nimport json\nimport os\nfrom pathlib import Path\nroot = Path(os.environ['D'])\ncontract = json.loads((root / 'pipeline_contract_receipt.json').read_text(encoding='utf-8'))\nspec = json.loads((root / 'dag-spec.json').read_text(encoding='utf-8'))\nassert contract['status'] == 'PASS_PERSONA_DREAM_PIPELINE_CONTRACT'\nassert contract['terminal_step'] == 'chatterbox_conversation'\nassert 'journal.wav' in contract['produced_artifacts']\nassert 'JOURNAL_SPOKEN_TEXT_RECEIPT.json' in contract['produced_artifacts']\nassert 'conversation.jsonl' in contract['produced_artifacts']\nassert 'dynamic_conversation_receipt.v1.json' in contract['produced_artifacts']\nassert not contract['active_competing_contracts']\nnodes = spec['nodes']\nassert [node['node_id'] for node in nodes] == ['dream_cycle', 'journal_entry', 'spoken_journal', 'chatterbox_conversation']\nfinal = nodes[-1]\nargv = final['command']\nassert '--command' in argv and argv[argv.index('--command') + 1] == 'chatterbox-conversation'\nproduces = argv[argv.index('--produces') + 1]\nassert 'conversation.jsonl' in produces\nassert 'dynamic_conversation_receipt.v1.json' in produces\nprint('CYCLE_JOURNAL_CHATTERBOX_CONVERSATION_SPINE_READBACK_OK')\nPY"
       ],
       "evidence_class": "deterministic",
       "expected": {
         "artifacts": [
           {
-            "equals": "spoken_journal",
+            "equals": "chatterbox_conversation",
             "json_pointer": "/terminal_step",
             "path": "/tmp/persona-dream-spoken-spine-eval-agentic/pipeline_contract_receipt.json"
           },
           {
-            "equals": "spoken_journal",
-            "json_pointer": "/nodes/2/node_id",
+            "equals": "chatterbox_conversation",
+            "json_pointer": "/nodes/3/node_id",
             "path": "/tmp/persona-dream-spoken-spine-eval-agentic/dag-spec.json"
           }
         ],
         "exit_code": 0,
         "stdout_contains": [
           "passed",
-          "\"terminal_step\": \"spoken_journal\"",
-          "CYCLE_JOURNAL_SPOKEN_SPINE_READBACK_OK"
+          "\"terminal_step\": \"chatterbox_conversation\"",
+          "CYCLE_JOURNAL_CHATTERBOX_CONVERSATION_SPINE_READBACK_OK"
         ],
         "stdout_not_contains": [
           "BLOCKED_PERSONA_DREAM_PIPELINE_CONTRACT",
@@ -1245,7 +1245,7 @@
       "readback": true,
       "real_world": true,
       "seams": [
-        "pipeline.cycle_journal_to_spoken_journal"
+        "pipeline.cycle_journal_to_chatterbox_conversation"
       ],
       "supports_claims": [
         "persona_dream.cycle_journal_spoken_spine_contract"
@@ -1497,7 +1497,7 @@
   ],
   "claims": {
     "does_not_prove": "semantic correctness, live service behavior, human perception of emotion, Embry speaker recognition, listener-study analysis, or full skill readiness",
-    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a spoken_journal node that declares cycle-journal text and audio artifacts, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step"
+    "proves": "the existing skill entrypoints exit with the expected status, the listener rater page renderer can produce a blinded static collection artifact, video_plan refuses to compose a storyboard without Look Lock + Script DNA from cinematic-technique-selector, the pipeline crew_casting command can write and validate a receipt-backed crew contract from a fixture selector, retained image generation code refuses unfunded API-key lanes and routes create_panel --backend scillm through ask image generation with Codex OAuth, the story-contract work-order executor consumes a validated work order and emits a validated accepted story contract without promoting stale storyboard/Kling artifacts, the storyboard-panel work-order executor consumes a validated work order and emits a validated panel receipt without provider/Kling calls or storyboard packet promotion, the panel-repair work-order executor consumes a validated work order and emits a validator-facing panel repair gate receipt that refuses provider eligibility until a public media probe passes, the executable Persona Dream spine terminates at a chatterbox_conversation node that declares conversation.jsonl and dynamic conversation receipt artifacts after cycle-journal text and audio, Persona Dream materializes that cycle journal plus watched dream observation/residue into the conversation context instead of generating a generic side journal, Persona Dream refuses perceptual affect claims unless a hash-bound Chatterbox registry entry exactly matches, research dispositions cannot claim immutable-goal completion while required hypotheses remain nonterminal, and status surfaces preserve the boundary between audible full-cycle evidence, provider/Kling readiness, human-perception claims, and the corrected-goal next step"
   },
   "proof_scope": "fixture wiring, blinded listener-study collection surface smoke, video_plan crew-casting fail-closed gate, crew_casting pipeline command fixture wiring, retained OAuth image-lane routing, story-contract, storyboard-panel, and panel-repair work-order fulfillment command wiring, cycle-journal-to-spoken-journal spine contract, source-grounded dream conversation context, Chatterbox affect-validation claim-boundary registry consumer, machine-readable research disposition validation, and status-scope boundary regression protection",
   "seams": [
@@ -1674,7 +1674,7 @@
         "deterministic",
         "live_e2e"
       ],
-      "seam_id": "pipeline.cycle_journal_to_spoken_journal",
+      "seam_id": "pipeline.cycle_journal_to_chatterbox_conversation",
       "seam_type": "pipeline_spine"
     },
     {

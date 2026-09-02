@@ -38,11 +38,13 @@ def test_pipeline_contract_is_the_executable_dream_spine():
 
     assert receipt["status"] == "PASS_PERSONA_DREAM_PIPELINE_CONTRACT"
     assert receipt["canonical_contract_schema"] == "persona_dream.dream_spine.v1"
-    assert receipt["step_count"] == 3
-    assert receipt["node_set"] == ["dream_cycle", "journal_entry", "spoken_journal"]
-    assert receipt["terminal_step"] == "spoken_journal"
+    assert receipt["step_count"] == 4
+    assert receipt["node_set"] == ["dream_cycle", "journal_entry", "spoken_journal", "chatterbox_conversation"]
+    assert receipt["terminal_step"] == "chatterbox_conversation"
     assert "dream_journal.md" in receipt["produced_artifacts"]
     assert "journal.wav" in receipt["produced_artifacts"]
+    assert "conversation.jsonl" in receipt["produced_artifacts"]
+    assert "dynamic_conversation_receipt.v1.json" in receipt["produced_artifacts"]
     assert receipt["active_competing_contracts"] == []
     assert receipt["retired_references"]
     assert receipt["actual_provider_call_attempts"] == 0

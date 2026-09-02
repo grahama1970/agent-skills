@@ -107,8 +107,8 @@ def check_pipeline_contract(path: Path = DEFAULT_CONTRACT) -> dict[str, Any]:
     if data.get("schema") != "persona_dream.dream_spine.v1":
         blockers.append("BLOCKED_SCHEMA_NOT_DREAM_SPINE_V1")
 
-    if data.get("terminates_at") != "spoken_journal":
-        blockers.append("BLOCKED_TERMINAL_NODE_NOT_SPOKEN_JOURNAL")
+    if data.get("terminates_at") != "chatterbox_conversation":
+        blockers.append("BLOCKED_TERMINAL_NODE_NOT_CHATTERBOX_CONVERSATION")
 
     steps = data.get("steps")
     if not isinstance(steps, list) or not steps:
@@ -144,6 +144,10 @@ def check_pipeline_contract(path: Path = DEFAULT_CONTRACT) -> dict[str, Any]:
         blockers.append("BLOCKED_JOURNAL_MARKDOWN_NOT_DECLARED")
     if "journal.wav" not in produced_artifacts:
         blockers.append("BLOCKED_JOURNAL_AUDIO_NOT_DECLARED")
+    if "conversation.jsonl" not in produced_artifacts:
+        blockers.append("BLOCKED_CONVERSATION_JSONL_NOT_DECLARED")
+    if "dynamic_conversation_receipt.v1.json" not in produced_artifacts:
+        blockers.append("BLOCKED_DYNAMIC_CONVERSATION_RECEIPT_NOT_DECLARED")
 
     competing_contracts = _active_competing_contracts(path)
     if competing_contracts:
@@ -170,12 +174,12 @@ def check_pipeline_contract(path: Path = DEFAULT_CONTRACT) -> dict[str, Any]:
             "proves": [
                 "the executable Persona Dream DAG node set is derived from one committed spine contract",
                 "no active competing persona_dream.pipeline contract is present in contracts/",
-                "the spine declares its terminal journal artifacts",
+                "the spine declares its terminal journal and Chatterbox conversation artifacts",
             ] if not blockers else [],
             "does_not_prove": [
                 "runtime spine execution",
                 "dream quality",
-                "voice synthesis",
+                "voice synthesis quality",
                 "optional video branch completion",
                 "provider readiness",
                 "provider submit",

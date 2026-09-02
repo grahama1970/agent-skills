@@ -140,7 +140,7 @@ def speak_horus(sr, text: str, tone: str, run_dir: Path, label: str) -> Path:
 def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | None,
            chatterbox_utterance_text: str | None = None,
            emotional_utterance_tags: list[str] | None = None,
-           chatterbox_pause_plan: list[dict[str, Any]] | None = None) -> None:
+           chatterbox_pause_plan: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     cmd = [sys.executable, str(ROOT / "scripts" / "append_conversation.py"),
            "--run-dir", str(run_dir), "--role", role, "--text", text, "--json"]
     if tone:
@@ -157,6 +157,7 @@ def append(run_dir: Path, role: str, text: str, tone: str | None, audio: Path | 
     receipt = json.loads(out.stdout or "{}")
     if receipt.get("status") != "PASS_CONVERSATION_APPENDED":
         raise SystemExit(f"BLOCKED_APPEND_{role.upper()}: {out.stdout[:200]}{out.stderr[:200]}")
+    return receipt
 
 
 def main() -> int:
@@ -180,26 +181,56 @@ def main() -> int:
         horus, tau_receipt = draft_horus_turn(run_dir, adapter, tones, args.opening_topic)
         h_wav = speak_horus(sr, horus["question"], horus["tone"], run_dir,
                             f"pd_horus_{run_dir.name}_t{i}_{abs(hash(horus['question'])) % 10**8}")
-        append(run_dir, "horus", horus["question"], horus["tone"], h_wav)
+        horus_append = append(run_dir, "horus", horus["question"], horus["tone"], h_wav)
+        horus_turn = dict(horus_append.get("appended") or {})
 
         embry = sr.generate_and_speak(run_dir=run_dir, prompt_text=horus["question"])
         if embry.get("status") != "PASS_REPLY_SPOKEN":
             raise SystemExit(f"BLOCKED_EMBRY_TURN: {json.dumps(embry)[:300]}")
-        append(run_dir, "embry", embry["text"], embry["tone"], run_dir / embry["audio"],
-               embry.get("chatterbox_utterance_text"), embry.get("emotional_utterance_tags") or [],
-               embry.get("chatterbox_pause_plan") or [])
+        embry_append = append(run_dir, "embry", embry["text"], embry["tone"], run_dir / embry["audio"],
+                              embry.get("chatterbox_utterance_text"), embry.get("emotional_utterance_tags") or [],
+                              embry.get("chatterbox_pause_plan") or [])
+        embry_turn = dict(embry_append.get("appended") or {})
 
         receipt["turn_pairs"].append({
             "pair": i,
             "horus": {**horus, "audio": h_wav.name, "audio_bytes": h_wav.stat().st_size,
+                      "audio_sha256": horus_turn.get("audio_sha256"),
+                      "tone_boundary": horus_turn.get("tone_boundary"),
+                      "append_read_back": bool(horus_append.get("read_back")),
                       "tau_receipt": adapter.receipt_provenance(tau_receipt) if tau_receipt else {}},
             "embry": {"text": embry["text"], "tone": embry["tone"], "audio": embry["audio"],
+                      "audio_sha256": embry_turn.get("audio_sha256"),
+                      "tone_boundary": embry_turn.get("tone_boundary"),
+                      "append_read_back": bool(embry_append.get("read_back")),
                       "chatterbox_utterance_text": embry.get("chatterbox_utterance_text"),
                       "emotional_utterance_tags": embry.get("emotional_utterance_tags") or [],
                       "chatterbox_pause_plan": embry.get("chatterbox_pause_plan") or [],
                       "audio_bytes": (run_dir / embry["audio"]).stat().st_size},
         })
 
+    receipt["status"] = "PASS_DYNAMIC_CONVERSATION"
+    receipt["turn_count"] = sum(2 for _ in receipt["turn_pairs"])
+    receipt["voice_delivery"] = {
+        "rendered_turn_count": receipt["turn_count"],
+        "audio_sha256_count": sum(
+            1
+            for pair in receipt["turn_pairs"]
+            for role in ("horus", "embry")
+            if pair.get(role, {}).get("audio_sha256")
+        ),
+        "embry_inline_tagged_turn_count": sum(
+            1
+            for pair in receipt["turn_pairs"]
+            if "[" in str(pair.get("embry", {}).get("chatterbox_utterance_text") or "")
+            and "]" in str(pair.get("embry", {}).get("chatterbox_utterance_text") or "")
+        ),
+        "embry_pause_plan_count": sum(
+            1
+            for pair in receipt["turn_pairs"]
+            if any(chunk.get("pause_after_ms") for chunk in pair.get("embry", {}).get("chatterbox_pause_plan") or [])
+        ),
+    }
     out = run_dir / "dynamic_conversation_receipt.v1.json"
     out.write_text(json.dumps(receipt, indent=2))
     print(json.dumps(receipt, indent=2) if args.json else

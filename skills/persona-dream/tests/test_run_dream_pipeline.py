@@ -39,7 +39,7 @@ def test_the_spine_is_data_not_welded_to_a_run_record():
 def test_the_spine_terminates_where_it_says_it_does():
     spine = _spine()
     assert [s["id"] for s in spine["steps"]][-1] == spine["terminates_at"]
-    assert spine["terminates_at"] == "spoken_journal"
+    assert spine["terminates_at"] == "chatterbox_conversation"
 
 
 def test_every_step_declares_artifacts_and_both_claim_directions():
@@ -59,7 +59,7 @@ def test_each_step_declares_its_own_run_dir_flag():
 
 
 def test_the_compiled_spec_is_strictly_sequential():
-    """The journal cannot precede the dream."""
+    """The journal cannot precede the dream, and conversation stays terminal."""
     spec = bdd.build_spec(contract=CONTRACT, run_dir=Path("/tmp/x"),
                           run_id="t", persona="embry", cycle_id="c1", idea="",
                           timeout_seconds=60)
