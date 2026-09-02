@@ -1,0 +1,72 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "skill": "project-watchdog",
+  "regressions": [
+    {
+      "regression_id": "unmerged-worktree-blocks-forever-1589",
+      "claim_ids": [
+        "project-watchdog.repair.worktree_preparation_composes_ops_worktrees"
+      ],
+      "seam_ids": [
+        "repair.worktree_prepare"
+      ],
+      "incident": {
+        "issue": "grahama1970/agent-skills#1589",
+        "date": "2026-09-02",
+        "description": "tau#331 repair worktree held 2 unmerged commits from a dead dispatch (Aug 29); registry.py refused with 'merge or delete the branch first' and every */5 cron tick emitted an identical BLOCKED receipt (15+ consecutive) instead of composing ops-worktrees archive. Resolved manually: commits recovered via reflog cherry-pick, landed on tau main as 468745db2+588e5171c, tau#331 closed, worktree removed."
+      },
+      "failure_code": "repair_worktree_unmerged_refusal_loops_blocked",
+      "evidence_class": "fault_injected_deterministic",
+      "retained_fixture": "agentic_eval.json",
+      "retained_case": "unmerged-repair-worktree-archives-via-ops-worktrees",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash",
+          "-c",
+          "grep -q 'ops-worktrees' skills/project-watchdog/scripts/watchdog/registry.py && grep -n 'unmerged' skills/project-watchdog/scripts/watchdog/registry.py | grep -q archive"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "proven_date": "2026-09-02",
+        "rationale": "Before the #1589 fix, registry.py's unmerged-refusal path names no ops-worktrees archive composition, so this grep proof fails. Once the fix lands, the retained agentic_eval.json case must seed an unmerged worktree, run a tick, and read back an archive receipt with a verified restorable bundle."
+      },
+      "repair_revision": "issue #1589 (open; incident resolved manually, guard pending fix)",
+      "first_added": "2026-09-02",
+      "last_proven": "2026-09-02",
+      "status": "ACTIVE"
+    },
+    {
+      "regression_id": "dispatch-races-live-recovery-branch-reset-331",
+      "claim_ids": [
+        "project-watchdog.repair.dispatch_never_resets_branch_under_live_recovery"
+      ],
+      "seam_ids": [
+        "repair.worktree_prepare"
+      ],
+      "incident": {
+        "issue": "grahama1970/tau#331",
+        "date": "2026-09-02",
+        "description": "While a human-driven recovery rebase was mid-flight in repair-worktrees/tau-331, a watchdog dispatch reset watchdog/issue-331 to origin/main (reflog: 'branch: Reset to origin/main'), orphaning commits 1f6a51a25/575e16905. During an active rebase HEAD is detached, so the origin/main..HEAD unmerged guard saw nothing to protect. Work was recovered from reflog and landed."
+      },
+      "failure_code": "repair_worktree_reset_during_active_rebase",
+      "evidence_class": "fault_injected_deterministic",
+      "retained_fixture": "agentic_eval.json",
+      "retained_case": "dispatch-refuses-worktree-with-rebase-in-progress",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash",
+          "-c",
+          "grep -q 'rebase-merge\\|rebase-apply\\|MERGE_HEAD\\|CHERRY_PICK_HEAD' skills/project-watchdog/scripts/watchdog/registry.py"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "proven_date": "2026-09-02",
+        "rationale": "registry.py's leftover-worktree guard checks only origin/main..HEAD, which is blind during an in-progress rebase/cherry-pick (detached HEAD). Until the guard also refuses when .git/rebase-merge, rebase-apply, MERGE_HEAD, or CHERRY_PICK_HEAD exists in the worktree, a dispatch can destroy live recovery work. The retained case must seed a worktree mid-rebase and assert the dispatch refuses without resetting the branch."
+      },
+      "repair_revision": "pending (recorded under #1589 scope)",
+      "first_added": "2026-09-02",
+      "last_proven": "2026-09-02",
+      "status": "ACTIVE"
+    }
+  ]
+}
