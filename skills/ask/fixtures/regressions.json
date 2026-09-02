@@ -1,0 +1,34 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "skill": "ask",
+  "regressions": [
+    {
+      "incident": {
+        "date": "2026-09-02",
+        "summary": "Live $ask webgpt tau-dag run blocked at browser provider availability preflight. Chrome had crashed and was stuck at the profile picker: no profile loaded, no surf extension, no native host, no /tmp/surf.sock. Ask correctly failed closed with blocked_reason browser_provider_unavailable_preflight and failure_code surf_browser_connection_unavailable instead of dispatching Tau or retrying provider lanes. Recovery: relaunch Chrome with --profile-directory=Default (bypasses the picker), after which the extension spawned the native host and tab.list worked.",
+        "run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-review-the-attached-watch-skill--e1ba59e49890"
+      },
+      "claims_threatened": [
+        "ask.browser_availability.fail_closed_preflight"
+      ],
+      "seams": [
+        "surf-transport"
+      ],
+      "retained_case": "browser-availability-entrypoint",
+      "retained_fixture": "agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash",
+          "-c",
+          "SURF_SOCKET=/tmp/nonexistent-surf-regression-probe.sock .venv/bin/python3 scripts/probe_browser_provider_availability.py --provider webgpt --output /tmp/ask-regression-probe.json --json"
+        ],
+        "expected": "non-zero exit with failure_code surf_tab_list_failed in the output artifact; proves the availability guard detects a dead surf transport instead of passing vacuously",
+        "proven": true,
+        "last_proven": "2026-09-02T21:41:44.922249+00:00"
+      },
+      "notes": "The preflight behaved correctly during the incident (fail-closed, named code, runnable next_command). This regression retains that behavior: if the probe ever exits zero or drops the failure_code when surf transport is down, the guard has been weakened.",
+      "regression_id": "surf-transport-down-chrome-profile-picker-20260902",
+      "status": "ACTIVE"
+    }
+  ]
+}
