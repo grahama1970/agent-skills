@@ -211,11 +211,13 @@ answer.
 
 ## Diarization Contract
 
-Status: `CONTRACT_DEFINED_NOT_IMPLEMENTED`.
+Status: `IMPLEMENTED_LIVE_GATED` — runtime support exists via the local
+pyannote Community-1 service, Watch CLI `--diarization` options, and the
+`test:pyannote-immutable-live` gate (PROJECT_KNOWLEDGE 2026-07-23). Claims of
+working diarization still require the live gate's proof artifacts at the
+current commit; the Docker service must be running for live runs.
 
 Watch should use pyannote when the task includes determining who spoke when.
-The contract is defined, but the runtime service and pipeline integration are
-not implemented in this skill yet.
 
 Evidence layers remain separate:
 

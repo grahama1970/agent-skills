@@ -7,7 +7,7 @@
   - `watch_content` — per-scene rows with timecode, SRT text, Whisper text, visual descriptions, divergence category, persona tag
   - `persona_memory` — "Embry watched Movie Title" record with `persona_id`, `answer_text`, `retrieval_text`, `watch_history` tag
 - **Whisper:** Dedicated Docker container `hwdsl2/whisper-server:cuda` on port 9000 (GPU-accelerated). Falls back to local faster-whisper on CPU only when Docker is unreachable.
-- **Diarization:** Contract defined for a future pyannote Community-1 audio evidence lane. It must produce anonymous speaker turns and transcript attribution, but it is not implemented in the Watch runtime yet.
+- **Diarization:** Implemented as an anonymous audio evidence lane: local pyannote Community-1 service, Watch CLI `--diarization auto|pyannote|none`, report/Memory speaker fields, and the `test:pyannote-immutable-live` gate (see 2026-07-23 entry). Anonymous clusters must never be promoted to character/real-world identity outside the identity ledger.
 
 ## Real-Time Entity Tracking Direction
 
