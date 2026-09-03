@@ -18,6 +18,20 @@ function assert(condition, message, details = {}) {
   }
 }
 
+function fencedJsonPayload(text, marker) {
+  assert(text.includes(marker), `missing ${marker}`, { text });
+  const fenceStart = text.indexOf('```json');
+  assert(fenceStart >= 0, 'missing fenced json payload', { text });
+  const jsonStart = fenceStart + '```json'.length;
+  const fenceEnd = text.indexOf('```', jsonStart);
+  assert(fenceEnd >= 0, 'unterminated fenced json payload', { text });
+  try {
+    return JSON.parse(text.slice(jsonStart, fenceEnd).trim());
+  } catch (error) {
+    assert(false, 'fenced payload is not strict JSON', { error: String(error), text });
+  }
+}
+
 let extensionImportCounter = 0;
 
 // JSON-swallow contract (2026-09-01): an allowed final that carried a valid
@@ -96,14 +110,29 @@ async function runRejectionPendingRetry() {
   assert(Array.isArray(result?.message?.content), 'replacement notice content must remain a Pi content-block array', { content: result?.message?.content });
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   assert(notice.includes('REJECTED_BY_SLOTH_COURT'), 'bad status was not replaced with shame notice', { notice });
-  assert(notice.includes('Status Report'), 'replacement notice does not include Status Report footer', { notice });
-  assert(notice.includes('/shame review'), 'replacement notice does not mention /shame review', { notice });
+  assert(!notice.includes('Status Report'), 'replacement notice must not depend on prose Status Report', { notice });
+  assert(!notice.includes('/shame review'), 'replacement notice must steer through typed validation data, not prose review text', { notice });
+  assert(!notice.includes('Rejected excerpt:'), 'visible rejection notice must not replay the rejected answer', { notice });
+  assert(!notice.includes('Correction workflow'), 'visible rejection notice must stay compact, not workflow prose', { notice });
+  const noticePacket = fencedJsonPayload(notice, 'REJECTED_BY_SLOTH_COURT');
+  assert(noticePacket.schema === 'lazy_report_shame.rejection_notice.v1', 'rejection notice schema mismatch', noticePacket);
+  assert(noticePacket.validation_result?.schema === 'pi.agent_status.validation_result.v1', 'rejection notice omitted pydantic validation result', noticePacket);
+  assert(noticePacket.next?.action === 'emit_pi_agent_status_v1', 'rejection notice omitted typed next action', noticePacket);
   assert(sent.length === 1, 'bad status did not queue exactly one retry', { sentCount: sent.length });
   assert(sent[0].text.includes('UNLAZY_FORCED_RETRY'), 'retry prompt did not contain UNLAZY_FORCED_RETRY', { sent });
+  assert(!sent[0].text.includes('Your previous answer'), 'retry prompt must be a typed packet, not prose instructions', { sent });
+  assert(!sent[0].text.includes('Rejected response:'), 'retry prompt must not replay the rejected response', { sent });
+  assert(!sent[0].text.includes('Rewrite the answer now'), 'retry prompt must not use prose instructions', { sent });
+  const retryPacket = fencedJsonPayload(sent[0].text, 'UNLAZY_FORCED_RETRY');
+  assert(retryPacket.schema === 'lazy_report_shame.retry_request.v1', 'retry prompt schema mismatch', retryPacket);
+  assert(retryPacket.validation_result?.schema === 'pi.agent_status.validation_result.v1', 'retry prompt omitted pydantic validation result', retryPacket);
+  assert(retryPacket.next?.action === 'emit_pi_agent_status_v1', 'retry prompt omitted typed next action', retryPacket);
+  assert(sent[0].text.split('\n').length <= 5, 'retry prompt is not compact', { text: sent[0].text });
   assert(existsSync(packet), 'pending review packet was not written', { packet });
   const saved = JSON.parse(readFileSync(packet, 'utf8'));
   assert(saved.schema === 'lazy_report_shame.review_packet.v1', 'pending packet schema mismatch', saved);
   assert(saved.candidate?.assistant_text === 'Committed and pushed. Done.', 'pending packet did not preserve rejected candidate', saved);
+  assert(saved.correction_contract?.schema === 'lazy_report_shame.correction_contract.v1', 'pending packet correction contract is not typed', saved);
   console.log(JSON.stringify({ ok: true, mode: 'rejection-pending-retry', retryMessages: sent.length, packet, schema: saved.schema, candidateHash: saved.candidate_hash }));
 }
 
@@ -127,7 +156,8 @@ async function runCheckerErrorFailsClosed() {
     assert(Array.isArray(result?.message?.content), 'checker error must be replaced with a content-block rejection notice', { result });
     const notice = result.message.content.map((part) => part?.text || '').join('\n');
     assert(notice.includes('REJECTED_BY_SLOTH_COURT'), 'checker error was not hidden by rejection notice', { notice });
-    assert(notice.includes('checker_error_fail_closed'), 'checker error rejection did not name fail-closed reason', { notice });
+    const noticePacket = fencedJsonPayload(notice, 'REJECTED_BY_SLOTH_COURT');
+    assert(noticePacket.reason_codes?.includes('checker_error_fail_closed'), 'checker error rejection did not name fail-closed reason', { noticePacket });
     assert(sent.length === 1, 'checker error should queue one retry', { sentCount: sent.length, sent });
     assert(existsSync(packet), 'checker error did not write pending review packet', { packet });
     console.log(JSON.stringify({ ok: true, mode: 'checker-error-fails-closed', retryMessages: sent.length, packet }));
@@ -159,6 +189,16 @@ async function runShowStatusJsonEnvIgnored() {
     if (previousShowRaw === undefined) delete process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON;
     else process.env.LAZY_REPORT_SHAME_SHOW_STATUS_JSON = previousShowRaw;
   }
+}
+
+async function runBeforeAgentStartDoesNotInjectProse() {
+  const { handlers } = await loadExtension();
+  const result = await handlers.before_agent_start[0]({
+    prompt: '$shame status report probe',
+    systemPrompt: 'base system prompt',
+  });
+  assert(result === undefined, 'before_agent_start must not inject prose instructions or mutate systemPrompt', { result });
+  console.log(JSON.stringify({ ok: true, mode: 'before-agent-start-does-not-inject-prose', returned: false }));
 }
 
 
@@ -205,9 +245,9 @@ async function runRetryBudgetExhaustsAsFailure() {
     lastNotice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   }
   assert(sent.length === 3, 'retry budget should allow exactly three automatic rewrites', { sentCount: sent.length, sent, lastNotice });
-  assert(lastNotice.includes('- State: failed'), 'retry-exhausted notice must be a failure, not a needs_human non-update', { lastNotice });
-  assert(!lastNotice.includes('- State: needs_human'), 'retry-exhausted notice must not claim human action by default', { lastNotice });
-  assert(lastNotice.includes('status_contract_retry_exhausted'), 'retry-exhausted notice must name the failure', { lastNotice });
+  const lastPacket = fencedJsonPayload(lastNotice, 'REJECTED_BY_SLOTH_COURT');
+  assert(lastPacket.next?.action === 'stop_retry', 'retry-exhausted notice must stop retrying', { lastPacket });
+  assert(lastPacket.next?.reason === 'status_contract_retry_exhausted', 'retry-exhausted notice must name the failure', { lastPacket });
   console.log(JSON.stringify({ ok: true, mode: 'retry-budget-exhausts-as-failure', retryMessages: sent.length }));
 }
 
@@ -273,8 +313,9 @@ async function runContinuationGuardOpenTicket() {
   );
   const result = await handlers.message_end[0]({ id: 'assistant-premature', message: { id: 'assistant-premature', role: 'assistant', content: [{ type: 'text', text: goodLookingFinal }] } }, c);
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
-  assert(notice.includes('continuation_guard_unresolved_work'), 'continuation guard did not reject premature final', { notice });
-  assert(notice.includes('open_relevant_agent_work_ticket'), 'continuation guard did not name open ticket failure', { notice });
+  const noticePacket = fencedJsonPayload(notice, 'REJECTED_BY_SLOTH_COURT');
+  assert(noticePacket.reason_codes?.includes('continuation_guard_unresolved_work'), 'continuation guard did not reject premature final', { noticePacket });
+  assert(noticePacket.footer_failures?.includes('open_relevant_agent_work_ticket'), 'continuation guard did not name open ticket failure', { noticePacket });
   assert(sent.length === 1, 'continuation guard did not queue one follow-up', { sentCount: sent.length, sent });
   assert(sent[0].text.includes('Run the continuation guard implementation task'), 'follow-up did not include next ticket action', { sent });
   const saved = JSON.parse(readFileSync(packet, 'utf8'));
@@ -327,7 +368,8 @@ async function runNamespacedMutatingToolForcesStatus() {
   await handlers.tool_call[0]({ toolName: 'functions.bash', input: { command: 'git push origin HEAD:main' } }, c);
   const result = await handlers.message_end[0]({ id: 'assistant-mutating-no-status', message: { id: 'assistant-mutating-no-status', role: 'assistant', content: [{ type: 'text', text: 'Done.' }] } }, c);
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
-  assert(notice.includes('missing_agent_status_json'), 'namespaced mutating tool did not force missing-status rejection', { notice, sent });
+  const noticePacket = fencedJsonPayload(notice, 'REJECTED_BY_SLOTH_COURT');
+  assert(noticePacket.reason_codes?.includes('missing_agent_status_json'), 'namespaced mutating tool did not force missing-status rejection', { noticePacket, sent });
   assert(sent.length === 1, 'namespaced mutating rejection did not queue one retry', { sentCount: sent.length, sent });
   assert(existsSync(packet), 'namespaced mutating rejection did not write pending packet', { packet });
   const saved = JSON.parse(readFileSync(packet, 'utf8'));
@@ -360,6 +402,8 @@ async function runWhatRemainsRejectedWithoutNeedsHuman() {
   assert(!rendered.includes('What remains: confusing prose'), 'model-authored status prose was not stripped', { rendered });
   assert(sent.length === 1, 'continuing state did not queue one follow-up', { sentCount: sent.length, sent });
   assert(sent[0].text.includes('run the next deterministic command'), 'follow-up did not include not_done next_command', { sent });
+  assert(sent[0].text.includes('lazy_report_shame.follow_up.v1'), 'continuing follow-up must be a typed packet', { sent });
+  assert(!sent[0].text.includes('Execute the compiled command now'), 'continuing follow-up must not use prose instructions', { sent });
   assert(!existsSync(packet), 'accepted continuing status should not write rejection packet', { packet });
   console.log(JSON.stringify({ ok: true, mode: 'what-remains-continuing-queues-follow-up', retryMessages: sent.length, reason: 'continuing_next_command' }));
 }
@@ -499,7 +543,8 @@ async function runRepeatedFailureRequiresDebuggerOrQuestion() {
   assert(allowedWithSwallow(first), 'first failed status should pass before repetition threshold', { first });
   const second = await handlers.message_end[0]({ id: 'assistant-fail-2', message: { id: 'assistant-fail-2', role: 'assistant', content: [{ type: 'text', text: failedStatusText('repeat failure gate probe') }] } }, c);
   const notice = second?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(second?.message?.content || '');
-  assert(notice.includes('repeated_failure_requires_debugger_or_human_question'), 'second same-fingerprint failure was not blocked', { notice });
+  const noticePacket = fencedJsonPayload(notice, 'REJECTED_BY_SLOTH_COURT');
+  assert(noticePacket.reason_codes?.includes('repeated_failure_requires_debugger_or_human_question'), 'second same-fingerprint failure was not blocked', { noticePacket });
   assert(sent.length === 1, 'repeated failure did not queue one retry', { sentCount: sent.length, sent });
   assert(sent[0].text.includes('debugger.proof.v1'), 'retry prompt did not name debugger proof recovery', { sent });
   assert(existsSync(packet), 'repeated failure rejection did not write pending packet', { packet });
@@ -581,7 +626,8 @@ async function runForcedRetryRequiresStatusJson() {
   );
   const result = await handlers.message_end[0]({ id: 'assistant-forced-retry-no-json', message: { id: 'assistant-forced-retry-no-json', role: 'assistant', content: [{ type: 'text', text }] } }, c);
   const notice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
-  assert(notice.includes('missing_agent_status_json'), 'forced retry without pi.agent_status.v1 JSON was not rejected', { notice });
+  const noticePacket = fencedJsonPayload(notice, 'REJECTED_BY_SLOTH_COURT');
+  assert(noticePacket.reason_codes?.includes('missing_agent_status_json'), 'forced retry without pi.agent_status.v1 JSON was not rejected', { noticePacket });
   assert(notice.includes('REJECTED_BY_SLOTH_COURT'), 'forced retry rejection did not show correction packet', { notice });
   assert(sent.length === 1, 'forced retry rejection did not queue one retry', { sentCount: sent.length, sent });
   const saved = JSON.parse(readFileSync(packet, 'utf8'));
@@ -652,6 +698,7 @@ const modes = {
   'rejection-pending-retry': runRejectionPendingRetry,
   'checker-error-fails-closed': runCheckerErrorFailsClosed,
   'show-status-json-env-ignored': runShowStatusJsonEnvIgnored,
+  'before-agent-start-does-not-inject-prose': runBeforeAgentStartDoesNotInjectProse,
   'show-recovers-pending': runShowRecoversPending,
   'default-normal-allows-plain-chat': runDefaultNormalAllowsPlainChat,
   'env-strict-rejects-plain-chat': runEnvStrictRejectsPlainChat,

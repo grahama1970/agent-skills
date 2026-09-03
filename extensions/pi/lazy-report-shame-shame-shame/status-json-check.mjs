@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-03.status-json-data-first.v9';
+const CHECKER_VERSION = '2026-09-03.status-json-data-first.v10';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
@@ -98,7 +98,12 @@ const statusJson = extractedStatus?.body || null;
 if (!statusJson) {
   if (MUTATING_TURN || FORCE_STATUS || STRICT_STATUS) {
     emit('reject', ['missing_agent_status_json'], {
-      correction: 'End the answer with a final fenced ```json block containing one valid pi.agent_status.v1 object.',
+      validation_result: {
+        schema: 'pi.agent_status.validation_result.v1',
+        valid: false,
+        errors: [{ type: 'missing_agent_status_json', loc: [], msg: 'missing pi.agent_status.v1 JSON block', ctx: {} }],
+        steering: [{ code: 'missing_agent_status_json', loc: [], action: 'emit_final_fenced_json', schema: 'pi.agent_status.v1' }],
+      },
     });
   }
   emit('pass', ['no_status_required_non_mutating_turn']);
@@ -168,14 +173,12 @@ if (verdict.valid === true && run.status !== 0) {
 }
 
 if (verdict.valid !== true) {
-  const pydanticError = String(verdict.error || '');
-  const reason = pydanticError.includes('proof path does not exist')
-    ? 'proof_path_missing'
-    : pydanticError.includes('verified item is not backed by proof text')
-      ? 'verified_not_backed_by_proof'
-      : 'invalid_agent_status_json';
-  emit('reject', [reason], {
-    pydantic_error: pydanticError.slice(0, 800),
+  const validationErrors = Array.isArray(verdict.errors) ? verdict.errors : [];
+  const reasonCodes = validationErrors.length
+    ? [...new Set(validationErrors.map((error) => String(error.type || 'invalid_agent_status_json')))]
+    : ['invalid_agent_status_json'];
+  emit('reject', reasonCodes, {
+    validation_result: verdict,
   });
 }
 

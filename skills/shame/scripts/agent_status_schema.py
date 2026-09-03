@@ -16,7 +16,8 @@ import sys
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 
 CATALOG_PATH = Path(__file__).resolve().parents[3] / "skills/triage-error/failure_codes.json"
 def is_minted_code(value: str) -> bool:
@@ -70,15 +71,27 @@ def validate_known_receipt(path: Path, text: str) -> None:
     if schema == "agentic_evals.report.v2":
         counts = data.get("outcome_counts") or {}
         if data.get("readiness") != "READY" or any(counts.get(k, 0) for k in ("FAIL", "BLOCKED", "NOT_TESTED")):
-            raise ValueError(f"agentic eval proof {path} is not READY with zero failing outcomes")
+            raise PydanticCustomError(
+                "agentic_eval_proof_not_ready",
+                "agentic eval proof is not READY with zero failing outcomes",
+                {"proof": str(path)},
+            )
     elif schema == "lazy_report_shame.report_check.v2":
         if data.get("decision") != "pass":
-            raise ValueError(f"status-check proof {path} decision is not pass")
+            raise PydanticCustomError(
+                "status_check_proof_not_pass",
+                "status-check proof decision is not pass",
+                {"proof": str(path)},
+            )
     elif schema == "pi.receipt_envelope.v1":
         import_receipt_envelope().ReceiptEnvelope.model_validate(data)
     elif schema == "debugger.proof.v1":
         if not any(k in data for k in ("breakpoints", "frames", "locals")):
-            raise ValueError(f"debugger proof {path} has no breakpoint/frame/local evidence")
+            raise PydanticCustomError(
+                "debugger_proof_missing_runtime_evidence",
+                "debugger proof has no breakpoint/frame/local evidence",
+                {"proof": str(path)},
+            )
 
 
 class ParentRef(BaseModel):
@@ -95,10 +108,10 @@ class ParentRef(BaseModel):
             return value
         prefix = "sha256:"
         if not value.startswith(prefix):
-            raise ValueError("digest must start with sha256:")
+            raise PydanticCustomError("invalid_digest", "digest must start with sha256:")
         digest = value[len(prefix):]
         if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
-            raise ValueError("digest must be 64 lowercase hex chars")
+            raise PydanticCustomError("invalid_digest", "digest must be 64 lowercase hex chars")
         return value
 
 
@@ -125,10 +138,10 @@ class Triage(BaseModel):
     def code_must_be_unambiguous(cls, value: str) -> str:
         if value in catalog_codes() or is_minted_code(value):
             return value
-        raise ValueError(
-            f"ambiguous failure label {value!r}: not in triage-error catalog and "
-            "not a minted *_unclassified_<8hex> code; run "
-            "skills/triage-error/run.sh classify first"
+        raise PydanticCustomError(
+            "ambiguous_failure_code",
+            "failure.triage.code must come from triage-error or match *_unclassified_<8hex>",
+            {"next_command": "skills/triage-error/run.sh classify"},
         )
 
 
@@ -213,25 +226,25 @@ class AgentStatus(BaseModel):
             return value
         prefix = "sha256:"
         if not value.startswith(prefix):
-            raise ValueError("goal_hash must start with sha256:")
+            raise PydanticCustomError("invalid_goal_hash", "goal_hash must start with sha256:")
         digest = value[len(prefix):]
         if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
-            raise ValueError("goal_hash digest must be 64 lowercase hex chars")
+            raise PydanticCustomError("invalid_goal_hash", "goal_hash digest must be 64 lowercase hex chars")
         return value
 
     @model_validator(mode="after")
     def state_legality(self) -> "AgentStatus":
         if self.state == "failed" and self.failure is None:
-            raise ValueError("state=failed requires failure.triage with a canonical code")
+            raise PydanticCustomError("failed_requires_triage", "state=failed requires failure.triage with a canonical code")
         if self.state != "failed" and self.failure is not None:
-            raise ValueError("failure is only legal with state=failed")
+            raise PydanticCustomError("failure_only_with_failed", "failure is only legal with state=failed")
         if self.state == "continuing" and not self.not_done:
-            raise ValueError("state=continuing requires not_done[].next_command")
+            raise PydanticCustomError("continuing_requires_not_done", "state=continuing requires not_done[].next_command")
         if self.not_done and self.state != "continuing":
-            raise ValueError(
-                "not_done items mean unfinished agent-executable work; use state=continuing "
-                "so not_done[0].next_command is queued deterministically. Use "
-                "needs_human.action instead of not_done when a person must act."
+            raise PydanticCustomError(
+                "not_done_requires_continuing",
+                "not_done is only legal with state=continuing",
+                {"next_field": "not_done[0].next_command"},
             )
         payload_states = {
             "needs_human": "needs_human",
@@ -244,24 +257,25 @@ class AgentStatus(BaseModel):
         for state_name, field_name in payload_states.items():
             value = getattr(self, field_name)
             if self.state == state_name and value is None:
-                raise ValueError(f"state={state_name} requires the {field_name} payload")
+                raise PydanticCustomError("state_payload_missing", f"state={state_name} requires the {field_name} payload", {"field": field_name})
             if self.state != state_name and value is not None:
-                raise ValueError(f"{field_name} is only legal with state={state_name}")
+                raise PydanticCustomError("state_payload_forbidden", f"{field_name} is only legal with state={state_name}", {"field": field_name})
         if not self.changed:
-            raise ValueError(
-                "every report requires non-empty changed; state what is now different "
-                "(or explicitly 'no change: <reason>')"
+            raise PydanticCustomError(
+                "changed_required",
+                "every report requires non-empty changed",
+                {"field": "changed"},
             )
         if self.state == "done":
             if not self.verified:
-                raise ValueError("state=done requires non-empty verified")
+                raise PydanticCustomError("done_requires_verified", "state=done requires non-empty verified", {"field": "verified"})
             if not self.proof:
-                raise ValueError("state=done requires non-empty proof")
+                raise PydanticCustomError("done_requires_proof", "state=done requires non-empty proof", {"field": "proof"})
             if self.not_done:
-                raise ValueError(
-                    "state=done with not_done items parks work without a human gate: "
-                    "use state=continuing so not_done[0].next_command is queued "
-                    "deterministically, or state=needs_human with the exact action"
+                raise PydanticCustomError(
+                    "done_forbids_not_done",
+                    "state=done forbids not_done; use state=continuing or state=needs_human",
+                    {"next_field": "not_done[0].next_command"},
                 )
             proof_text = ""
             for proof in self.proof:
@@ -269,18 +283,65 @@ class AgentStatus(BaseModel):
                 if path is None:
                     continue
                 if not path.exists():
-                    raise ValueError(f"proof path does not exist: {proof}")
+                    raise PydanticCustomError("proof_path_missing", "proof path does not exist", {"proof": proof})
                 text = read_proof_text(path)
                 validate_known_receipt(path, text)
                 proof_text += "\n" + text
             if proof_text:
                 for item in self.verified:
                     if item.command not in proof_text or item.result not in proof_text:
-                        raise ValueError(
-                            "verified item is not backed by proof text: "
-                            f"command={item.command!r} result={item.result!r}"
+                        raise PydanticCustomError(
+                            "verified_not_backed_by_proof",
+                            "verified item is not backed by proof text",
+                            {"command": item.command, "result": item.result},
                         )
         return self
+
+
+def steering_from_error(error: dict[str, Any]) -> dict[str, Any]:
+    """Return the machine steering payload from one Pydantic error."""
+    code = str(error.get("type") or "invalid_agent_status_json")
+    loc = [str(part) for part in error.get("loc", ())]
+    ctx = error.get("ctx") if isinstance(error.get("ctx"), dict) else {}
+    field = ctx.get("field") or (loc[0] if loc else None)
+    steering: dict[str, Any] = {"code": code, "loc": loc}
+    if field:
+        steering["field"] = field
+    if code == "missing":
+        steering["action"] = "add_required_field"
+    elif code.endswith("_required") or code.startswith("done_requires_") or code == "state_payload_missing":
+        steering["action"] = "add_required_field"
+    elif code.endswith("_forbidden") or code.endswith("_only_with_failed") or code == "done_forbids_not_done":
+        steering["action"] = "remove_or_change_state"
+    elif code == "not_done_requires_continuing":
+        steering.update({"action": "set_state", "state": "continuing", "field": "not_done"})
+    elif code == "ambiguous_failure_code":
+        steering.update({"action": "classify_with_triage_error", "next_command": ctx.get("next_command")})
+    elif code == "proof_path_missing":
+        steering.update({"action": "cite_existing_proof_path", "proof": ctx.get("proof")})
+    elif code == "verified_not_backed_by_proof":
+        steering.update({"action": "make_verified_match_proof", "command": ctx.get("command"), "result": ctx.get("result")})
+    else:
+        steering["action"] = "fix_field"
+    return steering
+
+
+def invalid_payload(errors: list[dict[str, Any]]) -> dict[str, Any]:
+    normalized = [
+        {
+            "type": str(error.get("type") or "invalid_agent_status_json"),
+            "loc": [str(part) for part in error.get("loc", ())],
+            "msg": str(error.get("msg") or "invalid agent status"),
+            "ctx": error.get("ctx") if isinstance(error.get("ctx"), dict) else {},
+        }
+        for error in errors
+    ]
+    return {
+        "valid": False,
+        "schema": "pi.agent_status.validation_result.v1",
+        "errors": normalized,
+        "steering": [steering_from_error(error) for error in normalized],
+    }
 
 
 def main() -> int:
@@ -290,10 +351,13 @@ def main() -> int:
     raw = sys.stdin.read() if sys.argv[2] == "-" else Path(sys.argv[2]).read_text()
     try:
         status = AgentStatus.model_validate_json(raw)
-    except Exception as exc:  # pydantic ValidationError or JSON error
-        print(json.dumps({"valid": False, "error": str(exc)}))
+    except ValidationError as exc:
+        print(json.dumps(invalid_payload(exc.errors(include_url=False))))
         return 1
-    print(json.dumps({"valid": True, "state": status.state}))
+    except Exception as exc:
+        print(json.dumps(invalid_payload([{"type": "invalid_json", "loc": [], "msg": str(exc), "ctx": {}}])))
+        return 1
+    print(json.dumps({"valid": True, "schema": "pi.agent_status.validation_result.v1", "state": status.state}))
     return 0
 
 

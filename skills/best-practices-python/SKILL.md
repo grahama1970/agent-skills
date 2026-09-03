@@ -301,6 +301,23 @@ payload = TaskPayload.model_validate(response.json())
 
 Do not pass raw provider dictionaries across multiple modules. Convert them into a named model at the boundary, then pass the typed object.
 
+### Rule: `correctness-pydantic-steering`
+
+When a Python schema validates agent output or a cross-skill receipt, the validation error itself is the steering contract. Use Pydantic v2 `ValidationError.errors()` plus `PydanticCustomError` `type` and `ctx` fields for deterministic repair data. Do not parse the rendered exception string, do not classify the agent's prose, and do not add a parallel prose checklist.
+
+**Right:**
+```python
+from pydantic_core import PydanticCustomError
+
+raise PydanticCustomError(
+    "not_done_requires_continuing",
+    "not_done is only legal with state=continuing",
+    {"next_field": "not_done[0].next_command"},
+)
+```
+
+The caller should route `errors()[0]["type"]`, `loc`, and `ctx` into a typed retry packet. If a failure category must be closed-world, model it as `Enum`/`Literal` or validate against the shared catalog (`triage-error`), not free-text labels.
+
 ## Security and Runtime Gates
 
 ### Rule: `security-no-unsafe-deserialization`

@@ -19,6 +19,7 @@ composes:
   - agentic-evals
 complies:
   - best-practices-skills
+  - best-practices-python
 runtime_self_improvement: basic
 taxonomy:
   - validation
@@ -83,7 +84,7 @@ Two invariants hold for every report regardless of state: `changed` must be non-
 
 `compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension queues the compiled command as a follow-up on `message_end`.
 
-The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the `pi.agent_status.v1` JSON remains the typed contract the checker enforces, and trailing prose after a valid status block is ignored rather than rejected. For `state=done`, every local `proof[]` entry must exist, known JSON receipt schemas are validated, and each `verified[]` command/result pair must appear in local proof text when local proof is supplied.
+The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the `pi.agent_status.v1` JSON remains the typed contract the checker enforces, and trailing prose after a valid status block is ignored rather than rejected. For `state=done`, every local `proof[]` entry must exist, known JSON receipt schemas are validated, and each `verified[]` command/result pair must appear in local proof text when local proof is supplied. On rejection, Pydantic `errors()` data (`type`, `loc`, `ctx`) is the steering contract; extension retry packets must carry `pi.agent_status.validation_result.v1` and must not require prose status sections, prose checklists, or LLM judgment to course-correct.
 
 The pending review packet is overwritten on each new rejected candidate:
 

@@ -165,6 +165,12 @@ for (const [name, c] of Object.entries(cases)) {
     c.reason = null;
   }
 }
+Object.assign(cases['done-missing-verified'], { reason: 'done_requires_verified' });
+Object.assign(cases['done-missing-proof'], { reason: 'done_requires_proof' });
+Object.assign(cases['continuing-missing-next-command'], { reason: 'continuing_requires_not_done' });
+Object.assign(cases['needs-human-missing-payload'], { reason: 'state_payload_missing' });
+Object.assign(cases['failed-missing-triage'], { reason: 'failed_requires_triage' });
+Object.assign(cases['extra-json-field'], { reason: 'extra_forbidden' });
 
 if (mode === 'list') {
   console.log(Object.keys(cases).join('\n'));

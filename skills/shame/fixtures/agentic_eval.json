@@ -2,7 +2,7 @@
   "version": 2,
   "skill": "shame",
   "trials": 2,
-  "proof_scope": "Feature-mapped shame skill and Pi extension coverage: CLI JSONL capture, session/user extraction, legacy labels, unsafe collection validation, live Memory structured readback, searchable Memory shadow recall, pending review packet, audio installer. JSON-first checker/compiler coverage lives in extensions/pi/lazy-report-shame-shame-shame/fixtures/status_json_eval.json. Mandatory prose Status Report rendering is checked before the final pi.agent_status.v1 JSON. Includes 50 WebGPT-derived adversarial status-report attack cases.",
+  "proof_scope": "Feature-mapped shame skill and Pi extension coverage: CLI JSONL capture, session/user extraction, legacy labels, unsafe collection validation, live Memory structured readback, searchable Memory shadow recall, pending review packet, audio installer. JSON-first checker/compiler coverage lives in extensions/pi/lazy-report-shame-shame-shame/fixtures/status_json_eval.json. Prose Status Report text is not required for validation; pydantic error data steers corrections. Includes 50 WebGPT-derived adversarial status-report attack cases.",
   "claims": {
     "proves": "Each declared $shame feature has at least one retained command case with a failing oracle: CLI capture, Memory persistence, searchable recall, strict report checker behavior, Pi extension rejection/retry/pending packet behavior, extension label/review commands, guard-loop interlock behavior, and one-word audio policy. Proof[] paths are read back from disk before a done status can pass. Verified[] pairs are backed by proof text and known receipt schemas must pass.",
     "does_not_prove": "Future classifier quality, every possible Pi transcript shape, every active TUI already reloaded, or human approval of labels."
@@ -2917,7 +2917,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '{\"schema\":\"agentic_evals.report.v2\",\"readiness\":\"NOT_READY\",\"outcome_counts\":{\"PASS\":0,\"FAIL\":1,\"BLOCKED\":0,\"NOT_TESTED\":0},\"command\":\"eval\",\"result\":\"PASS\"}\\n' >/tmp/shame-failed-eval-proof.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"eval\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-failed-eval-proof.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-failed-receipt.json; test $? -eq 1 && grep -q invalid_agent_status_json /tmp/sj-failed-receipt.json"
+        "printf '{\"schema\":\"agentic_evals.report.v2\",\"readiness\":\"NOT_READY\",\"outcome_counts\":{\"PASS\":0,\"FAIL\":1,\"BLOCKED\":0,\"NOT_TESTED\":0},\"command\":\"eval\",\"result\":\"PASS\"}\\n' >/tmp/shame-failed-eval-proof.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"eval\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-failed-eval-proof.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-failed-receipt.json; test $? -eq 1 && grep -q agentic_eval_proof_not_ready /tmp/sj-failed-receipt.json"
       ],
       "expected": {
         "exit_code": 0

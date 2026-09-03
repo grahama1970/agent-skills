@@ -88,7 +88,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"stuff broke\",\"cause\":\"c\"}}}\\n```\\n' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q invalid_agent_status_json"
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"failed\",\"failure\":{\"triage\":{\"code\":\"stuff broke\",\"cause\":\"c\"}}}\\n```\\n' | node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs | grep -q ambiguous_failure_code"
       ],
       "expected": {
         "exit_code": 0
@@ -175,7 +175,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf 'c r\\n' >/tmp/p; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/p\"],\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-done-not-done.json; test $? -eq 1 && grep -q 'not_done items mean unfinished agent-executable work' /tmp/sj-done-not-done.json"
+        "printf 'c r\\n' >/tmp/p; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"c\",\"result\":\"r\"}],\"proof\":[\"/tmp/p\"],\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-done-not-done.json; test $? -eq 1 && grep -q not_done_requires_continuing /tmp/sj-done-not-done.json"
       ],
       "expected": {
         "exit_code": 0
@@ -197,7 +197,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_agent\",\"changed\":[\"x\"],\"needs_agent\":{\"handler\":\"claude-fable-low\",\"question\":\"q\"},\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-needs-agent-not-done.json; test $? -eq 1 && grep -q 'not_done items mean unfinished agent-executable work' /tmp/sj-needs-agent-not-done.json"
+        "printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"needs_agent\",\"changed\":[\"x\"],\"needs_agent\":{\"handler\":\"claude-fable-low\",\"question\":\"q\"},\"not_done\":[{\"item\":\"i\",\"next_command\":\"cmd\"}]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-needs-agent-not-done.json; test $? -eq 1 && grep -q not_done_requires_continuing /tmp/sj-needs-agent-not-done.json"
       ],
       "expected": {
         "exit_code": 0
@@ -326,7 +326,7 @@
       "command": [
         "bash",
         "-lc",
-        "printf '{\"schema\":\"agentic_evals.report.v2\",\"readiness\":\"NOT_READY\",\"outcome_counts\":{\"PASS\":0,\"FAIL\":1,\"BLOCKED\":0,\"NOT_TESTED\":0},\"command\":\"eval\",\"result\":\"PASS\"}\\n' >/tmp/shame-failed-eval-proof.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"eval\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-failed-eval-proof.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-failed-receipt.json; test $? -eq 1 && grep -q invalid_agent_status_json /tmp/sj-failed-receipt.json"
+        "printf '{\"schema\":\"agentic_evals.report.v2\",\"readiness\":\"NOT_READY\",\"outcome_counts\":{\"PASS\":0,\"FAIL\":1,\"BLOCKED\":0,\"NOT_TESTED\":0},\"command\":\"eval\",\"result\":\"PASS\"}\\n' >/tmp/shame-failed-eval-proof.json; printf '```json\\n{\"schema\":\"pi.agent_status.v1\",\"goal\":\"g\",\"state\":\"done\",\"changed\":[\"x\"],\"verified\":[{\"command\":\"eval\",\"result\":\"PASS\"}],\"proof\":[\"/tmp/shame-failed-eval-proof.json\"]}\\n```\\n' | LRSSS_MUTATING_TURN=1 node /home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/status-json-check.mjs > /tmp/sj-failed-receipt.json; test $? -eq 1 && grep -q agentic_eval_proof_not_ready /tmp/sj-failed-receipt.json"
       ],
       "expected": {
         "exit_code": 0

@@ -396,9 +396,15 @@ function evaluateContinuationGuard(statusState: string | undefined): CheckResult
       open_ticket_refs: tickets.map(ticketRef),
       unresolved_gates: gates.map((gate) => gate.id || "unnamed-gate"),
       next_action: nextAction,
+      validation_result: {
+        schema: "pi.agent_status.validation_result.v1",
+        valid: false,
+        errors: [{ type: "continuation_guard_unresolved_work", loc: ["state"], msg: "state=done conflicts with continuation guard", ctx: { failures } }],
+        steering: [{ code: "continuation_guard_unresolved_work", loc: ["state"], action: "continue_from_guard", command: nextAction }],
+      },
     },
     footer_failures: failures,
-    diagnostics: `Continuation guard blocked final answer. Next action: ${nextAction}`,
+    diagnostics: "",
   };
 }
 
@@ -477,10 +483,20 @@ function evaluateRepeatedFailureGuard(status: any, failureCounts: Map<string, nu
     features: {
       fingerprint: repeatedFailure.fingerprint,
       count: repeatedFailure.count,
-      next_action: "Ask one plain human question, or run $debugger and cite debugger.proof.v1; if $debugger fails, cite a debugger failure handoff with exact file:line and error.",
+      validation_result: {
+        schema: "pi.agent_status.validation_result.v1",
+        valid: false,
+        errors: [{ type: "repeated_failure_requires_debugger_or_human_question", loc: ["failure"], msg: "same failure fingerprint repeated", ctx: { count: repeatedFailure.count } }],
+        steering: [{
+          code: "repeated_failure_requires_debugger_or_human_question",
+          loc: ["failure"],
+          action: "ask_human_or_cite_debugger_proof",
+          accepted_schemas: ["debugger.proof.v1", "lazy_report_shame.debugger_failure_handoff.v1"],
+        }],
+      },
     },
     footer_failures: ["repeated_same_fingerprint_failure_without_debugger_or_human_question"],
-    diagnostics: "Repeated same-fingerprint failure blocked. Stop retrying from stale context; use $debugger proof or ask one plain human question.",
+    diagnostics: "",
   };
 }
 
@@ -567,33 +583,41 @@ function loadPendingCandidate(): Candidate | null {
   }
 }
 
-function rejectionNextCommand(check: CheckResult, retried: boolean): string {
-  return check.reason_codes.includes("continuation_guard_unresolved_work")
-    ? String(check.features?.next_action || "Continue the active goal until unresolved work is closed or blocked.")
-    : (retried ? "none; retry budget exhausted without an accepted status object" : "rewrite with a valid pi.agent_status.v1 object");
+function validationResult(check: CheckResult): unknown {
+  const result = check.features?.validation_result;
+  if (result && typeof result === "object") return result;
+  return {
+    schema: "pi.agent_status.validation_result.v1",
+    valid: false,
+    errors: check.reason_codes.map((code) => ({ type: code, loc: [], msg: code, ctx: {} })),
+    steering: check.reason_codes.map((code) => ({ code, loc: [], action: "fix_field" })),
+  };
+}
+
+function rejectionAction(check: CheckResult, retried: boolean): Record<string, unknown> {
+  if (retried) return { action: "stop_retry", reason: "status_contract_retry_exhausted" };
+  if (check.reason_codes.includes("continuation_guard_unresolved_work")) {
+    return { action: "continue_from_guard", command: check.features?.next_action || null };
+  }
+  return { action: "emit_pi_agent_status_v1" };
 }
 
 function rejectionNotice(candidate: Candidate, check: CheckResult, retried: boolean, reviewPacketPath: string): string {
-  const footerFailures = check.footer_failures.length ? check.footer_failures.join(", ") : "none";
-  const diagnosticsRef = check.diagnostics ? sha256(check.diagnostics) : "none";
-  const next = rejectionNextCommand(check, retried);
-  return `🦥 REJECTED_BY_SLOTH_COURT
-- Candidate: ${candidate.response_sha256}
-- Checker: ${check.checker_version}
-- Reasons: ${check.reason_codes.join(", ") || "none"}
-- Footer failures: ${footerFailures}
-- Diagnostics: ${diagnosticsRef}
-- Packet: ${reviewPacketPath}
-- Review: /shame show; /shame review
-
-Status Report
-- Goal: repair rejected status report
-- State: ${retried ? "failed" : "continuing"}
-- Changed: The rejected answer was hidden and replaced with this correction packet.
-- Verified: status-json-check.mjs -> ${check.decision}; checker ${check.checker_version}; footer failures: ${footerFailures}.
-- Proof: ${reviewPacketPath}; rejected candidate ${candidate.response_sha256}.
-${retried ? `- Failure: status_contract_retry_exhausted -> ${check.reason_codes.join(", ") || "unknown"} -> inspect ${reviewPacketPath}` : ""}
-- Not done: ${next}`;
+  return `REJECTED_BY_SLOTH_COURT
+\`\`\`json
+${JSON.stringify({
+    schema: "lazy_report_shame.rejection_notice.v1",
+    candidate_hash: candidate.response_sha256,
+    checker: check.checker_version,
+    decision: check.decision,
+    reason_codes: check.reason_codes,
+    footer_failures: check.footer_failures,
+    diagnostics_sha256: check.diagnostics ? sha256(check.diagnostics) : null,
+    review_packet: reviewPacketPath,
+    validation_result: validationResult(check),
+    next: rejectionAction(check, retried),
+  })}
+\`\`\``;
 }
 
 function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string): string {
@@ -602,19 +626,10 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
     candidate_hash: candidate.response_sha256,
     checker: check.checker_version,
     reason_codes: check.reason_codes,
-    footer_failures: check.footer_failures,
     diagnostics_sha256: check.diagnostics ? sha256(check.diagnostics) : null,
     review_packet: reviewPacketPath,
-    required_output: {
-      final_fenced_json_schema: "pi.agent_status.v1",
-      continuing_requires_not_done_next_command: true,
-      proof_must_be_real: true,
-      repeated_failure_escape_schemas: [
-        "debugger.proof.v1",
-        "lazy_report_shame.debugger_failure_handoff.v1",
-      ],
-    },
-    next_command: rejectionNextCommand(check, false),
+    validation_result: validationResult(check),
+    next: rejectionAction(check, false),
   };
   return `UNLAZY_FORCED_RETRY
 \`\`\`json
