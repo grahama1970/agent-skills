@@ -35,6 +35,12 @@ ALERT_STATUSES = frozenset({"BLOCKED", "NEEDS_ATTENTION"})
 
 DEFAULT_RENOTIFY_SECONDS = 86400
 WEBHOOK_NAME = "watchdog"
+#: The operator's live Discord transport is the bot token in ~/.zshrc, not a
+#: webhook (verified 2026-09-03: only SLACK_WEBHOOK_URL is a webhook there,
+#: while DISCORD_BOT_TOKEN + guild resolve channel #horus). Default to the bot
+#: channel; override with PROJECT_WATCHDOG_ALERT_CHANNEL, or force the webhook
+#: path by exporting OPS_DISCORD_WEBHOOK_WATCHDOG_URL.
+DEFAULT_BOT_CHANNEL = "horus"
 
 #: Sibling skill, resolved from this skill's own location so it follows the
 #: checkout it runs from (same pattern as config.ASK_RUN_SH).
@@ -133,11 +139,15 @@ def maybe_alert(receipt: dict[str, Any]) -> None:
                 "run_sh": str(OPS_DISCORD_RUN_SH),
             }
             return
-        argv = [
-            str(OPS_DISCORD_RUN_SH),
-            "notify",
-            "--webhook",
-            WEBHOOK_NAME,
+        argv = [str(OPS_DISCORD_RUN_SH), "notify"]
+        if os.environ.get(f"OPS_DISCORD_WEBHOOK_{WEBHOOK_NAME.upper()}_URL"):
+            argv += ["--webhook", WEBHOOK_NAME]
+        else:
+            channel = os.environ.get(
+                "PROJECT_WATCHDOG_ALERT_CHANNEL", DEFAULT_BOT_CHANNEL
+            )
+            argv += ["--discord-bot", "--channel-name", channel]
+        argv += [
             "--title",
             f"project-watchdog {receipt.get('status')}",
             "--content",
