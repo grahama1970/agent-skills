@@ -3097,42 +3097,6 @@
         "exit_code": 0
       },
       "real_world": true
-    },
-    {
-      "name": "guard-injects-status-contract-at-turn-start",
-      "type": "positive",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && awk '/before_agent_start/,/^  \\}\\);$/' extensions/pi/lazy-report-shame-shame-shame/index.ts | grep -q 'systemPrompt' && awk '/before_agent_start/,/^  \\}\\);$/' extensions/pi/lazy-report-shame-shame-shame/index.ts | grep -q 'pi.agent_status.v1' && echo turn-start-contract-injection-present"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "turn-start-contract-injection-present"
-        ]
-      }
-    },
-    {
-      "name": "guard-injection-absent-when-mode-off",
-      "type": "negative",
-      "real_world": true,
-      "evidence_class": "deterministic",
-      "timeout_seconds": 30,
-      "command": [
-        "bash",
-        "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && awk '/before_agent_start/,/^  \\}\\);$/' extensions/pi/lazy-report-shame-shame-shame/index.ts | grep -q 'sessionMode === \"off\"' && echo off-mode-skips-injection"
-      ],
-      "expected": {
-        "exit_code": 0,
-        "stdout_contains": [
-          "off-mode-skips-injection"
-        ]
-      }
     }
   ],
   "seams": [

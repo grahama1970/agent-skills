@@ -9,7 +9,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-const CHECKER_VERSION = '2026-09-01.status-json-data-first.v7';
+const CHECKER_VERSION = '2026-09-03.status-json-data-first.v9';
 const TRUTHY_FLAG_VALUES = new Set(['1', 'true', 'yes']);
 const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim().toLowerCase());
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);

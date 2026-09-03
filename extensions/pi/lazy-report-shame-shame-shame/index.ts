@@ -868,19 +868,10 @@ export default function lazyReportShameShameShame(pi: any) {
     if (sessionGuardActive || turnGuardActive || activatesGuard(prompt)) {
       turnGuardActive = true;
     }
-    // Prevention, not just rejection (human directive 2026-09-02): remind the
-    // model of the status contract up front so it emits JSON-only reports
-    // instead of prose that the checker must reject after the fact.
-    if (sessionMode === "off") return;
-    return {
-      systemPrompt: String(event.systemPrompt || "") +
-        "\n\nSTATUS CONTRACT (lazy-report-shame): on any turn that mutates files/repos/services " +
-        "or reports work status, end the response with ONLY a fenced ```json block containing one " +
-        "valid pi.agent_status.v1 object (schema: skills/shame/scripts/agent_status_schema.py). " +
-        "Do NOT hand-write a prose 'Status Report'; the extension validates the JSON and renders " +
-        "the prettified Status Report itself. states: done requires verified[]+proof[]; " +
-        "continuing requires not_done[].next_command; changed must be non-empty.",
-    };
+    // Do not inject prose reminders into ordinary project-agent context. The
+    // deterministic checker/retry path owns enforcement; system-prompt noise was
+    // making agents talk about the guard instead of the project work.
+    return;
   });
 
   pi.on("message_end", async (event: any, ctx: any) => {
