@@ -481,6 +481,26 @@ def quickstart_command(port: int = typer.Option(7683, "--port", help="Local port
     whiteboard_command(port)
 
 
+@app.command(name="push-board")
+def push_board_command(
+    board: Path,
+    port: int = typer.Option(7683, "--port", help="Whiteboard server port."),
+) -> None:
+    """Push a .excalidraw board to the running whiteboard; the open page applies it live."""
+
+    import urllib.request
+
+    try:
+        load_scene(board)  # fail closed before pushing
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{port}/board", data=board.read_bytes(), method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            print(json.dumps({"schema": "ops_excalidraw.push_board.v1", "status": "PASS", **json.loads(resp.read())}))
+    except Exception as exc:  # noqa: BLE001 - single CLI boundary
+        fail(exc)
+
+
 @app.command(name="whiteboard")
 def whiteboard_command(port: int = typer.Option(7683, "--port", help="Local port.")) -> None:
     """Serve the embedded Excalidraw whiteboard with render button and library toggles."""

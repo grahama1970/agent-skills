@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 SKILL = Path(__file__).resolve().parents[1]
+BOARD_STATE: dict[str, object] = {"version": 0, "scene": None}  # ponytail: in-memory single-board state; move to files if multi-board is ever needed
 TOOLKITS = SKILL / "assets/toolkits"
 PAGE = SKILL / "assets/whiteboard/index.html"
 CREATE_SVG = SKILL.parent / "create-svg/run.sh"
@@ -61,6 +62,17 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(200, PAGE.read_bytes(), "text/html")
         elif self.path == "/libraries":
             self.reply(200, json.dumps(sorted(library_files())).encode(), "application/json")
+        elif self.path.startswith("/board"):
+            since = 0
+            if "since=" in self.path:
+                try:
+                    since = int(self.path.split("since=")[1].split("&")[0])
+                except ValueError:
+                    since = 0
+            if BOARD_STATE["scene"] is None or BOARD_STATE["version"] <= since:
+                self.reply(204, b"", "application/json")
+            else:
+                self.reply(200, json.dumps(BOARD_STATE).encode(), "application/json")
         elif self.path.startswith("/library/"):
             name = self.path.removeprefix("/library/")
             path = library_files().get(name)
@@ -72,10 +84,22 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(404, b"not found", "text/plain")
 
     def do_POST(self) -> None:  # noqa: N802
+        raw = self.rfile.read(int(self.headers.get("Content-Length", "0")))
+        if self.path == "/board":
+            try:
+                scene = json.loads(raw)
+                if scene.get("type") != "excalidraw" or not isinstance(scene.get("elements"), list):
+                    raise ValueError("not an excalidraw scene")
+            except (ValueError, json.JSONDecodeError) as exc:
+                self.reply(422, json.dumps({"error": str(exc)}).encode(), "application/json")
+                return
+            BOARD_STATE["version"] = int(BOARD_STATE["version"]) + 1
+            BOARD_STATE["scene"] = scene
+            self.reply(200, json.dumps({"version": BOARD_STATE["version"], "elements": len(scene["elements"])}).encode(), "application/json")
+            return
         if self.path != "/render":
             self.reply(404, b"not found", "text/plain")
             return
-        raw = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         try:
             code, body, ctype = render_scene(raw)
         except subprocess.TimeoutExpired:

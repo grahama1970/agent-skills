@@ -76,6 +76,19 @@ fetch("/libraries").then(r => r.json()).then(names => {
   }
 });
 
+// Hot reload: poll for agent-pushed board versions and apply live.
+let boardVersion = 0;
+setInterval(async () => {
+  if (!api) return;
+  try {
+    const r = await fetch("/board?since=" + boardVersion);
+    if (r.status !== 200) return;
+    const { version, scene } = await r.json();
+    boardVersion = version;
+    api.updateScene({ elements: scene.elements });
+  } catch {}
+}, 1500);
+
 document.getElementById("render").onclick = async () => {
   err("");
   try {

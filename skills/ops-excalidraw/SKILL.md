@@ -69,6 +69,16 @@ skills/ops-excalidraw/run.sh whiteboard --port 7683   # open http://127.0.0.1:76
 
 Embeds the `@excalidraw/excalidraw` component (esm.sh CDN; needs network for first load). Side panel: **Render SVG** button posts the live board to `/render` (compile + `$create-svg` render, SVG shown inline with download link; compile errors shown fail-closed), and library checkboxes load/unload every `.excalidrawlib` under `assets/toolkits/` (generated toolkit + vendored upstream sets).
 
+## Hot reload (live agent changes)
+
+While the whiteboard is open, an agent can push a board and the page applies it live (poll + `updateScene`, ~1.5s):
+
+```bash
+skills/ops-excalidraw/run.sh push-board path/to/board.excalidraw --port 7683
+```
+
+The push is validated fail-closed before sending; invalid payloads get 422. `GET /board?since=N` returns 204 when current. Human edits in the browser are not overwritten until the next push (last push wins).
+
 ## Vendored upstream libraries
 
 The official Excalidraw library directory (libraries.excalidraw.com, github.com/excalidraw/excalidraw-libraries) already ships comprehensive component sets. Three are vendored under `assets/toolkits/vendor/` and validate through this skill (v1 `library` format is normalized automatically):
