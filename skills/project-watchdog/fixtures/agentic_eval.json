@@ -1099,6 +1099,70 @@
         ]
       },
       "notes": "Regression guard for the watchdog stopping opaquely during long Ask/Tau runs: the repair lane must read Tau stream artifacts and write tau-stream-monitor.json instead of treating process exit or silence as progress proof."
+    },
+    {
+      "name": "blocked-receipt-alerts-human-via-ops-discord",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'run_id':'e1','status':'BLOCKED','apply':False,'project':'memory','handled_issues':[{'issue_number':1,'status':'BLOCKED','summary':'x'}]}; alerts.maybe_alert(r); a=r['alert']; assert a['status'] in ('DRY_RUN','SENT','ALERT_DELIVERY_FAILED'), a; print('alert-status:'+a['status'])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "alert-status:"
+        ]
+      }
+    },
+    {
+      "name": "noop-receipt-never-alerts",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"from scripts.watchdog import alerts; r={'status':'NOOP','apply':True}; alerts.maybe_alert(r); assert 'alert' not in r; print('noop-silent')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "noop-silent"
+        ]
+      }
+    },
+    {
+      "name": "alert-delivery-failure-never-fails-the-tick",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import pathlib; from scripts.watchdog import alerts; alerts.OPS_DISCORD_RUN_SH=pathlib.Path('/nonexistent/run.sh'); r={'status':'NEEDS_ATTENTION','apply':True,'run_id':'e3'}; alerts.maybe_alert(r); assert r['alert']['status']=='OPS_DISCORD_MISSING', r['alert']; print('soft-fail-ok')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "soft-fail-ok"
+        ]
+      }
+    },
+    {
+      "name": "repeated-blocker-is-deduped-within-renotify-window",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import json,time; from scripts.watchdog import alerts; r={'run_id':'e4','status':'BLOCKED','apply':False,'project':'m'}; fp=alerts._fingerprint(r); p=alerts._alerts_state_path(); p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps({fp: time.time()})); alerts.maybe_alert(r); assert r['alert']['status']=='DEDUPED', r['alert']; print('dedupe-ok')\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "dedupe-ok"
+        ]
+      }
     }
   ]
 }

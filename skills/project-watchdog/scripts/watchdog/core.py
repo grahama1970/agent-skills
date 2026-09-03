@@ -408,6 +408,12 @@ def finish(
     """
     if persist is None:
         persist = receipt.get("status") not in UNEVENTFUL_STATUSES
+    # Human alerting is composed from $ops-discord at this single receipt
+    # boundary. It records its outcome on the receipt and never raises, so a
+    # webhook outage cannot fail or block a tick.
+    from . import alerts
+
+    alerts.maybe_alert(receipt)
     if persist:
         receipt_path = receipt_dir / "receipt.json"
         receipt["receipt_path"] = str(receipt_path)

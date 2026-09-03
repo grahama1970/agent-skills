@@ -448,6 +448,32 @@ commands needed to inspect and repair the attestation path. Ask the human only
 when the receipt names an operator decision, credential, label-removal policy, or
 other action an agent is not allowed to take.
 
+## Human alerting — composed from $ops-discord
+
+When a receipt is `BLOCKED`, `NEEDS_ATTENTION`, or an `idle_streak_exceeded`
+escalation, `scripts/watchdog/alerts.py` shells out to the sibling
+`skills/ops-discord/run.sh notify --webhook watchdog` at the single receipt
+boundary in `core.finish()`. The watchdog owns no Discord code, tokens, or
+webhook config; ops-discord resolves the webhook named `watchdog` from
+`OPS_DISCORD_WEBHOOK_WATCHDOG_URL` (env or `~/.zshrc`, which matters under
+cron).
+
+Guarantees, each guarded by a retained adversarial eval case in
+`fixtures/agentic_eval.json`:
+
+- Alert delivery failure never fails or blocks the tick; the outcome is
+  recorded on the receipt under `alert` (`ALERT_DELIVERY_FAILED`,
+  `OPS_DISCORD_MISSING`, `NO_WEBHOOK` detail preserved).
+- `NOOP`/`SKIPPED`/`COMPLETED` receipts never alert.
+- Repeating blockers post once per fingerprint per
+  `PROJECT_WATCHDOG_ALERT_RENOTIFY_SECONDS` (default 24h), not once per cron
+  tick — memory#158 re-emitted the same BLOCKED receipt every 5 minutes for
+  days; alerting per tick would only move that noise to Discord.
+- Dry-run ticks pass `--dry-run` to ops-discord so nothing is posted.
+
+Disable with `PROJECT_WATCHDOG_ALERTS=off`. Until the operator configures the
+`watchdog` webhook, alerts degrade to a recorded `NO_WEBHOOK` outcome.
+
 ## cron needs a login environment
 
 cron starts with a nearly empty environment and does not read the user's
