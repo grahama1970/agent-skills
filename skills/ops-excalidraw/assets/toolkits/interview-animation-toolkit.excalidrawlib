@@ -1,0 +1,608 @@
+{
+  "type": "excalidrawlib",
+  "version": 2,
+  "source": "ops-excalidraw",
+  "libraryItems": [
+    {
+      "id": "source-node",
+      "status": "published",
+      "elements": [
+        {
+          "id": "source",
+          "type": "rectangle",
+          "x": 0,
+          "y": 0,
+          "width": 220,
+          "height": 110,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "source-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 112612,
+          "version": 1,
+          "versionNonce": 623050,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": {
+            "opsExcalidraw": {
+              "kind": "node",
+              "role": "source",
+              "title": "Client context",
+              "subtitle": "interview source"
+            }
+          }
+        },
+        {
+          "id": "source-node-label",
+          "type": "text",
+          "x": 0,
+          "y": 86,
+          "width": 80,
+          "height": 28,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "source-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 942200,
+          "version": 1,
+          "versionNonce": 360485,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": null,
+          "text": "Source",
+          "fontSize": 20,
+          "fontFamily": 5,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": null,
+          "originalText": "Source",
+          "lineHeight": 1.25
+        }
+      ]
+    },
+    {
+      "id": "target-card",
+      "status": "published",
+      "elements": [
+        {
+          "id": "target",
+          "type": "rectangle",
+          "x": 0,
+          "y": 0,
+          "width": 220,
+          "height": 110,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "target-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 918263,
+          "version": 1,
+          "versionNonce": 869663,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": {
+            "opsExcalidraw": {
+              "kind": "node",
+              "role": "target",
+              "title": "Strategy step",
+              "detail": "evidence-backed",
+              "accent": "green"
+            }
+          }
+        },
+        {
+          "id": "target-card-label",
+          "type": "text",
+          "x": 0,
+          "y": 86,
+          "width": 80,
+          "height": 28,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "target-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 565691,
+          "version": 1,
+          "versionNonce": 978612,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": null,
+          "text": "Target",
+          "fontSize": 20,
+          "fontFamily": 5,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": null,
+          "originalText": "Target",
+          "lineHeight": 1.25
+        }
+      ]
+    },
+    {
+      "id": "anim-reveal",
+      "status": "published",
+      "elements": [
+        {
+          "id": "anim-reveal",
+          "type": "diamond",
+          "x": 0,
+          "y": 0,
+          "width": 72,
+          "height": 72,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-reveal-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 769862,
+          "version": 1,
+          "versionNonce": 475130,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": {
+            "opsExcalidraw": {
+              "kind": "animation",
+              "preset": "reveal",
+              "targetId": "target",
+              "startMs": 0,
+              "durationMs": 600
+            }
+          }
+        },
+        {
+          "id": "anim-reveal-label",
+          "type": "text",
+          "x": 0,
+          "y": 86,
+          "width": 80,
+          "height": 28,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-reveal-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 668178,
+          "version": 1,
+          "versionNonce": 813201,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": null,
+          "text": "Reveal",
+          "fontSize": 20,
+          "fontFamily": 5,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": null,
+          "originalText": "Reveal",
+          "lineHeight": 1.25
+        }
+      ]
+    },
+    {
+      "id": "anim-line-draw",
+      "status": "published",
+      "elements": [
+        {
+          "id": "anim-line-draw",
+          "type": "diamond",
+          "x": 0,
+          "y": 0,
+          "width": 72,
+          "height": 72,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-line-draw-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 495792,
+          "version": 1,
+          "versionNonce": 911915,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": {
+            "opsExcalidraw": {
+              "kind": "animation",
+              "preset": "line-draw",
+              "targetId": "target",
+              "startMs": 600,
+              "durationMs": 700
+            }
+          }
+        },
+        {
+          "id": "anim-line-draw-label",
+          "type": "text",
+          "x": 0,
+          "y": 86,
+          "width": 90,
+          "height": 28,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-line-draw-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 337336,
+          "version": 1,
+          "versionNonce": 340505,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": null,
+          "text": "Line draw",
+          "fontSize": 20,
+          "fontFamily": 5,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": null,
+          "originalText": "Line draw",
+          "lineHeight": 1.25
+        }
+      ]
+    },
+    {
+      "id": "anim-glow-pulse",
+      "status": "published",
+      "elements": [
+        {
+          "id": "anim-glow-pulse",
+          "type": "ellipse",
+          "x": 0,
+          "y": 0,
+          "width": 72,
+          "height": 72,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-glow-pulse-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 119753,
+          "version": 1,
+          "versionNonce": 625181,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": {
+            "opsExcalidraw": {
+              "kind": "animation",
+              "preset": "glow-pulse",
+              "targetId": "source",
+              "startMs": 1200,
+              "durationMs": 900
+            }
+          }
+        },
+        {
+          "id": "anim-glow-pulse-label",
+          "type": "text",
+          "x": 0,
+          "y": 86,
+          "width": 80,
+          "height": 28,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-glow-pulse-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 798479,
+          "version": 1,
+          "versionNonce": 150911,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": null,
+          "text": "Glow",
+          "fontSize": 20,
+          "fontFamily": 5,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": null,
+          "originalText": "Glow",
+          "lineHeight": 1.25
+        }
+      ]
+    },
+    {
+      "id": "anim-highlight",
+      "status": "published",
+      "elements": [
+        {
+          "id": "anim-highlight",
+          "type": "ellipse",
+          "x": 0,
+          "y": 0,
+          "width": 72,
+          "height": 72,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-highlight-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 459830,
+          "version": 1,
+          "versionNonce": 936811,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": {
+            "opsExcalidraw": {
+              "kind": "animation",
+              "preset": "highlight",
+              "targetId": "target",
+              "startMs": 1600,
+              "durationMs": 700
+            }
+          }
+        },
+        {
+          "id": "anim-highlight-label",
+          "type": "text",
+          "x": 0,
+          "y": 86,
+          "width": 90,
+          "height": 28,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-highlight-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 952452,
+          "version": 1,
+          "versionNonce": 882705,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": null,
+          "text": "Highlight",
+          "fontSize": 20,
+          "fontFamily": 5,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": null,
+          "originalText": "Highlight",
+          "lineHeight": 1.25
+        }
+      ]
+    },
+    {
+      "id": "anim-pulse",
+      "status": "published",
+      "elements": [
+        {
+          "id": "anim-pulse",
+          "type": "ellipse",
+          "x": 0,
+          "y": 0,
+          "width": 72,
+          "height": 72,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-pulse-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 955072,
+          "version": 1,
+          "versionNonce": 834250,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": {
+            "opsExcalidraw": {
+              "kind": "animation",
+              "preset": "pulse",
+              "targetId": "target",
+              "startMs": 2000,
+              "durationMs": 700
+            }
+          }
+        },
+        {
+          "id": "anim-pulse-label",
+          "type": "text",
+          "x": 0,
+          "y": 86,
+          "width": 80,
+          "height": 28,
+          "angle": 0,
+          "strokeColor": "#1e88e5",
+          "backgroundColor": "transparent",
+          "fillStyle": "hachure",
+          "strokeWidth": 2,
+          "strokeStyle": "solid",
+          "roughness": 1,
+          "opacity": 100,
+          "groupIds": [
+            "anim-pulse-group"
+          ],
+          "frameId": null,
+          "roundness": {
+            "type": 3
+          },
+          "seed": 729365,
+          "version": 1,
+          "versionNonce": 722652,
+          "isDeleted": false,
+          "boundElements": null,
+          "updated": 1,
+          "link": null,
+          "locked": false,
+          "customData": null,
+          "text": "Pulse",
+          "fontSize": 20,
+          "fontFamily": 5,
+          "textAlign": "center",
+          "verticalAlign": "middle",
+          "containerId": null,
+          "originalText": "Pulse",
+          "lineHeight": 1.25
+        }
+      ]
+    }
+  ]
+}

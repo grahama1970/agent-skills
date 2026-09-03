@@ -1,0 +1,495 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "ops-excalidraw fixture",
+  "elements": [
+    {
+      "id": "source",
+      "type": "rectangle",
+      "x": 80,
+      "y": 120,
+      "width": 220,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "source-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 112612,
+      "version": 1,
+      "versionNonce": 623050,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "node",
+          "role": "source",
+          "title": "Client signals",
+          "subtitle": "brief + questions",
+          "accent": "cyan"
+        }
+      }
+    },
+    {
+      "id": "strategy",
+      "type": "rectangle",
+      "x": 460,
+      "y": 60,
+      "width": 220,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "strategy-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 59558,
+      "version": 1,
+      "versionNonce": 291944,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "node",
+          "role": "target",
+          "title": "Strategy",
+          "detail": "whiteboard route",
+          "accent": "green",
+          "number": 1
+        }
+      }
+    },
+    {
+      "id": "evidence",
+      "type": "rectangle",
+      "x": 460,
+      "y": 210,
+      "width": 220,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "evidence-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 521820,
+      "version": 1,
+      "versionNonce": 675975,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "node",
+          "role": "target",
+          "title": "Evidence",
+          "detail": "claims with receipts",
+          "accent": "cyan",
+          "number": 2
+        }
+      }
+    },
+    {
+      "id": "close",
+      "type": "rectangle",
+      "x": 460,
+      "y": 360,
+      "width": 220,
+      "height": 110,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "close-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 129399,
+      "version": 1,
+      "versionNonce": 624230,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "node",
+          "role": "target",
+          "title": "Close",
+          "detail": "answer or clarify",
+          "accent": "amber",
+          "number": 3
+        }
+      }
+    },
+    {
+      "id": "anim-source-reveal",
+      "type": "diamond",
+      "x": 105,
+      "y": 95,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-source-reveal-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 462460,
+      "version": 1,
+      "versionNonce": 443973,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "reveal",
+          "targetId": "source",
+          "startMs": 0,
+          "durationMs": 500
+        }
+      }
+    },
+    {
+      "id": "anim-strategy-line",
+      "type": "diamond",
+      "x": 360,
+      "y": 90,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-strategy-line-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 353712,
+      "version": 1,
+      "versionNonce": 371641,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "line-draw",
+          "targetId": "strategy",
+          "startMs": 500,
+          "durationMs": 500
+        }
+      }
+    },
+    {
+      "id": "anim-strategy-reveal",
+      "type": "diamond",
+      "x": 495,
+      "y": 35,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-strategy-reveal-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 254659,
+      "version": 1,
+      "versionNonce": 673040,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "reveal",
+          "targetId": "strategy",
+          "startMs": 900,
+          "durationMs": 500
+        }
+      }
+    },
+    {
+      "id": "anim-evidence-line",
+      "type": "diamond",
+      "x": 360,
+      "y": 240,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-evidence-line-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 96266,
+      "version": 1,
+      "versionNonce": 510912,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "line-draw",
+          "targetId": "evidence",
+          "startMs": 700,
+          "durationMs": 500
+        }
+      }
+    },
+    {
+      "id": "anim-evidence-highlight",
+      "type": "ellipse",
+      "x": 495,
+      "y": 185,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-evidence-highlight-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 830113,
+      "version": 1,
+      "versionNonce": 944106,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "highlight",
+          "targetId": "evidence",
+          "startMs": 1300,
+          "durationMs": 700
+        }
+      }
+    },
+    {
+      "id": "anim-close-line",
+      "type": "diamond",
+      "x": 360,
+      "y": 390,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-close-line-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 200471,
+      "version": 1,
+      "versionNonce": 282501,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "line-draw",
+          "targetId": "close",
+          "startMs": 900,
+          "durationMs": 500
+        }
+      }
+    },
+    {
+      "id": "anim-source-glow",
+      "type": "ellipse",
+      "x": 185,
+      "y": 95,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-source-glow-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 168745,
+      "version": 1,
+      "versionNonce": 928524,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "glow-pulse",
+          "targetId": "source",
+          "startMs": 1800,
+          "durationMs": 1200
+        }
+      }
+    },
+    {
+      "id": "anim-close-pulse",
+      "type": "ellipse",
+      "x": 575,
+      "y": 335,
+      "width": 60,
+      "height": 60,
+      "angle": 0,
+      "strokeColor": "#1e88e5",
+      "backgroundColor": "transparent",
+      "fillStyle": "hachure",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [
+        "anim-close-pulse-group"
+      ],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "seed": 459489,
+      "version": 1,
+      "versionNonce": 959055,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "customData": {
+        "opsExcalidraw": {
+          "kind": "animation",
+          "preset": "pulse",
+          "targetId": "close",
+          "startMs": 2100,
+          "durationMs": 700
+        }
+      }
+    }
+  ],
+  "appState": {
+    "name": "Interview strategy whiteboard",
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}

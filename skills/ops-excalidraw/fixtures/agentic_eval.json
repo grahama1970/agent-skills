@@ -1,0 +1,83 @@
+{
+  "version": 2,
+  "skill": "ops-excalidraw",
+  "trials": 2,
+  "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
+  "claims": {
+    "proves": "the skill can validate its reusable Excalidraw library, compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board",
+    "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
+  },
+  "cases": [
+    {
+      "name": "toolkit-generates-reusable-library",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && ../run.sh toolkit --output $T/toolkit.excalidrawlib | tee $T/out.json && python3 - $T/out.json $T/toolkit.excalidrawlib <<'PYCODE'\nimport json,sys\nreceipt=json.load(open(sys.argv[1]))\nlib=json.load(open(sys.argv[2]))\nif receipt['status']!='PASS' or receipt['animation_tokens']<5:\n    raise SystemExit(receipt)\nif lib['type']!='excalidrawlib' or len(lib['libraryItems'])<7:\n    raise SystemExit('bad library')\nprint('OPS_EXCALIDRAW_TOOLKIT_OK', receipt['animation_tokens'])\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OPS_EXCALIDRAW_TOOLKIT_OK 5"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "sanity-renders-through-create-svg",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "../sanity.sh"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PYTHON_STANDARDS_OK",
+          "SANITY PASS"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "compile-board-emits-create-svg-timeline",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && ../run.sh compile fixtures/interview-board.excalidraw $T/scene.yml | tee $T/compile.json && python3 - $T/compile.json $T/scene.yml <<'PYCODE'\nimport json,sys\nreceipt=json.load(open(sys.argv[1]))\nscene=json.load(open(sys.argv[2]))\nif receipt['schema']!='ops_excalidraw.compile.v1' or receipt['timeline_events']!=8:\n    raise SystemExit(receipt)\nrecipes={event['recipe'] for event in scene['timeline']['events']}\nfor recipe in ['fade-slide-y','draw-stroke','halo-pulse','color-pin','pulse']:\n    if recipe not in recipes:\n        raise SystemExit(f'missing {recipe}')\nprint('OP_EXCALIDRAW_TIMELINE_OK', len(scene['timeline']['events']))\nPYCODE"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "OP_EXCALIDRAW_TIMELINE_OK 8"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "unbound-animation-token-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && python3 - <<'PYCODE' > $T/bad.excalidraw\nimport json\nprint(json.dumps({'type':'excalidraw','version':2,'elements':[{'id':'anim','type':'diamond','x':0,'y':0,'width':50,'height':50,'isDeleted':False,'groupIds':[],'customData':{'opsExcalidraw':{'kind':'animation','preset':'pulse','startMs':0,'durationMs':500}}}], 'appState':{}, 'files':{}}))\nPYCODE\n../run.sh compile $T/bad.excalidraw $T/out.yml"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "expected exactly one source node"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    }
+  ],
+  "eval_kind": "skill_behavior"
+}

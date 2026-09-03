@@ -61,6 +61,15 @@ capabilities:
   svg-design-guardrails:
     providers:
       - best-practices-svg-design
+  excalidraw-toolkit:
+    providers:
+      - ops-excalidraw
+  excalidraw-validation:
+    providers:
+      - ops-excalidraw
+  create-svg-scene-input:
+    providers:
+      - ops-excalidraw
   card-legibility-contract:
     providers:
       - best-practices-svg-design
