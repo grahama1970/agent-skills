@@ -151,7 +151,10 @@ inotify_fail = sum("No space left on device" in line for line in pipewire)
 
 power = {}
 if dev:
-    for path in [Path("/sys/bus/usb/devices/usb3"), dev.parent, dev]:
+    real = dev.resolve()
+    candidates = [dev]
+    candidates.extend(p for p in real.parents if p.name.startswith("usb") or re.match(r"^[0-9a-f]{4}:[0-9a-f]{2}:[0-9a-f]{2}\\.[0-9]$", p.name))
+    for path in dict.fromkeys(candidates):
         control = path / "power/control"
         if control.exists():
             power[str(path)] = read(control)
