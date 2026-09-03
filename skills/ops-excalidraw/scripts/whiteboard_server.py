@@ -23,11 +23,13 @@ CREATE_SVG = SKILL.parent / "create-svg/run.sh"
 
 
 def library_files() -> dict[str, Path]:
+    """Map served .excalidrawlib names to paths (toolkits + vendor)."""
     files = list(TOOLKITS.glob("*.excalidrawlib")) + list((TOOLKITS / "vendor").glob("*.excalidrawlib"))
     return {p.name: p for p in files}
 
 
 def render_scene(raw: bytes) -> tuple[int, bytes, str]:
+    """Compile a posted board and render it to SVG; return (status, body, content-type)."""
     with tempfile.TemporaryDirectory() as tmp:
         board = Path(tmp) / "board.excalidraw"
         scene = Path(tmp) / "scene.yml"
@@ -51,6 +53,7 @@ def render_scene(raw: bytes) -> tuple[int, bytes, str]:
 
 class Handler(BaseHTTPRequestHandler):
     def reply(self, code: int, body: bytes, ctype: str) -> None:
+        """Send one complete HTTP response."""
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
@@ -58,6 +61,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:  # noqa: N802
+        """Route GET: page, static vendor JS, library list/fetch, board poll."""
         self.path, _, query = self.path.partition("?")  # route on path only
         if self.path in ("/", "/index.html"):
             self.reply(200, PAGE.read_bytes(), "text/html")
@@ -92,6 +96,7 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(404, b"not found", "text/plain")
 
     def do_POST(self) -> None:  # noqa: N802
+        """Route POST: personal-library persist, board push, render."""
         raw = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         if self.path == "/personal-library":
             try:
@@ -127,10 +132,12 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(code, body, ctype)
 
     def log_message(self, *args: object) -> None:
+        """Silence per-request logging."""
         pass
 
 
 def main() -> None:
+    """Serve the whiteboard bridge on 127.0.0.1:<port> (default 7683)."""
     import sys
 
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 7683
