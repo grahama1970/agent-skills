@@ -56,6 +56,15 @@ try {
     return React.createElement(ExcalidrawLib.Excalidraw, {
       excalidrawAPI: (a) => { api = a; },
       theme: th,
+      onLibraryChange: (items) => {
+        // Persist only human/agent-curated personal items, not the preloaded sets.
+        const preloaded = new Set([...loaded.values()].flat().map(i => i.id));
+        const personal = items.filter(i => !preloaded.has(i.id));
+        clearTimeout(window.__plTimer);
+        window.__plTimer = setTimeout(() => {
+          fetch("/personal-library", { method: "POST", body: JSON.stringify(personal) }).catch(() => {});
+        }, 800);
+      },
     });
   };
   ReactDOM.createRoot(document.getElementById("board")).render(React.createElement(App));
@@ -67,7 +76,8 @@ const refreshLibrary = (openMenu) => {
 };
 
 const normalize = (lib) =>
-  lib.libraryItems ?? (lib.library ?? []).map((els, i) => ({ id: "v1-" + i, status: "published", elements: els }));
+  (lib.libraryItems ?? (lib.library ?? []).map((els, i) => ({ id: "v1-" + i, elements: els })))
+    .map((it) => ({ ...it, status: "unpublished" }));
 
 fetch("/libraries").then(r => r.json()).then(names => {
   const box = document.getElementById("libs");
@@ -93,6 +103,12 @@ fetch("/libraries").then(r => r.json()).then(names => {
     };
     label.append(cb, " " + name);
     box.append(label);
+    // Pre-fill the personal library on startup.
+    fetch("/library/" + name).then(r => r.json()).then(lib => {
+      loaded.set(name, normalize(lib));
+      cb.checked = true;
+      const waitApi = setInterval(() => { if (api) { clearInterval(waitApi); refreshLibrary(false); } }, 300);
+    }).catch(() => {});
   }
 });
 

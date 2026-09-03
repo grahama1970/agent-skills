@@ -93,6 +93,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         raw = self.rfile.read(int(self.headers.get("Content-Length", "0")))
+        if self.path == "/personal-library":
+            try:
+                items = json.loads(raw)
+                if not isinstance(items, list):
+                    raise ValueError("expected a list of library items")
+            except (ValueError, json.JSONDecodeError) as exc:
+                self.reply(422, json.dumps({"error": str(exc)}).encode(), "application/json")
+                return
+            path = TOOLKITS / "personal.excalidrawlib"
+            path.write_text(json.dumps({"type": "excalidrawlib", "version": 2, "source": "ops-excalidraw personal", "libraryItems": items}, indent=1) + "\n")
+            self.reply(200, json.dumps({"saved": len(items), "path": str(path)}).encode(), "application/json")
+            return
         if self.path == "/board":
             try:
                 scene = json.loads(raw)
