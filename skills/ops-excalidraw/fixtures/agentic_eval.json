@@ -77,6 +77,23 @@
       },
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "ambiguous-role-alias-fails-closed",
+      "type": "negative",
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d) && python3 - <<'PYCODE' > $T/ambiguous.excalidraw\nimport json\ndef node(id, role, y):\n    return {'id': id, 'type': 'rectangle', 'x': 0, 'y': y, 'width': 100, 'height': 50, 'isDeleted': False, 'groupIds': [], 'customData': {'opsExcalidraw': {'kind': 'node', 'role': role, 'title': id}}}\nscene = {'type': 'excalidraw', 'version': 2, 'appState': {}, 'files': {}, 'elements': [node('source', 'source', 0), node('target-a', 'target', 80), node('target-b', 'target', 160), {'id': 'anim', 'type': 'diamond', 'x': 0, 'y': 220, 'width': 50, 'height': 50, 'isDeleted': False, 'groupIds': [], 'customData': {'opsExcalidraw': {'kind': 'animation', 'preset': 'pulse', 'targetId': 'target', 'startMs': 0, 'durationMs': 500}}}]}\nprint(json.dumps(scene))\nPYCODE\n../run.sh compile $T/ambiguous.excalidraw $T/out.yml"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "role alias 'target' matched multiple targets"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
     }
   ],
   "eval_kind": "skill_behavior"

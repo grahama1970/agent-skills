@@ -166,12 +166,15 @@ def resolve_target(
     token: OpsAnimation,
     nodes: list[tuple[ExcalidrawElement, OpsNode]],
 ) -> ExcalidrawElement:
-    aliases = {node.role: element for element, node in nodes}
     by_id = {element.id: element for element, _node in nodes}
     if token.targetId:
-        target = by_id.get(token.targetId) or aliases.get(token.targetId)
-        if target:
+        if target := by_id.get(token.targetId):
             return target
+        role_matches = [element for element, node in nodes if node.role == token.targetId]
+        if len(role_matches) == 1:
+            return role_matches[0]
+        if len(role_matches) > 1:
+            raise ValueError(f"animation token {token_el.id}: role alias {token.targetId!r} matched multiple targets")
         raise ValueError(f"animation token {token_el.id}: targetId {token.targetId!r} not found")
 
     grouped = [element for element, _node in nodes if set(element.groupIds) & set(token_el.groupIds)]
@@ -358,11 +361,11 @@ def toolkit(output: Path) -> None:
     specs = [
         ("source-node", "Source", base_element("source", "rectangle", 0, 0, 220, 110, {"kind": "node", "role": "source", "title": "Client context", "subtitle": "interview source"})),
         ("target-card", "Target", base_element("target", "rectangle", 0, 0, 220, 110, {"kind": "node", "role": "target", "title": "Strategy step", "detail": "evidence-backed", "accent": "green"})),
-        ("anim-reveal", "Reveal", base_element("anim-reveal", "diamond", 0, 0, 72, 72, {"kind": "animation", "preset": "reveal", "targetId": "target", "startMs": 0, "durationMs": 600})),
-        ("anim-line-draw", "Line draw", base_element("anim-line-draw", "diamond", 0, 0, 72, 72, {"kind": "animation", "preset": "line-draw", "targetId": "target", "startMs": 600, "durationMs": 700})),
+        ("anim-reveal", "Reveal", base_element("anim-reveal", "diamond", 0, 0, 72, 72, {"kind": "animation", "preset": "reveal", "startMs": 0, "durationMs": 600})),
+        ("anim-line-draw", "Line draw", base_element("anim-line-draw", "diamond", 0, 0, 72, 72, {"kind": "animation", "preset": "line-draw", "startMs": 600, "durationMs": 700})),
         ("anim-glow-pulse", "Glow", base_element("anim-glow-pulse", "ellipse", 0, 0, 72, 72, {"kind": "animation", "preset": "glow-pulse", "targetId": "source", "startMs": 1200, "durationMs": 900})),
-        ("anim-highlight", "Highlight", base_element("anim-highlight", "ellipse", 0, 0, 72, 72, {"kind": "animation", "preset": "highlight", "targetId": "target", "startMs": 1600, "durationMs": 700})),
-        ("anim-pulse", "Pulse", base_element("anim-pulse", "ellipse", 0, 0, 72, 72, {"kind": "animation", "preset": "pulse", "targetId": "target", "startMs": 2000, "durationMs": 700})),
+        ("anim-highlight", "Highlight", base_element("anim-highlight", "ellipse", 0, 0, 72, 72, {"kind": "animation", "preset": "highlight", "startMs": 1600, "durationMs": 700})),
+        ("anim-pulse", "Pulse", base_element("anim-pulse", "ellipse", 0, 0, 72, 72, {"kind": "animation", "preset": "pulse", "startMs": 2000, "durationMs": 700})),
     ]
     for item_id, label, element in specs:
         group = element["groupIds"][0]

@@ -212,7 +212,6 @@
             "opsExcalidraw": {
               "kind": "animation",
               "preset": "reveal",
-              "targetId": "target",
               "startMs": 0,
               "durationMs": 600
             }
@@ -298,7 +297,6 @@
             "opsExcalidraw": {
               "kind": "animation",
               "preset": "line-draw",
-              "targetId": "target",
               "startMs": 600,
               "durationMs": 700
             }
@@ -470,7 +468,6 @@
             "opsExcalidraw": {
               "kind": "animation",
               "preset": "highlight",
-              "targetId": "target",
               "startMs": 1600,
               "durationMs": 700
             }
@@ -556,7 +553,6 @@
             "opsExcalidraw": {
               "kind": "animation",
               "preset": "pulse",
-              "targetId": "target",
               "startMs": 2000,
               "durationMs": 700
             }

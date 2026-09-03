@@ -5,6 +5,8 @@ cd "$(dirname "$0")"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
+./run.sh toolkit --output "$work/toolkit.excalidrawlib" >/dev/null
+diff -u assets/toolkits/interview-animation-toolkit.excalidrawlib "$work/toolkit.excalidrawlib"
 ./run.sh validate assets/toolkits/interview-animation-toolkit.excalidrawlib | grep -q '"status": "PASS"'
 ./run.sh validate fixtures/interview-board.excalidraw | grep -q '"status": "PASS"'
 ./run.sh compile fixtures/interview-board.excalidraw "$work/scene.yml" | grep -q '"timeline_events":8'

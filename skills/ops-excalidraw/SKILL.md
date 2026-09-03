@@ -40,6 +40,7 @@ Use this skill to make Excalidraw the movable whiteboard layer and `$create-svg`
 - Animation intent is represented by visible toolkit tokens with `customData.opsExcalidraw.kind = "animation"`.
 - `$create-svg` owns final rendering, CSS animation, reduced-motion base state, SVG safety, and verification.
 - This skill emits `$create-svg` scene/timeline JSON; it does not emit final SVG.
+- v1 compiles single-source fan-out boards: exactly one `role: "source"` node and one or more `role: "target"` nodes.
 
 ## Commands
 
@@ -75,8 +76,8 @@ Supported animation presets:
 ## Binding rule
 
 1. Prefer explicit `targetId` in the animation token.
-2. Otherwise bind to a non-animation element in the same Excalidraw group.
-3. Otherwise bind to the single overlapping non-animation element.
+2. Otherwise bind to a node-tagged element in the same Excalidraw group.
+3. Otherwise bind to the single overlapping node-tagged element.
 4. Otherwise fail closed; do not guess.
 
 ## Finalization
