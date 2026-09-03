@@ -2232,6 +2232,41 @@
       "expected": {
         "exit_code": 0
       }
+    },
+    {
+      "name": "unvetted-card-publication-detected",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "python3",
+        "scripts/check_vetted_publication.py",
+        "fixtures/incidents/20260903-unvetted-cards-session.jsonl"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": [
+          "unvetted_card_published"
+        ]
+      },
+      "notes": "2026-09-03 incident: fast solver timeouts + fallback-to-ask skipped + reviewer-weak answers still published visible. Guard must keep detecting that journal."
+    },
+    {
+      "name": "question-text-refined-mid-flight-no-fence-bump",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python -c \"\nimport asyncio\nfrom live_evidence.config import AppSettings, InterviewProfile\nfrom live_evidence.state import RuntimeState\nasync def main():\n    s=RuntimeState(AppSettings.from_env(), InterviewProfile(name='refine-eval'))\n    qid,rev=await s.revise_question('chair um so how would you reverse a linked list')\n    ok=await s.refine_question_text(qid,'How would you reverse a linked list?')\n    ledger=await s.question_ledger()\n    assert ok and ledger[0]['text']=='How would you reverse a linked list?', ledger\n    qid2,rev2=await s.revise_question('How would you reverse a linked list in place?')\n    assert qid2==qid and rev2==rev+1, (qid2,rev2,qid,rev)\n    assert not await s.refine_question_text(qid,'')\n    print('REFINE_OK', rev, rev2)\nasyncio.run(main())\n\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "REFINE_OK 1 2"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
     }
   ]
 }

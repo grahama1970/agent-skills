@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import re
 from uuid import uuid4
 from collections.abc import AsyncIterator
 from datetime import timezone
@@ -35,118 +34,14 @@ from .models import (
     ledger_digest,
 )
 from .publication import reduce_card_publication
+from .state_helpers import (
+    _card_should_replace,
+    _explicit_new_question_marker,
+    _newer_displayed_blocks,
+    _status_for_session,
+    normalize_spoken_role_prefix,
+)
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
-
-
-ROLE_PREFIX_RE = re.compile(
-    r"^\s*(?P<role>interviewer|candidate|graham)(?P<sep>\s*(?:[:\-–—,.]|\band\b)?\s+|[.:]\s*$)",
-    re.IGNORECASE,
-)
-
-ROLE_PREFIX_PRONOUNS = {
-    "i", "i'm", "im", "we", "we're", "were", "you", "you're", "youre",
-    "what", "how", "why", "when", "where", "can", "could", "would", "should",
-    "the", "an", "a", "let", "let's", "lets", "thanks", "thank",
-    "right", "good", "sure", "absolutely", "yes", "yeah",
-    "live", "implement", "write", "design", "define", "build", "use", "give",
-}
-
-
-NEW_QUESTION_MARKERS = (
-    "second question",
-    "third question",
-    "next question",
-    "another question",
-    "separate question",
-    "different question",
-    "last question",
-    "last thing",
-    "next thing",
-)
-
-
-def normalize_spoken_role_prefix(event: TranscriptEvent) -> TranscriptEvent:
-    """Move spoken role labels out of transcript text and into speaker metadata.
-
-    Synthetic meeting audio often says ``Interviewer:`` / ``Candidate:`` before
-    each turn. RealtimeSTT may hear the separator as punctuation, whitespace, or
-    the word ``and``. Leaving that prefix in text polluted the transcript and,
-    worse, let candidate answers arrive as interviewer questions when the
-    listener was a single PipeWire channel labeled interviewer.
-    """
-
-    match = ROLE_PREFIX_RE.match(event.text)
-    if not match:
-        return event
-    role = match.group("role").casefold()
-    remainder = event.text[match.end():].strip(" ,:;.-–—")
-    if not remainder:
-        return event
-    first = remainder.split(maxsplit=1)[0].casefold().strip(".,:;!?\"'()[]{}")
-    sep = match.group("sep") or ""
-    explicit_separator = bool(sep.strip() and (sep.strip().casefold() == "and" or any(char in sep for char in ":-–—,.")))
-    if not explicit_separator and first not in ROLE_PREFIX_PRONOUNS:
-        return event
-    speaker = {
-        "interviewer": Speaker.INTERVIEWER,
-        "candidate": Speaker.CANDIDATE,
-        "graham": Speaker.GRAHAM,
-    }[role]
-    if role == "interviewer" and remainder[:1].islower():
-        remainder = remainder[:1].upper() + remainder[1:]
-    return event.model_copy(update={
-        "speaker": speaker,
-        "text": remainder,
-        "attribution_source": "transport",
-        "attribution_confidence": 0.95,
-    })
-
-
-def _explicit_new_question_marker(text: str) -> bool:
-    lower = text.casefold()
-    return any(marker in lower for marker in NEW_QUESTION_MARKERS)
-
-
-def _card_should_replace(displayed: EvidenceCard | None, incoming: EvidenceCard) -> bool:
-    """Keep a source-backed card visible over later weak revisions.
-
-    Live STT often keeps emitting cumulative explanatory fragments after the
-    useful problem statement has already produced a supported card. Those later
-    fragments may resolve to an insufficient card for the same question id; the
-    HUD should not lose the useful card to a weaker same-question revision.
-    """
-
-    if displayed is None:
-        return True
-    if incoming.status is CardStatus.SUPPORTED:
-        return True
-    return displayed.status is CardStatus.INSUFFICIENT
-
-
-def _newer_displayed_blocks(displayed: EvidenceCard | None, incoming: EvidenceCard) -> bool:
-    if displayed is None:
-        return False
-    if (displayed.question_revision or 0) <= (incoming.question_revision or 0):
-        return False
-    return not (
-        displayed.status is CardStatus.INSUFFICIENT
-        and incoming.status is CardStatus.SUPPORTED
-    )
-
-
-def _status_for_session(consent_confirmed: bool, policy: CapabilityPolicy) -> SessionStatus:
-    """Never report LISTENING for a session that may not capture audio.
-
-    Two independent gates: consent (the human agreed) and the frozen policy's
-    capture_audio capability (this session KIND is allowed to capture --
-    post_interview_review, for example, is post-hoc and never listens). Either
-    one absent keeps the session ARMED, and the coordinator refuses retrieval
-    for any non-LISTENING session.
-    """
-
-    if consent_confirmed and policy.capture_audio:
-        return SessionStatus.LISTENING
-    return SessionStatus.ARMED
 
 
 class RuntimeState:
@@ -175,6 +70,8 @@ class RuntimeState:
         self._active_question_answered: bool = False
         # Requirement ledger per (question_id, revision), append-only (#1454).
         self._ledger: dict[tuple[str, int], list[Requirement]] = {}
+        # Exclusive answer-worker leases per question id (3-agent architecture).
+        self._answer_leases: dict[str, str] = {}
         self._publication_journal: list[CardPublicationDecision] = []
 
     async def snapshot(self) -> AppSnapshot:
@@ -543,6 +440,135 @@ class RuntimeState:
             )
             return self._active_question_id, self._active_question_revision
 
+    async def update_card_fields(self, card_id: str, **fields: object) -> bool:
+        """Update review/amendment fields on a published card and broadcast.
+
+        Used by the reviewer/amendment lane only. The original answer text is
+        never touched here; amendments stream into amendment_text and the UI
+        promotes them only when amendment_complete is true.
+        """
+
+        async with self._lock:
+            for index, card in enumerate(self._cards):
+                if card.card_id == card_id:
+                    self._cards[index] = card.model_copy(update=fields)
+                    snapshot = self._snapshot_unlocked()
+                    break
+            else:
+                return False
+        await self._broadcast(snapshot)
+        return True
+
+    async def refine_question_text(self, question_id: str, text: str) -> bool:
+        """Refine the DISPLAYED question text without bumping the revision fence.
+
+        Mid-flight scanner refinements (cleaner restatement of the same
+        progressive question, e.g. ASR noise like a stray leading word) update
+        what the human sees but never redispatch or fence out the in-flight
+        answer. Updates the active question text and any published card for
+        the same question id, then broadcasts.
+        """
+
+        cleaned = text.strip()
+        if not cleaned:
+            return False
+        async with self._lock:
+            changed = False
+            if self._active_question_id == question_id and self._active_question_text != cleaned:
+                self._active_question_text = cleaned
+                changed = True
+            for index, card in enumerate(self._cards):
+                if card.question_id == question_id and card.question != cleaned:
+                    self._cards[index] = card.model_copy(update={"question": cleaned})
+                    changed = True
+            if not changed:
+                return False
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+        return True
+
+    async def acquire_lease(self, question_id: str, worker_id: str) -> bool:
+        """Exclusive per-question answer lease (3-agent architecture).
+
+        One answer worker owns one question; a second worker cannot acquire
+        the same question and therefore can never overwrite the first
+        worker's card. Mechanical, not prompt-level.
+        """
+
+        async with self._lock:
+            holder = self._answer_leases.get(question_id)
+            if holder is not None and holder != worker_id:
+                return False
+            self._answer_leases[question_id] = worker_id
+            return True
+
+    async def release_lease(self, question_id: str, worker_id: str) -> None:
+        async with self._lock:
+            if self._answer_leases.get(question_id) == worker_id:
+                del self._answer_leases[question_id]
+
+    async def lease_holder(self, question_id: str) -> str | None:
+        async with self._lock:
+            return self._answer_leases.get(question_id)
+
+    async def question_ledger(self, limit: int = 12) -> list[dict[str, object]]:
+        """Recent question identities for the ledger-aware resolver.
+
+        Fields per entry: id, text, answered. The resolver matches the live
+        buffer against these so refinements reuse an existing question id and
+        answered questions are never re-emitted as new cards.
+        """
+
+        async with self._lock:
+            entries: list[dict[str, object]] = []
+            seen: set[str] = set()
+            if self._active_question_id:
+                entries.append(
+                    {
+                        "id": self._active_question_id,
+                        "text": self._active_question_text,
+                        "state": "complete",
+                        "answered": self._active_question_answered,
+                    }
+                )
+                seen.add(self._active_question_id)
+            for card in self._cards:
+                question_id = card.question_id
+                if not question_id or question_id in seen:
+                    continue
+                seen.add(question_id)
+                entries.append(
+                    {
+                        "id": question_id,
+                        "text": card.question or card.query,
+                        "state": "complete",
+                        "answered": bool((card.answer or "").strip()),
+                    }
+                )
+                if len(entries) >= limit:
+                    break
+            return entries
+
+    async def adopt_question(
+        self, question_id: str, normalized_question: str
+    ) -> tuple[str, int]:
+        """Revise a resolver-matched KNOWN question in place.
+
+        The stage-1 resolver matched the live buffer to an existing question
+        id from the ledger, so the refinement bumps THAT question's revision
+        instead of minting a new id. The publication fence then supersedes the
+        older card rather than growing the timeline.
+        """
+
+        async with self._lock:
+            revision = self._question_last_revision.get(question_id, 0) + 1
+            self._active_question_id = question_id
+            self._active_question_revision = revision
+            self._active_question_text = normalized_question
+            self._active_question_answered = False
+            self._question_last_revision[question_id] = revision
+            return question_id, revision
+
     async def close_question(self) -> None:
         """Retire the active question so the next candidate allocates a new id."""
 
@@ -703,7 +729,11 @@ class RuntimeState:
         return AppSnapshot(
             session=self._session.model_copy(deep=True),
             current_thread=self._thread,
-            transcript=[item.model_copy(deep=True) for item in self._transcript],
+            # AppSnapshot caps transcript at 300; a longer live session must
+            # project the newest window, never fail validation (2026-09-03:
+            # /api/state 500ed at event 306 and the HUD showed Disconnected
+            # while the listener kept running).
+            transcript=[item.model_copy(deep=True) for item in self._transcript[-300:]],
             cards=[item.model_copy(deep=True) for item in self._cards],
             lanes=[self._lanes[lane].model_copy(deep=True) for lane in RetrievalLane],
             model_calls=[item.model_copy(deep=True) for item in self._model_calls],

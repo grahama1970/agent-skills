@@ -184,6 +184,34 @@ class EvidenceCoordinator:
     _ledger_text = staticmethod(scanner_fallback.ledger_text)
     _fallback_scan = staticmethod(scanner_fallback.fallback_scan)
 
+    @staticmethod
+    def _coherent_tail(events: list) -> list:
+        """Drop interim events and collapse consecutive same-speaker restatements.
+
+        Live STT emits dozens of growing-prefix stabilized/interim copies of one
+        utterance (96 near-duplicates in the 2026-09-03 youtube-oracle journal).
+        Feeding those raw to the scanner makes every ask look non-uniquely
+        recoverable, so it answers 'forming' forever and no card ever publishes.
+        Keep the latest/longest text per consecutive same-speaker run instead.
+        """
+
+        def norm(text: str) -> str:
+            return "".join(ch for ch in (text or "").lower() if ch.isalnum() or ch == " ")
+
+        collapsed: list = []
+        for item in events:
+            if getattr(item.kind, "value", item.kind) == "interim":
+                continue
+            if collapsed and collapsed[-1].speaker == item.speaker:
+                prev, cur = norm(collapsed[-1].text), norm(item.text)
+                if prev in cur or cur in prev or prev[:80] == cur[:80]:
+                    # restatement: keep whichever carries more content
+                    if len(cur) >= len(prev):
+                        collapsed[-1] = item
+                    continue
+            collapsed.append(item)
+        return collapsed
+
     async def _run_scan(self) -> None:
         """One scanner pass: classify asks, dispatch complete ones."""
 
@@ -197,7 +225,7 @@ class EvidenceCoordinator:
                 item for item in snapshot.transcript
                 if int(item.sequence or 0) > self._scan_cursor
             ]
-            tail_events = (new_events or snapshot.transcript[-12:])[-24:]
+            tail_events = self._coherent_tail(new_events or snapshot.transcript[-12:])[-24:]
             turns = [
                 {
                     "turn_id": item.turn_id or item.event_id,
@@ -305,6 +333,26 @@ class EvidenceCoordinator:
                 ):
                     # Already queued or being answered; a refinement mid-flight
                     # is NOT redispatched - the revision fence governs staleness.
+                    # But the DISPLAYED question text is still refined so the
+                    # human never reads stale ASR noise (e.g. a stray leading
+                    # word) while the answer is in flight.
+                    known_text = self._dispatched_texts.get(scanned_question_id, "") \
+                        or self._ledger_text(scanned_question_id, ledger)
+                    if (
+                        question.text.strip()
+                        and question.text.strip() != known_text.strip()
+                        and self._same_progressive_question(known_text, question.text)
+                    ):
+                        if await self._state.refine_question_text(
+                            scanned_question_id, question.text
+                        ):
+                            self._dispatched_texts[scanned_question_id] = question.text
+                            await self._journal.append(
+                                self._state.session_id(), "question_text_refined",
+                                {"question_id": scanned_question_id,
+                                 "text": question.text},
+                                policy_digest=digest,
+                            )
                     continue
                 if scanned_question_id:
                     question_id, revision = await self._state.adopt_question(
