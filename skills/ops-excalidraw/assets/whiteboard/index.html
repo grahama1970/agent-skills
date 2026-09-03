@@ -78,6 +78,8 @@ fetch("/libraries").then(r => r.json()).then(names => {
 
 document.getElementById("render").onclick = async () => {
   err("");
+  try {
+  if (!api) { err("editor still loading — try again in a moment"); return; }
   const scene = {
     type: "excalidraw", version: 2, source: "ops-excalidraw-whiteboard",
     elements: api.getSceneElements(), appState: { name: api.getAppState().name || "Whiteboard" }, files: {},
@@ -89,6 +91,7 @@ document.getElementById("render").onclick = async () => {
   const dl = document.getElementById("dl");
   dl.href = URL.createObjectURL(new Blob([text], { type: "image/svg+xml" }));
   dl.style.display = "block";
+  } catch (e) { err(String(e)); }
 };
 </script>
 </body>
