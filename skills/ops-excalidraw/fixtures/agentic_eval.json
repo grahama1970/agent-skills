@@ -138,7 +138,7 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && PORT=7696 && (python3 scripts/whiteboard_server.py $PORT >/dev/null 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/ >/dev/null && break; sleep 0.5; done && page=$(curl -s http://127.0.0.1:$PORT/) && pkill -f \"whiteboard_server.py $PORT\" || true; for q in 'data-qid=\"whiteboard:action:render\"' 'data-qs-action=\"WHITEBOARD_RENDER\"' 'title=\"Compile the board and render it to SVG\"' 'data-qid=\"whiteboard:panel:svg-output\"' 'data-qid=\"whiteboard:action:download\"' 'data-qid=\"whiteboard:action:theme-toggle\"' 'openLibraryMenu' 'whiteboard:panel:toolbar' 'gridSize: 20'; do echo \"$page\" | grep -qF \"$q\" || { echo \"MISSING $q\"; exit 1; }; done; echo QID_INSTRUMENTATION_OK"
+        "cd .. && PORT=7696 && (python3 scripts/whiteboard_server.py $PORT >/dev/null 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/ >/dev/null && break; sleep 0.5; done && page=$(curl -s http://127.0.0.1:$PORT/) && pkill -f \"whiteboard_server.py $PORT\" || true; for q in 'data-qid=\"whiteboard:action:render\"' 'data-qs-action=\"WHITEBOARD_RENDER\"' 'title=\"Compile the board and render it to SVG\"' 'data-qid=\"whiteboard:panel:svg-output\"' 'data-qid=\"whiteboard:action:download\"' 'data-qid=\"whiteboard:action:theme-toggle\"' 'openLibraryMenu' 'whiteboard:panel:toolbar' 'gridSize: 20' 'whiteboard:action:copy-svg' 'render it to SVG [R]'; do echo \"$page\" | grep -qF \"$q\" || { echo \"MISSING $q\"; exit 1; }; done; echo QID_INSTRUMENTATION_OK"
       ],
       "expected": {
         "exit_code": 0,
