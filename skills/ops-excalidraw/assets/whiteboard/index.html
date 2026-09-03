@@ -5,6 +5,10 @@
 <title>ops-excalidraw whiteboard</title>
 <style>
   html,body{margin:0;height:100%;font-family:system-ui,sans-serif}
+  body.dark{background:#121212;color:#e0e0e0}
+  body.dark #side{border-color:#333;background:#1b1b1f}
+  body.dark #svgout{border-color:#333;background:#1b1b1f}
+  body.dark button{background:#2a2a2e;color:#e0e0e0;border:1px solid #444}
   #app{display:flex;height:100%}
   #board{flex:1;min-width:0}
   #side{width:340px;border-left:1px solid #ccc;padding:10px;overflow:auto;display:flex;flex-direction:column;gap:8px}
@@ -19,6 +23,7 @@
 <div id="app">
   <div id="board"></div>
   <div id="side">
+    <button id="theme" data-qid="whiteboard:action:theme-toggle" data-qs-action="WHITEBOARD_TOGGLE_THEME" title="Switch between dark and light mode">Dark mode</button>
     <button id="render" data-qid="whiteboard:action:render" data-qs-action="WHITEBOARD_RENDER" title="Compile the board and render it to SVG">Render SVG</button>
     <div><strong>Libraries</strong><div id="libs" data-qid="whiteboard:panel:libraries"></div></div>
     <div id="err" data-qid="whiteboard:panel:error"></div>
@@ -32,19 +37,33 @@
 <script>
 let api = null;
 const loaded = new Map(); // libName -> items
+let theme = localStorage.getItem("wb-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+let setThemeState = null;
+
+const applyTheme = () => {
+  document.body.classList.toggle("dark", theme === "dark");
+  document.getElementById("theme").textContent = theme === "dark" ? "Light mode" : "Dark mode";
+  localStorage.setItem("wb-theme", theme);
+  if (setThemeState) setThemeState(theme);
+};
 
 const err = (m) => { document.getElementById("err").textContent = m || ""; };
 
 try {
-  const App = () => React.createElement(ExcalidrawLib.Excalidraw, {
-    excalidrawAPI: (a) => { api = a; },
-  });
+  const App = () => {
+    const [th, setTh] = React.useState(theme);
+    setThemeState = setTh;
+    return React.createElement(ExcalidrawLib.Excalidraw, {
+      excalidrawAPI: (a) => { api = a; },
+      theme: th,
+    });
+  };
   ReactDOM.createRoot(document.getElementById("board")).render(React.createElement(App));
 } catch (e) { err("editor failed to mount: " + e); }
 
-const refreshLibrary = () => {
+const refreshLibrary = (openMenu) => {
   const items = [...loaded.values()].flat();
-  api.updateLibrary({ libraryItems: items, merge: false });
+  api.updateLibrary({ libraryItems: items, merge: false, openLibraryMenu: !!openMenu });
 };
 
 const normalize = (lib) =>
@@ -69,7 +88,7 @@ fetch("/libraries").then(r => r.json()).then(names => {
         } else {
           loaded.delete(name);
         }
-        refreshLibrary();
+        refreshLibrary(cb.checked);
       } catch (e) { err(String(e)); cb.checked = false; }
     };
     label.append(cb, " " + name);
@@ -93,6 +112,9 @@ setInterval(async () => {
     } catch (e) { err("board apply failed: " + e); }
   } catch {}
 }, 1500);
+
+document.getElementById("theme").onclick = () => { theme = theme === "dark" ? "light" : "dark"; applyTheme(); };
+applyTheme();
 
 document.getElementById("render").onclick = async () => {
   err("");
