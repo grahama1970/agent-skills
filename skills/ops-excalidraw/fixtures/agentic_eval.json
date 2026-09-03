@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
   "claims": {
-    "proves": "the skill can validate its reusable Excalidraw library, compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board",
+    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board",
     "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
   },
   "cases": [
@@ -15,12 +15,12 @@
       "command": [
         "bash",
         "-c",
-        "T=$(mktemp -d) && ../run.sh toolkit --output $T/toolkit.excalidrawlib | tee $T/out.json && python3 - $T/out.json $T/toolkit.excalidrawlib <<'PYCODE'\nimport json,sys\nreceipt=json.load(open(sys.argv[1]))\nlib=json.load(open(sys.argv[2]))\nif receipt['status']!='PASS' or receipt['animation_tokens']<5:\n    raise SystemExit(receipt)\nif lib['type']!='excalidrawlib' or len(lib['libraryItems'])<7:\n    raise SystemExit('bad library')\nprint('OPS_EXCALIDRAW_TOOLKIT_OK', receipt['animation_tokens'])\nPYCODE"
+        "T=$(mktemp -d) && ../run.sh toolkit --output $T/toolkit.excalidrawlib | tee $T/out.json && python3 - $T/out.json $T/toolkit.excalidrawlib <<'PYCODE'\nimport json,sys\nreceipt=json.load(open(sys.argv[1]))\nlib=json.load(open(sys.argv[2]))\nif receipt['status']!='PASS' or receipt['animation_tokens']<5 or receipt['nodes']<28:\n    raise SystemExit(receipt)\nif lib['type']!='excalidrawlib' or len(lib['libraryItems'])<33:\n    raise SystemExit('bad library')\ntitles={e.get('customData',{}).get('opsExcalidraw',{}).get('title') for item in lib['libraryItems'] for e in item['elements'] if e.get('customData')}\nfor required in ('Graph DB','Vector store','Tau DAG','Gate','QRA','Control','Message queue','Load balancer','Decision','Risk'):\n    if required not in titles:\n        raise SystemExit(f'missing node: {required}')\nprint('OPS_EXCALIDRAW_TOOLKIT_OK', receipt['nodes'], receipt['animation_tokens'])\nPYCODE"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "OPS_EXCALIDRAW_TOOLKIT_OK 5"
+          "OPS_EXCALIDRAW_TOOLKIT_OK 28 5"
         ]
       },
       "readback": true,

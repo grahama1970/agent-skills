@@ -356,11 +356,55 @@ def text_element(element_id: str, x: int, y: int, text: str, group: str) -> dict
     return element
 
 
+# Comprehensive node palette for live strategy whiteboarding. Grounded in
+# system-design interview component libraries (queue/LB/cache/DB/vector store/
+# LLM blocks) plus this workstation's real projects: memory (graph+vector
+# recall), tau (DAG creator/reviewer gates), sparta (controls/QRA evidence).
+NODE_SPECS: list[tuple[str, str, dict[str, Any]]] = [
+    # generic strategy blocks
+    ("target-card", "Target", {"title": "Strategy step", "detail": "evidence-backed", "accent": "green"}),
+    ("node-decision", "Decision", {"title": "Decision", "detail": "choose + why", "accent": "amber"}),
+    ("node-risk", "Risk", {"title": "Risk", "detail": "blast radius", "accent": "red"}),
+    ("node-question", "Question", {"title": "Open question", "detail": "needs answer", "accent": "orange"}),
+    ("node-milestone", "Milestone", {"title": "Milestone", "detail": "done when...", "accent": "purple"}),
+    ("node-actor", "Actor", {"title": "Actor", "detail": "human/system user", "accent": "blue"}),
+    ("node-evidence", "Evidence", {"title": "Evidence", "detail": "receipt-backed", "accent": "green"}),
+    # system-design blocks
+    ("node-service", "Service", {"title": "Service", "detail": "deployable unit", "accent": "cyan"}),
+    ("node-api-gateway", "API GW", {"title": "API gateway", "detail": "routing/auth", "accent": "cyan"}),
+    ("node-database", "Database", {"title": "Database", "detail": "relational store", "accent": "blue"}),
+    ("node-queue", "Queue", {"title": "Message queue", "detail": "async decouple", "accent": "amber"}),
+    ("node-cache", "Cache", {"title": "Cache", "detail": "hot path", "accent": "orange"}),
+    ("node-load-balancer", "LB", {"title": "Load balancer", "detail": "fan-out traffic", "accent": "cyan"}),
+    ("node-llm", "LLM", {"title": "LLM", "detail": "model call", "accent": "purple"}),
+    # memory project (graph memory stack)
+    ("node-graph-db", "Graph DB", {"title": "Graph DB", "detail": "ArangoDB collections/edges", "accent": "blue"}),
+    ("node-vector-store", "Vectors", {"title": "Vector store", "detail": "Qdrant semantic sync", "accent": "purple"}),
+    ("node-embedder", "Embedder", {"title": "Embedder", "detail": "text/multimodal vectors", "accent": "purple"}),
+    ("node-recall", "Recall", {"title": "Memory recall", "detail": "BM25+dense+graph hop", "accent": "green"}),
+    # tau project (DAG orchestration)
+    ("node-dag", "DAG", {"title": "Tau DAG", "detail": "immutable goal contract", "accent": "cyan"}),
+    ("node-creator", "Creator", {"title": "Creator", "detail": "implements the change", "accent": "green"}),
+    ("node-reviewer", "Reviewer", {"title": "Reviewer", "detail": "VERDICT: PASS/FAIL", "accent": "amber"}),
+    ("node-gate", "Gate", {"title": "Gate", "detail": "deterministic check", "accent": "red"}),
+    ("node-receipt", "Receipt", {"title": "Receipt", "detail": "durable proof artifact", "accent": "green"}),
+    # sparta project (compliance pipeline)
+    ("node-control", "Control", {"title": "Control", "detail": "framework control ref", "accent": "blue"}),
+    ("node-qra", "QRA", {"title": "QRA", "detail": "question/reasoning/answer", "accent": "cyan"}),
+    ("node-crosswalk", "Crosswalk", {"title": "Crosswalk", "detail": "framework mapping edge", "accent": "orange"}),
+    ("node-pipeline-stage", "Stage", {"title": "Pipeline stage", "detail": "ingest -> QRA -> validate", "accent": "amber"}),
+]
+
+
 def toolkit(output: Path) -> None:
     items = []
     specs = [
         ("source-node", "Source", base_element("source", "rectangle", 0, 0, 220, 110, {"kind": "node", "role": "source", "title": "Client context", "subtitle": "interview source"})),
-        ("target-card", "Target", base_element("target", "rectangle", 0, 0, 220, 110, {"kind": "node", "role": "target", "title": "Strategy step", "detail": "evidence-backed", "accent": "green"})),
+    ]
+    for node_id, label, meta in NODE_SPECS:
+        custom = {"kind": "node", "role": "target", **meta}
+        specs.append((node_id, label, base_element(node_id, "rectangle", 0, 0, 220, 110, custom)))
+    specs += [
         ("anim-reveal", "Reveal", base_element("anim-reveal", "diamond", 0, 0, 72, 72, {"kind": "animation", "preset": "reveal", "startMs": 0, "durationMs": 600})),
         ("anim-line-draw", "Line draw", base_element("anim-line-draw", "diamond", 0, 0, 72, 72, {"kind": "animation", "preset": "line-draw", "startMs": 600, "durationMs": 700})),
         ("anim-glow-pulse", "Glow", base_element("anim-glow-pulse", "ellipse", 0, 0, 72, 72, {"kind": "animation", "preset": "glow-pulse", "targetId": "source", "startMs": 1200, "durationMs": 900})),
