@@ -119,6 +119,19 @@ class ExcalidrawLibrary(BaseModel):
     source: str | None = None
     libraryItems: list[LibraryItem]
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_v1(cls, data: Any) -> Any:
+        """Upstream directory libraries use v1 `library: [[elements]]` format."""
+        if isinstance(data, dict) and "libraryItems" not in data and isinstance(data.get("library"), list):
+            data = dict(data)
+            data["libraryItems"] = [
+                {"id": f"v1-item-{idx}", "status": "published", "elements": group}
+                for idx, group in enumerate(data.pop("library"))
+                if isinstance(group, list)
+            ]
+        return data
+
 
 class CompileResult(BaseModel):
     """Validated compiler result."""

@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
   "claims": {
-    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board",
+    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory",
     "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
   },
   "cases": [
@@ -94,6 +94,24 @@
       },
       "readback": true,
       "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "vendored-upstream-v1-libraries-validate",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && for f in assets/toolkits/vendor/*.excalidrawlib; do ./run.sh validate \"$f\" | grep -q '\"status\": \"PASS\"' || exit 1; done && ls assets/toolkits/vendor/*.excalidrawlib | wc -l"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "3"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
     }
   ],
   "eval_kind": "skill_behavior"

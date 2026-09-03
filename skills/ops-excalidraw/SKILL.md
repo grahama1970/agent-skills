@@ -51,6 +51,16 @@ skills/ops-excalidraw/run.sh compile skills/ops-excalidraw/fixtures/interview-bo
 skills/create-svg/run.sh render /tmp/interview-scene.yml /tmp/interview.svg
 ```
 
+## Vendored upstream libraries
+
+The official Excalidraw library directory (libraries.excalidraw.com, github.com/excalidraw/excalidraw-libraries) already ships comprehensive component sets. Three are vendored under `assets/toolkits/vendor/` and validate through this skill (v1 `library` format is normalized automatically):
+
+- `system-design.excalidrawlib` (rohanp, 24 items: LB, queue, cache, DB, CDN, etc.)
+- `software-architecture.excalidrawlib` (youritjang, 7 items)
+- `decision-flow-control.excalidrawlib` (aretecode, 8 items)
+
+Import them into Excalidraw alongside the generated toolkit for visual vocabulary; use the generated toolkit's tagged nodes/tokens for anything that must compile through `$create-svg`.
+
 ## Toolkit model
 
 Use normal Excalidraw library items for finished visual blocks:
