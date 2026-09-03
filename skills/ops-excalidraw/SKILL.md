@@ -51,6 +51,14 @@ skills/ops-excalidraw/run.sh compile skills/ops-excalidraw/fixtures/interview-bo
 skills/create-svg/run.sh render /tmp/interview-scene.yml /tmp/interview.svg
 ```
 
+## Local whiteboard page
+
+```bash
+skills/ops-excalidraw/run.sh whiteboard --port 7683   # open http://127.0.0.1:7683/
+```
+
+Embeds the `@excalidraw/excalidraw` component (esm.sh CDN; needs network for first load). Side panel: **Render SVG** button posts the live board to `/render` (compile + `$create-svg` render, SVG shown inline with download link; compile errors shown fail-closed), and library checkboxes load/unload every `.excalidrawlib` under `assets/toolkits/` (generated toolkit + vendored upstream sets).
+
 ## Vendored upstream libraries
 
 The official Excalidraw library directory (libraries.excalidraw.com, github.com/excalidraw/excalidraw-libraries) already ships comprehensive component sets. Three are vendored under `assets/toolkits/vendor/` and validate through this skill (v1 `library` format is normalized automatically):

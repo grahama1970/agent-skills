@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>ops-excalidraw whiteboard</title>
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,sans-serif}
+  #app{display:flex;height:100%}
+  #board{flex:1;min-width:0}
+  #side{width:340px;border-left:1px solid #ccc;padding:10px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+  #svgout{border:1px solid #ddd;min-height:200px;background:#fafafa}
+  #svgout svg{max-width:100%;height:auto}
+  button{padding:8px 12px;cursor:pointer}
+  #err{color:#b00020;white-space:pre-wrap;font-size:12px}
+  label{display:block;font-size:14px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="board"></div>
+  <div id="side">
+    <button id="render">Render SVG</button>
+    <div><strong>Libraries</strong><div id="libs"></div></div>
+    <div id="err"></div>
+    <div id="svgout"></div>
+    <a id="dl" download="whiteboard.svg" style="display:none">Download SVG</a>
+  </div>
+</div>
+<script type="module">
+import React from "https://esm.sh/react@18";
+import ReactDOM from "https://esm.sh/react-dom@18/client";
+import * as Ex from "https://esm.sh/@excalidraw/excalidraw@0.17.6?deps=react@18,react-dom@18";
+
+let api = null;
+const loaded = new Map(); // libName -> items
+
+const App = () => React.createElement(Ex.Excalidraw, {
+  excalidrawAPI: (a) => { api = a; },
+});
+ReactDOM.createRoot(document.getElementById("board")).render(React.createElement(App));
+
+const err = (m) => { document.getElementById("err").textContent = m || ""; };
+
+const refreshLibrary = () => {
+  const items = [...loaded.values()].flat();
+  api.updateLibrary({ libraryItems: items, merge: false });
+};
+
+const normalize = (lib) =>
+  lib.libraryItems ?? (lib.library ?? []).map((els, i) => ({ id: "v1-" + i, status: "published", elements: els }));
+
+fetch("/libraries").then(r => r.json()).then(names => {
+  const box = document.getElementById("libs");
+  for (const name of names) {
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.onchange = async () => {
+      err("");
+      try {
+        if (cb.checked) {
+          const lib = await (await fetch("/library/" + name)).json();
+          loaded.set(name, normalize(lib));
+        } else {
+          loaded.delete(name);
+        }
+        refreshLibrary();
+      } catch (e) { err(String(e)); cb.checked = false; }
+    };
+    label.append(cb, " " + name);
+    box.append(label);
+  }
+});
+
+document.getElementById("render").onclick = async () => {
+  err("");
+  const scene = {
+    type: "excalidraw", version: 2, source: "ops-excalidraw-whiteboard",
+    elements: api.getSceneElements(), appState: { name: api.getAppState().name || "Whiteboard" }, files: {},
+  };
+  const resp = await fetch("/render", { method: "POST", body: JSON.stringify(scene) });
+  const text = await resp.text();
+  if (!resp.ok) { err(text); return; }
+  document.getElementById("svgout").innerHTML = text;
+  const dl = document.getElementById("dl");
+  dl.href = URL.createObjectURL(new Blob([text], { type: "image/svg+xml" }));
+  dl.style.display = "block";
+};
+</script>
+</body>
+</html>

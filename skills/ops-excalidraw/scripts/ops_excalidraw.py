@@ -469,5 +469,16 @@ def compile_command(input_path: Path, output_path: Path) -> None:
         fail(exc)
 
 
+@app.command(name="whiteboard")
+def whiteboard_command(port: int = typer.Option(7683, "--port", help="Local port.")) -> None:
+    """Serve the embedded Excalidraw whiteboard with render button and library toggles."""
+
+    import runpy
+    import sys as _sys
+
+    _sys.argv = ["whiteboard_server.py", str(port)]
+    runpy.run_path(str(Path(__file__).with_name("whiteboard_server.py")), run_name="__main__")
+
+
 if __name__ == "__main__":
     app()

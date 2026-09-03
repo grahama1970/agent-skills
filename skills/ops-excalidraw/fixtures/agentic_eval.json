@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
   "claims": {
-    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory",
+    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board",
     "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
   },
   "cases": [
@@ -108,6 +108,24 @@
         "exit_code": 0,
         "stdout_contains": [
           "3"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "whiteboard-server-renders-board-live",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PORT=7697 && (python3 scripts/whiteboard_server.py $PORT >/tmp/wb-eval.log 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/libraries >/dev/null && break; sleep 0.5; done && curl -s http://127.0.0.1:$PORT/libraries | grep -q system-design.excalidrawlib && code=$(curl -s -X POST --data-binary @fixtures/interview-board.excalidraw http://127.0.0.1:$PORT/render -o /tmp/wb-eval.svg -w '%{http_code}') && bad=$(curl -s -X POST -d '{\"type\":\"excalidraw\",\"version\":2,\"elements\":[],\"appState\":{},\"files\":{}}' http://127.0.0.1:$PORT/render -o /dev/null -w '%{http_code}') && pkill -f \"whiteboard_server.py $PORT\" || true; head -c 4 /tmp/wb-eval.svg; echo \" render=$code bad=$bad\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "<svg render=200 bad=422"
         ]
       },
       "readback": true,
