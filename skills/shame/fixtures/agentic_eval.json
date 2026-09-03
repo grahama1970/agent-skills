@@ -418,12 +418,36 @@
       "command": [
         "bash",
         "-lc",
-        "cd .. && dir=$(mktemp -d) && ./run.sh audio install --source /tmp/lrsss-chatterbox-lower-female-shame-single.wav --extension-dir $dir >/tmp/shame_audio_eval_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_audio_eval_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.installed.duration_sec>2.5) throw new Error('too long'); if(d.installed.sha256!=='a3596aff349c98732f3c2c4b797a451fcf6a858d138c0b497d5df3642a5497dc') throw new Error('wrong audio'); console.log('ONE_WORD_AUDIO_OK')\""
+        "cd .. && dir=$(mktemp -d) && ./run.sh audio install --source /tmp/lrsss-explicit-embry-ref-single-shame.wav --extension-dir $dir >/tmp/shame_audio_eval_receipt.json && node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync('/tmp/shame_audio_eval_receipt.json','utf8')); if(!d.ok) throw new Error('not ok'); if(d.installed.duration_sec>2.5) throw new Error('too long'); if(d.installed.duration_sec<0.9) throw new Error('too short'); if(d.installed.active_duration_sec<0.45) throw new Error('active speech too short'); if(d.installed.sha256!=='ecf7387ead89e7ca1599dbbad35f12e117959c492566a6b8da6cbf583a2b6b5d') throw new Error('wrong audio'); console.log('ONE_WORD_AUDIO_OK')\""
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
           "ONE_WORD_AUDIO_OK"
+        ]
+      }
+    },
+    {
+      "name": "sped-up-chatterbox-audio-rejected",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.one_word_audio"
+      ],
+      "seams": [
+        "audio-install-duration"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd .. && dir=$(mktemp -d) && ./run.sh audio install --source /tmp/lrsss-chatterbox-lower-female-shame-single.wav --extension-dir $dir"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "expected >= 0.9s",
+          "active speech"
         ]
       }
     },
@@ -2989,6 +3013,28 @@
       "real_world": true
     },
     {
+      "name": "before-agent-start-does-not-inject-prose",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.no_regex_or_agent_prose_status_validity"
+      ],
+      "seams": [
+        "extension-before-agent-start",
+        "extension-message-end"
+      ],
+      "timeout_seconds": 60,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh before-agent-start-does-not-inject-prose | grep -q '\"returned\":false'"
+      ],
+      "expected": {
+        "exit_code": 0
+      },
+      "real_world": true
+    },
+    {
       "name": "retry-budget-exhausts-as-failure",
       "type": "adversarial",
       "evidence_class": "deterministic",
@@ -3051,6 +3097,42 @@
         "exit_code": 0
       },
       "real_world": true
+    },
+    {
+      "name": "guard-injects-status-contract-at-turn-start",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && awk '/before_agent_start/,/^  \\}\\);$/' extensions/pi/lazy-report-shame-shame-shame/index.ts | grep -q 'systemPrompt' && awk '/before_agent_start/,/^  \\}\\);$/' extensions/pi/lazy-report-shame-shame-shame/index.ts | grep -q 'pi.agent_status.v1' && echo turn-start-contract-injection-present"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "turn-start-contract-injection-present"
+        ]
+      }
+    },
+    {
+      "name": "guard-injection-absent-when-mode-off",
+      "type": "negative",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 30,
+      "command": [
+        "bash",
+        "-lc",
+        "cd /home/graham/workspace/experiments/agent-skills && awk '/before_agent_start/,/^  \\}\\);$/' extensions/pi/lazy-report-shame-shame-shame/index.ts | grep -q 'sessionMode === \"off\"' && echo off-mode-skips-injection"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "off-mode-skips-injection"
+        ]
+      }
     }
   ],
   "seams": [
