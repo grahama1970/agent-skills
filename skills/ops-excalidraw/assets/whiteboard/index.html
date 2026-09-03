@@ -26,20 +26,21 @@
     <a id="dl" download="whiteboard.svg" style="display:none" data-qid="whiteboard:action:download" data-qs-action="WHITEBOARD_DOWNLOAD_SVG" title="Download the rendered SVG">Download SVG</a>
   </div>
 </div>
-<script type="module">
-import React from "https://esm.sh/react@18";
-import ReactDOM from "https://esm.sh/react-dom@18/client";
-import * as Ex from "https://esm.sh/@excalidraw/excalidraw@0.17.6?deps=react@18,react-dom@18";
-
+<script src="/static/react.min.js"></script>
+<script src="/static/react-dom.min.js"></script>
+<script src="/static/excalidraw.min.js"></script>
+<script>
 let api = null;
 const loaded = new Map(); // libName -> items
 
-const App = () => React.createElement(Ex.Excalidraw, {
-  excalidrawAPI: (a) => { api = a; },
-});
-ReactDOM.createRoot(document.getElementById("board")).render(React.createElement(App));
-
 const err = (m) => { document.getElementById("err").textContent = m || ""; };
+
+try {
+  const App = () => React.createElement(ExcalidrawLib.Excalidraw, {
+    excalidrawAPI: (a) => { api = a; },
+  });
+  ReactDOM.createRoot(document.getElementById("board")).render(React.createElement(App));
+} catch (e) { err("editor failed to mount: " + e); }
 
 const refreshLibrary = () => {
   const items = [...loaded.values()].flat();
@@ -85,7 +86,11 @@ setInterval(async () => {
     if (r.status !== 200) return;
     const { version, scene } = await r.json();
     boardVersion = version;
-    api.updateScene({ elements: scene.elements });
+    try {
+      const els = ExcalidrawLib.convertToExcalidrawElements ? ExcalidrawLib.convertToExcalidrawElements(scene.elements) : scene.elements;
+      api.updateScene({ elements: els });
+      api.scrollToContent(undefined, { fitToContent: true });
+    } catch (e) { err("board apply failed: " + e); }
   } catch {}
 }, 1500);
 

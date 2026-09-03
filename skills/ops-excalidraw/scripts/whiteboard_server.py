@@ -58,15 +58,23 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:  # noqa: N802
+        self.path, _, query = self.path.partition("?")  # route on path only
         if self.path in ("/", "/index.html"):
             self.reply(200, PAGE.read_bytes(), "text/html")
+        elif self.path.startswith(("/vendor/", "/static/")):
+            name = Path(self.path.split("?")[0]).name  # flatten: no traversal, strip query
+            path = PAGE.parent / "vendor" / name
+            if path.is_file():
+                self.reply(200, path.read_bytes(), "application/javascript")
+            else:
+                self.reply(404, b"not found", "text/plain")
         elif self.path == "/libraries":
             self.reply(200, json.dumps(sorted(library_files())).encode(), "application/json")
         elif self.path.startswith("/board"):
             since = 0
-            if "since=" in self.path:
+            if "since=" in query:
                 try:
-                    since = int(self.path.split("since=")[1].split("&")[0])
+                    since = int(query.split("since=")[1].split("&")[0])
                 except ValueError:
                     since = 0
             if BOARD_STATE["scene"] is None or BOARD_STATE["version"] <= since:
