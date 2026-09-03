@@ -32,6 +32,34 @@ disciplines:
 
 **TOS-compliant** approach to Discord security intelligence gathering.
 
+## Transports — read this FIRST before claiming Discord is unconfigured
+
+This skill has **two independent delivery transports**. A caller (human or
+agent) must check both before concluding Discord notification is unavailable:
+
+| Transport | Command form | Configured by | Check with |
+| --- | --- | --- | --- |
+| **Webhook** | `notify --webhook <name>` | `OPS_DISCORD_WEBHOOK_<NAME>_URL` / `DISCORD_WEBHOOK_URL` / `SLACK_WEBHOOK_URL` (env or `~/.zshrc`) or `config.json` | `./run.sh webhook list` |
+| **Discord bot** | `notify --discord-bot --channel-name <name>` | `DISCORD_BOT_TOKEN` (+ guild) in env, `~/.zshrc`, or clawdbot `.env` | `./run.sh setup` |
+
+Rules that prevent the 2026-09-03 mistake (an agent reported "no Discord
+webhook configured, human must create one" while `DISCORD_BOT_TOKEN` in
+`~/.zshrc` could already deliver to `#horus`):
+
+- **`NO_WEBHOOK` means that one named webhook is missing, nothing more.** It is
+  NOT evidence that Discord delivery is unconfigured. Always try or check the
+  bot transport before escalating to the human.
+- **Verify transport availability with a dry-run, not an assumption:**
+  `./run.sh notify --discord-bot --channel-name horus --content probe --dry-run --json`
+  resolves the real guild + channel id without posting (`status: DRY_RUN`,
+  `ok: true`).
+- **Live delivery proof is the returned `message_id`/`message_url`**, read from
+  the `ops_discord.notification_receipt.v1` receipt — not the exit code.
+- Composing skills (e.g. `$project-watchdog` alerting) should prefer the
+  webhook when its env var exists and fall back to `--discord-bot` otherwise.
+
+Both transports go through one command: `notify` (see below).
+
 ## The Key Insight
 
 **OLD (Broken):** Try to search external servers where you're not admin → TOS violation, impossible

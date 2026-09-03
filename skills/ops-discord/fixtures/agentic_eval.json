@@ -60,6 +60,42 @@
           "CSECRET"
         ]
       }
+    },
+    {
+      "name": "bot-transport-resolves-when-no-webhook-exists",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && env -u OPS_DISCORD_WEBHOOK_WATCHDOG_URL ./run.sh notify --webhook watchdog --content probe --dry-run --json 2>/dev/null | grep -q '\"status\": \"NO_WEBHOOK\"'; ./run.sh notify --discord-bot --channel-name horus --content probe --dry-run --json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"DRY_RUN\"",
+          "\"transport\": \"discord_bot\"",
+          "\"channel_id\""
+        ]
+      },
+      "proves": "NO_WEBHOOK for one name does not mean Discord is unconfigured: the bot transport still resolves a real guild+channel from DISCORD_BOT_TOKEN. Guards the 2026-09-03 incident where an agent asked the human to create a webhook while the bot path could already deliver.",
+      "does_not_prove": "A live post; that requires a non-dry-run notify with a message_id readback."
+    },
+    {
+      "name": "missing-webhook-name-fails-with-clear-status",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && ./run.sh notify --webhook definitely-not-configured --content probe --dry-run --json; test $? -eq 1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"NO_WEBHOOK\""
+        ]
+      }
     }
   ]
 }
