@@ -91,7 +91,7 @@ def main() -> None:
 
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 7683
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(json.dumps({"schema": "ops_excalidraw.whiteboard.v1", "url": f"http://127.0.0.1:{port}/", "libraries": sorted(library_files())}))
+    print(json.dumps({"schema": "ops_excalidraw.whiteboard.v1", "url": f"http://127.0.0.1:{port}/", "libraries": sorted(library_files())}), flush=True)
     server.serve_forever()
 
 

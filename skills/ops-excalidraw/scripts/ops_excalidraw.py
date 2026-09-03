@@ -13,6 +13,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 
 app = typer.Typer(help="Compile Excalidraw animation tokens into create-svg input.")
 
+SKILL_DIR = Path(__file__).resolve().parents[1]
+
 PRESETS = {
     "reveal": "fade-slide-y",
     "line-draw": "draw-stroke",
@@ -20,7 +22,7 @@ PRESETS = {
     "highlight": "color-pin",
     "pulse": "pulse",
 }
-ACCENTS = {"green", "cyan", "amber", "orange", "red", "purple", "blue"}
+ACCENTS = {"green", "cyan", "amber", "orange", "red", "white"}  # must stay a subset of create-svg accents
 
 
 class OpsNode(BaseModel):
@@ -379,21 +381,21 @@ NODE_SPECS: list[tuple[str, str, dict[str, Any]]] = [
     ("node-decision", "Decision", {"title": "Decision", "detail": "choose + why", "accent": "amber"}),
     ("node-risk", "Risk", {"title": "Risk", "detail": "blast radius", "accent": "red"}),
     ("node-question", "Question", {"title": "Open question", "detail": "needs answer", "accent": "orange"}),
-    ("node-milestone", "Milestone", {"title": "Milestone", "detail": "done when...", "accent": "purple"}),
-    ("node-actor", "Actor", {"title": "Actor", "detail": "human/system user", "accent": "blue"}),
+    ("node-milestone", "Milestone", {"title": "Milestone", "detail": "done when...", "accent": "white"}),
+    ("node-actor", "Actor", {"title": "Actor", "detail": "human/system user", "accent": "cyan"}),
     ("node-evidence", "Evidence", {"title": "Evidence", "detail": "receipt-backed", "accent": "green"}),
     # system-design blocks
     ("node-service", "Service", {"title": "Service", "detail": "deployable unit", "accent": "cyan"}),
     ("node-api-gateway", "API GW", {"title": "API gateway", "detail": "routing/auth", "accent": "cyan"}),
-    ("node-database", "Database", {"title": "Database", "detail": "relational store", "accent": "blue"}),
+    ("node-database", "Database", {"title": "Database", "detail": "relational store", "accent": "cyan"}),
     ("node-queue", "Queue", {"title": "Message queue", "detail": "async decouple", "accent": "amber"}),
     ("node-cache", "Cache", {"title": "Cache", "detail": "hot path", "accent": "orange"}),
     ("node-load-balancer", "LB", {"title": "Load balancer", "detail": "fan-out traffic", "accent": "cyan"}),
-    ("node-llm", "LLM", {"title": "LLM", "detail": "model call", "accent": "purple"}),
+    ("node-llm", "LLM", {"title": "LLM", "detail": "model call", "accent": "white"}),
     # memory project (graph memory stack)
-    ("node-graph-db", "Graph DB", {"title": "Graph DB", "detail": "ArangoDB collections/edges", "accent": "blue"}),
-    ("node-vector-store", "Vectors", {"title": "Vector store", "detail": "Qdrant semantic sync", "accent": "purple"}),
-    ("node-embedder", "Embedder", {"title": "Embedder", "detail": "text/multimodal vectors", "accent": "purple"}),
+    ("node-graph-db", "Graph DB", {"title": "Graph DB", "detail": "ArangoDB collections/edges", "accent": "cyan"}),
+    ("node-vector-store", "Vectors", {"title": "Vector store", "detail": "Qdrant semantic sync", "accent": "white"}),
+    ("node-embedder", "Embedder", {"title": "Embedder", "detail": "text/multimodal vectors", "accent": "white"}),
     ("node-recall", "Recall", {"title": "Memory recall", "detail": "BM25+dense+graph hop", "accent": "green"}),
     # tau project (DAG orchestration)
     ("node-dag", "DAG", {"title": "Tau DAG", "detail": "immutable goal contract", "accent": "cyan"}),
@@ -402,7 +404,7 @@ NODE_SPECS: list[tuple[str, str, dict[str, Any]]] = [
     ("node-gate", "Gate", {"title": "Gate", "detail": "deterministic check", "accent": "red"}),
     ("node-receipt", "Receipt", {"title": "Receipt", "detail": "durable proof artifact", "accent": "green"}),
     # sparta project (compliance pipeline)
-    ("node-control", "Control", {"title": "Control", "detail": "framework control ref", "accent": "blue"}),
+    ("node-control", "Control", {"title": "Control", "detail": "framework control ref", "accent": "cyan"}),
     ("node-qra", "QRA", {"title": "QRA", "detail": "question/reasoning/answer", "accent": "cyan"}),
     ("node-crosswalk", "Crosswalk", {"title": "Crosswalk", "detail": "framework mapping edge", "accent": "orange"}),
     ("node-pipeline-stage", "Stage", {"title": "Pipeline stage", "detail": "ingest -> QRA -> validate", "accent": "amber"}),
@@ -467,6 +469,16 @@ def compile_command(input_path: Path, output_path: Path) -> None:
         print(compile_scene(input_path, output_path).model_dump_json(by_alias=True))
     except (OSError, ValueError, ValidationError, json.JSONDecodeError) as exc:
         fail(exc)
+
+
+@app.command(name="quickstart")
+def quickstart_command(port: int = typer.Option(7683, "--port", help="Local port.")) -> None:
+    """One-command setup: regenerate the toolkit, then serve the whiteboard page."""
+
+    toolkit_path = SKILL_DIR / "assets/toolkits/interview-animation-toolkit.excalidrawlib"
+    toolkit(toolkit_path)
+    print(json.dumps({"schema": "ops_excalidraw.quickstart.v1", "toolkit": str(toolkit_path), "next": f"open http://127.0.0.1:{port}/ — tick libraries in the side panel, drag blocks, press Render SVG"}), flush=True)
+    whiteboard_command(port)
 
 
 @app.command(name="whiteboard")

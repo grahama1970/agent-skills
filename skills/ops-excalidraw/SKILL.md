@@ -42,6 +42,16 @@ Use this skill to make Excalidraw the movable whiteboard layer and `$create-svg`
 - This skill emits `$create-svg` scene/timeline JSON; it does not emit final SVG.
 - v1 compiles single-source fan-out boards: exactly one `role: "source"` node and one or more `role: "target"` nodes.
 
+## Quickstart (one prompt)
+
+Say `$ops-excalidraw quickstart` (or run the command below). It regenerates the toolkit and serves the whiteboard; open the URL, tick libraries, drag blocks, press **Render SVG**.
+
+```bash
+skills/ops-excalidraw/run.sh quickstart --port 7683
+```
+
+Accent values on nodes must stay within the create-svg set: cyan, green, amber, orange, red, white.
+
 ## Commands
 
 ```bash

@@ -19,11 +19,11 @@
 <div id="app">
   <div id="board"></div>
   <div id="side">
-    <button id="render">Render SVG</button>
-    <div><strong>Libraries</strong><div id="libs"></div></div>
-    <div id="err"></div>
-    <div id="svgout"></div>
-    <a id="dl" download="whiteboard.svg" style="display:none">Download SVG</a>
+    <button id="render" data-qid="whiteboard:action:render" data-qs-action="WHITEBOARD_RENDER" title="Compile the board and render it to SVG">Render SVG</button>
+    <div><strong>Libraries</strong><div id="libs" data-qid="whiteboard:panel:libraries"></div></div>
+    <div id="err" data-qid="whiteboard:panel:error"></div>
+    <div id="svgout" data-qid="whiteboard:panel:svg-output"></div>
+    <a id="dl" download="whiteboard.svg" style="display:none" data-qid="whiteboard:action:download" data-qs-action="WHITEBOARD_DOWNLOAD_SVG" title="Download the rendered SVG">Download SVG</a>
   </div>
 </div>
 <script type="module">
@@ -55,6 +55,10 @@ fetch("/libraries").then(r => r.json()).then(names => {
     const label = document.createElement("label");
     const cb = document.createElement("input");
     cb.type = "checkbox";
+    const slug = name.replace(/\.excalidrawlib$/, "");
+    cb.dataset.qid = "whiteboard:library:" + slug;
+    cb.dataset.qsAction = "WHITEBOARD_TOGGLE_LIBRARY";
+    cb.title = "Load or unload library " + name;
     cb.onchange = async () => {
       err("");
       try {

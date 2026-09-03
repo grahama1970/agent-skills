@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
   "claims": {
-    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board",
+    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board; the served whiteboard page carries data-qid/data-qs-action/title instrumentation on its interactive controls; a mixed board with untagged vendored shapes compiles and renders; quickstart serves the whiteboard in one command",
     "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
   },
   "cases": [
@@ -126,6 +126,61 @@
         "exit_code": 0,
         "stdout_contains": [
           "<svg render=200 bad=422"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "whiteboard-page-qid-instrumentation",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PORT=7696 && (python3 scripts/whiteboard_server.py $PORT >/dev/null 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/ >/dev/null && break; sleep 0.5; done && page=$(curl -s http://127.0.0.1:$PORT/) && pkill -f \"whiteboard_server.py $PORT\" || true; for q in 'data-qid=\"whiteboard:action:render\"' 'data-qs-action=\"WHITEBOARD_RENDER\"' 'title=\"Compile the board and render it to SVG\"' 'data-qid=\"whiteboard:panel:svg-output\"' 'data-qid=\"whiteboard:action:download\"' 'WHITEBOARD_TOGGLE_LIBRARY'; do echo \"$page\" | grep -qF \"$q\" || { echo \"MISSING $q\"; exit 1; }; done; echo QID_INSTRUMENTATION_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "QID_INSTRUMENTATION_OK"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "meeting-scenario-board-mixed-vendor-content",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh compile fixtures/meeting-scenario-board.excalidraw $T/scene.yml && ../create-svg/run.sh render $T/scene.yml $T/out.svg >/dev/null 2>&1 && head -c 4 $T/out.svg"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"target_count\":2",
+          "<svg"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "quickstart-serves-whiteboard-one-command",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PORT=7694 && fuser -k $PORT/tcp >/dev/null 2>&1; L=$(mktemp) && (timeout 25 ./run.sh quickstart --port $PORT >$L 2>&1 &) && for i in $(seq 1 40); do curl -sf http://127.0.0.1:$PORT/libraries >/dev/null && break; sleep 0.5; done && curl -s http://127.0.0.1:$PORT/libraries | grep -q interview-animation-toolkit; fuser -k $PORT/tcp >/dev/null 2>&1; grep -o \"ops_excalidraw.quickstart.v1\" $L | head -1"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "ops_excalidraw.quickstart.v1"
         ]
       },
       "readback": true,

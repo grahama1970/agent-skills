@@ -1,0 +1,156 @@
+{
+ "type": "excalidraw",
+ "version": 2,
+ "source": "fixture",
+ "elements": [
+  {
+   "id": "vendor-lb",
+   "type": "rectangle",
+   "x": -300,
+   "y": 0,
+   "width": 120,
+   "height": 60,
+   "isDeleted": false,
+   "groupIds": []
+  },
+  {
+   "id": "vendor-arrow",
+   "type": "arrow",
+   "x": -180,
+   "y": 30,
+   "width": 80,
+   "height": 0,
+   "isDeleted": false,
+   "groupIds": []
+  },
+  {
+   "id": "vendor-note",
+   "type": "text",
+   "x": -300,
+   "y": 80,
+   "width": 120,
+   "height": 20,
+   "isDeleted": false,
+   "groupIds": []
+  },
+  {
+   "id": "src",
+   "type": "rectangle",
+   "x": 0,
+   "y": 0,
+   "width": 220,
+   "height": 110,
+   "isDeleted": false,
+   "groupIds": [],
+   "customData": {
+    "opsExcalidraw": {
+     "kind": "node",
+     "role": "source",
+     "title": "Client problem",
+     "subtitle": "meeting whiteboard"
+    }
+   }
+  },
+  {
+   "id": "t1",
+   "type": "rectangle",
+   "x": 400,
+   "y": -80,
+   "width": 220,
+   "height": 110,
+   "isDeleted": false,
+   "groupIds": [
+    "g1"
+   ],
+   "customData": {
+    "opsExcalidraw": {
+     "kind": "node",
+     "role": "target",
+     "title": "Memory recall",
+     "detail": "graph+vector",
+     "accent": "cyan"
+    }
+   }
+  },
+  {
+   "id": "t2",
+   "type": "rectangle",
+   "x": 400,
+   "y": 80,
+   "width": 220,
+   "height": 110,
+   "isDeleted": false,
+   "groupIds": [],
+   "customData": {
+    "opsExcalidraw": {
+     "kind": "node",
+     "role": "target",
+     "title": "Tau DAG",
+     "detail": "creator/reviewer",
+     "accent": "cyan"
+    }
+   }
+  },
+  {
+   "id": "a1",
+   "type": "diamond",
+   "x": 400,
+   "y": -80,
+   "width": 40,
+   "height": 40,
+   "isDeleted": false,
+   "groupIds": [
+    "g1"
+   ],
+   "customData": {
+    "opsExcalidraw": {
+     "kind": "animation",
+     "preset": "reveal",
+     "startMs": 0,
+     "durationMs": 600
+    }
+   }
+  },
+  {
+   "id": "a2",
+   "type": "ellipse",
+   "x": 0,
+   "y": 0,
+   "width": 40,
+   "height": 40,
+   "isDeleted": false,
+   "groupIds": [],
+   "customData": {
+    "opsExcalidraw": {
+     "kind": "animation",
+     "preset": "glow-pulse",
+     "targetId": "src",
+     "startMs": 600,
+     "durationMs": 800
+    }
+   }
+  },
+  {
+   "id": "a3",
+   "type": "ellipse",
+   "x": 420,
+   "y": 90,
+   "width": 30,
+   "height": 30,
+   "isDeleted": false,
+   "groupIds": [],
+   "customData": {
+    "opsExcalidraw": {
+     "kind": "animation",
+     "preset": "highlight",
+     "startMs": 1200,
+     "durationMs": 700
+    }
+   }
+  }
+ ],
+ "appState": {
+  "name": "Meeting scenario"
+ },
+ "files": {}
+}

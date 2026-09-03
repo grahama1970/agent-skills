@@ -472,7 +472,7 @@
               "role": "target",
               "title": "Milestone",
               "detail": "done when...",
-              "accent": "purple"
+              "accent": "white"
             }
           }
         },
@@ -558,7 +558,7 @@
               "role": "target",
               "title": "Actor",
               "detail": "human/system user",
-              "accent": "blue"
+              "accent": "cyan"
             }
           }
         },
@@ -902,7 +902,7 @@
               "role": "target",
               "title": "Database",
               "detail": "relational store",
-              "accent": "blue"
+              "accent": "cyan"
             }
           }
         },
@@ -1246,7 +1246,7 @@
               "role": "target",
               "title": "LLM",
               "detail": "model call",
-              "accent": "purple"
+              "accent": "white"
             }
           }
         },
@@ -1332,7 +1332,7 @@
               "role": "target",
               "title": "Graph DB",
               "detail": "ArangoDB collections/edges",
-              "accent": "blue"
+              "accent": "cyan"
             }
           }
         },
@@ -1418,7 +1418,7 @@
               "role": "target",
               "title": "Vector store",
               "detail": "Qdrant semantic sync",
-              "accent": "purple"
+              "accent": "white"
             }
           }
         },
@@ -1504,7 +1504,7 @@
               "role": "target",
               "title": "Embedder",
               "detail": "text/multimodal vectors",
-              "accent": "purple"
+              "accent": "white"
             }
           }
         },
@@ -2106,7 +2106,7 @@
               "role": "target",
               "title": "Control",
               "detail": "framework control ref",
-              "accent": "blue"
+              "accent": "cyan"
             }
           }
         },
