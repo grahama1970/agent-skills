@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
   "claims": {
-    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board; the served whiteboard page carries data-qid/data-qs-action/title instrumentation on its interactive controls; a mixed board with untagged vendored shapes compiles and renders; quickstart serves the whiteboard in one command",
+    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board; the served whiteboard page carries data-qid/data-qs-action/title instrumentation on its interactive controls; a mixed board with untagged vendored shapes compiles and renders; quickstart serves the whiteboard in one command; adversarial inputs (malformed JSON, unknown customData kinds, invalid accents, garbage HTTP payloads, path traversal) fail closed",
     "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
   },
   "cases": [
@@ -185,6 +185,75 @@
       },
       "readback": true,
       "evidence_class": "live_e2e"
+    },
+    {
+      "name": "malformed-json-board-fails-closed",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && printf '{\"type\":\"excalidraw\",' > $T/bad.excalidraw && ./run.sh compile $T/bad.excalidraw $T/out.yml"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "FAIL"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "unknown-ops-kind-fails-closed",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && python3 -c \"import json;print(json.dumps({'type':'excalidraw','version':2,'appState':{},'files':{},'elements':[{'id':'x','type':'rectangle','x':0,'y':0,'width':10,'height':10,'isDeleted':False,'groupIds':[],'customData':{'opsExcalidraw':{'kind':'exploit','payload':'x'}}}]}))\" > $T/evil.excalidraw && ./run.sh compile $T/evil.excalidraw $T/out.yml"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "unknown opsExcalidraw.kind"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "render-endpoint-rejects-garbage-payload",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PORT=7693 && fuser -k $PORT/tcp >/dev/null 2>&1; (python3 scripts/whiteboard_server.py $PORT >/dev/null 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/libraries >/dev/null && break; sleep 0.5; done && a=$(head -c 2048 /dev/urandom | curl -s -X POST --data-binary @- http://127.0.0.1:$PORT/render -o /dev/null -w '%{http_code}') && b=$(curl -s --path-as-is http://127.0.0.1:$PORT/library/../../etc/passwd -o /dev/null -w '%{http_code}'); fuser -k $PORT/tcp >/dev/null 2>&1; echo \"garbage=$a traversal=$b\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "garbage=422 traversal=404"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "adversarial_live_e2e"
+    },
+    {
+      "name": "invalid-accent-rejected-before-render",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && python3 -c \"import json;n=lambda i,r,a:{'id':i,'type':'rectangle','x':0,'y':0,'width':10,'height':10,'isDeleted':False,'groupIds':[],'customData':{'opsExcalidraw':{'kind':'node','role':r,'title':i,'accent':a}}};print(json.dumps({'type':'excalidraw','version':2,'appState':{},'files':{},'elements':[n('s','source','blue')]}))\" > $T/acc.excalidraw && ./run.sh compile $T/acc.excalidraw $T/out.yml"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "unknown accent"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
     }
   ],
   "eval_kind": "skill_behavior"
