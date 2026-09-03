@@ -29,6 +29,36 @@
       "notes": "The preflight behaved correctly during the incident (fail-closed, named code, runnable next_command). This regression retains that behavior: if the probe ever exits zero or drops the failure_code when surf transport is down, the guard has been weakened.",
       "regression_id": "surf-transport-down-chrome-profile-picker-20260902",
       "status": "ACTIVE"
+    },
+    {
+      "regression_id": "webgpt-submit-not-accepted-empty-url-tab-20260903",
+      "status": "ACTIVE",
+      "evidence_class": "live_e2e",
+      "incident": {
+        "date": "2026-09-03",
+        "summary": "After Surf socket recovery, $ask tau-dag reached handler-webgpt but failed closed before provider submission because browser-oracle bound a tab whose Surf tab.list URL/title remained empty. Receipts recorded proof_status not_submitted, submitted_to_chatgpt false, final_transport_state prepared_prompt_only, failure_code browser_submit_not_accepted, and quarantined the empty response instead of treating prepared prompt text as reviewer output.",
+        "run_dir": "/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-review-the-attached-watch-skill--e1ba59e49890"
+      },
+      "claims_threatened": [
+        "ask.recovery.webgpt_prepared_prompt_failclosed"
+      ],
+      "seams": [
+        "browser.prepared_prompt_recovery",
+        "browser.tab_lifecycle"
+      ],
+      "retained_case": "webgpt-prepared-prompt-recovery-terminates-or-submits",
+      "retained_fixture": "agentic_eval.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash",
+          "-c",
+          "python3 - <<'PY'\nimport json\np='/mnt/storage12tb/skills/ask/outputs/.ask_artifacts/tau-dag-runs/ask-tau-review-the-attached-watch-skill--e1ba59e49890/node-artifacts/handler-webgpt/response.meta.json'\nd=json.load(open(p))\nassert d.get('proof_status') == 'response_proven', d\nPY"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "last_proven": "2026-09-03T16:52:00Z"
+      },
+      "notes": "The proof command intentionally asserts the bad incident was response_proven; it must fail against the retained incident artifact, proving the guard distinguishes prepared_prompt_only/not_submitted from a real WebGPT response."
     }
   ]
 }

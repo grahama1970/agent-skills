@@ -1,0 +1,16 @@
+[
+  {
+    "id": 837425502,
+    "title": "Extensions",
+    "url": "chrome://extensions/",
+    "active": false,
+    "windowId": 837425500
+  },
+  {
+    "id": 837425562,
+    "title": "",
+    "url": "",
+    "active": true,
+    "windowId": 837425500
+  }
+]

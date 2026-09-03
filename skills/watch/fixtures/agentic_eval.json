@@ -2,10 +2,10 @@
   "version": 2,
   "skill": "watch",
   "trials": 2,
-  "proof_scope": "live entrypoint behavior: full sanity e2e (memory recall, scene elements, persona records), per-feature pipeline runs (frames, SRT transcript, emotion analysis, reports), and fail-closed source resolution",
+  "proof_scope": "live entrypoint behavior: full sanity e2e (memory recall, scene elements, persona records), per-feature pipeline runs (frames, SRT transcript, emotion analysis, reports), fail-closed source resolution, and backend immutable identity smoke tests",
   "claims": {
-    "proves": "sanity.sh e2e passes live; the pipeline extracts frames, parses English SRT transcript, detects SRT emotion cues, and writes report.json/md/html on a real video; run.sh fails closed on bad sources",
-    "does_not_prove": "movie acquisition via ingest-movie/Radarr, diarization runtime, YOLO identity ledger behavior (covered by the npm immutable-goal gate), or long-video rolling-window quality"
+    "proves": "sanity.sh e2e passes live; the pipeline extracts frames, parses English SRT transcript, detects SRT emotion cues, writes report.json/md/html on a real video; run.sh fails closed on bad sources; backend immutable identity smoke tests pass for YOLO receipt replay, receipt concurrency, and detector candidate isolation",
+    "does_not_prove": "movie acquisition via ingest-movie/Radarr, full clean-worktree immutable-goal proof (covered by npm prove:immutable-goal in a wt clean lane), calibrated similarity thresholds, human reference adjudication, or long-video rolling-window quality"
   },
   "capability_claims": [
     {
@@ -51,6 +51,14 @@
     {
       "id": "watch.report.generation",
       "description": "Every run writes report.json, report.md, and report.html with scene rows",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "watch.identity_ledger.backend_invariants",
+      "description": "Backend immutable identity smoke tests cover YOLO label receipt replay, receipt concurrency, and detector candidate isolation without requiring a clean monorepo checkout.",
       "criticality": "critical",
       "evidence_required": {
         "deterministic": true
@@ -181,6 +189,29 @@
             "path": "out/feat/run/report.html",
             "min_bytes": 500
           }
+        ]
+      }
+    },
+    {
+      "name": "identity-ledger-backend-invariants",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "watch.identity_ledger.backend_invariants"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd ../ui && npm test"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "watchYoloLabelReceiptReplay smoke passed",
+          "watchYoloReceiptConcurrency smoke passed",
+          "watchDetectorCandidateIsolation smoke passed"
         ]
       }
     }

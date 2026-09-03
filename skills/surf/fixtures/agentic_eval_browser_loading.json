@@ -1,0 +1,93 @@
+{
+  "version": 2,
+  "skill": "surf",
+  "trials": 2,
+  "proof_scope": "Regression guard for system Chrome external-page commits through Surf: socket presence is insufficient if normal HTTPS tabs never commit or content scripts never load.",
+  "claims": {
+    "proves": "Surf can create a normal external HTTPS tab in the active Chrome profile, observe its committed URL through tab.list, and read page text through the content-script path.",
+    "does_not_prove": "Authenticated provider success, ChatGPT account state, WebGPT semantic quality, or Chrome package health outside this workstation."
+  },
+  "capability_claims": [
+    {
+      "id": "surf.chrome_external_page_commit",
+      "description": "Surf does not treat a live native socket as sufficient browser readiness; a normal external page must commit and become readable.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "fault_injected_deterministic": true
+      }
+    }
+  ],
+  "seams": [
+    {
+      "seam_id": "surf.chrome_external_page_commit",
+      "seam_type": "browser_transport",
+      "criticality": "critical",
+      "required_evidence": [
+        "live_e2e",
+        "fault_injected_deterministic"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "chrome-external-page-commits-and-content-script-loads",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": [
+        "surf.chrome_external_page_commit"
+      ],
+      "seams": [
+        "surf.chrome_external_page_commit"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail\ncd ..\nOUT=${TMPDIR:-/tmp}/surf-external-page-commit\nrm -rf \"$OUT\"; mkdir -p \"$OUT\"\n./run.sh tab.new https://example.com --json | tee \"$OUT/tab-new.txt\"\nTAB=$(grep -oE 'tab [0-9]+' \"$OUT/tab-new.txt\" | awk '{print $2}' | tail -1)\nif [ -z \"$TAB\" ]; then echo NO_TAB_ID; exit 20; fi\nsleep 20\n./run.sh tab.list --json | tee \"$OUT/tab-list.json\"\npython3 - \"$OUT/tab-list.json\" \"$TAB\" <<'PY'\nimport json, sys\ntabs=json.load(open(sys.argv[1])); tab=next((t for t in tabs if str(t.get('id'))==sys.argv[2]), None)\nif not tab:\n    raise SystemExit('TAB_MISSING')\nurl=tab.get('url') or ''\nif not url.startswith('https://example.com'):\n    raise SystemExit(f'TAB_URL_NOT_COMMITTED:{url!r}')\nPY\n./run.sh text --tab-id \"$TAB\" | tee \"$OUT/text.txt\"\ngrep -q 'Example Domain' \"$OUT/text.txt\"\necho EXTERNAL_PAGE_COMMIT_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "EXTERNAL_PAGE_COMMIT_OK"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/surf-external-page-commit/tab-list.json",
+            "min_bytes": 2
+          },
+          {
+            "path": "/tmp/surf-external-page-commit/text.txt",
+            "min_bytes": 10
+          }
+        ]
+      }
+    },
+    {
+      "name": "dead-surf-socket-fails-closed-before-readiness",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "surf.chrome_external_page_commit"
+      ],
+      "seams": [
+        "surf.chrome_external_page_commit"
+      ],
+      "timeout_seconds": 90,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && SURF_SOCKET=/tmp/nonexistent-surf-browser-loading.sock ./run.sh tab.list --json"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "Socket connect failed: Socket not found",
+          "SURF_SOCKET is set"
+        ]
+      }
+    }
+  ]
+}

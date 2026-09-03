@@ -1,0 +1,40 @@
+{
+  "schema": "agentic_evals.regressions.v1",
+  "skill": "surf",
+  "regressions": [
+    {
+      "regression_id": "chrome-external-pages-blank-loading-20260903",
+      "status": "ACTIVE",
+      "evidence_class": "live_e2e",
+      "incident": {
+        "date": "2026-09-03",
+        "summary": "Surf native socket and tab.list were live, but every normal external Chrome navigation (example.com, neverssl.com, chatgpt.com) stayed visually blank/loading with empty title/url in Surf tab.list; content-script reads returned 'Content script not loaded' and screenshots timed out. The failure reproduced in a disposable Chrome profile, so this was system Chrome/browser readiness, not WebGPT semantics or a stale browser-oracle binding. Chrome UI reported 'Can't update Chrome' and apt showed installed google-chrome-stable 149.0.7827.53-1 with candidate 152.0.7977.75-1; sudo was required to reinstall/update.",
+        "proof_paths": [
+          "/tmp/chrome-load-test.png",
+          "/tmp/chrome-no-edp.log",
+          "/tmp/chrome-surf-only-visible.png",
+          "skills/surf/fixtures/chrome_blank_loading_tablist_20260903.json"
+        ]
+      },
+      "claims_threatened": [
+        "surf.chrome_external_page_commit"
+      ],
+      "seams": [
+        "surf.chrome_external_page_commit"
+      ],
+      "retained_case": "chrome-external-page-commits-and-content-script-loads",
+      "retained_fixture": "agentic_eval_browser_loading.json",
+      "fail_before_fix": {
+        "proof_command": [
+          "bash",
+          "-c",
+          "python3 - <<'PY'\nimport json\ntabs=json.load(open('fixtures/chrome_blank_loading_tablist_20260903.json'))\ntab=next((t for t in tabs if t.get('active')), None)\nassert tab, 'NO_ACTIVE_TAB'\nassert (tab.get('url') or '').startswith('https://example.com/'), tab\nPY"
+        ],
+        "expected_fail": true,
+        "proven": true,
+        "last_proven": "2026-09-03T16:52:00Z"
+      },
+      "notes": "This regression prevents equating /tmp/surf.sock or tab.list success with browser readiness. Provider submits must not proceed when normal external pages never commit."
+    }
+  ]
+}

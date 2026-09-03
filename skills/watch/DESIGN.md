@@ -66,14 +66,18 @@ npm --prefix skills/watch/ui run prove:immutable-goal
   elements, persona records).
 - `fixtures/agentic_eval.json` — retained $agentic-evals fixture: live
   sanity e2e with independent memory-daemon readback oracle
-  (`watch.sanity.e2e_live`), plus negative/adversarial fail-closed source
-  resolution cases (`watch.source_resolution.fail_closed`).
+  (`watch.sanity.e2e_live`), negative/adversarial fail-closed source
+  resolution cases (`watch.source_resolution.fail_closed`), per-feature
+  pipeline checks, and backend immutable identity smoke tests.
+- `docs/IDENTITY_PIPELINE_NEXT_STEPS.md` — WebGPT-reviewed sequence for
+  landing segment-scoped identity promotion without treating model scores,
+  diarization, SRT mentions, or Memory/Qdrant output as accepted identity.
 
-## Known gaps (honest)
+## Current gaps
 
-- Diarization runtime: contract defined (`scripts/diarization_contract.py`,
-  schemas in `docs/architecture/schemas/`); PROJECT_KNOWLEDGE and SKILL.md
-  disagree on implementation status — resolve before claiming who-spoke-when.
-- Marcus canary row-text materialization: `BLOCKED_PENDING_ROW_TEXT_MATERIALIZATION`.
+- Full immutable-goal proof needs a clean `wt` lane because the monorepo
+  primary checkout is intentionally dirty; do not weaken `assertCleanWorktree`.
+- Identity promotion is not enabled. Reference adjudication, shadow calibration,
+  stale-evidence gates, and human review receipts must land first.
 - Immutable-goal proof manifests are pinned to older commits; re-run the gate
-  at HEAD after ledger-relevant changes.
+  at HEAD in a clean lane after ledger-relevant changes.
