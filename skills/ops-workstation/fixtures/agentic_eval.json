@@ -1,11 +1,11 @@
 {
   "version": 2,
   "skill": "ops-workstation",
-  "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "trials": 5,
+  "proof_scope": "fixture wiring plus live limits command with exact inotify watch counts, top watcher readback, Jabra SPEAK 510 USB diagnostics, and meeting audio target switch status",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "the existing skill entrypoint exits with the expected status and the limits command reports exact inotify watch usage plus top watcher JSON",
+    "does_not_prove": "semantic correctness of every workstation subsystem, live KDE visual responsiveness, or that sudo-only sysctl changes were applied"
   },
   "cases": [
     {
@@ -17,6 +17,134 @@
       ],
       "expected": {
         "exit_code": 0
+      }
+    },
+    {
+      "name": "limits-json-reports-exact-inotify-watch-hogs",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "ops_workstation.inotify_watch_hogs"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/ops-workstation && OUTPUT=json ./run.sh limits | tee /tmp/ops-workstation-limits-agentic.json && jq -e '.inotify.current_watches >= 0 and (.inotify.top_watchers | type == \"array\") and (.inotify.top_watchers[0] | has(\"watches\") and has(\"pid\") and has(\"process\") and has(\"command\"))' /tmp/ops-workstation-limits-agentic.json >/dev/null"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/ops-workstation-limits-agentic.json",
+            "json_pointer": "/inotify/top_watchers/0/watches",
+            "type": "number"
+          }
+        ]
+      }
+    },
+    {
+      "name": "limits-markdown-does-not-use-approximate-inotify-instance-estimate",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "ops_workstation.inotify_watch_hogs"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/ops-workstation && ./run.sh limits | tee /tmp/ops-workstation-limits-markdown-agentic.txt && rg -n \"\\| inotify watchers \\|\" /tmp/ops-workstation-limits-markdown-agentic.txt | rg \" used \\([0-9]+%\\) \" >/dev/null && ! rg -n \"\\| inotify watchers \\|.*~[0-9]+ instances\" /tmp/ops-workstation-limits-markdown-agentic.txt"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "Top inotify watch users"
+        ],
+        "stdout_excludes": [
+          "~0 instances",
+          "~1 instances"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/ops-workstation-limits-markdown-agentic.txt",
+            "contains": "Top inotify watch users"
+          }
+        ]
+      }
+    },
+    {
+      "name": "jabra-json-reports-usb-flaps-topology-and-pipewire-context",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "ops_workstation.jabra_diagnostics"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/ops-workstation && set +e; OUTPUT=json ./run.sh jabra --since '3 days ago' | tee /tmp/ops-workstation-jabra-agentic.json; rc=${PIPESTATUS[0]}; set -e; [[ $rc -le 2 ]] && python3 - <<'PY2'\nimport json\nd=json.load(open('/tmp/ops-workstation-jabra-agentic.json'))\nassert d['schema']=='ops_workstation.jabra_diagnostics.v1'\nassert 'disconnects' in d['kernel'] and 'urb_no_device' in d['kernel']\nassert 'shared_hub_c920' in d['topology']\nassert 'streams' in d['pipewire']\nassert 'recommendation' in d and d['recommendation']\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/ops-workstation-jabra-agentic.json",
+            "json_pointer": "/schema",
+            "equals": "ops_workstation.jabra_diagnostics.v1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "audio-switch-status-exposes-streamdeck-callable-fallback-targets",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "ops_workstation.audio_switch"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "cd /home/graham/workspace/experiments/agent-skills/skills/ops-workstation && OUTPUT=json ./run.sh audio-switch status | tee /tmp/ops-workstation-audio-switch-agentic.json && python3 - <<'PY2'\nimport json\nd=json.load(open('/tmp/ops-workstation-audio-switch-agentic.json'))\nassert d['schema']=='ops_workstation.audio_switch.v1'\nassert d['status']=='OK'\nassert {'jabra-usb','jabra-bt','earbuds-bt','wired'} <= set(d['targets'])\nassert d['receipt'].endswith('audio-switch-receipt.json')\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/tmp/ops-workstation-audio-switch-agentic.json",
+            "json_pointer": "/schema",
+            "equals": "ops_workstation.audio_switch.v1"
+          }
+        ]
+      }
+    }
+  ],
+  "capability_claims": [
+    {
+      "id": "ops_workstation.inotify_watch_hogs",
+      "description": "limits JSON exposes exact current_watches and top_watchers so inotify exhaustion can be diagnosed before KDE/Plasma freezes.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "ops_workstation.jabra_diagnostics",
+      "description": "jabra JSON exposes USB disconnect counts, topology, PipeWire downstream errors, current processes, and recommendation for speakerphone wedging diagnosis.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
+      "id": "ops_workstation.audio_switch",
+      "description": "audio-switch JSON exposes Jabra USB, Jabra Bluetooth, earbuds Bluetooth, and wired targets so Stream Deck can call deterministic meeting-audio fallback commands.",
+      "criticality": "important",
+      "evidence_required": {
+        "deterministic": true
       }
     }
   ]

@@ -54,6 +54,7 @@ COMMANDS:
                     Non-mutating audit for meeting/display button hazards
     dynamic-stage-check
                     Non-mutating dynamic page request staging check
+    audio-switch    Delegate meeting audio target switching to ops-workstation
     config          Configuration commands
     health-check    Verify services and button icons
     fix             Auto-fix button configuration (safe)
@@ -90,6 +91,8 @@ AUDIT COMMANDS:
                        Verify meeting/display buttons do not route to display topology or KDE scale mutation
     dynamic-stage-check
                        Compile a semantic voice/chat request into staged Stream Deck artifacts without hardware effects
+    audio-switch status|fallback|next|set TARGET
+                       Stream Deck-callable meeting audio fallback via ops-workstation
 
 CONFIG COMMANDS:
     config             Show current configuration
@@ -191,6 +194,15 @@ daemon_logs() {
     log "Stream Deck service logs (last 50 lines):"
     journalctl --user -u "streamdeck*" --no-pager -n 50 2>/dev/null || \
         log "No journal logs available"
+}
+
+audio_switch() {
+    local ops_workstation="${OPS_WORKSTATION_RUN:-$(dirname "$SCRIPT_DIR")/ops-workstation/run.sh}"
+    if [ ! -x "$ops_workstation" ]; then
+        error "ops-workstation run.sh not executable: $ops_workstation"
+        exit 1
+    fi
+    "$ops_workstation" audio-switch "${@:2}"
 }
 
 # Button operations — read config from ~/.streamdeck_ui.json
@@ -1051,6 +1063,11 @@ case "$COMMAND" in
         dynamic_stage_check
         ;;
     
+    # Stream Deck-callable meeting audio fallback
+    audio-switch|meeting-audio)
+        audio_switch "$@"
+        ;;
+
     # Config commands
     config)
         case "${2:-}" in

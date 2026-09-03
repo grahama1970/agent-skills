@@ -30,6 +30,8 @@ Commands:
   net [opts]        Network diagnostics (link, IP, DNS, sockets, gateway)
   temps [opts]      Temperature monitoring (CPU, GPU, NVMe)
   audio [opts]      Audio diagnostics (PipeWire, ALSA, XRUN, sink hijack)
+  jabra [opts]      Jabra SPEAK 510 USB diagnostics (flaps, topology, PipeWire users)
+  audio-switch      Switch meeting audio targets for Stream Deck recovery buttons
   vscode [opts]     VS Code health (V8 OOM, runaway workers, heap config)
   containers        Container health summary (Docker)
   slim [opts]       Find storage savings (media quality, caches, duplicates)
@@ -50,6 +52,9 @@ Quick Reference:
   ./run.sh temps               # Temperature check
   ./run.sh audio               # Is audio working? (XRUN, mute, hijack)
   ./run.sh audio --fix         # Auto-fix detected audio issues
+  ./run.sh jabra               # Why did the Jabra speakerphone wedge?
+  ./run.sh audio-switch status # Show Jabra/Bluetooth/wired targets
+  ./run.sh audio-switch fallback # Switch away from wedged Jabra USB
   ./run.sh slim                # Where can I recover storage?
   ./run.sh vscode              # VS Code frozen / not accepting input?
   ./run.sh vscode --fix        # Kill runaway VS Code workers
@@ -117,6 +122,20 @@ case "$cmd" in
       exec bash scripts/audio.sh --json "$@"
     else
       exec bash scripts/audio.sh "$@"
+    fi
+    ;;
+  jabra|speak510|speakerphone)
+    if [[ "${OUTPUT:-}" == "json" ]]; then
+      exec bash scripts/jabra.sh --json "$@"
+    else
+      exec bash scripts/jabra.sh "$@"
+    fi
+    ;;
+  audio-switch|switch-audio|meeting-audio)
+    if [[ "${OUTPUT:-}" == "json" ]]; then
+      exec bash scripts/audio-switch.sh "$@" --json
+    else
+      exec bash scripts/audio-switch.sh "$@"
     fi
     ;;
   containers|docker)

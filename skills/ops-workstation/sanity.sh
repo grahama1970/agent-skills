@@ -12,7 +12,7 @@ echo "=== ops-workstation sanity check ==="
 echo "✓ help command works"
 
 # Check basic check command
-./run.sh check >/dev/null 2>&1 || { echo "FAIL: check command failed"; exit 1; }
+./run.sh check --disk 100 --mem 100 >/dev/null 2>&1 || { echo "FAIL: check command failed"; exit 1; }
 echo "✓ check command works"
 
 # Check memory command
@@ -36,6 +36,31 @@ echo "✓ net diagnostics work"
 ./run.sh temps >/dev/null 2>&1 || true  # Exit code may be 1 or 2 for warnings
 OUTPUT=json ./run.sh temps >/dev/null 2>&1 || true
 echo "✓ temps diagnostics work"
+
+# Jabra diagnostics may report current workstation WARN/CRIT, but must emit the JSON contract.
+tmp_jabra=$(mktemp)
+set +e
+OUTPUT=json ./run.sh jabra --since "1 second ago" > "$tmp_jabra"
+jabra_rc=$?
+set -e
+[[ $jabra_rc -le 2 ]] || { echo "FAIL: jabra command failed with invalid exit code $jabra_rc"; exit 1; }
+python3 - "$tmp_jabra" <<'PY' || { echo "FAIL: jabra JSON contract invalid"; exit 1; }
+import json, sys
+data = json.load(open(sys.argv[1]))
+assert data["schema"] == "ops_workstation.jabra_diagnostics.v1"
+assert "kernel" in data and "pipewire" in data and "topology" in data
+PY
+rm -f "$tmp_jabra"
+echo "✓ jabra diagnostics work"
+
+OUTPUT=json ./run.sh audio-switch status > /tmp/ops-workstation-audio-switch-sanity.json
+python3 - <<'PY' || { echo "FAIL: audio-switch JSON contract invalid"; exit 1; }
+import json
+data = json.load(open('/tmp/ops-workstation-audio-switch-sanity.json'))
+assert data['schema'] == 'ops_workstation.audio_switch.v1'
+assert {'jabra-usb', 'jabra-bt', 'earbuds-bt', 'wired'} <= set(data['targets'])
+PY
+echo "✓ audio switch diagnostics work"
 
 # Container health (graceful if docker missing)
 if command -v docker &>/dev/null && docker info >/dev/null 2>&1; then

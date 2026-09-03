@@ -32,7 +32,7 @@ done
 printf "System summary (%s)\n" "$(date)"
 printf "CPU load: %s\n" "$(uptime)"
 
-df -h
+df -h -x fuse.gvfsd-fuse
 
 warn=0
 while read -r fs size used avail pct mount; do
@@ -41,7 +41,7 @@ while read -r fs size used avail pct mount; do
     echo "WARNING: $mount at ${pct}% utilization"
     warn=1
   fi
-done < <(df -h | tail -n +2)
+done < <(df -h -x fuse.gvfsd-fuse | tail -n +2)
 
 read -r _ mem_total _ <<<"$(grep MemTotal /proc/meminfo)"
 read -r _ mem_available _ <<<"$(grep MemAvailable /proc/meminfo)"

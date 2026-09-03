@@ -137,12 +137,22 @@ The streamdeck project has two components:
 | ---------------------- | --------------------------------------------------------------------------- |
 | `audit-display-safety` | Non-mutating audit for meeting/display button routes and KDE scale hazards  |
 | `dynamic-stage-check`  | Non-mutating compile/stage check for voice/chat dynamic page requests       |
+| `audio-switch`         | Delegate meeting audio target switching to ops-workstation                 |
 
 ### Dynamic Pages
 
 | Command               | Description                                                                 |
 | --------------------- | --------------------------------------------------------------------------- |
 | `dynamic-stage-check` | Compiles a semantic `streamdeck.dynamic_page_request.v1` request through the live streamdeck CLI and verifies staged artifacts without hardware effects |
+
+### Meeting Audio
+
+| Command                                      | Description                                      |
+| -------------------------------------------- | ------------------------------------------------ |
+| `audio-switch status`                        | Read Jabra USB, Jabra Bluetooth, earbuds BT, and wired availability |
+| `audio-switch fallback`                      | Switch to the first available non-Jabra-USB meeting target |
+| `audio-switch next`                          | Cycle to the next available meeting audio target |
+| `audio-switch set jabra-usb|jabra-bt|earbuds-bt|wired` | Set a specific target through ops-workstation |
 
 ### Configuration
 
@@ -418,13 +428,12 @@ rules, or any meeting/display button path:
 
 The eval exercises a live local status path, a fail-closed malformed button
 request, nested button-state readback, `audit-states`, `audit-display-safety`,
-and `dynamic-stage-check`. The display audit non-mutatingly checks live
-config/templates/scripts for hazardous display and KDE scale routes. The
-dynamic check non-mutatingly compiles a semantic voice/SPARTA request to staged
-artifacts. It does not prove physical button rendering, USB hardware
-availability, light behavior, daemon API correctness, actual meeting button
-execution, action-dispatch semantics, deployment to hardware, or safe persistent
-config mutation.
+and `dynamic-stage-check`, plus live button-13 readback and `audio-switch status`.
+The display audit non-mutatingly checks live config/templates/scripts for hazardous
+display and KDE scale routes. The dynamic check non-mutatingly compiles a semantic
+voice/SPARTA request to staged artifacts. The audio check verifies the command
+contract and live button route; it does not prove physical button pixels, Google
+Meet's selected device, or Stream Deck button press dispatch.
 
 ### Adding New Features
 

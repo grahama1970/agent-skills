@@ -42,53 +42,111 @@ FILES_CRIT_PCT=80
 
 warn_count=0
 crit_count=0
+INOTIFY_SNAPSHOT="${TMPDIR:-/tmp}/ops-workstation-inotify-$$.tsv"
+trap 'rm -f "$INOTIFY_SNAPSHOT"' EXIT
+
+collect_inotify() {
+  [[ -s "$INOTIFY_SNAPSHOT" ]] && return 0
+  python3 - "$INOTIFY_SNAPSHOT" <<'PYI'
+import os, sys
+out = sys.argv[1]
+uid = os.getuid()
+rows = []
+total = 0
+instances = 0
+for pid in filter(str.isdigit, os.listdir('/proc')):
+    try:
+        if os.stat(f'/proc/{pid}').st_uid != uid:
+            continue
+        comm = open(f'/proc/{pid}/comm').read().strip()
+        cmd = open(f'/proc/{pid}/cmdline', 'rb').read().replace(b'\0', b' ').decode('utf-8', 'ignore').strip()
+        watches = 0
+        fds = 0
+        for fd in os.listdir(f'/proc/{pid}/fdinfo'):
+            try:
+                data = open(f'/proc/{pid}/fdinfo/{fd}', errors='ignore').read()
+            except Exception:
+                continue
+            count = data.count('inotify wd:')
+            if count:
+                watches += count
+                fds += 1
+        if watches:
+            total += watches
+            instances += fds
+            rows.append((watches, fds, int(pid), comm, cmd[:160]))
+    except Exception:
+        pass
+with open(out, 'w') as fh:
+    fh.write(f'TOTAL\t{total}\t{instances}\n')
+    for row in sorted(rows, reverse=True):
+        fh.write('%s\t%s\t%s\t%s\t%s\n' % row)
+PYI
+}
+
+inotify_total() { collect_inotify; awk -F'\t' '$1=="TOTAL" {print $2}' "$INOTIFY_SNAPSHOT"; }
+inotify_instances() { collect_inotify; awk -F'\t' '$1=="TOTAL" {print $3}' "$INOTIFY_SNAPSHOT"; }
 
 # =============================================================================
 # inotify Watchers
 # =============================================================================
 check_inotify_watchers() {
   local max_watches=$(cat /proc/sys/fs/inotify/max_user_watches 2>/dev/null || echo 0)
-
-  # Count current watches (approximate - count inotify fds)
-  local current_instances=$(find /proc/*/fd -lname 'anon_inode:inotify' 2>/dev/null | wc -l)
-
-  # Estimate watches per instance (conservative: assume 500 avg)
-  # This is imprecise but gives a rough idea
-  local estimated_watches=$((current_instances * 500))
+  local current_watches=$(inotify_total)
   local usage_pct=0
 
   if [[ $max_watches -gt 0 ]]; then
-    usage_pct=$((estimated_watches * 100 / max_watches))
+    usage_pct=$((current_watches * 100 / max_watches))
   fi
 
   local status="OK"
-  local action="-"
 
   if [[ $usage_pct -ge $INOTIFY_CRIT_PCT ]]; then
     status="CRITICAL"
-    action="Increase limit immediately"
     ((crit_count++))
   elif [[ $usage_pct -ge $INOTIFY_WARN_PCT ]]; then
     status="WARNING"
-    action="Consider increasing limit"
     ((warn_count++))
   fi
 
-  echo "| inotify watchers | $max_watches max | ~$current_instances instances | $status |"
+  echo "| inotify watchers | $max_watches max | $current_watches used (${usage_pct}%) | $status |"
 
   if [[ "$SHOW_FIX" == "true" && "$status" != "OK" ]]; then
     echo ""
     echo "**Fix inotify limit:**"
-    echo "\`\`\`bash"
-    echo "# Temporary (until reboot)"
-    echo "echo 524288 | sudo tee /proc/sys/fs/inotify/max_user_watches"
-    echo ""
-    echo "# Permanent"
-    echo "echo 'fs.inotify.max_user_watches=524288' | sudo tee -a /etc/sysctl.conf"
-    echo "sudo sysctl -p"
-    echo "\`\`\`"
+    echo "```bash"
+    echo "echo 'fs.inotify.max_user_watches=2097152' | sudo tee /etc/sysctl.d/99-local-inotify-watches.conf"
+    echo "sudo sysctl --system"
+    echo "```"
     echo ""
   fi
+}
+
+show_inotify_top() {
+  collect_inotify
+  echo "### Top inotify watch users"
+  echo ""
+  echo "| Watches | PID | Process | Command |"
+  echo "|---------|-----|---------|---------|"
+  awk -F'\t' '$1!="TOTAL" {gsub(/\|/, " ", $5); printf "| %s | %s | %s | `%s` |\n", $1, $3, $4, $5}' "$INOTIFY_SNAPSHOT" | head -10
+  echo ""
+}
+
+inotify_top_json() {
+  collect_inotify
+  python3 - "$INOTIFY_SNAPSHOT" <<'PYJ'
+import json, sys
+rows = []
+with open(sys.argv[1]) as fh:
+    for line in fh:
+        if line.startswith('TOTAL\t'):
+            continue
+        watches, fds, pid, comm, cmd = line.rstrip('\n').split('\t', 4)
+        rows.append({"watches": int(watches), "instances": int(fds), "pid": int(pid), "process": comm, "command": cmd})
+        if len(rows) == 10:
+            break
+print(json.dumps(rows))
+PYJ
 }
 
 # =============================================================================
@@ -96,7 +154,7 @@ check_inotify_watchers() {
 # =============================================================================
 check_inotify_instances() {
   local max_instances=$(cat /proc/sys/fs/inotify/max_user_instances 2>/dev/null || echo 0)
-  local current_instances=$(find /proc/*/fd -lname 'anon_inode:inotify' 2>/dev/null | wc -l)
+  local current_instances=$(inotify_instances)
 
   local usage_pct=0
   if [[ $max_instances -gt 0 ]]; then
@@ -187,8 +245,8 @@ show_recommended() {
   echo ""
   echo "| Setting | Default | Recommended | Why |"
   echo "|---------|---------|-------------|-----|"
-  echo "| fs.inotify.max_user_watches | 65536 | 524288 | IDEs, agents, node watchers |"
-  echo "| fs.inotify.max_user_instances | 128 | 512 | Multiple agent processes |"
+  echo "| fs.inotify.max_user_watches | 65536 | 2097152 | IDEs, agents, node watchers |"
+  echo "| fs.inotify.max_user_instances | 128 | 4096 | Multiple agent processes |"
   echo "| nofile (soft) | 1024 | 65536 | Many open sockets/files |"
   echo "| nofile (hard) | 4096 | 524288 | Burst capacity |"
   echo ""
@@ -211,6 +269,7 @@ output_markdown() {
   check_max_procs
 
   echo ""
+  show_inotify_top
 
   if [[ $crit_count -gt 0 ]]; then
     echo "**CRITICAL:** $crit_count limit(s) near exhaustion. Fix immediately to prevent crashes."
@@ -231,7 +290,12 @@ output_markdown() {
 output_json() {
   local max_watches=$(cat /proc/sys/fs/inotify/max_user_watches 2>/dev/null || echo 0)
   local max_instances=$(cat /proc/sys/fs/inotify/max_user_instances 2>/dev/null || echo 0)
-  local current_instances=$(find /proc/*/fd -lname 'anon_inode:inotify' 2>/dev/null | wc -l)
+  local current_watches=$(inotify_total)
+  local current_instances=$(inotify_instances)
+  local watch_pct=0
+  if [[ $max_watches -gt 0 ]]; then watch_pct=$((current_watches * 100 / max_watches)); fi
+  if [[ $watch_pct -ge $INOTIFY_CRIT_PCT ]]; then ((crit_count++)); elif [[ $watch_pct -ge $INOTIFY_WARN_PCT ]]; then ((warn_count++)); fi
+  local top_watchers=$(inotify_top_json)
   local soft_limit=$(ulimit -Sn 2>/dev/null || echo 0)
   local open_files=$(lsof -u "$(whoami)" 2>/dev/null | wc -l || echo 0)
   local max_procs=$(ulimit -u 2>/dev/null || echo 0)
@@ -242,8 +306,11 @@ output_json() {
   "timestamp": "$(date -Iseconds)",
   "inotify": {
     "max_watches": $max_watches,
+    "current_watches": $current_watches,
+    "watch_usage_pct": $watch_pct,
     "max_instances": $max_instances,
-    "current_instances": $current_instances
+    "current_instances": $current_instances,
+    "top_watchers": $top_watchers
   },
   "files": {
     "soft_limit": $soft_limit,
