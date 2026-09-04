@@ -510,21 +510,44 @@ def _tick_locked(
         return finish(run_id, receipt_dir, receipt, 0)
 
     projects_doc = load_json(config.projects_path())
-    # Registry envelope authority boundary: if the registry itself is
-    # unreadable/wrong-schema/structurally invalid such that project boundaries
-    # cannot be trusted, block the tick. A single malformed ProjectEntry is a
-    # narrower boundary handled downstream by rotation quarantine.
+    # Registry envelope authority boundary: if the registry cannot even be read
+    # as a doc with a projects LIST (or carries a wrong schema string), project
+    # boundaries cannot be trusted -- block the whole tick.
     try:
-        models.validate_registry(projects_doc)
+        models.validate_registry_envelope(projects_doc)
     except ValidationError as exc:
         receipt.update({
             "ok": False, "status": "BLOCKED",
             "stop_reason": "invalid_registry_document",
             "fleet_health": "NEEDS_ATTENTION",
-            "errors": [f"registry document failed pydantic validation: {exc}"],
+            "errors": [f"registry envelope failed pydantic validation: {exc}"],
         })
         log_event(run_id, "tick_blocked_invalid_registry")
         return finish(run_id, receipt_dir, receipt, 1)
+
+    # Per-entry quarantine: a single malformed ProjectEntry must not deny
+    # service to the whole fleet (WebGPT P0). Validate each entry; exclude the
+    # invalid ones as INVALID_CONFIG, never interpret them as defaults, and
+    # record fleet_health so a tick that quarantines a project does not read as
+    # fully healthy.
+    quarantined: list[dict[str, Any]] = []
+    valid_entries: list[dict[str, Any]] = []
+    for index, entry in enumerate(projects_doc.get("projects", [])):
+        try:
+            models.validate_project_entry(entry)
+        except (ValidationError, AttributeError, TypeError) as exc:
+            pid = entry.get("project_id") if isinstance(entry, dict) else None
+            quarantined.append({
+                "index": index, "project_id": pid,
+                "reason": "INVALID_CONFIG", "error": str(exc)[:400],
+            })
+            continue
+        valid_entries.append(entry)
+    if quarantined:
+        receipt["quarantined_projects"] = quarantined
+        receipt["fleet_health"] = "NEEDS_ATTENTION"
+        log_event(run_id, "projects_quarantined", count=len(quarantined))
+    projects_doc = {**projects_doc, "projects": valid_entries}
 
     if project_id == "all":
         rotation_mode = "fleet"

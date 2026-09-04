@@ -108,8 +108,34 @@ class Issue(BaseModel):
     url: str | None = None
 
 
+class RegistryEnvelope(BaseModel):
+    """Structural envelope only: the registry must be a doc whose ``projects``
+    is a list and whose ``schema`` (if present) is known. A single malformed
+    ProjectEntry does NOT fail the envelope -- it is quarantined per-entry so
+    one bad entry cannot deny service to the whole fleet (WebGPT P0)."""
+
+    model_config = ConfigDict(extra="allow")
+    schema_: str | None = Field(default=None, alias="schema")
+    projects: list[Any]
+
+    @field_validator("schema_")
+    @classmethod
+    def known_schema(cls, value: str | None) -> str | None:
+        if value is not None and value != "agent_skills.project_watchdog.registry.v1":
+            raise ValueError(f"unknown registry schema {value!r}")
+        return value
+
+
 def validate_registry(doc: dict[str, Any]) -> RegistryDoc:
     return RegistryDoc.model_validate(doc)
+
+
+def validate_registry_envelope(doc: dict[str, Any]) -> RegistryEnvelope:
+    return RegistryEnvelope.model_validate(doc)
+
+
+def validate_project_entry(doc: dict[str, Any]) -> ProjectEntry:
+    return ProjectEntry.model_validate(doc)
 
 
 def validate_state(doc: dict[str, Any]) -> StateDoc:

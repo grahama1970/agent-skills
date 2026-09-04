@@ -110,15 +110,43 @@ def test_invalid_global_state_blocks_whole_tick(monkeypatch, tmp_path):
     assert rc == 1, "an invalid global.state literal must block the tick fail-closed"
 
 
-def test_invalid_registry_repo_blocks_whole_tick(monkeypatch, tmp_path):
+def test_invalid_registry_envelope_blocks_whole_tick(monkeypatch, tmp_path):
+    # Envelope failure (projects is not a list) means project boundaries cannot
+    # be trusted -> block the whole tick.
     from watchdog import commands
     _tick_env(monkeypatch, tmp_path,
               {"schema": "agent_skills.project_watchdog.state.v1",
                "global": {"state": "active"}, "projects": {}},
               {"schema": "agent_skills.project_watchdog.registry.v1",
-               "projects": [{"project_id": "p", "repo": "not-owner-name", "worktree": str(tmp_path)}]})
+               "projects": "not-a-list"})
     rc = commands.tick(apply=False, project_id="all", max_tickets=1)
-    assert rc == 1, "a malformed registry repo must block the tick fail-closed"
+    assert rc == 1, "an invalid registry envelope must block the tick fail-closed"
+
+
+def test_one_malformed_entry_quarantines_not_blocks(monkeypatch, tmp_path, capsys):
+    # One malformed ProjectEntry (bad repo) must NOT deny service to the fleet:
+    # it is quarantined INVALID_CONFIG, fleet_health flips to NEEDS_ATTENTION,
+    # and the tick proceeds past the registry boundary rather than blocking on
+    # invalid_registry_document.
+    import json as _json
+    from watchdog import commands
+    _tick_env(monkeypatch, tmp_path,
+              {"schema": "agent_skills.project_watchdog.state.v1",
+               "global": {"state": "active"}, "projects": {}},
+              {"schema": "agent_skills.project_watchdog.registry.v1",
+               "projects": [
+                   {"project_id": "bad", "repo": "not-owner-name", "worktree": str(tmp_path)},
+                   {"project_id": "good", "repo": "o/n", "worktree": str(tmp_path)},
+               ]})
+    commands.tick(apply=False, project_id="all", max_tickets=1)
+    out = capsys.readouterr().out
+    receipt = _json.loads(out[out.find("{"):])
+    assert receipt.get("stop_reason") != "invalid_registry_document", \
+        "a single bad entry must not block the whole registry"
+    q = receipt.get("quarantined_projects") or []
+    assert any(item.get("project_id") == "bad" and item.get("reason") == "INVALID_CONFIG"
+               for item in q), "the malformed entry must be quarantined INVALID_CONFIG"
+    assert receipt.get("fleet_health") == "NEEDS_ATTENTION"
 
 
 def test_valid_docs_do_not_block_on_validation(monkeypatch, tmp_path):
