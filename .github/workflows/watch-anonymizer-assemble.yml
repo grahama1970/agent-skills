@@ -1,0 +1,91 @@
+name: One-shot Watch anonymizer assembler
+
+on:
+  push:
+    branches:
+      - watch-anonymizer-assemble-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assemble and verify exact Watch anonymizer files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p skills/watch/scripts skills/watch/tests
+          base64 --decode .watch-anonymizer-upload/live.py.gz.b64 | gzip --decompress > skills/watch/scripts/live_ultralytics_tracking.py
+          base64 --decode .watch-anonymizer-upload/anonymizer.py.gz.b64 | gzip --decompress > skills/watch/scripts/watch_anonymizer.py
+          base64 --decode .watch-anonymizer-upload/tests.py.gz.b64 | gzip --decompress > skills/watch/tests/test_watch_anonymizer.py
+
+          cat > /tmp/watch-anonymizer.sha256 <<'EOF'
+          6025992888b19c578f5722fdf5fb3ff24cae6825a3a25a20690b778a556537c1  skills/watch/DESIGN.md
+          e895a8c9bf93233e49e28a4a765d6e09bd9ebfbcdd668c5bc620863ee142de23  skills/watch/scripts/live_ultralytics_tracking.py
+          ca9fde6df55aa967d710256fa72f82eaa52501ba29e2cfe5754aa909e143cc35  skills/watch/scripts/watch_anonymizer.py
+          1483490086efd4626a3336377706315deefd861e3a1f867021f5d63741e4aaf8  skills/watch/tests/test_watch_anonymizer.py
+          5985dfde0d9ddd14f81ede1773688dd06676dab338c88ab5a0313c76921bb4c4  skills/watch/docs/architecture/watch_anonymization_targets.schema.json
+          d48c1c14346a10bc7bf97f2a2969dc36540bc1b0cea1a7f3ffda9300b00c351e  skills/watch/docs/architecture/watch_anonymization_receipt.schema.json
+          a8b88691173189beb66967e930e912cc6f4aaf47879e3d903e3956819bfb3ffc  skills/watch/docs/architecture/watch_anonymization_contract.md
+          2a30282b537547ad1d156918775e99575eb6ebe7f20c384c270a5527fa2410ee  skills/watch/docs/architecture/fixtures/watch_anonymization_targets.example.json
+          EOF
+          sha256sum --check /tmp/watch-anonymizer.sha256
+
+          python - <<'PY'
+          import ast
+          import json
+          from pathlib import Path
+
+          python_paths = (
+              'skills/watch/scripts/live_ultralytics_tracking.py',
+              'skills/watch/scripts/watch_anonymizer.py',
+              'skills/watch/tests/test_watch_anonymizer.py',
+          )
+          for raw_path in python_paths:
+              path = Path(raw_path)
+              ast.parse(path.read_text(encoding='utf-8'), filename=raw_path, feature_version=(3, 12))
+
+          json_paths = (
+              'skills/watch/docs/architecture/watch_anonymization_targets.schema.json',
+              'skills/watch/docs/architecture/watch_anonymization_receipt.schema.json',
+              'skills/watch/docs/architecture/fixtures/watch_anonymization_targets.example.json',
+          )
+          for raw_path in json_paths:
+              json.loads(Path(raw_path).read_text(encoding='utf-8'))
+          PY
+          python -m py_compile \
+            skills/watch/scripts/live_ultralytics_tracking.py \
+            skills/watch/scripts/watch_anonymizer.py \
+            skills/watch/tests/test_watch_anonymizer.py
+
+          git add -N \
+            skills/watch/scripts/live_ultralytics_tracking.py \
+            skills/watch/scripts/watch_anonymizer.py \
+            skills/watch/tests/test_watch_anonymizer.py
+          git diff --check
+
+          rm -rf .watch-anonymizer-upload
+          rm .github/workflows/watch-anonymizer-assemble.yml
+          git add -A \
+            .watch-anonymizer-upload \
+            .github/workflows/watch-anonymizer-assemble.yml \
+            skills/watch/DESIGN.md \
+            skills/watch/scripts/live_ultralytics_tracking.py \
+            skills/watch/scripts/watch_anonymizer.py \
+            skills/watch/tests/test_watch_anonymizer.py \
+            skills/watch/docs/architecture/watch_anonymization_targets.schema.json \
+            skills/watch/docs/architecture/watch_anonymization_receipt.schema.json \
+            skills/watch/docs/architecture/watch_anonymization_contract.md \
+            skills/watch/docs/architecture/fixtures/watch_anonymization_targets.example.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'watch: assemble checksummed anonymizer backend'
+          git push origin HEAD:${GITHUB_REF_NAME}

@@ -1,0 +1,307 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://embry.local/schemas/watch_anonymization_receipt.schema.json",
+  "title": "Watch Anonymization Frame Receipt",
+  "description": "Per-frame proof that an explicit post-detection target policy altered pixels. It is not an identity or de-identification claim.",
+  "type": "object",
+  "required": [
+    "schema",
+    "stream_id",
+    "asset_uid",
+    "segment_id",
+    "frame_index",
+    "media_time_seconds",
+    "policy",
+    "anonymization_applied",
+    "applications",
+    "non_applications",
+    "identity_mutated",
+    "deidentification_claimed",
+    "input_frame_sha256",
+    "output_frame_sha256",
+    "emitted_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "watch.anonymization_frame_receipt.v1"
+    },
+    "stream_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_uid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "segment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "frame_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "media_time_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "policy": {
+      "$ref": "#/$defs/policy"
+    },
+    "anonymization_applied": {
+      "type": "boolean"
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/application"
+      }
+    },
+    "non_applications": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/non_application"
+      }
+    },
+    "identity_mutated": {
+      "const": false
+    },
+    "deidentification_claimed": {
+      "const": false
+    },
+    "input_frame_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "output_frame_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "emitted_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "policy": {
+      "type": "object",
+      "required": [
+        "source",
+        "character_name",
+        "mode",
+        "style",
+        "strength",
+        "hold_ms",
+        "allow_suggested_export",
+        "target_evidence_sha256",
+        "face_localizer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "enum": [
+            "accepted",
+            "suggested",
+            "manual-track"
+          ]
+        },
+        "character_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "face",
+            "upper-person",
+            "person"
+          ]
+        },
+        "style": {
+          "enum": [
+            "gaussian",
+            "pixelate",
+            "solid"
+          ]
+        },
+        "strength": {
+          "type": "integer",
+          "minimum": 3
+        },
+        "hold_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5000
+        },
+        "allow_suggested_export": {
+          "type": "boolean"
+        },
+        "target_evidence_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "face_localizer": {
+          "type": "object"
+        }
+      }
+    },
+    "application": {
+      "type": "object",
+      "required": [
+        "decision_id",
+        "track_id",
+        "source",
+        "character_name",
+        "confidence",
+        "basis_ref",
+        "input_bbox_xyxy",
+        "roi_xyxy",
+        "requested_mode",
+        "applied_method",
+        "localizer",
+        "fallback_reason",
+        "held_from_last_observation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "track_id": {
+          "type": "string",
+          "pattern": "^track_[a-zA-Z0-9._-]+$"
+        },
+        "source": {
+          "enum": [
+            "accepted",
+            "suggested",
+            "manual-track"
+          ]
+        },
+        "character_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "basis_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "input_bbox_xyxy": {
+          "$ref": "#/$defs/bbox"
+        },
+        "roi_xyxy": {
+          "$ref": "#/$defs/bbox"
+        },
+        "requested_mode": {
+          "enum": [
+            "face",
+            "upper-person",
+            "person"
+          ]
+        },
+        "applied_method": {
+          "enum": [
+            "gaussian",
+            "pixelate",
+            "solid"
+          ]
+        },
+        "localizer": {
+          "enum": [
+            "face_detector",
+            "upper_person",
+            "upper_person_fallback",
+            "full_track_box",
+            "held_last_roi"
+          ]
+        },
+        "fallback_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "held_from_last_observation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "non_application": {
+      "type": "object",
+      "required": [
+        "track_id",
+        "decision_id",
+        "source",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "track_id": {
+          "type": "string",
+          "pattern": "^track_[a-zA-Z0-9._-]+$"
+        },
+        "decision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "accepted",
+            "suggested",
+            "manual-track"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "decision_retired_after_track_gap",
+            "current_track_bbox_invalid",
+            "redaction_roi_invalid",
+            "track_stale_decision_retired"
+          ]
+        }
+      }
+    },
+    "bbox": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}
