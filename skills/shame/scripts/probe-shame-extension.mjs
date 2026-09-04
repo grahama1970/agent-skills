@@ -51,7 +51,17 @@ async function loadExtension() {
   moduleUrl.searchParams.set('probe_import', String(extensionImportCounter++));
   const mod = await import(moduleUrl.href);
   const pi = {
-    on(name, fn) { (handlers[name] ||= []).push(fn); },
+    on(name, fn) {
+      // Legacy cases describe final responses; model the explicit terminal
+      // metadata and settled boundary now required by the production runtime.
+      const handler = name === 'message_end' ? async (event, c) => {
+        event.message.stopReason ??= 'stop';
+        const result = await fn(event, c);
+        for (const settled of handlers.agent_end || []) await settled({}, c);
+        return result;
+      } : fn;
+      (handlers[name] ||= []).push(handler);
+    },
     registerCommand(name, spec) { commands[name] = spec; },
     sendUserMessage(text, options) { sent.push({ text, options }); },
   };
@@ -93,7 +103,7 @@ async function runEmptyToolTurn() {
   const { handlers, sent } = await loadExtension();
   const c = ctx();
   await handlers.input[0]({ text: '$shame check this', source: 'user' });
-  const result = await handlers.message_end[0]({ id: 'tool-only', message: { id: 'tool-only', role: 'assistant', content: [] } }, c);
+  const result = await handlers.message_end[0]({ id: 'tool-only', message: { id: 'tool-only', role: 'assistant', stopReason: 'toolUse', content: [] } }, c);
   assert(result === undefined, 'empty assistant/tool-call turn was rewritten', { result });
   assert(sent.length === 0, 'empty assistant/tool-call turn queued retry', { sent });
   assert(!existsSync(packet), 'empty assistant/tool-call turn wrote pending packet', { packet });

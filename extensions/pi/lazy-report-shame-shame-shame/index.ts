@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { beginGuardTurn, claimGuardFollowUp } from "../_shared/guard-pipeline-shared.ts";
+import { beginGuardTurn, claimGuardFollowUp, isAssistantStop, resetGuardRepairBudget } from "../_shared/guard-pipeline-shared.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 // JSON-first checker (2026-09-01): regex/prose classification is banned.
@@ -809,6 +809,7 @@ export default function lazyReportShameShameShame(pi: any) {
   let shameSkillContractRead = false;
   let currentUserText = "";
   let retryInProgress = false;
+  let pendingFollowUp: string | null = null;
   // Feature 1 (from ponytail): session-persisted guard mode via custom entries.
   // off = no enforcement; normal = mutating turns need status JSON; strict = every substantive turn.
   let sessionMode: string = DEFAULT_SHAME_MODE;
@@ -835,6 +836,7 @@ export default function lazyReportShameShameShame(pi: any) {
     const text = String(event.text || "");
     beginGuardTurn(text, event.source);
     currentUserText = text;
+    pendingFollowUp = null;
     mutatingTurn = false;
     if (event.source !== "extension") retryInProgress = false;
     if (activatesGuard(text)) turnGuardActive = true;
@@ -889,11 +891,25 @@ export default function lazyReportShameShameShame(pi: any) {
     return;
   });
 
+  // Pi drains agent_end follow-ups inside the same prompt promise. At
+  // agent_settled print mode can exit before a newly started prompt completes.
+  pi.on("agent_end", async (_event: any, ctx: any) => {
+    if (!pendingFollowUp || ctx?.hasPendingMessages?.() || ctx?.signal?.aborted) return;
+    const prompt = pendingFollowUp;
+    pendingFollowUp = null;
+    pi.sendUserMessage(prompt, { deliverAs: "followUp", expandPromptTemplates: false });
+  });
+
+  pi.on("session_shutdown", async () => { pendingFollowUp = null; });
+
   pi.on("message_end", async (event: any, ctx: any) => {
     if (event.message?.role !== "assistant") return;
+    pendingFollowUp = null;
+    // Preserve intermediate text AND tool calls, guard state, and retry budget.
+    // Only a terminal model response can be a completion-report candidate.
+    if (!isAssistantStop(event.message) || ctx?.signal?.aborted || ctx?.hasPendingMessages?.()) return;
     if (sessionMode === "off") return;
     const text = contentToText(event.message.content);
-    if (!text.trim()) return;
     const forceStatus = sessionMode === "strict" || mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
@@ -927,6 +943,7 @@ export default function lazyReportShameShameShame(pi: any) {
         // command; done/needs_human/failed compile to null and end the turn.
         let displayReturn: any = undefined;
         if (status && typeof statusState === "string") {
+          resetGuardRepairBudget();
           // Human directive (2026-08-31): agent output is not polluted with JSON.
           // Validate, act, persist, then strip the model JSON and render status
           // from the pydantic-validated object.
@@ -943,15 +960,9 @@ export default function lazyReportShameShameShame(pi: any) {
               userText: currentUserText,
               reason: compiled.reason || `agent_status_${statusState}`,
               maxRetries: 3,
+              continuation: true,
             });
-            if (claim.ok) {
-              try {
-                pi.sendUserMessage(
-                  continuationPrompt(statusState, compiled),
-                  { deliverAs: "followUp", expandPromptTemplates: false },
-                );
-              } catch { /* follow-up delivery is best-effort */ }
-            }
+            if (claim.ok) pendingFollowUp = continuationPrompt(statusState, compiled);
           }
           return displayReturn;
         }
@@ -982,15 +993,7 @@ export default function lazyReportShameShameShame(pi: any) {
       if (!alreadyRetried) {
         retryInProgress = true;
         keepGuardForRetry = strictStatus;
-        try {
-          pi.sendUserMessage(retryPrompt(lastCandidate, check, reviewPacketPath), { deliverAs: "followUp", expandPromptTemplates: false });
-        } catch (_error) {
-          try {
-            pi.sendUserMessage(retryPrompt(lastCandidate, check, reviewPacketPath), { expandPromptTemplates: false });
-          } catch {
-            // Replacement still prevents the lazy answer from standing as the final visible answer.
-          }
-        }
+        pendingFollowUp = retryPrompt(lastCandidate, check, reviewPacketPath);
       }
 
       return {

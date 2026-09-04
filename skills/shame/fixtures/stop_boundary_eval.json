@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "Stop-boundary reporting, retry accounting, cancellation, and live Pi tool execution",
+  "claims": {
+    "proves": "Mixed text/tool-call responses survive the active shame completion gate; shame dispatches only on agent_end; six legitimate continuations do not consume formatting retries; interrupted runs are not restarted. A live model reads four files and writes an independently checked sum without report retries.",
+    "does_not_prove": "Every project reaches its goal, arbitrary semantic completion, or already-open Pi sessions loading the new code. Lifecycle cancellation/continuation cases use a synthetic event driver; the CLI case uses a real model and real tools."
+  },
+  "cases": [
+    {
+      "name": "stop-boundary-lifecycle-regression",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["node", "--experimental-strip-types", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/probe-stop-boundary.mjs"],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"intermediateRetries\":0", "\"continuations\":6", "\"cancellationRespected\":true"]}
+    },
+    {
+      "name": "live-pi-six-continuations-complete",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": ["python3", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py", "--continuations"],
+      "timeout_seconds": 210,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"continuations\": 6", "\"report_retries\": 0", "\"sum_readback_correct\": true", "\"done_rendered\": true"], "stdout_excludes": ["REJECTED_BY_SLOTH_COURT", "Traceback"]}
+    },
+    {
+      "name": "live-pi-mixed-text-tools-complete",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": ["python3", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py"],
+      "timeout_seconds": 210,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"report_retries\": 0", "\"sum_readback_correct\": true", "\"done_rendered\": true"], "stdout_excludes": ["REJECTED_BY_SLOTH_COURT", "Traceback"]}
+    }
+  ]
+}

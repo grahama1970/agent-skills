@@ -45,6 +45,18 @@ function state(): PipelineState {
   return globalObject[GLOBAL_KEY]!;
 }
 
+// A message ending is not an agent stopping: replacing tool-call content here
+// deletes the work Pi is about to execute. Errors/aborts belong to the host.
+export function isAssistantStop(message: any): boolean {
+  return message?.role === "assistant" && message.stopReason === "stop"
+    && !message.content?.some?.((part: any) => part?.type === "toolCall");
+}
+
+export function resetGuardRepairBudget(): void {
+  const s = state();
+  s.retryCounts.delete(s.rootKey);
+}
+
 export function beginGuardTurn(userText: string, source?: string): void {
   if (source === "extension") return;
   const s = state();
@@ -70,6 +82,7 @@ export function claimGuardFollowUp(args: {
   userText?: string;
   reason?: string;
   maxRetries?: number;
+  continuation?: boolean;
 }): { ok: boolean; reason: "claimed" | "message_already_claimed" | "retry_budget_exhausted"; used: number; max: number; claimedBy?: GuardClaim } {
   const s = state();
   if (!s.rootKey) {
@@ -87,8 +100,8 @@ export function claimGuardFollowUp(args: {
   const max = Number.isFinite(args.maxRetries) ? Math.max(0, Number(args.maxRetries)) : 1;
   const used = s.retryCounts.get(s.rootKey) || 0;
   if (claimedBy) return { ok: false, reason: "message_already_claimed", used, max, claimedBy };
-  if (used >= max) return { ok: false, reason: "retry_budget_exhausted", used, max };
-  const nextUsed = used + 1;
+  if (!args.continuation && used >= max) return { ok: false, reason: "retry_budget_exhausted", used, max };
+  const nextUsed = used + (args.continuation ? 0 : 1);
   const claim: GuardClaim = {
     guard: args.guard,
     rootKey: s.rootKey,

@@ -16,10 +16,10 @@ The installed `shame.wav` policy is deliberately small: one Chatterbox-generated
 
 The extension is not a reminder. It is a rejection loop.
 
-On assistant `message_end`, it:
+At terminal assistant `message_end` (`stopReason="stop"`, no tool calls or queued work), it:
 
 1. extracts the assistant’s final text;
-2. ignores tool-call-only assistant messages with no text, so intermediate tool use is not rejected as a missing report;
+2. preserves all intermediate tool calls, including responses containing both progress text and tool calls, without spending reporting retries;
 3. runs `status-json-check.mjs` as a deterministic checker;
 4. validates the final `pi.agent_status.v1` JSON with pydantic instead of classifying prose;
 5. rejects missing local `proof[]`, failed known receipt schemas, and `verified[]` entries not backed by local proof text;
@@ -27,14 +27,18 @@ On assistant `message_end`, it:
 7. ignores trailing prose after valid status JSON because pydantic data is authoritative and the renderer discards model prose;
 8. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
 9. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
-10. queues up to three `UNLAZY_FORCED_RETRY` follow-ups with `pi.sendUserMessage(..., { deliverAs: "followUp" })`;
+10. prepares up to three `UNLAZY_FORCED_RETRY` repairs per reporting episode and dispatches them only at `agent_end`; accepted status resets this repair budget, and valid continuations do not spend it;
 11. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>` after automatic repair is exhausted.
 
-The default mode is `normal`; ordinary chat is not forced through the status contract. Use `LAZY_REPORT_SHAME_DEFAULT_MODE=strict` for project-agent panes that must status-report every turn, or `/shame normal|off|strict` to override a session. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add one-turn enforcement without injecting system-prompt prose. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not carry valid `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide enforcement explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
+The default mode is `normal`; ordinary chat is not forced through the status contract. Use `LAZY_REPORT_SHAME_DEFAULT_MODE=strict` for project-agent panes that must status-report at every terminal stop, or `/shame normal|off|strict` to override a session. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add one-turn enforcement without injecting system-prompt prose. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not carry valid `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide enforcement explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
+
+Intermediate responses cannot erase pending tool calls or exhaust report repairs. Cancellation, provider errors, length limits, and shutdown do not restart the model. Host-queued work takes precedence over reporting repair. The final message is validated/rendered before display; `agent_end` owns follow-up dispatch, not message replacement. Pi drains follow-ups queued by `agent_end` inside the current prompt; `agent_settled` is too late for reliable print-mode continuation and is reserved for idle observation.
+
+Retained proof: `skills/shame/fixtures/stop_boundary_eval.json` covers lifecycle replay plus a live Pi model with real file reads, writes, and independent result readback. This is not proof that every project is semantically complete.
 
 ## Continuation guard file
 
-Write the active ledger to `/mnt/storage12tb/skills/shame/continuation-guard/current.json`, or override that path with `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE`, when a session has an active goal, ticket, or watchdog lease. The extension reads the file on each assistant `message_end`; no raw GitHub, ArangoDB, or Qdrant calls happen inside the hook.
+Write the active ledger to `/mnt/storage12tb/skills/shame/continuation-guard/current.json`, or override that path with `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE`, when a session has an active goal, ticket, or watchdog lease. The extension reads the file only at a terminal assistant stop; no raw GitHub, ArangoDB, or Qdrant calls happen inside the hook.
 
 ```json
 {
