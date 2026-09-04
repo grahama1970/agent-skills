@@ -3,8 +3,8 @@ name: best-practices-slide-design
 description: >
   Slide design craft for /pitchdeck: assertion headlines, distance-legible
   chrome, multi-channel reinforcement, density limits, audience-parameterized
-  arcs, and house theme templates. Use when planning, drafting, critiquing, or
-  restyling a deck; when slides look like "blue boxes"; when choosing layouts,
+  arcs, responsive browser presentation, and house theme templates.
+  Use when planning, drafting, critiquing, or restyling a deck; when slides look like "blue boxes"; when choosing layouts,
   fonts, or themes; or when converting a reference PPTX into a house style.
 triggers:
   - design this slide
@@ -14,6 +14,7 @@ triggers:
   - pitch deck style
   - apply the house theme
   - analyze this pptx style
+  - responsive slide design
 provides:
   - slide-design-rules
   - theme-templates
@@ -33,9 +34,11 @@ disciplines:
 # Slide Design Best Practices
 
 Craft rules for turning claim-honest deck drafts into persuasive slides.
-Every rule cites exemplar slides rendered from the human's REAL decks
-(`references/exemplars.yaml`, images in `assets/`). Design is ADVISORY;
-claims are LAW — nothing here overrides the pitchdeck compiler's gates.
+House-style rules cite exemplar slides rendered from the human's REAL decks
+(`references/exemplars.yaml`, images in `assets/`). Responsive browser rules
+below are delivery constraints, not measurements from that fixed-slide corpus.
+Design is ADVISORY; claims are LAW — nothing here overrides the pitchdeck
+compiler's gates.
 
 ## The three principles (from the deck author, 2026-08-06)
 
@@ -66,7 +69,7 @@ assignment lives in outputs/house-slides/archetypes.json.
 | Rule | Statement | Exemplar |
 |------|-----------|----------|
 | headline-as-assertion | Titles are takeaways ("LLMs are Expensive"), never labels ("Cost Analysis") | cybersummit-49 |
-| thesis-as-statement | Thesis = ONE hero-size assertion (64–112pt) + one icon, qualifiers in notes/footer | reqml-12 |
+| thesis-as-statement | Thesis = ONE hero-size assertion (64–112pt) + one icon; required qualifiers visible in footer, supporting detail in notes | reqml-12 |
 | density-5x5 | ≤5 words/line, ≤5 lines, ≤4 takeaways before a visual; median ~16–33 words/slide | anti: cybersummit-21 (224 words) |
 | one-big-diagram | Process/how slides earn ONE large diagram with labeled endpoints, not bullet paragraphs | cybersummit-12, cybersummit-18 |
 | one-idea-per-slide | Channels must agree on a single idea; split slides that argue two things | cybersummit-18 |
@@ -93,6 +96,46 @@ profiles and `house-style-synthesis.yaml` for the corpus synthesis.
 - **Bullets**: teal chevron `>` level 1, small square level 2, em-dash
   level 3; key words emphasized inline via underline or warm color, and
   color-coded label prefixes (**Problems/Goal/Solution/Impact**).
+
+## Responsive browser presentation
+
+A browser deck is a reading surface, not just a scaled PowerPoint canvas.
+The measured archetypes and point sizes above guide fixed exports and desktop
+composition; they are not rigid geometry or font-size rules for narrow windows.
+
+- **Reflow, do not shrink:** adapt to the available slide pane, including a
+  half-screen window beside VS Code. Stack columns/cards and wrap text while
+  preserving headline/body hierarchy. Use readable CSS type sizes; do not meet
+  density budgets by shrinking, clipping, or deleting content.
+- **Preserve the argument:** retain slide order, reading order, claims, source
+  bindings, and rhetorical build order. Required visible qualifiers and
+  distribution statements remain visible content, never notes-only, tooltips,
+  or collapsed controls. Reflow must not summarize or strengthen a claim.
+- **Preserve visual meaning:** keep diagram labels, directed relationships,
+  legends, and captions readable. An explicit labeled relationship view is
+  acceptable; stacking nodes alone must not imply a different graph. Complex
+  diagrams may scroll locally, with a keyboard-accessible region, rather than
+  shrinking labels indefinitely.
+- **Contain imagery:** preserve aspect ratios and evidence-bearing regions.
+  Do not crop away labels or evidence to fit a narrow pane.
+- **Keep controls usable:** allow vertical reading scroll without viewport-wide
+  horizontal overflow. Keep previous/next controls available; vertical keys
+  scroll a focused reading region, while Left/Right navigate slides. Preserve
+  focus visibility, interactive-control key handling, and reduced motion.
+- **Keep exports separate:** responsive reading never writes back canonical
+  element coordinates. Design editing, PPTX, and PDF retain fixed geometry;
+  browser reflow is not proof of graphical parity with exported slides.
+- **Verify the actual page:** inspect live Surf captures at desktop, half-screen,
+  and phone widths, including below-the-fold qualifiers and diagram labels.
+  Retained evals must check content retention, readable type, overflow,
+  navigation, unchanged export geometry, and rejection of whole-slide scaling.
+
+Use `$best-practices-react` for implementation/accessibility details. Breakpoints
+belong to `$pitchdeck`, not to a universal house-style law. Its current behavior
+and retained live gate are documented in
+[`../pitchdeck/docs/RESPONSIVE_BROWSER.md`](../pitchdeck/docs/RESPONSIVE_BROWSER.md)
+and [`../pitchdeck/fixtures/responsive_browser.json`](../pitchdeck/fixtures/responsive_browser.json).
+Those cases cover their tested decks, not every arbitrary slide composition.
 
 ## Theme templates (`themes/*.json`, `pitchdeck.theme_template.v1`)
 
