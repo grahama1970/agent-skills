@@ -42,13 +42,13 @@ def free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def post(base: str, path: str, payload: dict) -> tuple[int, dict]:
+def post(base: str, path: str, payload: dict, *, timeout_s: float = 30) -> tuple[int, dict]:
     req = urllib.request.Request(
         base + path, data=json.dumps(payload).encode(),
         headers={"Content-Type": "application/json"}, method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
             return resp.status, json.load(resp)
     except urllib.error.HTTPError as exc:
         try:
@@ -80,6 +80,9 @@ VERDICTS = [BLOCKED_VERDICT, BLOCKED_VERDICT]
 
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    live_ask = '--live-ask' in sys.argv
+    published_card = None
+    live_review_verified = False
     from live_evidence.question_window import _has_imperative_clause
     check("given clause distinguishes request from description",
           _has_imperative_clause('given a raw log, write a python parser.')
@@ -94,7 +97,16 @@ def main() -> int:
         temp = Path(temp_name)
         repo = temp / "repo"
         repo.mkdir()
-        (repo / "parser.py").write_text("def parse_log(text):\n    return text.splitlines()\n")
+        (repo / "parser.py").write_text(
+            "import json\nfrom collections import Counter\n\n"
+            "def parse_log(text):\n"
+            "    # Request log: each JSON object has an entry string.\n"
+            "    # Return all unique entries with counts, greatest count first.\n"
+            "    # Equal counts sort by entry; empty input returns an empty list.\n"
+            "    counts = Counter(json.loads(line)['entry'] for line in text.splitlines() if line.strip())\n"
+            "    return sorted(counts.items(), key=lambda item: (-item[1], item[0]))\n"
+            if live_ask else "def parse_log(text):\n    return text.splitlines()\n"
+        )
         (temp / "profile.yaml").write_text(
             "name: ledger-eval\nwatch_terms:\n  - python\n  - stack\n  - log\n"
         )
@@ -110,6 +122,12 @@ def main() -> int:
             'printf "Ask solution: parse then sort.\\n" > "$d/node-artifacts/handler-fixture/response.md"\n'
             'printf \'{"run_dir":"%s"}\\n\' "$d"\n'
         )
+        if live_ask:
+            runner.write_text(
+                '#!/usr/bin/env bash\nset -euo pipefail\n'
+                f'echo invoked >> "{ask_ledger}"\n'
+                'exec "${LIVE_EVIDENCE_REAL_ASK_RUNNER:?}" "$@"\n'
+            )
         runner.chmod(0o755)
         env = {
             **os.environ,
@@ -124,6 +142,10 @@ def main() -> int:
             "LIVE_EVIDENCE_ASK_FIXTURE_RUN_DIR": str(temp / "askrun"),
             "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
         }
+        if live_ask:
+            env.update(LIVE_EVIDENCE_REAL_ASK_RUNNER=str(root.parent / 'ask/run.sh'),
+                       LIVE_EVIDENCE_ASK_HANDLER='gpt-5.5-high',
+                       LIVE_EVIDENCE_ASK_TIMEOUT='240', LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS='true')
         port = free_port()
         base = f"http://127.0.0.1:{port}"
         log = (temp / "server.log").open("w")
@@ -203,7 +225,7 @@ def main() -> int:
 
             # Completing answer: solver runs exactly once.
             code, body = post(base, f"/api/questions/{qid}/clarifications/c2/answer",
-                              {"question_revision": rev, "answer": "Descending by count."})
+                              {"question_revision": rev, "answer": "Descending by count."}, timeout_s=260 if live_ask else 30)
             time.sleep(1.5)
             check("resolving the last blocking requirement runs Ask exactly once",
                   code == 200 and invocations() == 1,
@@ -214,9 +236,22 @@ def main() -> int:
                         and row.get('payload', {}).get('result') == 'amended']
             check("clarification answers are journaled independently of cards",
                   len(answered) == 2, f"answered={len(answered)}")
-            check("stub solver cannot authorize publication",
-                  not get(base, '/api/state').get('cards') and not body.get('published'),
-                  'fixture transport is not reviewer authority')
+            final_state = get(base, '/api/state')
+            if live_ask:
+                from live_evidence.models import EvidenceCard
+                from live_evidence.reviewed_answer import card_has_bound_review
+                published_card = next((c for c in final_state.get('cards', []) if c.get('question_id') == qid), None)
+                live_review_verified = bool(published_card and card_has_bound_review(EvidenceCard.model_validate(published_card)))
+                check('resolved clarification publishes a bound live-reviewed answer',
+                      code == 200 and body.get('published') is True and live_review_verified,
+                      f'published={body.get("published")} bound_review={live_review_verified}')
+                check('published card carries both clarification answers',
+                      len([c for c in (published_card or {}).get('clarifications', []) if c.get('answer')]) == 2,
+                      'API card clarification readback')
+            else:
+                check("stub solver cannot authorize publication",
+                      not final_state.get('cards') and not body.get('published'),
+                      'fixture transport is not reviewer authority')
 
             # Duplicate answer: idempotent, no extra solver run.
             code, body = post(base, f"/api/questions/{qid}/clarifications/c2/answer",
@@ -254,6 +289,7 @@ def main() -> int:
             check("invented requirement without ASSUMED provenance is rejected",
                   invented_rejected, "ValidationError raised")
         finally:
+            ask_dispatch_count = invocations()
             log.flush()
             Path('/tmp/live-evidence-clarification-server.log').write_text((temp / 'server.log').read_text())
             journal_text = '\n'.join(jf.read_text() for jf in (temp / 'data').rglob('session.jsonl'))
@@ -265,11 +301,18 @@ def main() -> int:
                 proc.kill()
             log.close()
 
-    Path('/tmp/live-evidence-clarification-eval.json').write_text(json.dumps({
+    receipt_path = Path('/tmp/live-evidence-clarification-live-eval.json' if live_ask else '/tmp/live-evidence-clarification-eval.json')
+    receipt_text = json.dumps({
         'status': 'FAIL' if failures else 'PASS', 'failures': failures,
-        'proof_scope': 'Real HTTP; scripted legacy resolver and stub solver. No default scanner, live provider, UI or audio proof.',
-        'fixture_backed': True, 'provider_calls': 0,
-    }, indent=2) + '\n')
+        'proof_scope': ('Real HTTP and Ask/Tau creator-reviewer; scripted resolver and synthetic code/clarifications. No default-scanner clarification, UI or audio proof.'
+                        if live_ask else 'Real HTTP; scripted legacy resolver and stub solver. No live provider, UI or audio proof.'),
+        'fixture_backed': True, 'live_ask_requested': live_ask, 'live_review_verified': live_review_verified,
+        'published_card': published_card, 'ask_dispatch_count': ask_dispatch_count,
+    }, indent=2) + '\n'
+    receipt_path.write_text(receipt_text)
+    archive = receipt_path.with_name(f'{receipt_path.stem}-{Path(temp_name).name}.json')
+    archive.write_text(receipt_text)
+    print(f'clarification receipt: {archive}')
     print()
     if failures:
         print(f"requirement ledger: FAIL ({len(failures)} failed: {', '.join(failures)})")

@@ -1073,6 +1073,30 @@
       }
     },
     {
+      "name": "clarification-resolution-live-ask-tau-review",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "notes": "Scripted resolver, synthetic code and clarification inputs; real HTTP and live Ask/Tau creator-reviewer. Not proof of default-scanner clarification discovery or physical audio.",
+      "command": ["bash", "../run.sh", "eval-requirement-ledger", "--live-ask"],
+      "timeout_seconds": 360,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "partial answer leaves the solver held: PASS",
+          "stale-revision answer rejected with 409: PASS",
+          "resolved clarification publishes a bound live-reviewed answer: PASS",
+          "duplicate answer is idempotent and never re-runs the solver: PASS"
+        ],
+        "artifacts": [
+          {"path": "/tmp/live-evidence-clarification-live-eval.json", "json_pointer": "/status", "equals": "PASS"},
+          {"path": "/tmp/live-evidence-clarification-live-eval.json", "json_pointer": "/live_review_verified", "equals": true},
+          {"path": "/tmp/live-evidence-clarification-live-eval.json", "json_pointer": "/ask_dispatch_count", "equals": 1}
+        ]
+      }
+    },
+    {
       "name": "requirement-ledger-gates-solver-and-binds-amendments",
       "type": "adversarial",
       "real_world": true,
