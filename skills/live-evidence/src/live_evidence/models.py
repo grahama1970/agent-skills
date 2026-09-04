@@ -17,12 +17,10 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-
 def utc_now() -> datetime:
     """Return a timezone-aware UTC timestamp."""
 
     return datetime.now(timezone.utc)
-
 
 class Speaker(StrEnum):
     """Known speaker channels."""
@@ -32,14 +30,12 @@ class Speaker(StrEnum):
     CANDIDATE = "candidate"
     UNKNOWN = "unknown"
 
-
 class TranscriptKind(StrEnum):
     """Transcription stability states."""
 
     INTERIM = "interim"
     STABILIZED = "stabilized"
     FINAL = "final"
-
 
 class SessionPurpose(StrEnum):
     """What this session is FOR. Frozen at start; changing it is a new session."""
@@ -50,7 +46,6 @@ class SessionPurpose(StrEnum):
     INTERVIEWER_ASSIST = "interviewer_assist"
     POST_INTERVIEW_REVIEW = "post_interview_review"
 
-
 class ActorRole(StrEnum):
     """Who the operator is acting as in this session."""
 
@@ -58,7 +53,6 @@ class ActorRole(StrEnum):
     CANDIDATE = "candidate"
     INTERVIEWER = "interviewer"
     REVIEWER = "reviewer"
-
 
 class CapabilityPolicy(BaseModel):
     """Frozen per-session capability grants, enforced in the backend.
@@ -80,7 +74,6 @@ class CapabilityPolicy(BaseModel):
     debugger_invocation: bool = False
     repository_mutation: bool = False
     voice_output: bool = False
-
 
 POLICY_VERSION = 1
 
@@ -108,7 +101,6 @@ DEFAULT_POLICIES: dict[SessionPurpose, CapabilityPolicy] = {
     ),
 }
 
-
 def policy_digest(purpose: SessionPurpose, actor_role: ActorRole, policy: CapabilityPolicy) -> str:
     """Canonical digest binding purpose, role, version, and capabilities."""
 
@@ -123,7 +115,6 @@ def policy_digest(purpose: SessionPurpose, actor_role: ActorRole, policy: Capabi
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
-
 class TranscriptSource(StrEnum):
     """Audio or fixture origin."""
 
@@ -131,7 +122,6 @@ class TranscriptSource(StrEnum):
     PIPEWIRE = "pipewire"
     DEMO = "demo"
     API = "api"
-
 
 class SessionStatus(StrEnum):
     """Operator-controlled session states."""
@@ -145,7 +135,6 @@ class SessionStatus(StrEnum):
     PAUSED = "paused"
     STOPPED = "stopped"
 
-
 class RetrievalLane(StrEnum):
     """Evidence-producing lanes."""
 
@@ -157,7 +146,6 @@ class RetrievalLane(StrEnum):
     DOGPILE = "dogpile"
     DEBUGGER = "debugger"
 
-
 class LaneState(StrEnum):
     """Runtime health state for one retrieval lane."""
 
@@ -168,7 +156,6 @@ class LaneState(StrEnum):
     DISABLED = "disabled"
     ERROR = "error"
 
-
 class Freshness(StrEnum):
     """Source freshness signals."""
 
@@ -177,13 +164,11 @@ class Freshness(StrEnum):
     UNKNOWN = "unknown"
     EXTERNAL = "external"
 
-
 class CardStatus(StrEnum):
     """Whether a card has sufficient source-bound support."""
 
     SUPPORTED = "supported"
     INSUFFICIENT = "insufficient"
-
 
 class PublicationStatus(StrEnum):
     """Reducer outcome for a candidate card."""
@@ -192,7 +177,6 @@ class PublicationStatus(StrEnum):
     HELD = "held"
     SUPERSEDED = "superseded"
 
-
 class FrameChangeReason(StrEnum):
     """Why a screen frame was admitted as evidence."""
 
@@ -200,14 +184,12 @@ class FrameChangeReason(StrEnum):
     VISUAL_CHANGE = "visual_change"
     MANUAL_MARKER = "manual_marker"
 
-
 class FrameRetention(StrEnum):
     """How long a captured screen frame may be retained."""
 
     SESSION_ONLY = "session_only"
     REDACTED = "redacted"
     EXPLICIT_RETAIN = "explicit_retain"
-
 
 class CardPublicationDecision(BaseModel):
     """Auditable output of the card-publication reducer.
@@ -244,7 +226,6 @@ class CardPublicationDecision(BaseModel):
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("decided_at must be timezone-aware")
         return value.astimezone(timezone.utc)
-
 
 class TranscriptEvent(BaseModel):
     """Validated transcript update from one speaker channel."""
@@ -300,7 +281,6 @@ class TranscriptEvent(BaseModel):
             raise ValueError("end_ms must be greater than or equal to start_ms")
         return self
 
-
 class FrameRegion(BaseModel):
     """One bounded region inside a captured screen frame."""
 
@@ -310,7 +290,6 @@ class FrameRegion(BaseModel):
     y: int = Field(ge=0)
     width: int = Field(gt=0)
     height: int = Field(gt=0)
-
 
 class FrameEvidence(BaseModel):
     """First-class timecoded screen evidence.
@@ -353,7 +332,6 @@ class FrameEvidence(BaseModel):
             raise ValueError("content_sha256 must be a lowercase sha256 hex digest")
         return normalized
 
-
 class EventSpan(BaseModel):
     """One transcript event's character span inside a question candidate."""
 
@@ -371,7 +349,6 @@ class EventSpan(BaseModel):
         if self.end_offset < self.start_offset:
             raise ValueError("end_offset must be greater than or equal to start_offset")
         return self
-
 
 class QuestionCandidate(BaseModel):
     """Bounded interviewer question assembled from one or more transcript events."""
@@ -405,7 +382,6 @@ class QuestionCandidate(BaseModel):
         if span_event_ids != self.source_event_ids:
             raise ValueError("source_spans must match source_event_ids order")
         return self
-
 
 class EvidenceSource(BaseModel):
     """One retrievable source candidate with a concrete locator."""
@@ -442,7 +418,6 @@ class EvidenceSource(BaseModel):
             raise ValueError("line_end must be greater than or equal to line_start")
         return self
 
-
 class RequirementKind(StrEnum):
     """What a requirement constrains (#1454). Task-agnostic, not LeetCode-specific."""
 
@@ -454,7 +429,6 @@ class RequirementKind(StrEnum):
     EVIDENCE = "evidence"
     PROCESS = "process"
 
-
 class RequirementStatus(StrEnum):
     STATED = "stated"
     CLARIFIED = "clarified"
@@ -462,14 +436,12 @@ class RequirementStatus(StrEnum):
     UNRESOLVED = "unresolved"
     SUPERSEDED = "superseded"
 
-
 class AnswerSource(StrEnum):
     """Where a clarification answer came from."""
 
     SPEECH = "speech"
     OPERATOR = "operator"
     DEFAULT_ASSUMPTION = "default_assumption"
-
 
 class Requirement(BaseModel):
     """One append-only ledger entry bound to transcript evidence (#1454).
@@ -512,7 +484,6 @@ class Requirement(BaseModel):
             raise ValueError("ASSUMED requirement must state its assumption_source")
         return self
 
-
 def ledger_digest(entries: list["Requirement"]) -> str:
     """Canonical digest over the append-only ledger for card binding."""
 
@@ -521,7 +492,6 @@ def ledger_digest(entries: list["Requirement"]) -> str:
         sort_keys=True,
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-
 
 class ClarificationItem(BaseModel):
     """One clarifying question the backend decided is worth asking.
@@ -542,7 +512,6 @@ class ClarificationItem(BaseModel):
     answer: str | None = Field(default=None, max_length=400)
     answer_source_event_ids: list[str] = Field(default_factory=list, max_length=8)
 
-
 class SolutionDeckPoint(BaseModel):
     """One solver-authored glance card point.
 
@@ -554,7 +523,6 @@ class SolutionDeckPoint(BaseModel):
 
     title: str = Field(min_length=1, max_length=80)
     trigger: str = Field(min_length=1, max_length=180)
-
 
 class EvidenceCard(BaseModel):
     """Compact human-facing evidence prompt derived only from selected sources."""
@@ -589,6 +557,16 @@ class EvidenceCard(BaseModel):
     # without these a slow result publishes over a newer question.
     question_id: str | None = Field(default=None, min_length=8, max_length=64)
     question_revision: int = Field(default=0, ge=0)
+    # Follow-up linkage: a follow-up gets its own answer lifecycle but renders
+    # inside the parent's flashcard so the human never hunts for it.
+    parent_question_id: str | None = Field(default=None, min_length=8, max_length=64)
+    # Background review (fourth agent): weak answers keep their original text
+    # on screen; the amendment streams into amendment_text and is promoted
+    # only when amendment_complete flips true. Never a mid-read replacement.
+    review_verdict: Literal["ok", "weak"] | None = None
+    review_reasons: list[str] = Field(default_factory=list, max_length=4)
+    amendment_text: str | None = None
+    amendment_complete: bool = False
     # Digest of the frozen session policy this card was produced under (#1449).
     policy_digest: str | None = Field(default=None, min_length=64, max_length=64)
     # Digest of the requirement ledger revision this card answers (#1454), plus
@@ -615,7 +593,6 @@ class EvidenceCard(BaseModel):
             raise ValueError("supported card requires at least one evidence source")
         return self
 
-
 class LaneActivity(BaseModel):
     """Current state and last result for one retrieval lane."""
 
@@ -627,7 +604,6 @@ class LaneActivity(BaseModel):
     latency_ms: int | None = Field(default=None, ge=0)
     result_count: int = Field(default=0, ge=0)
     updated_at: datetime = Field(default_factory=utc_now)
-
 
 class SessionInfo(BaseModel):
     """Session-level operator state."""
@@ -646,7 +622,6 @@ class SessionInfo(BaseModel):
     policy_version: int = POLICY_VERSION
     policy_digest: str = ""
     practice_only: bool = False
-
 
 class ModelCallTrace(BaseModel):
     """Bounded model-call status exposed to HUD clients."""
@@ -689,8 +664,9 @@ class AppSnapshot(BaseModel):
     model_calls: list[ModelCallTrace] = Field(default_factory=list, max_length=100)
     trace_events: list[PipelineTraceEvent] = Field(default_factory=list, max_length=200)
     external_search_enabled: bool = False
+    # Currently announced audio capture device (auto-switch visibility).
+    listener: dict[str, str] | None = None
     updated_at: datetime = Field(default_factory=utc_now)
-
 
 class SessionStartRequest(BaseModel):
     """Start-session command from the UI."""
@@ -703,7 +679,6 @@ class SessionStartRequest(BaseModel):
     # Explicit capability override; omitted fields take the purpose default.
     policy: CapabilityPolicy | None = None
 
-
 class ClarificationAnswerRequest(BaseModel):
     """Answer/amendment for one clarification, bound to an exact revision (#1454)."""
 
@@ -714,7 +689,6 @@ class ClarificationAnswerRequest(BaseModel):
     source: AnswerSource = AnswerSource.OPERATOR
     answer_event_ids: list[str] = Field(default_factory=list, max_length=8)
 
-
 class VoiceUtteranceRequest(BaseModel):
     """Text the assistant is about to speak aloud (#1453 echo suppression)."""
 
@@ -722,7 +696,6 @@ class VoiceUtteranceRequest(BaseModel):
 
     text: str = Field(min_length=1, max_length=2_000)
     turn_id: str | None = Field(default=None, max_length=120)
-
 
 class ManualSearchRequest(BaseModel):
     """Explicit bounded retrieval request."""
@@ -739,7 +712,6 @@ class ManualSearchRequest(BaseModel):
 
         return value
 
-
 class ActionDefinition(BaseModel):
     """One QuerySpec-compatible UI action registration."""
 
@@ -753,14 +725,12 @@ class ActionDefinition(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
     tags: list[str] = Field(default_factory=list, max_length=30)
 
-
 class ActionRegistrationBatch(BaseModel):
     """Batched UI action definitions."""
 
     model_config = ConfigDict(extra="forbid")
 
     actions: list[ActionDefinition] = Field(min_length=1, max_length=200)
-
 
 class HealthResponse(BaseModel):
     """Service health payload."""
@@ -771,7 +741,6 @@ class HealthResponse(BaseModel):
     memory_configured: bool
     repo_count: int
 
-
 class DoctorCheck(BaseModel):
     """One local readiness check."""
 
@@ -779,7 +748,6 @@ class DoctorCheck(BaseModel):
 
     status: Literal["PASS", "DEGRADED", "NOT_CONFIGURED"]
     detail: str = Field(min_length=1, max_length=500)
-
 
 class DoctorReport(BaseModel):
     """Machine-readable prepared-host readiness report."""

@@ -179,11 +179,38 @@ class RuntimeState:
     def session_policy_digest(self) -> str:
         return self._session.policy_digest
 
+    async def set_listener_info(self, info: dict[str, str]) -> AppSnapshot:
+        """Record which audio device the listener actually captures."""
+
+        async with self._lock:
+            self._listener_info = info
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+        return snapshot
+
     async def pause_session(self) -> AppSnapshot:
         """Pause automatic retrieval while preserving the transcript."""
 
         async with self._lock:
             self._session.status = SessionStatus.PAUSED
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+        return snapshot
+
+    async def resume_session(self) -> AppSnapshot:
+        """Resume a PAUSED session in place: same id, consent preserved.
+
+        This is the missing half of pause. Before it existed, the only Play
+        path was session/start, which allocates a NEW session with consent
+        dropped (the 2026-08-27 HANDOFF clobber defect) - so Play after Pause
+        wiped cards and demanded consent again. Resume only transitions
+        PAUSED -> LISTENING when consent was already confirmed; any other
+        state is returned unchanged rather than silently widened.
+        """
+
+        async with self._lock:
+            if self._session.status == SessionStatus.PAUSED and self._session.consent_confirmed:
+                self._session.status = SessionStatus.LISTENING
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
@@ -738,6 +765,7 @@ class RuntimeState:
             lanes=[self._lanes[lane].model_copy(deep=True) for lane in RetrievalLane],
             model_calls=[item.model_copy(deep=True) for item in self._model_calls],
             trace_events=[item.model_copy(deep=True) for item in self._trace_events],
+            listener=dict(self._listener_info) if getattr(self, '_listener_info', None) else None,
             external_search_enabled=bool(
                 self._settings.brave_runner or self._settings.dogpile_runner
             ),

@@ -70,6 +70,11 @@ export interface EvidenceCard {
   solution_deck?: SolutionDeckPoint[];
   question_id?: string | null;
   question_revision?: number;
+  parent_question_id?: string | null;
+  review_verdict?: "ok" | "weak" | null;
+  review_reasons?: string[];
+  amendment_text?: string | null;
+  amendment_complete?: boolean;
   policy_digest?: string | null;
   frame_refs?: string[];
   lanes: RetrievalLane[];
@@ -130,6 +135,7 @@ export interface AppSnapshot {
   cards: EvidenceCard[];
   lanes: LaneActivity[];
   external_search_enabled: boolean;
+  listener?: { device: string; resolve_reason: string; mode: string; level?: string } | null;
   updated_at: string;
 }
 

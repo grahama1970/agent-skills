@@ -257,31 +257,65 @@ class LiveListener:
             daemon=True,
         )
         transcription_thread.start()
-        command = _pipewire_record_command(str(self._options.pipewire_source))
-        process = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
         try:
-            if process.stdout is None:
-                raise RuntimeError("pw-record stdout was not created")
+            # Google-Meet-style live input level: RMS over ~1s windows,
+            # announced to the backend so the HUD can render a level meter
+            # and the human can verify the selected device actually hears.
+            import audioop
+
             while not self._stop.is_set():
-                chunk = process.stdout.read(4096)
-                if not chunk:
-                    if process.poll() is not None:
-                        error = process.stderr.read().decode("utf-8", errors="replace") if process.stderr else ""
-                        raise RuntimeError(f"pw-record exited {process.returncode}: {error[:300]}")
-                    time.sleep(0.02)
-                    continue
-                recorder.feed_audio(chunk, original_sample_rate=16000)
-        finally:
-            if process.poll() is None:
-                process.terminate()
+                resolved_source, resolve_reason = resolve_pipewire_source(
+                    str(self._options.pipewire_source) if self._options.pipewire_source else None
+                )
+                logger.info("pipewire source resolved: {} ({})", resolved_source, resolve_reason)
+                _announce_listener(self._options.backend_url, resolved_source, resolve_reason)
+                process = subprocess.Popen(
+                    _pipewire_record_command(resolved_source),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
                 try:
-                    process.wait(timeout=3.0)
-                except subprocess.TimeoutExpired:
-                    process.kill()
+                    if process.stdout is None:
+                        raise RuntimeError("pw-record stdout was not created")
+                    level_window: list[int] = []
+                    last_level_post = time.monotonic()
+                    while not self._stop.is_set():
+                        chunk = process.stdout.read(4096)
+                        if not chunk:
+                            if process.poll() is not None:
+                                error = process.stderr.read().decode("utf-8", errors="replace") if process.stderr else ""
+                                logger.warning("pw-record exited {}; restarting: {}", process.returncode, error[:300])
+                                _announce_listener(self._options.backend_url, resolved_source, "restarting", level=0)
+                                time.sleep(1.0)
+                                break
+                            time.sleep(0.02)
+                            continue
+                        recorder.feed_audio(chunk, original_sample_rate=16000)
+                        try:
+                            level_window.append(audioop.rms(chunk, 2))
+                        except Exception:
+                            level_window.append(0)
+                        now = time.monotonic()
+                        if now - last_level_post >= 0.25 and level_window:
+                            rms = max(level_window)
+                            level_window.clear()
+                            last_level_post = now
+                            # 0-100 scale: 3000 RMS on s16 speech is already loud.
+                            percent = min(100, int(rms / 30))
+                            threading.Thread(
+                                target=_announce_listener,
+                                args=(self._options.backend_url, resolved_source, resolve_reason),
+                                kwargs={"level": percent},
+                                daemon=True,
+                            ).start()
+                finally:
+                    if process.poll() is None:
+                        process.terminate()
+                        try:
+                            process.wait(timeout=3.0)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+        finally:
             recorder.shutdown()
             publisher.close()
             transcription_thread.join(timeout=3.0)
@@ -355,6 +389,57 @@ def _load_recorder() -> Any:
             "RealtimeSTT is not installed. Run ./run.sh setup --with-stt."
         ) from exc
     return AudioToTextRecorder
+
+
+def _announce_listener(backend_url: str, device: str, reason: str, level: int | None = None) -> None:
+    """Tell the backend which device is captured and how loud it is (best effort)."""
+
+    payload = {"device": device, "resolve_reason": reason, "mode": "pipewire"}
+    if level is not None:
+        payload["level"] = str(level)
+    try:
+        httpx.post(
+            f"{backend_url.rstrip('/')}/api/listener/announce",
+            json=payload,
+            timeout=httpx.Timeout(connect=1.0, read=2.0, write=1.0, pool=1.0),
+        )
+    except httpx.HTTPError:
+        logger.warning("listener announce failed; HUD will not show the device")
+
+
+def resolve_pipewire_source(requested: str | None) -> tuple[str, str]:
+    """Resolve the capture source, auto-switching when the named one is gone.
+
+    The Jabra hops between USB (alsa_input.usb-0b0e_Jabra...) and Bluetooth
+    (bluez_input.<MAC>) identities; a listener pinned to a stale name records
+    silence forever (live incident 2026-09-03: 0 events while the room played
+    audio). Order: exact name -> substring match -> RUNNING input -> bluez
+    input -> USB/alsa input. Returns (source_name, reason).
+    """
+
+    try:
+        output = subprocess.run(
+            ["pactl", "list", "short", "sources"],
+            capture_output=True, text=True, timeout=5, check=False,
+        ).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return requested or "@DEFAULT_SOURCE@", "pactl_unavailable"
+    rows = [line.split("\t") for line in output.splitlines() if "\t" in line]
+    names = [row[1] for row in rows if len(row) > 1]
+    inputs = [n for n in names if not n.endswith(".monitor")]
+    if requested and (requested in names or requested.startswith("sink:")):
+        return requested, "exact"
+    if requested and requested != "auto":
+        for name in inputs:
+            if requested.casefold() in name.casefold() or name.casefold() in requested.casefold():
+                return name, "substring"
+    running = [row[1] for row in rows if len(row) > 3 and row[-1].strip() == "RUNNING" and not row[1].endswith(".monitor")]
+    for pool, reason in ((running, "running_input"),
+                         ([n for n in inputs if n.startswith("bluez_input.")], "bluetooth_input"),
+                         ([n for n in inputs if n.startswith("alsa_input.")], "usb_input")):
+        if pool:
+            return pool[0], reason
+    return requested or "@DEFAULT_SOURCE@", "no_candidates"
 
 
 def _pipewire_record_command(target: str) -> list[str]:

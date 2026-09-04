@@ -30,6 +30,71 @@ from .persistence import SessionJournal
 from .state import RuntimeState
 
 
+DEV_PROMPTS_CONTEXT = """# Live Evidence: system context for these prompts
+
+## What $live-evidence is
+A local-first live interview/meeting copilot. It listens to consented audio
+(PipeWire -> Docker RealtimeSTT), watches the transcript, and renders one
+glanceable flashcard per interviewer question in a browser HUD
+(http on port 8799). The human stays in the conversation; the HUD supplies
+source-bound glance points, a full answer on the card back, and receipts for
+every decision.
+
+## What $curate-client is and how it feeds this system
+$curate-client builds the per-client knowledge base BEFORE the meeting:
+it extracts Q-A knowledge chunks from the client's OpenAPI specs, Terraform
+repos, and curated fact files, ingests them into graph Memory under scope
+client:<name>, verifies recall with fail-closed probes, and emits a
+live_evidence.prep_pack.v1 (briefing pack + expected question oracles +
+reviewed answers). At runtime, Live Evidence retrieves those chunks through
+the memory lane, treats reviewed answer-key excerpts as authoritative via an
+runtime-owned structured authority envelopes, and feeds prepared
+briefing topics into the scanner's CLIENT_CONTEXT.
+
+## The four-agent architecture these prompts implement
+1. SCANNER (question agent): sole owner of question identity. Runs on every
+   silence pause, every ~300 new transcript characters, or a wake word.
+   Sees the known-question ledger + client context + transcript tail and
+   returns strict JSON: each ask classified forming | complete |
+   already_answered | follow_up, with a closed-vocabulary category and
+   expected skills. "complete" is TERMINAL - never re-judged. Repeats of
+   answered questions die here (already_answered receipt, no card).
+   Category drives the deliverable downstream (code/debugging -> CODE mode
+   with fenced code).
+2. ANSWER WORKERS (two, leased): each takes an exclusive per-question lease
+   and streams a flashcard-format answer (bullets <= 90 chars, code fences,
+   tables; never prose paragraphs) plus a 2-4 point HUD glance deck.
+   One worker can never overwrite another's card - leases and a
+   revision CAS fence are enforced in code.
+3. REVIEWER (background): triggered by each FIRST published answer. Judges
+   correctness (vs evidence + interviewer-stated facts), scannability
+   (deterministic pre-check is authoritative), and staleness (only
+   post-publication interviewer speech). Weak -> a Memory-re-grounded
+   amendment streams into the SAME card; the original is never replaced
+   mid-read, promotion happens on completion.
+
+## Contract enforcement (why hallucination is hard here)
+Every agent reply is validated by pydantic models with extra=forbid and
+closed Literal vocabularies (statuses, categories, skills, verdicts,
+reason prefixes). Invalid output triggers ONE course-correction round that
+feeds the exact validation errors back to the model, then fails closed.
+Every decision (classification, skip, review, amendment, re-grounding)
+writes a journal receipt. Retained agentic-eval fixtures guard the
+regressions found live.
+
+## What each prompt is supposed to achieve
+- Scanner prompt: high-recall, zero-duplicate question extraction with
+  terminal verdicts and correct category/skill routing, robust to ASR
+  garble, crosstalk, and prompt injection in transcript/context fields.
+- Solver prompt: a 2-second-glanceable flashcard answer in the correct
+  deliverable shape (decided by the scanner's category), grounded in
+  evidence excerpts whose authority comes only from runtime metadata.
+- Reviewer prompt: catch wrong/unscannable/stale answers cheaply and
+  produce a bounded amendment instruction - never rewrite the answer
+  itself, never judge style beyond the three checks.
+"""
+
+
 def create_app(settings: AppSettings | None = None) -> FastAPI:
     """Create a fully wired application with explicit runtime dependencies."""
 
@@ -94,6 +159,42 @@ def _register_api_routes(
             repo_count=len(settings.repo_roots),
         )
 
+    @app.get("/api/dev/prompts")
+    async def dev_prompts() -> dict:
+        """Exact assembled agent prompts for the Dev page (read-only)."""
+
+        from .reviewer import REVIEWER_INSTRUCTIONS, REVIEWER_OUTPUT_CONTRACT
+        from .scanner import SCANNER_INSTRUCTIONS, SCANNER_OUTPUT_CONTRACT
+        from .solver import SOLVER_INSTRUCTIONS, SOLVER_OUTPUT_CONTRACT
+
+        return {
+            "schema": "live_evidence.dev_prompts.v1",
+            "context": DEV_PROMPTS_CONTEXT,
+            "prompts": [
+                {
+                    "id": "scanner",
+                    "name": "Scanner (question agent)",
+                    "description": "Runs per pause / 300 chars / wake word. Sole owner of question identity: forming | complete | already_answered | follow_up, closed-vocab category + expected skills. Runtime appends KNOWN_QUESTIONS, CLIENT_CONTEXT, TRANSCRIPT_TAIL between instructions and contract.",
+                    "model_env": "LIVE_EVIDENCE_SCANNER_MODEL (default claude-sonnet-5, low)",
+                    "text": SCANNER_INSTRUCTIONS + "\n[... runtime data: KNOWN_QUESTIONS / CLIENT_CONTEXT / TRANSCRIPT_TAIL ...]\n" + SCANNER_OUTPUT_CONTRACT,
+                },
+                {
+                    "id": "solver",
+                    "name": "Answer solver",
+                    "description": "Answers one complete/follow_up question. Mode is decided by trusted scanner category (code/debugging -> CODE). Emits the HUD deck JSON then the flashcard answer. Runtime appends QUESTION and structured EVIDENCE_EXCERPTS with metadata authority fields.",
+                    "model_env": "LIVE_EVIDENCE_SOLVER_MODEL (default claude-sonnet-5, low)",
+                    "text": SOLVER_INSTRUCTIONS + "\n[... runtime data: RUNTIME MODE DECISION / QUESTION / EVIDENCE_EXCERPTS ...]\n" + SOLVER_OUTPUT_CONTRACT,
+                },
+                {
+                    "id": "reviewer",
+                    "name": "Reviewer (background)",
+                    "description": "Triggered on each first published answer. Judges correctness / scannability (deterministic pre-check is authoritative) / staleness against post-publication interviewer speech. Weak -> amendment streamed into the same card.",
+                    "model_env": "LIVE_EVIDENCE_REVIEWER_MODEL (default claude-sonnet-5, low)",
+                    "text": REVIEWER_INSTRUCTIONS + "\n[... runtime data: QUESTION_AT_PUBLICATION / PUBLISHED_ANSWER_BODY / EVIDENCE_EXCERPTS_USED / SCANNABILITY_CHECK / QUESTION_EVENTS_AFTER_PUBLICATION ...]\n" + REVIEWER_OUTPUT_CONTRACT,
+                },
+            ],
+        }
+
     @app.get("/api/config")
     async def config() -> dict[str, Any]:
         return public_settings(settings, profile)
@@ -125,6 +226,37 @@ def _register_api_routes(
     @app.post("/api/session/pause", response_model=AppSnapshot)
     async def pause_session() -> AppSnapshot:
         return await state.pause_session()
+
+    @app.post("/api/listener/announce", response_model=AppSnapshot)
+    async def listener_announce(payload: dict[str, str]) -> AppSnapshot:
+        """Listener reports its resolved capture device for HUD visibility."""
+        return await state.set_listener_info({
+            "device": str(payload.get("device") or ""),
+            "resolve_reason": str(payload.get("resolve_reason") or ""),
+            "mode": str(payload.get("mode") or ""),
+            "level": str(payload.get("level") or "0"),
+        })
+
+    @app.get("/api/audio/devices")
+    async def audio_devices() -> dict[str, Any]:
+        """List capture sources (Google-Meet-style device picker data)."""
+        import subprocess as _sp
+        try:
+            out = _sp.run(["pactl", "list", "short", "sources"],
+                          capture_output=True, text=True, timeout=5, check=False).stdout
+        except Exception:
+            out = ""
+        devices = []
+        for line in out.splitlines():
+            parts = line.split("\t")
+            if len(parts) > 1 and not parts[1].endswith(".monitor"):
+                devices.append({"name": parts[1], "state": parts[-1].strip()})
+        return {"devices": devices}
+
+    @app.post("/api/session/resume", response_model=AppSnapshot)
+    async def resume_session() -> AppSnapshot:
+        """Resume the PAUSED session in place (same id, consent preserved)."""
+        return await state.resume_session()
 
     @app.post("/api/session/stop", response_model=AppSnapshot)
     async def stop_session() -> AppSnapshot:
