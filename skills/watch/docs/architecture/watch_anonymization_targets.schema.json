@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://embry.local/schemas/watch_anonymization_targets.schema.json",
+  "title": "Watch Anonymization Target Decisions",
+  "description": "Explicit post-detection decisions that select detector tracks for pixel redaction without promoting identity.",
+  "type": "object",
+  "required": [
+    "schema",
+    "targets"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "watch.anonymization_targets.v1"
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/target"
+      }
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "required": [
+        "decision_id",
+        "track_id",
+        "source",
+        "stream_id",
+        "asset_uid",
+        "segment_id",
+        "valid_from_seconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "track_id": {
+          "type": "string",
+          "pattern": "^track_[a-zA-Z0-9._-]+$"
+        },
+        "source": {
+          "enum": [
+            "accepted",
+            "suggested",
+            "manual-track"
+          ]
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "asset_uid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "segment_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "valid_from_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "valid_until_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "character_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "detected_class": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "person",
+            "vehicle",
+            "drone",
+            "object",
+            "unknown",
+            null
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "basis_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

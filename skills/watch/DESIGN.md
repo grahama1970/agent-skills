@@ -21,6 +21,11 @@ run.sh (Typer CLI, scripts/watch.py)
   ├─ report.py        report.json + report.md + report.html + frames_manifest.json
   └─ video_memory.py  memory daemon (:8601) upsert/recall over watch_content;
                       brave-search corroboration (never authority)
+scripts/live_ultralytics_tracking.py
+  ├─ YOLO/ByteTrack  provisional observation events; no named identity
+  └─ watch_anonymizer.py
+       explicit accepted/suggested/manual target policy → pixel-redacted
+       frame/video + per-frame receipts; never identity promotion
 ui/ (React TypeScript, mounted by ux-lab Express API :3001)
   └─ WatchReportView, Orpheus annotation, YOLO identity ledger, chat sidebar
 proofs/immutable-goal/<sha>/manifest.json   live gate receipts
@@ -42,6 +47,13 @@ proofs/immutable-goal/<sha>/manifest.json   live gate receipts
   locally before Memory sync. Proven by the live npm immutable-goal gate
   (`npm --prefix ui run prove:immutable-goal`), receipts under
   `proofs/immutable-goal/<git-sha>/`.
+- **Post-detection pixel redaction, not identity promotion**: anonymization
+  targets consume accepted, tentative, or manual decisions without writing
+  ledger events. Decisions are bound to one stream, asset, and segment. Accepted
+  mode reads asset/row-consistent timed human receipts; suggestions require
+  explicit permanent-export opt-in; stale/reused tracks require a new decision.
+  Receipts fix `identity_mutated=false` and `deidentification_claimed=false`.
+  See `docs/architecture/watch_anonymization_contract.md`.
 - **Heavy artifacts on 12TB**: frames/audio under `WATCH_MEDIA_ROOT`
   (defaults to `~/.local/share/agent-skills/watch-frames`; media library on
   `/mnt/storage12tb/media/`).
@@ -69,6 +81,9 @@ npm --prefix skills/watch/ui run prove:immutable-goal
   (`watch.sanity.e2e_live`), negative/adversarial fail-closed source
   resolution cases (`watch.source_resolution.fail_closed`), per-feature
   pipeline checks, and backend immutable identity smoke tests.
+- `tests/test_watch_anonymizer.py` — deterministic compositor and integration
+  regressions for authority separation, stop/reset/reuse, fail-safe ROI fallback,
+  output pixel alteration, frame coverage, and receipt schemas.
 - `docs/IDENTITY_PIPELINE_NEXT_STEPS.md` — WebGPT-reviewed sequence for
   landing segment-scoped identity promotion without treating model scores,
   diarization, SRT mentions, or Memory/Qdrant output as accepted identity.
@@ -79,5 +94,16 @@ npm --prefix skills/watch/ui run prove:immutable-goal
   primary checkout is intentionally dirty; do not weaken `assertCleanWorktree`.
 - Identity promotion is not enabled. Reference adjudication, shadow calibration,
   stale-evidence gates, and human review receipts must land first.
+- Anonymization target materialization is not yet exposed by the Watch API/UI;
+  the backend currently consumes an explicit label receipt, target manifest, or
+  manual track selection.
+- `face` mode has a fail-safe upper-person fallback but no pinned local face
+  detector/model yet.
+- Track-box redaction does not yet support segmentation masks, class-wide
+  policies, audio/text/metadata redaction, or a formal de-identification claim.
+- The current OpenCV output path writes video frames only; it does not preserve
+  source audio. Container-safe remux/strip policy belongs in the release exporter.
+- The real-media anonymized-export proof and artifact-level hash/readback gate
+  have not yet been added to the immutable-goal workflow.
 - Immutable-goal proof manifests are pinned to older commits; re-run the gate
   at HEAD in a clean lane after ledger-relevant changes.

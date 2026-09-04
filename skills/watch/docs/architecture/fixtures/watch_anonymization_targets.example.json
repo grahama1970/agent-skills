@@ -1,0 +1,19 @@
+{
+  "schema": "watch.anonymization_targets.v1",
+  "targets": [
+    {
+      "decision_id": "anon_suggestion_bad_santa_row9_track_7_001",
+      "track_id": "track_7",
+      "source": "suggested",
+      "stream_id": "bad_santa_watch_stream",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "segment_id": "bad_santa_row_9",
+      "valid_from_seconds": 96.2,
+      "valid_until_seconds": 98.7,
+      "character_name": "Willie",
+      "detected_class": "person",
+      "confidence": 0.89,
+      "basis_ref": "memory:/watch/identity/recall-crop#suggestion=willie-track-7"
+    }
+  ]
+}
