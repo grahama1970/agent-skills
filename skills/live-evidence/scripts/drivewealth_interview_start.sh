@@ -6,7 +6,7 @@ SKILL="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$SKILL"
 
 BACKEND_URL="http://127.0.0.1:8800"
-JABRA_SINK="sink:alsa_output.usb-0b0e_Jabra_SPEAK_510_USB_501AA5274B1D022000-00.analog-stereo"
+JABRA_INPUT="${LIVE_EVIDENCE_AUDIO_SOURCE:-auto:jabra-input}"
 LOG_DIR="/tmp/live-evidence-drivewealth-interview"
 mkdir -p "$LOG_DIR"
 
@@ -38,11 +38,26 @@ echo
 ./run.sh load-prep-pack --pack fixtures/prep_pack_drivewealth.json \
   --backend-url "$BACKEND_URL" --output "$LOG_DIR/prep-load.json"
 
-# 4. Jabra listener (meeting audio -> STT -> cards).
-nohup ./run.sh listen --mode pipewire --pipewire-source "$JABRA_SINK" \
-  --backend-url "$BACKEND_URL" --speaker interviewer --device cpu --consent-confirmed \
-  > "$LOG_DIR/listener.log" 2>&1 &
-echo "listener PID $!"
+# 4. Jabra room-mic listener (iPad speaker / room audio -> STT -> cards), SUPERVISED.
+#    pw-record dies with Broken pipe when the sink suspends or the browser
+#    re-grabs the device (this silently deafened the 2026-09-02 interview).
+#    The wrapper restarts the listener within 3s, forever, and logs each death.
+nohup bash -c '
+  while true; do
+    echo "[$(date -Is)] listener (re)starting" >> "'"$LOG_DIR"'/listener-supervisor.log"
+    ./run.sh listen --mode pipewire --pipewire-source "'"$JABRA_INPUT"'" \
+      --backend-url "'"$BACKEND_URL"'" --speaker interviewer --device cpu --consent-confirmed \
+      >> "'"$LOG_DIR"'/listener.log" 2>&1
+    echo "[$(date -Is)] listener EXITED (code $?) - restarting in 3s" >> "'"$LOG_DIR"'/listener-supervisor.log"
+    sleep 3
+  done
+' > /dev/null 2>&1 &
+echo "listener supervisor PID $!"
+
+# 5. Start a consented meeting session so cards can publish immediately.
+sleep 2
+curl -s -X POST "$BACKEND_URL/api/session/start" -H 'Content-Type: application/json' \
+  -d '{"consent_confirmed":true,"purpose":"meeting"}' | python3 -c "import json,sys;d=json.load(sys.stdin);print('session:',d['session']['session_id'][:12],d['session']['status'])"
 
 echo
 echo "READY. HUD: $BACKEND_URL  Logs: $LOG_DIR/"

@@ -250,9 +250,10 @@ class LiveListener:
             start_callback_in_new_thread=True,
             spinner=False,
         )
+        transcription_errors: queue.Queue[Exception] = queue.Queue()
         transcription_thread = threading.Thread(
-            target=_external_text_loop,
-            args=(recorder, publisher.final, self._stop),
+            target=_guarded_external_text_loop,
+            args=(recorder, publisher.final, self._stop, transcription_errors),
             name="live-evidence-pipewire-transcribe",
             daemon=True,
         )
@@ -280,6 +281,13 @@ class LiveListener:
                     level_window: list[int] = []
                     last_level_post = time.monotonic()
                     while not self._stop.is_set():
+                        if not transcription_errors.empty():
+                            error = transcription_errors.get_nowait()
+                            _announce_listener(self._options.backend_url, resolved_source, "transcription_error", level=0)
+                            raise RuntimeError(f"transcription worker failed: {error}") from error
+                        if not transcription_thread.is_alive():
+                            _announce_listener(self._options.backend_url, resolved_source, "transcription_error", level=0)
+                            raise RuntimeError("transcription worker stopped")
                         chunk = process.stdout.read(4096)
                         if not chunk:
                             if process.poll() is not None:
@@ -418,28 +426,57 @@ def resolve_pipewire_source(requested: str | None) -> tuple[str, str]:
     """
 
     try:
-        output = subprocess.run(
+        sources_output = subprocess.run(
             ["pactl", "list", "short", "sources"],
             capture_output=True, text=True, timeout=5, check=False,
         ).stdout
-    except (OSError, subprocess.TimeoutExpired):
-        return requested or "@DEFAULT_SOURCE@", "pactl_unavailable"
-    rows = [line.split("\t") for line in output.splitlines() if "\t" in line]
+        sinks_output = subprocess.run(
+            ["pactl", "list", "short", "sinks"],
+            capture_output=True, text=True, timeout=5, check=False,
+        ).stdout
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        if requested in {None, "auto"}:
+            return "@DEFAULT_SOURCE@", "pactl_unavailable"
+        raise RuntimeError(f"cannot resolve requested PipeWire source {requested!r}: {exc}") from exc
+    rows = [line.split("\t") for line in sources_output.splitlines() if "\t" in line]
     names = [row[1] for row in rows if len(row) > 1]
     inputs = [n for n in names if not n.endswith(".monitor")]
-    if requested and (requested in names or requested.startswith("sink:")):
+    sink_names = [line.split("\t")[1] for line in sinks_output.splitlines() if "\t" in line and len(line.split("\t")) > 1]
+
+    def jabra_inputs() -> list[str]:
+        candidates = [n for n in inputs if n.startswith("bluez_input.")]
+        candidates += [n for n in inputs if "jabra" in n.casefold() and n not in candidates]
+        return candidates
+
+    if requested == "auto:jabra-input":
+        matches = jabra_inputs()
+        if len(matches) == 1:
+            return matches[0], "auto_jabra_input"
+        available = ", ".join(inputs) or "none"
+        if not matches:
+            raise RuntimeError(f"auto:jabra-input found no Jabra input sources; available inputs: {available}")
+        raise RuntimeError(f"auto:jabra-input found multiple candidates {matches}; choose one explicitly")
+    if requested and requested.startswith("sink:"):
+        sink = requested.split(":", 1)[1]
+        if sink not in sink_names:
+            available = ", ".join(sink_names) or "none"
+            raise RuntimeError(f"requested sink {sink!r} is unavailable; available sinks: {available}")
+        return requested, "exact_sink"
+    if requested and requested in names:
         return requested, "exact"
     if requested and requested != "auto":
         for name in inputs:
             if requested.casefold() in name.casefold() or name.casefold() in requested.casefold():
                 return name, "substring"
+        available = ", ".join(inputs) or "none"
+        raise RuntimeError(f"requested PipeWire source {requested!r} is unavailable; available inputs: {available}")
     running = [row[1] for row in rows if len(row) > 3 and row[-1].strip() == "RUNNING" and not row[1].endswith(".monitor")]
-    for pool, reason in ((running, "running_input"),
-                         ([n for n in inputs if n.startswith("bluez_input.")], "bluetooth_input"),
+    for pool, reason in ((jabra_inputs(), "jabra_input"),
+                         (running, "running_input"),
                          ([n for n in inputs if n.startswith("alsa_input.")], "usb_input")):
         if pool:
             return pool[0], reason
-    return requested or "@DEFAULT_SOURCE@", "no_candidates"
+    return "@DEFAULT_SOURCE@", "no_candidates"
 
 
 def _pipewire_record_command(target: str) -> list[str]:
@@ -477,6 +514,16 @@ def _pipewire_record_command(target: str) -> list[str]:
 def _external_text_loop(recorder: Any, callback: Callable[[str], None], stop: threading.Event) -> None:
     while not stop.is_set():
         recorder.text(callback)
+
+
+def _guarded_external_text_loop(
+    recorder: Any, callback: Callable[[str], None], stop: threading.Event, errors: queue.Queue[Exception]
+) -> None:
+    try:
+        _external_text_loop(recorder, callback, stop)
+    except Exception as exc:
+        errors.put(exc)
+        stop.set()
 
 
 def _install_signal_handlers(stop: threading.Event) -> None:

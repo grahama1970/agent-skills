@@ -9,9 +9,11 @@ PORT="${LIVE_EVIDENCE_PORT:-8799}"          # 8765 is owned by task-monitor
 BASE="http://127.0.0.1:$PORT"
 PACK="$SKILL_DIR/fixtures/briefing_drivewealth.json"
 
-# Meeting audio source: default = the Jabra monitor (system audio you hear).
-# Override with INTERVIEW_AUDIO_SOURCE for a different call device.
-SRC="${INTERVIEW_AUDIO_SOURCE:-sink:alsa_output.usb-0b0e_Jabra_SPEAK_510_USB_501AA5274B1D022000-00.analog-stereo}"
+# Room-audio source: default = Jabra microphone input.
+# This is the right topology when an iPad plays interview audio through its
+# external speaker and the Jabra speakerphone listens to the room. For meeting
+# audio rendered by this Linux box, override with INTERVIEW_AUDIO_SOURCE=sink:<output-sink>.
+SRC="${INTERVIEW_AUDIO_SOURCE:-auto:jabra-input}"
 
 export LIVE_EVIDENCE_REPOS="$HOME/workspace/experiments/agent-skills:$HOME/workspace/experiments/tau:$HOME/workspace/experiments/memory:$HOME/workspace/experiments/sparta:$HOME/workspace/experiments/dw-openapi"
 export LIVE_EVIDENCE_SCILLM_KEY="$(docker exec docker-scillm-proxy-1 printenv SCILLM_MASTER_KEY)"
