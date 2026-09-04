@@ -17,6 +17,7 @@ from pathlib import Path
 
 SKILL = Path(__file__).resolve().parents[1]
 BOARD_STATE: dict[str, object] = {"version": 0, "scene": None}  # ponytail: in-memory single-board state; move to files if multi-board is ever needed
+PROPOSAL_STATE: dict[str, object] = {"version": 0, "scene": None}  # pending agent proposal awaiting human Accept/Reject
 TOOLKITS = SKILL / "assets/toolkits"
 PAGE = SKILL / "assets/whiteboard/index.html"
 CREATE_SVG = SKILL.parent / "create-svg/run.sh"
@@ -95,17 +96,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.reply(404, b"not found", "text/plain")
         elif self.path == "/libraries":
             self.reply(200, json.dumps(sorted(library_files())).encode(), "application/json")
+        elif self.path.startswith("/proposal"):
+            self._poll(PROPOSAL_STATE, query)
         elif self.path.startswith("/board"):
-            since = 0
-            if "since=" in query:
-                try:
-                    since = int(query.split("since=")[1].split("&")[0])
-                except ValueError:
-                    since = 0
-            if BOARD_STATE["scene"] is None or BOARD_STATE["version"] <= since:
-                self.reply(204, b"", "application/json")
-            else:
-                self.reply(200, json.dumps(BOARD_STATE).encode(), "application/json")
+            self._poll(BOARD_STATE, query)
         elif self.path.startswith("/library/"):
             name = self.path.removeprefix("/library/")
             path = library_files().get(name)
@@ -116,8 +110,21 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.reply(404, b"not found", "text/plain")
 
+    def _poll(self, state: dict, query: str) -> None:
+        """Return the state scene if newer than ?since=N, else 204."""
+        since = 0
+        if "since=" in query:
+            try:
+                since = int(query.split("since=")[1].split("&")[0])
+            except ValueError:
+                since = 0
+        if state["scene"] is None or int(state["version"]) <= since:
+            self.reply(204, b"", "application/json")
+        else:
+            self.reply(200, json.dumps(state).encode(), "application/json")
+
     def do_POST(self) -> None:  # noqa: N802
-        """Route POST: personal-library persist, board push, render."""
+        """Route POST: personal-library persist, proposal, board push, render."""
         raw = self.rfile.read(int(self.headers.get("Content-Length", "0")))
         if self.path == "/personal-library":
             try:
@@ -131,7 +138,11 @@ class Handler(BaseHTTPRequestHandler):
             path = TOOLKITS / "personal.excalidrawlib"
             self.reply(200, json.dumps({"saved": saved, "path": str(path)}).encode(), "application/json")
             return
-        if self.path == "/board":
+        if self.path == "/proposal/clear":
+            PROPOSAL_STATE["scene"] = None
+            self.reply(200, b'{"cleared": true}', "application/json")
+            return
+        if self.path in ("/proposal", "/board"):
             try:
                 scene = json.loads(raw)
                 if scene.get("type") != "excalidraw" or not isinstance(scene.get("elements"), list):
@@ -139,9 +150,11 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, json.JSONDecodeError) as exc:
                 self.reply(422, json.dumps({"error": str(exc)}).encode(), "application/json")
                 return
-            BOARD_STATE["version"] = int(BOARD_STATE["version"]) + 1
-            BOARD_STATE["scene"] = scene
-            self.reply(200, json.dumps({"version": BOARD_STATE["version"], "elements": len(scene["elements"])}).encode(), "application/json")
+            # /proposal is the safe default (human Accept/Reject); /board replaces the canvas directly.
+            state = PROPOSAL_STATE if self.path == "/proposal" else BOARD_STATE
+            state["version"] = int(state["version"]) + 1
+            state["scene"] = scene
+            self.reply(200, json.dumps({"version": state["version"], "elements": len(scene["elements"])}).encode(), "application/json")
             return
         if self.path != "/render":
             self.reply(404, b"not found", "text/plain")

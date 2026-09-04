@@ -485,18 +485,20 @@ def quickstart_command(port: int = typer.Option(7683, "--port", help="Local port
 def push_board_command(
     board: Path,
     port: int = typer.Option(7683, "--port", help="Whiteboard server port."),
+    replace: bool = typer.Option(False, "--replace", help="Unsafe: replace the live canvas directly instead of proposing."),
 ) -> None:
-    """Push a .excalidraw board to the running whiteboard; the open page applies it live."""
+    """Propose a board to the whiteboard (human Accepts/Rejects); --replace applies it directly."""
 
     import urllib.request
 
     try:
         load_scene(board)  # fail closed before pushing
+        endpoint = "board" if replace else "proposal"
         req = urllib.request.Request(
-            f"http://127.0.0.1:{port}/board", data=board.read_bytes(), method="POST"
+            f"http://127.0.0.1:{port}/{endpoint}", data=board.read_bytes(), method="POST"
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
-            print(json.dumps({"schema": "ops_excalidraw.push_board.v1", "status": "PASS", **json.loads(resp.read())}))
+            print(json.dumps({"schema": "ops_excalidraw.push_board.v1", "status": "PASS", "mode": endpoint, **json.loads(resp.read())}))
     except Exception as exc:  # noqa: BLE001 - single CLI boundary
         fail(exc)
 

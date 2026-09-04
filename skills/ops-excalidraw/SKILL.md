@@ -81,15 +81,16 @@ skills/ops-excalidraw/run.sh render-board chart.excalidraw --output out.svg  # c
 
 `render-board` needs no server; `push-library`/`push-board` target a running whiteboard. All fail closed on invalid input.
 
-## Hot reload (live agent changes)
+## Proposal-first agent changes (safe default)
 
-While the whiteboard is open, an agent can push a board and the page applies it live (poll + `updateScene`, ~1.5s):
+While the whiteboard is open, `push-board` sends a **proposal** by default — the page shows an Accept / Reject / Focus banner and the human's canvas is untouched until they click Accept. Accept merges by element id, so proposed elements are added/updated and existing human elements are never deleted.
 
 ```bash
-skills/ops-excalidraw/run.sh push-board path/to/board.excalidraw --port 7683
+skills/ops-excalidraw/run.sh push-board chart.excalidraw --port 7683            # safe: proposal (Accept/Reject)
+skills/ops-excalidraw/run.sh push-board chart.excalidraw --port 7683 --replace  # unsafe: replace the live canvas directly (disposable board)
 ```
 
-The push is validated fail-closed before sending; invalid payloads get 422. `GET /board?since=N` returns 204 when current. Human edits in the browser are not overwritten until the next push (last push wins).
+Endpoints: `POST /proposal` (safe), `POST /board` (replace), `POST /proposal/clear` (accept/reject both clear). `GET /proposal?since=N` and `GET /board?since=N` return 204 when current. Pushes are validated fail-closed; invalid payloads get 422. `--replace` viewport fits only on the first applied board, never on later live updates.
 
 ## Vendored upstream libraries
 

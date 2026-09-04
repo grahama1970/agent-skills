@@ -55,6 +55,9 @@ create-svg owns final render/animation/verification).
   operator's stated intent across the build session ("fast/easy/dynamic way to
   whiteboard strategy in live meetings, professional libraries ready, agent
   hot-reload, render to SVG") plus the SKILL.md contract.
-- v1 hot-reload is last-push-wins. The safe-copilot end state (proposal-first
-  push with Accept/Reject against a base revision, per the WebGPT review's
-  P0.2) is the next major milestone toward this goal, not part of the v1 proof.
+- Proposal-first push (P0.2) is now implemented: `push-board` defaults to a
+  proposal the human Accepts/Rejects, and Accept merges by id so human elements
+  are never deleted (live-proven: human element survives Accept). `--replace`
+  remains for a disposable canvas. Remaining P0/P1 items (durable revision
+  store, native-vs-semantic export split, meeting sidebar, searchable C4/Lucide
+  library) are follow-on milestones, not part of the v1 proof.
