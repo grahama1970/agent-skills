@@ -480,6 +480,27 @@ def _tick_locked(
     state = load_json(config.state_path())
     receipt["state_snapshot"] = state
 
+    # Whole-document authority boundary (WebGPT P0, 2026-09-04): the state doc
+    # is the authorization gate. An unreadable/invalid state document or invalid
+    # global.state must block the entire tick -- continuing would mean guessing
+    # whether execution is authorized. Fail at the smallest boundary whose
+    # integrity can still be established; for the global gate that boundary is
+    # the whole tick.
+    from . import models
+    from pydantic import ValidationError
+
+    try:
+        models.validate_state(state)
+    except ValidationError as exc:
+        receipt.update({
+            "ok": False, "status": "BLOCKED",
+            "stop_reason": "invalid_state_document",
+            "fleet_health": "NEEDS_ATTENTION",
+            "errors": [f"state document failed pydantic validation: {exc}"],
+        })
+        log_event(run_id, "tick_blocked_invalid_state")
+        return finish(run_id, receipt_dir, receipt, 1)
+
     global_state = state.get("global", {}).get("state")
     if global_state != "active":
         receipt.update(
@@ -489,6 +510,22 @@ def _tick_locked(
         return finish(run_id, receipt_dir, receipt, 0)
 
     projects_doc = load_json(config.projects_path())
+    # Registry envelope authority boundary: if the registry itself is
+    # unreadable/wrong-schema/structurally invalid such that project boundaries
+    # cannot be trusted, block the tick. A single malformed ProjectEntry is a
+    # narrower boundary handled downstream by rotation quarantine.
+    try:
+        models.validate_registry(projects_doc)
+    except ValidationError as exc:
+        receipt.update({
+            "ok": False, "status": "BLOCKED",
+            "stop_reason": "invalid_registry_document",
+            "fleet_health": "NEEDS_ATTENTION",
+            "errors": [f"registry document failed pydantic validation: {exc}"],
+        })
+        log_event(run_id, "tick_blocked_invalid_registry")
+        return finish(run_id, receipt_dir, receipt, 1)
+
     if project_id == "all":
         rotation_mode = "fleet"
         candidates = registry.rotation_order(projects_doc, state)

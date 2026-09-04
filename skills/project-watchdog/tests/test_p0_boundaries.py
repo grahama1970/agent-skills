@@ -88,3 +88,45 @@ def test_worktree_lease_registered_on_exit_code_zero(monkeypatch, tmp_path):
     result = registry.prepare_repair_worktree(repo, wt, 42)
     assert result["ok"] is True
     assert calls["registered"] == 1, "lease must register when worktree add exits 0"
+
+
+def _tick_env(monkeypatch, tmp_path, state_doc, registry_doc):
+    import json as _json
+    (tmp_path / "state.json").write_text(_json.dumps(state_doc))
+    reg = tmp_path / "projects.json"
+    reg.write_text(_json.dumps(registry_doc))
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+    monkeypatch.setenv("PROJECT_WATCHDOG_PROJECTS_PATH", str(reg))
+
+
+def test_invalid_global_state_blocks_whole_tick(monkeypatch, tmp_path):
+    from watchdog import commands
+    _tick_env(monkeypatch, tmp_path,
+              {"schema": "agent_skills.project_watchdog.state.v1",
+               "global": {"state": "banana"}, "projects": {}},
+              {"schema": "agent_skills.project_watchdog.registry.v1",
+               "projects": [{"project_id": "p", "repo": "o/n", "worktree": str(tmp_path)}]})
+    rc = commands.tick(apply=False, project_id="all", max_tickets=1)
+    assert rc == 1, "an invalid global.state literal must block the tick fail-closed"
+
+
+def test_invalid_registry_repo_blocks_whole_tick(monkeypatch, tmp_path):
+    from watchdog import commands
+    _tick_env(monkeypatch, tmp_path,
+              {"schema": "agent_skills.project_watchdog.state.v1",
+               "global": {"state": "active"}, "projects": {}},
+              {"schema": "agent_skills.project_watchdog.registry.v1",
+               "projects": [{"project_id": "p", "repo": "not-owner-name", "worktree": str(tmp_path)}]})
+    rc = commands.tick(apply=False, project_id="all", max_tickets=1)
+    assert rc == 1, "a malformed registry repo must block the tick fail-closed"
+
+
+def test_valid_docs_do_not_block_on_validation(monkeypatch, tmp_path):
+    from watchdog import commands
+    _tick_env(monkeypatch, tmp_path,
+              {"schema": "agent_skills.project_watchdog.state.v1",
+               "global": {"state": "active"}, "projects": {}},
+              {"schema": "agent_skills.project_watchdog.registry.v1",
+               "projects": []})
+    rc = commands.tick(apply=False, project_id="all", max_tickets=1)
+    assert rc == 0, "valid docs must not be blocked by the validation boundary"

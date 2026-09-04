@@ -43,13 +43,17 @@ class ProjectEntry(BaseModel):
 
 class RegistryDoc(BaseModel):
     model_config = ConfigDict(extra="allow")
-    schema_: str = Field(alias="schema")
+    # The load-bearing authority is the project list and each entry's id/repo,
+    # not the schema string. schema is validated only when present so a
+    # structurally-valid schema-less doc (internal/minimal) is not refused,
+    # while a wrong schema string is still rejected.
+    schema_: str | None = Field(default=None, alias="schema")
     projects: list[ProjectEntry]
 
     @field_validator("schema_")
     @classmethod
-    def known_schema(cls, value: str) -> str:
-        if value != "agent_skills.project_watchdog.registry.v1":
+    def known_schema(cls, value: str | None) -> str | None:
+        if value is not None and value != "agent_skills.project_watchdog.registry.v1":
             raise ValueError(f"unknown registry schema {value!r}")
         return value
 
@@ -73,14 +77,16 @@ class GateState(BaseModel):
 
 class StateDoc(BaseModel):
     model_config = ConfigDict(extra="allow")
-    schema_: str = Field(alias="schema")
+    # Authority is the global gate literal, not the schema string; validate
+    # schema only when present (see RegistryDoc).
+    schema_: str | None = Field(default=None, alias="schema")
     global_: GateState = Field(alias="global")
     projects: dict[str, GateState] = {}
 
     @field_validator("schema_")
     @classmethod
-    def known_schema(cls, value: str) -> str:
-        if value != "agent_skills.project_watchdog.state.v1":
+    def known_schema(cls, value: str | None) -> str | None:
+        if value is not None and value != "agent_skills.project_watchdog.state.v1":
             raise ValueError(f"unknown state schema {value!r}")
         return value
 
