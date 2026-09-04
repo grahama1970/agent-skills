@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -33,9 +34,22 @@ def _normalize(text: str) -> str:
     return " ".join(str(text or "").lower().split())
 
 
+def _canonical_layer(layer: str | None) -> str:
+    """Layer as a code-identifier prefix: lowercase, non-[a-z0-9] runs -> ``_``.
+
+    The ecosystem minted-code shape is ``<prefix>_unclassified_<8hex>`` with a
+    ``[a-z0-9_]`` prefix (shame ``is_minted_code``, project-watchdog
+    ``MINTED_CODE_RE``). A raw layer like ``project-watchdog`` minted a
+    hyphenated code its own receipt validator then rejected, so canonicalize
+    at the shared mint site (2026-09-04).
+    """
+    slug = re.sub(r"[^a-z0-9]+", "_", (layer or "unknown").strip().lower()).strip("_")
+    return slug or "unknown"
+
+
 def _mint_code(text: str, layer: str | None) -> str:
     digest = hashlib.sha256(_normalize(text).encode("utf-8")).hexdigest()[:8]
-    return f"{(layer or 'unknown').strip() or 'unknown'}_unclassified_{digest}"
+    return f"{_canonical_layer(layer)}_unclassified_{digest}"
 
 
 def _first_error_line(text: str) -> str:

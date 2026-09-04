@@ -142,10 +142,14 @@ def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -
 
     worktree.parent.mkdir(parents=True, exist_ok=True)
     added = git("worktree", "add", "-B", branch, str(worktree), "origin/main", cwd=repo_dir)
-    if added.get("returncode") == 0:
+    if added.get("exit_code") == 0:
         # Register the lease at creation. The watchdog owns 58 of this repo's
         # worktrees and has never removed one; without an owner recorded here
         # the reaper can only report them, never reclaim them.
+        # NOTE 2026-09-04: this branch read ``returncode``, but git()/run_cmd
+        # record ``exit_code`` only, so the lease was NEVER registered and the
+        # reaper could never reclaim -- the stranded-worktree root cause
+        # (memory#158). Keyed on exit_code now.
         _register_worktree_lease(worktree, purpose=f"watchdog:{branch}")
     if added.get("exit_code") != 0:
         return {"ok": False, "error": f"worktree add failed: {added.get('stderr')}", "steps": steps}

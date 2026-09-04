@@ -172,20 +172,33 @@ def maybe_alert(receipt: dict[str, Any]) -> None:
             notify_receipt = json.loads(proc.stdout)
         except ValueError:
             notify_receipt = {"raw_stdout": proc.stdout[-500:]}
-        delivered = proc.returncode == 0
+        # A real delivery is the ONLY thing that may advance the dedupe clock.
+        # A zero exit is not delivery: a dry run exits zero, and an unverified
+        # webhook send exits zero without proof anything was posted. Requiring
+        # status==SENT plus a message_id/message_url means a dry run or a
+        # silent no-op cannot suppress the next real notification
+        # (WebGPT P0, 2026-09-04).
+        exit_ok = proc.returncode == 0
+        message_ref = notify_receipt.get("message_id") or notify_receipt.get("message_url")
+        really_delivered = (
+            not dry_run
+            and notify_receipt.get("status") == "SENT"
+            and bool(message_ref)
+        )
         receipt["alert"] = {
             "status": notify_receipt.get("status")
-            or ("SENT" if delivered else "ALERT_DELIVERY_FAILED"),
-            "delivered": delivered and not dry_run,
+            or ("SENT" if exit_ok else "ALERT_DELIVERY_FAILED"),
+            "delivered": really_delivered,
             "dry_run": dry_run,
+            "message_ref": message_ref,
             "fingerprint": fingerprint,
             "exit_code": proc.returncode,
             "notify_receipt": notify_receipt,
         }
-        if not delivered:
+        if not exit_ok:
             receipt["alert"]["status"] = "ALERT_DELIVERY_FAILED"
             receipt["alert"]["stderr"] = proc.stderr[-500:]
-        if delivered:
+        if really_delivered:
             state[fingerprint] = now
             state_path.parent.mkdir(parents=True, exist_ok=True)
             state_path.write_text(json.dumps(state, indent=2, sort_keys=True))
