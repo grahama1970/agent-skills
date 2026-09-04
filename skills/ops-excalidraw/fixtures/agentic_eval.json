@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
   "claims": {
-    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board; the served whiteboard page carries data-qid/data-qs-action/title instrumentation on its interactive controls; a mixed board with untagged vendored shapes compiles and renders; quickstart serves the whiteboard in one command; adversarial inputs (malformed JSON, unknown customData kinds, invalid accents, garbage HTTP payloads, path traversal) fail closed; an agent can hot-push a board to the running whiteboard over /board, the page polls and applies it, stale polls get 204, and invalid pushes get 422; the page and vendored UMD assets are served locally (no CDN) including query-string URLs; the page ships a dark/light theme toggle and opens the native library pane when a library is loaded; approved personal library items persist server-side to a versioned personal.excalidrawlib, are listed and reloadable, and invalid payloads get 422; the project agent controls the whiteboard entirely from the CLI: render-board compiles+renders a board to SVG (fail-closed on invalid), push-library persists custom items; sequential personal-library saves merge by id and never drop prior items (P0.5 fix); push-board defaults to a safe proposal (lands in /proposal, never /board; page shows Accept/Reject and merges by id so human elements are never deleted); --replace targets /board for a disposable canvas",
+    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board; the served whiteboard page carries data-qid/data-qs-action/title instrumentation on its interactive controls; a mixed board with untagged vendored shapes compiles and renders; quickstart serves the whiteboard in one command; adversarial inputs (malformed JSON, unknown customData kinds, invalid accents, garbage HTTP payloads, path traversal) fail closed; an agent can hot-push a board to the running whiteboard over /board, the page polls and applies it, stale polls get 204, and invalid pushes get 422; the page and vendored UMD assets are served locally (no CDN) including query-string URLs; the page ships a dark/light theme toggle and opens the native library pane when a library is loaded; approved personal library items persist server-side to a versioned personal.excalidrawlib, are listed and reloadable, and invalid payloads get 422; the project agent controls the whiteboard entirely from the CLI: render-board compiles+renders a board to SVG (fail-closed on invalid), push-library persists custom items; sequential personal-library saves merge by id and never drop prior items (P0.5 fix); push-board defaults to a safe proposal (lands in /proposal, never /board; page shows Accept/Reject and merges by id so human elements are never deleted); --replace targets /board for a disposable canvas; describe drafts a fan-out board from a one-line spec (renders + pushes as proposal); a board with no animation tokens still renders (default reveal); the laser-pointer button is wired to Excalidraw's native setActiveTool",
     "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
   },
   "cases": [
@@ -414,6 +414,80 @@
         "stdout_contains": [
           "\"mode\": \"board\"",
           "board=200"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "describe-renders-and-proposes",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh describe --source 'Client problem' --target 'Graph DB' --target Vectors --target Embedder --output $T/desc.excalidraw | grep -o '\"status\": \"PASS\"' && ./run.sh render-board $T/desc.excalidraw --output $T/desc.svg | grep -o '\"status\": \"PASS\"' && head -c 4 $T/desc.svg"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "<svg"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "describe-pushes-proposal-not-board",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PORT=7684 && fuser -k $PORT/tcp >/dev/null 2>&1; (python3 scripts/whiteboard_server.py $PORT >/dev/null 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/libraries >/dev/null && break; sleep 0.5; done && ./run.sh describe --source Q --target A --target B --port $PORT | grep -o '\"mode\": \"proposal\"' && p=$(curl -s -o /dev/null -w '%{http_code}' \"http://127.0.0.1:$PORT/proposal?since=0\") && b=$(curl -s -o /dev/null -w '%{http_code}' \"http://127.0.0.1:$PORT/board?since=0\"); fuser -k $PORT/tcp >/dev/null 2>&1; echo \"proposal=$p board=$b\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"mode\": \"proposal\"",
+          "proposal=200 board=204"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "no-animation-board-still-renders",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh describe --source S --target X --output $T/b.excalidraw >/dev/null && ./run.sh compile $T/b.excalidraw $T/scene.yml >/dev/null && python3 -c \"import json,sys; d=json.load(open('$T/scene.yml')); ev=d['timeline']['events']; print('events='+str(len(ev))); sys.exit(0 if len(ev)>=1 else 1)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "events=1"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "laser-button-native-wiring",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PORT=7682 && fuser -k $PORT/tcp >/dev/null 2>&1; (python3 scripts/whiteboard_server.py $PORT >/dev/null 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/ >/dev/null && break; sleep 0.5; done && page=$(curl -s http://127.0.0.1:$PORT/); fuser -k $PORT/tcp >/dev/null 2>&1; for q in 'data-qid=\"whiteboard:action:laser\"' 'WHITEBOARD_LASER' 'setActiveTool({ type: \"laser\" })'; do echo \"$page\" | grep -qF \"$q\" || { echo \"MISSING $q\"; exit 1; }; done; echo LASER_WIRED_OK"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "LASER_WIRED_OK"
         ]
       },
       "readback": true,

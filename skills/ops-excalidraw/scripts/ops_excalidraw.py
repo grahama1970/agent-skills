@@ -252,6 +252,11 @@ def compile_scene(input_path: Path, output_path: Path) -> CompileResult:
             event["to_color"] = "#14394d"
         events.append(event)
 
+    if not events:
+        # A board with no animation tokens still needs a non-empty timeline for
+        # create-svg; synthesize a minimal reveal on the source node.
+        events.append({"target": "source-node", "recipe": PRESETS["reveal"], "start_ms": 0, "end_ms": 600, "from_y": -18})
+
     doc = {
         "schema_version": 1,
         "theme": "fixing-opus-neon-v1",
@@ -479,6 +484,56 @@ def quickstart_command(port: int = typer.Option(7683, "--port", help="Local port
     toolkit(toolkit_path)
     print(json.dumps({"schema": "ops_excalidraw.quickstart.v1", "toolkit": str(toolkit_path), "next": f"open http://127.0.0.1:{port}/ — tick libraries in the side panel, drag blocks, press Render SVG"}), flush=True)
     whiteboard_command(port)
+
+
+def build_describe_board(title: str, source: str, targets: list[str]) -> dict[str, Any]:
+    """Build a valid single-source fan-out board from a one-line spec (source + targets)."""
+    if not targets:
+        raise ValueError("describe needs at least one --target")
+    elements: list[dict[str, Any]] = []
+    src = base_element("src", "rectangle", 0, 170, 240, 90, {"kind": "node", "role": "source", "title": source})
+    src["backgroundColor"] = "#a5d8ff"
+    elements += [src, text_element("src-label", 20, 205, source, src["groupIds"][0])]
+    accents = ["green", "cyan", "amber", "orange", "red", "white"]
+    span = max(1, len(targets) - 1)
+    for i, target in enumerate(targets):
+        y = i * 150
+        tid = f"t{i}"
+        rect = base_element(tid, "rectangle", 520, y, 240, 90, {"kind": "node", "role": "target", "title": target, "accent": accents[i % len(accents)]})
+        rect["backgroundColor"] = "#b2f2bb"
+        arrow = base_element(f"a{i}", "arrow", 260, 205, 240, (y + 45) - 205, {})
+        arrow.pop("customData", None)
+        elements += [rect, text_element(f"{tid}-label", 540, y + 32, target, rect["groupIds"][0]), arrow]
+    return {"type": "excalidraw", "version": 2, "source": "ops-excalidraw describe", "elements": elements, "appState": {"name": title}, "files": {}}
+
+
+@app.command(name="describe")
+def describe_command(
+    source: str = typer.Option(..., "--source", help="The single source node label."),
+    target: list[str] = typer.Option(..., "--target", help="A target node label (repeatable)."),
+    title: str = typer.Option("Whiteboard", "--title", help="Board title."),
+    output: Path | None = typer.Option(None, "--output", help="Write the board to a file instead of pushing."),
+    port: int = typer.Option(7683, "--port", help="Whiteboard server port (proposal push)."),
+    replace: bool = typer.Option(False, "--replace", help="Unsafe: replace the live canvas instead of proposing."),
+) -> None:
+    """Draft a fan-out board from a one-line spec, then push it as a proposal (or --output to a file)."""
+
+    import urllib.request
+
+    try:
+        board = build_describe_board(title, source, list(target))
+        raw = (json.dumps(board) + "\n").encode()
+        if output is not None:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(raw)
+            print(json.dumps({"schema": "ops_excalidraw.describe.v1", "status": "PASS", "output": str(output), "targets": len(target)}))
+            return
+        endpoint = "board" if replace else "proposal"
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/{endpoint}", data=raw, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            print(json.dumps({"schema": "ops_excalidraw.describe.v1", "status": "PASS", "mode": endpoint, **json.loads(resp.read())}))
+    except Exception as exc:  # noqa: BLE001 - single CLI boundary
+        fail(exc)
 
 
 @app.command(name="push-board")

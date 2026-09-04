@@ -81,6 +81,15 @@ skills/ops-excalidraw/run.sh render-board chart.excalidraw --output out.svg  # c
 
 `render-board` needs no server; `push-library`/`push-board` target a running whiteboard. All fail closed on invalid input.
 
+Draft a board from a one-line spec (meeting speed) and push it as a proposal:
+
+```bash
+skills/ops-excalidraw/run.sh describe --source "Client problem" --target "Graph DB" --target Vectors --target Embedder --port 7683
+skills/ops-excalidraw/run.sh describe --source S --target A --target B --output board.excalidraw   # to a file instead
+```
+
+The **laser pointer** toolbar button (Excalidraw's native tool) lets the human point at components while talking during a live call.
+
 ## Proposal-first agent changes (safe default)
 
 While the whiteboard is open, `push-board` sends a **proposal** by default — the page shows an Accept / Reject / Focus banner and the human's canvas is untouched until they click Accept. Accept merges by element id, so proposed elements are added/updated and existing human elements are never deleted.
