@@ -33,9 +33,24 @@ def _normalize(text: str) -> str:
     return " ".join(str(text or "").lower().split())
 
 
+def _canonical_layer(layer: str | None) -> str:
+    """Return the failure-code-safe canonical layer name.
+
+    Failure-code consumers (project-watchdog, shame, receipt validators) accept
+    lowercase alphanumerics and underscores. Callers historically passed names
+    such as ``project-watchdog``; minting that raw value produced a code the
+    caller immediately rejected. Canonicalize once at the vocabulary owner.
+    """
+    raw = _normalize(layer or "unknown")
+    canonical = "_".join(part for part in raw.replace("-", " ").split() if part)
+    safe = "".join(ch for ch in canonical if ch.islower() or ch.isdigit() or ch == "_")
+    safe = safe.strip("_")
+    return safe or "unknown"
+
+
 def _mint_code(text: str, layer: str | None) -> str:
     digest = hashlib.sha256(_normalize(text).encode("utf-8")).hexdigest()[:8]
-    return f"{(layer or 'unknown').strip() or 'unknown'}_unclassified_{digest}"
+    return f"{_canonical_layer(layer)}_unclassified_{digest}"
 
 
 def _first_error_line(text: str) -> str:
