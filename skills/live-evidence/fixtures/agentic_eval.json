@@ -845,7 +845,7 @@
       "command": [
         "bash",
         "-c",
-        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/live-evidence\" && bash run.sh eval-live-youtube-oracle"
+        "repo=$(git -C .. rev-parse --show-toplevel) && cd \"$repo/skills/live-evidence\" && bash run.sh eval-live-youtube-oracle --live-ask"
       ],
       "expected": {
         "exit_code": 0,
@@ -881,6 +881,11 @@
           },
           {
             "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
+            "json_pointer": "/checks/displayed_cards_review_bound",
+            "equals": true
+          },
+          {
+            "path": "/tmp/live-evidence-live-youtube-pipewire-oracle-receipt.json",
             "json_pointer": "/checks/publication_decisions_journaled",
             "equals": true
           },
@@ -902,7 +907,7 @@
         ]
       },
       "proves": "Real audio reaches a card: the YouTube interview WAV is played into PipeWire, captured by pw-record, transcribed by RealtimeSTT in the GPU container, and projected as a source-backed evidence card. Every other case in this suite posts transcript TEXT to the API and therefore proves nothing about the audio half.",
-      "does_not_prove": "Browser playback from youtube.com (a stored WAV of the same video is played), live Ask provider quality, or real Memory relevance (Memory is deliberately degraded).",
+      "does_not_prove": "Browser playback from youtube.com, physical Jabra/iPad microphone capture, broad answer quality, or real Memory relevance (Memory is deliberately degraded). Source code is fixture-backed; creator/reviewer calls are live through Ask/Tau.",
       "infra_blocked_when": [
         "Surf extension was reloaded",
         "server did not come up",

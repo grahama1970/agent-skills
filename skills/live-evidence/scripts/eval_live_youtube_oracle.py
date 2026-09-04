@@ -14,6 +14,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 import httpx
+from live_evidence.models import EvidenceCard
+from live_evidence.reviewed_answer import card_has_bound_review
 from dotenv import load_dotenv
 load_dotenv(override=False)
 DEFAULT_WAV_CANDIDATES = [
@@ -105,28 +107,6 @@ def write_profile(path: Path) -> None:
 def write_repo(repo: Path) -> None:
     """Copy the committed code-fixture repo (fixtures/code-fixture-repo)."""
     shutil.copytree(Path(__file__).resolve().parents[1] / "fixtures" / "code-fixture-repo", repo)
-def write_ask_fixture_runner(path: Path, run_dir: Path, log_path: Path) -> Path:
-    runner = path / "ask-youtube-oracle-fixture-runner.sh"
-    runner.write_text(
-        "\n".join(
-            [
-                "#!/usr/bin/env bash",
-                "set -euo pipefail",
-                f"run_dir={json.dumps(str(run_dir))}",
-                f"log_path={json.dumps(str(log_path))}",
-                'mkdir -p "$run_dir/node-artifacts/handler-fixture"',
-                'printf "%s\\n" "$*" >> "$log_path"',
-                'cat > "$run_dir/node-artifacts/handler-fixture/response.md" <<\'EOF\'',
-                "Use a stack of opening-parenthesis indices. Remove closing parentheses that have no earlier opening match, then remove leftover opening indices. Preserve non-parenthesis characters. Code path: live-evidence-proof/remove_invalid_parentheses.py.",
-                "EOF",
-                'printf \'{"run_dir":"%s"}\\n\' "$run_dir"',
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    runner.chmod(0o755)
-    return runner
 def wait_for_health(client: httpx.Client, server_log: Path) -> None:
     for _ in range(100):
         try:
@@ -425,6 +405,12 @@ def evaluate_oracle(
             {"terms": group, "present": term_group_present(transcript_blob, [str(term) for term in group])}
             for group in transcript_groups
         ],
+        "displayed_cards_review_bound": bool(cards) and all(
+            card_has_bound_review(EvidenceCard.model_validate(card))
+            and (card.get("answer_review") or {}).get("binding", {}).get("session_id") == (state.get("session") or {}).get("session_id")
+            and card.get("policy_digest") == (state.get("session") or {}).get("policy_digest")
+            for card in cards
+        ),
         "selected_query_bounded": bool(query_cards),
         "source_backed_expected_card": bool(matching_source_cards),
         "publication_decisions_journaled": bool(publication_decisions),
@@ -444,6 +430,7 @@ def evaluate_oracle(
         and checks["bridge_docker_realtimestt_process_ok"]
         and checks["bridge_pipewire_transcript_events"] > 0
         and all(item["present"] for item in checks["transcript_required_terms"])
+        and checks["displayed_cards_review_bound"]
         and checks["selected_query_bounded"]
         and checks["source_backed_expected_card"]
         and checks["publication_decisions_journaled"]
@@ -509,7 +496,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--compute-type", default="int8")
     parser.add_argument("--ui-cdp", action="store_true")
     parser.add_argument("--ui-name", default="live-evidence-youtube-pipewire-oracle")
-    parser.add_argument("--attempts", type=int, default=1, help="Retry full live attempts until backend and UI oracle pass.")
+    parser.add_argument("--live-ask", action="store_true", help="Explicitly allow real creator/reviewer model calls through Ask/Tau.")
+    parser.add_argument("--review-wait-seconds", type=float, default=240.0)
+    parser.add_argument("--attempts", type=int, default=1, help="Number of full live attempts.")
     return parser.parse_args()
 def run_attempt_loop(args: argparse.Namespace) -> int:
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
@@ -552,6 +541,9 @@ def run_attempt_loop(args: argparse.Namespace) -> int:
             command.extend(["--source-wav", str(Path(args.source_wav).expanduser().resolve())])
         if args.ui_cdp:
             command.append("--ui-cdp")
+        if args.live_ask:
+            command.append("--live-ask")
+        command.extend(["--review-wait-seconds", str(args.review_wait_seconds), "--device", args.device])
         result = subprocess.run(command, text=True, capture_output=True, check=False, timeout=args.max_seconds + 300)
         attempt_summary: dict[str, Any] = {
             "attempt": attempt,
@@ -576,7 +568,7 @@ def run_attempt_loop(args: argparse.Namespace) -> int:
         "created_at": datetime.now(UTC).isoformat(),
         "mocked": False,
         "live": True,
-        "fixture_backed": False,
+        "fixture_backed": True,
         "attempt_budget": args.attempts,
         "attempts_run": len(attempts),
         "passing_receipt": passing_receipt,
@@ -590,6 +582,10 @@ def run_attempt_loop(args: argparse.Namespace) -> int:
     return 0 if final_status == "PASS" else 1
 def main() -> int:
     args = parse_args()
+    if not args.live_ask:
+        raise SystemExit("Reviewed publication requires --live-ask (Ask/Tau only); the old Ask stub is not review authority.")
+    if not 1 <= args.review_wait_seconds <= 300:
+        raise SystemExit("--review-wait-seconds must be between 1 and 300")
     if args.attempts < 1:
         raise SystemExit("--attempts must be >= 1")
     if args.attempts > 1:
@@ -633,7 +629,7 @@ def main() -> int:
         "created_at": datetime.now(UTC).isoformat(),
         "mocked": False,
         "live": True,
-        "fixture_backed": False,
+        "fixture_backed": True,
         "oracle": str(oracle_path),
         "source_wav": str(source_wav),
         "youtube_source": oracle.get("source"),
@@ -649,9 +645,7 @@ def main() -> int:
             write_profile(profile)
             data_dir = output_dir / "data"
             server_log = output_dir / "server.log"
-            ask_log = output_dir / "ask.argv"
-            ask_run_dir = output_dir / "ask-run"
-            ask_runner = write_ask_fixture_runner(output_dir, ask_run_dir, ask_log)
+            ask_runner = skills_root / "ask" / "run.sh"
             port = free_port()
             backend_url = f"http://127.0.0.1:{port}"
             env = {
@@ -663,9 +657,9 @@ def main() -> int:
                 "LIVE_EVIDENCE_PROCESS_TIMEOUT": "4",
                 "LIVE_EVIDENCE_MAX_CARDS": "8",
                 "LIVE_EVIDENCE_ASK_RUNNER": str(ask_runner),
-                "LIVE_EVIDENCE_ASK_HANDLER": "fixture-handler",
-                "LIVE_EVIDENCE_ASK_TIMEOUT": "5",
-                "LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS": "false",
+                "LIVE_EVIDENCE_ASK_HANDLER": os.getenv("LIVE_EVIDENCE_ASK_HANDLER", "gpt-5.5-high"),
+                "LIVE_EVIDENCE_ASK_TIMEOUT": str(args.review_wait_seconds),
+                "LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS": "true",
                 "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
             }
             with server_log.open("w", encoding="utf-8") as log:
@@ -682,6 +676,12 @@ def main() -> int:
                 bridge_invocation = run_bridge(args, backend_url=backend_url, source_wav=source_wav, output_dir=output_dir)
                 bridge_receipt = read_bridge_receipt(bridge_invocation)
                 final_state = get_state(client)
+                deadline = time.monotonic() + args.review_wait_seconds
+                while not final_state.get("cards") and time.monotonic() < deadline:
+                    if not any(lane.get("state") == "running" for lane in final_state.get("lanes", [])):
+                        break
+                    time.sleep(0.5)
+                    final_state = get_state(client)
                 final_state_path = output_dir / "final-state.json"
                 final_state_path.write_text(json.dumps(final_state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
                 journal_rows = read_journal_rows(data_dir)
@@ -739,7 +739,8 @@ def main() -> int:
                         "ask_source_count": oracle_result["ask_source_count"],
                         "claims": {
                             "proves": [
-                                "a stored YouTube interview WAV was played through PipeWire into a GPU Docker RealtimeSTT container",
+                                f"a stored YouTube interview WAV was played through PipeWire into Docker RealtimeSTT with requested device={args.device}",
+                                "every displayed card has an exact-answer Ask/Tau reviewer approval bound to the current session",
                                 "Live Evidence received pipewire transcript events containing the expected parenthesis-problem terms",
                                 "the selected live card stayed bounded to the parenthesis question",
                                 "the displayed card exposed current-source evidence for valid_parentheses.py",
@@ -747,7 +748,8 @@ def main() -> int:
                             ],
                             "does_not_prove": [
                                 "browser playback from youtube.com because the eval reuses a stored WAV from the supplied video",
-                                "live Ask provider quality because this oracle permits the deterministic gate to block Ask",
+                                "general answer quality beyond this single stored-audio scenario",
+                                "physical Jabra/iPad room-microphone capture when using the default virtual sink",
                                 "real Memory relevance because Memory is intentionally degraded to localhost:9",
                             ],
                         },
