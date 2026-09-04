@@ -360,6 +360,7 @@ class ScannedQuestion:
     category: str | None = None
     skills: tuple[str, ...] = ()
     source_turn_ids: tuple[str, ...] = ()
+    missing_input: bool = False
 
 
 @dataclass(frozen=True, slots=True)

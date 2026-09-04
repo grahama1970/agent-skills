@@ -661,6 +661,7 @@ class AppSnapshot(BaseModel):
     current_thread: str = "Waiting for the conversation"
     transcript: list[TranscriptEvent] = Field(default_factory=list, max_length=300)
     cards: list[EvidenceCard] = Field(default_factory=list, max_length=100)
+    pending_requirements: list[Requirement] = Field(default_factory=list)
     lanes: list[LaneActivity] = Field(default_factory=list)
     model_calls: list[ModelCallTrace] = Field(default_factory=list, max_length=100)
     trace_events: list[PipelineTraceEvent] = Field(default_factory=list, max_length=200)

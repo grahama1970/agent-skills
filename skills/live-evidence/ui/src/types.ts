@@ -127,12 +127,23 @@ export interface SessionInfo {
   practice_only: boolean;
 }
 
+export interface PendingRequirement {
+  requirement_id: string;
+  question_id: string;
+  question_revision: number;
+  clarification_id: string | null;
+  text: string;
+  blocking: boolean;
+  status: string;
+}
+
 export interface AppSnapshot {
   schema: "live_evidence.app_snapshot.v1";
   session: SessionInfo;
   current_thread: string;
   transcript: TranscriptEvent[];
   cards: EvidenceCard[];
+  pending_requirements?: PendingRequirement[];
   lanes: LaneActivity[];
   external_search_enabled: boolean;
   listener?: {

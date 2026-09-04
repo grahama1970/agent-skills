@@ -361,7 +361,10 @@ class RuntimeState:
 
         async with self._lock:
             self._ledger[(question_id, revision)] = list(entries)
-            return ledger_digest(self._ledger[(question_id, revision)])
+            digest = ledger_digest(self._ledger[(question_id, revision)])
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+        return digest
 
     async def ledger_entries(self, question_id: str, revision: int) -> list[Requirement]:
         async with self._lock:
@@ -370,11 +373,14 @@ class RuntimeState:
     async def pending_requirements(self) -> list[Requirement]:
         """Current question requirements, independently of visible answer cards."""
         async with self._lock:
-            return [entry.model_copy(deep=True)
-                    for (qid, revision), entries in self._ledger.items()
-                    if self._question_last_revision.get(qid) == revision
-                    and any(entry.status is RequirementStatus.UNRESOLVED for entry in entries)
-                    for entry in entries]
+            return self._pending_requirements_unlocked()
+
+    def _pending_requirements_unlocked(self) -> list[Requirement]:
+        return [entry.model_copy(deep=True)
+                for (qid, revision), entries in self._ledger.items()
+                if self._question_last_revision.get(qid) == revision
+                and any(entry.status is RequirementStatus.UNRESOLVED for entry in entries)
+                for entry in entries]
 
     async def blocking_unresolved(self, question_id: str, revision: int) -> list[Requirement]:
         async with self._lock:
@@ -426,7 +432,9 @@ class RuntimeState:
             # Append-only: the amended entry supersedes in place-position, but
             # the prior state remains recoverable through the journal.
             entries[entries.index(target)] = amended
-            return "amended", amended
+            snapshot = self._snapshot_unlocked()
+        await self._broadcast(snapshot)
+        return "amended", amended
 
     async def revise_question(self, normalized_question: str) -> tuple[str, int]:
         """Open or revise the single active question, returning (id, revision).
@@ -786,6 +794,7 @@ class RuntimeState:
             # while the listener kept running).
             transcript=[item.model_copy(deep=True) for item in self._transcript[-300:]],
             cards=[item.model_copy(deep=True) for item in self._cards],
+            pending_requirements=self._pending_requirements_unlocked(),
             lanes=[self._lanes[lane].model_copy(deep=True) for lane in RetrievalLane],
             model_calls=[item.model_copy(deep=True) for item in self._model_calls],
             trace_events=[item.model_copy(deep=True) for item in self._trace_events],

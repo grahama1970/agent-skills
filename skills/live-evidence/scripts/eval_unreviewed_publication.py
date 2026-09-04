@@ -14,7 +14,7 @@ from pathlib import Path
 import httpx
 
 from eval_interview_loop import free_port, post_turn, write_profile
-from eval_ui_surf_controls import surf, surf_click, surf_new_tab, surf_js
+from eval_ui_surf_controls import surf, surf_click, surf_new_tab, surf_js, surf_type
 
 
 def main() -> int:
@@ -22,6 +22,7 @@ def main() -> int:
     reviewed = '--reviewed' in sys.argv
     manual_mode = '--manual' in sys.argv
     ui_mode = '--ui' in sys.argv
+    incomplete_mode = '--incomplete' in sys.argv
     receipt_path = Path('/tmp/live-evidence-reviewed-publication.json' if reviewed else '/tmp/live-evidence-unreviewed-publication.json')
     with tempfile.TemporaryDirectory(prefix='le-unreviewed-') as temporary:
         temp = Path(temporary)
@@ -61,6 +62,8 @@ def main() -> int:
                 client.post('/api/session/start', json={'consent_confirmed': True}).raise_for_status()
                 query = ('How does evidence_loop return the evidence-loop text? Show its Python implementation, not a real routing system.'
                          if reviewed else 'How does the evidence-loop put interviewer questions into ambient hud cards?')
+                if incomplete_mode:
+                    query = 'Could you implement the parser for this input?'
                 if manual_mode:
                     manual_response = client.post('/api/search', json={'lane': 'ask', 'query': query}, timeout=260)
                     manual_response.raise_for_status()
@@ -81,7 +84,7 @@ def main() -> int:
                           all(d['status'] == 'held' and
                               'answer_review_required' in d['reason_codes'] for d in decisions))
                 checks = {}
-                if not reviewed:
+                if not reviewed and not incomplete_mode:
                     manual = client.post('/api/search', json={'lane': 'ripgrep',
                         'query': 'How does evidence_loop return evidence-loop text?'})
                     checks['manual_held_http_409'] = manual.status_code == 409
@@ -110,6 +113,12 @@ def main() -> int:
                             'required_sections': all(heading in answer.splitlines() for heading in headings),
                         }
                         passed = all(checks.values())
+                if incomplete_mode:
+                    pending = client.get('/api/requirements').json()
+                    checks['incomplete_question_clarification'] = any(
+                        item.get('blocking') and item.get('status') == 'unresolved' for item in pending)
+                    passed = (checks['incomplete_question_clarification'] and not cards
+                              and bool(decisions) and all(d['status'] == 'held' for d in decisions))
                 screenshots = []
                 session_control_readback = {}
                 if ui_mode and passed:
@@ -119,6 +128,19 @@ def main() -> int:
                         shot = f'/tmp/live-evidence-approved-{temp.name}.png'
                         surf(root, ['snap', '--tab-id', str(tab), '--no-activate', '--output', shot])
                         screenshots.append(shot)
+                        if incomplete_mode:
+                            checks['clarification_form_visible'] = surf_js(root, tab,
+                                "return !!document.querySelector('[data-qid=clarification-answer]')") is True
+                            surf_click(root, tab, '[data-qid="clarification-answer"]')
+                            surf_type(root, tab, 'Input is comma-separated integers; return their sum.')
+                            surf_click(root, tab, '[data-qid="clarification-submit"]')
+                            for _ in range(50):
+                                pending_after = client.get('/api/requirements').json()
+                                if not pending_after:
+                                    break
+                                time.sleep(0.1)
+                            checks['clarification_submit_resolved'] = not pending_after
+                            checks['unreviewed_answer_still_hidden'] = not client.get('/api/state').json()['cards']
                         if reviewed:
                             geometry = surf_js(root, tab, """return JSON.stringify((() => {
                               const pane = document.querySelector('[data-qid="flashcard-answer-pane"]');

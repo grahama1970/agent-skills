@@ -85,6 +85,7 @@ class EvidenceCoordinator:
         self._tasks: set[asyncio.Task[None]] = set()
         self._solved_revisions: set[tuple[str, int]] = set()
         self._held: dict[tuple[str, int], dict] = {}
+        self._missing_input_questions: set[str] = set()
         self._assistant_utterances: list[str] = []
         self._scanner = QuestionScanner()
         from .threader import QuestionThreader
@@ -326,6 +327,8 @@ class EvidenceCoordinator:
                 self._dispatched_questions.add(question_id)
                 self._dispatched_texts[question_id] = question.text
                 self._question_categories[question_id] = question.category
+                if question.missing_input:
+                    self._missing_input_questions.add(question_id)
                 await self._journal.append(
                     self._state.session_id(), "question_classified",
                     {"question_id": question_id, "category": question.category,

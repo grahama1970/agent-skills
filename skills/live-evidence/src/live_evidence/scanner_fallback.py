@@ -133,6 +133,10 @@ def fallback_scan(
             category=category,
             skills=skills,
             source_turn_ids=(str(turn.get("turn_id") or ""),),
+            # Narrow missing-reference guard: no preceding transcript and no
+            # inline example. This is not a general answerability classifier.
+            missing_input=(len(turns) == 1 and not ledger and "this input" in lowered
+                           and not any(mark in text for mark in (":", "{", "[", "\n"))),
         )
         key = fallback_question_key(text)
         match_index = question_keys.index(key) if key in question_keys else -1
@@ -146,6 +150,7 @@ def fallback_scan(
                 category=question.category,
                 skills=question.skills,
                 source_turn_ids=tuple(dict.fromkeys((*prior.source_turn_ids, *question.source_turn_ids))),
+                missing_input=question.missing_input,
             )
             continue
         question_keys.append(key)

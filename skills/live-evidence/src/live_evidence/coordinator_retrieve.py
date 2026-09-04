@@ -46,6 +46,17 @@ async def retrieve(
         # call. verdict=None flows through the existing None-safe paths
         # (heuristic may_ask, no clarification hold, unbounded query).
         verdict = None
+        if question_id in self._missing_input_questions:
+            from .readiness import ReadinessVerdict, ClarifyingQuestion
+            verdict = ReadinessVerdict(
+                question_asked_yet=True, question_complete=False,
+                ready_to_answer=False, blocking_reason="needs_clarification",
+                question_type="code", canonical_question=decision.query,
+                clarifying_questions=[ClarifyingQuestion(
+                    id="referenced-input", question="Please provide the input example and expected output.",
+                    why_it_matters="The request refers to input not supplied in the transcript.",
+                    blocking=True)],
+            )
     else:
         ledger = await self._state.question_ledger()
         # Deterministic junk gate + restatement dedupe BEFORE any model call

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { DevPanel } from "@/components/DevPanel";
 import { FlashCard } from "@/components/FlashCard";
+import { PendingClarification } from "@/components/PendingClarification";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { MemoryVault } from "@/components/MemoryVault";
 import { QuestionTimeline } from "@/components/QuestionTimeline";
@@ -40,6 +41,7 @@ export default function App() {
   }, [snapshot.cards]);
 
   const activeCard = activeCardForSelection(visibleCards, selection);
+  const pending = snapshot.pending_requirements?.find((item) => item.blocking && item.status === "unresolved" && item.clarification_id);
 
   useEffect(() => {
     if (!activeCard) {
@@ -111,6 +113,7 @@ export default function App() {
         />
 
         <main className="flex flex-1 flex-col overflow-hidden bg-[#090a0f]">
+          {pending ? <PendingClarification key={`${snapshot.session.session_id}:${pending.requirement_id}`} requirement={pending} /> : null}
           <FlashCard
             card={activeCard ?? null}
             followUps={activeCard?.question_id ? (followUpsByParent.get(activeCard.question_id) ?? []) : []}

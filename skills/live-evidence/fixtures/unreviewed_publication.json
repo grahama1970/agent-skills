@@ -9,6 +9,26 @@
   },
   "cases": [
     {
+      "name": "incomplete-input-shows-independent-clarification",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "readback": true,
+      "notes": "Injected incomplete-parser transcript, default deterministic scanner, real HTTP and Surf form submission. No provider or microphone calls.",
+      "command": ["bash", "-c", "bash ../run.sh ui-build >/dev/null && UV_PROJECT_ENVIRONMENT=\"${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv\" uv run --project .. --extra dev python ../scripts/eval_unreviewed_publication.py --incomplete --ui"],
+      "timeout_seconds": 150,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {"path": "/tmp/live-evidence-unreviewed-publication.json", "json_pointer": "/status", "equals": "PASS"},
+          {"path": "/tmp/live-evidence-unreviewed-publication.json", "json_pointer": "/checks/incomplete_question_clarification", "equals": true},
+          {"path": "/tmp/live-evidence-unreviewed-publication.json", "json_pointer": "/checks/clarification_form_visible", "equals": true},
+          {"path": "/tmp/live-evidence-unreviewed-publication.json", "json_pointer": "/checks/clarification_submit_resolved", "equals": true},
+          {"path": "/tmp/live-evidence-unreviewed-publication.json", "json_pointer": "/checks/unreviewed_answer_still_hidden", "equals": true}
+        ]
+      }
+    },
+    {
       "name": "reviewed-answer-published-through-live-ask-tau",
       "type": "positive",
       "real_world": true,
