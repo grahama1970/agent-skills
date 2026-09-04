@@ -77,7 +77,7 @@ function Visual({ visual }: { visual: UiVisual }) {
   }
   if (visual.type === 'native_diagram') {
     return (
-      <div className="flex h-full w-full items-center justify-center gap-6">
+      <div className="native-flow flex h-full w-full items-center justify-center gap-6">
         {visual.items.map((item, i) => (
           <div key={item} className="flex items-center gap-6">
             {i > 0 ? <span aria-hidden className="text-5xl text-[var(--deck-accent,#67e8f9)]">→</span> : null}
@@ -125,7 +125,7 @@ function BodyList({ slide, size = 'text-4xl' }: { slide: UiSlide; size?: string 
 
 function Footer({ slide }: { slide: UiSlide }) {
   if (!slide.footer) return null
-  return <p className="absolute bottom-10 left-24 right-24 m-0 text-2xl text-slate-500">{slide.footer}</p>
+  return <p className="slide-footer absolute bottom-10 left-24 right-24 m-0 text-2xl text-slate-500">{slide.footer}</p>
 }
 
 export function Cover({ slide }: { slide: UiSlide }) {
@@ -236,7 +236,7 @@ export function Flow({ slide }: { slide: UiSlide }) {
   )
 }
 
-const LAYOUTS: Record<string, (props: { slide: UiSlide }) => React.ReactNode> = {
+const LAYOUTS: Record<string, (props: { slide: UiSlide; responsive?: boolean }) => React.ReactNode> = {
   freeform: Freeform,
   cover: Cover,
   statement: Statement,
@@ -250,11 +250,11 @@ const LAYOUTS: Record<string, (props: { slide: UiSlide }) => React.ReactNode> = 
   appendix: CardGrid,
 }
 
-export function SlideBody({ slide }: { slide: UiSlide }) {
+export function SlideBody({ slide, responsive = false }: { slide: UiSlide; responsive?: boolean }) {
   const Layout = LAYOUTS[slide.layout] ?? Split
   return (
-    <div className="deck-font h-full w-full">
-      <Layout slide={slide} />
+    <div className={`deck-font h-full w-full ${slide.layout === 'freeform' ? '' : 'semantic-slide'}`}>
+      <Layout slide={slide} responsive={responsive} />
     </div>
   )
 }

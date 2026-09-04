@@ -74,8 +74,9 @@ export function RightSheet({
       ref={ref}
       aria-label="Auxiliary tools"
       aria-hidden={collapsed}
+      inert={collapsed}
       data-qid="deck:pane:chat"
-      className="min-h-0 shrink-0 overflow-hidden border-l border-slate-800"
+      className="auxiliary-sheet min-h-0 shrink-0 overflow-hidden border-l border-slate-800"
       style={{
         width: collapsed ? 0 : DRAWER_WIDTH,
         transition: `width ${collapsed ? 200 : 250}ms ${EASE}`,
@@ -88,7 +89,7 @@ export function RightSheet({
         }
       }}
     >
-      <div className="flex h-full flex-col" style={{ width: DRAWER_WIDTH }}>
+      <div className="auxiliary-sheet-inner flex h-full flex-col" style={{ width: DRAWER_WIDTH }}>
         <div className="flex h-11 shrink-0 items-center border-b border-slate-800 bg-slate-950/60">
           {(['chat', 'notes', ...(layout ? (['layout'] as RightSheetTab[]) : [])] as RightSheetTab[]).map(tabButton)}
           <Button

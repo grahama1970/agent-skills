@@ -1,5 +1,6 @@
 import { useContext, useState } from 'react'
 import { Rnd } from 'react-rnd'
+import { CanonicalDiagram } from '../components/CanonicalDiagram'
 import { FloatingToolbar } from '../components/FloatingToolbar'
 import { EditContext } from '../edit'
 import { assetUrl, revisionStore } from '../hooks'
@@ -112,7 +113,8 @@ async function postFrame(slideId: string, elementId: string, frame: { x: number;
   }
 }
 
-function ElementContent({ element }: { element: UiElement }) {
+function ElementContent({ element, responsive = false }: { element: UiElement; responsive?: boolean }) {
+  if (element.diagram) return <CanonicalDiagram diagram={element.diagram} responsive={responsive} />
   if (element.type === 'asset' && element.asset) {
     if (element.asset.missing || !element.asset.file) {
       return (
@@ -138,7 +140,7 @@ function ElementContent({ element }: { element: UiElement }) {
     <p
       className="m-0 h-full w-full whitespace-pre-wrap leading-snug"
       style={{
-        fontSize: `${(element.size_pt / 72) * (CANVAS_HEIGHT / 7.5)}px`, // pt → 144dpi canvas px (WebGPT review P1-11)
+        fontSize: responsive ? `${Math.max(18, Math.min(element.size_pt, element.role === 'title' ? 40 : 28))}px` : `${(element.size_pt / 72) * (CANVAS_HEIGHT / 7.5)}px`, // pt → 144dpi canvas px (WebGPT review P1-11)
         fontWeight: element.bold ? 700 : 400,
         color: element.color ?? '#3a4550',  // dark ink on the house white canvas
         textAlign: element.align as 'left' | 'center' | 'right',
@@ -149,7 +151,7 @@ function ElementContent({ element }: { element: UiElement }) {
   )
 }
 
-export function Freeform({ slide }: { slide: UiSlide }) {
+export function Freeform({ slide, responsive = false }: { slide: UiSlide; responsive?: boolean }) {
   const { editing, request } = useContext(EditContext)
   const [error, setError] = useState<string | null>(null)
   const [frames, setFrames] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({})
@@ -163,24 +165,25 @@ export function Freeform({ slide }: { slide: UiSlide }) {
   }
 
   return (
-    <div className="relative h-full w-full bg-white text-slate-800">
+    <div className="freeform-slide relative h-full w-full bg-white text-slate-800">
       {/* house chrome (#1388): the PPTX inherits this from the template; the
           browser draws the same anatomy so review is faithful */}
       <div
-        className="absolute left-0 top-0 z-0 flex w-full items-center px-10"
+        className="freeform-band absolute left-0 top-0 z-0 flex w-full items-center px-10"
         style={{ height: 0.11 * CANVAS_HEIGHT, background: '#076889' }}
       >
         <span className="text-4xl font-semibold text-white">{slide.title}</span>
       </div>
-      <div className="absolute bottom-3 left-10 z-0 text-xl font-bold" style={{ color: '#076889' }}>
+      <div className="freeform-brand absolute bottom-3 left-10 z-0 text-xl font-bold" style={{ color: '#076889' }}>
         grahama.co
       </div>
-      <div className="absolute bottom-3 right-10 z-0 text-xl text-slate-400">{slide.order}</div>
+      <div className="freeform-page absolute bottom-3 right-10 z-0 text-xl text-slate-400">{slide.order}</div>
       {error ? (
         <p role="alert" className="absolute left-4 top-4 z-30 m-0 rounded-lg border border-rose-500/60 bg-rose-500/10 px-3 py-1.5 text-xl text-rose-300">
           Rejected: {error}
         </p>
       ) : null}
+      {responsive && slide.footer ? <p className="freeform-footer">{slide.footer}</p> : null}
       <SnapGuideOverlay guides={guides} />
       {slide.elements.map((element) => {
         const frame = frames[element.id] ?? { x: element.x, y: element.y, w: element.w, h: element.h }
@@ -188,16 +191,19 @@ export function Freeform({ slide }: { slide: UiSlide }) {
           return (
             <div
               key={element.id}
-              className={`absolute ${element.entrance && element.entrance !== 'none' ? `entrance-${element.entrance}` : ''}`}
+              data-element-id={element.id}
+              className={`freeform-element ${responsive ? '' : 'absolute'} ${element.entrance && element.entrance !== 'none' ? `entrance-${element.entrance}` : ''}`}
               style={{
-                left: frame.x * CANVAS_WIDTH,
-                top: frame.y * CANVAS_HEIGHT,
-                width: frame.w * CANVAS_WIDTH,
-                height: frame.h * CANVAS_HEIGHT,
+                left: responsive ? undefined : frame.x * CANVAS_WIDTH,
+                top: responsive ? undefined : frame.y * CANVAS_HEIGHT,
+                width: responsive ? undefined : frame.w * CANVAS_WIDTH,
+                height: responsive ? undefined : frame.h * CANVAS_HEIGHT,
+                // Reflow must not enlarge small marks into full-width artwork.
+                maxWidth: responsive && element.type === 'asset' ? frame.w * CANVAS_WIDTH : undefined,
                 animationDelay: element.entrance_delay_ms ? `${element.entrance_delay_ms}ms` : undefined,
               }}
             >
-              <ElementContent element={element} />
+              <ElementContent element={element} responsive={responsive} />
             </div>
           )
         }
@@ -234,7 +240,7 @@ export function Freeform({ slide }: { slide: UiSlide }) {
             }
             className="group border border-dashed border-transparent hover:border-cyan-500/60"
           >
-            {selectedId === element.id ? (
+            {selectedId === element.id && !element.diagram ? (
               <FloatingToolbar
                 slideId={slide.id}
                 element={element}
@@ -249,7 +255,7 @@ export function Freeform({ slide }: { slide: UiSlide }) {
               className="h-full w-full cursor-move"
               onClick={() => setSelectedId(element.id)}
               onDoubleClick={() => {
-                if (element.type === 'text') {
+                if (element.type === 'text' && !element.diagram) {
                   request({
                     slideId: slide.id,
                     field: `element:${element.id}:text`,
@@ -259,7 +265,7 @@ export function Freeform({ slide }: { slide: UiSlide }) {
                 }
               }}
             >
-              <ElementContent element={element} />
+              <ElementContent element={element} responsive={responsive} />
             </div>
           </Rnd>
         )

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './responsive.css';
 
 /* shadcn design tokens (Tailwind v4 is CSS-first: no tailwind.config.js).
    Values are the deck's own house palette so primitives inherit the product

@@ -41,31 +41,37 @@ export function useDeck(): { deck: UiDeckBundle | null; error: string | null; re
 }
 
 /** Scale a fixed 1920x1080 canvas to fit its container (open-slide convention). */
-export function useSlideScale(): { ref: React.RefObject<HTMLDivElement | null>; scale: number } {
+export function useSlideScale(): { ref: React.RefObject<HTMLDivElement | null>; scale: number; width: number } {
   const ref = useRef<HTMLDivElement | null>(null)
   const [scale, setScale] = useState(0.1)
+  const [width, setWidth] = useState(0)
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const observer = new ResizeObserver(() => {
       const rect = el.getBoundingClientRect()
+      setWidth(rect.width)
       setScale(Math.min(rect.width / CANVAS_WIDTH, rect.height / CANVAS_HEIGHT))
     })
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
-  return { ref, scale }
+  return { ref, scale, width }
 }
 
 /** Arrow/space/home/end keyboard navigation. */
-export function useKeyboardNav(count: number, index: number, setIndex: (next: number) => void): void {
+export function useKeyboardNav(count: number, index: number, setIndex: (next: number) => void, enabled = true): void {
   const clamp = useCallback(
     (value: number) => Math.max(0, Math.min(count - 1, value)),
     [count],
   )
   useEffect(() => {
+    if (!enabled) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
+      const target = event.target as HTMLElement
+      if (target.closest('input, textarea, select, button, a, [contenteditable=true]') || event.ctrlKey || event.metaKey || event.altKey) return
+      // A focused reflowed slide is a reading region: vertical keys scroll it.
+      if (target.closest('.slide-viewport[data-layout="responsive"]') && ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(event.key)) return
       switch (event.key) {
         case 'ArrowRight':
         case 'ArrowDown':
@@ -88,7 +94,7 @@ export function useKeyboardNav(count: number, index: number, setIndex: (next: nu
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [clamp, count, index, setIndex])
+  }, [clamp, count, index, setIndex, enabled])
 }
 
 interface ActionSpec {

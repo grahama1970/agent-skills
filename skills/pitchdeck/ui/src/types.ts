@@ -19,7 +19,15 @@ export interface UiAsset {
   missing: boolean
 }
 
+export interface UiDiagram {
+  nodes: { id: string; label: string; sublabel?: string | null; bbox: { x: number; y: number; w: number; h: number } }[]
+  edges: { id: string; source: string; target: string; label?: string | null; line_style?: string; arrowhead?: boolean }[]
+}
+
 export interface UiElement {
+  kind?: string
+  role?: string
+  diagram?: UiDiagram
   id: string
   type: 'text' | 'asset' | string
   x: number

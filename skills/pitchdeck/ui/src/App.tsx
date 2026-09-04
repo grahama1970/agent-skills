@@ -17,12 +17,13 @@ import { Toasts, toast } from './components/Toasts'
 import { Inspector } from './components/Inspector'
 import { EditContext, type EditRequest } from './edit'
 import { lintSlide } from './lib/pptxLint'
-import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterAction, useSlideScale } from './hooks'
+import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterAction } from './hooks'
 import { useTopNavShortcuts } from './useTopNavShortcuts'
-import { FragmentContext, SlideBody, fragmentCount } from './layouts/SlideLayouts'
-import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiDeckBundle, type UiSlide } from './types'
+import { FragmentContext, fragmentCount } from './layouts/SlideLayouts'
+import { type UiDeckBundle } from './types'
 // Direct import, never a barrel file (best-practices-react).
 import { Button } from './components/ui/button'
+import { SlideViewport } from './components/SlideViewport'
 
 function usePersistentPane(key: string, initial: boolean): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
   const [value, setValue] = useState<boolean>(() => {
@@ -48,31 +49,6 @@ type View = 'present' | 'overview' | 'claims'
 function viewFromHash(): View {
   const hash = window.location.hash.replace('#/', '')
   return hash === 'overview' || hash === 'claims' ? hash : 'present'
-}
-
-function SlideCanvas({ slide, direction, zoom }: { slide: UiSlide; direction: 'fwd' | 'back'; zoom: string }) {
-  const { ref, scale: fitScale } = useSlideScale()
-  const scale = zoom === 'fit' ? fitScale : (Number(zoom) / 100) * fitScale
-  return (
-    <div ref={ref} className="relative min-h-0 flex-1 overflow-hidden">
-      <div
-        className="absolute left-1/2 top-1/2 overflow-hidden rounded-lg bg-slate-950 shadow-2xl"
-        style={{
-          width: CANVAS_WIDTH,
-          height: CANVAS_HEIGHT,
-          transform: `translate(-50%, -50%) scale(${scale})`,
-        }}
-      >
-        <div
-          key={slide.id}
-          className={`h-full w-full ${slide.transition === 'none' ? '' : `anim-${slide.transition}-${direction}`}`}
-          style={{ '--deck-transition': `${slide.transition_duration_ms}ms` } as React.CSSProperties}
-        >
-          <SlideBody slide={slide} />
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function Overview({ deck, onSelect }: { deck: UiDeckBundle; onSelect: (index: number) => void }) {
@@ -349,7 +325,7 @@ export function App() {
     }
   }, [deck, index, editing])
 
-  useKeyboardNav(deck ? (editing ? deck.slides.length : deck.slides.filter((s) => !s.hidden).length) : 0, index, go)
+  useKeyboardNav(deck ? (editing ? deck.slides.length : deck.slides.filter((s) => !s.hidden).length) : 0, index, go, !presenting)
 
 
   // Mode architecture (roundtable): Present | Design | Claims | Source as one
@@ -406,13 +382,13 @@ export function App() {
     'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:border-cyan-500/60 disabled:cursor-not-allowed disabled:opacity-40'
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="deck-app flex h-full min-w-0 flex-col">
       {presenting ? (
         <PresenterOverlay slides={navSlides.filter((s) => !s.hidden)} initialIndex={index} onClose={() => setPresenting(false)} />
       ) : null}
       <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       <Toasts />
-      <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 border-b border-slate-800 px-4 py-1.5">
+      <header className="deck-header grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 border-b border-slate-800 px-4 py-1.5">
         <div className="flex min-w-0 items-center gap-3">
           {editing ? (
             <>
@@ -582,13 +558,14 @@ export function App() {
         <Overview
           deck={deck}
           onSelect={(next) => {
-            go(next)
+            setIndex(next)
+            setFragment(0)
             setView('present')
           }}
         />
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <div className="relative flex min-h-0 flex-1">
+          <div className="deck-workspace relative flex min-h-0 flex-1">
             {editing && showSource ? (
               <>
                 <SourcePane version={sourceVersion} onSaved={reloadAll} onClose={() => setShowSource(false)} width={widths.source} />
@@ -648,7 +625,7 @@ export function App() {
               <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
                 <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
                   <FragmentContext.Provider value={editing ? Infinity : fragment}>
-                    <SlideCanvas slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} />
+                    <SlideViewport slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} fixed={editing} />
                   </FragmentContext.Provider>
                 </EditContext.Provider>
               </AssetDropZone>
@@ -668,13 +645,13 @@ export function App() {
           {pendingEdit ? (
             <EditPanel edit={pendingEdit} onClose={() => setPendingEdit(null)} onSaved={reloadAll} />
           ) : null}
-          <footer className="flex items-center justify-between gap-4 border-t border-slate-800 px-4 py-2">
+          <footer className="deck-navigation flex items-center justify-between gap-4 border-t border-slate-800 px-4 py-2">
             <Button
               type="button"
               data-qid="deck:nav:prev"
               data-qs-action="DECK_PREV_SLIDE"
               title="Previous slide"
-              disabled={index === 0}
+              disabled={index === 0 && fragment === 0}
               onClick={() => go(index - 1)}
               className={navButton}
             >
@@ -688,7 +665,7 @@ export function App() {
               data-qid="deck:nav:next"
               data-qs-action="DECK_NEXT_SLIDE"
               title="Next slide"
-              disabled={index === navSlides.length - 1}
+              disabled={index === navSlides.length - 1 && fragment >= fragmentTotal.current}
               onClick={() => go(index + 1)}
               className={navButton}
             >

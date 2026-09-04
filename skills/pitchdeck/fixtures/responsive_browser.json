@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Live Chrome rendering through Surf and canonical production emission; responsive reading at 1920, 960 and 390 CSS pixels",
+  "claims": {
+    "proves": "Text and qualifier retention, canonical diagram label/edge retention, image loading, narrow font floors, viewport overflow, keyboard/button/overview navigation and unchanged Design/export geometry for the live emitted decks",
+    "does_not_prove": "Every arbitrary user-authored layout; graphical equivalence with PPTX; unsupported canonical primitives; author visual approval or live VS Code recording"
+  },
+  "cases": [
+    {
+      "name": "responsive-live-browser",
+      "type": "positive",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_responsive_browser.py", "--out", "/tmp/pitchdeck-responsive-live.json"],
+      "timeout_seconds": 600,
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-responsive-live.json", "json_pointer": "/status", "equals": "PASS"}]}
+    },
+    {
+      "name": "responsive-rejects-scaled-canvas",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_responsive_browser.py", "--negative", "--out", "/tmp/pitchdeck-responsive-negative.json"],
+      "timeout_seconds": 180,
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-responsive-negative.json", "json_pointer": "/scaling_defect_detected", "equals": true}]}
+    }
+  ]
+}

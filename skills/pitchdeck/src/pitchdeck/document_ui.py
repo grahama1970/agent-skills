@@ -148,7 +148,7 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
             # re-deriving a layout the document already decided
             "elements": [_element_payload(e, assets=assets, asset_dir=asset_dir)
                           for e in sorted(slide.elements, key=lambda e: e.z)
-                          if e.kind in {DocElementKind.TEXT, DocElementKind.IMAGE}
+                          if e.kind in {DocElementKind.TEXT, DocElementKind.IMAGE, DocElementKind.DIAGRAM}
                           # band-duty titles are absorbed by the chrome band,
                           # exactly as the PPTX emitter absorbs them (skip_title)
                           and not (e.role == "title" and e.bbox.y < 0.15)],

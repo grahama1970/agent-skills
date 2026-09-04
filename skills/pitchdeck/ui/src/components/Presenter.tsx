@@ -5,6 +5,7 @@ import { FragmentContext, SlideBody, fragmentCount } from '../layouts/SlideLayou
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiSlide } from '../types'
 // Direct import, never a barrel file (best-practices-react).
 import { Button } from './ui/button'
+import { SlideViewport } from './SlideViewport'
 
 // Presenter view (user spec, adapted): REAL slide renders (SlideBody scaled)
 // for current and next slide, elapsed timer + wall clock, speaker notes with
@@ -200,6 +201,9 @@ export function PresenterOverlay({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (event.key !== 'Escape' && (target.closest('input, textarea, select, button, a, [contenteditable=true]') || event.ctrlKey || event.metaKey || event.altKey)) return
+      if (target.closest('.slide-viewport[data-layout="responsive"]') && ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(event.key)) return
       if (event.key === 'Escape') {
         event.preventDefault()
         onClose()
@@ -221,7 +225,7 @@ export function PresenterOverlay({
   const upNext = slides[index + 1]
 
   const body = (
-    <div className="flex h-full w-full select-none flex-col overflow-hidden bg-slate-950 text-slate-100">
+    <div className="presenter-shell flex h-full w-full select-none flex-col overflow-hidden bg-slate-950 text-slate-100">
       <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-6">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-2 font-mono text-xs font-semibold text-cyan-400">
@@ -361,8 +365,8 @@ export function PresenterOverlay({
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-6 overflow-hidden p-6">
         <div className="col-span-7 flex min-h-0 flex-col gap-4 overflow-hidden">
-          <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-3 shadow-2xl">
-            <ScaledSlide slide={slide} revealed={fragment} />
+          <div className="relative flex min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-3 shadow-2xl">
+            <FragmentContext.Provider value={fragment}><SlideViewport slide={slide} qidPrefix="deck:presenter:slide" /></FragmentContext.Provider>
           </div>
           <div className="flex h-32 flex-shrink-0 gap-4">
             <div className="flex w-1/3 flex-col justify-between rounded-xl border border-slate-800 bg-slate-900 p-3">
@@ -373,7 +377,7 @@ export function PresenterOverlay({
                   data-qid="deck:presenter:prev"
                   data-qs-action="DECK_PRESENTER_PREV"
                   title="Previous slide (←)"
-                  disabled={index === 0}
+                  disabled={index === 0 && fragment === 0}
                   onClick={prev}
                   className="flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-slate-800 py-3 text-slate-200 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-30"
                 >
@@ -384,7 +388,7 @@ export function PresenterOverlay({
                   data-qid="deck:presenter:next"
                   data-qs-action="DECK_PRESENTER_NEXT"
                   title="Next slide (→ / Space)"
-                  disabled={index === slides.length - 1}
+                  disabled={index === slides.length - 1 && fragment >= total}
                   onClick={next}
                   className="flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-cyan-700 py-3 text-white hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-30"
                 >

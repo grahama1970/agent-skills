@@ -385,7 +385,8 @@ rather than text).
 ## Browser deck renderer (ui/)
 
 `ui/` is a React + Tailwind app (Vite, TypeScript) that presents the emitted
-`deck.data.json` on a fixed 1920×1080 scaled canvas: keyboard navigation,
+`deck.data.json` on a 1920×1080 desktop canvas, with automatic readable reflow
+below 1100 CSS pixels of available reading space: keyboard navigation,
 slide transitions (reduced-motion aware), overview grid, speaker-notes panel,
 and a read-only claim-ledger review view. `emit-ui` runs the same fail-closed
 validation as `build` before writing anything, and the app refuses bundles
@@ -402,6 +403,13 @@ to route free-form turns to a live project agent.
 ./run.sh emit-ui --bundle-dir docs/pitch/product --output-dir ui/public
 cd ui && pnpm install && pnpm dev   # http://localhost:3006
 ```
+
+Present mode reflows semantic layouts and canonical freeform elements without
+changing export coordinates. Design/Source mode and thumbnails remain fixed
+geometry; narrow reading scrolls vertically instead of shrinking text. Canonical
+diagrams retain explicit node/edge labels in a responsive reading projection.
+See `docs/RESPONSIVE_BROWSER.md` and the retained live gate
+`fixtures/responsive_browser.json` for the scope and proof boundary.
 
 `ui/node_modules` is a symlink into `/mnt/storage12tb/skills/pitchdeck/`
 per the storage policy. The browser deck is the animation surface; PPTX stays

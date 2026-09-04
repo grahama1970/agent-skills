@@ -1,0 +1,76 @@
+/* Only the reading surface reflows. Export geometry and Design Rnd frames
+   remain in the fixed canvas; the available pane width selects this mode. */
+.slide-viewport { container-type: inline-size; }
+.slide-viewport:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+/* Keep slide-entry translations inside the reading surface, not in its scroll bounds. */
+.responsive-slide { min-height: 100%; overflow-wrap: anywhere; overflow: clip; }
+.responsive-slide .deck-font { height: auto; }
+.responsive-slide .semantic-slide > div {
+  height: auto;
+  min-height: 100%;
+  padding: clamp(20px, 4cqw, 48px);
+  gap: 24px;
+}
+.responsive-slide .semantic-slide :is(h1, h2) { font-size: clamp(28px, 4cqw, 44px); line-height: 1.15; }
+.responsive-slide .semantic-slide :is(.text-5xl, .text-4xl) { font-size: clamp(20px, 2.8cqw, 28px); }
+.responsive-slide .semantic-slide :is(.text-3xl, .text-2xl) { font-size: 18px; }
+.responsive-slide .semantic-slide .grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  height: auto;
+  gap: 24px;
+}
+.responsive-slide .semantic-slide :is(figure, figure > div) { height: auto; min-width: 0; }
+.responsive-slide .semantic-slide :is(img, video) { flex: none; height: auto; max-height: 65vh; }
+.responsive-slide .semantic-slide header { flex-wrap: wrap; }
+.responsive-slide .semantic-slide li { padding: 16px; min-width: 0; }
+.responsive-slide .semantic-slide li li { padding: 0; }
+.responsive-slide .semantic-slide .slide-footer { position: static; margin-top: 24px; font-size: 16px; }
+.responsive-slide .semantic-slide .native-flow { height: auto; flex-direction: column; align-items: stretch; }
+.responsive-slide .semantic-slide .native-flow > div { flex-direction: column; gap: 12px; }
+.responsive-slide .semantic-slide .native-flow > div > span { transform: rotate(90deg); align-self: center; }
+.responsive-slide .semantic-slide .native-flow > div > div { padding: 16px; font-size: 18px; }
+/* Complex vector diagrams/math keep their internal coordinates and can be
+   inspected in a local scroll region instead of shrinking labels to nothing. */
+.responsive-slide [data-qid='deck:visual:mermaid'],
+.responsive-slide [data-qid='deck:visual:math'] { overflow: auto; justify-content: flex-start; max-width: 100%; }
+.responsive-slide [data-qid='deck:visual:mermaid'] svg { max-width: none; flex-shrink: 0; }
+.responsive-slide .freeform-slide { display: flex; flex-direction: column; height: auto; gap: 24px; padding: 0 clamp(20px, 4cqw, 48px) 24px; }
+.responsive-slide .freeform-band { position: static; height: auto !important; padding: 20px; margin: 0 calc(-1 * clamp(20px, 4cqw, 48px)); width: auto; }
+.responsive-slide .freeform-band span { font-size: clamp(24px, 3.5cqw, 36px); }
+.responsive-slide .freeform-element { min-width: 0; }
+.responsive-slide .freeform-element :is(p, img, video) { height: auto; }
+.responsive-slide .freeform-element :is(img, video) { max-height: min(40vh, 360px); width: 100%; }
+.responsive-slide .freeform-brand, .responsive-slide .freeform-page { position: static; order: 2; font-size: 16px; }
+.responsive-slide .freeform-page { align-self: flex-end; }
+.responsive-slide .freeform-footer { order: 1; font-size: 16px; }
+
+/* Chrome wraps independently from slide coordinates. Drawers overlay instead
+   of consuming the entire reading pane at phone / split-screen sizes. */
+.deck-header { flex-shrink: 0; }
+.deck-navigation { flex-shrink: 0; }
+.deck-navigation > span { min-width: 0; overflow-wrap: anywhere; text-align: center; }
+@media (max-width: 1100px) {
+  .deck-header { display: flex; flex-wrap: wrap; gap: 8px; }
+  .deck-header > div:first-child { flex: 1 1 100%; flex-wrap: wrap; }
+  .deck-header > div:first-child h1 { flex: 1; min-width: 80px; }
+  .deck-header nav { flex-wrap: wrap; justify-content: flex-start; gap: 4px; }
+  .auxiliary-sheet[aria-hidden='false'] { position: absolute; inset: 0 0 0 auto; z-index: 40; max-width: 100%; background: #0a0f14; }
+  .auxiliary-sheet-inner { max-width: 100%; }
+  .deck-header > div:nth-child(2) { max-width: 100%; overflow-x: auto; }
+  .deck-workspace > aside { max-width: 80vw; }
+  .deck-app > ul { padding: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+  .deck-navigation { gap: 8px; padding-inline: 8px; }
+  .presenter-shell { overflow-y: auto; }
+  .presenter-shell > header > div { flex-wrap: wrap; max-width: 100%; }
+  .presenter-shell > header { height: auto; flex-wrap: wrap; gap: 12px; padding: 12px; }
+  .presenter-shell > div { display: flex; flex-direction: column; overflow: visible; flex: none; padding: 12px; }
+  .presenter-shell > div > div:first-child { min-height: 70vh; }
+  .presenter-shell > div > div:last-child { min-height: 200px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auxiliary-sheet { transition: none !important; }
+}
+.responsive-slide .canonical-diagram { font-size: 18px; line-height: 1.5; }
+@media (max-width: 1100px) {
+  .deck-workspace > [aria-label='Deck source'] { position: absolute; inset: 0 auto 0 0; z-index: 40; width: min(100%, 520px) !important; min-width: 0 !important; }
+}
