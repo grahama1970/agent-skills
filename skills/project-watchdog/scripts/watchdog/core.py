@@ -406,6 +406,14 @@ def finish(
     carry no evidence, and one directory per minute is pure disk churn. The
     receipt is still printed and still logged.
     """
+    # Pydantic receipt validation (receipt_schema.py). Invalid receipts are
+    # downgraded to NEEDS_ATTENTION with the validation error recorded, so a
+    # malformed receipt or a hand-invented triage code cannot flow downstream
+    # unmarked. Runs before persistence gating and alerting: a downgraded
+    # receipt persists and alerts like any NEEDS_ATTENTION.
+    from . import receipt_schema
+
+    validation = receipt_schema.validate_receipt(receipt)
     if persist is None:
         persist = receipt.get("status") not in UNEVENTFUL_STATUSES
     # Human alerting is composed from $ops-discord at this single receipt
@@ -414,6 +422,16 @@ def finish(
     from . import alerts
 
     alerts.maybe_alert(receipt)
+    # Re-validate the FINAL shape after alerting mutated the receipt, so
+    # schema_validation describes what is actually persisted, not a
+    # pre-mutation snapshot (gpt-5.6-sol review finding 2, 2026-09-03).
+    if validation.get("valid"):
+        validation = receipt_schema.validate_receipt(receipt)
+    if not validation.get("valid"):
+        # Fail-closed process outcome: an invalid receipt must not let the
+        # tick exit 0 (review finding 1). Evidence is preserved first; only
+        # the exit code hardens.
+        exit_code = exit_code or 1
     if persist:
         receipt_path = receipt_dir / "receipt.json"
         receipt["receipt_path"] = str(receipt_path)

@@ -65,8 +65,12 @@ ASK_RUN_SH = SKILL_DIR.parent / "ask" / "run.sh"
 
 
 def ask_run_sh() -> Path:
-    """Path to the $ask runner used by the ticket-repair lane."""
-    return ASK_RUN_SH
+    """Path to the $ask runner used by the ticket-repair lane.
+
+    ``PROJECT_WATCHDOG_ASK_RUN_SH`` overrides it so the end-to-end probe can
+    substitute a seat stub without touching real provider transports.
+    """
+    return _env_path("PROJECT_WATCHDOG_ASK_RUN_SH", ASK_RUN_SH)
 #: Seed state, versioned with the skill. Runtime state is NOT written here.
 STATE_SEED_PATH = REGISTRY_DIR / "state.json"
 

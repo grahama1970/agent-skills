@@ -1181,6 +1181,78 @@
       },
       "proves": "With no watchdog webhook env var, watchdog alerting falls back to the ops-discord Discord-bot transport and resolves a real channel. Guards the 2026-09-03 incident: an agent must never report 'human must create a webhook' while the bot token in ~/.zshrc can deliver.",
       "does_not_prove": "A live post from an applied tick; live proof is the message_id receipt from 2026-09-03 (1545107248219693187)."
+    },
+    {
+      "name": "e2e-three-agent-completed",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python scripts/e2e_three_agent_probe.py completed"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true"
+        ]
+      },
+      "proves": "Three-agent pipeline E2E scenario 'completed' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+    },
+    {
+      "name": "e2e-three-agent-needs-human",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python scripts/e2e_three_agent_probe.py needs-human"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true"
+        ]
+      },
+      "proves": "Three-agent pipeline E2E scenario 'needs-human' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+    },
+    {
+      "name": "e2e-three-agent-bad-code",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python scripts/e2e_three_agent_probe.py bad-code"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true"
+        ]
+      },
+      "proves": "Three-agent pipeline E2E scenario 'bad-code' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+    },
+    {
+      "name": "e2e-three-agent-ui-data",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python scripts/e2e_three_agent_probe.py ui-data"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true"
+        ]
+      },
+      "proves": "Three-agent pipeline E2E scenario 'ui-data' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
+      "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
     }
   ]
 }

@@ -911,6 +911,20 @@
         "best-practices finding",
         "external research timeout"
       ]
+    },
+    {
+      "code": "triage_classifier_unreachable",
+      "layer": "triage-error",
+      "match": [
+        "triage_classifier_unreachable",
+        "triage-error classify could not be invoked"
+      ],
+      "cause": "A caller tried to route a raw failure signal through triage-error classify, but the classifier CLI could not be invoked (missing runner, timeout, or bad JSON output).",
+      "next_command": "skills/triage-error/run.sh classify --text probe --layer triage-error",
+      "recoverable": true,
+      "not_this": [
+        "the underlying failure the caller was trying to classify"
+      ]
     }
   ],
   "aliases": {}

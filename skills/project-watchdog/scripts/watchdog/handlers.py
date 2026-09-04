@@ -1521,9 +1521,20 @@ def handle_ticket_repair(
                 github.watchdog_comment("Repair proof gate refused closure", gate),
             )
         )
+        # A seat that actively rejected the reviewer's classification with
+        # NEEDS_ATTENTION is a human-decision signal, not a retryable machine
+        # failure: route the ticket to a person instead of parking it only as
+        # agent-blocked (operator 2026-09-03).
+        refusal_labels = [config.BLOCKED_LABEL]
+        seat_needs_attention = any(
+            (seat or {}).get("verdict") == "NEEDS_ATTENTION"
+            for seat in gate.get("seat_verdicts", {}).values()
+        )
+        if seat_needs_attention:
+            refusal_labels.append("needs-human")
         result["commands"].append(
             github.issue_edit(
-                repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
+                repo, issue_number, add=refusal_labels, remove=[config.LEASE_LABEL]
             )
         )
         log_event(run_id, "repair_proof_gate_refused", issue=issue_number,

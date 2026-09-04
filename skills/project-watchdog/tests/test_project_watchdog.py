@@ -778,7 +778,9 @@ def test_a_dag_that_passed_but_proved_nothing_does_not_close_the_issue(tmp_path)
     assert result["status"] == "NEEDS_ATTENTION" and result["ok"] is False
     assert not close.called, "an unproven repair must not close its ticket"
     assert not any(e.get("add") == [config.DONE_LABEL] for e in edits), "must not mark it done"
-    assert any(e.get("add") == [config.BLOCKED_LABEL] for e in edits)
+    # A seat that declared NEEDS_ATTENTION routes the ticket to a person:
+    # agent-blocked plus needs-human (operator 2026-09-03).
+    assert any(e.get("add") == [config.BLOCKED_LABEL, "needs-human"] for e in edits)
     reasons = " | ".join(result["proof_gate"]["reasons"])
     assert "declared NEEDS_ATTENTION" in reasons
     assert "declared no VERDICT" in reasons

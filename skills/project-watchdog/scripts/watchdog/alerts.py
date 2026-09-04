@@ -88,7 +88,16 @@ def _should_alert(receipt: dict[str, Any]) -> bool:
         return False
     if receipt.get("status") in ALERT_STATUSES:
         return True
-    return receipt.get("stop_reason") == "idle_streak_exceeded"
+    if receipt.get("stop_reason") == "idle_streak_exceeded":
+        return True
+    # A completed ticket is human-notable good news (operator 2026-09-03):
+    # notify when a tick actually handled a ticket to completion. NOOP fleet
+    # rotation stays silent.
+    if receipt.get("status") == "COMPLETED" and any(
+        h.get("status") == "COMPLETED" for h in receipt.get("handled_issues") or []
+    ):
+        return True
+    return False
 
 
 def _render_content(receipt: dict[str, Any]) -> str:
