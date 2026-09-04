@@ -115,6 +115,18 @@ def _render_content(receipt: dict[str, Any]) -> str:
     return "\n".join(lines)[:1800]
 
 
+def _verified_delivery(notify_receipt: dict[str, Any], *, dry_run: bool) -> bool:
+    """Whether ops-discord returned read-back evidence of a real message.
+
+    Process exit zero proves only that the notifier ran. A dry run, a webhook
+    204, or an unverified ``SENT`` claim must never advance dedupe state because
+    doing so can suppress the next real alert for a full renotify window.
+    """
+    if dry_run or notify_receipt.get("status") != "SENT":
+        return False
+    return bool(notify_receipt.get("message_id") or notify_receipt.get("message_url"))
+
+
 def maybe_alert(receipt: dict[str, Any]) -> None:
     """Post a human alert for this receipt through $ops-discord, best effort.
 
@@ -172,17 +184,26 @@ def maybe_alert(receipt: dict[str, Any]) -> None:
             notify_receipt = json.loads(proc.stdout)
         except ValueError:
             notify_receipt = {"raw_stdout": proc.stdout[-500:]}
-        delivered = proc.returncode == 0
+        process_ok = proc.returncode == 0
+        delivered = process_ok and _verified_delivery(notify_receipt, dry_run=dry_run)
+        notifier_status = str(notify_receipt.get("status") or "")
+        if delivered:
+            status = "SENT"
+        elif dry_run and process_ok:
+            status = notifier_status or "DRY_RUN"
+        elif process_ok and notifier_status == "SENT":
+            status = "ACCEPTED_UNVERIFIED"
+        else:
+            status = notifier_status or "ALERT_DELIVERY_FAILED"
         receipt["alert"] = {
-            "status": notify_receipt.get("status")
-            or ("SENT" if delivered else "ALERT_DELIVERY_FAILED"),
-            "delivered": delivered and not dry_run,
+            "status": status,
+            "delivered": delivered,
             "dry_run": dry_run,
             "fingerprint": fingerprint,
             "exit_code": proc.returncode,
             "notify_receipt": notify_receipt,
         }
-        if not delivered:
+        if not process_ok:
             receipt["alert"]["status"] = "ALERT_DELIVERY_FAILED"
             receipt["alert"]["stderr"] = proc.stderr[-500:]
         if delivered:
