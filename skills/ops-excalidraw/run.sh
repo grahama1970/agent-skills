@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Strip inherited venv to prevent uv conflicts in cross-skill subprocess calls
+unset VIRTUAL_ENV
 set -euo pipefail
 cd "$(dirname "$0")"
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/ops-excalidraw/.venv}"

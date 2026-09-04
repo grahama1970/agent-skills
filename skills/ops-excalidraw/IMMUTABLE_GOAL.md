@@ -9,7 +9,7 @@ create-svg owns final render/animation/verification).
 
 ## Primary proof
 
-- `skills/ops-excalidraw/run.sh render-board skills/ops-excalidraw/fixtures/meeting-scenario-board.excalidraw --output /tmp/ops-excalidraw-goal.svg`
+- From `skills/ops-excalidraw`: `./run.sh render-board fixtures/meeting-scenario-board.excalidraw --output /tmp/ops-excalidraw-goal.svg`
   exits 0, emits `ops_excalidraw.render_board.v1 status PASS`, and writes a
   non-empty `<svg …>` file.
 - `skills/agentic-evals/run.sh run skills/ops-excalidraw/fixtures/agentic_eval.json --output /tmp/ox-eval.json`
