@@ -4,7 +4,7 @@
 Nothing here is fixtured or deterministic by design. Embry's voice is rendered
 by the LIVE Chatterbox server (CUDA, turbo engine) from a breakpoint monologue;
 audio plays through a per-run null sink; the LIVE GPU RealtimeSTT bridge
-transcribes the sink monitor; the LIVE stage-1 resolver (SciLLM, opus low)
+transcribes the sink monitor; the local stage-1 resolver
 judges the transcript; and the human interruption is a REAL human voice -- the
 recorded interviewer from the pinned YouTube WAV -- barging in over Embry.
 
@@ -14,9 +14,9 @@ the system (a) actually silences the assistant -- process-level effect plus a
 Chatterbox cancel receipt, not a status flag -- and (b) redirects to the
 human's topic, producing a card about parentheses, not breakpoints.
 
-Prerequisites are part of the claim: if Chatterbox, the GPU container, Memory,
-or the SciLLM key is unavailable, the eval fails with that named reason rather
-than degrading into fixtures.
+Prerequisites are part of the claim: if Chatterbox, the GPU container, or Memory
+is unavailable, the eval fails with that named reason rather than degrading into
+fixtures.
 """
 
 from __future__ import annotations
@@ -84,20 +84,8 @@ def get(url: str, timeout: float = 15.0) -> dict:
         return json.load(resp)
 
 
-def scillm_key() -> str | None:
-    if os.getenv("LIVE_EVIDENCE_SCILLM_KEY"):
-        return os.environ["LIVE_EVIDENCE_SCILLM_KEY"]
-    try:
-        env = subprocess.run(
-            ["docker", "inspect", "docker-scillm-proxy-1",
-             "--format", "{{range .Config.Env}}{{println .}}{{end}}"],
-            capture_output=True, text=True, timeout=20).stdout
-        for line in env.splitlines():
-            if line.startswith("SCILLM_MASTER_KEY="):
-                return line.split("=", 1)[1]
-    except Exception:
-        pass
-    return None
+def provider_boundary() -> str:
+    return "tau_only"
 
 
 def transcript_tokens(base: str) -> set[str]:
@@ -116,8 +104,6 @@ def main() -> int:
     check("chatterbox voice server live",
           health.get("live") is True and health.get("model_loaded") is True,
           f"engine={health.get('engine')} device={health.get('device')}")
-    key = scillm_key()
-    check("live stage-1 resolver key available", bool(key), "SciLLM master key resolved")
     check("real human interrupt audio present", SINK_WAV.is_file(), str(SINK_WAV)[-40:])
     if failures:
         return 1
@@ -170,7 +156,6 @@ def main() -> int:
             "LIVE_EVIDENCE_REPOS": str(repo),
             "LIVE_EVIDENCE_DATA_DIR": str(temp / "data"),
             "LIVE_EVIDENCE_PROFILE": str(temp / "profile.yaml"),
-            "LIVE_EVIDENCE_SCILLM_KEY": key or "",
             "MEMORY_SERVICE_URL": "http://127.0.0.1:8601",
         }
         server_log = (temp / "server.log").open("w")

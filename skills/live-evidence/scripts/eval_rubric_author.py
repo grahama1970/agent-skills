@@ -71,9 +71,6 @@ def main() -> int:
     import run_g2i_campaign as campaign
 
     campaign.ROOT = root
-    if not campaign.scillm_key():
-        print("live SciLLM key: FAIL")
-        return 1
     rubric_payload = json.loads((campaign.PACK / "role-rubric.json").read_text())
 
     # 1. purpose gate.

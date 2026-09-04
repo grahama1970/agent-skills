@@ -73,7 +73,7 @@ def main() -> int:
         "comparison_statement": report_text,
         "release_marker": benchmark["release_marker"] if ready else None,
         "proof_boundary": {
-            "live": ["stage-1 SciLLM resolver (G2I-01/02)", "debugger capture+validation (G2I-04)",
+            "live": ["stage-1 local resolver (G2I-01/02)", "debugger capture+validation (G2I-04)",
                       "chatterbox render byte readback (G2I-07)", "backend policy enforcement (G2I-03)"],
             "fixture_backed": ["Ask solver lane (owned counting fixture)",
                                 "review journal fixture (G2I-05)", "rubric answer events (G2I-06)"],

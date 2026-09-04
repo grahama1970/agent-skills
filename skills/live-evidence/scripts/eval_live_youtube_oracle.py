@@ -21,26 +21,8 @@ DEFAULT_WAV_CANDIDATES = [
     Path("/mnt/storage12tb/skills/live-evidence/live-youtube-proof/20260816T180912Z/youtube.wav"),
     Path("/mnt/storage12tb/skills/live-evidence/live-youtube-proof/20260816T180437Z/youtube.wav"),
 ]
-def scillm_key() -> str | None:
-    """Resolve the stage-1 resolver key like the live server would: env first,
-    else the running proxy container's own SCILLM_MASTER_KEY. Without it the
-    resolver is unusable and question selection degrades to the punctuation
-    heuristic -- the exact flake this eval exists to catch."""
-    if os.getenv("LIVE_EVIDENCE_SCILLM_KEY"):
-        return os.environ["LIVE_EVIDENCE_SCILLM_KEY"]
-    if os.getenv("SCILLM_MASTER_KEY"):
-        return os.environ["SCILLM_MASTER_KEY"]
-    try:
-        env_text = subprocess.run(
-            ["docker", "inspect", "docker-scillm-proxy-1",
-             "--format", "{{range .Config.Env}}{{println .}}{{end}}"],
-            capture_output=True, text=True, timeout=20).stdout
-        for line in env_text.splitlines():
-            if line.startswith("SCILLM_MASTER_KEY="):
-                return line.split("=", 1)[1]
-    except Exception:
-        pass
-    return None
+def provider_boundary() -> str:
+    return "tau_only"
 def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
@@ -523,6 +505,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tail-seconds", type=float, default=2.5)
     parser.add_argument("--model", default="base.en")
     parser.add_argument("--realtime-model", default="tiny.en")
+    parser.add_argument("--device", default="cpu")
     parser.add_argument("--compute-type", default="int8")
     parser.add_argument("--ui-cdp", action="store_true")
     parser.add_argument("--ui-name", default="live-evidence-youtube-pipewire-oracle")
@@ -684,7 +667,6 @@ def main() -> int:
                 "LIVE_EVIDENCE_ASK_TIMEOUT": "5",
                 "LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS": "false",
                 "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
-                "LIVE_EVIDENCE_SCILLM_KEY": scillm_key() or "",
             }
             with server_log.open("w", encoding="utf-8") as log:
                 server_process = subprocess.Popen(

@@ -40,6 +40,7 @@ from .state_helpers import (
     _newer_displayed_blocks,
     _status_for_session,
     normalize_spoken_role_prefix,
+    listener_snapshot,
 )
 from .transcript_dedupe import is_progressive_restatement, richer_transcript_event
 
@@ -59,20 +60,18 @@ class RuntimeState:
         self._model_calls: list[ModelCallTrace] = []
         self._trace_events: list[PipelineTraceEvent] = []
         self._lanes = self._initial_lanes()
-        # Single active question. Retrieval plus a solver call runs for tens of
-        # seconds, which is long enough for speech to change the question
-        # underneath it, so every answer is fenced against the revision that
-        # asked for it.
         self._active_question_id: str | None = None
         self._question_last_revision: dict[str, int] = {}
         self._active_question_text: str = ""
         self._active_question_revision: int = 0
         self._active_question_answered: bool = False
-        # Requirement ledger per (question_id, revision), append-only (#1454).
         self._ledger: dict[tuple[str, int], list[Requirement]] = {}
-        # Exclusive answer-worker leases per question id (3-agent architecture).
         self._answer_leases: dict[str, str] = {}
         self._publication_journal: list[CardPublicationDecision] = []
+        self._listener_info: dict[str, str] | None = None
+        self._listener_last_report_at = None
+        self._listener_last_audio_at = None
+        self._listener_last_transcript_at = None
 
     async def snapshot(self) -> AppSnapshot:
         """Return an immutable validated UI projection."""
@@ -182,8 +181,13 @@ class RuntimeState:
     async def set_listener_info(self, info: dict[str, str]) -> AppSnapshot:
         """Record which audio device the listener actually captures."""
 
+        now = utc_now().astimezone(timezone.utc)
+        level = int(str(info.get("level") or "0") or 0)
         async with self._lock:
-            self._listener_info = info
+            self._listener_last_report_at = now
+            if level > 8:
+                self._listener_last_audio_at = now
+            self._listener_info = {**info, "last_report_at": now.isoformat()}
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
@@ -288,6 +292,8 @@ class RuntimeState:
                             "speaker_slot": slot,
                         })
                 self._transcript.append(event)
+            if event.text.strip() and event.kind.value in {"stabilized", "final"}:
+                self._listener_last_transcript_at = utc_now().astimezone(timezone.utc)
             self._transcript = self._transcript[-self._settings.max_transcript_events :]
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
@@ -765,7 +771,13 @@ class RuntimeState:
             lanes=[self._lanes[lane].model_copy(deep=True) for lane in RetrievalLane],
             model_calls=[item.model_copy(deep=True) for item in self._model_calls],
             trace_events=[item.model_copy(deep=True) for item in self._trace_events],
-            listener=dict(self._listener_info) if getattr(self, '_listener_info', None) else None,
+            listener=listener_snapshot(
+                self._listener_info,
+                self._session.status,
+                self._listener_last_report_at,
+                self._listener_last_audio_at,
+                self._listener_last_transcript_at,
+            ),
             external_search_enabled=bool(
                 self._settings.brave_runner or self._settings.dogpile_runner
             ),

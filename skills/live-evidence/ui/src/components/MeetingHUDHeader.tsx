@@ -135,6 +135,28 @@ export function MeetingHUDHeader({
           <span className="pulse-dot" />
           {liveStatusLabel(session, connected)}
         </div>
+        <div className="hidden items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-[11px] sm:flex" aria-label="Agent status">
+          <div className="flex items-center gap-1.5 border-r border-slate-800 pr-2">
+            <span className="relative flex h-2 w-2">
+              {listening ? <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" /> : null}
+              <span className={`relative inline-flex h-2 w-2 rounded-full ${listening ? "bg-emerald-500" : "bg-slate-600"}`} />
+            </span>
+            <span className="font-medium text-slate-400">Detector:</span>
+            <span className={`font-mono font-semibold ${listening ? "text-emerald-400" : "text-slate-500"}`}>
+              {listening ? "LISTENING" : session.status.toUpperCase()}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 pl-1">
+            <span className="relative flex h-2 w-2">
+              {busy ? <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" /> : null}
+              <span className={`relative inline-flex h-2 w-2 rounded-full ${busy ? "bg-amber-500" : "bg-slate-600"}`} />
+            </span>
+            <span className="font-medium text-slate-400">Solver:</span>
+            <span className={`font-mono font-semibold ${busy ? "text-amber-400" : "text-slate-500"}`}>
+              {busy ? "GENERATING…" : "IDLE"}
+            </span>
+          </div>
+        </div>
         <div className="hidden min-w-0 items-center gap-2 text-[11px] text-slate-400 md:flex">
           <Radio aria-hidden="true" className="size-3 text-sky-300" />
           <span className="max-w-[20rem] truncate">{currentThread}</span>

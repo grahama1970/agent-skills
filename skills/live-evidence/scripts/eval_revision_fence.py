@@ -86,7 +86,6 @@ def main() -> int:
             "LIVE_EVIDENCE_ASK_FIXTURE_RUN_DIR": str(temp / "askrun"),
             "MEMORY_SERVICE_URL": "http://127.0.0.1:9",
         }
-        env.pop("LIVE_EVIDENCE_SCILLM_KEY", None)  # resolver absent -> legacy fallback path
         log = (temp / "server.log").open("w", encoding="utf-8")
         process = subprocess.Popen(
             [sys.executable, "-m", "live_evidence", "serve", "--host", "127.0.0.1",

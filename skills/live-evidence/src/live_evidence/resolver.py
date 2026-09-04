@@ -12,10 +12,7 @@ pushes ``clarifying_questions`` to the tail precisely so a streaming consumer
 can act before the long field arrives. Reordering the schema silently costs the
 latency this module exists to recover.
 
-Transport is a direct SciLLM call. See SKILL.md "Provider boundary: two tiers"
-for why stage 1 does not route through ``$ask tau-dag``: Tau adds ~27s of
-orchestration to an ~11s call, and a readiness verdict is worthless three
-seconds later, so none of what Tau guarantees applies to this tier.
+Direct provider transport is disabled. Stage-1 readiness now falls back to local deterministic gates; provider/model work belongs behind Tau.
 """
 
 from __future__ import annotations
@@ -32,7 +29,7 @@ from typing import Any
 
 from .readiness import ClarifyingQuestion, ReadinessVerdict
 
-DEFAULT_URL = "http://127.0.0.1:4001"
+DEFAULT_URL = ""
 DEFAULT_MODEL = "claude-opus-5"
 DEFAULT_EFFORT = "low"
 
@@ -47,7 +44,8 @@ PROMPT_HEADER = (
     'client|none","actionable":bool,"question_asked_yet":bool,'
     '"canonical_question":str,"clarifying_questions":[str],"confidence":float,'
     '"action_candidates":[{"kind":"fact_check|remember_fact|open_artifact|schedule|compose",'
-    '"payload":str,"summary":str}]}\n\n'
+    '"payload":str,"summary":str}],'
+    '"matches_question_id":str|null,"already_answered":bool}\n\n'
     "Rules:\n"
     "- A statement cut off mid-sentence is NOT complete; ready_to_answer=false, "
     "blocking_reason=truncated.\n"
@@ -74,9 +72,21 @@ PROMPT_HEADER = (
     "  A request to build a chart/graph/figure/visualization/dashboard of data\n"
     "  or metrics ('graph last quarter's numbers', 'show a chart of X') is\n"
     "  kind=compose, payload=the visualization request. Only propose what was\n"
-    "  literally said.\n\n"
-    "BUFFER:\n"
+    "  literally said.\n"
+    "- matches_question_id: compare the buffer against KNOWN_QUESTIONS below.\n"
+    "  Set it to the exact id of the ONE known question asking for the same\n"
+    "  information, even when the buffer rewords, extends, or corrects\n"
+    "  misheard words of that question. Set null when the buffer asks for\n"
+    "  something no known question asks for. Never invent an id not listed.\n"
+    "- already_answered: true ONLY when matches_question_id is set AND that\n"
+    "  known question has answered=true AND the buffer adds no new constraint.\n"
+    "  Then also set ready_to_answer=false, blocking_reason=already_answered.\n"
+    "  A matched question with answered=false is a refinement, not a repeat:\n"
+    "  keep already_answered=false and judge readiness normally.\n\n"
+    "KNOWN_QUESTIONS (JSON array; fields: id, text, answered):\n"
 )
+
+PROMPT_BUFFER_LABEL = "\n\nBUFFER:\n"
 
 _GATE_RE = re.compile(
     r'"ready_to_answer"\s*:\s*(true|false).*?"blocking_reason"\s*:\s*"([a-z_]+)"',
@@ -87,23 +97,8 @@ _JSON_RE = re.compile(r"\{.*\}", re.S)
 
 
 def resolver_key() -> str | None:
-    """Resolve the SciLLM key, most authoritative first.
+    """Direct provider keys are forbidden; Tau owns provider access."""
 
-    SCILLM_PROXY_KEY in the shell profile has drifted from the running
-    container's SCILLM_MASTER_KEY on this machine, so it is tried last. A stale
-    key returns 401 and trips the proxy abuse guard after 5 errors in 30s.
-    """
-
-    # SCILLM_PROXY_KEY is deliberately NOT in this chain. It is exported from
-    # the shell profile on this machine and has drifted from the running
-    # container's master key, so picking it up made every resolver call a
-    # doomed 401 round trip on the card critical path -- which blew the 8s
-    # window sanity_live.py allows for a card to appear, and tripped the proxy
-    # abuse guard. Stage 1 is opt-in: configure LIVE_EVIDENCE_SCILLM_KEY.
-    for name in ("LIVE_EVIDENCE_SCILLM_KEY", "SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
-        value = os.getenv(name)
-        if value:
-            return value
     return None
 
 
@@ -129,7 +124,7 @@ class ResolverOutcome:
 
 
 class StreamingResolver:
-    """Call SciLLM with stream=true and surface the gate at first token."""
+    """Provider-disabled compatibility shell; local deterministic readiness is the live path."""
 
     def __init__(
         self,
@@ -139,7 +134,7 @@ class StreamingResolver:
         effort: str | None = None,
         timeout_s: float = 60.0,
     ) -> None:
-        self._url = (url or os.getenv("LIVE_EVIDENCE_SCILLM_URL") or DEFAULT_URL).rstrip("/")
+        self._url = (url or DEFAULT_URL).rstrip("/")
         self._model = model or os.getenv("LIVE_EVIDENCE_RESOLVER_MODEL") or DEFAULT_MODEL
         self._effort = effort or os.getenv("LIVE_EVIDENCE_RESOLVER_EFFORT") or DEFAULT_EFFORT
         self._timeout_s = timeout_s
@@ -147,7 +142,11 @@ class StreamingResolver:
     def _stream_fixture(self, path: Path) -> Iterator[GateEvent | ResolverOutcome]:
         yield from _stream_fixture_verdicts(path)
 
-    def stream(self, buffer_text: str) -> Iterator[GateEvent | ResolverOutcome]:
+    def stream(
+        self,
+        buffer_text: str,
+        known_questions: list[dict[str, Any]] | None = None,
+    ) -> Iterator[GateEvent | ResolverOutcome]:
         """Yield a GateEvent as soon as it is parseable, then the final outcome."""
 
         import time
@@ -159,12 +158,13 @@ class StreamingResolver:
 
         key = resolver_key()
         if not key:
-            yield ResolverOutcome(error="no_scillm_key_configured")
+            yield ResolverOutcome(error="direct_provider_disabled_tau_only")
             return
 
+        ledger_json = json.dumps(known_questions or [], ensure_ascii=False)
         payload: dict[str, Any] = {
             "model": self._model,
-            "messages": [{"role": "user", "content": PROMPT_HEADER + buffer_text}],
+            "messages": [{"role": "user", "content": PROMPT_HEADER + ledger_json + PROMPT_BUFFER_LABEL + buffer_text}],
             "reasoning_effort": self._effort,
             "stream": True,
         }
@@ -183,7 +183,7 @@ class StreamingResolver:
         # CA bundle. This endpoint is http://127.0.0.1 with no TLS, so the
         # stdlib client is both sufficient and one less environment dependency.
         request = urllib.request.Request(
-            f"{self._url}/v1/chat/completions",
+            f"{self._url}/provider-disabled",
             data=json.dumps(payload).encode("utf-8"),
             headers=headers,
             method="POST",
@@ -220,7 +220,7 @@ class StreamingResolver:
         except urllib.error.HTTPError as exc:
             yield ResolverOutcome(
                 gate=gate,
-                error=f"scillm_http_{exc.code}",
+                error=f"provider_disabled_http_{exc.code}",
                 raw=accumulated,
                 total_elapsed_s=time.monotonic() - start,
             )
@@ -228,7 +228,7 @@ class StreamingResolver:
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             yield ResolverOutcome(
                 gate=gate,
-                error=f"scillm_transport:{type(exc).__name__}",
+                error=f"provider_disabled_transport:{type(exc).__name__}",
                 raw=accumulated,
                 total_elapsed_s=time.monotonic() - start,
             )

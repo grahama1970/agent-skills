@@ -2267,6 +2267,22 @@
       },
       "readback": true,
       "evidence_class": "live_e2e"
+    },
+    {
+      "name": "threader-contract-invariants",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "python3",
+        "scripts/check_threader_contract.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "threader contract checks PASS"
+        ]
+      },
+      "notes": "Threader agent (question grouping): hallucinated parent ids, non-null parent on new_topic, and >6-word titles must be unrepresentable; empty ledger deterministically new_topic."
     }
   ]
 }

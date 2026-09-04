@@ -16,7 +16,7 @@ Contract:
   'can everyone...', a statement mentioning the project, a rhetorical tag) is
   suppressed by the agent, with a surface=false decision journaled.
 
-No scillm key -> INFRA_BLOCKED, never a fake pass.
+No provider key is needed; direct provider calls are disabled.
 """
 
 from __future__ import annotations
@@ -110,9 +110,6 @@ def _card_matches(rows: list[dict], tokens: list[str]) -> bool:
 
 def main() -> int:
     campaign.ROOT = SKILL
-    if not campaign.scillm_key():
-        print("relevance filter: INFRA_BLOCKED (no scillm key; filter unavailable)")
-        return 0
     if not Path(SPARTA).is_dir():
         print("relevance filter: INFRA_BLOCKED (sparta repo not present)")
         return 0

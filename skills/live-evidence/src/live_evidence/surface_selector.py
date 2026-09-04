@@ -13,10 +13,7 @@ a candidate GATHERER (dedup + coarse cap); this call is the arbiter.
 
 Fail-open by construction: no key, a timeout, an unparseable reply, or an empty
 result leaves the caller's order untouched, so the card path never blocks on
-the selector. Same direct-SciLLM stage boundary as the resolver/solver
-(SKILL.md "Provider boundary: two tiers"): the live path cannot absorb
-tau-dag orchestration per question, and selection is disposable judgment with
-no receipt to preserve.
+the selector. Direct provider calls are disabled; selection is deterministic/fail-open unless Tau-backed reviewer work is explicitly configured elsewhere.
 """
 
 from __future__ import annotations
@@ -32,7 +29,7 @@ from loguru import logger
 from .models import EvidenceSource
 from .resolver import resolver_key
 
-DEFAULT_URL = "http://127.0.0.1:4001"
+DEFAULT_URL = ""
 DEFAULT_MODEL = "gpt-5.5"
 DEFAULT_EFFORT = "low"
 MAX_CANDIDATES = 10
@@ -69,7 +66,7 @@ class SurfaceSelector:
         effort: str | None = None,
         timeout_s: float = 8.0,
     ) -> None:
-        self._url = (url or os.getenv("LIVE_EVIDENCE_SCILLM_URL") or DEFAULT_URL).rstrip("/")
+        self._url = (url or DEFAULT_URL).rstrip("/")
         self._model = model or os.getenv("LIVE_EVIDENCE_SELECTOR_MODEL") or DEFAULT_MODEL
         self._effort = effort or os.getenv("LIVE_EVIDENCE_SELECTOR_EFFORT") or DEFAULT_EFFORT
         self._timeout_s = timeout_s
@@ -99,7 +96,7 @@ class SurfaceSelector:
             return sources, receipt
         key = resolver_key()
         if not key:
-            receipt["error"] = "no_scillm_key_configured"
+            receipt["error"] = "direct_provider_disabled_tau_only"
             return sources, receipt
         pool = _balanced_pool(sources, MAX_CANDIDATES)
         lines = [
@@ -122,7 +119,7 @@ class SurfaceSelector:
             "stream": False,
         }
         request = urllib.request.Request(
-            f"{self._url}/v1/chat/completions",
+            f"{self._url}/provider-disabled",
             data=json.dumps(payload).encode("utf-8"),
             headers={"Authorization": f"Bearer {key}",
                      "X-Caller-Skill": "live-evidence",

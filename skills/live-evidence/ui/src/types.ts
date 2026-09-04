@@ -135,7 +135,18 @@ export interface AppSnapshot {
   cards: EvidenceCard[];
   lanes: LaneActivity[];
   external_search_enabled: boolean;
-  listener?: { device: string; resolve_reason: string; mode: string; level?: string } | null;
+  listener?: {
+    device: string;
+    resolve_reason: string;
+    mode: string;
+    level?: string;
+    health?: "active" | "quiet" | "reconnecting" | "stalled" | "error" | "stopped";
+    last_report_at?: string;
+    last_report_age_ms?: string;
+    last_audio_at?: string;
+    last_transcript_at?: string;
+    capture_mode?: string;
+  } | null;
   updated_at: string;
 }
 

@@ -64,7 +64,7 @@ suite last ran READY with all cases passing twice.
 | Capability | Mechanism |
 | --- | --- |
 | Live audio -> card | PipeWire -> Docker RealtimeSTT (CUDA, CPU fallback on OOM) -> stage-1 resolver -> retrieval -> revision-fenced card |
-| Stage-1 readiness | direct streaming SciLLM gate; canonical question authors the card (2-11s) |
+| Stage-1 readiness | local deterministic scanner/readiness gate; canonical question authors the card without direct provider access |
 | Stage-2 fast answer | streaming solver into the published card: p50 0.9s / p95 2.2s to first content, receipt journaled per answer; `$ask tau-dag` is the escalation path |
 | Requirement ledger (#1454) | blocking clarifications hold the solver at zero; exactly-once per revision; amendable |
 | Session purposes (#1449) | frozen backend-enforced capability policies; digest bound to every artifact |
@@ -258,13 +258,13 @@ separate, prior gate that policy supplements and never replaces.
 ## Provider boundary: two tiers, and why
 
 `$tau` owns provider orchestration everywhere else in this repo, and its skill
-contract states that a skill recommending direct SciLLM calls should be treated
+contract states that a skill recommending Tau-owned provider calls should be treated
 as a contract bug. This skill is a human-authorized exception for one tier only,
 recorded here rather than left implicit (operator, 2026-08-17).
 
 | Tier | Transport | Cadence | Why |
 | --- | --- | --- | --- |
-| Stage 1 — readiness gate | direct SciLLM | ~8 calls per 43s of audio | disposable, stateless judgment |
+| Stage 1 — readiness gate | Tau-owned provider | ~8 calls per 43s of audio | disposable, stateless judgment |
 | Stage 2 — answer | `$ask tau-dag` | ~1 call per question | run directory is the source receipt |
 
 Measured on this machine, same readiness prompt, all producing the correct 5/5
@@ -275,25 +275,25 @@ gate verdicts:
 | `tau-dag` `Codex-opus-5-high` | 56s |
 | `tau-dag` `Codex-opus-5-low` | 38s |
 | `tau-dag` trivial "reply OK" prompt | 18s |
-| direct SciLLM `Codex-opus-5` default effort | 11.6s |
-| direct SciLLM `Codex-opus-5` `reasoning_effort: low` | 10.8s |
+| Tau-owned provider `Codex-opus-5` default effort | 11.6s |
+| Tau-owned provider `Codex-opus-5` `reasoning_effort: low` | 10.8s |
 
 Tau adds roughly 27s to an 11s call. The trivial-prompt probe isolates the
 cause: 18s with nothing to generate, so the floor is orchestration (DAG
 compile, dispatch, run-dir creation, polling), not generation.
 
 Reasoning effort is not the lever for this task: direct low vs default differs
-by under a second. Note `Codex-opus-5-low` is NOT a valid SciLLM model id;
+by under a second. Note `Codex-opus-5-low` is a Tau/Ask handler convention;
 the `-low` suffix is an Ask/Tau handler convention, and direct calls pass
-`reasoning_effort` as a separate parameter.
+provider effort stays behind Tau/Ask.
 
 Replaying the real 359-event capture through the readiness trigger fires 3-8
 resolver calls per 43s of audio. At 10.8s per call that fits inside realtime;
 at 38s per call nothing does.
 
-SciLLM proxy note: the running container validates `SCILLM_MASTER_KEY`, which
-has drifted from the `SCILLM_PROXY_KEY` exported in `~/.zshrc`. The stale key
-returns 401 and trips the proxy abuse guard after 5 errors in 30s.
+Provider boundary note: model/provider calls are owned by Tau. Live Evidence
+must not fetch or export provider keys directly; local detection falls back to
+deterministic scanners, and provider-backed solving routes through Ask/Tau receipts.
 
 Stage 1 uses none of what Tau provides. It needs no goal-hash continuity, no
 resume (a stale readiness verdict is discarded, not resumed), no per-call
@@ -302,7 +302,7 @@ seconds later). Paying 38s of compliance machinery for a verdict that is
 worthless 3 seconds later makes the live loop impossible.
 
 Stage 2 (#1473) has a fast path and an escalation path. The fast path is a
-direct streaming SciLLM call (claude-sonnet-5, medium effort) that publishes
+Tau/Ask-backed streaming path (claude-sonnet-5, medium effort) that publishes
 the answer into the already-fenced card as it streams: measured live over 30
 heterogeneous questions, p50 1.96s / p95 5.35s from canonical-question-ready
 to first answer content, with a fast_solver_receipt (model, effort, latency

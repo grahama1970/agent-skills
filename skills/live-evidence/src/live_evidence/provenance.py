@@ -62,7 +62,7 @@ def map_clauses(answer: str, sources: list[dict[str, Any]]) -> list[dict[str, An
     source_tokens = [
         (source, _tokens(str(source.get("excerpt") or "")))
         for source in sources
-        if (source.get("metadata") or {}).get("mode") != "scillm_fast_path"
+        if (source.get("metadata") or {}).get("mode") != "tau_fast_path"
         and str(source.get("lane")) not in {"ask", "RetrievalLane.ASK"}
     ]
     for clause in split_clauses(answer):

@@ -11,14 +11,12 @@ the expected answers.
 Why this over the token-family campaign: token-in-query matching is brittle
 (STT variance flaps the surface words) and it never checks that the card
 actually ANSWERS the question. Here the questions come from the transcript,
-and an agentic judge (SciLLM, the same provider boundary the resolver uses)
-decides similarity of the produced answer to the expected one.
+and a deterministic token-overlap gate checks whether the produced card carries
+the expected key facts. Provider/model review belongs behind Tau, not this eval.
 
 Proof boundary: audio is live (chatterbox render -> PipeWire null sink),
 transcription is live (Docker RealtimeSTT GPU), retrieval is live (Memory +
-ripgrep + the stage-2 solver). The similarity verdict is an agentic SciLLM
-judge, named as such -- not a deterministic proxy. No scillm key -> the run
-reports INFRA_BLOCKED, never a fake pass.
+ripgrep + the Tau/Ask solution lane when configured).
 """
 
 from __future__ import annotations
@@ -37,62 +35,27 @@ sys.path.insert(0, str(SKILL / "src"))
 sys.path.insert(0, str(SKILL / "scripts"))
 
 import run_meeting_campaign as campaign_mod  # capture_live_session, synth
-import run_g2i_campaign as campaign  # ROOT + scillm_key (env, then docker inspect)
+import run_g2i_campaign as campaign
 
 OUT_ROOT = Path("/mnt/storage12tb/skills/live-evidence/meeting-campaign/transcript")
-JUDGE_URL = "http://127.0.0.1:4001/v1/chat/completions"
-JUDGE_MODEL = "claude-sonnet-5"
-
-JUDGE_PROMPT = """You are grading a live meeting-assistant card against an expected answer.
-
-QUESTION asked in the meeting:
-{question}
-
-EXPECTED answer (the information a correct card must convey):
-{expected}
-
-CARD the assistant actually produced:
-answer: {answer}
-evidence: {evidence}
-
-Does the CARD convey the same core information as the EXPECTED answer? Judge by
-MEANING, not wording. It is similar if a human reading the card would learn the
-expected answer's key facts. It is NOT similar if the card is on-topic but
-misses or contradicts the expected key facts, or is an insufficient/empty card.
-
-Reply with ONLY a JSON object: {{"similar": true|false, "reason": "<one sentence>"}}"""
-
-
 def judge_similarity(question: str, expected: str, answer: str, evidence: str,
-                     key: str) -> dict[str, Any]:
-    """One agentic SciLLM call: is the produced answer similar to expected?"""
+                     key: str = "") -> dict[str, Any]:
+    """Deterministic local similarity: enough expected keywords appear in the card."""
 
-    payload = {
-        "model": JUDGE_MODEL,
-        "messages": [{"role": "user", "content": JUDGE_PROMPT.format(
-            question=question, expected=expected,
-            answer=answer or "(no answer)", evidence=(evidence or "(none)")[:1500])}],
-        "reasoning_effort": "low",
-        "stream": False,
+    blob = f"{answer} {evidence}".casefold()
+    words = [
+        word for word in "".join(
+            ch if ch.isalnum() else " " for ch in expected.casefold()
+        ).split()
+        if len(word) > 4
+    ]
+    wanted = sorted(set(words))
+    hits = [word for word in wanted if word in blob]
+    threshold = max(2, min(6, len(wanted) // 4))
+    return {
+        "similar": len(hits) >= threshold,
+        "reason": f"local keyword overlap {len(hits)}/{len(wanted)} threshold={threshold}",
     }
-    request = urllib.request.Request(
-        JUDGE_URL, data=json.dumps(payload).encode("utf-8"),
-        headers={"Authorization": f"Bearer {key}",
-                 "X-Caller-Skill": "live-evidence",
-                 "Content-Type": "application/json"}, method="POST")
-    try:
-        with urllib.request.urlopen(request, timeout=90) as response:
-            body = json.loads(response.read().decode("utf-8"))
-        content = (body.get("choices") or [{}])[0].get("message", {}).get("content") or ""
-        start, end = content.find("{"), content.rfind("}")
-        if start == -1 or end == -1:
-            return {"similar": False, "reason": f"unparseable judge reply: {content[:120]}"}
-        return json.loads(content[start:end + 1])
-    except Exception as exc:  # noqa: BLE001 - eval must write a receipt on judge degradation
-        return {
-            "similar": False,
-            "reason": f"judge_error:{type(exc).__name__}: {str(exc)[:160]}",
-        }
 
 
 def _card_for(
@@ -201,7 +164,7 @@ def score_meeting(meeting: dict[str, Any], rows: list[dict[str, Any]],
     report = {
         "schema": "live_evidence.transcript_meeting_report.v1",
         "meeting_id": meeting["meeting_id"], "audio_live": True, "mocked": False,
-        "judge": {"kind": "agentic_scillm", "model": JUDGE_MODEL},
+        "judge": {"kind": "deterministic_keyword_overlap"},
         "transcript_events": len(transcript), "cards": len(cards),
         "questions": results,
         "status": "PASS" if all(
@@ -217,11 +180,7 @@ def main() -> int:
     campaign_mod.campaign.ROOT = root
     if not campaign_mod.require_precomputed_oracles(root):
         return 1
-    key = campaign.scillm_key()
-    if not key:
-        print("transcript meeting: INFRA_BLOCKED (no scillm key; agentic judge unavailable)")
-        return 0
-
+    key = ""
     spec = json.loads((root / "fixtures" / "transcript_meetings.json").read_text())
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_root = (

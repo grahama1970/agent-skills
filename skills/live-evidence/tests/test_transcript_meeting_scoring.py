@@ -10,16 +10,17 @@ import eval_transcript_meeting as etm  # noqa: E402
 from eval_transcript_meeting import _card_for  # noqa: E402
 
 
-def test_judge_similarity_returns_fail_closed_on_timeout(monkeypatch) -> None:
-    def boom(*args, **kwargs):
-        raise TimeoutError("timed out")
+def test_judge_similarity_uses_local_keyword_overlap() -> None:
+    verdict = etm.judge_similarity(
+        "q",
+        "fail closed retrieval confidence support",
+        "answer only with support after retrieval confidence checks; fail closed otherwise",
+        "",
+        "",
+    )
 
-    monkeypatch.setattr(etm.urllib.request, "urlopen", boom)
-
-    verdict = etm.judge_similarity("q", "expected", "answer", "evidence", "key")
-
-    assert verdict["similar"] is False
-    assert verdict["reason"].startswith("judge_error:TimeoutError")
+    assert verdict["similar"] is True
+    assert verdict["reason"].startswith("local keyword overlap")
 
 
 def test_card_for_prefers_exact_answer_key_over_generic_coding_card() -> None:

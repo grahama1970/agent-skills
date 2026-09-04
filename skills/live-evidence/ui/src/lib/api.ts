@@ -23,6 +23,8 @@ export const api = {
       body: JSON.stringify({ consent_confirmed: consentConfirmed }),
     }),
   pause: () => request<AppSnapshot>("/api/session/pause", { method: "POST" }),
+  resume: () => request<AppSnapshot>("/api/session/resume", { method: "POST" }),
+  archive: () => request<Record<string, unknown>>("/api/session/archive", { method: "POST" }),
   stop: () => request<AppSnapshot>("/api/session/stop", { method: "POST" }),
   search: (query: string, lane: RetrievalLane) =>
     request<EvidenceCard>("/api/search", {

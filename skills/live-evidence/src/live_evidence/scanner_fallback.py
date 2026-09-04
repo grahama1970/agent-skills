@@ -17,8 +17,11 @@ _ASK_TERMS = (
     "?", "assume", "assumed", "defend", "design", "explain", "give me", "how ",
     "implement", "show", "tell me", "walk through", "what ", "which ", "why ",
 )
-_CODE_TERMS = ("implement", "python", "coderpad", "sql", "patch")
+_CODE_TERMS = ("algorithm", "complexity", "implement", "parentheses", "python", "coderpad", "sql", "string", "patch")
 _SKIP_TERMS = ("thanks for joining", "end of the technical section", "remaining time")
+
+# Public alias for cross-module use (coordinator_retrieve junk gate).
+ASK_TERMS = _ASK_TERMS
 
 
 def question_words(text: str) -> list[str]:
@@ -81,6 +84,26 @@ def fallback_question_key(text: str) -> str:
     if "assume" in lowered or "assumed" in lowered or "worker" in lowered or "eks" in lowered:
         return "runtime-failure"
     return " ".join(question_words(text)[:6])
+
+
+def coherent_tail(events: list) -> list:
+    """Drop interim events and collapse consecutive same-speaker restatements."""
+
+    def norm(text: str) -> str:
+        return "".join(ch for ch in (text or "").lower() if ch.isalnum() or ch == " ")
+
+    collapsed: list = []
+    for item in events:
+        if getattr(item.kind, "value", item.kind) == "interim":
+            continue
+        if collapsed and collapsed[-1].speaker == item.speaker:
+            prev, cur = norm(collapsed[-1].text), norm(item.text)
+            if prev in cur or cur in prev or prev[:80] == cur[:80]:
+                if len(cur) >= len(prev):
+                    collapsed[-1] = item
+                continue
+        collapsed.append(item)
+    return collapsed
 
 
 def fallback_scan(

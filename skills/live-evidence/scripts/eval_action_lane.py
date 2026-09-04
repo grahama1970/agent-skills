@@ -83,9 +83,6 @@ def main() -> int:
     import run_g2i_campaign as campaign
 
     campaign.ROOT = root
-    if not campaign.scillm_key():
-        print("live SciLLM key: FAIL")
-        return 1
 
     work = campaign.import_tmp("action-lane")
     server = campaign.Server(work, live_resolver=True, memory_url="http://127.0.0.1:8601")

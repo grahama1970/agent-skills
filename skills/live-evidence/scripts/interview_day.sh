@@ -16,11 +16,8 @@ PACK="$SKILL_DIR/fixtures/briefing_drivewealth.json"
 SRC="${INTERVIEW_AUDIO_SOURCE:-auto:jabra-input}"
 
 export LIVE_EVIDENCE_REPOS="$HOME/workspace/experiments/agent-skills:$HOME/workspace/experiments/tau:$HOME/workspace/experiments/memory:$HOME/workspace/experiments/sparta:$HOME/workspace/experiments/dw-openapi"
-export LIVE_EVIDENCE_SCILLM_KEY="$(docker exec docker-scillm-proxy-1 printenv SCILLM_MASTER_KEY)"
-[ -n "$LIVE_EVIDENCE_SCILLM_KEY" ] || { echo "FATAL: no SCILLM master key from container"; exit 1; }
 
 echo "== dependency probes"
-curl -sf -m 5 http://127.0.0.1:4001/health >/dev/null || { echo "FATAL: scillm proxy down"; exit 1; }
 curl -sf -m 5 http://127.0.0.1:8601/health >/dev/null || { echo "FATAL: memory daemon down"; exit 1; }
 curl -sf -m 20 -X POST http://127.0.0.1:8601/recall -H 'Content-Type: application/json' \
   -d '{"q":"drivewealth autopilot rebalancing","limit":1}' | grep -q '"found": *true' \

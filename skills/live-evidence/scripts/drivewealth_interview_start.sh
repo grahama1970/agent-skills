@@ -15,15 +15,10 @@ pkill -f "live_evidence serve --port 8800" 2>/dev/null || true
 pkill -f "live_evidence listen --mode pipewire" 2>/dev/null || true
 sleep 2
 
-# 2. Scanner key: the 3-agent scanner path activates only when a SciLLM key
-#    is present; without it the backend silently uses the legacy question
-#    window (root cause of 2026-09-01 live duplicate cards).
-SCANNER_KEY="${SCILLM_MASTER_KEY:-$(docker inspect docker-scillm-proxy-1 --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | grep '^SCILLM_MASTER_KEY=' | cut -d= -f2-)}"
-test -n "$SCANNER_KEY" || { echo 'FATAL: no SciLLM key found; scanner path would be silently disabled'; exit 1; }
+# 2. Direct provider keys are forbidden here; Tau owns provider access.
 
 # 3. Backend with DriveWealth profile + repos.
 LIVE_EVIDENCE_PROFILE="$SKILL/config/drivewealth.yaml" \
-LIVE_EVIDENCE_SCILLM_KEY="$SCANNER_KEY" \
 LIVE_EVIDENCE_REPOS="$HOME/workspace/experiments/dw-openapi:$HOME/workspace/experiments/dwt-terraform-aws-helm-release:$HOME/workspace/experiments/agent-skills" \
   nohup ./run.sh serve --port 8800 > "$LOG_DIR/backend.log" 2>&1 &
 echo "backend PID $!"

@@ -1,0 +1,78 @@
+name: drivewealth
+candidate_name: Graham Anderson
+organization: DriveWealth
+watch_terms:
+  - DriveWealth
+  - Core Platform
+  - Principal AI Engineer
+  - brokerage
+  - brokerage operations
+  - account lifecycle
+  - account APIs
+  - KYC
+  - orders
+  - funding
+  - policy evidence
+  - evidence graph
+  - AI reliability
+  - model evaluation
+  - agentic workflows
+project_aliases:
+  drivewealth:
+    - DriveWealth
+    - core platform
+    - brokerage platform
+    - investing API
+  live-evidence:
+    - live evidence
+    - interview prep
+    - evidence HUD
+  agent-skills:
+    - agent skills
+    - Tau
+    - receipt-gated
+repo_priorities:
+  - dw-openapi
+  - agent-skills
+  - tau
+memory_scope: client:drivewealth
+memory_collections:
+  - client_interview_qa
+  - live_evidence_answers
+  - live_evidence_questions
+  - live_evidence_source_context
+  - live_evidence_skill_chains
+  - live_evidence_edges
+  - project_knowledge
+  - lessons_v2
+  - dogpile_research
+  - code_symbols
+stt_prompt_terms:
+  - DriveWealth
+  - Ajit Sarkaar
+  - Neelesh Parihar
+  - Graham Anderson
+  - Core Platform
+  - Principal AI Engineer
+  - brokerage
+  - Investing API
+  - KYC
+  - account APIs
+  - orders
+  - funding
+  - audit receipts
+  - source provenance
+  - fail closed
+blocked_tags:
+  - private
+  - confidential
+  - restricted
+  - secret
+  - credential
+  - itar-sensitive
+  - export-controlled-content
+blocked_path_fragments:
+  - /.env
+  - /secrets/
+  - /credentials/
+  - /private/

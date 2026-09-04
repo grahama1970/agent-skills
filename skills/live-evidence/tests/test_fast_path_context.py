@@ -45,7 +45,7 @@ class State:
 
 
 class Solver:
-    def stream(self, query, evidence_excerpts):
+    def stream(self, query, evidence_excerpts, answer_mode=None):
         yield SolverChunk("answer", 0.01)
         yield SolverOutcome(
             ok=True,
@@ -83,7 +83,7 @@ class HiddenDraftState:
             question_id=card.question_id,
             question_revision=card.question_revision,
             answer_revision=card.question_revision,
-            source_refs=["ask:fast:scillm://fixture/" + "a" * 64],
+            source_refs=["ask:fast:tau://fixture/" + "a" * 64],
             visible_card_ids=[card.card_id],
         )
         return object()
@@ -176,14 +176,14 @@ async def _assert_fast_solver_hidden_draft_reaches_supported_final_card() -> Non
     final = state.published[-1]
     assert final.status is CardStatus.SUPPORTED
     assert final.sources
-    assert final.sources[-1].url.startswith("scillm://fixture/")
+    assert final.sources[-1].url.startswith("tau://fixture/")
 
 
 class DeckJsonSolver:
     _model = "fixture"
     _effort = "fixture"
 
-    def stream(self, query, evidence_excerpts):
+    def stream(self, query, evidence_excerpts, answer_mode=None):
         answer = '''```json
 {"schema":"live_evidence.solution_deck.v1","points":[{"title":"Gate Evidence","trigger":"Require attribution before publishing"},{"title":"Hold Unsupported","trigger":"No citation means no visible card"}]}
 ```
@@ -207,7 +207,7 @@ class NoContentBeforeDeadlineSolver:
     _model = "fixture"
     _effort = "fixture"
 
-    def stream(self, query, evidence_excerpts):
+    def stream(self, query, evidence_excerpts, answer_mode=None):
         time.sleep(0.25)
         yield SolverChunk("late answer", 0.25)
         yield SolverOutcome(

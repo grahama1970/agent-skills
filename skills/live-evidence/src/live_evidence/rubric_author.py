@@ -1,7 +1,6 @@
 """Model-authored rubric coverage over live transcripts (#1474).
 
-The RubricEngine floor validates; this pass AUTHORS. A streaming SciLLM call
-maps candidate answer spans to rubric criteria and proposes coverage records
+The RubricEngine floor validates; this pass AUTHORS. A Tau-owned provider pass, when available, maps candidate answer spans to rubric criteria and proposes coverage records
 plus at most one follow-up suggestion. Every authored record flows through the
 deterministic floor (exact event refs required, cited text must state the
 criterion's required facts, revision + rubric digest fenced); records the
@@ -27,7 +26,7 @@ from .rubric import (
     RubricEngine,
 )
 
-DEFAULT_URL = "http://127.0.0.1:4001"
+DEFAULT_URL = ""
 DEFAULT_MODEL = "claude-sonnet-5"
 
 _JSON_RE = re.compile(r"\{.*\}", re.S)
@@ -52,7 +51,7 @@ class RubricAuthor:
 
     def __init__(self, *, url: str | None = None, model: str | None = None,
                  timeout_s: float = 60.0) -> None:
-        self._url = (url or os.getenv("LIVE_EVIDENCE_SCILLM_URL") or DEFAULT_URL).rstrip("/")
+        self._url = (url or DEFAULT_URL).rstrip("/")
         self._model = model or os.getenv("LIVE_EVIDENCE_RUBRIC_MODEL") or DEFAULT_MODEL
         self._timeout_s = timeout_s
 
@@ -73,7 +72,7 @@ class RubricAuthor:
                            for e in events][:24])
         )
         request = urllib.request.Request(
-            f"{self._url}/v1/chat/completions",
+            f"{self._url}/provider-disabled",
             data=json.dumps({
                 "model": self._model,
                 "reasoning_effort": "low",

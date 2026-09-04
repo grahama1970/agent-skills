@@ -28,7 +28,6 @@ def free_port() -> int:
 def main() -> int:
     import tempfile
 
-    key = os.environ.get("SCILLM_MASTER_KEY") or os.environ.get("LIVE_EVIDENCE_SCILLM_KEY", "")
     question = (sys.argv[1] if len(sys.argv) > 1
                 else "What are the hard read first rules recorded in the Sparta project memory index?")
     data = Path(tempfile.mkdtemp(prefix="le-proof-"))
@@ -39,7 +38,6 @@ def main() -> int:
         "LIVE_EVIDENCE_DATA_DIR": str(data),
         "LIVE_EVIDENCE_PROFILE": str(ROOT / "config" / "default.yaml"),
         "MEMORY_SERVICE_URL": "http://127.0.0.1:8601",
-        "LIVE_EVIDENCE_SCILLM_KEY": key,
         "PYTHONPATH": str(ROOT / "src"),
     }
     log = (data / "server.log").open("w")

@@ -1,9 +1,12 @@
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import { InsightsPanel } from "@/components/InsightsPanel";
-import { LiveMeetingSurface } from "@/components/LiveMeetingSurface";
+import { DevPanel } from "@/components/DevPanel";
+import { FlashCard } from "@/components/FlashCard";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { MemoryVault } from "@/components/MemoryVault";
+import { QuestionTimeline } from "@/components/QuestionTimeline";
+import { StatusStrip } from "@/components/StatusStrip";
 import { TranscriptDrawer } from "@/components/TranscriptDrawer";
 import { useHUDHotkeys } from "@/hooks/useHUDHotkeys";
 import { useLiveEvidence } from "@/hooks/useLiveEvidence";
@@ -13,10 +16,27 @@ export default function App() {
   const { snapshot, connected, error, busy, actions } = useLiveEvidence();
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [vaultOpen, setVaultOpen] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [devOpen, setDevOpen] = useState(false);
   const [selection, setSelection] = useState<CardSelection>({ cardId: null, mode: "auto" });
 
-  const visibleCards = useMemo(() => {
-    return visibleCardOrder(snapshot.cards);
+  // Scanner-owned question identity (3-agent architecture) makes timeline
+  // dedupe/legitimacy by construction; the former timelineCards() UI band-aid
+  // over-filtered scanner-approved questions and is retired.
+  // Follow-ups render inside their parent's flashcard, never as separate
+  // timeline entries the human has to hunt for.
+  const { visibleCards, followUpsByParent } = useMemo(() => {
+    const ordered = visibleCardOrder(snapshot.cards);
+    const parents = ordered.filter((card) => !card.parent_question_id);
+    const byParent = new Map<string, typeof ordered>();
+    for (const card of ordered) {
+      if (!card.parent_question_id) continue;
+      const bucket = byParent.get(card.parent_question_id) ?? [];
+      bucket.push(card);
+      byParent.set(card.parent_question_id, bucket);
+    }
+    return { visibleCards: parents, followUpsByParent: byParent };
   }, [snapshot.cards]);
 
   const activeCard = activeCardForSelection(visibleCards, selection);
@@ -42,54 +62,64 @@ export default function App() {
     const index = Math.max(visibleCards.findIndex((card) => card.card_id === activeCard?.card_id), 0);
     const nextIndex = direction > 0 ? Math.min(index + 1, visibleCards.length - 1) : Math.max(index - 1, 0);
     setSelection({ cardId: visibleCards[nextIndex].card_id, mode: "manual" });
+    setIsFlipped(false);
   };
 
   useHUDHotkeys([
+    { key: "?", handler: () => setShortcutsOpen((value) => !value) },
     { key: "Cmd+\\", handler: () => setTranscriptOpen((value) => !value) },
     { key: "Ctrl+\\", handler: () => setTranscriptOpen((value) => !value) },
     { key: "ArrowDown", handler: () => selectRelativeCard(1) },
     { key: "j", handler: () => selectRelativeCard(1) },
     { key: "ArrowUp", handler: () => selectRelativeCard(-1) },
     { key: "k", handler: () => selectRelativeCard(-1) },
-    { key: "Space", handler: () => activeCard && void actions.pin(activeCard.card_id) },
-    { key: "Enter", handler: () => document.getElementById("active-insight-stage")?.focus() },
+    { key: "Space", handler: () => activeCard && setIsFlipped((value) => !value) },
+    { key: "p", handler: () => activeCard && void actions.pin(activeCard.card_id) },
     { key: "Escape", handler: () => activeCard && void actions.dismiss(activeCard.card_id) },
     { key: "d", handler: () => activeCard && void actions.dismiss(activeCard.card_id) },
-    {
-      key: "Shift+C",
-      handler: () => {
-        const button = document.querySelector<HTMLButtonElement>('[data-qs-action="LIVE_EVIDENCE_SOLUTION_COPY_CODE"]:not(:disabled)');
-        button?.click();
-      },
-    },
   ]);
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-[var(--foreground)]">
-      <LiveMeetingSurface
-        cards={visibleCards}
-        activeCard={activeCard}
-        selectedCardId={activeCard?.card_id ?? null}
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-[#090a0f] text-[var(--foreground)]">
+      <StatusStrip
+        session={snapshot.session}
+        snapshot={snapshot}
+        onOpenShortcuts={() => setShortcutsOpen(true)}
+        onOpenDev={() => setDevOpen(true)}
+        transcriptCount={snapshot.transcript.length}
         connected={connected}
         busy={busy}
-        currentThread={snapshot.current_thread}
-        lanes={snapshot.lanes}
-        session={snapshot.session}
-        transcriptCount={snapshot.transcript.length}
+        transcriptOpen={transcriptOpen}
         vaultOpen={vaultOpen}
-        onSelectCard={(cardId) => setSelection({ cardId, mode: "manual" })}
-        onPin={(cardId) => void actions.pin(cardId)}
-        onDismiss={(cardId) => {
-          void actions.dismiss(cardId);
-        }}
-        onOpenTranscript={() => setTranscriptOpen(true)}
+        onToggleTranscript={() => setTranscriptOpen((value) => !value)}
         onToggleVault={() => setVaultOpen((value) => !value)}
         onStart={() => void actions.start()}
         onPause={() => void actions.pause()}
+        onResume={() => void actions.resume()}
+        onNewSession={() => void actions.newSession()}
         onStop={() => void actions.stop()}
       />
 
-      <InsightsPanel />
+      <div className="relative flex flex-1 overflow-hidden">
+        <QuestionTimeline
+          cards={visibleCards}
+          selectedCardId={activeCard?.card_id ?? null}
+          onSelectCard={(cardId) => {
+            setSelection({ cardId, mode: "manual" });
+            setIsFlipped(false);
+          }}
+        />
+
+        <main className="flex flex-1 flex-col overflow-hidden bg-[#090a0f]">
+          <FlashCard
+            card={activeCard ?? null}
+            followUps={activeCard?.question_id ? (followUpsByParent.get(activeCard.question_id) ?? []) : []}
+            isFlipped={isFlipped}
+            onFlipToggle={() => setIsFlipped((value) => !value)}
+            onTogglePin={(cardId) => void actions.pin(cardId)}
+          />
+        </main>
+      </div>
 
       {error ? (
         <div
@@ -116,6 +146,10 @@ export default function App() {
           </div>
         </div>
       ) : null}
+
+      <KeyboardShortcutsModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
+      <DevPanel isOpen={devOpen} onClose={() => setDevOpen(false)} />
 
       <TranscriptDrawer
         open={transcriptOpen}

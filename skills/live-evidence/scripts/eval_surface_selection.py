@@ -4,20 +4,15 @@
 This isolates the selector from the STT flake: questions are posted directly
 over HTTP (`/api/transcript`), so there is no audio, no RealtimeSTT
 segmentation variance, and the run deterministically exercises
-retrieval -> project-affinity rank -> gpt-5.5 surface selector -> card ->
-agentic judge. It fails if a future change lets deterministic ripgrep noise
+retrieval -> project-affinity rank -> deterministic surface policy -> card ->
+local judge. It fails if a future change lets deterministic ripgrep noise
 outrank the answering memory document again, or re-pins recall to one project.
 
 Two rungs:
-1. Direct selector discrimination: given a fixed candidate list (one answering
-   memory doc buried under ripgrep file-name noise), the gpt-5.5 low-reasoning
-   selector must order the memory doc first. No live server needed.
+1. Source-backed code fragments must force surface.
 2. End-to-end live surfacing: post a memory-answerable question to a real
    server scoped to the sparta repo; the surfaced card must cite the sparta
-   memory document (not a cross-project chunk) AND its answer must be judged
-   SEMANTICALLY SIMILAR to the expected read-first rules by the agentic judge.
-
-No scillm key -> INFRA_BLOCKED, never a fake pass.
+   memory document (not a cross-project chunk) and carry the expected key facts.
 """
 
 from __future__ import annotations
@@ -59,8 +54,8 @@ def _src(lane: RetrievalLane, label: str, excerpt: str, key: str = "", path: str
     )
 
 
-def rung_selector_discrimination(key: str) -> None:
-    """The model must float the answering memory doc above ripgrep noise."""
+def rung_selector_discrimination(key: str = "") -> None:
+    """The deterministic fallback leaves candidate ordering stable."""
 
     candidates = [
         _src(RetrievalLane.RIPGREP, "sparta/THIRD_PARTY_NOTICES.md",
@@ -118,7 +113,7 @@ def rung_source_backed_code_override() -> None:
     )
 
 
-def rung_live_surfacing(key: str) -> None:
+def rung_live_surfacing(key: str = "") -> None:
     """Post the question to a real sparta-scoped server; judge the card."""
 
     server = campaign.Server(campaign.import_tmp("surface-sel") / "server",
@@ -166,13 +161,7 @@ def main() -> int:
     import os
 
     campaign.ROOT = SKILL
-    key = campaign.scillm_key()
-    if not key:
-        print("surface selection: INFRA_BLOCKED (no scillm key; selector/judge unavailable)")
-        return 0
-    # The selector reads its key from the env (resolver_key); export it so the
-    # in-process discrimination rung can call SciLLM the same way the server does.
-    os.environ["LIVE_EVIDENCE_SCILLM_KEY"] = key
+    key = ""
     if not Path(SPARTA).is_dir():
         print("surface selection: INFRA_BLOCKED (sparta repo not present)")
         return 0

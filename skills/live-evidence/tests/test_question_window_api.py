@@ -5,6 +5,10 @@ import json
 from pathlib import Path
 import time
 
+import os
+os.environ.setdefault("LIVE_EVIDENCE_SCANNER_MODE", "false")  # legacy window-path tests
+
+
 from fastapi.testclient import TestClient
 
 from live_evidence.api import create_app

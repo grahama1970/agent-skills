@@ -96,6 +96,13 @@ export function useLiveEvidence() {
     () => ({
       start: () => execute(() => api.start(false)),
       pause: () => execute(api.pause),
+      resume: () => execute(api.resume),
+      // Save the old session (episodic archive) before starting a fresh one.
+      newSession: () =>
+        execute(async () => {
+          await api.archive().catch(() => undefined);
+          return api.start(false);
+        }),
       stop: () => execute(api.stop),
       search: (query: string, lane: RetrievalLane) => execute(() => api.search(query, lane)),
       pin: (cardId: string) => execute(() => api.pin(cardId)),

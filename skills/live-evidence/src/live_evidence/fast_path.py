@@ -1,6 +1,6 @@
 """Progressive card publication for the fast-path solver (#1473).
 
-Runs the FastSolver stream off the event loop and republishes the SAME
+Runs the solver stream off the event loop and republishes the SAME
 question/revision card as the answer grows. Every publish goes through the
 compare-and-swap fence, so a question that moves on mid-stream discards the
 remainder (journaled), and a finished answer carries its own receipt: model,
@@ -72,6 +72,7 @@ async def stream_fast_answer(
     question_revision: int,
     session_id: str,
     policy_digest: str,
+    answer_mode: str | None = None,
 ) -> SolverOutcome | None:
     """Stream the answer into the already-published card. Returns the final
     outcome, or None when the revision went stale mid-stream."""
@@ -81,7 +82,7 @@ async def stream_fast_answer(
 
     def run() -> None:
         try:
-            for item in solver.stream(query, evidence_excerpts):
+            for item in solver.stream(query, evidence_excerpts, answer_mode=answer_mode):
                 loop.call_soon_threadsafe(queue.put_nowait, item)
         finally:
             loop.call_soon_threadsafe(queue.put_nowait, None)
@@ -184,7 +185,7 @@ async def stream_fast_answer(
     receipt = {
         "question_id": question_id,
         "question_revision": question_revision,
-        "mode": "scillm_fast_path",
+        "mode": "tau_fast_path",
         "model": outcome.model,
         "reasoning_effort": outcome.effort,
         "first_content_s": outcome.first_content_s,
@@ -202,7 +203,7 @@ async def stream_fast_answer(
             excerpt=(clean_answer or outcome.answer)[:4_000],
             # locator contract: the response digest IS the stable key
             # for this generated artifact; there is no file path.
-            url=f"scillm://{outcome.model}/{outcome.response_sha256}",
+            url=f"tau://{outcome.model}/{outcome.response_sha256}",
             metadata=receipt,
         ),
     ][:8]

@@ -1,5 +1,39 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-stream-glow: stream-glow 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-stream-border: stream-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-beacon-ping: beacon-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-typing-cursor: typing-cursor 0.8s ease-in-out infinite;
+
+  @keyframes stream-glow {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.5), inset 0 0 8px rgba(99, 102, 241, 0.2);
+    }
+    50% {
+      opacity: 0.45;
+      box-shadow: 0 0 4px rgba(99, 102, 241, 0.15), inset 0 0 2px rgba(99, 102, 241, 0.05);
+    }
+  }
+
+  @keyframes stream-border {
+    0%, 100% { border-color: rgba(99, 102, 241, 0.8); }
+    50% { border-color: rgba(99, 102, 241, 0.25); }
+  }
+
+  @keyframes beacon-ping {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.4); opacity: 0; }
+    100% { transform: scale(0.95); opacity: 0; }
+  }
+
+  @keyframes typing-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+}
+
 :root {
   color-scheme: dark;
   --background: #090a0f;
@@ -1753,3 +1787,19 @@ kbd {
 .scannable-card.active { opacity: 1.0; border-left-color: #facc15; }
 .card-title { font-size: 1.6rem !important; font-weight: 900 !important; color: #ffffff; }
 .card-bullet { font-size: 1.15rem !important; font-weight: 600; color: #cbd5e1; }
+
+/* 3D flip utilities (flashcard front/back scene) */
+.perspective-1000 { perspective: 1000px; }
+.transform-style-3d { transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.rotate-y-180 { transform: rotateY(180deg); }
+
+/* Prism token contrast overrides for dark card bases */
+.token.comment, .token.prolog, .token.doctype, .token.cdata { color: #64748b !important; font-style: italic; }
+.token.punctuation { color: #94a3b8 !important; }
+.token.property, .token.tag, .token.boolean, .token.number, .token.constant, .token.symbol { color: #f43f5e !important; }
+.token.selector, .token.attr-name, .token.string, .token.char, .token.builtin { color: #34d399 !important; }
+.token.operator, .token.entity, .token.url { color: #38bdf8 !important; }
+.token.atrule, .token.attr-value, .token.keyword { color: #818cf8 !important; font-weight: 600; }
+.token.function, .token.class-name { color: #fbbf24 !important; }
+.token.regex, .token.important, .token.variable { color: #c084fc !important; }

@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8,<10",
+  "pytest-asyncio>=1,<2",
 ]
 stt = [
   "RealtimeSTT[faster-whisper] @ git+https://github.com/grahama1970/RealtimeSTT.git@cbdbd12a8f573a92d7ffd14cfbd82baa59a59849",

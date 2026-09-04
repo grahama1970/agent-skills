@@ -82,25 +82,19 @@ class EvidenceCoordinator:
         self._solved_revisions: set[tuple[str, int]] = set()
         self._held: dict[tuple[str, int], dict] = {}
         self._assistant_utterances: list[str] = []
-        # 3-agent architecture: one scanner owns question identity; two answer
-        # workers hold exclusive per-question leases. Scanner mode replaces the
-        # grammar-trigger path when enabled (default on).
         self._scanner = QuestionScanner()
+        from .threader import QuestionThreader
+
+        self._threader = QuestionThreader()
         self._ready_queue: asyncio.Queue[tuple[str, int, TriggerDecision]] = asyncio.Queue()
         self._answer_workers: list[asyncio.Task[None]] = []
         self._scan_in_flight = False
         self._scan_requested = False
         self._scan_cursor = 0
         self._dispatched_questions: set[str] = set()
-        # question_id -> canonical text for every question this session has
-        # dispatched or carded; the scanner ledger misses in-flight questions,
-        # so restatement dedupe must consult THIS map (live dup bug 2026-09-01).
         self._dispatched_texts: dict[str, str] = {}
-        # follow-up question id -> parent question id (rendered in parent card)
         self._follow_up_parents: dict[str, str] = {}
-        # scanner-decided category per question id (drives solver mode)
         self._question_categories: dict[str, str] = {}
-        # Scan triggers (decision 4): pause OR char interval OR wake word.
         self._chars_since_scan = 0
         self._scan_char_interval = int(os.getenv("LIVE_EVIDENCE_SCAN_CHAR_INTERVAL", "300"))
         self._wake_words = tuple(
@@ -121,8 +115,6 @@ class EvidenceCoordinator:
             self._answer_workers.append(worker)
 
     async def _answer_worker(self, worker_id: str) -> None:
-        """Pull complete questions and answer them under an exclusive lease."""
-
         while True:
             question_id, revision, decision = await self._ready_queue.get()
             acquired = await self._state.acquire_lease(question_id, worker_id)
@@ -148,14 +140,6 @@ class EvidenceCoordinator:
     _review_published_answer = review_published_answer
 
     def _scanner_client_context(self) -> str:
-        """Compact curate-client context for the question agent.
-
-        The scanner should recognize prepared/expected questions and
-        canonicalize garbled speech toward the phrasings curated in the
-        client KB - not judge legitimacy in a vacuum (operator, 2026-08-31).
-        Bounded: profile identity, watch terms, briefing point titles.
-        """
-
         lines: list[str] = [f"profile: {self._profile.name}"]
         if self._profile.watch_terms:
             lines.append("watch_terms: " + ", ".join(self._profile.watch_terms[:24]))
@@ -184,37 +168,9 @@ class EvidenceCoordinator:
     _ledger_text = staticmethod(scanner_fallback.ledger_text)
     _fallback_scan = staticmethod(scanner_fallback.fallback_scan)
 
-    @staticmethod
-    def _coherent_tail(events: list) -> list:
-        """Drop interim events and collapse consecutive same-speaker restatements.
-
-        Live STT emits dozens of growing-prefix stabilized/interim copies of one
-        utterance (96 near-duplicates in the 2026-09-03 youtube-oracle journal).
-        Feeding those raw to the scanner makes every ask look non-uniquely
-        recoverable, so it answers 'forming' forever and no card ever publishes.
-        Keep the latest/longest text per consecutive same-speaker run instead.
-        """
-
-        def norm(text: str) -> str:
-            return "".join(ch for ch in (text or "").lower() if ch.isalnum() or ch == " ")
-
-        collapsed: list = []
-        for item in events:
-            if getattr(item.kind, "value", item.kind) == "interim":
-                continue
-            if collapsed and collapsed[-1].speaker == item.speaker:
-                prev, cur = norm(collapsed[-1].text), norm(item.text)
-                if prev in cur or cur in prev or prev[:80] == cur[:80]:
-                    # restatement: keep whichever carries more content
-                    if len(cur) >= len(prev):
-                        collapsed[-1] = item
-                    continue
-            collapsed.append(item)
-        return collapsed
+    _coherent_tail = staticmethod(scanner_fallback.coherent_tail)
 
     async def _run_scan(self) -> None:
-        """One scanner pass: classify asks, dispatch complete ones."""
-
         if self._scan_in_flight:
             self._scan_requested = True
             return
@@ -243,22 +199,29 @@ class EvidenceCoordinator:
             )
             digest = self._state.session_policy_digest()
             questions = outcome.questions
+            fallback_questions = self._fallback_scan(turns, ledger)
             if outcome.error is not None:
                 await self._journal.append(
                     self._state.session_id(), "scanner_error",
                     {"error": outcome.error, "raw": outcome.raw[:500]},
                     policy_digest=digest,
                 )
-                questions = self._fallback_scan(turns, ledger)
+                questions = fallback_questions
                 if not questions:
                     return
+            elif fallback_questions and not any(q.status in {"complete", "follow_up"} for q in questions):
+                await self._journal.append(
+                    self._state.session_id(), "scanner_forming_fallback",
+                    {"provider_results": [{"status": q.status, "text": q.text[:80]} for q in questions],
+                     "fallback_results": [{"status": q.status, "text": q.text[:80]} for q in fallback_questions]},
+                    policy_digest=digest,
+                )
+                questions = fallback_questions
             if turns:
                 self._scan_cursor = max(
                     self._scan_cursor,
                     *(int(turn.get("sequence") or 0) for turn in turns),
                 )
-            # Every scan outcome is journaled: a silent forming-only scan was
-            # undiagnosable when a question vanished live (2026-09-01 q02 miss).
             await self._journal.append(
                 self._state.session_id(), "scan_completed",
                 {"window": [int(turn.get("sequence") or 0) for turn in turns[:1] + turns[-1:]],
@@ -290,8 +253,6 @@ class EvidenceCoordinator:
                     continue
                 parent_question_id: str | None = None
                 if question.status == "follow_up":
-                    # New linked question: own answer lifecycle, rendered in the
-                    # parent's flashcard. The parent stays answered/terminal.
                     parent_question_id = scanned_question_id
                     from uuid import uuid4
 
@@ -325,17 +286,11 @@ class EvidenceCoordinator:
                         or self._dispatched_texts.get(scanned_question_id, "")
                     if self._same_progressive_question(known_text, question.text) \
                             or known_text.strip().casefold() == question.text.strip().casefold():
-                        # A restatement of an answered question is not a new ask.
                         continue
                 if scanned_question_id and (
                     scanned_question_id in self._dispatched_questions
                     or await self._state.lease_holder(scanned_question_id) is not None
                 ):
-                    # Already queued or being answered; a refinement mid-flight
-                    # is NOT redispatched - the revision fence governs staleness.
-                    # But the DISPLAYED question text is still refined so the
-                    # human never reads stale ASR noise (e.g. a stray leading
-                    # word) while the answer is in flight.
                     known_text = self._dispatched_texts.get(scanned_question_id, "") \
                         or self._ledger_text(scanned_question_id, ledger)
                     if (
@@ -428,7 +383,7 @@ class EvidenceCoordinator:
                     self._state.session_id(), "briefing_point_surfaced", hit,
                     policy_digest=self._state.session_policy_digest(),
                 )
-        if self._scanner_mode() and (os.getenv("LIVE_EVIDENCE_SCANNER_FIXTURE") or scanner_key()):
+        if self._scanner_mode():
             # Scanner triggers (decision 4: both + wake word):
             # 1. silence pause - any final interviewer turn;
             # 2. char interval - N new final chars since the last scan, so a

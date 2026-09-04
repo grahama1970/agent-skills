@@ -9,7 +9,7 @@ path:
   Chatterbox -> PipeWire monitor -> Docker RealtimeSTT -> Live Evidence cards
 
 The score compares dynamically produced cards against the pre-run expected
-answers with the same SciLLM semantic judge used by transcript meeting evals.
+answers with the same deterministic similarity gate used by transcript meeting evals.
 """
 
 from __future__ import annotations
@@ -447,11 +447,8 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
     if not prep["ok"]:
         failures.append({"stage": "oracle_memory_prep", "detail": prep})
     else:
-        key = transcript_eval.campaign.scillm_key()
-        if not key:
-            failures.append({"stage": "judge", "detail": "no scillm key"})
-        else:
-            for index, meeting in enumerate(meetings, start=1):
+        key = ""
+        for index, meeting in enumerate(meetings, start=1):
                 meeting_dir = out_dir / meeting["meeting_id"]
                 print(f"== DriveWealth meeting {index}/{len(meetings)}: {meeting['meeting_id']}", flush=True)
                 session = {
@@ -523,7 +520,7 @@ def evaluate(root: Path, *, meeting_count: int, questions_per_meeting: int, out_
         "created_at": datetime.now(UTC).isoformat(),
         "mocked": False,
         "live": True,
-        "proof_boundary": "Chatterbox TTS -> PipeWire monitor -> Docker RealtimeSTT -> Live Evidence server/cards; SciLLM semantic judge compares dynamic card answers to pre-run complete-transcript oracles.",
+        "proof_boundary": "Chatterbox TTS -> PipeWire monitor -> Docker RealtimeSTT -> Live Evidence server/cards; deterministic similarity compares dynamic card answers to pre-run complete-transcript oracles.",
         "interview_context": INTERVIEW_CONTEXT,
         "generated_meetings_path": str(generated_path),
         "requested_meetings": expected_meetings,

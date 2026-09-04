@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """G2i public benchmark campaign runner (#1455): cases G2I-01..G2I-07.
 
-Each case runs live against a real Live Evidence server (real stage-1 SciLLM
-resolver where the case needs judgment) or the real sibling debugger /
+Each case runs live against a real Live Evidence server (deterministic/local resolver where the case needs judgment) or the real sibling debugger /
 chatterbox capability, writes a per-trial receipt into the pack's receipts/
 directory, and states its proof boundary honestly:
 
-- resolver: LIVE SciLLM (no fixture) for G2I-01/02;
+- resolver: deterministic/local; provider work routes through Tau/Ask only;
 - solver (Ask) lane: owned fixture runner -- counted for exactly-once, not a
   live Ask/Tau claim;
 - transcript delivery: direct HTTP injection; NO live-audio claim is made by
@@ -45,21 +44,8 @@ def now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def scillm_key() -> str | None:
-    for name in ("LIVE_EVIDENCE_SCILLM_KEY", "SCILLM_MASTER_KEY"):
-        if os.getenv(name):
-            return os.environ[name]
-    try:
-        env_text = subprocess.run(
-            ["docker", "inspect", "docker-scillm-proxy-1",
-             "--format", "{{range .Config.Env}}{{println .}}{{end}}"],
-            capture_output=True, text=True, timeout=20).stdout
-        for line in env_text.splitlines():
-            if line.startswith("SCILLM_MASTER_KEY="):
-                return line.split("=", 1)[1]
-    except Exception:
-        pass
-    return None
+def provider_boundary() -> str:
+    return "tau_only"
 
 
 def free_port() -> int:
@@ -126,7 +112,6 @@ class Server:
             "LIVE_EVIDENCE_ASK_TIMEOUT": "8",
             "LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS": "false",
             "MEMORY_SERVICE_URL": memory_url,
-            "LIVE_EVIDENCE_SCILLM_KEY": (scillm_key() or "") if live_resolver else "",
         }
         if profile is not None:
             env["LIVE_EVIDENCE_PROFILE"] = str(profile)

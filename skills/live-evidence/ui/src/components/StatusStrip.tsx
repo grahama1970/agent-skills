@@ -66,10 +66,13 @@ export function StatusStrip({
 
   const listening = session.status === "listening";
   const listenerLevel = Number(snapshot.listener?.level ?? 0);
-  const hearingAudio = listening && listenerLevel > 8;
+  const listenerHealth = snapshot.listener?.health ?? (listenerLevel > 8 ? "active" : "quiet");
+  const hearingAudio = listening && listenerHealth === "active";
+  const listenerWarn = ["quiet", "reconnecting", "stalled", "error"].includes(listenerHealth);
   const listenerName = snapshot.listener?.device?.includes("bluez")
     ? "Jabra (Bluetooth)"
     : snapshot.listener?.device?.split(".").slice(-1)[0];
+  const listenerLabel = listenerHealth === "active" ? "HEARING" : listenerHealth.toUpperCase();
 
   return (
     <header className="flex h-8 items-center justify-between overflow-hidden border-b border-gray-800/80 bg-[#0d0e15] px-2 text-xs text-gray-400 select-none sm:px-3">
@@ -110,14 +113,16 @@ export function StatusStrip({
             className={`flex shrink-0 items-center gap-2 rounded border px-2 py-0.5 font-mono text-[10px] transition-colors ${
               hearingAudio
                 ? "border-emerald-500/50 bg-emerald-950/40 text-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
-                : "border-amber-700/50 bg-amber-950/20 text-amber-200"
+                : listenerWarn
+                  ? "border-amber-700/50 bg-amber-950/20 text-amber-200"
+                  : "border-gray-700 bg-gray-900/40 text-gray-300"
             }`}
-            title={`Capturing from ${snapshot.listener.device} (${snapshot.listener.resolve_reason}); level ${listenerLevel}`}
+            title={`Capturing from ${snapshot.listener.device} (${snapshot.listener.resolve_reason}); health ${listenerHealth}; level ${listenerLevel}`}
             data-qid="listener-level"
           >
             <span className="hidden max-w-[10rem] truncate lg:inline">{listenerName}</span>
-            <span className={`font-semibold tracking-wide ${hearingAudio ? "text-emerald-200" : "text-amber-200"}`}>
-              {hearingAudio ? "HEARING" : "SILENT"}
+            <span className={`font-semibold tracking-wide ${hearingAudio ? "text-emerald-200" : listenerWarn ? "text-amber-200" : "text-gray-300"}`}>
+              {listenerLabel}
             </span>
             <span className="relative flex size-7 items-center justify-center rounded-full border border-current/50 bg-black/30" aria-label="Input level">
               <span className={`absolute size-full rounded-full ${hearingAudio ? "animate-ping bg-emerald-400/30" : "bg-amber-900/40"}`} />

@@ -59,7 +59,14 @@ class ReadinessVerdict(BaseModel):
         "awaiting_more_speech",
         "needs_clarification",
         "not_a_question",
+        "already_answered",
     ] = "not_a_question"
+    # Ledger-aware question identity (timeline dedupe by construction): when
+    # the buffer refines a KNOWN question the resolver returns that question's
+    # id so the card revises in place; when a KNOWN answered question already
+    # covers the ask, already_answered=true and no new card is created.
+    matches_question_id: str | None = None
+    already_answered: bool = False
     # (#1475) resolver-proposed action candidates; the resolver is the single
     # ambient authority, so this is the ONLY proposal channel.
     action_candidates: list[dict] = Field(default_factory=list)
