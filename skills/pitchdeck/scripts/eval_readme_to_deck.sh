@@ -14,13 +14,23 @@ export SPARTA_ROOT="${SPARTA_ROOT:-$HOME/workspace/experiments/sparta}"
 export SPARTA_PUBLIC_ROOT="${SPARTA_PUBLIC_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-public}"
 # CANONICAL source of truth = the private repo (code, docs, full imagery).
 # Publication is a separate layer: clearance_ledger.json + assert_public_document.
-export SPARTA_CANONICAL_ROOT="${SPARTA_CANONICAL_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical}"
+if [ -z "${SPARTA_CANONICAL_ROOT:-}" ]; then
+  if [ -d /mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical ]; then
+    export SPARTA_CANONICAL_ROOT=/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical
+  elif [ -d "$SPARTA_PUBLIC_ROOT" ]; then
+    export SPARTA_CANONICAL_ROOT="$SPARTA_PUBLIC_ROOT"
+  else
+    export SPARTA_CANONICAL_ROOT="$SPARTA_ROOT"
+  fi
+fi
 
 WORK="${1:-$(mktemp -d /tmp/pitchdeck-e2e-XXXXXX)}"
 mkdir -p "$WORK"
-O=/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278
-HT=/mnt/storage12tb/skills/pitchdeck/sources/style-corpus/SpartaAI_CyberSummitv_v3.pptx
-BUNDLE=examples/sparta-explorer
+O="${PITCHDECK_EVAL_APPROVED_DIR:-/mnt/storage12tb/skills/pitchdeck/outputs/ticket-1278}"
+HT="${PITCHDECK_EVAL_HOUSE_TEMPLATE:-/mnt/storage12tb/skills/pitchdeck/sources/style-corpus/SpartaAI_CyberSummitv_v3.pptx}"
+BUNDLE="${PITCHDECK_EVAL_BUNDLE:-examples/sparta-explorer}"
+CONTEXT="${PITCHDECK_EVAL_CONTEXT:-$SCRIPT_DIR/fixtures/north-star/deck_context.json}"
+APPROVALS="$WORK/publish-approvals.json"
 pass=0; fail=0
 stage() { # stage <name> <cmd...>
   local name="$1"; shift
@@ -37,7 +47,7 @@ stage readme-present test -s "$SPARTA_PUBLIC_ROOT/README.md"
 
 echo "--- stage 2: claim-bound compilation (target: 15-20 slides) ---"
 stage materialize ./run.sh materialize-outline --outline "$O/approved_outline.json" \
-  --context /tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c97e92ee-f998-42c3-8cea-10d08775cc68/scratchpad/deck_context.json \
+  --context "$CONTEXT" \
   --bundle-dir "$BUNDLE" --output "$WORK/deck.document.json"
 stage design-lint ./run.sh design-lint --document "$WORK/deck.document.json"
 stage slide-count python3 -c "
@@ -64,9 +74,29 @@ echo "--- stage 4: chain + publication verification ---"
 stage build-manifest ./run.sh build-manifest --bundle-dir "$BUNDLE" \
   --document "$WORK/deck.document.json" --outline "$O/approved_outline.json" \
   --pptx "$WORK/deck.pptx" --house-template "$HT" --output "$WORK/manifest.json"
+python3 - "$O/approved_outline.json" "$APPROVALS" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+outline = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+approved = [
+    r["text"]
+    for module in outline.get("modules", [])
+    for r in module.get("renderings", [])
+    if r.get("status") == "approved"
+]
+Path(sys.argv[2]).write_text(json.dumps({
+    "schema": "pitchdeck.publish_approvals.v1",
+    "approved_renderings": approved,
+    "non_claim_text": ["grahama.co"],
+    "disclaimer": "This document is the property of grahama.co and cannot be communicated or disclosed without grahama.co's authorization.",
+    "stale_owner_markers": ["CSINC", "CS Communication", "SpartaAI", "Sparta AI"],
+}, indent=1), encoding="utf-8")
+PY
 stage verify-publish ./run.sh verify-publish --pptx "$WORK/deck.pptx" \
   --ledger "$BUNDLE/claim_ledger.yaml" \
-  --approvals /tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c97e92ee-f998-42c3-8cea-10d08775cc68/scratchpad/publish-approvals-attested.json \
+  --approvals "$APPROVALS" \
   --document "$WORK/deck.document.json" \
   --build-manifest "$WORK/manifest.json" --bundle-dir "$BUNDLE"
 stage house-conformance ./run.sh house-conformance --pptx "$WORK/deck.pptx"

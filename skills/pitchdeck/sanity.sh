@@ -7,6 +7,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Sparta example bundle needs its source stores when present on this host.
 if [ -d "$HOME/workspace/experiments/sparta" ]; then export SPARTA_ROOT="${SPARTA_ROOT:-$HOME/workspace/experiments/sparta}"; fi
 if [ -d "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public" ]; then export SPARTA_PUBLIC_ROOT="${SPARTA_PUBLIC_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-public}"; fi
+if [ -d "/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical" ]; then
+  export SPARTA_CANONICAL_ROOT="${SPARTA_CANONICAL_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-canonical}"
+elif [ -d "/mnt/storage12tb/skills/pitchdeck/sources/sparta-public" ]; then
+  export SPARTA_CANONICAL_ROOT="${SPARTA_CANONICAL_ROOT:-/mnt/storage12tb/skills/pitchdeck/sources/sparta-public}"
+elif [ -d "$HOME/workspace/experiments/sparta" ]; then
+  export SPARTA_CANONICAL_ROOT="${SPARTA_CANONICAL_ROOT:-$HOME/workspace/experiments/sparta}"
+fi
 export PYTHONPATH="$SCRIPT_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 TMP_DIR="$(mktemp -d -t pitchdeck-sanity.XXXXXX)"

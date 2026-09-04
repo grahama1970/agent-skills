@@ -1,0 +1,20 @@
+{
+  "schema": "pitchdeck.deck_context.v1",
+  "objective": "Sparta Explorer turns scattered evidence into one inspectable decision thread.",
+  "desired_action": "Start a design-partner conversation and review the prepared-host workflow.",
+  "audience": "conference",
+  "audience_roles": ["defense software leaders", "compliance engineers", "program stakeholders"],
+  "prior_knowledge": "domain",
+  "duration_minutes": 15,
+  "target_slide_range": [15, 20],
+  "primary_ask": "Review whether the governed evidence path is worth a design-partner session.",
+  "required_modules": ["thesis", "problem_solution", "architecture", "proof", "roadmap"],
+  "non_goals": ["Claim deployment readiness", "Claim certification or accreditation"],
+  "forbidden_claims": [],
+  "target_outputs": ["pptx"],
+  "design_system_id": "sparta-house-conference",
+  "deck_profile_id": "sparta-conference",
+  "style_reference_ids": ["SpartaAI_CyberSummitv_v3"],
+  "visibility": "public",
+  "delivery": "presenter_led"
+}

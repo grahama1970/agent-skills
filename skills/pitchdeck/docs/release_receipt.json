@@ -1,22 +1,25 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "9c93dc3dcc48adb1bde7fd75f6970aab7cb46a07",
- "source_tree_sha256": "39a4bab1fc020bf7d6ee68d6a3dfd8eb3c81a6c4fe911820ec5b82bef4c2d441",
+ "commit": "4535a57f7d2a234297691b8415d537376cd19129",
+ "source_tree_sha256": "22d8de24fbbd72fce40bb4dbe92b0896bd0412de955114bf5f8f86f7b7f38d26",
  "commands": [
   "analyze-style",
   "apply-edit",
   "approve-rendering",
   "asset-add",
+  "asset-alternates",
   "asset-clear",
   "bindings-migrate",
   "build",
   "build-manifest",
+  "calibrate-house-gate",
   "claim-decide",
   "compile-document",
   "compile-voice-profile",
   "deck-op",
   "design-lint",
   "doctor",
+  "document-edit",
   "drift",
   "emit-document-pptx",
   "emit-document-ui",
@@ -26,7 +29,9 @@
   "emit-ui",
   "find-layout",
   "house-conformance",
+  "house-deck-gate",
   "house-similarity",
+  "house-structure",
   "image-variations",
   "index-house-slides",
   "materialize-outline",
@@ -49,11 +54,12 @@
   "version",
   "visual-sync"
  ],
- "command_count": 45,
+ "command_count": 50,
  "schema_inventory": [
   {
    "declared_schemas": [
     "pitchdeck.assertion_atom.v1",
+    "pitchdeck.asset_alternates.v1",
     "pitchdeck.asset_manifest.v1",
     "pitchdeck.brandmark_receipt.v1",
     "pitchdeck.build_manifest.v1",
@@ -62,6 +68,7 @@
     "pitchdeck.composition_recipe.v1",
     "pitchdeck.deck_context.v1",
     "pitchdeck.deck_document.v1",
+    "pitchdeck.deck_gate_calibration.v1",
     "pitchdeck.deck_manifest.v1",
     "pitchdeck.deck_op_receipt.v1",
     "pitchdeck.deck_profile.v1",
@@ -73,6 +80,7 @@
     "pitchdeck.emit_md_receipt.v1",
     "pitchdeck.emit_ui_receipt.v1",
     "pitchdeck.handout_receipt.v1",
+    "pitchdeck.house_gate_calibration.v1",
     "pitchdeck.house_spec.v1",
     "pitchdeck.icon_library.v1",
     "pitchdeck.identity_ledger.v1",
@@ -105,7 +113,7 @@
    "artifacts": [
     {
      "schema": "pitchdeck.deck_document.v1.schema",
-     "sha256": "f9864e180cbaa0206a1abc5a9ef8f2462fc257e8634e00b1faa269aac879890b",
+     "sha256": "e05eaa1631b673226b406685100ce36a4de36adc2f8db872e06b2b2e33551d7e",
      "visibility": "public"
     }
    ]
@@ -113,8 +121,8 @@
  ],
  "golden_slice_sha256": "1c98b0377bb809f96531a55426113828bae5c7a7b3fd088b0c30076e4cd54609",
  "tests": {
-  "exit_code": 0,
-  "summary": "44 passed, 0 xfail"
+  "status": "NOT_RUN_BY_GENERATOR",
+  "note": "pass --with-tests for live counts"
  },
  "known_limitations": [
   "browser-vs-PPTX visual fidelity is unverified (parity gate is #1273)",

@@ -22,6 +22,8 @@ cannot be read raise — nothing emits partially.
 from __future__ import annotations
 
 import json
+import tempfile
+import zipfile
 from pathlib import Path
 
 from pptx import Presentation
@@ -51,6 +53,36 @@ _CONNECTOR_ROUTES = {
 }
 
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+
+
+def _scrub_package_markers(pptx_path: Path, markers: tuple[str, ...], replacement: str) -> list[str]:
+    """Remove stale owner strings from textual OPC parts after python-pptx save.
+
+    python-pptx leaves docProps/app.xml from the template intact; that metadata
+    can still carry prior-owner slide titles after all template slides are
+    stripped. Rewrite only UTF-8 XML/rels parts and leave binary media alone.
+    """
+    if not markers:
+        return []
+    changed: list[str] = []
+    with zipfile.ZipFile(pptx_path, "r") as src, tempfile.NamedTemporaryFile(
+        dir=pptx_path.parent, suffix=".pptx", delete=False
+    ) as tmp:
+        tmp_path = Path(tmp.name)
+        with zipfile.ZipFile(tmp, "w") as dst:
+            for info in src.infolist():
+                data = src.read(info.filename)
+                if info.filename.endswith((".xml", ".rels")):
+                    text = data.decode("utf-8")
+                    updated = text
+                    for marker in markers:
+                        updated = updated.replace(marker, replacement)
+                    if updated != text:
+                        data = updated.encode("utf-8")
+                        changed.append(info.filename)
+                dst.writestr(info, data)
+    tmp_path.replace(pptx_path)
+    return changed
 
 
 class Frame:
@@ -482,7 +514,7 @@ def emit_document_pptx(
         if disclaimer:
             from .template_deck import retarget_disclaimer
 
-            markers = stale_owner_markers or ("CSINC", "CS Communication")
+            markers = stale_owner_markers or ("CSINC", "CS Communication", "SpartaAI", "Sparta AI")
             disclaimer_receipt = retarget_disclaimer(presentation, disclaimer, stale_markers=markers)
             if disclaimer_receipt["residual_markers"]:
                 raise ValueError(
@@ -660,6 +692,14 @@ def emit_document_pptx(
         receipt["slides"].append({"id": slide_doc.id, "elements": sum(1 for _ in __import__("pitchdeck.document", fromlist=["iter_tree"]).iter_tree(slide_doc.elements))})
     output_path.parent.mkdir(parents=True, exist_ok=True)
     presentation.save(str(output_path))
+    if disclaimer:
+        scrubbed = _scrub_package_markers(
+            output_path,
+            stale_owner_markers or ("CSINC", "CS Communication", "SpartaAI", "Sparta AI"),
+            "grahama.co",
+        )
+        if scrubbed:
+            receipt["package_marker_scrubbed"] = scrubbed
     receipt["output"] = str(output_path.resolve())
     (output_path.with_suffix(".receipt.json")).write_text(json.dumps(receipt, indent=1), encoding="utf-8")
     return receipt
