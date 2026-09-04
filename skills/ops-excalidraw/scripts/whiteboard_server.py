@@ -28,6 +28,27 @@ def library_files() -> dict[str, Path]:
     return {p.name: p for p in files}
 
 
+def merge_personal_library(items: list) -> int:
+    """Merge posted items into personal.excalidrawlib by id (never drops prior items); atomic write."""
+    path = TOOLKITS / "personal.excalidrawlib"
+    by_id: dict[str, object] = {}
+    if path.exists():
+        try:
+            for existing in json.loads(path.read_text()).get("libraryItems", []):
+                if isinstance(existing, dict) and existing.get("id"):
+                    by_id[existing["id"]] = existing
+        except (ValueError, json.JSONDecodeError):
+            pass
+    for item in items:
+        if isinstance(item, dict) and item.get("id"):
+            by_id[item["id"]] = item  # posted item wins on id collision
+    doc = {"type": "excalidrawlib", "version": 2, "source": "ops-excalidraw personal", "libraryItems": list(by_id.values())}
+    tmp = path.with_suffix(".excalidrawlib.tmp")
+    tmp.write_text(json.dumps(doc, indent=1) + "\n")
+    tmp.replace(path)
+    return len(by_id)
+
+
 def render_scene(raw: bytes) -> tuple[int, bytes, str]:
     """Compile a posted board and render it to SVG; return (status, body, content-type)."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -106,9 +127,9 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, json.JSONDecodeError) as exc:
                 self.reply(422, json.dumps({"error": str(exc)}).encode(), "application/json")
                 return
+            saved = merge_personal_library(items)
             path = TOOLKITS / "personal.excalidrawlib"
-            path.write_text(json.dumps({"type": "excalidrawlib", "version": 2, "source": "ops-excalidraw personal", "libraryItems": items}, indent=1) + "\n")
-            self.reply(200, json.dumps({"saved": len(items), "path": str(path)}).encode(), "application/json")
+            self.reply(200, json.dumps({"saved": saved, "path": str(path)}).encode(), "application/json")
             return
         if self.path == "/board":
             try:
