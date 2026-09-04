@@ -53,12 +53,14 @@ async def retrieve(
         # fragment 'chair to show 4 loop of 5 easier' carded). Reuses the
         # proven scanner_fallback machinery on the resolver path.
         from . import scanner_fallback as sf
+        from .question_window import _has_imperative_clause
 
         query_lowered = decision.query.casefold()
         if (
             len(sf.question_words(decision.query)) < 4
             or sf.scanner_skip_text(decision.query)
-            or not any(term in query_lowered for term in sf.ASK_TERMS)
+            or not (any(term in query_lowered for term in sf.ASK_TERMS)
+                    or _has_imperative_clause(query_lowered))
         ):
             try:
                 await self._journal.append(

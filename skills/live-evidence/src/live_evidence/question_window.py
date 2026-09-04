@@ -69,7 +69,12 @@ IMPERATIVE_CLAUSE_LEADS = frozenset({
 
 def _has_imperative_clause(lower_text: str) -> bool:
     for clause in re.split(r"[.;!?]\s+", lower_text):
-        first_word = clause.strip().split(" ", 1)[0].strip()
+        clause = clause.strip()
+        if clause.startswith("given ") and "," in clause:
+            clause = clause.partition(",")[2].lstrip()
+        if clause.startswith("now "):
+            clause = clause[4:].lstrip()
+        first_word = clause.split(" ", 1)[0]
         if first_word in IMPERATIVE_CLAUSE_LEADS:
             return True
     return False

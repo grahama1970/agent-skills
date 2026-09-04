@@ -277,6 +277,11 @@ def _register_api_routes(
         return archive_session(state.session_id() or "no-session", rows,
                                Path(tempfile.mkdtemp(prefix="le-episodic-")))
 
+    @app.get("/api/requirements")
+    async def pending_requirements() -> list[dict[str, Any]]:
+        """Expose clarification prompts without publishing an answer candidate."""
+        return [entry.model_dump(mode="json") for entry in await state.pending_requirements()]
+
     @app.post("/api/questions/{question_id}/clarifications/{clarification_id}/answer")
     async def answer_clarification(
         question_id: str, clarification_id: str, request: ClarificationAnswerRequest

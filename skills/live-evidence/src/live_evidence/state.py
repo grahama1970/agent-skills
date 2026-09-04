@@ -139,6 +139,9 @@ class RuntimeState:
                 self._active_question_revision = 0
                 self._active_question_answered = False
                 self._publication_journal = []
+                self._ledger.clear()
+                self._question_last_revision.clear()
+                self._answer_leases.clear()
             snapshot = self._snapshot_unlocked()
         await self._broadcast(snapshot)
         return snapshot
@@ -363,6 +366,15 @@ class RuntimeState:
     async def ledger_entries(self, question_id: str, revision: int) -> list[Requirement]:
         async with self._lock:
             return list(self._ledger.get((question_id, revision), []))
+
+    async def pending_requirements(self) -> list[Requirement]:
+        """Current question requirements, independently of visible answer cards."""
+        async with self._lock:
+            return [entry.model_copy(deep=True)
+                    for (qid, revision), entries in self._ledger.items()
+                    if self._question_last_revision.get(qid) == revision
+                    and any(entry.status is RequirementStatus.UNRESOLVED for entry in entries)
+                    for entry in entries]
 
     async def blocking_unresolved(self, question_id: str, revision: int) -> list[Requirement]:
         async with self._lock:

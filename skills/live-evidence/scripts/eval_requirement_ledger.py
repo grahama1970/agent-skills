@@ -75,18 +75,21 @@ BLOCKED_VERDICT = {
          "default_assumption": "Assume the log fits in memory."},
     ],
 }
-VERDICTS = [
-    {"question_asked_yet": True, "question_complete": False, "ready_to_answer": False,
-     "blocking_reason": "awaiting_more_speech", "question_type": "code",
-     "actionable": False, "canonical_question": "", "clarifying_questions": [],
-     "confidence": 0.7},
-    BLOCKED_VERDICT,
-    BLOCKED_VERDICT,
-]
+VERDICTS = [BLOCKED_VERDICT, BLOCKED_VERDICT]
 
 
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    from live_evidence.question_window import _has_imperative_clause
+    check("given clause distinguishes request from description",
+          _has_imperative_clause('given a raw log, write a python parser.')
+          and not _has_imperative_clause('given a raw log, we write records to disk.'),
+          'imperative accepted; description rejected')
+    from live_evidence.scanner_fallback import fallback_scan
+    check("default scanner preserves imperative and rejects description",
+          len(fallback_scan([{'speaker': 'interviewer', 'text': 'Given the raw log, write a Python function returning counts.'}], [])) == 1
+          and not fallback_scan([{'speaker': 'interviewer', 'text': 'Given the raw log, we write records to disk.'}], []),
+          'deterministic default-scanner check; no provider')
     with tempfile.TemporaryDirectory(prefix="le-ledger-") as temp_name:
         temp = Path(temp_name)
         repo = temp / "repo"
@@ -114,6 +117,7 @@ def main() -> int:
             "LIVE_EVIDENCE_DATA_DIR": str(temp / "data"),
             "LIVE_EVIDENCE_PROFILE": str(temp / "profile.yaml"),
             "LIVE_EVIDENCE_RESOLVER_FIXTURE": str(fixture),
+            "LIVE_EVIDENCE_SCANNER_MODE": "false",
             "LIVE_EVIDENCE_ASK_RUNNER": str(runner),
             "LIVE_EVIDENCE_ASK_HANDLER": "fixture",
             "LIVE_EVIDENCE_ASK_TIMEOUT": "30",
@@ -150,7 +154,7 @@ def main() -> int:
                 deadline = time.monotonic() + timeout_s
                 cards: list[dict] = []
                 while time.monotonic() < deadline:
-                    cards = get(base, "/api/state").get("cards") or []
+                    cards = get(base, "/api/requirements")
                     if len(cards) >= want:
                         return cards
                     time.sleep(0.4)
@@ -160,7 +164,7 @@ def main() -> int:
 
             # Proof: a grammatical period is not task completion.
             speak(1, "We rely on Python and a large log processing stack in production.")
-            wait_cards(1)
+            time.sleep(0.5)
             check("period-terminated background does not start the solver",
                   invocations() == 0, f"invocations={invocations()}")
 
@@ -170,12 +174,16 @@ def main() -> int:
             time.sleep(1.5)
             check("blocking requirements hold automatic Ask at zero",
                   invocations() == 0, f"invocations={invocations()}")
-            blocked = next((c for c in cards if c.get("ledger_digest")), None)
-            check("held card binds a ledger digest", blocked is not None,
-                  str((blocked or {}).get("ledger_digest"))[:12])
-            check("assumption is visibly labeled on the card",
-                  bool(blocked and blocked.get("assumptions")),
-                  str((blocked or {}).get("assumptions"))[:70])
+            blocked = next((c for c in cards if c.get("blocking") and c.get("status") == "unresolved"), None)
+            journal_rows = [json.loads(line) for jf in (temp / 'data').rglob('session.jsonl')
+                            for line in jf.read_text().splitlines()]
+            check("held requirement binds a ledger digest",
+                  any(row.get('kind') == 'requirement_ledger_opened' and row.get('payload', {}).get('ledger_digest') for row in journal_rows),
+                  'ledger journal read back')
+            check("assumption is labeled independently of answer cards",
+                  any(c.get('status') == 'assumed' and c.get('assumption_source') for c in cards),
+                  str(cards)[:100])
+            check("held answers remain invisible", not get(base, '/api/state').get('cards'), 'answer rail empty')
             qid = blocked.get("question_id") if blocked else ""
             rev = blocked.get("question_revision") if blocked else 0
 
@@ -200,11 +208,15 @@ def main() -> int:
             check("resolving the last blocking requirement runs Ask exactly once",
                   code == 200 and invocations() == 1,
                   f"invocations={invocations()} published={body.get('published')}")
-            final_cards = get(base, "/api/state").get("cards") or []
-            solved = next((c for c in final_cards if c.get("question_id") == qid), None)
-            answered = [cl for cl in (solved or {}).get("clarifications") or [] if cl.get("answer")]
-            check("published card carries the clarification answers",
+            journal_rows = [json.loads(line) for jf in (temp / 'data').rglob('session.jsonl')
+                            for line in jf.read_text().splitlines()]
+            answered = [row for row in journal_rows if row.get('kind') == 'requirement_amendment'
+                        and row.get('payload', {}).get('result') == 'amended']
+            check("clarification answers are journaled independently of cards",
                   len(answered) == 2, f"answered={len(answered)}")
+            check("stub solver cannot authorize publication",
+                  not get(base, '/api/state').get('cards') and not body.get('published'),
+                  'fixture transport is not reviewer authority')
 
             # Duplicate answer: idempotent, no extra solver run.
             code, body = post(base, f"/api/questions/{qid}/clarifications/c2/answer",
@@ -215,7 +227,7 @@ def main() -> int:
 
             # Spoken (non-question) turn binds as a speech answer on a new blocked question.
             speak(3, "Now write a Python function that groups the log entries by user id.")
-            wait_cards(3)
+            wait_cards(2)
             speak(4, "The entries arrive newline separated over standard input.")
             time.sleep(2)
             journal_kinds: dict[str, int] = {}
@@ -242,6 +254,10 @@ def main() -> int:
             check("invented requirement without ASSUMED provenance is rejected",
                   invented_rejected, "ValidationError raised")
         finally:
+            log.flush()
+            Path('/tmp/live-evidence-clarification-server.log').write_text((temp / 'server.log').read_text())
+            journal_text = '\n'.join(jf.read_text() for jf in (temp / 'data').rglob('session.jsonl'))
+            Path('/tmp/live-evidence-clarification-session.jsonl').write_text(journal_text)
             proc.terminate()
             try:
                 proc.wait(timeout=5)
@@ -249,6 +265,11 @@ def main() -> int:
                 proc.kill()
             log.close()
 
+    Path('/tmp/live-evidence-clarification-eval.json').write_text(json.dumps({
+        'status': 'FAIL' if failures else 'PASS', 'failures': failures,
+        'proof_scope': 'Real HTTP; scripted legacy resolver and stub solver. No default scanner, live provider, UI or audio proof.',
+        'fixture_backed': True, 'provider_calls': 0,
+    }, indent=2) + '\n')
     print()
     if failures:
         print(f"requirement ledger: FAIL ({len(failures)} failed: {', '.join(failures)})")

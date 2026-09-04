@@ -1085,6 +1085,10 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
+          "given clause distinguishes request from description: PASS",
+          "default scanner preserves imperative and rejects description: PASS",
+          "held answers remain invisible: PASS",
+          "stub solver cannot authorize publication: PASS",
           "blocking requirements hold automatic Ask at zero: PASS",
           "partial answer leaves the solver held: PASS",
           "stale-revision answer rejected with 409: PASS",
@@ -1093,8 +1097,12 @@
           "spoken non-question turn binds as a speech answer: PASS",
           "invented requirement without ASSUMED provenance is rejected: PASS",
           "requirement ledger: PASS"
+        ],
+        "artifacts": [
+          {"path": "/tmp/live-evidence-clarification-eval.json", "json_pointer": "/status", "equals": "PASS"}
         ]
-      }
+      },
+      "notes": "Real local HTTP with scripted legacy resolver and stub solver; pending requirements are independent of visible answer cards. Includes deterministic default-scanner imperative checks. No live provider, audio or clarification UI proof."
     },
     {
       "name": "embry-voice-interrupted-and-redirected-by-real-human",

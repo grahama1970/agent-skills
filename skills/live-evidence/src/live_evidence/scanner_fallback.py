@@ -12,6 +12,7 @@ provider outages make this too noisy.
 from __future__ import annotations
 
 from .scanner import ScannedQuestion
+from .question_window import _has_imperative_clause
 
 _ASK_TERMS = (
     "?", "assume", "assumed", "defend", "design", "explain", "give me", "how ",
@@ -121,7 +122,7 @@ def fallback_scan(
             continue
         if len(text.split()) < 5 or lowered in known or scanner_skip_text(text):
             continue
-        if not any(term in lowered for term in _ASK_TERMS):
+        if not (any(term in lowered for term in _ASK_TERMS) or _has_imperative_clause(lowered)):
             continue
         category = "code" if any(term in lowered for term in _CODE_TERMS) else "architecture"
         skills = ("memory", "code", "ripgrep", "ask") if category == "code" else ("memory", "code")

@@ -17,6 +17,11 @@ SRC="${INTERVIEW_AUDIO_SOURCE:-auto:jabra-input}"
 
 export LIVE_EVIDENCE_REPOS="$HOME/workspace/experiments/agent-skills:$HOME/workspace/experiments/tau:$HOME/workspace/experiments/memory:$HOME/workspace/experiments/sparta:$HOME/workspace/experiments/dw-openapi"
 
+# Provider access stays inside Ask/Tau; no provider credentials belong here.
+export LIVE_EVIDENCE_ASK_RUNNER="${LIVE_EVIDENCE_ASK_RUNNER:-$SKILL_DIR/../ask/run.sh}"
+export LIVE_EVIDENCE_ASK_ALLOW_PROVIDER_CALLS=true
+export LIVE_EVIDENCE_ASK_TIMEOUT="${LIVE_EVIDENCE_ASK_TIMEOUT:-180}"
+
 echo "== dependency probes"
 curl -sf -m 5 http://127.0.0.1:8601/health >/dev/null || { echo "FATAL: memory daemon down"; exit 1; }
 curl -sf -m 20 -X POST http://127.0.0.1:8601/recall -H 'Content-Type: application/json' \
