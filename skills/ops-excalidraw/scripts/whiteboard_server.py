@@ -125,7 +125,19 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         """Route POST: personal-library persist, proposal, board push, render."""
-        raw = self.rfile.read(int(self.headers.get("Content-Length", "0")))
+        # Hardening: reject cross-origin browser pages and oversized bodies.
+        # A present Origin must be this loopback server; CLI/curl send no Origin.
+        port = self.server.server_address[1]
+        origin = self.headers.get("Origin")
+        allowed = {f"http://127.0.0.1:{port}", f"http://localhost:{port}"}
+        if origin is not None and origin not in allowed:
+            self.reply(403, b'{"error": "cross-origin request refused"}', "application/json")
+            return
+        length = int(self.headers.get("Content-Length", "0"))
+        if length > 16 * 1024 * 1024:  # 16 MB cap
+            self.reply(413, b'{"error": "request body too large"}', "application/json")
+            return
+        raw = self.rfile.read(length)
         if self.path == "/personal-library":
             try:
                 items = json.loads(raw)

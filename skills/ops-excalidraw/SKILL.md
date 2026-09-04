@@ -107,6 +107,8 @@ skills/ops-excalidraw/run.sh push-board chart.excalidraw --port 7683 --replace  
 
 Endpoints: `POST /proposal` (safe), `POST /board` (replace), `POST /proposal/clear` (accept/reject both clear). `GET /proposal?since=N` and `GET /board?since=N` return 204 when current. Pushes are validated fail-closed; invalid payloads get 422. `--replace` viewport fits only on the first applied board, never on later live updates.
 
+The server binds to loopback and hardens POSTs: a browser page from another origin is refused (403), CLI/same-origin requests are allowed, and bodies over 16 MB get 413.
+
 ## Vendored upstream libraries
 
 The official Excalidraw library directory (libraries.excalidraw.com, github.com/excalidraw/excalidraw-libraries) already ships comprehensive component sets. Three are vendored under `assets/toolkits/vendor/` and validate through this skill (v1 `library` format is normalized automatically):
