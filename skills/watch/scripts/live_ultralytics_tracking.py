@@ -4,6 +4,10 @@ This is the Watch Stage 1 tracker boundary: detect/track people frame-by-frame
 from a video, webcam, RTSP, or similar stream and emit event-backed bounding
 boxes immediately. It does not identify characters. Named identity belongs to a
 separate verifier that consumes crops/references after this first-stage stream.
+
+An optional post-detection compositor can redact explicitly targeted tracks
+before frame JPEGs, display pixels, or output video are emitted. That compositor
+does not alter Stage 1 observations or accepted identity.
 """
 from __future__ import annotations
 
@@ -17,6 +21,23 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from jsonschema import Draft202012Validator
+
+if __package__:
+    from .watch_anonymizer import (
+        AnonymizationConfigError,
+        AnonymizationSession,
+        anonymization_config_summary,
+        anonymization_message_summary,
+        session_from_args,
+    )
+else:
+    from watch_anonymizer import (
+        AnonymizationConfigError,
+        AnonymizationSession,
+        anonymization_config_summary,
+        anonymization_message_summary,
+        session_from_args,
+    )
 
 
 DEFAULT_SCHEMA = Path(__file__).resolve().parents[1] / "docs" / "architecture" / "watch_track_observations.schema.json"
@@ -53,9 +74,81 @@ def main() -> int:
     parser.add_argument("--stdout-frame-jsonl", action="store_true", help="Print frame+box messages as JSONL for WebSocket canvas streaming.")
     parser.add_argument("--sse", action="store_true", help="Print events as SSE track_update frames.")
     parser.add_argument("--jpeg-quality", type=int, default=75, help="JPEG quality for --stdout-frame-jsonl frames.")
-    parser.add_argument("--output-video", type=Path, help="Optional annotated video output path.")
+    parser.add_argument(
+        "--output-video",
+        type=Path,
+        help=(
+            "Optional annotated/redacted video-only output path. OpenCV writes "
+            "video frames; source audio is not preserved by this backend slice."
+        ),
+    )
     parser.add_argument("--display", action="store_true", help="Open an OpenCV display window. Off by default for headless use.")
     parser.add_argument("--pace-realtime", action="store_true", help="Sleep between sampled frames to approximate source time.")
+
+    anonymization = parser.add_argument_group("post-detection pixel redaction")
+    anonymization.add_argument(
+        "--blur-character",
+        help="Character-name filter for accepted/suggested target decisions. This never accepts identity.",
+    )
+    anonymization.add_argument(
+        "--blur-source",
+        choices=["accepted", "suggested", "manual-track"],
+        help="Authority lane used only to select redaction targets.",
+    )
+    anonymization.add_argument(
+        "--blur-label-receipt",
+        type=Path,
+        help="Timed watch.yolo_track_labels.v1 receipt used to derive accepted target intervals.",
+    )
+    anonymization.add_argument(
+        "--blur-target-manifest",
+        type=Path,
+        help="Explicit watch.anonymization_targets.v1 manifest, required for suggestion targets.",
+    )
+    anonymization.add_argument(
+        "--blur-track",
+        action="append",
+        default=[],
+        metavar="TRACK_ID",
+        help="Explicit detector track to redact for --blur-source manual-track. Repeatable.",
+    )
+    anonymization.add_argument(
+        "--blur-mode",
+        choices=["face", "upper-person", "person"],
+        default=None,
+        help=(
+            "ROI policy (default when enabled: upper-person). face falls back "
+            "to upper-person unless a localizer is supplied."
+        ),
+    )
+    anonymization.add_argument(
+        "--blur-style",
+        choices=["gaussian", "pixelate", "solid"],
+        default=None,
+        help="Pixel transform (default when enabled: gaussian).",
+    )
+    anonymization.add_argument(
+        "--blur-strength",
+        type=int,
+        default=None,
+        help="Transform strength (default when enabled: 31).",
+    )
+    anonymization.add_argument(
+        "--blur-hold-ms",
+        type=int,
+        default=None,
+        help="Bounded last-ROI hold in milliseconds (default when enabled: 750).",
+    )
+    anonymization.add_argument(
+        "--allow-suggested-export",
+        action="store_true",
+        help="Explicitly allow tentative suggestions to drive permanent --output-video redaction.",
+    )
+    anonymization.add_argument(
+        "--anonymization-receipt",
+        type=Path,
+        help="JSONL frame-receipt path. Defaults under --out-dir.",
+    )
     args = parser.parse_args()
 
     if args.sample_fps <= 0:
@@ -98,7 +191,7 @@ def main() -> int:
                 print(line, flush=True)
             if args.sse:
                 print(f"event: track_update\ndata: {line}\n", flush=True)
-            if len(events) >= args.max_events:
+            if len(events) >= args.max_events and not _complete_pixel_pass_requested(args):
                 break
     finally:
         event_file.close()
@@ -114,6 +207,7 @@ def main() -> int:
 
 
 def iter_track_events(args: argparse.Namespace) -> Iterable[dict[str, Any]]:
+    anonymizer = session_from_args(args)
     try:
         import cv2
         from ultralytics import YOLO
@@ -132,6 +226,9 @@ def iter_track_events(args: argparse.Namespace) -> Iterable[dict[str, Any]]:
     if not source_fps or not math.isfinite(source_fps) or source_fps <= 0:
         source_fps = 30.0
     frame_stride = max(1, round(source_fps / args.sample_fps))
+    _validate_redaction_output_cadence(
+        anonymizer, args=args, source_fps=source_fps, frame_stride=frame_stride
+    )
     model = YOLO(args.model)
 
     classes = None if args.no_class_filter else [args.class_id]
@@ -152,29 +249,47 @@ def iter_track_events(args: argparse.Namespace) -> Iterable[dict[str, Any]]:
     frame_index = -1
     emitted_count = 0
     candidate_entities = _candidate_entities(args)
+    complete_pixel_pass = _complete_pixel_pass_requested(args)
+    full_frame_output = bool(args.display or complete_pixel_pass)
 
-    try:
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
-            frame_index += 1
-            if frame_index % frame_stride != 0:
-                continue
+    with anonymizer:
+        try:
+            while True:
+                loop_start = time.perf_counter()
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                frame_index += 1
+                sampled = frame_index % frame_stride == 0
+                if not sampled and not full_frame_output:
+                    continue
 
-            result = model.track(frame, **track_kwargs)
-            annotated = frame.copy()
-            frame_seconds = frame_index / source_fps
-            media_time = round(args.start_seconds + frame_seconds, 3)
+                frame_seconds = frame_index / source_fps
+                media_time = round(args.start_seconds + frame_seconds, 3)
+                tracks: list[dict[str, Any]] = []
+                if sampled:
+                    result = model.track(frame, **track_kwargs)
+                    boxes = result[0].boxes if result and result[0].boxes is not None else None
+                    tracks = _tracks_from_boxes(
+                        boxes,
+                        detected_class=args.detected_class,
+                        candidate_entities=candidate_entities,
+                    )
 
-            boxes = result[0].boxes if result and result[0].boxes is not None else None
-            if boxes is not None and boxes.id is not None and len(boxes) > 0:
-                xyxy_values = _tolist(boxes.xyxy)
-                ids = _tolist(boxes.id)
-                conf_values = _tolist(boxes.conf)
-                for box_index, track_id_value in enumerate(ids):
-                    bbox = _bbox(xyxy_values[box_index])
-                    track_id = f"track_{_normalize_track_id(track_id_value)}"
+                rendered, _receipt = anonymizer.process(
+                    frame,
+                    tracks=tracks,
+                    stream_id=args.stream_id,
+                    asset_uid=args.asset_uid,
+                    segment_id=args.segment_id,
+                    frame_index=frame_index,
+                    media_time_seconds=media_time,
+                )
+                annotated = rendered.copy()
+                frame_events: list[dict[str, Any]] = []
+                for track in tracks:
+                    if emitted_count >= args.max_events:
+                        break
                     event = {
                         "event_type": "track_update",
                         "schema_version": "watch.live_track_update.v1",
@@ -182,37 +297,58 @@ def iter_track_events(args: argparse.Namespace) -> Iterable[dict[str, Any]]:
                         "asset_uid": args.asset_uid,
                         "segment_id": args.segment_id,
                         "media_time_seconds": media_time,
-                        "track_id": track_id,
-                        "bbox_xyxy": bbox,
-                        "detected_class": args.detected_class,
-                        "candidate_entities": candidate_entities,
+                        "track_id": track["track_id"],
+                        "bbox_xyxy": track["bbox_xyxy"],
+                        "detected_class": track["detected_class"],
+                        "candidate_entities": track["candidate_entities"],
                         "status": "PROVISIONAL",
-                        "emitted_at": (event_base + timedelta(seconds=frame_seconds)).isoformat().replace("+00:00", "Z"),
+                        "emitted_at": (
+                            event_base + timedelta(seconds=frame_seconds)
+                        ).isoformat().replace("+00:00", "Z"),
                     }
                     emitted_count += 1
-                    _draw_box(annotated, bbox=bbox, track_id=track_id, confidence=_maybe_conf(conf_values, box_index))
-                    yield event
-                    if emitted_count >= args.max_events:
-                        return
+                    frame_events.append(event)
+                    _draw_box(
+                        annotated,
+                        bbox=track["bbox_xyxy"],
+                        track_id=track["track_id"],
+                        confidence=track["confidence"],
+                    )
 
-            if args.output_video:
-                writer = _writer_for(cv2, writer, args.output_video, source_fps, annotated)
-                writer.write(annotated)
-            if args.display:
-                cv2.imshow("Watch Ultralytics Stage 1 Tracking", annotated)
-                if cv2.waitKey(1) & 0xFF == ord("q"):
+                if args.output_video:
+                    # A redaction export writes the compositor output itself, not
+                    # detector decorations added after the receipt hash. Operator
+                    # display may still show boxes; non-redaction output preserves
+                    # the historical annotated-video behavior.
+                    video_frame = rendered if anonymizer.enabled else annotated
+                    writer = _writer_for(
+                        cv2, writer, args.output_video, source_fps, video_frame
+                    )
+                    writer.write(video_frame)
+                if args.display:
+                    cv2.imshow("Watch Ultralytics Stage 1 Tracking", annotated)
+                    if cv2.waitKey(1) & 0xFF == ord("q"):
+                        return
+                if args.pace_realtime:
+                    interval = 1.0 / source_fps if full_frame_output else frame_stride / source_fps
+                    elapsed = time.perf_counter() - loop_start
+                    time.sleep(max(0.0, interval - elapsed))
+
+                # Complete export/redaction passes continue to source EOF even after
+                # the observation event budget is exhausted.
+                yield from frame_events
+                if emitted_count >= args.max_events and not complete_pixel_pass:
                     return
-            if args.pace_realtime:
-                time.sleep(frame_stride / source_fps)
-    finally:
-        cap.release()
-        if writer is not None:
-            writer.release()
-        if args.display:
-            cv2.destroyAllWindows()
+        finally:
+            cap.release()
+            if writer is not None:
+                writer.release()
+            if args.display:
+                cv2.destroyAllWindows()
 
 
 def iter_track_frames(args: argparse.Namespace) -> Iterable[dict[str, Any]]:
+    anonymizer = session_from_args(args)
     try:
         import cv2
         from ultralytics import YOLO
@@ -249,49 +385,83 @@ def iter_track_frames(args: argparse.Namespace) -> Iterable[dict[str, Any]]:
     processed_index = 0
     candidate_entities = _candidate_entities(args)
 
-    try:
-        while True:
-            loop_start = time.perf_counter()
-            ok, frame = cap.read()
-            if not ok:
-                yield {"type": "end", "processed_frames": processed_index}
-                return
-            frame_index += 1
-            if frame_index % frame_stride != 0:
-                continue
+    with anonymizer:
+        try:
+            while True:
+                loop_start = time.perf_counter()
+                ok, frame = cap.read()
+                if not ok:
+                    yield {"type": "end", "processed_frames": processed_index}
+                    return
+                frame_index += 1
+                if frame_index % frame_stride != 0:
+                    continue
 
-            result = model.track(frame, **track_kwargs)
-            frame_seconds = frame_index / source_fps
-            media_time = round(args.start_seconds + frame_seconds, 3)
-            boxes = result[0].boxes if result and result[0].boxes is not None else None
-            tracks = _tracks_from_boxes(
-                boxes,
-                detected_class=args.detected_class,
-                candidate_entities=candidate_entities,
-            )
-            height, width = frame.shape[:2]
-            yield {
-                "type": "frame",
-                "schema_version": "watch.tracker_canvas_frame.v1",
-                "stream_id": args.stream_id,
-                "asset_uid": args.asset_uid,
-                "segment_id": args.segment_id,
-                "media_time_seconds": media_time,
-                "frame_index": frame_index,
-                "processed_index": processed_index,
-                "source_fps": source_fps,
-                "sample_fps": args.sample_fps,
-                "width": width,
-                "height": height,
-                "tracks": tracks,
-                "jpeg": _encode_jpeg(frame, args.jpeg_quality),
-            }
-            processed_index += 1
-            if args.pace_realtime:
-                elapsed = time.perf_counter() - loop_start
-                time.sleep(max(0.0, (1.0 / args.sample_fps) - elapsed))
-    finally:
-        cap.release()
+                result = model.track(frame, **track_kwargs)
+                frame_seconds = frame_index / source_fps
+                media_time = round(args.start_seconds + frame_seconds, 3)
+                boxes = result[0].boxes if result and result[0].boxes is not None else None
+                tracks = _tracks_from_boxes(
+                    boxes,
+                    detected_class=args.detected_class,
+                    candidate_entities=candidate_entities,
+                )
+                rendered, receipt = anonymizer.process(
+                    frame,
+                    tracks=tracks,
+                    stream_id=args.stream_id,
+                    asset_uid=args.asset_uid,
+                    segment_id=args.segment_id,
+                    frame_index=frame_index,
+                    media_time_seconds=media_time,
+                )
+                height, width = rendered.shape[:2]
+                yield {
+                    "type": "frame",
+                    "schema_version": "watch.tracker_canvas_frame.v1",
+                    "stream_id": args.stream_id,
+                    "asset_uid": args.asset_uid,
+                    "segment_id": args.segment_id,
+                    "media_time_seconds": media_time,
+                    "frame_index": frame_index,
+                    "processed_index": processed_index,
+                    "source_fps": source_fps,
+                    "sample_fps": args.sample_fps,
+                    "width": width,
+                    "height": height,
+                    "tracks": tracks,
+                    "anonymization": anonymization_message_summary(receipt),
+                    "jpeg": _encode_jpeg(rendered, args.jpeg_quality),
+                }
+                processed_index += 1
+                if args.pace_realtime:
+                    elapsed = time.perf_counter() - loop_start
+                    time.sleep(max(0.0, (1.0 / args.sample_fps) - elapsed))
+        finally:
+            cap.release()
+
+
+def _complete_pixel_pass_requested(args: argparse.Namespace) -> bool:
+    return bool(getattr(args, "output_video", None) or getattr(args, "blur_source", None))
+
+
+def _validate_redaction_output_cadence(
+    anonymizer: AnonymizationSession,
+    *,
+    args: argparse.Namespace,
+    source_fps: float,
+    frame_stride: int,
+) -> None:
+    if not anonymizer.enabled or not getattr(args, "output_video", None):
+        return
+    assert anonymizer.engine is not None
+    minimum_hold_ms = math.ceil(1000.0 * frame_stride / source_fps)
+    if anonymizer.engine.config.hold_ms < minimum_hold_ms:
+        raise AnonymizationConfigError(
+            "--blur-hold-ms must cover the effective detector interval for "
+            f"--output-video ({minimum_hold_ms}ms at source_fps={source_fps:g}, "
+            f"frame_stride={frame_stride})"
+        )
 
 
 def _tracks_from_boxes(
@@ -388,7 +558,15 @@ def _writer_for(cv2: Any, writer: Any, output_path: Path, fps: float, frame: Any
         return writer
     output_path.parent.mkdir(parents=True, exist_ok=True)
     height, width = frame.shape[:2]
-    return cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+    created = cv2.VideoWriter(
+        str(output_path),
+        cv2.VideoWriter_fourcc(*"mp4v"),
+        fps,
+        (width, height),
+    )
+    if not created.isOpened():
+        raise RuntimeError(f"could not open output video writer: {output_path}")
+    return created
 
 
 def _tolist(value: Any) -> list[Any]:
@@ -449,12 +627,17 @@ def _summary(*, args: argparse.Namespace, events: list[dict[str, Any]], events_p
             "start": min((event["media_time_seconds"] for event in events), default=None),
             "end": max((event["media_time_seconds"] for event in events), default=None),
         },
+        "post_detection_redaction": anonymization_config_summary(args),
+        "output_video_audio_preserved": (
+            False if getattr(args, "output_video", None) else None
+        ),
         "mocked": False,
         "live": True,
         "claim_boundary": (
-            "This artifact proves only frame-by-frame Ultralytics tracking event emission. "
-            "It does not prove named character identity, crop/reference similarity, Qdrant writes, "
-            "Arango writes, or memory recall."
+            "This artifact proves frame-by-frame Ultralytics tracking event emission. "
+            "When post-detection redaction is configured, its separate frame receipts prove only "
+            "that selected pixels in processed frames were altered. Neither artifact proves named identity, "
+            "anonymity, crop/reference similarity, Qdrant writes, Arango writes, or memory recall."
         ),
     }
 
@@ -483,12 +666,18 @@ def _frame_summary(*, args: argparse.Namespace, frames: list[dict[str, Any]], fr
             "start": min((frame["media_time_seconds"] for frame in frame_messages), default=None),
             "end": max((frame["media_time_seconds"] for frame in frame_messages), default=None),
         },
+        "post_detection_redaction": anonymization_config_summary(args),
+        "output_video_audio_preserved": (
+            False if getattr(args, "output_video", None) else None
+        ),
         "mocked": False,
         "live": True,
         "claim_boundary": (
-            "This artifact proves only server-produced frame+track messages for canvas rendering. "
-            "It does not prove named character identity, crop/reference similarity, Qdrant writes, "
-            "Arango writes, or memory recall."
+            "This artifact proves server-produced frame+track messages for canvas rendering. "
+            "When post-detection redaction is configured, JPEG pixels are encoded from the "
+            "redacted frame and a separate receipt records the applied ROI. This does not prove "
+            "named identity, anonymity, crop/reference similarity, Qdrant writes, Arango writes, "
+            "or memory recall."
         ),
     }
 
