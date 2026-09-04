@@ -501,6 +501,55 @@ def push_board_command(
         fail(exc)
 
 
+@app.command(name="render-board")
+def render_board_command(
+    board: Path,
+    output: Path = typer.Option(..., "--output", help="Destination .svg file."),
+    show: bool = typer.Option(False, "--show", help="Open the rendered SVG in the default viewer."),
+) -> None:
+    """Compile a board and render it to an SVG file (no browser needed)."""
+
+    import subprocess
+    import tempfile
+
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            scene = Path(tmp) / "scene.yml"
+            compile_scene(board, scene)
+            render = subprocess.run(
+                [str(SKILL_DIR / "../create-svg/run.sh"), "render", str(scene), str(output)],
+                capture_output=True, text=True, timeout=120,
+            )
+            if render.returncode != 0 or not output.exists():
+                raise ValueError(render.stderr[-2000:] or "create-svg render failed")
+        if show:
+            subprocess.Popen(["xdg-open", str(output)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(json.dumps({"schema": "ops_excalidraw.render_board.v1", "status": "PASS", "output": str(output), "bytes": output.stat().st_size}))
+    except (OSError, ValueError, ValidationError, json.JSONDecodeError, subprocess.SubprocessError) as exc:
+        fail(exc)
+
+
+@app.command(name="push-library")
+def push_library_command(
+    library: Path,
+    port: int = typer.Option(7683, "--port", help="Whiteboard server port."),
+) -> None:
+    """Persist custom library items to the running whiteboard's personal library."""
+
+    import urllib.request
+
+    try:
+        lib = load_library(library)  # fail closed before pushing
+        items = json.dumps([item.model_dump(by_alias=True) for item in lib.libraryItems]).encode()
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{port}/personal-library", data=items, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            print(json.dumps({"schema": "ops_excalidraw.push_library.v1", "status": "PASS", **json.loads(resp.read())}))
+    except Exception as exc:  # noqa: BLE001 - single CLI boundary
+        fail(exc)
+
+
 @app.command(name="whiteboard")
 def whiteboard_command(port: int = typer.Option(7683, "--port", help="Local port.")) -> None:
     """Serve the embedded Excalidraw whiteboard with render button and library toggles."""

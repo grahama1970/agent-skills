@@ -69,6 +69,18 @@ skills/ops-excalidraw/run.sh whiteboard --port 7683   # open http://127.0.0.1:76
 
 Embeds the `@excalidraw/excalidraw` component (esm.sh CDN; needs network for first load). Side panel: **Render SVG** button posts the live board to `/render` (compile + `$create-svg` render, SVG shown inline with download link; compile errors shown fail-closed), and library checkboxes load/unload every `.excalidrawlib` under `assets/toolkits/` (generated toolkit + vendored upstream sets).
 
+## Full agent control (CLI, no browser)
+
+The project agent drives the whole workflow from the CLI over the server's HTTP endpoints — no clicking `[data-qid]` elements through a browser (those exist for the surf/test-interactions path):
+
+```bash
+skills/ops-excalidraw/run.sh push-library custom.excalidrawlib --port 7683   # persist custom chart items
+skills/ops-excalidraw/run.sh push-board chart.excalidraw --port 7683         # push a chart, page applies it live
+skills/ops-excalidraw/run.sh render-board chart.excalidraw --output out.svg  # compile+render to SVG (add --show to open)
+```
+
+`render-board` needs no server; `push-library`/`push-board` target a running whiteboard. All fail closed on invalid input.
+
 ## Hot reload (live agent changes)
 
 While the whiteboard is open, an agent can push a board and the page applies it live (poll + `updateScene`, ~1.5s):

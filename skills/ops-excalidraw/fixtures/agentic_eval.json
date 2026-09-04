@@ -4,7 +4,7 @@
   "trials": 2,
   "proof_scope": "local deterministic Excalidraw toolkit validation, animation-token binding, create-svg scene compilation, create-svg SVG rendering, and fail-closed invalid board handling",
   "claims": {
-    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board; the served whiteboard page carries data-qid/data-qs-action/title instrumentation on its interactive controls; a mixed board with untagged vendored shapes compiles and renders; quickstart serves the whiteboard in one command; adversarial inputs (malformed JSON, unknown customData kinds, invalid accents, garbage HTTP payloads, path traversal) fail closed; an agent can hot-push a board to the running whiteboard over /board, the page polls and applies it, stale polls get 204, and invalid pushes get 422; the page and vendored UMD assets are served locally (no CDN) including query-string URLs; the page ships a dark/light theme toggle and opens the native library pane when a library is loaded; approved personal library items persist server-side to a versioned personal.excalidrawlib, are listed and reloadable, and invalid payloads get 422",
+    "proves": "the skill can validate its comprehensive reusable Excalidraw library (28 node blocks spanning generic strategy, system-design, memory, tau, and sparta vocabulary plus 5 animation tokens), compile a board with movable animation tokens into create-svg scene/timeline input, render that scene through create-svg, and reject an uncompileable board; it also validates vendored upstream v1-format libraries from the official excalidraw-libraries directory; the local whiteboard server serves the embedded page, lists libraries, renders a live board to SVG over HTTP, and fails closed on an invalid board; the served whiteboard page carries data-qid/data-qs-action/title instrumentation on its interactive controls; a mixed board with untagged vendored shapes compiles and renders; quickstart serves the whiteboard in one command; adversarial inputs (malformed JSON, unknown customData kinds, invalid accents, garbage HTTP payloads, path traversal) fail closed; an agent can hot-push a board to the running whiteboard over /board, the page polls and applies it, stale polls get 204, and invalid pushes get 422; the page and vendored UMD assets are served locally (no CDN) including query-string URLs; the page ships a dark/light theme toggle and opens the native library pane when a library is loaded; approved personal library items persist server-side to a versioned personal.excalidrawlib, are listed and reloadable, and invalid payloads get 422; the project agent controls the whiteboard entirely from the CLI: render-board compiles+renders a board to SVG (fail-closed on invalid), push-library persists custom items",
     "does_not_prove": "every arbitrary Excalidraw layout, live browser editing, Excalimate compatibility, or final create-svg browser verification"
   },
   "cases": [
@@ -304,6 +304,60 @@
         "exit_code": 0,
         "stdout_contains": [
           "item=eval-item bad=422 listed=1"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "cli-render-board-to-svg",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && ./run.sh render-board fixtures/meeting-scenario-board.excalidraw --output $T/out.svg | grep -o '\"status\": \"PASS\"' && head -c 4 $T/out.svg"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "<svg"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "cli-render-board-invalid-fails-closed",
+      "type": "adversarial",
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && T=$(mktemp -d) && printf '{\"type\":\"excalidraw\",\"version\":2,\"appState\":{},\"files\":{},\"elements\":[]}' > $T/empty.excalidraw && ./run.sh render-board $T/empty.excalidraw --output $T/out.svg"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "FAIL"
+        ]
+      },
+      "readback": true,
+      "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "cli-push-library-persists",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && PORT=7688 && fuser -k $PORT/tcp >/dev/null 2>&1; (python3 scripts/whiteboard_server.py $PORT >/dev/null 2>&1 &) && for i in $(seq 1 20); do curl -sf http://127.0.0.1:$PORT/libraries >/dev/null && break; sleep 0.5; done && T=$(mktemp -d) && printf '{\"type\":\"excalidrawlib\",\"version\":2,\"source\":\"c\",\"libraryItems\":[{\"id\":\"cli-item\",\"status\":\"unpublished\",\"elements\":[{\"id\":\"e\",\"type\":\"rectangle\",\"x\":0,\"y\":0,\"width\":10,\"height\":10,\"isDeleted\":false,\"groupIds\":[]}]}]}' > $T/lib.excalidrawlib && ./run.sh push-library $T/lib.excalidrawlib --port $PORT | grep -o '\"status\": \"PASS\"' && got=$(curl -s http://127.0.0.1:$PORT/library/personal.excalidrawlib | python3 -c 'import json,sys;print(json.load(sys.stdin)[\"libraryItems\"][0][\"id\"])'); fuser -k $PORT/tcp >/dev/null 2>&1; echo \"item=$got\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "item=cli-item"
         ]
       },
       "readback": true,
