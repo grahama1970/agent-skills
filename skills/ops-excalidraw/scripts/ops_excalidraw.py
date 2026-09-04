@@ -293,7 +293,7 @@ def compile_scene(input_path: Path, output_path: Path) -> CompileResult:
     )
 
 
-def validate_path(path: Path) -> dict[str, Any]:
+def validate_path(path: Path, profile: str | None = None) -> dict[str, Any]:
     raw = load_json(path)
     if raw.get("type") == "excalidrawlib":
         lib = load_library(path)
@@ -316,10 +316,20 @@ def validate_path(path: Path) -> dict[str, Any]:
     nodes, animations = classify(scene)
     for token_el, token in animations:
         resolve_target(token_el, token, nodes)
+    if profile == "fanout":
+        # Enforce the SAME contract the compiler applies, so a passing
+        # `validate --profile fanout` guarantees `compile` will succeed.
+        sources = [n for _e, n in nodes if n.role == "source"]
+        targets = [n for _e, n in nodes if n.role == "target"]
+        if len(sources) != 1:
+            raise ValueError(f"profile fanout: expected exactly one source node, found {len(sources)}")
+        if not targets:
+            raise ValueError("profile fanout: expected at least one target node")
     return {
         "schema": "ops_excalidraw.validate.v1",
         "status": "PASS",
         "kind": "scene",
+        "profile": profile or "none",
         "elements": len(live_elements(scene)),
         "nodes": len(nodes),
         "animation_tokens": len(animations),
@@ -457,11 +467,14 @@ def toolkit_command(output: Path = typer.Option(..., "--output", help="Destinati
 
 
 @app.command(name="validate")
-def validate_command(path: Path) -> None:
-    """Validate a .excalidraw board or .excalidrawlib toolkit."""
+def validate_command(
+    path: Path,
+    profile: str = typer.Option(None, "--profile", help="Enforce a compile profile (e.g. 'fanout') so validate guarantees compile."),
+) -> None:
+    """Validate a .excalidraw board or .excalidrawlib toolkit; --profile enforces the compile contract."""
 
     try:
-        print(json.dumps(validate_path(path)))
+        print(json.dumps(validate_path(path, profile)))
     except (OSError, ValueError, ValidationError, json.JSONDecodeError) as exc:
         fail(exc)
 

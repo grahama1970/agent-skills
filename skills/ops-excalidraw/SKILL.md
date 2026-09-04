@@ -88,7 +88,13 @@ skills/ops-excalidraw/run.sh describe --source "Client problem" --target "Graph 
 skills/ops-excalidraw/run.sh describe --source S --target A --target B --output board.excalidraw   # to a file instead
 ```
 
-The **laser pointer** toolbar button (Excalidraw's native tool) lets the human point at components while talking during a live call.
+The **laser pointer** toolbar button (Excalidraw's native tool) lets the human point at components while talking during a live call. The **native-export** toolbar button exports the board exactly as drawn via Excalidraw's `exportToSvg` (preserves images, colors, and background that the semantic `create-svg` render drops) — use it for a faithful capture, and Render SVG for the polished/animated semantic version.
+
+Validate against the compile contract so a passing validate guarantees compile:
+
+```bash
+skills/ops-excalidraw/run.sh validate board.excalidraw --profile fanout
+```
 
 ## Proposal-first agent changes (safe default)
 

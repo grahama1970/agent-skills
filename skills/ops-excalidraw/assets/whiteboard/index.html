@@ -49,6 +49,9 @@
   <button id="render" data-qid="whiteboard:action:render" data-qs-action="WHITEBOARD_RENDER" title="Compile the board and render it to SVG [Ctrl+Shift+R]">
     <svg role="img" aria-label="Compile the board and render it to SVG" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>Compile the board and render it to SVG</title><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
   </button>
+  <button id="export-native" data-qid="whiteboard:action:export-native" data-qs-action="WHITEBOARD_EXPORT_NATIVE" title="Export the board exactly as drawn (keeps images, colors, background)">
+    <svg role="img" aria-label="Export board as SVG (faithful)" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>Export board as SVG (faithful)</title><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>
+  </button>
   <button id="copysvg" style="display:none" data-qid="whiteboard:action:copy-svg" data-qs-action="WHITEBOARD_COPY_SVG" title="Copy rendered SVG to clipboard">
     <svg role="img" aria-label="Copy rendered SVG to clipboard" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>Copy rendered SVG to clipboard</title><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><path d="m17 14-5 5-2-2"/></svg>
   </button>
@@ -211,6 +214,28 @@ applyTheme();
 // Laser pointer: Excalidraw's native tool for pointing while presenting.
 document.getElementById("laser").onclick = () => {
   try { api && api.setActiveTool({ type: "laser" }); } catch (e) { err("laser: " + e); }
+};
+
+// Faithful native export: the board exactly as drawn, preserving appState and
+// binary files (images/icons/background) that the semantic render drops.
+document.getElementById("export-native").onclick = async () => {
+  err("");
+  try {
+    if (!api) { err("editor still loading"); return; }
+    const svgEl = await ExcalidrawLib.exportToSvg({
+      elements: api.getSceneElements(),
+      appState: { ...api.getAppState(), exportBackground: true },
+      files: api.getFiles(),
+    });
+    const text = new XMLSerializer().serializeToString(svgEl);
+    document.getElementById("svgout").innerHTML = text;
+    window.__lastSvg = text;
+    const dl = document.getElementById("dl");
+    dl.href = URL.createObjectURL(new Blob([text], { type: "image/svg+xml" }));
+    dl.style.display = "flex";
+    document.getElementById("copysvg").style.display = "flex";
+    updateResultVisibility();
+  } catch (e) { err("native export failed: " + e); }
 };
 
 document.getElementById("copysvg").onclick = async () => {
