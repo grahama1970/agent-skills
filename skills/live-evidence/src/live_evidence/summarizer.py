@@ -42,8 +42,10 @@ class ExtractiveSummarizer:
                 lanes=[],
             )
 
-        primary = selected[0]
-        answer = _answer_sentence(primary.excerpt, 1_600)
+        approved = next((source for source in sources if source.lane is RetrievalLane.ASK
+                         and source.metadata.get("answer_review")), None)
+        primary = approved or selected[0]
+        answer = primary.excerpt if approved else _answer_sentence(primary.excerpt, 1_600)
         talking_point = answer[:1_000]
         proof_parts = [_source_proof(source) for source in selected[:2]]
         proof = " · ".join(part for part in proof_parts if part)
@@ -55,6 +57,8 @@ class ExtractiveSummarizer:
             thread=thread,
             question=query,
             answer=answer,
+            review_verdict="ok" if approved else None,
+            answer_review=approved.metadata["answer_review"] if approved else None,
             evidence=proof or _sentence(primary.excerpt, 520),
             talking_point=talking_point,
             proof=proof or _sentence(primary.excerpt, 520),

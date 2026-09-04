@@ -52,6 +52,10 @@ from .coordinator_review import review_published_answer
 from .coordinator_retrieve import _should_solve_with_ask, retrieve
 from .query_bounds import bounded_query
 from .trigger import TriggerDecision
+class CardPublicationHeld(RuntimeError):
+    """A manual candidate did not pass the shared publication gate."""
+
+
 class EvidenceCoordinator:
     """Run bounded retrieval after accepted transcript triggers."""
     def __init__(
@@ -615,7 +619,13 @@ class EvidenceCoordinator:
             await self._state.set_lane(
                 RetrievalLane.ASK, LaneState.RUNNING, "Solving after clarification"
             )
-            ask_result = await self._ask.solve(seeded_query, ranked[:4])
+            binding = {
+                "session_id": self._state.session_id(),
+                "policy_digest": self._state.session_policy_digest(),
+                "question_id": question_id, "question_revision": revision,
+                "query": display_query,
+            }
+            ask_result = await self._ask.solve(seeded_query, ranked[:4], binding=binding)
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.OK if ask_result.ok else LaneState.DEGRADED,
@@ -725,6 +735,12 @@ class EvidenceCoordinator:
     async def manual_search(self, request: ManualSearchRequest) -> EvidenceCard:
         """Run one explicit lane without exposing the full transcript."""
         thread = f"Manual · {request.lane.value}"
+        question_id, revision = await self._state.revise_question(request.query)
+        session_id = self._state.session_id()
+        policy_digest = self._state.session_policy_digest()
+        binding = {"session_id": session_id, "policy_digest": policy_digest,
+                   "question_id": question_id, "question_revision": revision,
+                   "query": request.query}
         await self._state.set_thread(thread)
         if request.lane in {RetrievalLane.BRAVE, RetrievalLane.DOGPILE}:
             await self._state.set_lane(request.lane, LaneState.RUNNING, "Manual search")
@@ -750,7 +766,11 @@ class EvidenceCoordinator:
             sources = rank_sources(result.sources, request.query, self._profile, repo_scope=self._repo_scope)
         elif request.lane is RetrievalLane.ASK:
             await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Manual Ask code solution")
-            result = await self._ask.solve(request.query, [])
+            local = await self._ripgrep.retrieve(request.query)
+            memory = await self._memory.retrieve(request.query)
+            seeds = rank_sources([*memory.sources, *local.sources], request.query,
+                                 self._profile, repo_scope=self._repo_scope)
+            result = await self._ask.solve(request.query, seeds[:4], binding=binding)
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.OK if result.ok else LaneState.DEGRADED,
@@ -771,8 +791,14 @@ class EvidenceCoordinator:
             )
             sources = rank_sources(result.sources, request.query, self._profile, repo_scope=self._repo_scope)
         card = self._summarizer.build(request.query, thread, sources)
-        card = card.model_copy(update={"policy_digest": self._state.session_policy_digest()})
-        snapshot = await self._state.add_card(card)
+        card = card.model_copy(update={"policy_digest": policy_digest,
+                                       "question_id": question_id, "question_revision": revision})
+        snapshot = await self._state.publish_card_fenced(card)
+        await self._journal_latest_publication_decision(session_id, policy_digest)
+        if snapshot is None:
+            await self._journal.append(session_id, "manual_card_held", card,
+                                       policy_digest=policy_digest)
+            raise CardPublicationHeld("answer_review_required_or_stale_revision")
         await self._journal.append(
             snapshot.session.session_id, "evidence_card", card,
             policy_digest=self._state.session_policy_digest(),

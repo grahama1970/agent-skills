@@ -11,7 +11,7 @@ import {
   RotateCw,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { CodeBlock } from "@/components/CodeBlock";
 import { flashCardStatus } from "@/components/QuestionTimeline";
@@ -48,8 +48,8 @@ function deriveGlance(answerText: string): GlancePoint[] {
     const line = raw.trim();
     if (line.startsWith("```")) { inCode = !inCode; continue; }
     if (inCode) continue;
-    if (line.startsWith("## ")) {
-      currentHeading = line.replace("## ", "").trim();
+    if (/^#{2,6}\s/.test(line)) {
+      currentHeading = line.replace(/^#{2,6}\s+/, "").trim();
       continue;
     }
     if (line.startsWith("- ") || line.startsWith("* ")) {
@@ -81,31 +81,13 @@ function uniqueLanes(sources: EvidenceSource[]): RetrievalLane[] {
   return [...new Set(sources.map((source) => source.lane))];
 }
 
-export function FlashCard({ card, followUps = [], isFlipped, onFlipToggle, onTogglePin }: FlashCardProps) {
+export function FlashCard({ card, followUps = [], onTogglePin }: FlashCardProps) {
   const [copied, setCopied] = useState(false);
-  const backRef = useRef<HTMLDivElement>(null);
-  useRegisterAction({ element_id: "flashcard-controls", app: "live-evidence", action: "operate_flashcard", label: "Operate flashcard", description: "Flip, copy, or pin the active evidence card." });
-  const [userScrolledBack, setUserScrolledBack] = useState(false);
-
-  useEffect(() => {
-    setCopied(false);
-    setUserScrolledBack(false);
-  }, [card?.card_id]);
-
+  useRegisterAction({ element_id: "flashcard-controls", app: "live-evidence", action: "operate_flashcard", label: "Operate flashcard", description: "Copy or pin the active evidence card." });
+  useRegisterAction({ element_id: "flashcard-full-answer", app: "live-evidence", action: "SHOW_FULL_ANSWER", label: "Show full reviewed answer", description: "Expand the unmodified reviewed answer and supporting sections." });
+  useEffect(() => { setCopied(false); }, [card?.card_id]);
   const status = card ? flashCardStatus(card) : "thinking";
   const isStreaming = status !== "ready";
-
-  const handleBackScroll = () => {
-    if (!backRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = backRef.current;
-    setUserScrolledBack(scrollHeight - scrollTop - clientHeight >= 30);
-  };
-
-  useEffect(() => {
-    if (isFlipped && isStreaming && backRef.current && !userScrolledBack) {
-      backRef.current.scrollTo({ top: backRef.current.scrollHeight, behavior: "smooth" });
-    }
-  }, [card?.answer, card?.amendment_text, isFlipped, isStreaming, userScrolledBack]);
 
   if (!card) {
     return (
@@ -122,6 +104,7 @@ export function FlashCard({ card, followUps = [], isFlipped, onFlipToggle, onTog
   const answerText = amendmentPromoted ? (card.amendment_text ?? "") : (card.answer ?? "");
   const deckPoints = solverDeck.length > 0 ? solverDeck : deriveGlance(answerText);
   const originalAnswer = card.answer ?? "";
+  const implementation = answerText.split(/^#{2,6}\s+CODE\s*$/m)[1]?.split(/^#{2,6}\s+/m)[0]?.trim();
   const question = card.question ?? card.query;
 
   const handleCopy = () => {
@@ -187,7 +170,7 @@ export function FlashCard({ card, followUps = [], isFlipped, onFlipToggle, onTog
       </div>
 
       {/* Unified card: question + key points + full solution, no flip */}
-      <div className="relative h-full w-full flex-1">
+      <div className="relative min-h-0 w-full flex-1">
         <div className="flex h-full flex-col overflow-hidden rounded-2xl border-2 border-slate-800/80 bg-[#0e101a] p-4 shadow-2xl">
           {/* Top strip: compact question anchor */}
           <div className="mb-3 flex shrink-0 items-center justify-between gap-3 rounded-r-lg border-l-4 border-emerald-500 bg-slate-800/60 p-3">
@@ -249,18 +232,19 @@ export function FlashCard({ card, followUps = [], isFlipped, onFlipToggle, onTog
             </div>
 
             <div
-              ref={backRef}
-              onScroll={handleBackScroll}
+              data-qid="flashcard-answer-pane"
               className="col-span-7 min-h-0 scroll-smooth space-y-3 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-sans text-sm leading-relaxed text-slate-100"
             >
               {answerText ? (
-                <FormattedAnswer
-                  text={answerText}
-                  skipHeadings={[
-                    ...(deckPoints.length > 0 ? ["approach", "algorithm"] : []),
-                    ...(extractComplexity(answerText).time ? ["complexity"] : []),
-                  ]}
-                />
+                <>
+                  <FormattedAnswer text={implementation || answerText} />
+                  {implementation ? (
+                    <details>
+                      <summary data-qid="flashcard-full-answer" data-qs-action="SHOW_FULL_ANSWER" title="Show full reviewed answer" className="cursor-pointer text-xs text-slate-400">Full reviewed answer and context</summary>
+                      <FormattedAnswer text={answerText} />
+                    </details>
+                  ) : null}
+                </>
               ) : (
                 <div className="animate-stream-glow rounded-xl border-2 border-indigo-500/60 bg-[#121526] p-6 font-mono text-base leading-relaxed text-slate-100">
                   Awaiting full solution streaming…
@@ -346,7 +330,8 @@ function FormattedAnswer({ text, skipHeadings = [] }: { text: string; skipHeadin
 
   lines.forEach((line, index) => {
     const trimmed = line.trim();
-    if (line.startsWith("## ")) skippingSection = shouldSkip(line.replace("## ", ""));
+    const heading = /^#{2,6}\s+(.+)$/.exec(trimmed)?.[1];
+    if (heading) skippingSection = shouldSkip(heading);
     if (skippingSection && !trimmed.startsWith("```") && !inCodeBlock) return;
     if (skippingSection && trimmed.startsWith("```")) skippingSection = false; // never skip code
     if (trimmed.startsWith("```")) {
@@ -364,13 +349,13 @@ function FormattedAnswer({ text, skipHeadings = [] }: { text: string; skipHeadin
       codeBuffer.push(line);
       return;
     }
-    if (line.startsWith("## ")) {
+    if (heading) {
       elements.push(
         <h3
           key={index}
           className="mb-2 mt-6 border-b border-slate-800/80 pb-1.5 text-base font-extrabold uppercase tracking-wider text-indigo-300"
         >
-          {line.replace("## ", "")}
+          {heading}
         </h3>,
       );
     } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {

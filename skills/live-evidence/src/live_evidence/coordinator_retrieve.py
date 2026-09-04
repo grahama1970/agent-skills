@@ -330,7 +330,11 @@ async def retrieve(
             )
         else:
             await self._state.set_lane(RetrievalLane.ASK, LaneState.RUNNING, "Solving code question")
-            ask_result = await self._ask.solve(query, ranked[:4])
+            ask_result = await self._ask.solve(query, ranked[:4], binding={
+                "session_id": session_id, "policy_digest": policy_digest,
+                "question_id": question_id, "question_revision": question_revision,
+                "query": query,
+            })
             await self._state.set_lane(
                 RetrievalLane.ASK,
                 LaneState.OK if ask_result.ok else LaneState.DEGRADED,
@@ -416,7 +420,7 @@ async def retrieve(
             card,
             policy_digest=policy_digest,
         )
-        if (card.answer or "").strip():
+        if (card.answer or "").strip() and card.answer_review is None:
             # Oracle/summarizer-answered publication: the answer arrived
             # WITH the card (no fast-solver stream), so this is the
             # first-answer moment that triggers the background reviewer.

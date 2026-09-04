@@ -100,7 +100,8 @@ export function useLiveEvidence() {
       // Save the old session (episodic archive) before starting a fresh one.
       newSession: () =>
         execute(async () => {
-          await api.archive().catch(() => undefined);
+          await api.archive();
+          await api.stop();
           return api.start(false);
         }),
       stop: () => execute(api.stop),

@@ -95,7 +95,7 @@ export function CodeBlock({ code, language = "python", isStreaming = false }: Co
         onScroll={handleScroll}
         className="!m-0 max-h-[380px] scroll-smooth overflow-x-auto overflow-y-auto bg-[#06070c] p-4 font-mono text-sm leading-relaxed text-slate-100"
       >
-        <code ref={codeRef} className={`language-${normalizedLanguage}`}>
+        <code ref={codeRef} className={`language-${normalizedLanguage}`} style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
           {code.trim()}
         </code>
       </pre>

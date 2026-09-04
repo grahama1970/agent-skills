@@ -481,10 +481,18 @@ class RuntimeState:
         promotes them only when amendment_complete is true.
         """
 
+        # Answer/body/provenance changes require a new bound approval and the
+        # publication gate; this metadata-only path cannot promote amendments.
+        if set(fields) - {"review_verdict", "review_reasons"}:
+            return False
         async with self._lock:
             for index, card in enumerate(self._cards):
                 if card.card_id == card_id:
-                    self._cards[index] = card.model_copy(update=fields)
+                    candidate = card.model_copy(update=fields)
+                    from .reviewed_answer import card_has_bound_review
+                    if candidate.review_verdict != "ok" or not card_has_bound_review(candidate):
+                        return False
+                    self._cards[index] = candidate
                     snapshot = self._snapshot_unlocked()
                     break
             else:
@@ -623,6 +631,11 @@ class RuntimeState:
         """
 
         async with self._lock:
+            if card.answer_review is not None:
+                binding = card.answer_review.get("binding", {})
+                if (binding.get("session_id") != self._session.session_id
+                        or binding.get("policy_digest") != self.session_policy_digest()):
+                    return None
             reduction = reduce_card_publication(
                 displayed_cards=self._cards,
                 incoming=card,
@@ -659,17 +672,10 @@ class RuntimeState:
             return self._publication_journal[-1].model_copy(deep=True)
 
     async def add_card(self, card: EvidenceCard) -> AppSnapshot:
-        """Add a new card, preserving pinned cards when trimming history."""
+        """Compatibility entrypoint; all inserts must pass the publication gate."""
 
-        async with self._lock:
-            self._cards.insert(0, card)
-            if len(self._cards) > self._settings.max_cards:
-                pinned = [item for item in self._cards if item.pinned]
-                unpinned = [item for item in self._cards if not item.pinned]
-                self._cards = (pinned + unpinned)[: self._settings.max_cards]
-            snapshot = self._snapshot_unlocked()
-        await self._broadcast(snapshot)
-        return snapshot
+        published = await self.publish_card_fenced(card)
+        return published if published is not None else await self.snapshot()
 
     async def set_card_flag(
         self,

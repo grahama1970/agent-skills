@@ -14,7 +14,7 @@ from loguru import logger
 from . import __version__
 from .action_registry import ActionRegistry
 from .config import AppSettings, InterviewProfile, public_settings
-from .coordinator import EvidenceCoordinator
+from .coordinator import CardPublicationHeld, EvidenceCoordinator
 from .models import (
     ActionRegistrationBatch,
     AppSnapshot,
@@ -657,7 +657,10 @@ def _register_api_routes(
             raise HTTPException(status_code=403, detail="candidate_answer_generation disabled by session policy")
         if lane in ("memory", "ripgrep", "code") and not policy.retrieve_local_evidence:
             raise HTTPException(status_code=403, detail="retrieve_local_evidence disabled by session policy")
-        return await coordinator.manual_search(request)
+        try:
+            return await coordinator.manual_search(request)
+        except CardPublicationHeld as exc:
+            raise HTTPException(status_code=409, detail={"code": "card_publication_held", "reason": str(exc)}) from exc
 
     @app.post("/api/cards/{card_id}/pin", response_model=AppSnapshot)
     async def pin_card(card_id: str) -> AppSnapshot:

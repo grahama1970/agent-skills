@@ -564,6 +564,7 @@ class EvidenceCard(BaseModel):
     # on screen; the amendment streams into amendment_text and is promoted
     # only when amendment_complete flips true. Never a mid-read replacement.
     review_verdict: Literal["ok", "weak"] | None = None
+    answer_review: dict[str, Any] | None = None
     review_reasons: list[str] = Field(default_factory=list, max_length=4)
     amendment_text: str | None = None
     amendment_complete: bool = False

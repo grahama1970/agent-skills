@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "skill": "live-evidence",
+  "trials": 2,
+  "proof_scope": "Production state-method replay using copied prior live approval artifacts and restored session identity. No new provider calls or live HTTP/audio/UI proof.",
+  "claims": {
+    "proves": "Valid approval survives replay; changed answer, revision, session, missing approval/artifacts and publication/update bypasses are rejected.",
+    "does_not_prove": "Cryptographic artifact authentication, arbitrary tampering resistance, full runtime availability, live conversation correctness or full-goal readiness."
+  },
+  "cases": [{
+    "name": "approval-binding-and-publication-bypasses",
+    "type": "adversarial",
+    "real_world": true,
+    "evidence_class": "fault_injected_deterministic",
+    "readback": true,
+    "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv\" uv run --project .. --extra dev python ../scripts/eval_review_binding.py"],
+    "timeout_seconds": 60,
+    "expected": {
+      "exit_code": 0,
+      "artifacts": [{"path": "/tmp/live-evidence-review-binding-eval.json", "json_pointer": "/status", "equals": "PASS"}]
+    }
+  }]
+}
