@@ -48,7 +48,7 @@ for (let i = 0; i < 8; i++) {
   assert.equal(await emit('message_end', { message: m }), undefined, 'tool-bearing assistant message must not be rewritten');
 }
 assert.equal(sent.length, 0, 'working agent consumed report retries');
-assert.equal(existsSync(process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET), false);
+assert.equal(existsSync(process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET + '.sessions'), false);
 for (const stopReason of ['aborted', 'error', 'length']) {
   assert.equal(await emit('message_end', { message: message('Interrupted', stopReason) }), undefined);
   await emit('agent_end');

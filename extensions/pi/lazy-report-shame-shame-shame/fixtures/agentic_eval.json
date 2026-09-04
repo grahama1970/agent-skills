@@ -3126,6 +3126,73 @@
         "exit_code": 0
       },
       "real_world": true
+    },
+    {
+      "name": "hardening-reproduced-regressions",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/probe-hardening.mjs"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HARDENING_REPRO_PASS",
+          "\"failures\":[]"
+        ]
+      }
+    },
+    {
+      "name": "live-pi-identical-continuations-complete",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--continuations",
+        "--repeat-status"
+      ],
+      "timeout_seconds": 210,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"continuations\": 6",
+          "\"report_retries\": 0",
+          "\"sum_readback_correct\": true",
+          "\"done_rendered\": true"
+        ],
+        "stdout_excludes": [
+          "REJECTED_BY_SLOTH_COURT",
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "live-pi-corrupted-proof-repairs-to-completion",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--proof-repair"
+      ],
+      "timeout_seconds": 210,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"report_retries\": 1",
+          "\"sum_readback_correct\": true",
+          "\"done_rendered\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
     }
   ]
 }

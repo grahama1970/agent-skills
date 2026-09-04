@@ -22,7 +22,7 @@ At terminal assistant `message_end` (`stopReason="stop"`, no tool calls or queue
 2. preserves all intermediate tool calls, including responses containing both progress text and tool calls, without spending reporting retries;
 3. runs `status-json-check.mjs` as a deterministic checker;
 4. validates the final `pi.agent_status.v1` JSON with pydantic instead of classifying prose;
-5. rejects missing local `proof[]`, failed known receipt schemas, and `verified[]` entries not backed by local proof text;
+5. rejects unresolved URL/digest `proof[]`, missing/empty/non-file local proof, failed known receipt schemas, and `verified[]` entries not backed by local proof text;
 6. when `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE` points at an active goal/ticket ledger, rejects a final `state=done` report while relevant `agent-work` tickets, acceptance gates, or explicit next steps remain open;
 7. ignores trailing prose after valid status JSON because pydantic data is authoritative and the renderer discards model prose;
 8. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
@@ -33,6 +33,8 @@ At terminal assistant `message_end` (`stopReason="stop"`, no tool calls or queue
 The default mode is `normal`; ordinary chat is not forced through the status contract. Use `LAZY_REPORT_SHAME_DEFAULT_MODE=strict` for project-agent panes that must status-report at every terminal stop, or `/shame normal|off|strict` to override a session. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add one-turn enforcement without injecting system-prompt prose. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not carry valid `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide enforcement explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
 
 Intermediate responses cannot erase pending tool calls or exhaust report repairs. Cancellation, provider errors, length limits, and shutdown do not restart the model. Host-queued work takes precedence over reporting repair. The final message is validated/rendered before display; `agent_end` owns follow-up dispatch, not message replacement. Pi drains follow-ups queued by `agent_end` inside the current prompt; `agent_settled` is too late for reliable print-mode continuation and is reserved for idle observation.
+
+Repeated status text is not a duplicate event: legitimate polling continuations dispatch at each distinct stop, while replaying the same terminal event dispatches once. `skills/shame/fixtures/hardening_eval.json` retains this live case plus session ownership and evidence-resolution regressions.
 
 Retained proof: `skills/shame/fixtures/stop_boundary_eval.json` covers lifecycle replay plus a live Pi model with real file reads, writes, and independent result readback. This is not proof that every project is semantically complete.
 
@@ -83,7 +85,7 @@ skills/shame/scripts/write-continuation-guard.mjs \
 The intended human-agent flow is:
 
 1. The extension rejects the bad status answer and shows the machine reason, raw candidate hash, excerpt, and required JSON contract.
-2. The extension writes a pending review packet to `/mnt/storage12tb/skills/shame/training/pending-review-packet.json` so the raw candidate survives an extension reload.
+2. The extension atomically writes `/mnt/storage12tb/skills/shame/training/pending-review-packet.json.sessions/<sha256(session-id)>.json` so the raw candidate survives reload without crossing session boundaries. Legacy packets are read only by their recorded owner, after checking the candidate hash.
 3. The agent rewrites the answer and ends with one valid `pi.agent_status.v1` JSON block; the extension renders the visible `Status Report`.
 4. The human approves or corrects the classification with `/shame review` for an interactive label picker, or directly with `/shame allow|reject|warn <reason> -- <note>`.
 5. `/shame show` displays the raw candidate, pending packet path, machine decision, checker version, excerpt, and copyable human-labeling commands.
@@ -106,7 +108,7 @@ The retained `$agentic-evals` include `skills/shame/scripts/check-status-guard-d
 
 ## Required report shape
 
-A guarded answer must include a fenced `json` block containing one `pi.agent_status.v1` object. For `state=done`, every local `proof[]` entry must exist, known JSON receipt schemas must pass their schema-specific checks, and each `verified[]` command/result pair must appear in local proof text when local proof is supplied. The extension renders the visible report from that data and ignores trailing prose.
+A guarded answer must include a fenced `json` block containing one `pi.agent_status.v1` object. For `state=done`, each `proof[]` entry must be a non-empty local file; unresolved URLs and bare digests are not evidence. Materialize remote evidence through its owning skill before reporting. Known JSON receipt schemas must pass their schema-specific checks, and each `verified[]` command/result pair must appear in local proof text. The extension renders the visible report from that data and ignores trailing prose.
 
 Rules:
 

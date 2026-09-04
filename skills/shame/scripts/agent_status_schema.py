@@ -281,10 +281,18 @@ class AgentStatus(BaseModel):
             for proof in self.proof:
                 path = local_proof_path(proof)
                 if path is None:
-                    continue
+                    raise PydanticCustomError(
+                        "proof_reference_unresolved",
+                        "proof references must be materialized as local evidence before done",
+                        {"proof": proof},
+                    )
                 if not path.exists():
                     raise PydanticCustomError("proof_path_missing", "proof path does not exist", {"proof": proof})
+                if not path.is_file():
+                    raise PydanticCustomError("proof_not_file", "proof must be a readable file, not a directory", {"proof": proof})
                 text = read_proof_text(path)
+                if not text.strip():
+                    raise PydanticCustomError("proof_empty", "proof file has no evidence text", {"proof": proof})
                 validate_known_receipt(path, text)
                 proof_text += "\n" + text
             if proof_text:
@@ -317,7 +325,7 @@ def steering_from_error(error: dict[str, Any]) -> dict[str, Any]:
         steering.update({"action": "set_state", "state": "continuing", "field": "not_done"})
     elif code == "ambiguous_failure_code":
         steering.update({"action": "classify_with_triage_error", "next_command": ctx.get("next_command")})
-    elif code == "proof_path_missing":
+    elif code in {"proof_path_missing", "proof_reference_unresolved", "proof_not_file", "proof_empty"}:
         steering.update({"action": "cite_existing_proof_path", "proof": ctx.get("proof")})
     elif code == "verified_not_backed_by_proof":
         steering.update({"action": "make_verified_match_proof", "command": ctx.get("command"), "result": ctx.get("result")})

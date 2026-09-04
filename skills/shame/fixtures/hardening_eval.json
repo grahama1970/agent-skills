@@ -1,0 +1,79 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "Repeated continuation, evidence resolution, session-owned review packets, and live model completion",
+  "claims": {
+    "proves": "Distinct terminal events with identical continuation status dispatch independently, replayed events dispatch once, unsupported proof references and empty/directory evidence are refused, and sessions recover only their own candidates. A live model finishes seven file reads across six byte-identical continuation reports and writes independently verified output.",
+    "does_not_prove": "Universal obedience to arbitrary natural-language instructions, authenticity of arbitrary agent-writable local evidence, every running pane reloaded, or all possible project outcomes. Lifecycle/session injection is synthetic; the repeated-continuation CLI case uses real model calls and tools."
+  },
+  "cases": [
+    {
+      "name": "hardening-reproduced-regressions",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "node",
+        "--experimental-strip-types",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/probe-hardening.mjs"
+      ],
+      "timeout_seconds": 60,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "HARDENING_REPRO_PASS",
+          "\"failures\":[]"
+        ]
+      }
+    },
+    {
+      "name": "live-pi-identical-continuations-complete",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--continuations",
+        "--repeat-status"
+      ],
+      "timeout_seconds": 210,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"continuations\": 6",
+          "\"report_retries\": 0",
+          "\"sum_readback_correct\": true",
+          "\"done_rendered\": true"
+        ],
+        "stdout_excludes": [
+          "REJECTED_BY_SLOTH_COURT",
+          "Traceback"
+        ]
+      }
+    },
+    {
+      "name": "live-pi-corrupted-proof-repairs-to-completion",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-stop-boundary-live.py",
+        "--proof-repair"
+      ],
+      "timeout_seconds": 210,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"report_retries\": 1",
+          "\"sum_readback_correct\": true",
+          "\"done_rendered\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback"
+        ]
+      }
+    }
+  ]
+}

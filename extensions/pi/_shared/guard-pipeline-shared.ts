@@ -75,6 +75,11 @@ export function guardPipelineStatus(): { rootKey: string; retryCount: number; cl
   };
 }
 
+// Repair notices deduplicate by draft; executable continuations deduplicate
+// only a replay of the same terminal event, not legitimate repeated polling.
+const continuationEvents = new WeakMap<object, number>();
+let continuationSequence = 0;
+
 export function claimGuardFollowUp(args: {
   guard: GuardName;
   messageId?: string;
@@ -83,6 +88,7 @@ export function claimGuardFollowUp(args: {
   reason?: string;
   maxRetries?: number;
   continuation?: boolean;
+  message?: object;
 }): { ok: boolean; reason: "claimed" | "message_already_claimed" | "retry_budget_exhausted"; used: number; max: number; claimedBy?: GuardClaim } {
   const s = state();
   if (!s.rootKey) {
@@ -95,7 +101,14 @@ export function claimGuardFollowUp(args: {
   // in probes/headless sessions; if one guard falls back to "unknown" and
   // another to "research-routing-message", both used to claim and rewrite the
   // same draft. Text-hashing makes one visible draft have one owner.
-  const messageKey = assistantText ? `${s.rootKey}:${sha256(assistantText)}` : `${s.rootKey}:${String(args.messageId || sha256("empty-message"))}`;
+  let identity = args.messageId;
+  if (args.continuation && args.message && (!identity || identity === "unknown")) {
+    if (!continuationEvents.has(args.message)) continuationEvents.set(args.message, ++continuationSequence);
+    identity = `event:${continuationEvents.get(args.message)}`;
+  }
+  const messageKey = args.continuation
+    ? `${s.rootKey}:continuation:${identity || sha256(assistantText)}`
+    : (assistantText ? `${s.rootKey}:${sha256(assistantText)}` : `${s.rootKey}:${String(identity || sha256("empty-message"))}`);
   const claimedBy = s.claims.get(messageKey);
   const max = Number.isFinite(args.maxRetries) ? Math.max(0, Number(args.maxRetries)) : 1;
   const used = s.retryCounts.get(s.rootKey) || 0;

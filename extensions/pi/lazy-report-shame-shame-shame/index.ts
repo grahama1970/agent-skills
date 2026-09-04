@@ -2,8 +2,8 @@
 // Global Pi extension. Reload Pi with /reload after editing.
 
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beginGuardTurn, claimGuardFollowUp, isAssistantStop, resetGuardRepairBudget } from "../_shared/guard-pipeline-shared.ts";
@@ -138,6 +138,7 @@ type Candidate = {
   force_status: boolean;
   session_file?: string;
   session_id?: string;
+  review_packet_path?: string;
   turn_id: string;
 };
 
@@ -553,19 +554,39 @@ function makeReviewPacket(candidate: Candidate, check: CheckResult, retried: boo
   };
 }
 
-function writePendingReviewPacket(candidate: Candidate, check: CheckResult, retried: boolean): string {
-  mkdirSync(dirname(PENDING_REVIEW_PACKET), { recursive: true });
-  writeFileSync(PENDING_REVIEW_PACKET, JSON.stringify(makeReviewPacket(candidate, check, retried), null, 2) + "\n", "utf8");
-  return PENDING_REVIEW_PACKET;
+function sessionIdentity(ctx: any): string | undefined {
+  return ctx?.sessionManager?.getSessionId?.() || ctx?.sessionManager?.getSessionFile?.();
 }
 
-function loadPendingCandidate(): Candidate | null {
-  if (!existsSync(PENDING_REVIEW_PACKET)) return null;
+function pendingReviewPath(identity: string | undefined): string | null {
+  return identity ? join(`${PENDING_REVIEW_PACKET}.sessions`, `${sha256(identity).slice(7)}.json`) : null;
+}
+
+function writePendingReviewPacket(candidate: Candidate, check: CheckResult, retried: boolean): string {
+  const path = pendingReviewPath(candidate.session_id || candidate.session_file);
+  if (!path) throw new Error("pending review packet requires session identity");
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
+  const temp = `${path}.${randomUUID()}.tmp`;
+  writeFileSync(temp, JSON.stringify(makeReviewPacket(candidate, check, retried), null, 2) + "\n", { encoding: "utf8", mode: 0o600 });
+  renameSync(temp, path);
+  candidate.review_packet_path = path;
+  return path;
+}
+
+function loadPendingCandidate(ctx: any): Candidate | null {
+  const identity = sessionIdentity(ctx);
+  if (!identity) return null;
+  const scoped = pendingReviewPath(identity)!;
+  const path = existsSync(scoped) ? scoped : PENDING_REVIEW_PACKET;
+  if (!existsSync(path)) return null;
   try {
-    const packet = JSON.parse(readFileSync(PENDING_REVIEW_PACKET, "utf8"));
+    const packet = JSON.parse(readFileSync(path, "utf8"));
     const candidate = packet?.candidate;
     if (!candidate || typeof candidate.assistant_text !== "string" || typeof candidate.response_sha256 !== "string") return null;
+    if ((candidate.session_id || candidate.session_file) !== identity) return null;
+    if (sha256(candidate.assistant_text) !== candidate.response_sha256) return null;
     return {
+      review_packet_path: path,
       user_text: String(candidate.user_text || ""),
       assistant_entry_id: String(candidate.assistant_entry_id || "unknown"),
       assistant_text: candidate.assistant_text,
@@ -961,6 +982,7 @@ export default function lazyReportShameShameShame(pi: any) {
               reason: compiled.reason || `agent_status_${statusState}`,
               maxRetries: 3,
               continuation: true,
+              message: event.message,
             });
             if (claim.ok) pendingFollowUp = continuationPrompt(statusState, compiled);
           }
@@ -1039,9 +1061,9 @@ export default function lazyReportShameShameShame(pi: any) {
         return;
       }
       if (parsed.action === "show") {
-        const candidate = lastCandidate || loadPendingCandidate();
+        const candidate = lastCandidate || loadPendingCandidate(ctx);
         if (!candidate) {
-          ctx.ui.notify(`No candidate captured yet. No pending review packet found at ${PENDING_REVIEW_PACKET}.`, "info");
+          ctx.ui.notify(`No candidate captured yet. No matching pending review packet found at ${pendingReviewPath(sessionIdentity(ctx)) || "(session identity unavailable)"}.`, "info");
           return;
         }
         const excerpt = candidate.assistant_text.replace(/\s+/g, " ").slice(0, 240) || "(no text extracted)";
@@ -1049,7 +1071,7 @@ export default function lazyReportShameShameShame(pi: any) {
         ctx.ui.notify([
           "Shame review packet",
           `- Candidate: ${candidate.response_sha256}`,
-          `- Pending packet: ${PENDING_REVIEW_PACKET}`,
+          `- Pending packet: ${candidate.review_packet_path || pendingReviewPath(sessionIdentity(ctx))}`,
           `- Machine: ${candidate.machine_decision} (${reasons})`,
           `- Checker: ${candidate.checker_version}`,
           `- Excerpt: ${excerpt}`,
@@ -1069,7 +1091,7 @@ export default function lazyReportShameShameShame(pi: any) {
         return;
       }
 
-      let candidate = lastCandidate || loadPendingCandidate();
+      let candidate = lastCandidate || loadPendingCandidate(ctx);
       if (!candidate) {
         const last = getLastAssistantEntry(ctx);
         if (!last) {

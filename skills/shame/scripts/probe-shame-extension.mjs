@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { createHash } from 'node:crypto';
+import { join } from 'node:path';
+
+function pendingPacketPath() {
+  return join(`${process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET}.sessions`, createHash('sha256').update('shame-probe-session').digest('hex') + '.json');
+}
 
 const mode = process.argv[2] || 'all';
 process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED ||= '0';
@@ -98,7 +104,7 @@ async function markShameSkillRead(handlers, c) {
 }
 
 async function runEmptyToolTurn() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-empty-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -111,7 +117,7 @@ async function runEmptyToolTurn() {
 }
 
 async function runRejectionPendingRetry() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-pending-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -147,7 +153,7 @@ async function runRejectionPendingRetry() {
 }
 
 async function runCheckerErrorFailsClosed() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-checker-error-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const previousValidator = process.env.LRSSS_VALIDATOR;
   process.env.LRSSS_VALIDATOR = '/tmp/lrsss-missing-validator.py';
@@ -215,7 +221,7 @@ async function runBeforeAgentStartDoesNotInjectProse() {
 
 async function runDefaultNormalAllowsPlainChat() {
   delete process.env.LAZY_REPORT_SHAME_DEFAULT_MODE;
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-default-normal-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -229,7 +235,7 @@ async function runDefaultNormalAllowsPlainChat() {
 
 async function runEnvStrictRejectsPlainChat() {
   process.env.LAZY_REPORT_SHAME_DEFAULT_MODE = 'strict';
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-env-strict-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -243,7 +249,7 @@ async function runEnvStrictRejectsPlainChat() {
 }
 
 async function runRetryBudgetExhaustsAsFailure() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-retry-budget-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -262,8 +268,7 @@ async function runRetryBudgetExhaustsAsFailure() {
 }
 
 async function runShowRecoversPending() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-pending-packet.json';
-  process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET = packet;
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   await runRejectionPendingRetry();
   const { commands } = await loadExtension();
@@ -277,8 +282,7 @@ async function runShowRecoversPending() {
 }
 
 async function runReviewFallback() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-review-packet.json';
-  process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET = packet;
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   await runRejectionPendingRetry();
   const { commands } = await loadExtension();
@@ -292,7 +296,7 @@ async function runReviewFallback() {
 
 async function runContinuationGuardOpenTicket() {
   const guardFile = `/tmp/shame-probe-continuation-${process.pid}.json`;
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-continuation-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE = guardFile;
   writeFileSync(guardFile, JSON.stringify({
@@ -370,7 +374,7 @@ async function runContinuationGuardClosedTicketAllowsFinal() {
 
 
 async function runNamespacedMutatingToolForcesStatus() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-namespaced-mutating-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -388,7 +392,7 @@ async function runNamespacedMutatingToolForcesStatus() {
 }
 
 async function runWhatRemainsRejectedWithoutNeedsHuman() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-what-remains-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -445,7 +449,7 @@ async function runWhatRemainsAllowedWithNeedsHuman() {
 }
 
 async function runStatusReportRequiredWithJson() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-status-report-required-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -469,7 +473,7 @@ async function runStatusReportRequiredWithJson() {
 }
 
 async function runStatusReportMismatchRejected() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-status-report-mismatch-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -543,7 +547,7 @@ function failedStatusText(goal) {
 }
 
 async function runRepeatedFailureRequiresDebuggerOrQuestion() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-repeated-failure-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -623,7 +627,7 @@ async function runRepeatedFailureAllowsDebuggerProof() {
 }
 
 async function runForcedRetryRequiresStatusJson() {
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-forced-retry-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(packet)) rmSync(packet);
   const { handlers, sent } = await loadExtension();
   const c = ctx();
@@ -684,7 +688,7 @@ async function runSkillReadGuardAllowsActionAfterFullRead() {
 
 async function runDirectLabelJsonl() {
   const out = process.env.LAZY_REPORT_SHAME_TRAINING_JSONL || '/tmp/shame-probe-training.jsonl';
-  const packet = process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET || '/tmp/shame-probe-label-packet.json';
+  const packet = pendingPacketPath();
   if (existsSync(out)) rmSync(out);
   if (existsSync(packet)) rmSync(packet);
   const { handlers, commands } = await loadExtension();

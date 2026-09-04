@@ -38,6 +38,36 @@ Use exactly this data shape, substituting the index and next path:
 {"schema":"pi.agent_status.v1","goal":"live sum probe","state":"continuing","changed":["read file <index>"],"not_done":[{"item":"read next file","next_command":"Read <next absolute path>, then follow the original lifecycle instructions. After the seventh read write the sum file and emit the final done status."}]}
 ```
 Emit no status JSON in a response that also calls a tool. Only after the seventh read write the sum file and emit done. Keep all earlier values for the final sum.'''
+if '--repeat-status' in sys.argv:
+    assert continuations, '--repeat-status requires --continuations'
+    prompt += '''
+For each of the SIX continuing stops, emit this EXACT same block without edits or extra prose (the command intentionally remains identical; choose the next unread input from context):
+```json
+{"schema":"pi.agent_status.v1","goal":"live sum probe","state":"continuing","changed":["another input read; remaining work"],"not_done":[{"item":"finish reading inputs","next_command":"Read the next unread numbered input from the original list; after the seventh read write the sum file and emit done."}]}
+```
+'''
+repair_proof = '--proof-repair' in sys.argv
+if repair_proof:
+    prompt += f'\nA test transport will corrupt your first proof reference. If a correction arrives, read {ROOT}/skills/shame/SKILL.md, read back the real sum file, and report its actual local path. Never fabricate evidence.'
+    # Corrupt exactly one real terminal message rather than asking the model
+    # to fabricate a completion claim. The recovery still uses the live model.
+    fault = work / 'fault.ts'
+    fault.write_text('''import {writeFileSync} from 'node:fs';
+export default function(pi) {
+ let injected=false;
+ pi.on('message_end', e=>{
+  if(injected || e.message?.role!=='assistant' || e.message.stopReason!=='stop') return;
+  const parts=e.message.content;
+  const part=parts.find(p=>p.type==='text' && p.text.includes('```json'));
+  if(!part) return;
+  const start=part.text.indexOf('```json')+7, end=part.text.indexOf('```',start);
+  const status=JSON.parse(part.text.slice(start,end));
+  if(status.state!=='done') return;
+  injected=true;status.proof=['https://shame.invalid/nonexistent.json'];
+  writeFileSync('fault.json',JSON.stringify({injected:true,proof:status.proof}));
+  return {message:{...e.message,content:parts.map(p=>p===part?{...p,text:'```json\\n'+JSON.stringify(status)+'\\n```'}:p)}};
+ });
+}''')
 env = {**os.environ, 'LAZY_REPORT_SHAME_DEFAULT_MODE': 'strict',
        'LAZY_REPORT_SHAME_AUDIO_ENABLED': '0', 'LAZY_REPORT_SHAME_MEMORY_ENABLED': '0',
        'LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET': str(work / 'pending.json'),
@@ -47,6 +77,9 @@ command = ['pi', '--print', '--mode', 'json', '--no-session', '--no-extensions',
            '--extension', index, '--tools', 'read,write', '--thinking', 'low',
            '--provider', os.environ.get('PI_PROVIDER', 'openai-codex'),
            '--model', os.environ.get('PI_MODEL', 'gpt-6-astra'), prompt]
+if repair_proof:
+    position=command.index('--extension')
+    command[position:position]=['--extension', str(fault)]
 result = subprocess.run(command, cwd=work, env=env, capture_output=True, text=True, timeout=180)
 (work / 'events.jsonl').write_text(result.stdout)
 (work / 'stderr.log').write_text(result.stderr)
@@ -58,17 +91,25 @@ tool_messages = [m for m in assistant if any(p.get('type') == 'toolCall' for p i
 mixed = [m for m in tool_messages if any(p.get('type') == 'text' and p.get('text', '').strip() for p in m['content'])]
 assert len(tool_messages) >= 5, 'missing separate live read/write calls'
 assert mixed, 'live model did not exercise mixed text/tool-call seam'
-assert not (work / 'pending.json').exists(), 'intermediate or final output triggered rejection'
+packet_exists = (work / 'pending.json').exists() or (work / 'pending.json.sessions').exists()
+assert packet_exists == repair_proof, 'unexpected pending rejection packet state'
+if repair_proof:
+    assert json.loads((work / 'fault.json').read_text())['injected'] is True
 actual = json.loads(output.read_text())
 assert actual['values'] == values and actual['sum'] == sum(values), (actual, values)
 continuation_count = sum('State: continuing' in '\n'.join(p.get('text', '') for p in m.get('content', [])) for m in assistant)
 if continuations:
     assert continuation_count == 6, f'expected six completed continuations, got {continuation_count}'
+if '--repeat-status' in sys.argv:
+    rendered = ['\n'.join(p.get('text', '') for p in m.get('content', [])) for m in assistant]
+    continued = [t.strip() for t in rendered if 'State: continuing' in t]
+    assert len(set(continued)) == 1, 'live run did not exercise byte-identical repeated continuation reports'
 last_text = '\n'.join(p.get('text', '') for p in assistant[-1].get('content', []))
 assert 'State: done' in last_text, last_text
-assert 'REJECTED_BY_SLOTH_COURT' not in result.stdout, 'live run exhausted/used report repair'
+rejections = sum(any('REJECTED_BY_SLOTH_COURT' in p.get('text', '') for p in m.get('content', [])) for m in assistant)
+assert rejections == (1 if repair_proof else 0), f'unexpected reporting repairs: {rejections}'
 report = {'live_model': env.get('PI_MODEL', 'gpt-6-astra'), 'tool_messages': len(tool_messages),
-          'mixed_text_tool_messages': len(mixed), 'report_retries': 0, 'continuations': continuation_count,
+          'mixed_text_tool_messages': len(mixed), 'report_retries': rejections, 'continuations': continuation_count,
           'sum_readback_correct': True, 'done_rendered': True,
           'events': str(work / 'events.jsonl'), 'output': str(output)}
 receipt = work / 'report.json'
