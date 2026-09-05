@@ -432,7 +432,8 @@ def _compile_stop(ask_run_dir: Path) -> dict[str, Any] | None:
         goal = requested.get("goal")
         task = (ask_run_dir.parent / "repair-task.md").read_text(encoding="utf-8")
         if (requested.get("schema") != "ask.tau_dag_request.v1"
-                or requested.get("request") != task or not task.strip()
+                # Ask.prepare_tau_dag_input applies request.strip() before persistence.
+                or requested.get("request") != task.strip() or not task.strip()
                 or not isinstance(goal, dict)
                 or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(goal.get("goal_hash", "")))):
             return None

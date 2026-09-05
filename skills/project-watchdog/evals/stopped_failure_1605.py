@@ -55,7 +55,8 @@ if args.mode == "boundary":
               "scope": "complete degraded join and node identity/liveness negatives"}
 elif args.mode == "compile":
     ask = args.out / "ask"
-    task = "Pre-dispatch refusal probe for ticket 1605; no execution requested."
+    # Match the real repair-task producer, which terminates its text with a newline.
+    task = "Pre-dispatch refusal probe for ticket 1605; no execution requested.\n"
     (args.out / "repair-task.md").write_text(task)
     command = [str(SKILL.parent / "ask/run.sh"), "tau-dag", task,
         "--repo", "grahama1970/agent-skills", "--target", "stopped-failure-1605",
