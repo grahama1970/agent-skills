@@ -103,7 +103,7 @@ class UiDeckBundle(StrictModel):
     audience: str
     visibility: str
     theme: str
-    theme_tokens: dict[str, str] = Field(default_factory=dict)
+    theme_tokens: dict[str, object] = Field(default_factory=dict)
     slides: list[UiSlide] = Field(min_length=1)
     claim_summary: dict[str, int] = Field(default_factory=dict)
     revision: int = 0

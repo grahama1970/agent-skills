@@ -772,6 +772,8 @@ def _build_pptx_inner(
                 )
             slide.notes_slide.notes_text_frame.text = _notes_text(spec)
 
+    from .theme_style import apply_presentation_theme
+    apply_presentation_theme(presentation, deck.deck.theme_tokens, [s.title for s in deck.slides])
     presentation.save(output_path)
     # Post-emit artifact scan (roundtable session 1): the emitted bytes, not the
     # model, are the boundary — fail closed on any private text in the artifact.

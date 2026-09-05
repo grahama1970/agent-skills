@@ -6,9 +6,11 @@ Inputs/Outputs/Failures: See functions below.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -16,10 +18,11 @@ from .io import SkillError, dump_json, sha256_file
 from .models import OperationClaims, OperationReceipt, Readiness, SeamValidation
 
 
-def _run(command: list[str], *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def _run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         command,
         cwd=str(cwd) if cwd else None,
+        env=env,
         check=False,
         capture_output=True,
         text=True,
@@ -82,6 +85,20 @@ def render_pptx(pptx_path: Path, output_dir: Path, *, dpi: int = 120) -> Operati
     # Isolated profile: headless conversion must not collide with (or corrupt)
     # a running GUI LibreOffice holding the shared user profile lock.
     profile_dir = output_dir / ".lo-profile"
+    profile_dir.mkdir(parents=True, exist_ok=True)
+    # Process-local fonts: retain the caller's Fontconfig configuration and
+    # its system/user fonts; never install fonts into the host environment.
+    base_config = Path(os.environ.get("FONTCONFIG_FILE", "fonts.conf"))
+    if not base_config.is_absolute():
+        base_config = Path(os.environ.get("FONTCONFIG_PATH", "/etc/fonts")) / base_config
+    font_dir = Path(__file__).resolve().parents[2] / "fonts/fraunces"
+    font_config = profile_dir / "fonts.conf"
+    font_config.write_text(
+        '<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">'
+        '<fontconfig><include>' + escape(str(base_config)) + '</include><dir>'
+        + escape(str(font_dir)) + '</dir><cachedir>'
+        + escape(str(profile_dir.resolve() / "font-cache")) + '</cachedir></fontconfig>'
+    )
     _run(
         [
             libreoffice,
@@ -92,7 +109,8 @@ def render_pptx(pptx_path: Path, output_dir: Path, *, dpi: int = 120) -> Operati
             "--outdir",
             str(output_dir),
             str(pptx_path),
-        ]
+        ],
+        env={**os.environ, "FONTCONFIG_FILE": str(font_config.resolve())},
     )
     pdf_path = output_dir / f"{pptx_path.stem}.pdf"
     if not pdf_path.exists():

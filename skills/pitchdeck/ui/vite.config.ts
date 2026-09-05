@@ -10,6 +10,7 @@ import { defineConfig } from 'vite'
 import { bindDeck, deckContext, listDecks } from './server/deck-context'
 import { canonicalExport } from './server/canonical-export'
 import { debuggerApi } from './server/debugger-api'
+import { themeApi } from './server/theme-api'
 import { elementAgentApi } from './server/element-agent'
 
 // Canonical shared UI package (agent-skills/skills/ux-lab/ui), imported from
@@ -43,7 +44,7 @@ function slideEditApi(): Plugin {
       // Emitted decks/exports land in public/ after startup and are excluded
       // from the file watcher (inotify ENOSPC crashed the server), so Vite's
       // cached public-file list never learns them. Serve them from disk.
-      const types: Record<string, string> = { '.json': 'application/json', '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', '.pdf': 'application/pdf', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.webm': 'video/webm', '.md': 'text/markdown', '.html': 'text/html', '.gif': 'image/gif', '.ico': 'image/x-icon', '.css': 'text/css' }
+      const types: Record<string, string> = { '.json': 'application/json', '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', '.pdf': 'application/pdf', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.webm': 'video/webm', '.md': 'text/markdown', '.html': 'text/html', '.gif': 'image/gif', '.ico': 'image/x-icon', '.css': 'text/css', '.woff2': 'font/woff2' }
       server.middlewares.use((req, res, next) => {
         const pathname = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname)
         const ext = extname(pathname)
@@ -55,6 +56,7 @@ function slideEditApi(): Plugin {
         createReadStream(file).pipe(res)
       })
       server.middlewares.use((req, res, next) => bindDeck(publicDir, req, res, next))
+      server.middlewares.use('/api/theme', themeApi(skillRoot))
       server.middlewares.use('/api/element-agent', elementAgentApi(skillRoot))
       server.middlewares.use('/api/debugger', debuggerApi(skillRoot))
       server.middlewares.use('/api/insert', (req, res) => {

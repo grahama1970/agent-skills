@@ -43,6 +43,12 @@ assert(response.ok, 'payload HTTP failure');
 const deck = await response.json();
 const initial = JSON.stringify(deck);
 const slides = deck.slides.filter(s => !s.hidden);
+// Each trial starts at a known slide through the real UI. Per-deck resume may
+// legitimately restore the final slide after a prior trial or interrupted run.
+q('deck:view:overview').click();
+await waitFor(() => q('deck:overview:slide:' + slides[0].id), 'overview did not open');
+q('deck:overview:slide:' + slides[0].id).click();
+await waitFor(() => document.querySelector('.slide-viewport')?.dataset.slideId === slides[0].id, 'first-slide selection failed');
 const results = [];
 const textStrings = slide => slide.layout === 'freeform'
   ? [slide.title, slide.footer, ...slide.elements.flatMap(e => [e.text,
@@ -214,9 +220,9 @@ def main() -> int:
             url = args.url + "?deck=./responsive-eval/deck.data.json"
             surf("go", url)
             ready(url)
-            js("const s=document.querySelector('.responsive-slide'); if(!s) throw new Error('missing reading surface'); s.style.transform='scale(0.2)'; return true;")
             try:
-                js(PROBE)
+                # Inject after PROBE's first-slide reset, which remounts the canvas.
+                js(PROBE.replace('const results = [];', "document.querySelector('.responsive-slide').style.transform='scale(0.2)';\nconst results = [];"))
             except RuntimeError as exc:
                 assert "whole-slide scaling instead of reflow" in str(exc), str(exc)
             else:

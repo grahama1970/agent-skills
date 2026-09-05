@@ -450,8 +450,15 @@ class ThemeTokens(StrictModel):
     """Typed design tokens applied identically by the browser and PPTX emitters."""
 
     accent: str = Field(default="#22d3ee", pattern=r"^#[0-9a-fA-F]{6}$")
-    heading_font: str = Field(default="Arial", min_length=1)
-    body_font: str = Field(default="Arial", min_length=1)
+    heading_font: str = Field(default="Arial", min_length=1, max_length=80, pattern=r"^[A-Za-z][A-Za-z0-9 ,\-]*$")
+    body_font: str = Field(default="Arial", min_length=1, max_length=80, pattern=r"^[A-Za-z][A-Za-z0-9 ,\-]*$")
+    canvas: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
+    text: str = Field(default="#292929", pattern=r"^#[0-9a-fA-F]{6}$")
+    muted: str = Field(default="#595959", pattern=r"^#[0-9a-fA-F]{6}$")
+    header: str = Field(default="#076889", pattern=r"^#[0-9a-fA-F]{6}$")
+    header_text: str = Field(default="#FFFFFF", pattern=r"^#[0-9a-fA-F]{6}$")
+    header_opacity: float = Field(default=1, ge=0, le=1, strict=True)
+    header_image_opacity: float = Field(default=0.1, ge=0, le=1, strict=True)
 
 
 class DeckMeta(StrictModel):

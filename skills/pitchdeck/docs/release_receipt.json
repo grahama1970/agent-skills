@@ -1,7 +1,7 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
  "commit": "f1e32a7a9ed5cca9ad13a04bbde047538a6adf82",
- "source_tree_sha256": "4a56349fbc537a8d045565b76983aa08df06aa71f204cd83bd1e4bc734c38915",
+ "source_tree_sha256": "b6bc00a184a754dddeee3343cdb5e6820d2aa7940484f27f126cd063930754c9",
  "commands": [
   "analyze-style",
   "apply-edit",
@@ -49,6 +49,7 @@
   "selected-edit",
   "simulate",
   "source-edit",
+  "theme-edit",
   "undo",
   "variations",
   "verify",
@@ -56,7 +57,7 @@
   "version",
   "visual-sync"
  ],
- "command_count": 52,
+ "command_count": 53,
  "schema_inventory": [
   {
    "declared_schemas": [
@@ -115,7 +116,7 @@
    "artifacts": [
     {
      "schema": "pitchdeck.deck_document.v1.schema",
-     "sha256": "17c3a5411ed2b172980e6b42482269d2d501a7eb68eee55eeb9855475858b986",
+     "sha256": "f28403bdd8ae475eeca364651ea1a1db612a2e65b2945acbabf14e220f0f8da6",
      "visibility": "public"
     }
    ]

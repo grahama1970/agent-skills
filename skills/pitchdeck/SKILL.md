@@ -638,3 +638,33 @@ alternative-generation workflow, OS clipboard behavior or publication readiness.
 ## Known limitation: visual fidelity
 
 The compiler proves every visible string survives into the emitted artifacts (post-emit whole-string scan), but it does NOT yet prove visual fidelity between the browser renderer and the PPTX/LibreOffice render: geometry, wrapping, and legibility can differ. The strict xfail `test_case13_browser_vs_libreoffice_visual_diff` tracks this. Review the rendered PPTX (`run.sh render`) before external delivery; every build receipt carries this limitation as a gap line.
+
+## Theme editor
+
+The **Theme** dropdown is in the main top bar. Select a preset to preview the
+whole deck, navigate slides, open **Customize** for colors/fonts and separate header
+fill/image opacity, then **Apply** or **Cancel**. Apply/Cancel stay visible while scrolling. **Save theme** retains a named preset without
+applying it; **Undo theme** refuses to overwrite later work. Writes bind source
+hashes and revision and change only theme metadata in canonical or legacy sources.
+
+`themes/presets.json` is the preset source; typed `ThemeTokens` travel with the
+source into browser and PPTX export. The grahama.co palette/font roles come from
+`site/BRAND.md`, `site/DESIGN.md`, and `site/app/globals.css`. The header uses a brown
+fill with the supplied turbine image over it at **10% image opacity**; titles stay
+opaque. The image is byte-identical to `ReqML_GE_Presentation.pptx`'s
+`ppt/media/image4.png`, used by layout 46 with `alphaModFix amt="10000"`.
+The browser delivery copy is `ui/public/theme-assets/house-band-texture.png`;
+the canonical source is `best-practices-slide-design/assets/house-band-texture.png`.
+Fill opacity and image opacity are independent controls. Current appearance remains available
+without activating new styling; Legacy house offers the white/teal look.
+
+Browser Fraunces is copied from `site/public/fonts/fraunces-site-subset.woff2`.
+PDF rendering includes the supplied static Fraunces fonts through process-local
+Fontconfig; no system/user font installation is changed. Editable PPTX requests
+Fraunces but does not embed it: recipients may need to install the supplied
+`fonts/fraunces/*.ttf` files. Browser system sans maps to Arial for export.
+Static PDF fonts use opsz=9; pixel-identical optical sizing across apps is not claimed.
+See `fonts/fraunces/README.md` for provenance and the OFL license.
+Raster illustrations retain their own colors. Existing animations are untouched;
+PPTX remains animation-free as documented above. PDF is rendered from PPTX, not
+independently themed. `fixtures/theme_picker.json` retains the live proof boundary.

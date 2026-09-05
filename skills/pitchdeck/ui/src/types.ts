@@ -84,7 +84,7 @@ export interface UiDeckBundle {
   audience: string
   visibility: 'public' | 'private' | string
   theme: string
-  theme_tokens: { accent: string; heading_font: string; body_font: string }
+  theme_tokens: import('./components/ThemePicker').ThemeTokens
   slides: UiSlide[]
   claim_summary: Record<string, number>
   validation_readiness: string

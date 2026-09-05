@@ -1900,15 +1900,70 @@
         },
         "heading_font": {
           "default": "Arial",
+          "maxLength": 80,
           "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9 ,\\-]*$",
           "title": "Heading Font",
           "type": "string"
         },
         "body_font": {
           "default": "Arial",
+          "maxLength": 80,
           "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9 ,\\-]*$",
           "title": "Body Font",
           "type": "string"
+        },
+        "canvas": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Canvas"
+        },
+        "text": {
+          "default": "#292929",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Text",
+          "type": "string"
+        },
+        "muted": {
+          "default": "#595959",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Muted",
+          "type": "string"
+        },
+        "header": {
+          "default": "#076889",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Header",
+          "type": "string"
+        },
+        "header_text": {
+          "default": "#FFFFFF",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Header Text",
+          "type": "string"
+        },
+        "header_opacity": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Header Opacity",
+          "type": "number"
+        },
+        "header_image_opacity": {
+          "default": 0.1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Header Image Opacity",
+          "type": "number"
         }
       },
       "title": "ThemeTokens",

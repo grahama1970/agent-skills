@@ -709,6 +709,8 @@ def emit_document_pptx(
             _emit_element(slide.shapes, element, root, palette=palette, scale=scale, assets=assets, asset_base=asset_base, receipt=receipt)
         receipt["slides"].append({"id": slide_doc.id, "elements": sum(1 for _ in __import__("pitchdeck.document", fromlist=["iter_tree"]).iter_tree(slide_doc.elements))})
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    from .theme_style import apply_presentation_theme
+    apply_presentation_theme(presentation, document.deck.theme_tokens, [e.text or "" for slide in document.slides for e in slide.elements if e.role == "title"])
     presentation.save(str(output_path))
     if disclaimer:
         scrubbed = _scrub_package_markers(

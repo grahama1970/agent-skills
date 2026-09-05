@@ -61,30 +61,47 @@ def candidate(doc: DeckDocument, slide_id: str, element_id: str, changes: dict) 
     return checked, replacement, text_changed
 
 
-def replace_pair(paths: list[Path], before: list[bytes], after: list[bytes]) -> None:
+def replace_pair(paths: list[Path], before: list[bytes | None], after: list[bytes]) -> None:
+    """Stage the entire write set, CAS, then replace; None means absent.
+
+    Ordinary I/O failure restores only this transaction's still-current bytes.
+    This is not a power-loss-atomic filesystem transaction.
+    """
     staged: list[Path] = []
-    backups: list[Path] = []
+    backups: list[Path | None] = []
     replaced = 0
+    read = lambda path: path.read_bytes() if path.exists() else None
     try:
         for path, old, new in zip(paths, before, after):
-            for content, collection in [(old, backups), (new, staged)]:
+            backup = None
+            if old is not None:
                 fd, name = tempfile.mkstemp(prefix='.selected-edit-', dir=path.parent)
-                collection.append(Path(name))
+                backup = Path(name)
                 with os.fdopen(fd, 'wb') as stream:
-                    stream.write(content)
-                    stream.flush()
-                    os.fsync(stream.fileno())
-        if [p.read_bytes() for p in paths] != before:
+                    stream.write(old); stream.flush(); os.fsync(stream.fileno())
+            backups.append(backup)
+            fd, name = tempfile.mkstemp(prefix='.selected-edit-', dir=path.parent)
+            staged.append(Path(name))
+            with os.fdopen(fd, 'wb') as stream:
+                stream.write(new); stream.flush(); os.fsync(stream.fileno())
+        if [read(p) for p in paths] != before:
             raise ValueError('Source changed while staging; proposal refused')
         for src, dst in zip(staged, paths):
             os.replace(src, dst)
             replaced += 1
+        if [read(p) for p in paths] != after:
+            raise ValueError('Write readback changed; later work will not be overwritten')
     except Exception:
-        for i in range(replaced):
-            os.replace(backups[i], paths[i])
+        for i in reversed(range(replaced)):
+            if read(paths[i]) != after[i]:
+                continue  # A later writer owns these bytes; never restore over it.
+            if backups[i] is None:
+                paths[i].unlink(missing_ok=True)
+            else:
+                os.replace(backups[i], paths[i])
         raise
     finally:
-        for path in staged + backups:
+        for path in staged + [p for p in backups if p is not None]:
             path.unlink(missing_ok=True)
 
 

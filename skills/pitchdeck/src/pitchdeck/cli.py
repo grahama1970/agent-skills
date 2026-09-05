@@ -1158,6 +1158,21 @@ def document_edit_cmd(
         _abort(exc)
 
 
+@app.command(name="theme-edit")
+def theme_edit_cmd(
+    source: Annotated[Path, typer.Option(help="Server-resolved document or deck YAML.")],
+    output_dir: Annotated[Path, typer.Option(help="Emitted UI directory.")],
+    request_file: Annotated[Path, typer.Option(help="Bound theme operation request.")],
+    storage: Annotated[Path, typer.Option(help="Private theme catalog and undo storage.")],
+) -> None:
+    from .theme_edit import run
+    import json
+    try:
+        typer.echo(json.dumps(run(source, output_dir, request_file, storage)))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="selected-edit")
 def selected_edit_cmd(
     document: Annotated[Path, typer.Option(help="Canonical document.")],

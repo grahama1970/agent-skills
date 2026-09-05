@@ -151,7 +151,8 @@ function ElementContent({ element, responsive = false }: { element: UiElement; r
       style={{
         fontSize: responsive ? `${Math.max(18, Math.min(element.size_pt, element.role === 'title' ? 40 : 28))}px` : `${(element.size_pt / 72) * (CANVAS_HEIGHT / 7.5)}px`, // pt → 144dpi canvas px (WebGPT review P1-11)
         fontWeight: element.bold ? 700 : 400,
-        color: element.color ?? '#3a4550',  // dark ink on the house white canvas
+        color: 'var(--deck-element-text, ' + (element.color ?? '#3a4550') + ')',  // dark ink on the house white canvas
+        fontFamily: element.role === 'title' ? 'var(--deck-heading-font, Arial)' : 'var(--deck-body-font, Arial)',
         textAlign: element.align as 'left' | 'center' | 'right',
       }}
     >
@@ -180,11 +181,11 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
           browser draws the same anatomy so review is faithful */}
       <div
         className="freeform-band absolute left-0 top-0 z-0 flex w-full items-center px-10"
-        style={{ height: 0.11 * CANVAS_HEIGHT, background: '#076889' }}
+        style={{ height: 0.11 * CANVAS_HEIGHT, background: 'var(--deck-header-background, #076889)' }}
       >
-        <span className="text-4xl font-semibold text-white">{slide.title}</span>
+        <span className="text-4xl font-semibold" style={{ color: 'var(--deck-header-text, white)', fontFamily: 'var(--deck-heading-font, Arial)' }}>{slide.title}</span>
       </div>
-      <div className="freeform-brand absolute bottom-3 left-10 z-0 text-xl font-bold" style={{ color: '#076889' }}>
+      <div className="freeform-brand absolute bottom-3 left-10 z-0 text-xl font-bold" style={{ color: 'var(--deck-diagram-accent, #076889)' }}>
         grahama.co
       </div>
       <div className="freeform-page absolute bottom-3 right-10 z-0 text-xl text-slate-400">{slide.order}</div>

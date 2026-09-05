@@ -16,6 +16,7 @@ exports/
 *.png
 !fixtures/**/*.png
 !examples/sparta-explorer/assets/*.png
+!ui/public/theme-assets/house-band-texture.png
 .env
 readme-to-pitchdeck.config.yml
 ui/node_modules
@@ -28,3 +29,7 @@ ui/public/exports/
 ui/public/responsive-eval/
 ui/public/responsive-semantic/
 ui/public/usability-*/
+
+# Disposable live theme eval projections; retained receipts live on storage.
+ui/public/theme-eval-*/
+ui/public/theme-legacy-*/

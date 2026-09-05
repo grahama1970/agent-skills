@@ -1,0 +1,101 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Live Vite Theme top-bar preview/customize/save/apply/cancel/reload/reselect/undo; unchanged canonical content, geometry, claims, animations and asset hashes; real PPTX/PDF endpoint readback; legacy YAML adapter",
+  "claims": {
+    "proves": "Theme workflow and fail-closed source/revision validation on live emitted decks",
+    "does_not_prove": "Universal graphical parity, embedded Office fonts, arbitrary imported template chrome, or publication approval"
+  },
+  "cases": [
+    {
+      "name": "live-theme-picker",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/eval_theme_picker.py",
+        "--out",
+        "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/live.json"
+      ],
+      "timeout_seconds": 300,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/live.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "invalid-and-stale-theme",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/eval_theme_picker.py",
+        "--negative",
+        "--out",
+        "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/negative.json"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/negative.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "legacy-theme-adapter",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/eval_theme_legacy.py",
+        "--out",
+        "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/legacy.json"
+      ],
+      "timeout_seconds": 180,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/legacy.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "filesystem-failure-no-write",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "python3",
+        "../scripts/eval_theme_write_failure.py",
+        "--out",
+        "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/write-failure.json"
+      ],
+      "timeout_seconds": 90,
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/pitchdeck/outputs/theme-picker/write-failure.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    }
+  ]
+}

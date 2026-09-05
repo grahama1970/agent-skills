@@ -29,6 +29,7 @@ import { useSlideNavigation } from './useSlideNavigation'
 import { DeckNavigator } from './components/DeckNavigator'
 import { DebuggerControls } from './components/DebuggerControls'
 import { RehearsalControls } from './components/RehearsalControls'
+import { ThemePicker, applyThemeTokens } from './components/ThemePicker'
 import { InsertMenu } from './components/InsertMenu'
 
 function usePersistentPane(key: string, initial: boolean): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
@@ -164,6 +165,7 @@ function EditPanel({
 
 export function App() {
   const { deck, error, reload } = useDeck()
+  useEffect(() => { if (deck) applyThemeTokens(deck.theme_tokens) }, [deck?.theme_tokens])
   const [direction, setDirection] = useState<'fwd' | 'back'>('fwd')
   const [view, setView] = useState<View>(viewFromHash)
   const [sheetTab, setSheetTab] = useState<RightSheetTab>('chat')
@@ -208,16 +210,6 @@ export function App() {
     label: 'Undo',
     description: 'Restore the previous committed bundle state (undo of undo = redo)',
   })
-
-  // Theme tokens (typed in DeckMeta.theme_tokens) → CSS vars consumed by the
-  // slide layouts, so the browser and PPTX emitters share one accent source.
-  useEffect(() => {
-    if (!deck?.theme_tokens) return
-    const root = document.documentElement.style
-    root.setProperty('--deck-accent', deck.theme_tokens.accent)
-    root.setProperty('--deck-heading-font', deck.theme_tokens.heading_font)
-    root.setProperty('--deck-body-font', deck.theme_tokens.body_font)
-  }, [deck])
 
   const [fragment, setFragment] = useState(0)
   const fragmentTotal = useRef(0)
@@ -556,6 +548,7 @@ export function App() {
           >
             <StickyNote aria-hidden className="h-4 w-4" /> <span className="hidden lg:inline">Notes</span>
           </Button>
+          <ThemePicker deck={deck} onChanged={reloadAll} />
           <ExportMenu />
         </nav>
       </header> : null}
