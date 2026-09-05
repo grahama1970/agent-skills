@@ -267,6 +267,23 @@ def list_routable_issues(
     skip_now = set(skip_issue_numbers or ())
     skip_reasons = dict(skip_issue_reasons or {})
     for issue in issues:
+        # Per-issue quarantine (WebGPT P0, 2026-09-04): a malformed issue must
+        # never deny service to the repository or fleet. Validate the shape
+        # through the pydantic Issue model; on failure mark it
+        # UNROUTABLE_INVALID_ISSUE, exclude it from this tick, and continue
+        # scanning. Never mutate an issue whose identity cannot be trusted.
+        try:
+            from . import models as _models
+
+            _models.validate_issue(issue)
+        except Exception:  # pydantic ValidationError or non-dict shapes
+            number_guess = issue.get("number") if isinstance(issue, dict) else None
+            excluded.setdefault("UNROUTABLE_INVALID_ISSUE", []).append(
+                int(number_guess) if isinstance(number_guess, int) else -1
+            )
+            log_event(run_id, "issue_quarantined_invalid", repo=repo,
+                      number=number_guess)
+            continue
         issue_number = int(issue["number"])
         if only_issue is not None and issue_number != int(only_issue):
             excluded.setdefault("not_targeted_issue", []).append(issue_number)
