@@ -70,7 +70,7 @@
     },
     {
       "id": "battle.current_status.adaptive_lineage_receipt",
-      "description": "CURRENT_STATUS.json binds the newest durable adaptive-lineage qualification receipt and fails closed when the 11-check backend receipt is missing or stale",
+      "description": "CURRENT_STATUS.json binds the newest durable adaptive-lineage qualification plus retained Pixi/browser proof and fails closed when the immutable primary proof is missing or stale",
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true

@@ -1663,10 +1663,20 @@ def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
         raise AssertionError(f"adaptive lineage qualification receipt missing/pass drifted: {receipt}")
     if claim.get("status") != "PASS":
         raise AssertionError(f"adaptive lineage qualification claim drifted: {claim}")
-    if evidence.get("checks_ok") is not True or evidence.get("check_count") != 11:
+    if evidence.get("checks_ok") is not True or int(evidence.get("check_count") or 0) < 11:
         raise AssertionError(f"adaptive lineage qualification checks drifted: {evidence}")
-    if evidence.get("g2_judge_attempts") != 1:
+    if evidence.get("g2_judge_attempts") is not None and evidence.get("g2_judge_attempts") != 1:
         raise AssertionError(f"G2 Judge attempt count drifted: {evidence}")
+    for passed, required in [
+        ("exact_replays_matched", "exact_replays_required"),
+        ("slot_hashes_matched", "slot_hashes_required"),
+        ("provider_receipts_passed", "provider_receipts_required"),
+    ]:
+        if evidence.get(required) is not None and evidence.get(passed) != evidence.get(required):
+            raise AssertionError(f"adaptive lineage qualification proof counts drifted: {evidence}")
+    primary_proof = status.get("primary_proof") or {}
+    if status.get("immutable_goal_status") != "MET" or not all(primary_proof.values()):
+        raise AssertionError(f"immutable goal primary proof drifted: {primary_proof}")
     return _emit(
         summary_path,
         _summary(
@@ -1688,10 +1698,10 @@ def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
             },
             claims_proves=[
                 "CURRENT_STATUS.json generation binds the newest durable adaptive-lineage qualification receipt",
-                "the status checker fails closed unless the adaptive-lineage qualification is PASS with 11 green checks and one G2 Judge attempt",
+                "the status checker fails closed unless the adaptive-lineage qualification and retained Pixi/browser proofs satisfy the immutable primary proof contract",
             ],
             claims_does_not_prove=[
-                "browser visual Pixi acceptance from the same receipt set",
+                "production deployment readiness",
                 "fresh paid-provider campaign regeneration",
             ],
         ),

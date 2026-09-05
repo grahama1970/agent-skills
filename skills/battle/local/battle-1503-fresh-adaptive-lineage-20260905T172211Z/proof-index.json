@@ -32,9 +32,25 @@
       "bytes": 2324,
       "sha256": "ccff7549129ce067eed86eefb4825bdf5e1b26119ab975c3535a03dce5526506"
     },
+    "pixi-gameplay-video-proof.json": {
+      "bytes": 4239,
+      "sha256": "a884545bb094cf4b580373669738f82a14523b7d746c707eb9a31ad36a51eacf"
+    },
+    "pixi-replay-proof.json": {
+      "bytes": 1425,
+      "sha256": "7ca7a8a5a7126b466fc3f310e6d3264e0fbdb55dc097aa03d9aa58126890bb1d"
+    },
     "source-receipt-index.json": {
       "bytes": 8036,
       "sha256": "88a0649dbc559627422c9b40a2a3a902417bbc217bd532a732fce2ca2a1b33cb"
+    },
+    "surf-battle-replay-corrected2.png": {
+      "bytes": 306921,
+      "sha256": "0e44f94746e2a18090286924abf8ce8e9d977bf5e4f20e71d73392487c4baaf9"
+    },
+    "surf-text-corrected.txt": {
+      "bytes": 3965,
+      "sha256": "edbe731922c929d4940d0201d747b983e2e39ed2255a6148cd557d5fa290e810"
     }
   },
   "qualification_dir": "/mnt/storage12tb/skills/battle/ticket-1503/qualification-20260905T172211Z",

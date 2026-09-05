@@ -1,0 +1,139 @@
+{
+  "schema": "battle.pixi_gameplay_video_proof.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": "local_http_static_bundle_playwright_video_pixi_gameplay",
+  "fixture_id": "battle-004-adaptive-lineage-v13",
+  "base_url": "http://127.0.0.1:58269/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13",
+  "loaded": {
+    "playheadSeconds": 121.505984,
+    "playheadLabel": "PLAYHEAD 02:01",
+    "laneIds": [
+      "blue-g1",
+      "blue-g2",
+      "red-g1",
+      "red-g2"
+    ],
+    "animations": {
+      "red-g1": "run",
+      "red-g2": "mutate",
+      "blue-g1": "run",
+      "blue-g2": "mutate"
+    },
+    "lineagePhases": {
+      "red-g2": "active",
+      "blue-g2": "active"
+    },
+    "source": {
+      "battle_id": "battle-004",
+      "run_id": "battle-1503-20260905T172211Z",
+      "source_proof_id": "battle-1503-20260905T172211Z",
+      "source_fixture_id": "battle-004-adaptive-lineage-v13",
+      "source_fixture_sha256": "695bac25f925d1eeed0e1a22e4a0889fe5137404539a63594f8ad8069ba5cac6"
+    },
+    "pause_after_round": {
+      "top_panel_present": false,
+      "receipt_replay_non_applicable_present": true
+    },
+    "canvasWidth": 1030,
+    "canvasHeight": 282,
+    "sameCanvas": true
+  },
+  "played": {
+    "playheadSeconds": 0.6686669749003327,
+    "playheadLabel": "PLAYHEAD 00:00",
+    "laneIds": [
+      "blue-g1",
+      "red-g1"
+    ],
+    "animations": {
+      "red-g1": "run",
+      "blue-g1": "run"
+    },
+    "lineagePhases": {},
+    "source": {
+      "battle_id": "battle-004",
+      "run_id": "battle-1503-20260905T172211Z",
+      "source_proof_id": "battle-1503-20260905T172211Z",
+      "source_fixture_id": "battle-004-adaptive-lineage-v13",
+      "source_fixture_sha256": "695bac25f925d1eeed0e1a22e4a0889fe5137404539a63594f8ad8069ba5cac6"
+    },
+    "pause_after_round": {
+      "top_panel_present": false,
+      "receipt_replay_non_applicable_present": true
+    },
+    "canvasWidth": 1030,
+    "canvasHeight": 282,
+    "sameCanvas": true
+  },
+  "pause_start": {
+    "playheadSeconds": 0.8020669749003329,
+    "playheadLabel": "PLAYHEAD 00:00",
+    "laneIds": [
+      "blue-g1",
+      "red-g1"
+    ],
+    "animations": {
+      "red-g1": "run",
+      "blue-g1": "run"
+    },
+    "lineagePhases": {},
+    "source": {
+      "battle_id": "battle-004",
+      "run_id": "battle-1503-20260905T172211Z",
+      "source_proof_id": "battle-1503-20260905T172211Z",
+      "source_fixture_id": "battle-004-adaptive-lineage-v13",
+      "source_fixture_sha256": "695bac25f925d1eeed0e1a22e4a0889fe5137404539a63594f8ad8069ba5cac6"
+    },
+    "pause_after_round": {
+      "top_panel_present": false,
+      "receipt_replay_non_applicable_present": true
+    },
+    "canvasWidth": 1030,
+    "canvasHeight": 282,
+    "sameCanvas": true
+  },
+  "pause_end": {
+    "playheadSeconds": 0.8020669749003329,
+    "playheadLabel": "PLAYHEAD 00:00",
+    "laneIds": [
+      "blue-g1",
+      "red-g1"
+    ],
+    "animations": {
+      "red-g1": "run",
+      "blue-g1": "run"
+    },
+    "lineagePhases": {},
+    "source": {
+      "battle_id": "battle-004",
+      "run_id": "battle-1503-20260905T172211Z",
+      "source_proof_id": "battle-1503-20260905T172211Z",
+      "source_fixture_id": "battle-004-adaptive-lineage-v13",
+      "source_fixture_sha256": "695bac25f925d1eeed0e1a22e4a0889fe5137404539a63594f8ad8069ba5cac6"
+    },
+    "pause_after_round": {
+      "top_panel_present": false,
+      "receipt_replay_non_applicable_present": true
+    },
+    "canvasWidth": 1030,
+    "canvasHeight": 282,
+    "sameCanvas": true
+  },
+  "play_advanced": true,
+  "pause_stopped": true,
+  "scrub_reset_works": true,
+  "scrub_jump_works": true,
+  "no_runtime_errors": true,
+  "source_identity_visible": true,
+  "pause_after_round_not_in_primary_replay": true,
+  "runtime_errors": [],
+  "screenshots": {
+    "loaded": "/tmp/battle-agentic-evals/pixi-gameplay-video/screenshots/loaded.png",
+    "playing": "/tmp/battle-agentic-evals/pixi-gameplay-video/screenshots/playing.png",
+    "scrubbed": "/tmp/battle-agentic-evals/pixi-gameplay-video/screenshots/scrubbed.png"
+  },
+  "video_path": "/tmp/battle-agentic-evals/pixi-gameplay-video/video/pixi-replay-gameplay.webm",
+  "created_at": "2026-09-05T17:51:47.458Z",
+  "video_bytes": 231669
+}

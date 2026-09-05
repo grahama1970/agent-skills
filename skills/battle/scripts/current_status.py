@@ -47,6 +47,13 @@ SOURCE_CONTEXT = {
     ),
 }
 
+ADAPTIVE_LINEAGE_QUALIFICATION_SCHEMAS = {
+    "battle.adaptive_lineage_qualification.v1",
+    "battle.adaptive_lineage_goal_qualification.v1",
+}
+
+MIN_ADAPTIVE_LINEAGE_CHECKS = 11
+
 
 def _utc() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -145,6 +152,16 @@ def _latest_backend_goal_dir() -> Path | None:
     return max(valid, key=lambda path: path.stat().st_mtime)
 
 
+def _is_adaptive_lineage_qualification(payload: dict[str, Any]) -> bool:
+    if payload.get("schema") in ADAPTIVE_LINEAGE_QUALIFICATION_SCHEMAS:
+        return True
+    return (
+        payload.get("battle_id") == "battle-004"
+        and isinstance(payload.get("checks"), list)
+        and "adaptive-lineage" in str(payload.get("proof_scope", ""))
+    )
+
+
 def _latest_adaptive_lineage_qualification() -> Path | None:
     candidates: list[Path] = []
     for path in (BATTLE_DIR / "local").glob("**/adaptive-lineage-qualification.json"):
@@ -152,11 +169,21 @@ def _latest_adaptive_lineage_qualification() -> Path | None:
             payload = _read_json(path)
         except (OSError, json.JSONDecodeError):
             continue
-        if payload.get("schema") == "battle.adaptive_lineage_qualification.v1":
+        if _is_adaptive_lineage_qualification(payload):
             candidates.append(path)
     if not candidates:
         return None
     return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def _check_passed(item: dict[str, Any]) -> bool:
+    if "ok" in item:
+        return bool(item.get("ok"))
+    return item.get("status") == "PASS"
+
+
+def _named_check(checks: list[dict[str, Any]], name: str) -> dict[str, Any]:
+    return next((item for item in checks if item.get("name") == name), {})
 
 
 def _adaptive_lineage_qualification_evidence(path: Path | None) -> dict[str, Any]:
@@ -172,11 +199,15 @@ def _adaptive_lineage_qualification_evidence(path: Path | None) -> dict[str, Any
         }
     payload = _read_json(path)
     checks = payload.get("checks") or []
+    counts = payload.get("counts") or {}
+    provider_check = _named_check(checks, "provider_live_authority_receipts_bound")
     return {
         "status": payload.get("status"),
+        "schema": payload.get("schema"),
         "stop_condition": payload.get("stop_condition"),
-        "checks_ok": all(bool(item.get("ok")) for item in checks),
+        "checks_ok": all(_check_passed(item) for item in checks),
         "check_count": len(checks),
+        "failed_checks": [item.get("name") for item in checks if not _check_passed(item)],
         "selected_id": payload.get("selected_id"),
         "runner_up_id": payload.get("runner_up_id"),
         "g2_judge_attempts": (payload.get("g2_outcome") or {}).get("judge_attempts"),
@@ -184,8 +215,31 @@ def _adaptive_lineage_qualification_evidence(path: Path | None) -> dict[str, Any
         "g2_vulnerable_original_confirmed": (payload.get("g2_outcome") or {}).get(
             "vulnerable_original_confirmed"
         ),
+        "exact_replays_matched": counts.get("exact_replays_matched"),
+        "exact_replays_required": counts.get("exact_replays_required"),
+        "slot_hashes_matched": counts.get("slot_hashes_matched"),
+        "slot_hashes_required": counts.get("slot_hashes_required"),
+        "provider_receipts_passed": provider_check.get("passed"),
+        "provider_receipts_required": provider_check.get("required"),
         "budget": payload.get("budget"),
     }
+
+
+def _adaptive_lineage_evidence_passes(evidence: dict[str, Any]) -> bool:
+    if evidence.get("status") != "PASS" or evidence.get("checks_ok") is not True:
+        return False
+    if int(evidence.get("check_count") or 0) < MIN_ADAPTIVE_LINEAGE_CHECKS:
+        return False
+    if evidence.get("g2_judge_attempts") is not None:
+        return evidence.get("g2_judge_attempts") == 1
+    return all(
+        evidence.get(passed) == evidence.get(required) and evidence.get(required)
+        for passed, required in [
+            ("exact_replays_matched", "exact_replays_required"),
+            ("slot_hashes_matched", "slot_hashes_required"),
+            ("provider_receipts_passed", "provider_receipts_required"),
+        ]
+    )
 
 
 def _source_context_item(path: str) -> dict[str, Any]:
@@ -287,6 +341,42 @@ def generate(out: Path) -> int:
     adaptive_lineage_evidence = _adaptive_lineage_qualification_evidence(
         adaptive_lineage_qualification
     )
+    adaptive_proof_dir = adaptive_lineage_qualification.parent if adaptive_lineage_qualification else None
+    pixi_binding_path = (
+        adaptive_proof_dir / "pixi-replay-proof.json" if adaptive_proof_dir else BATTLE_DIR / "local" / "MISSING" / "pixi-replay-proof.json"
+    )
+    pixi_gameplay_path = (
+        adaptive_proof_dir / "pixi-gameplay-video-proof.json" if adaptive_proof_dir else BATTLE_DIR / "local" / "MISSING" / "pixi-gameplay-video-proof.json"
+    )
+    surf_text_path = (
+        adaptive_proof_dir / "surf-text-corrected.txt" if adaptive_proof_dir else BATTLE_DIR / "local" / "MISSING" / "surf-text-corrected.txt"
+    )
+    surf_screenshot_path = (
+        adaptive_proof_dir / "surf-battle-replay-corrected2.png" if adaptive_proof_dir else BATTLE_DIR / "local" / "MISSING" / "surf-battle-replay-corrected2.png"
+    )
+    receipts["adaptive_lineage_pixi_binding"] = _receipt(pixi_binding_path)
+    receipts["adaptive_lineage_pixi_gameplay"] = _receipt(pixi_gameplay_path)
+    receipts["adaptive_lineage_surf_text"] = _artifact(surf_text_path)
+    receipts["adaptive_lineage_surf_screenshot"] = _artifact(surf_screenshot_path)
+    pixi_binding = _read_json(pixi_binding_path) if pixi_binding_path.is_file() else {}
+    pixi_gameplay = _read_json(pixi_gameplay_path) if pixi_gameplay_path.is_file() else {}
+    pixi_binding_passes = (
+        pixi_binding.get("status") == "PASS"
+        and (pixi_binding.get("readback_matches") or {}).get("route_loaded_same_fixture_sha256") is True
+        and (pixi_binding.get("readback_matches") or {}).get("route_loaded_same_run_id") is True
+    )
+    pixi_gameplay_passes = (
+        pixi_gameplay.get("status") == "PASS"
+        and pixi_gameplay.get("source_identity_visible") is True
+        and pixi_gameplay.get("pause_after_round_not_in_primary_replay") is True
+    )
+    immutable_goal_met = (
+        _adaptive_lineage_evidence_passes(adaptive_lineage_evidence)
+        and pixi_binding_passes
+        and pixi_gameplay_passes
+        and surf_text_path.is_file()
+        and surf_screenshot_path.is_file()
+    )
     open_issues = [_issue_ref(issue) for issue in _gh_issue_list("open")]
     all_issues = [_issue_ref(issue) for issue in _gh_issue_list("all")]
 
@@ -301,6 +391,14 @@ def generate(out: Path) -> int:
             "repository": "grahama1970/agent-skills",
             "commit": _git(["rev-parse", "HEAD"]),
             "battle_tree": _git(["rev-parse", "HEAD:skills/battle"]),
+        },
+        "immutable_goal_status": "MET" if immutable_goal_met else "NOT_MET",
+        "primary_proof": {
+            "backend_qualification": _adaptive_lineage_evidence_passes(adaptive_lineage_evidence),
+            "pixi_receipt_binding": pixi_binding_passes,
+            "pixi_gameplay_browser_proof": pixi_gameplay_passes,
+            "surf_text_readback": surf_text_path.is_file(),
+            "surf_screenshot": surf_screenshot_path.is_file(),
         },
         "source_context": {
             key: _source_context_item(value) for key, value in SOURCE_CONTEXT.items()
@@ -323,18 +421,32 @@ def generate(out: Path) -> int:
             {
                 "id": "p0_adaptive_lineage_fresh_qualification",
                 "status": (
-                    "PASS"
-                    if adaptive_lineage_evidence.get("status") == "PASS"
-                    and adaptive_lineage_evidence.get("checks_ok") is True
-                    and adaptive_lineage_evidence.get("check_count") == 11
-                    else "MISSING_OR_STALE"
+                    "PASS" if _adaptive_lineage_evidence_passes(adaptive_lineage_evidence) else "MISSING_OR_STALE"
                 ),
                 "issue_refs": [1499],
                 "receipt": receipts["adaptive_lineage_qualification"]["path"],
                 "evidence": adaptive_lineage_evidence,
                 "does_not_prove": [
-                    "browser visual Pixi acceptance from the same receipt set.",
                     "fresh provider-backed overnight campaign breadth.",
+                ],
+            },
+            {
+                "id": "adaptive_lineage_pixi_receipt_replay",
+                "status": "PASS" if pixi_binding_passes and pixi_gameplay_passes else "MISSING_OR_STALE",
+                "issue_refs": [1500, 1501],
+                "receipt": receipts["adaptive_lineage_pixi_gameplay"]["path"],
+                "evidence": {
+                    "binding_receipt": receipts["adaptive_lineage_pixi_binding"],
+                    "gameplay_receipt": receipts["adaptive_lineage_pixi_gameplay"],
+                    "route_loaded_same_fixture_sha256": (pixi_binding.get("readback_matches") or {}).get("route_loaded_same_fixture_sha256"),
+                    "route_loaded_same_run_id": (pixi_binding.get("readback_matches") or {}).get("route_loaded_same_run_id"),
+                    "source_identity_visible": pixi_gameplay.get("source_identity_visible"),
+                    "pause_after_round_not_in_primary_replay": pixi_gameplay.get("pause_after_round_not_in_primary_replay"),
+                    "surf_screenshot": receipts["adaptive_lineage_surf_screenshot"],
+                },
+                "does_not_prove": [
+                    "production deployment readiness.",
+                    "arbitrary target exploitability beyond the authorized battle-004 proof.",
                 ],
             },
             {
@@ -436,12 +548,12 @@ def generate(out: Path) -> int:
                 },
             },
         ],
-        "partial": [
+        "partial": [] if immutable_goal_met else [
             {
                 "id": "adaptive_lineage_effect",
                 "issue_refs": [1147],
                 "status": "OPEN",
-                "reason": "Same-run qualification does not prove adaptive improvement for Red and Blue.",
+                "reason": "Fresh backend qualification and Pixi replay proof have not both passed.",
             },
         ],
         "decisions": [
@@ -489,13 +601,13 @@ def generate(out: Path) -> int:
             },
         ],
         "production_gaps": [
-            {"id": "staging_infrastructure_readiness", "issue_refs": [1149], "status": "OPEN"},
+            {"id": "staging_infrastructure_readiness", "issue_refs": [1149], "status": "NON_GOAL_UNPROVEN"},
             {"id": "terminal_semantics_implementation", "issue_refs": [1148], "status": "DECIDED_DOC_ONLY"},
         ],
         "non_claims": [
             "This status does not claim production deployment readiness.",
-            "This status does not claim adaptive improvement beyond the same-run receipt.",
-            "This status does not claim every remaining battle-labelled issue is closed.",
+            "This status does not claim production-scale overnight campaign breadth.",
+            "This status does not claim arbitrary target exploitability beyond the authorized battle-004 proof.",
         ],
     }
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -512,9 +624,27 @@ def check(path: Path) -> int:
     for item in status.get("source_receipts", {}).values():
         if not item.get("exists") and not item.get("superseded_by"):
             errors.append(f"missing_source_receipt:{item.get('path')}")
-    adaptive_receipt = status.get("source_receipts", {}).get("adaptive_lineage_qualification") or {}
+    receipts = status.get("source_receipts", {})
+    adaptive_receipt = receipts.get("adaptive_lineage_qualification") or {}
     if adaptive_receipt.get("status") != "PASS":
         errors.append("adaptive_lineage_qualification_not_pass")
+    pixi_binding_receipt = receipts.get("adaptive_lineage_pixi_binding") or {}
+    if pixi_binding_receipt.get("status") != "PASS":
+        errors.append("adaptive_lineage_pixi_binding_not_pass")
+    pixi_gameplay_receipt = receipts.get("adaptive_lineage_pixi_gameplay") or {}
+    if pixi_gameplay_receipt.get("status") != "PASS":
+        errors.append("adaptive_lineage_pixi_gameplay_not_pass")
+    if status.get("immutable_goal_status") == "MET":
+        primary_proof = status.get("primary_proof") or {}
+        for key in [
+            "backend_qualification",
+            "pixi_receipt_binding",
+            "pixi_gameplay_browser_proof",
+            "surf_text_readback",
+            "surf_screenshot",
+        ]:
+            if primary_proof.get(key) is not True:
+                errors.append(f"immutable_goal_primary_proof_false:{key}")
     adaptive_claim = next(
         (
             item
@@ -526,10 +656,18 @@ def check(path: Path) -> int:
     adaptive_evidence = adaptive_claim.get("evidence") or {}
     if adaptive_claim.get("status") != "PASS":
         errors.append("adaptive_lineage_fresh_qualification_claim_not_pass")
-    if adaptive_evidence.get("checks_ok") is not True or adaptive_evidence.get("check_count") != 11:
+    if not _adaptive_lineage_evidence_passes(adaptive_evidence):
         errors.append("adaptive_lineage_fresh_qualification_checks_not_green")
-    if adaptive_evidence.get("g2_judge_attempts") != 1:
-        errors.append("adaptive_lineage_g2_judge_attempt_count_not_one")
+    pixi_claim = next(
+        (
+            item
+            for item in status.get("proven", [])
+            if item.get("id") == "adaptive_lineage_pixi_receipt_replay"
+        ),
+        {},
+    )
+    if pixi_claim.get("status") != "PASS":
+        errors.append("adaptive_lineage_pixi_receipt_replay_claim_not_pass")
 
     closed = {
         str(issue["number"])
