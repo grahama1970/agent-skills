@@ -728,25 +728,6 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         _write_json(run_dir / "compile-status.json", attachment_blocker)
         return attachment_blocker
 
-    worker_path = _write_roundtable_worker(run_dir) if input.handlers else _write_worker(run_dir)
-    command_specs_dir = run_dir / "command-specs"
-    agents_dir = run_dir / "agents"
-    dag = _build_roundtable_tau_dag(input, run_dir=run_dir) if input.handlers else _build_tau_dag(input, run_dir=run_dir)
-    for node in dag["nodes"]:
-        _write_agent_stub(agents_dir, node_id=str(node["id"]), role=str(node["agent"]))
-        if node.get("command_spec"):
-            if input.handlers:
-                _write_roundtable_command_spec(
-                    command_specs_dir,
-                    node=node,
-                    input=input,
-                    worker_path=worker_path,
-                    run_dir=run_dir,
-                )
-            else:
-                _write_command_spec(
-                    command_specs_dir,
-                    node=node,
     binding_errors = []
     for index, handler in enumerate(input.handlers):
         try:
@@ -766,6 +747,25 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         _write_json(run_dir / "compile-status.json", blocked)
         return blocked
 
+    worker_path = _write_roundtable_worker(run_dir) if input.handlers else _write_worker(run_dir)
+    command_specs_dir = run_dir / "command-specs"
+    agents_dir = run_dir / "agents"
+    dag = _build_roundtable_tau_dag(input, run_dir=run_dir) if input.handlers else _build_tau_dag(input, run_dir=run_dir)
+    for node in dag["nodes"]:
+        _write_agent_stub(agents_dir, node_id=str(node["id"]), role=str(node["agent"]))
+        if node.get("command_spec"):
+            if input.handlers:
+                _write_roundtable_command_spec(
+                    command_specs_dir,
+                    node=node,
+                    input=input,
+                    worker_path=worker_path,
+                    run_dir=run_dir,
+                )
+            else:
+                _write_command_spec(
+                    command_specs_dir,
+                    node=node,
                     input=input,
                     worker_path=worker_path,
                     run_dir=run_dir,
@@ -3077,6 +3077,11 @@ def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str
         policy["id"] = handler
         policy["execution_owner"] = "$tau"
         policy["receipt_schema"] = "ask.tau_dag_handler_receipt.v1"
+        if handler == "codex":
+            policy["model_policy"] = {
+                **_subagent_model_policy("gpt-5.5-high"),
+                "provider_transport": "$codex-cli", "service": "codex_cli_workspace",
+            }
         if workflow_mode == "compete" and handler == "webclaude":
             policy["model_preference"] = COMPETE_WEBCLAUDE_MODEL
             policy["model_preference_scope"] = "ask_compete_default"
@@ -3120,6 +3125,18 @@ def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str
     }
 
 
+def resolve_handler_execution_binding(
+    handler: str, *, workspace: str = "", provider_hint: str = "", workflow_mode: str = "roundtable",
+    local_model: str = "",
+) -> HandlerExecutionBinding:
+    policy = _handler_policy(handler, provider_hint=provider_hint, workflow_mode=workflow_mode)
+    model = (policy.get("model_policy") or {}).get("model") or policy.get("model")
+    if local_model and policy["transport"] in {"codex.exec", "subagent-runner.codex_exec"}:
+        model = local_model
+    return HandlerExecutionBinding(handler=handler, transport=policy["transport"],
+                                   model=model, workspace=workspace or None)
+
+
 def _is_subagent_handler(handler: str, provider_hint: str = "") -> bool:
     if provider_hint:
         return False
@@ -3157,11 +3174,6 @@ def _handler_project(input: TauDagCompileInput, handler: str) -> str:
 
 def _handler_workspace(input: TauDagCompileInput, handler: str) -> str:
     """Workspace directory bound to a local-CLI handler (codex coder node)."""
-        if handler == "codex":
-            policy["model_policy"] = {
-                **_subagent_model_policy("gpt-5.5-high"),
-                "provider_transport": "$codex-cli", "service": "codex_cli_workspace",
-            }
     prefix = f"{handler}="
     for item in input.handler_workspaces:
         if item.startswith(prefix):
@@ -3205,18 +3217,6 @@ def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:
 def _roundtable_prior_nodes(input: TauDagCompileInput, node_id: str) -> list[str]:
     if input.topology != "sequential" or not node_id.startswith("handler-"):
         return []
-def resolve_handler_execution_binding(
-    handler: str, *, workspace: str = "", provider_hint: str = "", workflow_mode: str = "roundtable",
-    local_model: str = "",
-) -> HandlerExecutionBinding:
-    policy = _handler_policy(handler, provider_hint=provider_hint, workflow_mode=workflow_mode)
-    model = (policy.get("model_policy") or {}).get("model") or policy.get("model")
-    if local_model and policy["transport"] in {"codex.exec", "subagent-runner.codex_exec"}:
-        model = local_model
-    return HandlerExecutionBinding(handler=handler, transport=policy["transport"],
-                                   model=model, workspace=workspace or None)
-
-
     node_ids = _handler_node_ids(input.handlers)
     try:
         index = node_ids.index(node_id)
