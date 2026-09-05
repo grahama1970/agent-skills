@@ -152,6 +152,19 @@ questions. A structural `PASS` is not proof of company accuracy, meeting quality
 live STT, playback, or Live Evidence card quality; those require independent
 content review plus live-path receipts.
 
+## Production audio acceptance
+
+Google Meet is the production target. YouTube played on an external iPad is
+only a debugging source and cannot establish Meet support. For desktop Meet,
+distinguish remote-participant output capture from the local Jabra microphone;
+never label the microphone tap as direct incoming Meet audio. A shared output
+monitor is not per-tab isolation.
+
+The retained real-call scenario is [Google Meet acceptance](fixtures/google_meet_acceptance.md).
+It requires consent, independently verified routing and channel attribution,
+reviewed cards, uninterrupted Meet playback/uplink, and capture lifecycle proof.
+The scenario is NOT RUN until a consenting real Meet call supplies those receipts.
+
 ## Operating contract
 
 ```text
