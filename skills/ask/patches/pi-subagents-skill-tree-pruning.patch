@@ -1,0 +1,58 @@
+diff --git a/src/agents/agents.ts b/src/agents/agents.ts
+index 784a7726..44ec6479 100644
+--- a/src/agents/agents.ts
++++ b/src/agents/agents.ts
+@@ -1674,7 +1674,7 @@ export function removeBuiltinAgentOverrideFields(
+ 	return { path: filePath, removed: true };
+ }
+ 
+-const DISCOVERY_PRUNED_DIR_NAMES = new Set([".git", "node_modules", ".pi", "sync-backups"]);
++const DISCOVERY_PRUNED_DIR_NAMES = new Set([".git", "node_modules", ".pi", ".claude", ".codex", ".Codex", ".opencode", "sync-backups"]);
+ 
+ function isDiscoveryNestedProjectRoot(dir: string): boolean {
+ 	return isDirectory(getProjectConfigDir(dir)) || isDirectory(path.join(dir, ".agents"));
+@@ -1682,6 +1682,8 @@ function isDiscoveryNestedProjectRoot(dir: string): boolean {
+ 
+ function shouldPruneDiscoveryDir(rootDir: string, dir: string, dirName: string): boolean {
+ 	if (DISCOVERY_PRUNED_DIR_NAMES.has(dirName)) return true;
++	// Excluding skill files after descent still fingerprints all their artifacts.
++	if (isLegacyAgentSkillPath(rootDir, dir)) return true;
+ 	if (fs.existsSync(path.join(dir, ".git"))) return true;
+ 	return path.resolve(dir) !== path.resolve(rootDir) && isDiscoveryNestedProjectRoot(dir);
+ }
+diff --git a/test/unit/agent-skill-pruning.test.ts b/test/unit/agent-skill-pruning.test.ts
+new file mode 100644
+index 00000000..3fefd3b6
+--- /dev/null
++++ b/test/unit/agent-skill-pruning.test.ts
+@@ -0,0 +1,30 @@
++import assert from "node:assert/strict";
++import * as fs from "node:fs";
++import * as os from "node:os";
++import * as path from "node:path";
++import { test } from "node:test";
++import { inspectAgentDefinitionDirectory } from "../../src/agents/agents.ts";
++
++test("prunes skill and provider trees before traversing or fingerprinting their artifacts", () => {
++	const temp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skill-prune-"));
++	const root = path.join(temp, ".agents");
++	const readDirs: string[] = [];
++	try {
++		for (const dir of ["team", "skills/demo/local/deep", ".opencode/skills/demo/local", ".claude/skills/demo", ".codex/skills/demo", ".Codex/skills/demo"]) {
++			fs.mkdirSync(path.join(root, dir), { recursive: true });
++			fs.writeFileSync(path.join(root, dir, "reviewer.md"), "---\nname: reviewer\ndescription: Example\n---\nRead only.");
++		}
++		const result = inspectAgentDefinitionDirectory(root, {
++			existsSync: fs.existsSync,
++			realpathSync: fs.realpathSync,
++			statSync: fs.statSync,
++			readdirSync(dir) { readDirs.push(path.relative(root, dir)); return fs.readdirSync(dir, { withFileTypes: true }); },
++		});
++		assert.deepEqual(readDirs.sort(), ["", "team"]);
++		assert.deepEqual(result.files, [path.join(root, "team/reviewer.md")]);
++		// Explicitly selected roots remain supported, even inside provider trees.
++		assert.equal(inspectAgentDefinitionDirectory(path.join(root, ".opencode/skills/demo/local")).files.length, 1);
++	} finally {
++		fs.rmSync(temp, { recursive: true, force: true });
++	}
++});

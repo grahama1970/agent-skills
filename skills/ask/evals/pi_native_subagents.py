@@ -19,7 +19,27 @@ import tempfile
 ASK = Path(__file__).resolve().parents[1]
 REPO = ASK.parents[1]
 ROOT = Path(os.environ.get("ASK_PI_EVAL_ROOT", "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals"))
-EXTENSION = Path(os.environ.get("ASK_PI_SUBAGENTS_EXTENSION", str(Path.home() / ".pi/agent/git/github.com/nicobailon/pi-subagents/index.ts")))
+
+
+def configured_extension() -> Path:
+    if explicit := os.environ.get("ASK_PI_SUBAGENTS_EXTENSION"):
+        return Path(explicit).expanduser().resolve()
+    agent_dir = Path(os.environ.get("PI_CODING_AGENT_DIR", str(Path.home() / ".pi/agent")))
+    settings = read_json(agent_dir / "settings.json")
+    candidates = []
+    for entry in settings.get("packages", []):
+        source = entry if isinstance(entry, str) else entry.get("source", "")
+        if isinstance(entry, dict) and entry.get("extensions") == []:
+            continue
+        if source.rstrip("/") in {"https://github.com/nicobailon/pi-subagents", "git:github.com/nicobailon/pi-subagents"}:
+            candidates.append(agent_dir / "git/github.com/nicobailon/pi-subagents/index.ts")
+        elif source.startswith(("/", ".", "~")):
+            package = (agent_dir / Path(source).expanduser()).resolve()
+            manifest = package / "package.json"
+            if manifest.is_file() and read_json(manifest).get("name") == "pi-subagents":
+                candidates.append(package / "index.ts")
+    assert len(candidates) == 1, "set ASK_PI_SUBAGENTS_EXTENSION: no unique configured Pi-subagents package"
+    return candidates[0]
 
 
 def read_json(path: Path):
@@ -93,8 +113,9 @@ def validate_model(step: dict, item: dict) -> None:
 
 def live(case: str, work: Path) -> dict:
     absent = case == "unavailable"
-    if not absent:
-        assert EXTENSION.is_file(), f"PI_SUBAGENTS_UNAVAILABLE: {EXTENSION}"
+    extension = configured_extension() if not absent else None
+    if extension is not None:
+        assert extension.is_file(), f"PI_SUBAGENTS_UNAVAILABLE: {extension}"
     expected = []
     tasks = []
     provider = os.environ.get("ASK_PI_EVAL_PROVIDER", os.environ.get("PI_PROVIDER", ""))
@@ -103,13 +124,16 @@ def live(case: str, work: Path) -> dict:
     base_model = model if model.startswith(provider + "/") else provider + "/" + model
     if base_model.rsplit(":", 1)[-1] in {"off", "minimal", "low", "medium", "high", "xhigh", "max"}:
         base_model = base_model.rsplit(":", 1)[0]
+    team_model = os.environ.get("ASK_PI_EVAL_TEAM_MODEL", "")
+    if case == "team":
+        assert "/" in team_model and ":" not in team_model and team_model != base_model, "set ASK_PI_EVAL_TEAM_MODEL to a different catalog provider/model ID (without reasoning suffix)"
     for index in range(2 if case == "team" else 1):
         values = [secrets.randbelow(900) + 100 for _ in range(3)]
         nonce = secrets.token_hex(16)
         input_path, output_path = work / f"input-{index}.json", work / f"answer-{index}.json"
         save(input_path, {"nonce": nonce, "values": values})
         thinking = "high" if index else "low"
-        expected.append({"input": str(input_path), "output": str(output_path), "nonce": nonce, "sum": sum(values), "model": base_model, "thinking": thinking})
+        expected.append({"input": str(input_path), "output": str(output_path), "nonce": nonce, "sum": sum(values), "model": team_model if index else base_model, "thinking": thinking})
         tasks.append(f"Read {input_path} with your read tool. Return ONLY JSON with nonce copied from the input and sum equal to the sum of values. Do not edit files or call other tools.")
     if case == "team":
         request = "use Pi-native subagents as two concurrent read-only reviewers. Assign these distinct tasks, one per reviewer: " + json.dumps(tasks)
@@ -136,13 +160,13 @@ If the exact named agent is absent or disabled, return PI_SUBAGENT_NOT_EXECUTABL
                "--no-extensions", "--no-skills", "--no-context-files", "--no-prompt-templates", "--no-themes",
                "--skill", str(ASK / "SKILL.md"), "--tools", "read" if absent else "read,subagent", "--thinking", "low"]
     if not absent:
-        command += ["--extension", str(EXTENSION)]
+        command += ["--extension", str(extension)]
     for flag, env_name, fallback in (("--provider", "ASK_PI_EVAL_PROVIDER", "PI_PROVIDER"), ("--model", "ASK_PI_EVAL_MODEL", "PI_MODEL")):
         value = os.environ.get(env_name, os.environ.get(fallback))
         if value:
             command += [flag, value]
     command.append(prompt)
-    save(work / "command.json", {"argv": command, "cwd": str(REPO), "skill_sha256": sha(ASK / "SKILL.md")})
+    save(work / "command.json", {"argv": command, "cwd": str(REPO), "extension": str(extension) if extension else None, "skill_sha256": sha(ASK / "SKILL.md"), "probe_sha256": sha(Path(__file__))})
     env = {**os.environ, "PI_SUBAGENTS_TEMP_ROOT": str(work / "native-runtime")}
     with (work / "events.jsonl").open("w") as stdout, (work / "stderr.log").open("w") as stderr:
         result = subprocess.run(command, cwd=REPO, env=env, stdout=stdout, stderr=stderr, timeout=480)
@@ -165,8 +189,10 @@ If the exact named agent is absent or disabled, return PI_SUBAGENT_NOT_EXECUTABL
     # Check actual persisted child tool calls, not the parent's claim of delegation.
     child_sessions = list((work / "child-sessions").rglob("*.jsonl"))
     reads = set()
-    native_steps = [step for status_file in (work / "native-runtime").rglob("status.json")
-                    for step in read_json(status_file).get("steps", []) if step.get("sessionFile")]
+    # Workflow steps are summaries without model fields; the child owns attribution.
+    native_steps = [step for status in (read_json(p) for p in (work / "native-runtime").rglob("status.json"))
+                    if status.get("mode") == "single"
+                    for step in status.get("steps", []) if step.get("sessionFile")]
     model_readbacks = []
     intervals = []
     for path in child_sessions:

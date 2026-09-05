@@ -172,37 +172,67 @@ Docker-isolated, and judged by Battle—not by a model's PASS statement.
 
 ## Retained agentic evals
 
-**Validation boundary, 2026-09-05:** an initial native single-child run returned
-fresh file-derived output. The subsequent explicit-model suite is **not ready**:
-missing-tool refusal, missing-agent refusal, and WebGPT-to-Tau compile checks
-passed twice; explicit-model child launch failed twice, and the dependent
-artifact-tampering case could not run. The team pilot timed out before child
-creation. The low/high team case has not passed.
+**Live validation, 2026-09-05:** all six cases passed both trials (12 trials),
+with all three declared critical claims proven. The team ran
+`openai-codex/gpt-6-astra:low` and `openai-codex/gpt-5.5:high` concurrently.
+The checker read each child's session, model/thinking, nonce and computed sum;
+it did not accept the parent's summary. Five altered-evidence cases were
+rejected: missing dispatch, missing discovery, wrong nonce, wrong model and
+wrong reasoning. These counterfactual mutations are deterministic checks over
+real run evidence; provider outputs in the live cases are not mocked.
 
-Observed blockers: native discovery fingerprinted 236,105 paths through the
-`~/.agents` monorepo symlink (Node inspector breakpoint evidence); later child
-launches reported missing `@earendil-works/pi-server`,
-`@earendil-works/pi-server/unix`, and `@earendil-works/pi-client/unix` at the Pi
-package root. Package inspection places pi-server/pi-client in Pi 0.85.1's
-devDependencies, not installed runtime dependencies. Do not infer a working
-installation from these examples or hide the failure with another runner.
+Local report:
+`/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/distinct-model-report.json`.
+The earlier failure reports remain beside it for diagnosis; do not report them
+as the current result.
 
-Local evidence: `/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/partial-report.json`
-and `team-0fcja0uy/debug-paused.json` under that same directory. The separate
-documentation gate passed three trials; it does not prove live execution.
+### Runtime repairs used by that proof
+
+Pi 0.85.1 lists its server/client packages as devDependencies, so the normal
+npm installation lacked modules required by background children. Installing
+the matching published runtime packages restored the public SDK import:
+
+```bash
+npm install -g --ignore-scripts @earendil-works/pi-server@0.85.1 @earendil-works/pi-client@0.85.1
+```
+
+This is a version-specific installation repair, not permission to mix arbitrary
+Pi package versions. Recheck SDK import and the live suite after Pi upgrades.
+
+Native discovery also traversed 236,105 paths through this host's `~/.agents`
+monorepo symlink. The fix prunes skill/provider subtrees **before** descent and
+fingerprinting; explicitly configured roots remain supported. The symlink was
+not changed. The small source patch and fail-before/pass-after regression are
+retained in [pi-subagents-skill-tree-pruning.patch](../patches/pi-subagents-skill-tree-pruning.patch),
+based on upstream `379a0daa`. Apply only after `git apply --check` in the primary
+Pi-subagents checkout; do not apply it blindly after an upstream change.
+
+Pi's user `packages` entry now points to
+`/home/graham/workspace/experiments/pi-subagents`, the repaired primary checkout,
+rather than the disposable Git package clone. No source was copied into another
+runtime. Existing Pi sessions need `/reload`; newly launched hosts read that
+configured path, including this eval. Upstream push permission was unavailable,
+so the patch is retained in agent-skills rather than claimed as merged upstream.
 
 From the primary repository root:
 
 ```bash
-skills/agentic-evals/run.sh run skills/ask/fixtures/agentic_eval_pi_subagents.json \
+# Select a different, available second model from `pi --list-models`.
+ASK_PI_EVAL_TEAM_MODEL=openai-codex/gpt-5.5 \
+  skills/agentic-evals/run.sh run skills/ask/fixtures/agentic_eval_pi_subagents.json \
   --output /mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/report.json \
   --timeout-seconds 600
 ```
 
 Prerequisites: installed `pi`, authenticated model, and Nico's `pi-subagents`
-package. Set `ASK_PI_SUBAGENTS_EXTENSION` if its `index.ts` is not under the
-usual `~/.pi/agent/git/github.com/nicobailon/pi-subagents/` installation.
+package. The probe reads the configured local or canonical Git package from
+Pi's user settings. `ASK_PI_SUBAGENTS_EXTENSION` explicitly overrides that path.
 `ASK_PI_EVAL_PROVIDER` and `ASK_PI_EVAL_MODEL` override the current Pi model.
+`ASK_PI_EVAL_TEAM_MODEL` must name a **different** available `provider/model`
+without a reasoning suffix; the second child uses high. The example above was
+selected from this host's catalog; replace it if unavailable or if it equals
+your primary model. An unset/equal second model fails before dispatch so losing
+per-child model overrides cannot pass unnoticed.
 Generated evidence belongs under `ASK_PI_EVAL_ROOT` (defaults to the storage
 path above), never in committed source. No automatic dependency installation,
 provider substitution, or fixture-response fallback is permitted.
@@ -211,8 +241,9 @@ The suite drives real Pi with the current Ask skill and inspects actual tool
 calls and child output. Each positive run uses new random input values and a
 nonce so an old result cannot satisfy it. Negative cases exercise absent tools,
 unknown agents, and missing/tampered execution evidence. The single child uses
-explicit low reasoning; the team uses low and high and checks each resolved
-model/thinking value in native status, not just the requested arguments. It also checks the
+explicit low reasoning; the team uses different model IDs at low and high and
+checks each resolved model/thinking value in the child-owned native status,
+not the workflow summary or just the requested arguments. It also checks the
 existing WebGPT compile-only route without submitting to a browser.
 
 Proof boundary: this validates Ask's **in-Pi routing instructions and native
