@@ -138,7 +138,9 @@ def live(project_id: str, number: int, output: Path, kill_scheduler: bool, timeo
                     killed = True
             if record and record.phase in {"finished", "retryable"}:
                 break
-            if proc.poll() is not None and record is None:
+            if proc.poll() is not None and not primary.writer_active(root):
+                # A returned failure/uncertain journal is already the result;
+                # waiting out the canary deadline cannot settle that run.
                 break
             time.sleep(1)
         # Do not kill the detached author or fabricate remote settlement on timeout.

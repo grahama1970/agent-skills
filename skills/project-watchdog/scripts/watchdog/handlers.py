@@ -337,6 +337,54 @@ def _jsonl_stats(path: Path) -> dict[str, Any]:
     return stats
 
 
+def _settled_semantic_refusal(plan_path: Path, expected: set[str]) -> dict[str, Any] | None:
+    """A native semantic rejection stops before downstream nodes are launched.
+
+    This admits failure settlement only, never success or cancelled/unknown
+    execution. Missing downstream receipts are expected after this exact stop.
+    """
+    plan = _json_from_file(plan_path) or {}
+    root = plan_path.parent
+    native = _json_from_file(root / "tau-receipts/dag-receipt.json") or {}
+    progress = _json_from_file(root / "tau-receipts/dag-progress.json") or {}
+    execution = _json_from_file(root / "execution-status.json") or {}
+    states = native.get("node_terminal_states") or {}
+    dispatches = native.get("dispatches") or []
+    events = native.get("scheduler_events") or []
+    alerts = native.get("alerts") or []
+    goal = plan.get("goal")
+    if not isinstance(goal, dict) or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(goal.get("goal_hash", ""))):
+        return None
+    if not isinstance(states, dict) or not all(isinstance(v, str) for v in states.values()):
+        return None
+    if not all(isinstance(rows, list) and all(isinstance(row, dict) for row in rows)
+               for rows in (dispatches, events, alerts)):
+        return None
+    if not (
+        plan.get("schema") == "tau.dag_contract.v1"
+        and isinstance(plan.get("dag_id"), str) and bool(plan["dag_id"])
+        and native.get("schema") == "tau.dag_receipt.v1"
+        and progress.get("schema") == "tau.dag_progress.v1"
+        and execution.get("schema") == "ask.tau_dag_execution.v1"
+        and native.get("status") == execution.get("status") == progress.get("status") == "BLOCKED"
+        and native.get("durable") is True
+        and native.get("dag_id") == progress.get("dag_id") == plan.get("dag_id")
+        and native.get("active_goal_hash") == (plan.get("goal") or {}).get("goal_hash")
+        and native.get("contract_sha256") == "sha256:" + hashlib.sha256(plan_path.read_bytes()).hexdigest()
+        and execution.get("receipt") == native
+        and progress.get("active_subagents") == []
+        and expected and set(states) == expected
+        and set(states.values()) <= {"pending", "blocked", "completed"}
+        and dispatches and all(d.get("status") == "COMPLETED" and d.get("stop_reason") == "response_consumed" for d in dispatches)
+        and alerts and all(a.get("code") == "evidence_receipt_verdict_failed" for a in alerts)
+        and events and events[-1].get("event") == "scheduler_finished"
+    ):
+        return None
+    return {"path": str(root / "tau-receipts/dag-receipt.json"),
+            "failure_code": "evidence_receipt_verdict_failed",
+            "dag_error": native.get("dag_error")}
+
+
 def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
     """Read Ask/Tau stream artifacts into one watchdog status snapshot."""
     record: dict[str, Any] = {
@@ -374,7 +422,12 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
                 progress.get("current_node")
                 or progress.get("active_node")
                 or progress.get("node_id")
+                or next((n.get("node_id") for n in progress.get("active_subagents", []) if isinstance(n, dict)), None)
             )
+            if type(progress.get("event_count")) is int:
+                record["event_count"] = max(record["event_count"], progress["event_count"])
+            if isinstance(progress.get("last_event"), dict):
+                record["latest_event"] = progress["last_event"]
         record["progress_files"].append(item)
 
     for receipt_path in sorted(ask_run_dir.glob("**/node-receipt.json")):
@@ -386,8 +439,8 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
         record["node_receipts"].append(item)
 
     candidates: list[dict[str, Any]] = []
-    candidates.extend(record["progress_files"])
     candidates.extend(record["node_receipts"])
+    candidates.extend(record["progress_files"])  # Run status outranks an individual node.
     for item in reversed(candidates):
         status = item.get("status")
         if status is not None:
@@ -420,6 +473,9 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
             record["terminal_status"] = "NEEDS_ATTENTION"
             record["inconsistent_terminal"] = "aggregate success contradicts a required node"
         record["terminal_source"] = "run-level dag-progress.json"
+    elif len(plans) == 1 and (refusal := _settled_semantic_refusal(plans[0], expected)):
+        record.update(terminal=True, terminal_status="BLOCKED", current_status="BLOCKED",
+                      terminal_source=refusal["path"], semantic_refusal=refusal)
     # Node receipts remain progress evidence only; they cannot settle a DAG.
     record["stream_readable"] = bool(
         record["event_count"] or any(p.get("readable") for p in record["progress_files"] + record["node_receipts"])
@@ -1811,8 +1867,15 @@ def finish_primary_operation(record) -> dict[str, Any]:
     native_ticket.assert_mutable(record)
     primary.readonly_preflight(root, record.targets)
     stream = inspect_tau_stream(Path(record.ask_run_dir))
-    if not stream.get("terminal") or stream.get("terminal_status") not in {"PASS", "COMPLETED"}:
-        raise primary.Refusal("native Tau did not settle PASS; no verified closure")
+    if not stream.get("terminal"):
+        raise primary.Refusal("native Tau run is not settled; recover the same retained run")
+    if stream.get("terminal_status") not in {"PASS", "COMPLETED"}:
+        refused = stream.get("semantic_refusal") or {}
+        result = primary.failure(project, issue,
+            f"Tau stopped {stream.get('terminal_status')}: {refused.get('failure_code', 'non_passing_run')}; no verified closure")
+        result["tau_stream_monitor"] = stream
+        result["tau_failure"] = refused
+        return result
     monitor = _json_from_file(receipt_dir / "tau-stream-monitor.json") or {}
     if monitor.get("timed_out") or monitor.get("process_exit_code") not in {None, 0}:
         raise primary.Refusal("retained Ask invocation failed/timed out; no automatic closure")

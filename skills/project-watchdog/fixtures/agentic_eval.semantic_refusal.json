@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "skill": "project-watchdog",
+  "trials": 2,
+  "proof_scope": "Semantic-stop recognition only: fixture safety negatives and replay of captured real canary evidence",
+  "claims": {
+    "proves": "The pre-fix parser fails the reported case; the patched parser recognizes a completed-response semantic failure without admitting active, mismatched, cancelled, or incomplete runs",
+    "does_not_prove": "Successful ticket repair, fresh provider execution, scheduler-loss recovery, or closure"
+  },
+  "cases": [
+    {
+      "name": "semantic-stop-fails-before-fix",
+      "type": "negative",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["uv", "run", "--project", "..", "python", "../evals/semantic_refusal_boundary.py", "--baseline-ref", "0369679774ff216e9440bec5e76dbb21aa34a299"],
+      "expected": {"exit_code": 1, "stderr_contains": ["AssertionError", "'terminal': False", "'current_status': 'PASS'"]}
+    },
+    {
+      "name": "semantic-stop-identity-and-liveness-negatives",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["uv", "run", "--project", "..", "python", "../evals/semantic_refusal_boundary.py"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"checks\": 10", "\"mocked\": true"]}
+    },
+    {
+      "name": "captured-real-canary-semantic-stop",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": ["uv", "run", "--project", "..", "python", "../evals/semantic_refusal_boundary.py", "--run-dir", "/mnt/storage12tb/skills/project-watchdog/outputs/semantic-refusal-captured/ask"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"terminal_status\": \"BLOCKED\"", "\"live\": false"], "stdout_excludes": ["Traceback"]},
+      "proves": "Production reader accepts the preserved native semantic-stop receipts from the real Tau #315 canary",
+      "does_not_prove": "A new live execution or a successful repair"
+    }
+  ]
+}
