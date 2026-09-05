@@ -28,12 +28,26 @@ async function readReplayState(page, initialCanvas) {
     const canvas = document.querySelector('canvas.pixiRaceCanvas')
     const slider = document.querySelector('[data-qid="battle:timeline:scrub"]')
     const playheadSeconds = Number(slider?.getAttribute('aria-valuenow'))
+    const source = document.querySelector('[data-qid="battle:race:source"]')
+    const topPausePanel = document.querySelector('[data-qid="battle:human-interjection:panel"]')
+    const pauseNa = document.querySelector('[data-qid="battle:human-interjection:receipt-replay-na"]')
     return {
       playheadSeconds: Number.isFinite(playheadSeconds) ? playheadSeconds : null,
       playheadLabel: document.querySelector('.playheadLabel')?.textContent?.replace(/\s+/g, ' ').trim() ?? null,
       laneIds: [...new Set([...document.querySelectorAll('[data-lane-id]')].map((element) => element.getAttribute('data-lane-id')).filter(Boolean))].sort(),
       animations: parseRecord(stage?.dataset.battleRunnerAnimations),
       lineagePhases: parseRecord(stage?.dataset.battleLineagePhases),
+      source: {
+        battle_id: source?.getAttribute('data-battle-id') ?? null,
+        run_id: source?.getAttribute('data-run-id') ?? null,
+        source_proof_id: source?.getAttribute('data-source-proof-id') ?? null,
+        source_fixture_id: source?.getAttribute('data-source-fixture-id') ?? null,
+        source_fixture_sha256: source?.getAttribute('data-source-fixture-sha256') ?? null,
+      },
+      pause_after_round: {
+        top_panel_present: Boolean(topPausePanel),
+        receipt_replay_non_applicable_present: Boolean(pauseNa),
+      },
       canvasWidth: canvas?.width ?? null,
       canvasHeight: canvas?.height ?? null,
       sameCanvas: canvas === originalCanvas,
@@ -157,6 +171,8 @@ async function main() {
       scrub_reset_works: (reset.playheadSeconds ?? Number.NaN) <= 0.35,
       scrub_jump_works: (jumped.playheadSeconds ?? 0) >= 99,
       no_runtime_errors: errors.length === 0,
+      source_identity_visible: loaded.source.battle_id === 'battle-004' && Boolean(loaded.source.run_id) && Boolean(loaded.source.source_fixture_sha256),
+      pause_after_round_not_in_primary_replay: loaded.pause_after_round.top_panel_present === false && loaded.pause_after_round.receipt_replay_non_applicable_present === true,
       runtime_errors: errors,
       screenshots: {
         loaded: resolve(screenshotsDir, 'loaded.png'),
@@ -175,7 +191,7 @@ async function main() {
   await copyFile(rawVideoPath, finalVideoPath)
   const videoStat = await stat(finalVideoPath)
   receipt.video_bytes = videoStat.size
-  if (!receipt.play_advanced || !receipt.pause_stopped || !receipt.scrub_reset_works || !receipt.scrub_jump_works || errors.length) {
+  if (!receipt.play_advanced || !receipt.pause_stopped || !receipt.scrub_reset_works || !receipt.scrub_jump_works || !receipt.source_identity_visible || !receipt.pause_after_round_not_in_primary_replay || errors.length) {
     receipt.status = 'FAIL'
   }
   await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8')

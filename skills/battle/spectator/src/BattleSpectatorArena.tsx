@@ -332,12 +332,12 @@ function BattleSpectatorArenaContent({ routeEpoch }: { routeEpoch: number }) {
           />
         </div>
       ) : null}
-      {receiptChrome ? (
+      {receiptChrome && liveReplay ? (
         <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0">
           <BattleHumanInterjectionPanel
             fixture={typedReceiptFixture}
-            liveControl={liveReplay ? liveTransport.pauseControl : null}
-            onPauseAfterRound={liveReplay ? liveTransport.submitPauseAfterRound : undefined}
+            liveControl={liveTransport.pauseControl}
+            onPauseAfterRound={liveTransport.submitPauseAfterRound}
           />
         </div>
       ) : null}
@@ -508,6 +508,7 @@ function BattleSpectatorArenaContent({ routeEpoch }: { routeEpoch: number }) {
                 <>
                   <Button data-qid="battle:control:event:blue-patch" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue patch receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue worker patch receipts are materialized and receipt-backed.")}><Icons.Shield className="h-4 w-4" /> Blue patch proof</Button>
                   <Button data-qid="battle:control:event:blue-block" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue block receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue block proof comes only from Judge BLUE_SUCCESS attempts.")}><Icons.ShieldX className="h-4 w-4" /> Blue block proof</Button>
+                  {receiptReplay ? <Button data-qid="battle:human-interjection:receipt-replay-na" title="pause_after_round is not a live-backend control on receipt replay routes" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("pause_after_round is non-applicable on this receipt replay route; no live backend control receipt is claimed.")}><Icons.Pause className="h-4 w-4" /> Pause n/a</Button> : null}
                   <LogSheet open={jsonlOpen} onOpenChange={setJsonlOpen} events={battleEvents} />
                 </>
               }
