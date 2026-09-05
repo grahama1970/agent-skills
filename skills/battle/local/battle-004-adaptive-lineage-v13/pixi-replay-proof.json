@@ -1,0 +1,30 @@
+{
+  "backend_receipt": {
+    "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-1503-fresh-adaptive-lineage-20260905T172211Z/campaign-receipt.json",
+    "sha256": "sha256:a299ffc9c17dff8ef0ec8df46c3d698352204087c9b5a0977daeac8ae31fa7ef"
+  },
+  "normalized_fixture": {
+    "fixture_id": "battle-004-adaptive-lineage-v13",
+    "sha256": "695bac25f925d1eeed0e1a22e4a0889fe5137404539a63594f8ad8069ba5cac6",
+    "source_proof_id": "battle-1503-20260905T172211Z",
+    "source_url": "http://127.0.0.1:36145/battle-fixtures/battle-004-adaptive-lineage-v13/battle.normalized_ux_fixture.json"
+  },
+  "readback_matches": {
+    "route_loaded_same_fixture_sha256": true,
+    "route_loaded_same_run_id": true
+  },
+  "route_url": "http://127.0.0.1:36145/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13",
+  "schema": "battle.pixi_replay_receipt_binding.v1",
+  "screenshots": [
+    "/tmp/battle-agentic-evals/receipt-pixi-replay/screenshots/before-spawn.png",
+    "/tmp/battle-agentic-evals/receipt-pixi-replay/screenshots/after-spawn.png"
+  ],
+  "status": "PASS",
+  "visible_route_readback": {
+    "battle_id": "battle-004",
+    "run_id": "battle-1503-20260905T172211Z",
+    "source_fixture_id": "battle-004-adaptive-lineage-v13",
+    "source_fixture_sha256": "695bac25f925d1eeed0e1a22e4a0889fe5137404539a63594f8ad8069ba5cac6",
+    "source_proof_id": "battle-1503-20260905T172211Z"
+  }
+}

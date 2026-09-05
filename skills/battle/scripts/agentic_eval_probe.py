@@ -109,6 +109,26 @@ def _wait_for_http(host: str, *, timeout_s: float = 10.0) -> None:
     raise RuntimeError(f"HTTP host did not become ready: {host}: {latest!r}")
 
 
+def _parse_stdout_json_after_marker(stdout: str, marker: str) -> dict[str, Any]:
+    tail = stdout.split(marker, 1)[-1]
+    start = tail.find("{")
+    end = tail.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise AssertionError(f"missing JSON payload after {marker!r}")
+    return json.loads(tail[start : end + 1])
+
+
+def _receipt_pixi_backend_receipt_path() -> Path | None:
+    raw = os.environ.get("BATTLE_PIXI_BACKEND_RECEIPT_PATH")
+    if raw:
+        return Path(raw)
+    candidates = sorted(
+        (BATTLE_DIR / "local").glob("battle-*-fresh-adaptive-lineage-*/campaign-receipt.json"),
+        key=lambda path: path.stat().st_mtime,
+    )
+    return candidates[-1] if candidates else None
+
+
 def _fresh_authorization(
     path: Path,
     *,
@@ -732,6 +752,7 @@ def probe_receipt_pixi_replay(summary_path: Path) -> int:
         raise AssertionError("receipt Pixi replay proof failed")
     if "PASS battle-receipt-pixi-sanity" not in proof.stdout:
         raise AssertionError("receipt Pixi replay proof did not emit PASS marker")
+    proof_payload = _parse_stdout_json_after_marker(proof.stdout, "PASS battle-receipt-pixi-sanity")
 
     required_screenshots = [
         screenshot_dir / "before-spawn.png",
@@ -740,6 +761,38 @@ def probe_receipt_pixi_replay(summary_path: Path) -> int:
     missing = [str(path) for path in required_screenshots if not path.is_file() or path.stat().st_size < 1000]
     if missing:
         raise AssertionError(f"receipt Pixi replay screenshots missing or too small: {missing}")
+
+    backend_receipt_path = _receipt_pixi_backend_receipt_path()
+    backend_receipt_sha256 = _sha256_file(backend_receipt_path) if backend_receipt_path and backend_receipt_path.is_file() else None
+    fixture_hash = proof_payload.get("fixture", {}).get("fetched_fixture_sha256")
+    loaded_hash = proof_payload.get("loadedSource", {}).get("source_fixture_sha256")
+    route_run_id = proof_payload.get("loadedSource", {}).get("run_id")
+    fixture_run_id = proof_payload.get("fixture", {}).get("run_id")
+    replay_proof = {
+        "schema": "battle.pixi_replay_receipt_binding.v1",
+        "status": "PASS" if backend_receipt_sha256 and fixture_hash and loaded_hash == fixture_hash and route_run_id == fixture_run_id else "FAIL",
+        "route_url": proof_payload.get("route", {}).get("url"),
+        "backend_receipt": {
+            "path": str(backend_receipt_path) if backend_receipt_path else None,
+            "sha256": backend_receipt_sha256,
+        },
+        "normalized_fixture": {
+            "fixture_id": proof_payload.get("fixture", {}).get("fixture_id"),
+            "source_proof_id": proof_payload.get("fixture", {}).get("source_proof_id"),
+            "source_url": proof_payload.get("fixture", {}).get("source_fixture_url"),
+            "sha256": fixture_hash,
+        },
+        "visible_route_readback": proof_payload.get("loadedSource"),
+        "readback_matches": {
+            "route_loaded_same_fixture_sha256": loaded_hash == fixture_hash,
+            "route_loaded_same_run_id": route_run_id == fixture_run_id,
+        },
+        "screenshots": [str(path) for path in required_screenshots],
+    }
+    replay_proof_path = out_root / "pixi-replay-proof.json"
+    _write_json(replay_proof_path, replay_proof)
+    if replay_proof["status"] != "PASS":
+        raise AssertionError(f"receipt Pixi replay binding failed: {replay_proof}")
 
     return _emit(
         summary_path,
@@ -751,6 +804,10 @@ def probe_receipt_pixi_replay(summary_path: Path) -> int:
                     "name": "receipt_pixi_replay_browser_proof",
                     "status": "PASS",
                     "host": host,
+                    "route_url": replay_proof["route_url"],
+                    "backend_receipt": replay_proof["backend_receipt"],
+                    "normalized_fixture": replay_proof["normalized_fixture"],
+                    "readback_matches": replay_proof["readback_matches"],
                     "screenshots": [str(path) for path in required_screenshots],
                 }
             ],
@@ -759,10 +816,12 @@ def probe_receipt_pixi_replay(summary_path: Path) -> int:
                 "stderr": str(out_root / "prove-receipt-pixi.stderr.txt"),
                 "before_spawn_screenshot": str(required_screenshots[0]),
                 "after_spawn_screenshot": str(required_screenshots[1]),
+                "pixi_replay_proof": str(replay_proof_path),
             },
             claims_proves=[
                 "receipt-backed Pixi replay derives parent/child visibility from the served fixture",
                 "browser-rendered Pixi replay shows child lanes after the fixture spawn point and supports playhead scrub",
+                "the browser route loaded the same normalized fixture hash bound to the durable backend receipt",
             ],
             claims_does_not_prove=[
                 "production staging route availability",

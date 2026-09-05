@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createHash } from 'node:crypto'
 import { mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { chromium } from 'playwright'
@@ -20,11 +21,14 @@ function parentLaneId(lane) {
 }
 
 async function loadFixtureContract() {
-  const response = await fetch(`${host}/battle-fixtures/${fixtureId}/battle.normalized_ux_fixture.json`)
+  const fixtureUrl = `${host}/battle-fixtures/${fixtureId}/battle.normalized_ux_fixture.json`
+  const response = await fetch(fixtureUrl)
   if (!response.ok) {
     throw new Error(`fixture ${fixtureId} unavailable over HTTP: ${response.status}`)
   }
-  const fixture = await response.json()
+  const fixtureText = await response.text()
+  const fixtureSha256 = createHash('sha256').update(fixtureText).digest('hex')
+  const fixture = JSON.parse(fixtureText)
   const lanes = Array.isArray(fixture.lanes) ? fixture.lanes : []
   const parents = lanes.map(laneId).filter((id, index) => id && !parentLaneId(lanes[index]))
   const children = lanes.map(laneId).filter((id, index) => id && parentLaneId(lanes[index]))
@@ -48,6 +52,11 @@ async function loadFixtureContract() {
     parents,
     children,
     spawnAt,
+    fixture_id: fixture.fixture_id ?? fixtureId,
+    source_proof_id: fixture.provenance?.source_proof_id ?? fixture.source_proof_id ?? null,
+    source_fixture_url: fixtureUrl,
+    source_fixture_sha256: fixture.source_fixture_sha256 ?? fixtureSha256,
+    fetched_fixture_sha256: fixtureSha256,
   }
 }
 
@@ -73,6 +82,13 @@ async function main() {
   await page.waitForTimeout(2000)
 
   const beforeSpawn = await page.evaluate(() => ({
+    source: {
+      battle_id: document.querySelector('[data-qid="battle:race:source"]')?.getAttribute('data-battle-id') ?? null,
+      run_id: document.querySelector('[data-qid="battle:race:source"]')?.getAttribute('data-run-id') ?? null,
+      source_proof_id: document.querySelector('[data-qid="battle:race:source"]')?.getAttribute('data-source-proof-id') ?? null,
+      source_fixture_id: document.querySelector('[data-qid="battle:race:source"]')?.getAttribute('data-source-fixture-id') ?? null,
+      source_fixture_sha256: document.querySelector('[data-qid="battle:race:source"]')?.getAttribute('data-source-fixture-sha256') ?? null,
+    },
     lanes: [...document.querySelectorAll('[data-qid^="battle:lane:"]')].map((el) => el.getAttribute('data-qid')),
   }))
 
@@ -120,7 +136,7 @@ async function main() {
   }
 
   console.log('PASS battle-receipt-pixi-sanity')
-  console.log(JSON.stringify({ fixture: contract, beforeSpawn, pre, post, scrub: { labelBefore, labelAfter }, screenshots: outDir }, null, 2))
+  console.log(JSON.stringify({ route: { url: baseUrl }, fixture: contract, loadedSource: beforeSpawn.source, beforeSpawn, pre, post, scrub: { labelBefore, labelAfter }, screenshots: outDir }, null, 2))
 }
 
 main().catch((error) => { console.error(error); process.exit(1) })
