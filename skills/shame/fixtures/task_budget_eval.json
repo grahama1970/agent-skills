@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "Operator-armed Pi task budgets, named checks, terminal acceptance and output-only repair",
+  "claims": {
+    "proves": "Tool path restrictions and raw/custom-tool refusal in an armed budget, frozen check definitions, cache reuse for unchanged passing inputs, two repair attempts, review/elapsed deadlines, terminal acceptance, explicit question mode and one tool-free formatting repair. Live Pi produces an independently checked artifact with exactly one approved check and zero post-acceptance tool calls.",
+    "does_not_prove": "OS-level confinement of explicitly approved commands, arbitrary external-state freshness, hostile same-user tamper resistance, automatic classification of natural-language questions, or activation in already-open sessions. Lifecycle adversarial probes use synthetic Pi events; the artifact run uses a real model and real tools."
+  },
+  "cases": [
+    {
+      "name": "task-budget-boundaries",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["node", "--experimental-strip-types", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/probe-task-budget.mjs"],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "stdout_contains": ["TASK_BUDGET_PROBE_PASS", "\"one_output_only_repair\":true", "\"accepted_terminal\":true"]}
+    },
+    {
+      "name": "task-budget-live-artifact",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": ["python3", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-task-budget-live.py"],
+      "timeout_seconds": 210,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"approved_check_runs\": 1", "\"accepted\": true", "\"output_readback_correct\": true", "\"post_acceptance_tool_calls\": 0"], "stdout_excludes": ["Traceback"]}
+    }
+  ]
+}

@@ -64,6 +64,27 @@ Use `/shame review` for an interactive label picker when the TUI/RPC UI is avail
 
 The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, pending packet path, machine decision, checker version, excerpt, and copyable label commands before deciding. Use `/shame review` to choose the label without remembering the exact command syntax.
 
+## Bounded task execution
+
+The existing extension supports an operator-armed `pi.task_budget.v1` contract.
+Use `/shame-task start /absolute/contract.json` or launch Pi with `SHAME_TASK_BUDGET`
+set; see `extensions/pi/lazy-report-shame-shame-shame/README.md` in the primary
+agent-skills checkout for the complete example. No task budget is silently inferred
+from prose. Unarmed sessions retain existing behavior.
+
+An armed task fixes one deliverable, allowed write/edit paths, named argv checks,
+file inputs/check definitions, and explicit elapsed/check/review deadlines. Raw
+Bash and unapproved custom tools are blocked; `task_check` runs only named checks.
+Unchanged passing inputs reuse evidence, failures permit two repairs, reviews do
+not automatically resubmit, and all required checks/delivery readbacks passing
+locks the task in `accepted`. One report-format correction is tool-free and cannot
+reopen an accepted task. Explicit question mode permits read/search only and skips
+status/quality gates. Approved commands are trusted capabilities, not OS-sandboxed
+code; these controls do not require sudo or promise same-user tamper resistance.
+
+Retained proof: `skills/shame/fixtures/task_budget_eval.json` (synthetic boundary
+cases plus a live model/real-tool artifact run).
+
 ## pi.agent_status.v1 — the status contract
 
 One JSON object per report-like turn, validated by `scripts/agent_status_schema.py` (pydantic, `extra="forbid"`). Nine states, each with a typed payload that makes the wrong thing unrepresentable:

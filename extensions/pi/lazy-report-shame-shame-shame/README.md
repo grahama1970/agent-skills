@@ -38,6 +38,57 @@ Repeated status text is not a duplicate event: legitimate polling continuations 
 
 Retained proof: `skills/shame/fixtures/stop_boundary_eval.json` covers lifecycle replay plus a live Pi model with real file reads, writes, and independent result readback. This is not proof that every project is semantically complete.
 
+## Operator-armed task budgets
+
+Arm a bounded task with `/shame-task start /absolute/contract.json`, or set
+`SHAME_TASK_BUDGET=/absolute/contract.json` when launching Pi. `/shame-task status`
+shows the phase and receipt. This is opt-in; an unarmed session retains existing behavior.
+
+```json
+{
+  "schema": "pi.task_budget.v1",
+  "mode": "task",
+  "deliverable": "Update the requested widget",
+  "allowed_paths": ["src/widget.ts"],
+  "elapsed_ms": 1800000,
+  "checks": [{
+    "id": "widget-tests",
+    "argv": ["npm", "test"],
+    "inputs": ["src/widget.ts", "package.json"],
+    "definition_files": ["package.json", "package-lock.json"],
+    "timeout_ms": 60000,
+    "kind": "check"
+  }]
+}
+```
+
+- Paths are project-relative; a trailing `/` explicitly permits a subtree. Built-in
+  write/edit paths are canonicalized, including symlinks. Contract/check-definition
+  files are frozen. Declare every relevant file dependency in `inputs`.
+- Raw Bash and unapproved custom tools are blocked. The model uses `task_check`
+  with an approved `id`; it cannot supply replacement commands or arguments.
+  Approved argv commands are **trusted capabilities**, not OS-confined programs.
+  This is task-policy enforcement, not a hostile-code sandbox; no sudo is involved.
+- Checks wait for batched mutations. Once checking begins, further edits require
+  a failed check. Passing checks with unchanged inputs return cached evidence;
+  changed inputs or failures permit another run. Initial failure permits two repairs.
+- `kind: "review"` has an explicit deadline and no automatic resubmission.
+  `kind: "delivery"` is a required delivery readback. All listed checks are required.
+- The elapsed deadline aborts the agent. Command deadlines/cancellation kill the
+  approved POSIX process group; command output is bounded. Receipt reasons distinguish
+  deadlines, cancellation, and check failures.
+- All checks passing for their declared inputs makes `accepted` terminal: no more
+  tools or edits. One missing/invalid report correction is output-only, does not
+  reopen acceptance, and cannot rerun tests.
+- For explanatory questions, arm `mode: "question"` with empty `allowed_paths` and
+  `checks`. Only read/search tools are available and no status/quality gate is required.
+  Later human questions after acceptance are likewise read-only. New execution
+  requires a new operator-armed contract; there is no prose intent classifier.
+
+Receipts live under `SHAME_TASK_RECEIPT_DIR` (default: `/tmp/shame-task-budgets`).
+Retained proof: `skills/shame/fixtures/task_budget_eval.json` — synthetic adversarial
+lifecycle cases plus a live model producing an independently checked artifact.
+
 ## Continuation guard file
 
 Write the active ledger to `/mnt/storage12tb/skills/shame/continuation-guard/current.json`, or override that path with `LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE`, when a session has an active goal, ticket, or watchdog lease. The extension reads the file only at a terminal assistant stop; no raw GitHub, ArangoDB, or Qdrant calls happen inside the hook.

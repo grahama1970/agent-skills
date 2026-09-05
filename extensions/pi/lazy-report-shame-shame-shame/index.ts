@@ -7,6 +7,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeF
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beginGuardTurn, claimGuardFollowUp, isAssistantStop, resetGuardRepairBudget } from "../_shared/guard-pipeline-shared.ts";
+import { installTaskBudget } from "./task-budget.ts";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 // JSON-first checker (2026-09-01): regex/prose classification is banned.
@@ -641,9 +642,10 @@ ${JSON.stringify({
 \`\`\``;
 }
 
-function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string): string {
+function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string, taskBudget?: object): string {
   const packet = {
     schema: "lazy_report_shame.retry_request.v1",
+    ...(taskBudget ? { task_budget: taskBudget } : {}),
     candidate_hash: candidate.response_sha256,
     checker: check.checker_version,
     reason_codes: check.reason_codes,
@@ -822,6 +824,7 @@ function makeCandidate(ctx: any, userText: string, assistantEntryId: string, ass
 }
 
 export default function lazyReportShameShameShame(pi: any) {
+  let budget: ReturnType<typeof installTaskBudget>;
   let sessionGuardActive = false;
   let turnGuardActive = false;
   let shameSelfCorrectTurn = false;
@@ -929,9 +932,13 @@ export default function lazyReportShameShameShame(pi: any) {
     // Preserve intermediate text AND tool calls, guard state, and retry budget.
     // Only a terminal model response can be a completion-report candidate.
     if (!isAssistantStop(event.message) || ctx?.signal?.aborted || ctx?.hasPendingMessages?.()) return;
-    if (sessionMode === "off") return;
+    if (budget.current?.contract.mode === "question" || budget.current?.answerOnlyTurn) {
+      if (budget.current.contract.mode === "question") budget.current.questionAnswered();
+      return;
+    }
+    if (sessionMode === "off" && !budget.current) return;
     const text = contentToText(event.message.content);
-    const forceStatus = sessionMode === "strict" || mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
+    const forceStatus = Boolean(budget.current) || sessionMode === "strict" || mutatingTurn || sessionGuardActive || turnGuardActive || Boolean(activeContinuationState());
     const strictStatus = shameSelfCorrectTurn;
     let check = checkReport(text, forceStatus, mutatingTurn, strictStatus, currentUserText);
     const statusState = typeof (check as any)?.features?.state === "string" ? String((check as any).features.state) : undefined;
@@ -942,6 +949,16 @@ export default function lazyReportShameShameShame(pi: any) {
       ? evaluateRepeatedFailureGuard(status, failureCounts, repeatedFailure)
       : null;
     if (repeatedFailureCheck) check = repeatedFailureCheck;
+    if (status && check.decision !== "reject" && budget.current) {
+      const reason = budget.current.validReport(statusState!);
+      if (reason) check = {
+        schema: "lazy_report_shame.report_check.v2", checker_version: "task-budget-v1", decision: "reject",
+        reason_codes: [reason], footer_failures: [], diagnostics: "",
+        features: { validation_result: { schema: "pi.agent_status.validation_result.v1", valid: false,
+          errors: [{ type: reason, loc: ["state"], msg: reason, ctx: { receipt: budget.current.receipt } }],
+          steering: [{ code: reason, action: "report_task_budget_state", phase: budget.current.phase, receipt: budget.current.receipt }] } },
+      };
+    }
     let keepGuardForRetry = false;
 
     try {
@@ -992,15 +1009,17 @@ export default function lazyReportShameShameShame(pi: any) {
       }
 
       const turnId = lastCandidate.turn_id;
+      const formatAllowed = budget.current ? budget.current.requestFormatRepair() : true;
       const pipelineClaim = claimGuardFollowUp({
         guard: "shame",
         messageId: String(event.message.id || event.id || turnId),
         assistantText: text,
         userText: currentUserText,
         reason: [...check.reason_codes, ...check.footer_failures].join(","),
-        maxRetries: 3,
+        maxRetries: budget.current ? 1 : 3,
       });
-      const alreadyRetried = retriedTurnIds.has(turnId) || !pipelineClaim.ok;
+      const alreadyRetried = !formatAllowed || retriedTurnIds.has(turnId) || !pipelineClaim.ok;
+      if (alreadyRetried && budget.current) budget.current.save("task_format_repair_exhausted");
       if (!alreadyRetried) retriedTurnIds.add(turnId);
 
       let reviewPacketPath = PENDING_REVIEW_PACKET;
@@ -1015,7 +1034,9 @@ export default function lazyReportShameShameShame(pi: any) {
       if (!alreadyRetried) {
         retryInProgress = true;
         keepGuardForRetry = strictStatus;
-        pendingFollowUp = retryPrompt(lastCandidate, check, reviewPacketPath);
+        pendingFollowUp = retryPrompt(lastCandidate, check, reviewPacketPath, budget.current ? {
+          phase: budget.current.phase, receipt: budget.current.receipt, allowed_tools: [], format_repair_limit: 1,
+        } : undefined);
       }
 
       return {
@@ -1178,4 +1199,5 @@ export default function lazyReportShameShameShame(pi: any) {
       }
     },
   });
+  budget = installTaskBudget(pi);
 }
