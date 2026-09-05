@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +50,7 @@ def verify(run_dir: Path) -> dict[str, Any]:
     slot_records: list[dict[str, Any]] = []
     replay_records: list[dict[str, Any]] = []
     attempt_records: list[dict[str, Any]] = []
+    provider_records: list[dict[str, Any]] = []
 
     def require(condition: bool, code: str) -> None:
         if not condition:
@@ -203,6 +203,17 @@ def verify(run_dir: Path) -> dict[str, Any]:
             attempt_records=attempt_records,
         )
 
+    provider_paths = sorted(root.glob("generation-[12]/tau-live/*/scillm-call-receipt.json"))
+    require(len(provider_paths) == 4, "provider_receipt_count_invalid")
+    for path in provider_paths:
+        checked_files.append(str(path))
+        _verify_provider_receipt(
+            path=path,
+            root=root,
+            errors=errors,
+            provider_records=provider_records,
+        )
+
     generations = (
         campaign.get("generations")
         if isinstance(campaign.get("generations"), list)
@@ -222,6 +233,7 @@ def verify(run_dir: Path) -> dict[str, Any]:
         slot_records=slot_records,
         replay_records=replay_records,
         attempt_records=attempt_records,
+        provider_records=provider_records,
     )
 
 
@@ -309,6 +321,48 @@ def _verify_attempt(
     )
 
 
+def _verify_provider_receipt(
+    *,
+    path: Path,
+    root: Path,
+    errors: list[str],
+    provider_records: list[dict[str, Any]],
+) -> None:
+    if path.is_symlink() or not path.is_file() or not _inside(path, root):
+        errors.append(f"{path}:provider_receipt_path_invalid")
+        return
+    receipt = _load(path)
+    team = path.parent.name
+    generation = path.parents[1].name
+
+    def require(condition: bool, code: str) -> None:
+        if not condition:
+            errors.append(f"{path}:{code}")
+
+    require(receipt.get("schema") == "tau.scillm_call_receipt.v1", "provider_schema_invalid")
+    require(receipt.get("status") == "PASS", "provider_status_not_pass")
+    require(receipt.get("live") is True, "provider_live_not_true")
+    require(receipt.get("mocked") is False, "provider_mocked_not_false")
+    require(receipt.get("http_status") == 200, "provider_http_status_not_200")
+    require(receipt.get("api_key_present") is True, "provider_api_key_missing")
+    require(receipt.get("parse_status") == "PASS", "provider_parse_status_not_pass")
+    require(isinstance(receipt.get("parsed_json"), dict), "provider_parsed_json_invalid")
+    provider_records.append(
+        {
+            "path": str(path),
+            "generation": generation,
+            "team": team,
+            "model": receipt.get("model"),
+            "surface": receipt.get("surface"),
+            "http_status": receipt.get("http_status"),
+            "api_key_present": receipt.get("api_key_present"),
+            "live": receipt.get("live"),
+            "mocked": receipt.get("mocked"),
+            "sha256": _sha256(path),
+        }
+    )
+
+
 def _result(
     *,
     run_dir: Path,
@@ -317,11 +371,13 @@ def _result(
     slot_records: list[dict[str, Any]] | None = None,
     replay_records: list[dict[str, Any]] | None = None,
     attempt_records: list[dict[str, Any]] | None = None,
+    provider_records: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     unique_checked = sorted(set(checked_files))
     slot_records = slot_records or []
     replay_records = replay_records or []
     attempt_records = attempt_records or []
+    provider_records = provider_records or []
     return {
         "schema": "battle.adaptive_lineage_backend_verification.v1",
         "status": "PASS" if not errors else "FAIL",
@@ -346,6 +402,16 @@ def _result(
         "slot_records": slot_records,
         "replay_records": replay_records,
         "attempt_records": attempt_records,
+        "provider_receipts_passed": sum(
+            1
+            for item in provider_records
+            if item.get("live") is True
+            and item.get("mocked") is False
+            and item.get("http_status") == 200
+            and item.get("api_key_present") is True
+        ),
+        "provider_receipts_required": 4,
+        "provider_records": provider_records,
         "mocked": False,
         "live": True,
     }

@@ -1,0 +1,184 @@
+{
+  "attempt_records": [
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "binding_role_count": 3,
+      "container_hash_receipt_count": 2,
+      "container_input_hash_pass": true,
+      "judge_input_byte_binding_pass": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+      "status": "PASS"
+    }
+  ],
+  "battle_report_path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/battle-report.md",
+  "battle_report_sha256": "a0025c313747a74124b3d67510e40aefd0475cdb24c17ff50ec98c6e8613e7d5",
+  "checked_file_count": 28,
+  "checked_files": [
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/artifact-integrity-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/campaign-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge-exact-replay/exact-replay-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched/app.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge-exact-replay/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge/replays/red-0__blue-0/patched/app.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/reviewed/immutable-slots/generation-1-red.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/tau-live/blue/scillm-call-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/tau-live/red/scillm-call-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge-exact-replay/exact-replay-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/patched/app.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge-exact-replay/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge/replays/red-0__blue-0/attempt-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge/replays/red-0__blue-0/original/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge/replays/red-0__blue-0/patched/app.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge/replays/red-0__blue-0/patched/red_exploit_submission.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/reviewed/immutable-slots/generation-2-red.py",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/tau-live/blue/scillm-call-receipt.json",
+    "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/tau-live/red/scillm-call-receipt.json"
+  ],
+  "errors": [],
+  "exact_replay_attempt_count": 2,
+  "exact_replays_matched": 2,
+  "exact_replays_required": 2,
+  "judge_attempt_count": 4,
+  "live": true,
+  "mocked": false,
+  "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/backend-verification.json",
+  "provider_receipts_passed": 4,
+  "provider_receipts_required": 4,
+  "provider_records": [
+    {
+      "api_key_present": true,
+      "generation": "tau-live",
+      "http_status": 200,
+      "live": true,
+      "mocked": false,
+      "model": "gpt-5.5",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/tau-live/blue/scillm-call-receipt.json",
+      "sha256": "dde460dd835f8e70aaac9826231e275174ec6f47562041e50fbce34de8aa121b",
+      "surface": "scillm.chat_completions",
+      "team": "blue"
+    },
+    {
+      "api_key_present": true,
+      "generation": "tau-live",
+      "http_status": 200,
+      "live": true,
+      "mocked": false,
+      "model": "gpt-5.5",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/tau-live/red/scillm-call-receipt.json",
+      "sha256": "f16ab0c124ad963686139267e3696154ab93686c8274963dd2e2d2ce8c3358b1",
+      "surface": "scillm.chat_completions",
+      "team": "red"
+    },
+    {
+      "api_key_present": true,
+      "generation": "tau-live",
+      "http_status": 200,
+      "live": true,
+      "mocked": false,
+      "model": "gpt-5.5",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/tau-live/blue/scillm-call-receipt.json",
+      "sha256": "840bfc5484972f5b4263c7974ccf4ab7c69a5debf482da01baac320ac2414c57",
+      "surface": "scillm.chat_completions",
+      "team": "blue"
+    },
+    {
+      "api_key_present": true,
+      "generation": "tau-live",
+      "http_status": 200,
+      "live": true,
+      "mocked": false,
+      "model": "gpt-5.5",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/tau-live/red/scillm-call-receipt.json",
+      "sha256": "ad9d80097d194745dd303d1a026c06fa1c53680f38b9e83707bce89841891928",
+      "surface": "scillm.chat_completions",
+      "team": "red"
+    }
+  ],
+  "replay_records": [
+    {
+      "actual_sha256": "8b274283459a3d7d230ae9e7d83d761a616dc31a8e83e423c7604019b5fac668",
+      "docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+      "expected_sha256": "8b274283459a3d7d230ae9e7d83d761a616dc31a8e83e423c7604019b5fac668",
+      "generation": 1,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/judge-exact-replay/exact-replay-receipt.json",
+      "replay_docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917"
+    },
+    {
+      "actual_sha256": "8bbfcab6847585e80b20a43dd94069297bc077ad4131704a67ffba99053287f8",
+      "docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917",
+      "expected_sha256": "8bbfcab6847585e80b20a43dd94069297bc077ad4131704a67ffba99053287f8",
+      "generation": 2,
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/judge-exact-replay/exact-replay-receipt.json",
+      "replay_docker_image_id": "sha256:9cbfea842643d1cf45df5d841ac78e8cc1a8bfbcc36934a9d31fdc964fcc5917"
+    }
+  ],
+  "run_dir": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z",
+  "schema": "battle.adaptive_lineage_backend_verification.v1",
+  "slot_hashes_matched": 4,
+  "slot_hashes_required": 4,
+  "slot_records": [
+    {
+      "actual_sha256": "dd122c8f300a1b5f1831040af983b093716ea011f7f402716538a61894ce1c16",
+      "expected_sha256": "dd122c8f300a1b5f1831040af983b093716ea011f7f402716538a61894ce1c16",
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/reviewed/immutable-slots/generation-1-red.py",
+      "slot_key": "generation-1:red"
+    },
+    {
+      "actual_sha256": "310e4c058344f93a1b5aad76cab831093473f9d75f026bbac992ba90455c8dd7",
+      "expected_sha256": "310e4c058344f93a1b5aad76cab831093473f9d75f026bbac992ba90455c8dd7",
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-1/reviewed/immutable-slots/generation-1-blue.py",
+      "slot_key": "generation-1:blue"
+    },
+    {
+      "actual_sha256": "68673fad70f1587a787242d7a12aba0f4427d3d159aa58eb9213490f067f3d3e",
+      "expected_sha256": "68673fad70f1587a787242d7a12aba0f4427d3d159aa58eb9213490f067f3d3e",
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/reviewed/immutable-slots/generation-2-red.py",
+      "slot_key": "generation-2:red"
+    },
+    {
+      "actual_sha256": "64aa164ace85bac67594eb2c9b5259299a45a03bca42a3c4ac580c9b894155b9",
+      "expected_sha256": "64aa164ace85bac67594eb2c9b5259299a45a03bca42a3c4ac580c9b894155b9",
+      "matched": true,
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/generation-2/reviewed/immutable-slots/generation-2-blue.py",
+      "slot_key": "generation-2:blue"
+    }
+  ],
+  "status": "PASS"
+}

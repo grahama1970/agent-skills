@@ -48,10 +48,33 @@ def run_adaptive_red_blue_lineage_canary(
     model: str = "gpt-5.5",
     scillm_base_url: str = "http://localhost:4001",
     timeout_s: float = 300.0,
+    authorization_manifest: Path | None = None,
 ) -> dict[str, Any]:
-    """Run two simultaneous Red/Blue generations against one Arena target."""
+    """Run two authorized simultaneous Red/Blue generations against one Arena target."""
+    from common.security_authorization import validate_target_authorization
 
     out_dir = out_dir.resolve()
+    # Bind permission to the actual shipped Arena/scenario implementation, not
+    # an arbitrary identity supplied by the caller or a regenerated receipt.
+    definition = b"".join(
+        Path(__file__).with_name(name).read_bytes()
+        for name in ("arena_subagent.py", "arena_battle_proof.py", "arena_live_battle_proof.py")
+    )
+    identity = f"{battle_id}@sha256:{hashlib.sha256(definition).hexdigest()}"
+    authorization = validate_target_authorization(
+        authorization_manifest,
+        expected_target=identity,
+        requested_action="battle",
+        requested_runtime_mode="docker",
+        requested_probe_class="path_traversal",
+        receipt_out=out_dir / "authorization-validation.json",
+    )
+    if authorization["status"] != "PASS":
+        blocked = {"schema": SCHEMA, "status": "BLOCKED", "reason": "target_authorization_failed",
+                   "battle_id": battle_id, "run_id": run_id, "authorization": authorization,
+                   "execution_started": False, "fixture_fallback_used": False}
+        _write_json(out_dir / "campaign-receipt.json", blocked)
+        return blocked
     out_dir.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
     journal = CampaignEventJournal(root=out_dir, battle_id=battle_id, run_id=run_id)
@@ -519,6 +542,7 @@ def run_adaptive_red_blue_lineage_canary(
         "mocked": False,
         "live": True,
         "live_mode": "tau_scillm_docker_judge_two_generation_red_blue",
+        "authorization": authorization,
         "agentic": True,
         "fixture_fallback_used": False,
         "source_commit": _git_rev_parse("HEAD"),

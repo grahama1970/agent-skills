@@ -7,10 +7,10 @@
   "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
   "claims": {
     "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
-    "does_not_prove": "fresh paid-provider adaptive-lineage qualification, arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
+    "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
   },
   "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
-    "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout against a real public endpoint, a real 1000-round overnight campaign, QEMU boot execution, fresh paid-provider Tau execution, and full visual design acceptance",
+  "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout against a real public endpoint, a real 1000-round overnight campaign, QEMU boot execution, arbitrary target exploitability, and full visual design acceptance",
   "capability_claims": [
     {
       "id": "battle.authorization.fail_closed",
@@ -62,7 +62,7 @@
     },
     {
       "id": "battle.adaptive_lineage.live_exact_chain",
-      "description": "battle-004 fresh or recovered exact-byte Red/Blue adaptive-lineage campaign binds campaign, artifact-integrity, and backend-verification receipts",
+      "description": "battle-004 fresh exact-byte Red/Blue adaptive-lineage campaign binds campaign, artifact-integrity, backend-verification, provider-authority, and Docker Judge receipts",
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true

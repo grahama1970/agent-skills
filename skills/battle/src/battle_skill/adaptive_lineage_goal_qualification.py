@@ -128,6 +128,13 @@ def qualify_recovered_adaptive_lineage_run(
         judge_attempt_count=verification.get("judge_attempt_count"),
         exact_replay_attempt_count=verification.get("exact_replay_attempt_count"),
     )
+    check(
+        "provider_live_authority_receipts_bound",
+        verification.get("provider_receipts_passed") == 4
+        and verification.get("provider_receipts_required") == 4,
+        passed=verification.get("provider_receipts_passed"),
+        required=verification.get("provider_receipts_required"),
+    )
     generation_check = _check_red_blue_generations(campaign)
     check(
         "red_blue_generation_ids_valid",
@@ -187,16 +194,15 @@ def qualify_recovered_adaptive_lineage_run(
         },
         "proof_scope": {
             "proves": [
-                "the recovered battle-004 adaptive Red/Blue lineage receipts rehash under the backend verifier",
+                "the referenced battle-004 adaptive Red/Blue lineage source run rehashes under the backend verifier",
                 "the qualification receipt is bound to campaign, artifact-integrity, prior backend, and fresh verification inputs",
-                "the recovered run is non-mocked, live, fixture-free, and exact-replay checked for this receipt set",
+                "the run is non-mocked, live, fixture-free, provider-receipt-backed, and exact-replay checked for this receipt set",
             ],
             "does_not_prove": [
                 "production readiness",
                 "UX acceptance",
-                "a new live Tau/Docker campaign was rerun",
                 "security exploit success beyond the referenced Judge receipts",
-                "patch effectiveness outside the recovered battle-004 replay inputs",
+                "patch effectiveness outside the referenced battle-004 replay inputs",
             ],
         },
     }

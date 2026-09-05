@@ -1,0 +1,63 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Memory was written, promoted, or durably recalled."
+    ],
+    "proves": [
+      "Battle evaluated selected evidence under the memory policy."
+    ]
+  },
+  "evaluation_id": "battle-1503-20260905T172211Z-memory-evaluation",
+  "evaluations": [
+    {
+      "decision": "NO_PROMOTION",
+      "durable_recall_proven": false,
+      "eligible_decisions": [
+        "NO_PROMOTION"
+      ],
+      "evidence_classification": "neutral",
+      "fitness_receipt_sha256": "7eb3bc1dcddc83cb00edba65f4b5dfedb2c810630e3ed6f417fdf6c880c7505e",
+      "genome_delta_sha256": "f3c601705c24248c83aaf77ffc7a67d9b0222bd2dbabc0fe84b3eccec043bb6c",
+      "judge_receipt_sha256": "3ba72c23f34c15e90824364e0c1ce601c5e79d0ffd585e5652654ede2a861f2d",
+      "judge_requirement_satisfied": true,
+      "memory_write_receipt_sha256": null,
+      "memory_write_required": false,
+      "reason_codes": [
+        "evaluate_only_canary",
+        "durable_write_out_of_scope"
+      ],
+      "selected_generation": 2,
+      "team": "red",
+      "visibility_scope": "red_only"
+    },
+    {
+      "decision": "NO_PROMOTION",
+      "durable_recall_proven": false,
+      "eligible_decisions": [
+        "NO_PROMOTION"
+      ],
+      "evidence_classification": "neutral",
+      "fitness_receipt_sha256": "d42c6b1c285809f5d9a22d0f49a82a0c8210bb1a764711b2f921d332a06310b7",
+      "genome_delta_sha256": "cdb2b0ff9dd7a70ec8d2c02b39f272a35a235ff6efc12f96e3c5f6c9153f2fcb",
+      "judge_receipt_sha256": "3ba72c23f34c15e90824364e0c1ce601c5e79d0ffd585e5652654ede2a861f2d",
+      "judge_requirement_satisfied": true,
+      "memory_write_receipt_sha256": null,
+      "memory_write_required": false,
+      "reason_codes": [
+        "evaluate_only_canary",
+        "durable_write_out_of_scope"
+      ],
+      "selected_generation": 2,
+      "team": "blue",
+      "visibility_scope": "blue_only"
+    }
+  ],
+  "policy_id": "battle-memory-promotion-evaluate-only-v1",
+  "policy_mode": "evaluate_only",
+  "policy_sha256": "1c17aa6c109ad8718acdbb84a7f035f1d381f6834a6c4522e701de79338a0b5d",
+  "run_id": "battle-1503-20260905T172211Z",
+  "schema": "battle.memory_promotion_evaluation.v1",
+  "selection_receipt_sha256": "e299803354f8c982d129b3be0f35ca9cc53e99fdbf607a3ae6de01f16a0f1854",
+  "status": "PASS"
+}

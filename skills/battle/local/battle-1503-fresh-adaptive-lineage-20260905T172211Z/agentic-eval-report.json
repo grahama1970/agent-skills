@@ -1,0 +1,100 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/battle/fixtures/agentic_eval.json",
+  "run_id": "c8cebbdf2fb2",
+  "fixture_sha256": "sha256:7ffcd096ae3f41cb3fff06337e764e3821d8e083a5e6d91eb0c01d462063f353",
+  "repo": {
+    "sha": "f1e32a7a9ed5cca9ad13a04bbde047538a6adf82",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
+  "claims": {
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
+  },
+  "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
+  "what_remains_unverified": "external staging authority bundle (#1149), production WebSocket TLS/auth/fanout against a real public endpoint, a real 1000-round overnight campaign, QEMU boot execution, arbitrary target exploitability, and full visual design acceptance",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": null,
+  "claims_coverage": "partial: focused --case run",
+  "focused_cases": [
+    "adaptive-lineage-live-exact-chain"
+  ],
+  "generated_at": "2026-09-05T17:33:13.589081+00:00",
+  "case_count": 1,
+  "required_case_count": 1,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 2,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "adaptive-lineage-live-exact-chain",
+      "type": "adversarial",
+      "case_id": "c8cebbdf2fb2-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py adaptive-lineage-live-exact-chain --summary /tmp/battle-agentic-evals/adaptive-lineage-live-exact-chain.json"
+      ],
+      "declared_evidence_class": "adversarial_live_e2e",
+      "effective_evidence_class": "adversarial_live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "battle.adaptive_lineage.live_exact_chain",
+        "battle.immutable_goal.adaptive_lineage_pixi"
+      ],
+      "seams": [
+        "adaptive_lineage.live_exact_chain",
+        "immutable_goal.close_gate"
+      ],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 129.555,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "BATTLE_AGENTIC_EVAL_PASS suite=adaptive-lineage-live-exact-chain receipt_sha256=sha256:a330febe436fbd02f7a9f925ea64cd12e07f1bc18471c64939cc1525c97c3d99\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/battle/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 128.45,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c8cebbdf2fb2-c000-t00",
+          "artifact_hashes": {
+            "/tmp/battle-agentic-evals/adaptive-lineage-live-exact-chain.json": "sha256:a330febe436fbd02f7a9f925ea64cd12e07f1bc18471c64939cc1525c97c3d99"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "BATTLE_AGENTIC_EVAL_PASS suite=adaptive-lineage-live-exact-chain receipt_sha256=sha256:a330febe436fbd02f7a9f925ea64cd12e07f1bc18471c64939cc1525c97c3d99\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `/home/graham/workspace/experiments/agent-skills/skills/battle/pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 130.66,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "c8cebbdf2fb2-c000-t01",
+          "artifact_hashes": {
+            "/tmp/battle-agentic-evals/adaptive-lineage-live-exact-chain.json": "sha256:a330febe436fbd02f7a9f925ea64cd12e07f1bc18471c64939cc1525c97c3d99"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "files": {
+    "adaptive-lineage-chain-receipt.json": {
+      "bytes": 53230,
+      "sha256": "a299ffc9c17dff8ef0ec8df46c3d698352204087c9b5a0977daeac8ae31fa7ef"
+    },
+    "adaptive-lineage-qualification.json": {
+      "bytes": 4789,
+      "sha256": "a71caa7f9e4622ce534bf3a60314b1d099d76227924005b700e38aad7fc4212a"
+    },
+    "adaptive-lineage-verification.json": {
+      "bytes": 8294,
+      "sha256": "06a5205587f419723b0fc29b122b478ed918d81fbe38925dbfdddc44c4216e3c"
+    },
+    "agentic-eval-report.json": {
+      "bytes": 5352,
+      "sha256": "e0c3438203c13fab93421f889512f38915d7604beda068ebff201cc491a80197"
+    },
+    "artifact-integrity-receipt.json": {
+      "bytes": 3471,
+      "sha256": "acd6d89473df436c33d68ab99a69136dc1c333483b62e889d204c108d7b9dcf4"
+    },
+    "backend-verification.json": {
+      "bytes": 11073,
+      "sha256": "43cf5bf8c52bc4cf77c4565c70ed38d7a8409b31ea94302361fcc59767f0eba6"
+    },
+    "campaign-receipt.json": {
+      "bytes": 53230,
+      "sha256": "a299ffc9c17dff8ef0ec8df46c3d698352204087c9b5a0977daeac8ae31fa7ef"
+    },
+    "memory-promotion-evaluation.json": {
+      "bytes": 2324,
+      "sha256": "ccff7549129ce067eed86eefb4825bdf5e1b26119ab975c3535a03dce5526506"
+    },
+    "source-receipt-index.json": {
+      "bytes": 8036,
+      "sha256": "88a0649dbc559627422c9b40a2a3a902417bbc217bd532a732fce2ca2a1b33cb"
+    }
+  },
+  "qualification_dir": "/mnt/storage12tb/skills/battle/ticket-1503/qualification-20260905T172211Z",
+  "schema": "battle.ticket_1503_fresh_proof_index.v1",
+  "source_run_dir": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z",
+  "status": "PASS",
+  "ticket": 1503
+}

@@ -1,0 +1,159 @@
+{
+  "battle_id": "battle-004",
+  "checks": [
+    {
+      "name": "campaign_receipt_present",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/campaign-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "name": "artifact_integrity_receipt_present",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/artifact-integrity-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "name": "prior_backend_verification_present",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/backend-verification.json",
+      "status": "PASS"
+    },
+    {
+      "errors": [],
+      "name": "fresh_backend_verification_pass",
+      "status": "PASS"
+    },
+    {
+      "actual": "battle-004",
+      "expected": "battle-004",
+      "name": "battle_id_matches",
+      "status": "PASS"
+    },
+    {
+      "actual": "PASS",
+      "name": "campaign_status_pass",
+      "status": "PASS"
+    },
+    {
+      "campaign_live": true,
+      "name": "live_required",
+      "status": "PASS",
+      "verification_live": true
+    },
+    {
+      "campaign_mocked": false,
+      "name": "mock_forbidden",
+      "status": "PASS",
+      "verification_mocked": false
+    },
+    {
+      "fixture_fallback_used": false,
+      "name": "fixture_fallback_forbidden",
+      "status": "PASS"
+    },
+    {
+      "matched": 4,
+      "name": "immutable_slots_match_required_count",
+      "required": 4,
+      "status": "PASS"
+    },
+    {
+      "matched": 2,
+      "name": "exact_replays_match_required_count",
+      "required": 2,
+      "status": "PASS"
+    },
+    {
+      "exact_replay_attempt_count": 2,
+      "judge_attempt_count": 4,
+      "name": "docker_observed_input_hashes_bound",
+      "status": "PASS"
+    },
+    {
+      "name": "provider_live_authority_receipts_bound",
+      "passed": 4,
+      "required": 4,
+      "status": "PASS"
+    },
+    {
+      "generation_check": {
+        "bad_status": [],
+        "generations": [
+          1,
+          2
+        ],
+        "missing": [],
+        "ok": true
+      },
+      "name": "red_blue_generation_ids_valid",
+      "status": "PASS"
+    },
+    {
+      "exact_replays_matched": 2,
+      "name": "prior_backend_verification_pass",
+      "slot_hashes_matched": 4,
+      "status": "PASS"
+    }
+  ],
+  "counts": {
+    "exact_replay_attempt_count": 2,
+    "exact_replays_matched": 2,
+    "exact_replays_required": 2,
+    "judge_attempt_count": 4,
+    "slot_hashes_matched": 4,
+    "slot_hashes_required": 4
+  },
+  "fixture_fallback_used": false,
+  "input_receipts": [
+    {
+      "exists": true,
+      "name": "campaign_path",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/campaign-receipt.json",
+      "sha256": "a299ffc9c17dff8ef0ec8df46c3d698352204087c9b5a0977daeac8ae31fa7ef"
+    },
+    {
+      "exists": true,
+      "name": "integrity_path",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/artifact-integrity-receipt.json",
+      "sha256": "acd6d89473df436c33d68ab99a69136dc1c333483b62e889d204c108d7b9dcf4"
+    },
+    {
+      "exists": true,
+      "name": "prior_backend_path",
+      "path": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z/backend-verification.json",
+      "sha256": "43cf5bf8c52bc4cf77c4565c70ed38d7a8409b31ea94302361fcc59767f0eba6"
+    },
+    {
+      "exists": true,
+      "name": "verification_path",
+      "path": "adaptive-lineage-verification.json",
+      "sha256": "1ec32917314e430fac44feb1ab85dd1aced1e21677341006c63d55ed95fa3787"
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "proof_scope": {
+    "does_not_prove": [
+      "production readiness",
+      "UX acceptance",
+      "security exploit success beyond the referenced Judge receipts",
+      "patch effectiveness outside the referenced battle-004 replay inputs"
+    ],
+    "proves": [
+      "the referenced battle-004 adaptive Red/Blue lineage source run rehashes under the backend verifier",
+      "the qualification receipt is bound to campaign, artifact-integrity, prior backend, and fresh verification inputs",
+      "the run is non-mocked, live, fixture-free, provider-receipt-backed, and exact-replay checked for this receipt set"
+    ]
+  },
+  "requirements": {
+    "forbid_mock": true,
+    "require_exact_replay": true,
+    "require_live": true,
+    "required_exact_replay_count": 2,
+    "required_slot_count": 4
+  },
+  "schema": "battle.adaptive_lineage_goal_qualification.v1",
+  "source_commit": "f1e32a7a9ed5cca9ad13a04bbde047538a6adf82",
+  "source_run_dir": "/mnt/storage12tb/skills/battle/ticket-1503/battle-1503-20260905T172211Z",
+  "source_run_id": "battle-1503-20260905T172211Z",
+  "source_tree": "2dd0d99eba9e127487c67b3c1d321a5b22839b26",
+  "status": "PASS"
+}

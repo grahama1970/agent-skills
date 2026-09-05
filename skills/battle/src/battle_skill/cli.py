@@ -1122,6 +1122,7 @@ def adaptive_red_blue_lineage_canary(
     model: str = typer.Option("gpt-5.5", "--model"),
     scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url"),
     timeout_s: float = typer.Option(300.0, "--timeout-s", min=60.0),
+    authorization_manifest: Optional[Path] = typer.Option(None, "--authorization-manifest"),
 ):
     """Run simultaneous Red/Blue parent and child generations through Tau, Docker, and Judge."""
     import json as _json
@@ -1136,9 +1137,10 @@ def adaptive_red_blue_lineage_canary(
         model=model,
         scillm_base_url=scillm_base_url,
         timeout_s=timeout_s,
+        authorization_manifest=authorization_manifest,
     )
     print(_json.dumps(receipt, indent=2, sort_keys=True))
-    if receipt.get("status") == "FAIL":
+    if receipt.get("status") != "PASS":
         raise typer.Exit(1)
 
 

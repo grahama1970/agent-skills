@@ -37,7 +37,7 @@ for candidate in (REPO_ROOT / "skills", BATTLE_DIR / "src"):
     if raw not in sys.path:
         sys.path.insert(0, raw)
 
-from common.security_authorization import validate_target_authorization
+from common.security_authorization import validate_target_authorization  # noqa: E402
 
 
 def _utc() -> str:
@@ -109,16 +109,29 @@ def _wait_for_http(host: str, *, timeout_s: float = 10.0) -> None:
     raise RuntimeError(f"HTTP host did not become ready: {host}: {latest!r}")
 
 
-def _fresh_authorization(path: Path, *, target_identity: str = TARGET_IDENTITY) -> dict[str, Any]:
+def _fresh_authorization(
+    path: Path,
+    *,
+    target_identity: str = TARGET_IDENTITY,
+    runtime_modes: list[str] | None = None,
+) -> dict[str, Any]:
     manifest = _read_json(AUTH_TEMPLATE)
     manifest["expires_at"] = "2099-01-01T00:00:00Z"
     canonical_id, immutable_ref = target_identity.split("@", 1)
     manifest["target"]["canonical_id"] = canonical_id
     manifest["target"]["immutable_ref"] = immutable_ref
     manifest["allowed_actions"] = ["authorization-preflight", "battle"]
-    manifest["runtime_modes"] = ["battle", "local_docker_fixture"]
+    manifest["runtime_modes"] = runtime_modes or ["battle", "local_docker_fixture"]
     _write_json(path, manifest)
     return manifest
+
+
+def _battle_004_target_identity() -> str:
+    definition = b"".join(
+        (BATTLE_DIR / "src" / "battle_skill" / name).read_bytes()
+        for name in ("arena_subagent.py", "arena_battle_proof.py", "arena_live_battle_proof.py")
+    )
+    return f"battle-004@sha256:{hashlib.sha256(definition).hexdigest()}"
 
 
 def _assert_status(receipt: dict[str, Any], path: Path, status: str = "PASS") -> None:
@@ -250,6 +263,12 @@ def _regenerate_adaptive_lineage_proof_root(summary_path: Path) -> Path | None:
 
     run_id = f"battle-agentic-exact-chain-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
     timeout_s = float(os.environ.get("BATTLE_ADAPTIVE_LINEAGE_TIMEOUT_S", "300"))
+    authorization = proof_parent / "authorization.json"
+    _fresh_authorization(
+        authorization,
+        target_identity=_battle_004_target_identity(),
+        runtime_modes=["docker"],
+    )
     canary = _run(
         [
             str(RUN_SH),
@@ -261,6 +280,8 @@ def _regenerate_adaptive_lineage_proof_root(summary_path: Path) -> Path | None:
             run_id,
             "--timeout-s",
             str(timeout_s),
+            "--authorization-manifest",
+            str(authorization),
         ],
         timeout=int(timeout_s) + 120,
     )
@@ -1492,6 +1513,7 @@ def probe_adaptive_lineage_live_exact_chain(summary_path: Path, *, proof_root: s
         "immutable_slots_match_required_count",
         "exact_replays_match_required_count",
         "docker_observed_input_hashes_bound",
+        "provider_live_authority_receipts_bound",
         "red_blue_generation_ids_valid",
     }
     passed_checks = {item.get("name") for item in checks if item.get("status") == "PASS"}
