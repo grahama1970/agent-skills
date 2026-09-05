@@ -35,13 +35,16 @@ def _blocked(creator: str, reviewer: str) -> bool:
 def main() -> int:
     failures: list[str] = []
 
-    # ONLY the bare local Codex CLI coder (`codex`) is banned. SciLLM model
-    # handlers (Codex-opus-5-*, gpt-5.5-*) are Tau/SciLLM nodes and are allowed.
+    # ONLY the bare local Codex CLI coder (`codex`) is banned outright among
+    # local lanes. Per SKILL.md (updated 2026-08+), `oc-*`/`opencode-go/*` are
+    # SciLLM OpenCode chat/REVIEW routes: they must NOT author repairs either
+    # (repo-changing OpenCode work needs its own authoring lane), so an oc-*
+    # CREATOR must be refused.
     if not _blocked("codex", "Codex-opus-5-medium"):
         failures.append("CODEX_CLI_ACCEPTED: bare codex creator should be blocked")
     for cr, rv in [("oc-deepseek", "gpt-5.5-high"), ("oc-deepseek", "Codex-opus-5-medium")]:
-        if _blocked(cr, rv):
-            failures.append(f"SCILLM_HANDLER_WRONGLY_BANNED: {cr}+{rv}")
+        if not _blocked(cr, rv):
+            failures.append(f"OC_CHAT_CREATOR_ACCEPTED: {cr}+{rv} (oc-* cannot author repairs)")
 
     # Same provider must be blocked (Codex-opus and Codex-sonnet are both Anthropic).
     if not _blocked("Codex-sonnet-4-6-high", "Codex-opus-5-medium"):
@@ -51,10 +54,10 @@ def main() -> int:
     if not _blocked("oc-deepseek", "webgpt"):
         failures.append("BROWSER_REVIEWER_ACCEPTED: a browser reviewer cannot run the proof but was accepted.")
 
-    # The valid config: non-codex-CLI OpenCode creator + a different-provider,
-    # code-running Opus-5 reviewer.
-    if _blocked("oc-deepseek", "Codex-opus-5-medium"):
-        failures.append("VALID_PAIR_REJECTED: oc-deepseek + Codex-opus-5-medium should be valid.")
+    # A valid config: SciLLM model creator + different-provider code-running
+    # reviewer (the production default family pairing).
+    if _blocked("gpt-5.5-high", "Codex-opus-5-medium"):
+        failures.append("VALID_PAIR_REJECTED: gpt-5.5-high + Codex-opus-5-medium should be valid.")
 
     if failures:
         for f in failures:

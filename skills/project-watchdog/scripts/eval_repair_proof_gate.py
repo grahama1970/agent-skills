@@ -199,8 +199,36 @@ def run_repair(root: Path, *, creator_says: str, reviewer_says: str,
         "body": issue_body(proof_path),
         "watchdog_action": "ticket_repair",
     }
+    def fake_stream_monitor(command, *, cwd, timeout_s, ask_run_dir, monitor_path,
+                            poll_interval_s=5.0):
+        # handle_ticket_repair dispatches $ask via subprocess.Popen inside
+        # run_ask_tau_dag_with_stream_monitor, not run_cmd; without this fake
+        # the eval spawns a REAL ask tau-dag and hangs until timeout (drift
+        # caught 2026-09-05). Reuse the run_cmd fake to write seat artifacts
+        # into the actual ask_run_dir the gate globs, then write the monitor
+        # receipt the tick requires.
+        nonlocal_node_root = Path(ask_run_dir) / "run-x" / "node-artifacts"
+        for handler, text in ((CREATOR, creator_says), (REVIEWER, reviewer_says)):
+            node = nonlocal_node_root / node_id(handler)
+            node.mkdir(parents=True, exist_ok=True)
+            (node / "response.md").write_text(text, encoding="utf-8")
+            (node / "node-receipt.json").write_text(
+                json.dumps({"handler": handler, "ok": True, "status": "PASS"}),
+                encoding="utf-8")
+        if write_proof:
+            proof_path.write_text(json.dumps({
+                "readiness": "READY",
+                "cases": [{"name": "ticket-repair-rejects-needs-attention-without-proof",
+                           "status": "PASS"}]}), encoding="utf-8")
+        Path(monitor_path).write_text(json.dumps(
+            {"schema": "agent_skills.project_watchdog.tau_stream_monitor.v1",
+             "terminal": True, "events_seen": 1}), encoding="utf-8")
+        return {"exit_code": 0, "stdout": "{}", "stderr": ""}
+
     with (
         mock.patch.object(handlers, "run_cmd", side_effect=fake_run_cmd),
+        mock.patch.object(handlers, "run_ask_tau_dag_with_stream_monitor",
+                          side_effect=fake_stream_monitor),
         mock.patch.object(handlers.github, "issue_comment", side_effect=record("comment")),
         mock.patch.object(handlers.github, "issue_edit", side_effect=record("edit")),
         mock.patch.object(handlers.github, "issue_close", side_effect=record("close")),
@@ -208,6 +236,16 @@ def run_repair(root: Path, *, creator_says: str, reviewer_says: str,
             handlers.registry, "prepare_repair_worktree",
             return_value={"ok": True, "branch": "watchdog/issue-1499", "worktree": str(repair)},
         ),
+        # The fake worktree above is not a registered git worktree, so the
+        # post-land archive/remove step (added after this eval was written)
+        # cannot succeed against it. Cleanup is not the seam under test here;
+        # the proof gate is.
+        mock.patch.object(
+            handlers, "_cleanup_landed_repair_worktree",
+            return_value={"label": "cleanup", "exit_code": 0, "ok": True,
+                          "archived": True, "removed": True},
+        ),
+        mock.patch.object(handlers, "_landed_repair_cleanup_ok", return_value=True),
     ):
         result = handlers.handle_issue("eval", receipt_dir, project, issue, apply=True)
     result["_calls"] = calls

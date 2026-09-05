@@ -1086,7 +1086,12 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
     stat = path.stat()
     record["mtime"] = stat.st_mtime
     record["size"] = stat.st_size
-    if stat.st_mtime < not_before:
+    # File mtimes come from the kernel's coarse clock, which can lag
+    # time.time() by a few milliseconds -- a file written microseconds AFTER
+    # dispatch can carry an mtime microseconds BEFORE it (proven with a live
+    # -0.34ms delta, 2026-09-05). One second of tolerance is noise against
+    # real multi-minute dispatches and removes the false 'predates' refusal.
+    if stat.st_mtime < not_before - 1.0:
         record["reason"] = "predates this dispatch"
         return record
     record["fresh"] = True

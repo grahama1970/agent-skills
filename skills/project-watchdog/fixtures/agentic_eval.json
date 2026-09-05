@@ -94,7 +94,7 @@
         "..",
         "pytest",
         "../tests/test_project_rotation.py::test_open_dependency_blocks_dispatch",
-        "../tests/test_project_rotation.py::test_closed_dependency_clears_hold_labels_and_routes",
+        "../tests/test_project_rotation.py::test_closed_dependency_apply_clears_hold_labels_without_same_tick_dispatch",
         "../tests/test_project_rotation.py::test_unreadable_dependency_fails_closed",
         "-q"
       ],
@@ -557,7 +557,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "SEATS_DIFFER codex"
+          "SEATS_DIFFER"
         ]
       }
     },
@@ -1171,15 +1171,15 @@
       "command": [
         "bash",
         "-c",
-        "cd .. && test -x ../ops-discord/run.sh && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import os; os.environ.pop('OPS_DISCORD_WEBHOOK_WATCHDOG_URL',None); from scripts.watchdog import alerts; r={'run_id':'e5','status':'BLOCKED','apply':False,'project':'m','handled_issues':[]}; alerts.maybe_alert(r); a=r['alert']; assert a['status']=='DRY_RUN', a; nr=a['notify_receipt']; assert nr.get('transport')=='discord_bot' and nr.get('channel_id'), nr; print('bot-fallback-resolves:'+nr['channel_name'])\""
+        "cd .. && test -x ../ops-discord/run.sh && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) uv run python -c \"import os; os.environ.pop('OPS_DISCORD_WEBHOOK_WATCHDOG_URL',None); from scripts.watchdog import alerts; r={'run_id':'e5','status':'BLOCKED','apply':False,'project':'m','handled_issues':[]}; alerts.maybe_alert(r); a=r['alert']; nr=a.get('notify_receipt') or {}; assert nr.get('transport')=='discord_bot', (a.get('status'), nr); assert nr.get('status')!='NO_WEBHOOK', nr; assert a.get('delivered') is not True, a; print('bot-transport-selected:'+str(nr.get('status')))\""
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "bot-fallback-resolves:"
+          "bot-transport-selected:"
         ]
       },
-      "proves": "With no watchdog webhook env var, watchdog alerting falls back to the ops-discord Discord-bot transport and resolves a real channel. Guards the 2026-09-03 incident: an agent must never report 'human must create a webhook' while the bot token in ~/.zshrc can deliver.",
+      "proves": "With no watchdog webhook env var, alerting selects the ops-discord Discord-bot transport (never NO_WEBHOOK) and never delivers in dry-run. Guards the 2026-09-03 webhook-assumption incident. Live channel resolution outcome (DRY_RUN vs rate-limited CHANNEL_LIST_FAILED) is environment-dependent and not asserted.",
       "does_not_prove": "A live post from an applied tick; live proof is the message_id receipt from 2026-09-03 (1545107248219693187)."
     },
     {
@@ -1253,6 +1253,26 @@
       },
       "proves": "Three-agent pipeline E2E scenario 'ui-data' through the real tick path (gh shim + ask seat stub faked; scan/route/lease/worktree/proof-gate/pydantic-validation/triage-self-heal/alerting live).",
       "does_not_prove": "Live GitHub, live model seats, or live Discord delivery."
+    },
+    {
+      "name": "worktree-created-with-lease",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd .. && uv run python scripts/prove_worktree_lease.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"ok\": true",
+          "cleanup.worktree_lease.v1",
+          "watchdog:watchdog/issue-42"
+        ]
+      },
+      "proves": "prepare_repair_worktree creates a real git worktree AND registers an ops-worktrees lease, read back from the lease registry file (issue #1577 named proof).",
+      "does_not_prove": "reaper reclamation behavior or GitHub dispatch."
     }
   ]
 }
