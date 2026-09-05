@@ -53,6 +53,8 @@ def _element_payload(element, assets=None, asset_dir: str = "assets") -> dict[st
     if element.kind is DocElementKind.TEXT and element.text:
         payload["text"] = element.text
     if element.kind is DocElementKind.IMAGE and element.asset_id:
+        if element.crop:
+            payload["crop"] = {"x": element.crop.x, "y": element.crop.y, "w": element.crop.w, "h": element.crop.h}
         payload["asset_id"] = element.asset_id
         asset = (assets or {}).get(element.asset_id)
         payload["asset"] = {

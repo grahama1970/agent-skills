@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Live canonical-document editing: CLI document-op with create-figure/create-svg generation, Vite API, real browser UI (Surf) for Insert menu, clipboard paste, crop and delete; PPTX reopened for crop and generated images",
+  "claims": {
+    "proves": "Elements/slides can be added, duplicated, moved, deleted; images arrive by file, paste, create-figure chart, or create-svg diagram with required alt text; crop persists to the document and the delivered PPTX; rejected ops write nothing",
+    "does_not_prove": "Publication approval of generated illustrations, legacy YAML bundle parity, drag-drop from the OS file manager, or Google Slides fidelity"
+  },
+  "cases": [
+    {"name": "live-editing-insert-paste-crop", "type": "positive", "real_world": true,
+     "command": ["python3", "../scripts/eval_editing.py", "--out", "/tmp/pitchdeck-editing-live.json"], "timeout_seconds": 900,
+     "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-editing-live.json", "json_pointer": "/status", "equals": "PASS"}]}},
+    {"name": "refuse-bad-image-crop-and-unknown-element", "type": "adversarial", "real_world": true,
+     "command": ["python3", "../scripts/eval_editing.py", "--negative", "--out", "/tmp/pitchdeck-editing-negative.json"], "timeout_seconds": 300,
+     "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-editing-negative.json", "json_pointer": "/status", "equals": "PASS"}]}}
+  ]
+}

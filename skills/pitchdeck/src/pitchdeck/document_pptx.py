@@ -336,7 +336,21 @@ def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict
         path = expand_path(spec.local_path, base_dir=asset_base)
         left, top, width, height = frame.rect(element.bbox)
         source: object = str(path)
-        if path.suffix.lower() in {".webp", ".avif"}:
+        if path.suffix.lower() == ".svg":
+            # python-pptx cannot embed SVG; rasterize with rsvg-convert (2x for
+            # legibility). The browser deck keeps the vector/animated original.
+            import io
+            import shutil as _sh
+            import subprocess as _sp
+
+            tool = _sh.which("rsvg-convert")
+            if not tool:
+                raise ValueError(f"element '{element.id}': SVG asset needs rsvg-convert to rasterize for PPTX")
+            raster = _sp.run([tool, "-w", str(int(width / 914400 * 192)), str(path)], capture_output=True, timeout=60)
+            if raster.returncode or not raster.stdout:
+                raise ValueError(f"element '{element.id}': rsvg-convert failed: {raster.stderr.decode(errors='replace')[-300:]}")
+            source = io.BytesIO(raster.stdout)
+        elif path.suffix.lower() in {".webp", ".avif"}:
             # python-pptx accepts BMP/GIF/JPEG/PNG/TIFF/WMF; convert losslessly.
             import io
 
@@ -347,6 +361,10 @@ def _emit_element(container, element: DocElement, frame: Frame, *, palette: dict
             buffer.seek(0)
             source = buffer
         picture = container.add_picture(source, left, top, width=width, height=height)
+        if element.crop:
+            c = element.crop
+            picture.crop_left, picture.crop_top = c.x, c.y
+            picture.crop_right, picture.crop_bottom = 1.0 - (c.x + c.w), 1.0 - (c.y + c.h)
         if element.rotation_deg:
             picture.rotation = element.rotation_deg
         picture.name = f"el:{element.id}"

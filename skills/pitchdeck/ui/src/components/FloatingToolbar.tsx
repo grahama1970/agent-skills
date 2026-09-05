@@ -1,4 +1,4 @@
-import { AArrowDown, AArrowUp, AlignCenter, AlignLeft, AlignRight, Bold, Trash2 } from 'lucide-react'
+import { Crop, AArrowDown, AArrowUp, AlignCenter, AlignLeft, AlignRight, Bold, Trash2 } from 'lucide-react'
 import { revisionStore } from '../hooks'
 import type { UiElement } from '../types'
 // Direct import, never a barrel file (best-practices-react).
@@ -49,9 +49,7 @@ export function FloatingToolbar({
       className="absolute left-1/2 top-0 z-40 flex -translate-x-1/2 -translate-y-[110%] items-center gap-0.5 rounded-lg border border-slate-700 bg-slate-800/95 px-1.5 py-1 text-xs shadow-2xl backdrop-blur-md"
       onMouseDown={(event) => event.stopPropagation()}
     >
-      {isText ? (
-        <>
-          {isAsset && assetsIndex.length ? (
+      {isAsset && assetsIndex.length ? (
         <select
           data-qid={`freeform:toolbar:swap-asset:${element.id}`}
           data-qs-action="DECK_SWAP_ASSET"
@@ -67,6 +65,8 @@ export function FloatingToolbar({
           ))}
         </select>
       ) : null}
+      {isText ? (
+        <>
       <Button
             type="button"
             data-qid={`deck:eltoolbar:bold:${element.id}`}
@@ -121,6 +121,30 @@ export function FloatingToolbar({
           ))}
           <span aria-hidden className="mx-0.5 h-4 w-px bg-slate-700" />
         </>
+      ) : null}
+          {isAsset ? (
+        <span className="flex items-center gap-1" title="Crop: visible window as fractions of the source image">
+          <Crop aria-hidden className="h-3.5 w-3.5 text-slate-400" />
+          {(['x', 'y', 'w', 'h'] as const).map((k) => (
+            <input
+              key={k}
+              type="number" min={0} max={1} step={0.05}
+              data-qid={`freeform:toolbar:crop-${k}:${element.id}`}
+              data-qs-action="DECK_ELEMENT_CROP"
+              title={`crop ${k} (0-1)`}
+              aria-label={`crop ${k}`}
+              defaultValue={element.crop?.[k] ?? (k === 'x' || k === 'y' ? 0 : 1)}
+              className="w-12 rounded bg-slate-700 px-1 py-0.5 text-xs text-slate-100"
+              onBlur={(event) => {
+                const form = event.currentTarget.parentElement!
+                const read = (n: string) => Number((form.querySelector(`[aria-label="crop ${n}"]`) as HTMLInputElement).value)
+                const [x, y, w, h] = ['x', 'y', 'w', 'h'].map(read)
+                const reset = x === 0 && y === 0 && w === 1 && h === 1
+                void act(`element:crop:${element.id}`, reset ? '' : `${x},${y},${w},${h}`)
+              }}
+            />
+          ))}
+        </span>
       ) : null}
       <select
         aria-label="Entrance animation"

@@ -377,6 +377,7 @@ class DocElement(StrictModel):
     icon: IconSpec | None = None
     rich_text: RichTextSpec | None = None
     rotation_deg: float | None = Field(default=None, ge=0.0, lt=360.0, description="clockwise, center-anchored; group/shape/image only")
+    crop: Bbox | None = Field(default=None, description="image only: visible window as fractions of the SOURCE image (x,y,w,h); PPTX crop_* and browser clip derive from it")
     binding_paths: list[str] = Field(default_factory=list, description="TextBinding.path values this element renders.")
     entrance: DocEntrance = Field(default_factory=DocEntrance)
 

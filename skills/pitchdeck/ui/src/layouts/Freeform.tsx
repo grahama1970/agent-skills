@@ -123,6 +123,15 @@ function ElementContent({ element, responsive = false }: { element: UiElement; r
         </div>
       )
     }
+    if (element.crop && element.asset.kind !== 'video') {
+      const c = element.crop
+      return (
+        <div className="h-full w-full overflow-hidden rounded-xl">
+          <img src={assetUrl(element.asset.file)} alt={element.asset.alt_text} className="max-w-none"
+            style={{ width: `${100 / c.w}%`, height: `${100 / c.h}%`, marginLeft: `${-c.x / c.w * 100}%`, marginTop: `${-c.y / c.h * 100}%`, objectFit: 'fill' }} />
+        </div>
+      )
+    }
     return element.asset.kind === 'video' ? (
       <video
         src={assetUrl(element.asset.file)}

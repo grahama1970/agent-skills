@@ -450,6 +450,40 @@ overwrote the paused line). `ui/public/` is deliberately unwatched by Vite and
 served from disk because new emitted deck directories crashed the dev server
 when the workstation's inotify budget was exhausted.
 
+## Editing canonical decks: elements, slides, images, charts, diagrams
+
+`document-op` is the ONE structural editor for a canonical document (the UI
+calls it; agents call it directly). Every op re-validates the whole model and
+re-projects `deck.data.json`; a rejected op writes nothing.
+
+```bash
+D="--document deck.document.json --output-dir ui/public/<deck> --asset-base <bundle>"
+./run.sh document-op $D --op add-text      --slide-id m-cover --text "Key point"
+./run.sh document-op $D --op add-image     --slide-id m-cover --file shot.png --alt "…" --bbox 0.55,0.3,0.4,0.4
+./run.sh document-op $D --op add-chart     --slide-id m-cover --spec metrics.json --chart-type bar --title "QRA corpus" --alt "…"   # $create-figure
+./run.sh document-op $D --op add-diagram   --slide-id m-cover --spec scene.yml --alt "…"                                        # $create-svg render
+./run.sh document-op $D --op crop          --slide-id m-cover --element-id img-shot --bbox 0.25,0.25,0.5,0.5   # window of the SOURCE image
+./run.sh document-op $D --op delete-element --slide-id m-cover --element-id text-2
+./run.sh document-op $D --op slide-duplicate|slide-add_after|slide-move_left|slide-move_right|slide-delete|slide-hide --slide-id m-cover
+```
+
+In the browser (Design mode): drag/resize any element; **Insert ▾** offers Text,
+Image file, Chart (create-figure, paste metrics JSON), Diagram (create-svg,
+paste a scene); **Ctrl+V** with an image on the clipboard or a drop onto the
+slide opens the same alt-text intake; the element toolbar has crop x/y/w/h,
+swap-asset, size/bold/align/entrance, delete. Generated and pasted images are
+ILLUSTRATION/DIAGRAM assets with a `generation_brief` — they decorate claims,
+never evidence them (`GENERATED_ASSET_CLAIM_SURFACE`). Crop persists as
+`element.crop` and is emitted as PPTX `crop_*`; SVG assets are rasterized for
+PPTX with `rsvg-convert` (the browser keeps the vector). New assets are stored
+beside the document under `assets/`, never inside a shared example bundle.
+
+Retained live gate: `fixtures/editing.json` — CLI chart/diagram/slide ops, then
+the real UI (Surf) inserting a chart, pasting an image, cropping it, deleting an
+element, and the re-emitted PPTX reopened to prove `crop_left/right = 0.25` and
+the generated pictures; adversarial trials prove a script renamed `.png`, an
+out-of-bounds crop, an unknown element, and blank alt text all write nothing.
+
 ## Visual sync (Qdrant multimodal)
 
 `visual-sync` embeds rendered `slide-N.png` images (text_mm + image_mm named

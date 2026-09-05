@@ -1158,6 +1158,42 @@ def document_edit_cmd(
         _abort(exc)
 
 
+@app.command(name="document-op")
+def document_op_cmd(
+    document: Annotated[Path, typer.Option(help="Canonical deck.document.json to edit in place.")],
+    output_dir: Annotated[Path, typer.Option(help="UI public dir to re-project into.")],
+    asset_base: Annotated[Path, typer.Option(help="Bundle dir for existing relative asset paths.")],
+    op: Annotated[str, typer.Option(help="add-text | add-image | add-chart | add-diagram | delete-element | crop | slide-add_after | slide-duplicate | slide-move_left | slide-move_right | slide-delete | slide-hide | slide-show")],
+    slide_id: Annotated[str, typer.Option(help="Target slide id.")],
+    element_id: Annotated[str | None, typer.Option(help="Element id for delete-element/crop.")] = None,
+    text: Annotated[str | None, typer.Option(help="Text for add-text.")] = None,
+    file: Annotated[Path | None, typer.Option(help="Image file for add-image.")] = None,
+    spec: Annotated[Path | None, typer.Option(help="add-chart: metrics JSON for create-figure; add-diagram: scene YAML for create-svg.")] = None,
+    chart_type: Annotated[str, typer.Option(help="add-chart: bar|hbar|pie|line.")] = "bar",
+    title: Annotated[str, typer.Option(help="add-chart title.")] = "Figure",
+    alt: Annotated[str | None, typer.Option(help="Alt text (required for any image).")] = None,
+    bbox: Annotated[str | None, typer.Option(help="x,y,w,h fractions for the new element or the crop window.")] = None,
+) -> None:
+    """Structural edit on a canonical document: elements, slides, images, crops,
+    and agent-generated charts/diagrams via create-figure / create-svg. Full
+    re-validation before any write; a rejected op changes nothing."""
+    import json as json_mod
+
+    from .document import Bbox as _Bbox
+    from .document_ops import apply
+
+    try:
+        box = None
+        if bbox:
+            x, y, w, h = (float(v) for v in bbox.split(","))
+            box = _Bbox(x=x, y=y, w=w, h=h)
+        result = apply(document, output_dir, asset_base, op, slide_id=slide_id, element_id=element_id, text=text,
+                       file=file, spec=spec, chart_type=chart_type, title=title, alt=alt or "", bbox=box)
+        typer.echo(json_mod.dumps(result))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="calibrate-house-gate")
 def calibrate_house_gate_cmd(
     output: Annotated[Path, typer.Option(help="Where to write house_gate_calibration.v1 JSON.")] = Path("fixtures/house-gate/calibration.v1.json"),

@@ -1,5 +1,5 @@
 import { ImagePlus } from 'lucide-react'
-import { useState, type DragEvent, type ReactNode } from 'react'
+import { useEffect, useState, type DragEvent, type ReactNode } from 'react'
 import type { UiSlide } from '../types'
 // Direct import, never a barrel file (best-practices-react).
 import { Button } from './ui/button'
@@ -19,17 +19,43 @@ export function AssetDropZone({
   enabled,
   onChanged,
   children,
+  externalFile,
 }: {
   slide: UiSlide
   enabled: boolean
   onChanged: () => void
   children: ReactNode
+  /** A file chosen elsewhere (Insert menu) that should go through the same alt-text + validation intake. */
+  externalFile?: File | null
 }) {
   const [dragging, setDragging] = useState(false)
   const [pending, setPending] = useState<PendingDrop | null>(null)
   const [alt, setAlt] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Clipboard paste (Ctrl+V with an image on the clipboard) uses the identical
+  // intake as drag-drop: alt text required, magic bytes checked server-side.
+  useEffect(() => {
+    if (!enabled) return
+    const onPaste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest?.('input, textarea, [contenteditable=true]')) return
+      const item = Array.from(event.clipboardData?.items ?? []).find((i) => i.type.startsWith('image/'))
+      const file = item?.getAsFile()
+      if (!file) return
+      event.preventDefault()
+      const ext = file.type.split('/')[1]?.replace('svg+xml', 'svg') ?? 'png'
+      setPending({ file: new File([file], file.name && file.name !== 'image.png' ? file.name : `pasted-${Date.now()}.${ext}`, { type: file.type }), slideId: slide.id })
+      setAlt('')
+      setError(null)
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [enabled, slide.id])
+  useEffect(() => {
+    if (externalFile) { setPending({ file: externalFile, slideId: slide.id }); setAlt(''); setError(null) }
+  }, [externalFile, slide.id])
 
   if (!enabled) return <>{children}</>
 

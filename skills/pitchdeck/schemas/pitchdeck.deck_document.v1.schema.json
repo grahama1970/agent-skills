@@ -917,6 +917,18 @@
           "description": "clockwise, center-anchored; group/shape/image only",
           "title": "Rotation Deg"
         },
+        "crop": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bbox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "image only: visible window as fractions of the SOURCE image (x,y,w,h); PPTX crop_* and browser clip derive from it"
+        },
         "binding_paths": {
           "description": "TextBinding.path values this element renders.",
           "items": {

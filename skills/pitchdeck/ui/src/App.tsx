@@ -28,6 +28,7 @@ import { useSlideNavigation } from './useSlideNavigation'
 import { DeckNavigator } from './components/DeckNavigator'
 import { DebuggerControls } from './components/DebuggerControls'
 import { RehearsalControls } from './components/RehearsalControls'
+import { InsertMenu } from './components/InsertMenu'
 
 function usePersistentPane(key: string, initial: boolean): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
   const [value, setValue] = useState<boolean>(() => {
@@ -168,6 +169,7 @@ export function App() {
   const [chatCollapsed, setChatCollapsed] = usePersistentPane('deck-pane-chat-collapsed', true)
   const [editing, setEditing] = useState(false)
   const { index, setIndex, notice } = useSlideNavigation(deck, editing)
+  const [pickedFile, setPickedFile] = useState<File | null>(null)
   const [rehearsing, setRehearsing] = useState(() => new URLSearchParams(location.search).get('rehearse') === '1')
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
   const [railCollapsed, setRailCollapsed] = usePersistentPane('deck-pane-rail-collapsed', false)
@@ -555,6 +557,7 @@ export function App() {
       <div className="flex shrink-0 flex-wrap gap-2 border-b border-slate-800 p-2">
         <RehearsalControls active={rehearsing} onToggle={() => { setRehearsing(v => !v); setMode('present'); setPresenting(false); const url = new URL(location.href); if (rehearsing) url.searchParams.delete('rehearse'); else url.searchParams.set('rehearse', '1'); history.replaceState(null, '', url) }} />
         <DebuggerControls slideId={slide.id} />
+        {editing ? <InsertMenu slide={slide} onChanged={reloadAll} onPickFile={setPickedFile} /> : null}
       </div>
       {notice ? <p role="status" className="m-0 px-2 text-xs text-amber-300">{notice}</p> : null}
 
@@ -633,7 +636,7 @@ export function App() {
                   </Button>
                 </div>
               ) : null}
-              <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll}>
+              <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll} externalFile={pickedFile}>
                 <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
                   <FragmentContext.Provider value={editing ? Infinity : fragment}>
                     <SlideViewport slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} fixed={editing} />

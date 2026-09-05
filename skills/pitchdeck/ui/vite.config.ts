@@ -22,6 +22,19 @@ const publicDir = fileURLToPath(new URL('./public', import.meta.url))
 // validation lives in Python (the same fail-closed gates as the build); a
 // rejected edit changes nothing on disk. The bundle dir comes from the
 // emit_ui_receipt.json written next to deck.data.json — never from the client.
+
+// Canonical documents route structural edits through `document-op` (full-model
+// revalidation, nothing written on rejection). Args are fixed shapes only.
+function documentOp(context: ReturnType<typeof deckContext>, args: string[], res: import('node:http').ServerResponse, timeout = 60_000, cleanup?: () => void) {
+  const o = context.receipt.outputs
+  execFile(`${skillRoot}/run.sh`, ['document-op', '--document', o.document_path!, '--output-dir', o.output_dir!, '--asset-base', o.asset_base!, ...args], { timeout }, (error, stdout, stderr) => {
+    cleanup?.()
+    res.setHeader('Content-Type', 'application/json')
+    if (error) { res.statusCode = 422; res.end(JSON.stringify({ error: stderr.trim().split('\n').filter(l => l.includes('ERROR')).join(' ') || stderr.trim().slice(-400) || String(error) })); return }
+    res.end(stdout)
+  })
+}
+
 function slideEditApi(): Plugin {
   return {
     name: 'deck-slide-edit-api',
@@ -42,6 +55,28 @@ function slideEditApi(): Plugin {
       })
       server.middlewares.use((req, res, next) => bindDeck(publicDir, req, res, next))
       server.middlewares.use('/api/debugger', debuggerApi(skillRoot))
+      server.middlewares.use('/api/insert', (req, res) => {
+        if (req.method !== 'POST') { res.statusCode = 405; res.end(JSON.stringify({ error: 'POST only' })); return }
+        const chunks: Buffer[] = []
+        req.on('data', (c: Buffer) => chunks.push(c))
+        req.on('end', () => {
+          try {
+            const { kind, slide_id, text, spec, chart_type, title, alt } = JSON.parse(Buffer.concat(chunks).toString('utf-8')) as Record<string, string>
+            const ctx = deckContext(req)
+            if (ctx.receipt.operation !== 'emit-document-ui') { res.statusCode = 422; res.end(JSON.stringify({ error: 'Insert is available on canonical documents; legacy bundles use the visual/asset workflow' })); return }
+            if (!slide_id) { res.statusCode = 400; res.end(JSON.stringify({ error: 'slide_id required' })); return }
+            if (kind === 'text') { documentOp(ctx, ['--op', 'add-text', '--slide-id', slide_id, '--text', text || 'New text'], res); return }
+            if (kind !== 'chart' && kind !== 'diagram') { res.statusCode = 400; res.end(JSON.stringify({ error: 'kind must be text, chart or diagram' })); return }
+            if (!spec || !alt) { res.statusCode = 400; res.end(JSON.stringify({ error: 'spec and alt are required' })); return }
+            const tmpDir = mkdtempSync(join(tmpdir(), 'deck-insert-'))
+            const specPath = join(tmpDir, kind === 'chart' ? 'metrics.json' : 'scene.yml')
+            writeFileSync(specPath, spec)
+            const args = ['--op', `add-${kind}`, '--slide-id', slide_id, '--spec', specPath, '--alt', alt]
+            if (kind === 'chart') args.push('--chart-type', chart_type || 'bar', '--title', title || 'Figure')
+            documentOp(ctx, args, res, 240_000, () => rmSync(tmpDir, { recursive: true, force: true }))
+          } catch (error) { res.statusCode = 400; res.end(JSON.stringify({ error: String(error) })) }
+        })
+      })
       server.middlewares.use('/api/decks', (req, res) => {
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify(listDecks(publicDir)))
@@ -66,6 +101,12 @@ function slideEditApi(): Plugin {
             if (!op || !slide_id) {
               res.statusCode = 400
               res.end(JSON.stringify({ error: 'op and slide_id are required' }))
+              return
+            }
+            const ctx = deckContext(req)
+            if (ctx.receipt.operation === 'emit-document-ui') {
+              if (base_revision !== undefined && Number(base_revision) !== ctx.deck.revision) { res.statusCode = 409; res.end(JSON.stringify({ error: 'Stale deck revision; reload before editing' })); return }
+              documentOp(ctx, ['--op', `slide-${op}`, '--slide-id', String(slide_id)], res)
               return
             }
             const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
@@ -339,6 +380,16 @@ function slideEditApi(): Plugin {
             const { slide_id, filename, alt, data_b64, action } = JSON.parse(
               Buffer.concat(chunks).toString('utf-8'),
             ) as Record<string, string>
+            const ctx = deckContext(req)
+            if (ctx.receipt.operation === 'emit-document-ui') {
+              if (action === 'clear') { res.statusCode = 422; res.end(JSON.stringify({ error: 'Select the image and delete it instead' })); return }
+              if (!slide_id || !filename || !alt || !data_b64) { res.statusCode = 400; res.end(JSON.stringify({ error: 'slide_id, filename, alt, data_b64 are required' })); return }
+              const tmpDir = mkdtempSync(join(tmpdir(), 'deck-drop-'))
+              const tmpPath = join(tmpDir, filename.replace(/[^a-zA-Z0-9._-]/g, '_'))
+              writeFileSync(tmpPath, Buffer.from(data_b64, 'base64'))
+              documentOp(ctx, ['--op', 'add-image', '--slide-id', slide_id, '--file', tmpPath, '--alt', alt], res, 60_000, () => rmSync(tmpDir, { recursive: true, force: true }))
+              return
+            }
             const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
             const bundleDir = receipt?.outputs?.bundle_dir
             if (!bundleDir) {
@@ -512,6 +563,13 @@ function slideEditApi(): Plugin {
             // Document-pipeline decks (#1388) edit the canonical document;
             // legacy bundle decks keep the apply-edit path unchanged.
             const isDocument = receipt?.operation === 'emit-document-ui'
+            const structural = String(field).match(/^element:(del|crop):(.+)$/)
+            if (isDocument && structural) {
+              const ctx = deckContext(req)
+              if (base_revision !== undefined && Number(base_revision) !== ctx.deck.revision) { res.statusCode = 409; res.end(JSON.stringify({ error: 'Stale deck revision; reload before editing' })); return }
+              documentOp(ctx, ['--op', structural[1] === 'del' ? 'delete-element' : 'crop', '--slide-id', String(slide_id), '--element-id', structural[2], ...(structural[1] === 'crop' && value ? ['--bbox', String(value)] : [])], res)
+              return
+            }
             if (isDocument && base_revision !== undefined && Number(base_revision) !== deckContext(req).deck.revision) {
               res.statusCode = 409
               res.end(JSON.stringify({ error: 'Stale deck revision; reload before editing' }))

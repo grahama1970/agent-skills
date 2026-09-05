@@ -28,6 +28,7 @@ export interface UiElement {
   kind?: string
   role?: string
   diagram?: UiDiagram
+  crop?: { x: number; y: number; w: number; h: number }
   id: string
   type: 'text' | 'asset' | string
   x: number

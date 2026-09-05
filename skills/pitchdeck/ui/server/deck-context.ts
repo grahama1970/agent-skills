@@ -67,7 +67,7 @@ export function bindDeck(root: string, req: IncomingMessage, res: ServerResponse
       res.once('finish', release)
       res.once('close', release)
     }
-    if (context.receipt.operation === 'emit-document-ui' && !['/api/slide-edit', '/api/export', '/api/debugger'].some(route => req.url!.startsWith(route)) && req.method === 'POST') throw new Error('This operation requires a legacy bundle. Canonical decks support element editing, export and debugger control; no other deck will be modified.')
+    if (context.receipt.operation === 'emit-document-ui' && !['/api/slide-edit', '/api/export', '/api/debugger', '/api/deck-op', '/api/asset-drop', '/api/insert'].some(route => req.url!.startsWith(route)) && req.method === 'POST') throw new Error('This operation requires a legacy bundle. Canonical decks support element editing, export and debugger control; no other deck will be modified.')
     contexts.set(req, context)
     next()
   } catch (error) {
