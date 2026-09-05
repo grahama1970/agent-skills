@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "skill": "live-evidence",
+  "trials": 2,
+  "proof_scope": "Production listener supervisor with controlled local HTTP and instrumented substitute recorder subprocesses. No audio hardware or Meet capture.",
+  "claims": {
+    "proves": "Supervisor lifecycle stops capture workers on pause, New, consent loss, backend failure and teardown, and resumes the same consented session.",
+    "does_not_prove": "Real recorder shutdown, PipeWire blocking-read cleanup, Bluetooth routing, microphone capture, STT quality or Google Meet acceptance."
+  },
+  "cases": [{
+    "name": "no-hardware-listener-lifecycle",
+    "type": "adversarial",
+    "real_world": true,
+    "evidence_class": "fault_injected_deterministic",
+    "readback": true,
+    "command": ["bash", "-c", "UV_PROJECT_ENVIRONMENT=\"${XDG_CACHE_HOME:-$HOME/.cache}/live-evidence/venv\" uv run --project .. --extra dev python ../scripts/eval_listener_lifecycle.py"],
+    "timeout_seconds": 90,
+    "expected": {
+      "exit_code": 0,
+      "artifacts": [{"path": "/tmp/live-evidence-listener-lifecycle.json", "json_pointer": "/status", "equals": "PASS"}]
+    }
+  }]
+}
