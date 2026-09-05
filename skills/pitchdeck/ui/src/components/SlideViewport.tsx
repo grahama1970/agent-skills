@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useRegisterAction, useSlideScale } from '../hooks'
 import { SlideBody } from '../layouts/SlideLayouts'
+import { CanvasScaleContext } from '../edit'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiSlide } from '../types'
 
 /** Reading reflows below 1100 CSS px of AVAILABLE slide space. Design and
@@ -26,7 +27,9 @@ export function SlideViewport({ slide, direction = 'fwd', zoom = 'fit', fixed = 
         style={responsive ? undefined : { width: CANVAS_WIDTH, height: CANVAS_HEIGHT, transform: `translate(-50%, -50%) scale(${scale})` }}>
         <div key={slide.id} className={`${responsive ? '' : 'h-full w-full'} ${slide.transition === 'none' ? '' : `anim-${slide.transition}-${direction}`}`}
           style={{ '--deck-transition': `${slide.transition_duration_ms}ms` } as React.CSSProperties}>
-          <SlideBody slide={slide} responsive={responsive} />
+          <CanvasScaleContext.Provider value={responsive ? 1 : scale}>
+            <SlideBody slide={slide} responsive={responsive} />
+          </CanvasScaleContext.Provider>
         </div>
       </div>
     </div>

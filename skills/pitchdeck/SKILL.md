@@ -484,6 +484,37 @@ element, and the re-emitted PPTX reopened to prove `crop_left/right = 0.25` and
 the generated pictures; adversarial trials prove a script renamed `.png`, an
 out-of-bounds crop, an unknown element, and blank alt text all write nothing.
 
+## Selected-element natural-language amendments (#1599)
+
+In **Design**, click a rendered canvas element to highlight it and open the
+existing project chat. Describe the change: “make this headline larger and move
+it left” or “invite the reader to schedule an architecture walkthrough.” The
+agent receives the selected deck/revision/slide/element and its relevant claim
+context through **Ask → Tau**, not a keyword-only command parser.
+
+The validated proposal appears on the slide with a dashed selection outline.
+**Show original / Show proposal** compares without writing; **Apply** commits
+only that element; **Undo amendment** restores the original if no later work
+would be overwritten, including after reload and reselecting the element.
+Selection changes, source/revision drift and failed agent calls refuse stale
+writes. Text amendments preserve required visible qualifiers and invalidate
+publication authorization; clicking Apply is not approval of a claim.
+
+The local dev API uses `PITCHDECK_AGENT_HANDLER` (default `claude-fable-low`,
+resolved by Ask/Tau). Context, provider receipts, proposals and undo journals
+stay outside public assets under
+`/mnt/storage12tb/skills/pitchdeck/outputs/element-agent/` (`PITCHDECK_NL_ROOT`
+overrides). `PITCHDECK_AGENT_TIMEOUT_SECONDS` bounds the Ask process group
+(10–150 seconds; default 150). The operation is non-mutating until Apply. It does not
+start the debugger, move desktop focus or execute model-written commands.
+
+Retained gate: `fixtures/natural_language_editing.json`; it exercises real
+model-backed geometry and wording requests, preview/apply/reload/undo, stale
+selection/source refusal, and a deliberately unavailable handler on a separate
+local server. Alternative generation is #1600; OS clipboard/direct manipulation
+is #1601. Template chrome and nested unprojected primitives are not editable
+through this selected-canvas-element path.
+
 ## Visual sync (Qdrant multimodal)
 
 `visual-sync` embeds rendered `slide-N.png` images (text_mm + image_mm named
@@ -595,12 +626,14 @@ Read only what the task requires:
 
 ## Evaluation posture
 
-`eval_not_required`: this version is a deterministic one-shot compiler. It does
-not call an LLM, orchestrate subagents, make network requests, or mutate external
-services. Positive, negative, public/private leakage, missing-asset, qualifier,
-and PPTX-structure behavior is covered by committed fixtures, `pytest`, and
-`sanity.sh`. Add an `agentic-evals` fixture before introducing autonomous claim
-rewriting, external research, or multi-agent slide selection.
+Compiler checks and live authoring checks are separate. `sanity.sh` checks
+local compilation boundaries; `fixtures/natural_language_editing.json` exercises
+the real model-backed selected-element flow through Ask/Tau, including bound
+claim context, proposal/apply/undo and stale-target/qualifier refusal. Its
+unavailable-handler case injects a failure configuration; it is not successful
+provider evidence. `editing.json`, `usability.json`, and `responsive_browser.json`
+retain their own scoped regressions. Passing these does not prove the broader
+alternative-generation workflow, OS clipboard behavior or publication readiness.
 
 ## Known limitation: visual fidelity
 

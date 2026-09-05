@@ -10,6 +10,7 @@ import { defineConfig } from 'vite'
 import { bindDeck, deckContext, listDecks } from './server/deck-context'
 import { canonicalExport } from './server/canonical-export'
 import { debuggerApi } from './server/debugger-api'
+import { elementAgentApi } from './server/element-agent'
 
 // Canonical shared UI package (agent-skills/skills/ux-lab/ui), imported from
 // source via alias so the dependency stays versioned in this repo.
@@ -54,6 +55,7 @@ function slideEditApi(): Plugin {
         createReadStream(file).pipe(res)
       })
       server.middlewares.use((req, res, next) => bindDeck(publicDir, req, res, next))
+      server.middlewares.use('/api/element-agent', elementAgentApi(skillRoot))
       server.middlewares.use('/api/debugger', debuggerApi(skillRoot))
       server.middlewares.use('/api/insert', (req, res) => {
         if (req.method !== 'POST') { res.statusCode = 405; res.end(JSON.stringify({ error: 'POST only' })); return }

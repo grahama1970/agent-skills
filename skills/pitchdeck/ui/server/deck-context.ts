@@ -59,7 +59,7 @@ export function bindDeck(root: string, req: IncomingMessage, res: ServerResponse
     const context = resolveDeck(root, selected)
     const sourcePath = context.receipt.outputs.document_path || context.receipt.outputs.bundle_dir
     if (req.method === 'POST' && !req.url.startsWith('/api/debugger') && (!sourcePath || !existsSync(sourcePath))) throw new Error('Active deck source is missing. This preview is read-only; re-emit from a retained source before editing or exporting.')
-    if (req.method === 'POST' && !req.url.startsWith('/api/debugger')) {
+    if (req.method === 'POST' && !['/api/debugger', '/api/element-agent/selection', '/api/element-agent/propose'].some(route => req.url!.startsWith(route))) {
       const source = context.receipt.outputs.document_path || context.receipt.outputs.bundle_dir || context.directory
       if (pendingWrites.has(source)) throw new Error('Another operation on this deck is pending')
       pendingWrites.add(source)
@@ -67,7 +67,7 @@ export function bindDeck(root: string, req: IncomingMessage, res: ServerResponse
       res.once('finish', release)
       res.once('close', release)
     }
-    if (context.receipt.operation === 'emit-document-ui' && !['/api/slide-edit', '/api/export', '/api/debugger', '/api/deck-op', '/api/asset-drop', '/api/insert'].some(route => req.url!.startsWith(route)) && req.method === 'POST') throw new Error('This operation requires a legacy bundle. Canonical decks support element editing, export and debugger control; no other deck will be modified.')
+    if (context.receipt.operation === 'emit-document-ui' && !['/api/slide-edit', '/api/export', '/api/debugger', '/api/deck-op', '/api/asset-drop', '/api/insert', '/api/element-agent'].some(route => req.url!.startsWith(route)) && req.method === 'POST') throw new Error('This operation requires a legacy bundle. Canonical decks support element editing, export and debugger control; no other deck will be modified.')
     contexts.set(req, context)
     next()
   } catch (error) {

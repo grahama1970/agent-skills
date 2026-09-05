@@ -3,7 +3,8 @@ import { Check, X } from 'lucide-react'
 import { ChatWell } from '@ux-lab/ui/ChatWell'
 import type { ChatMessage } from '@ux-lab/ui/ChatWell'
 import { revisionStore } from '../hooks'
-import type { UiDeckBundle } from '../types'
+import type { UiDeckBundle, UiElement } from '../types'
+import { useSelectedAmendment, type ElementTarget } from './SelectedAmendment'
 // Direct import, never a barrel file (best-practices-react).
 import { Button } from './ui/button'
 
@@ -176,7 +177,8 @@ function interpret(deck: UiDeckBundle, text: string): string | { content: string
   ].join('\n')
 }
 
-export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: () => void }) {
+export function DeckChat({ deck, onChanged, target, onPreview }: { deck: UiDeckBundle; onChanged?: () => void; target?: ElementTarget; onPreview?: (element?: UiElement) => void }) {
+  const selectedAgent = useSelectedAmendment(deck, target, onChanged, onPreview)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [busy, setBusy] = useState(false)
   const [pending, setPending] = useState<DeckCommand | null>(null)
@@ -189,6 +191,11 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
   const onSend = useCallback(
     async (text: string) => {
       setMessages((prev) => [...prev, msg('user', text)])
+      if (target) {
+        const reply = await selectedAgent.send(text)
+        setMessages(prev => [...prev, msg('assistant', reply)])
+        return
+      }
       const command = parseCommand(deck, text)
       if (command) {
         // Pin the revision the proposal was computed against (review P1):
@@ -252,7 +259,7 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
         typeof answer === 'string' ? msg('assistant', answer) : msg('assistant', answer.content, answer.extra),
       ])
     },
-    [deck],
+    [deck, target, selectedAgent.send],
   )
 
   const onVoiceToggle = useCallback(
@@ -340,10 +347,10 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
 
   return (
     <ChatWell
-      actionSlot={proposalCard}
+      actionSlot={target ? selectedAgent.card : proposalCard}
       messages={messages}
       onSend={onSend}
-      isStreaming={busy}
+      isStreaming={busy || selectedAgent.busy}
       streamingSteps={steps}
       qid="deck:chat:claims"
       surface="pitchdeck"
@@ -352,7 +359,7 @@ export function DeckChat({ deck, onChanged }: { deck: UiDeckBundle; onChanged?: 
       voiceLabel="dictation (RealtimeSTT)"
       projectLabel="PITCHDECK COMPILER"
       onVoiceToggle={(enabled: boolean) => void onVoiceToggle(enabled)}
-      placeholder="Ask about this deck…"
+      placeholder={target ? 'Describe a change to the highlighted element…' : 'Ask about this deck, or select an element to amend…'}
       emptyTitle={`Reviewing ${deck.title}`}
       emptyDescription={`${deck.visibility} deck · ${deck.validation_readiness} · ${new Set(candidateCount.map((c) => c.id)).size} candidate claims await review. Ask for gaps, inspect a claim, or get the exact ledger commands to approve, reject, or qualify it.`}
       starterChips={[

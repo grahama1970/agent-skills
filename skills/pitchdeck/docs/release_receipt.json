@@ -1,6 +1,6 @@
 {
  "schema": "pitchdeck.release_receipt.v1",
- "commit": "4fb9af1dd5ea2fc7fd54c82c87cf91aa984f078d",
+ "commit": "f1e32a7a9ed5cca9ad13a04bbde047538a6adf82",
  "source_tree_sha256": "4a56349fbc537a8d045565b76983aa08df06aa71f204cd83bd1e4bc734c38915",
  "commands": [
   "analyze-style",
@@ -46,6 +46,7 @@
   "render",
   "render-document",
   "scaffold",
+  "selected-edit",
   "simulate",
   "source-edit",
   "undo",
@@ -55,7 +56,7 @@
   "version",
   "visual-sync"
  ],
- "command_count": 51,
+ "command_count": 52,
  "schema_inventory": [
   {
    "declared_schemas": [

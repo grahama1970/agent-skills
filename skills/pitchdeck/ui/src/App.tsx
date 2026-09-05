@@ -20,7 +20,8 @@ import { lintSlide } from './lib/pptxLint'
 import { revisionStore, useDeck, useKeyboardNav, usePaneResize, useRegisterAction } from './hooks'
 import { useTopNavShortcuts } from './useTopNavShortcuts'
 import { FragmentContext, fragmentCount } from './layouts/SlideLayouts'
-import { type UiDeckBundle } from './types'
+import { type UiDeckBundle, type UiElement } from './types'
+import type { ElementTarget } from './components/SelectedAmendment'
 // Direct import, never a barrel file (best-practices-react).
 import { Button } from './components/ui/button'
 import { SlideViewport } from './components/SlideViewport'
@@ -172,6 +173,10 @@ export function App() {
   const [pickedFile, setPickedFile] = useState<File | null>(null)
   const [rehearsing, setRehearsing] = useState(() => new URLSearchParams(location.search).get('rehearse') === '1')
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
+  const [elementTarget, setElementTarget] = useState<ElementTarget>()
+  const [agentPreview, setAgentPreview] = useState<UiElement>()
+  useEffect(() => { setElementTarget(undefined) }, [index, editing, deck?.deck_id])
+  useEffect(() => { setAgentPreview(undefined) }, [elementTarget, index, editing, deck?.revision])
   const [railCollapsed, setRailCollapsed] = usePersistentPane('deck-pane-rail-collapsed', false)
   const [zoom, setZoom] = useState('fit')
   const [showSource, setShowSource] = usePersistentPane('deck-pane-source', false)
@@ -385,6 +390,7 @@ export function App() {
 
   const navSlides = editing ? deck.slides : deck.slides.filter((s) => !s.hidden)
   const slide = navSlides[Math.min(index, navSlides.length - 1)] ?? deck.slides[0]
+  const selectedTarget = editing && elementTarget?.slideId === slide.id && slide.elements.some(e => e.id === elementTarget.elementId) ? elementTarget : undefined
   const navButton =
     'inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 transition-colors hover:border-cyan-500/60 disabled:cursor-not-allowed disabled:opacity-40'
 
@@ -637,7 +643,10 @@ export function App() {
                 </div>
               ) : null}
               <AssetDropZone slide={slide} enabled={editing} onChanged={reloadAll} externalFile={pickedFile}>
-                <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll }}>
+                <EditContext.Provider value={{ editing, request: setPendingEdit, refresh: reloadAll, selectedElementId: selectedTarget?.elementId, previewElement: selectedTarget ? agentPreview : undefined, selectElement: id => {
+                  setElementTarget(prev => id ? prev?.slideId === slide.id && prev.elementId === id ? prev : { slideId: slide.id, elementId: id } : undefined)
+                  if (id) { setSheetTab('chat'); setChatCollapsed(false) }
+                } }}>
                   <FragmentContext.Provider value={editing ? Infinity : fragment}>
                     <SlideViewport slide={slide} direction={direction} zoom={editing ? zoom : 'fit'} fixed={editing} />
                   </FragmentContext.Provider>
@@ -650,7 +659,7 @@ export function App() {
                 tab={sheetTab}
                 onTab={setSheetTab}
                 onCollapse={() => setChatCollapsed(true)}
-                chat={<DeckChat deck={deck} onChanged={reloadAll} />}
+                chat={<DeckChat deck={deck} onChanged={reloadAll} target={selectedTarget} onPreview={setAgentPreview} />}
                 notes={<NotesPanel slide={slide} onChanged={reloadAll} />}
                 layout={editing ? <Inspector slide={slide} onChanged={reloadAll} /> : undefined}
               />

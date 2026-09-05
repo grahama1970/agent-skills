@@ -1,8 +1,8 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Rnd } from 'react-rnd'
 import { CanonicalDiagram } from '../components/CanonicalDiagram'
 import { FloatingToolbar } from '../components/FloatingToolbar'
-import { EditContext } from '../edit'
+import { CanvasScaleContext, EditContext } from '../edit'
 import { assetUrl, revisionStore } from '../hooks'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, type UiElement, type UiSlide } from '../types'
 
@@ -161,16 +161,17 @@ function ElementContent({ element, responsive = false }: { element: UiElement; r
 }
 
 export function Freeform({ slide, responsive = false }: { slide: UiSlide; responsive?: boolean }) {
-  const { editing, request } = useContext(EditContext)
+  const { editing, request, selectedElementId: selectedId, selectElement, previewElement } = useContext(EditContext)
+  const canvasScale = useContext(CanvasScaleContext)
   const [error, setError] = useState<string | null>(null)
   const [frames, setFrames] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({})
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const { refresh } = useContext(EditContext)
+  useEffect(() => { setFrames({}) }, [slide.elements])
 
   const save = (element: UiElement, frame: { x: number; y: number; w: number; h: number }) => {
     setFrames((prev) => ({ ...prev, [element.id]: frame }))
-    postFrame(slide.id, element.id, frame).catch((err: Error) => setError(err.message))
+    postFrame(slide.id, element.id, frame).then(() => refresh?.()).catch((err: Error) => setError(err.message))
   }
 
   return (
@@ -195,7 +196,8 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
       {responsive && slide.footer ? <p className="freeform-footer">{slide.footer}</p> : null}
       <SnapGuideOverlay guides={guides} />
       {slide.elements.map((element) => {
-        const frame = frames[element.id] ?? { x: element.x, y: element.y, w: element.w, h: element.h }
+        const proposed = editing && previewElement?.id === element.id ? previewElement : undefined
+        const frame = proposed ?? frames[element.id] ?? { x: element.x, y: element.y, w: element.w, h: element.h }
         if (!editing) {
           return (
             <div
@@ -220,6 +222,9 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
           <Rnd
             key={element.id}
             bounds="parent"
+            scale={canvasScale}
+            disableDragging={!!proposed}
+            enableResizing={!proposed}
             size={{ width: frame.w * CANVAS_WIDTH, height: frame.h * CANVAS_HEIGHT }}
             position={{ x: frame.x * CANVAS_WIDTH, y: frame.y * CANVAS_HEIGHT }}
             onDrag={(_event, data) => {
@@ -247,9 +252,9 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
                 h: ref.offsetHeight / CANVAS_HEIGHT,
               })
             }
-            className="group border border-dashed border-transparent hover:border-cyan-500/60"
+            className={`group border-2 ${selectedId === element.id ? 'border-cyan-500' : 'border-transparent hover:border-cyan-500/60'} ${proposed ? 'border-dashed' : ''}`}
           >
-            {selectedId === element.id && !element.diagram ? (
+            {selectedId === element.id && !element.diagram && !proposed ? (
               <FloatingToolbar
                 slideId={slide.id}
                 element={element}
@@ -262,9 +267,18 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
               data-qs-action="DECK_FREEFORM_ELEMENT"
               title={`Drag or resize ${element.id}; double-click text to edit`}
               className="h-full w-full cursor-move"
-              onClick={() => setSelectedId(element.id)}
+              data-selected={selectedId === element.id}
+              data-agent-preview={!!proposed}
+              role="button"
+              tabIndex={0}
+              aria-label={`Select ${element.text?.slice(0, 80) || element.asset?.alt_text || element.id}`}
+              onClick={() => selectElement?.(element.id)}
+              onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.stopPropagation(); selectElement?.(element.id) }
+                if (event.key === 'Escape') { event.stopPropagation(); selectElement?.('') }
+              }}
               onDoubleClick={() => {
-                if (element.type === 'text' && !element.diagram) {
+                if (element.type === 'text' && !element.diagram && !proposed) {
                   request({
                     slideId: slide.id,
                     field: `element:${element.id}:text`,
@@ -274,7 +288,7 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
                 }
               }}
             >
-              <ElementContent element={element} responsive={responsive} />
+              <ElementContent element={proposed || element} responsive={responsive} />
             </div>
           </Rnd>
         )

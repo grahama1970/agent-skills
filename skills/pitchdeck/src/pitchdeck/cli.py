@@ -1158,6 +1158,23 @@ def document_edit_cmd(
         _abort(exc)
 
 
+@app.command(name="selected-edit")
+def selected_edit_cmd(
+    document: Annotated[Path, typer.Option(help="Canonical document.")],
+    output_dir: Annotated[Path, typer.Option(help="Emitted UI directory.")],
+    operation: Annotated[str, typer.Option(help="preview, apply or undo.")],
+    request_file: Annotated[Path, typer.Option(help="Server-owned selected-element request.")],
+) -> None:
+    """Validate/apply/undo a revision-bound selected-element proposal."""
+    import json as json_mod
+    from .selected_edit import run
+
+    try:
+        typer.echo(json_mod.dumps(run(document, output_dir, operation, request_file)))
+    except Exception as exc:
+        _abort(exc)
+
+
 @app.command(name="document-op")
 def document_op_cmd(
     document: Annotated[Path, typer.Option(help="Canonical deck.document.json to edit in place.")],

@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Real selected-element chat through Surf, Ask/Tau and a live model; non-mutating visual preview, guarded Apply and Undo",
+  "claims": {
+    "proves": "Selection-bound geometry and text amendments via the existing chat, unchanged non-target elements, publication-review invalidation for text, reload/undo, stale-target refusal and configured-provider-failure refusal",
+    "does_not_prove": "All arbitrary prompts, generation of visual alternatives (#1600), OS clipboard/direct manipulation (#1601), template chrome editing, or automatic publication approval"
+  },
+  "cases": [
+    {"name":"live-selected-headline-amendment","type":"positive","real_world":true,
+     "command":["python3","../scripts/eval_natural_language_editing.py","--out","/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/geometry.json"],
+     "timeout_seconds":300,"expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/geometry.json","json_pointer":"/status","equals":"PASS"}]}},
+    {"name":"live-selected-wording-amendment","type":"positive","real_world":true,
+     "command":["python3","../scripts/eval_natural_language_editing.py","--wording","--out","/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/wording.json"],
+     "timeout_seconds":300,"expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/wording.json","json_pointer":"/status","equals":"PASS"}]}},
+    {"name":"live-bound-claim-amendment","type":"positive","real_world":true,
+     "command":["python3","../scripts/eval_natural_language_editing.py","--bound","--out","/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/bound.json"],
+     "timeout_seconds":300,"expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/bound.json","json_pointer":"/status","equals":"PASS"}]}},
+    {"name":"stale-selection-and-unavailable-handler-refused","type":"adversarial","real_world":true,
+     "command":["python3","../scripts/eval_natural_language_editing.py","--negative","--out","/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/negative.json"],
+     "timeout_seconds":300,"expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/natural-language-editing/negative.json","json_pointer":"/status","equals":"PASS"}]}}
+  ]
+}

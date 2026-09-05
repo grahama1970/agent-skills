@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { UiSlide } from './types'
+import type { UiElement, UiSlide } from './types'
 
 export interface EditRequest {
   slideId: string
@@ -12,9 +12,13 @@ interface EditContextValue {
   editing: boolean
   request: (edit: EditRequest) => void
   refresh?: () => void
+  selectedElementId?: string
+  selectElement?: (id: string) => void
+  previewElement?: UiElement
 }
 
 export const EditContext = createContext<EditContextValue>({ editing: false, request: () => undefined })
+export const CanvasScaleContext = createContext(1)
 
 /** Wraps slide text; in edit mode a click opens the edit panel for that field. */
 export function Editable({
