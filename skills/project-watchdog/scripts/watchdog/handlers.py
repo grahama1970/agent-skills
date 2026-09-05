@@ -32,9 +32,10 @@ import signal
 import subprocess
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from loguru import logger
+from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
 from . import config, github, registry
 from .core import iso_now, log_event, run_cmd, write_json
@@ -299,7 +300,7 @@ def issue_goal_hash(repo: str, issue_number: int) -> str:
 
 
 TAU_STREAM_TERMINAL_STATUSES = frozenset(
-    {"PASS", "FAIL", "BLOCKED", "NEEDS_ATTENTION", "COMPLETED", "LANDED"}
+    {"PASS", "FAIL", "FAILED", "ERROR", "DEGRADED", "BLOCKED", "NEEDS_ATTENTION", "COMPLETED", "LANDED"}
 )
 
 
@@ -385,6 +386,62 @@ def _settled_semantic_refusal(plan_path: Path, expected: set[str]) -> dict[str, 
             "dag_error": native.get("dag_error")}
 
 
+class _CompileStopObservation(BaseModel):
+    """Strict watchdog observation of an Ask rejection before DAG emission."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+    status: Literal["BLOCKED"]
+    failure_code: Literal["ask_handler_binding_invalid"]
+    exit_code: int
+    process_running: bool
+    timed_out: bool
+    provider_live: bool
+    execution: None
+
+    @model_validator(mode="after")
+    def stopped_without_execution(self) -> "_CompileStopObservation":
+        if self.exit_code != 2 or self.process_running or self.timed_out or self.provider_live:
+            raise ValueError("not a completed pre-dispatch refusal")
+        return self
+
+
+def _compile_stop(ask_run_dir: Path) -> dict[str, Any] | None:
+    monitor = _json_from_file(ask_run_dir.parent / "tau-stream-monitor.json")
+    output = _json_from_file(ask_run_dir.parent / "tau-stream-monitor.stdout.log")
+    if not monitor or not output or output.get("schema") != "ask.tau_dag_cli_result.v1":
+        return None
+    bundle = output.get("bundle")
+    if not isinstance(bundle, dict) or bundle.get("status") != "BLOCKED":
+        return None
+    try:
+        _CompileStopObservation.model_validate({
+            "status": output["status"], "failure_code": bundle["failure_code"],
+            "exit_code": monitor["process_exit_code"], "process_running": monitor["process_running"],
+            "timed_out": monitor["timed_out"], "provider_live": output["provider_live"],
+            "execution": output["execution"],
+        })
+        root = Path(bundle["run_dir"]).resolve()
+        request = Path(bundle["request_path"]).resolve()
+        if (root.parent != ask_run_dir.resolve() or request != root / "request.json"
+                or Path(monitor["ask_run_dir"]).resolve() != ask_run_dir.resolve()):
+            return None
+        if (root / "dag.json").exists() or (root / "node-artifacts").exists():
+            return None
+        if _json_from_file(root / "compile-status.json") != bundle:
+            return None
+        requested = _json_from_file(request) or {}
+        goal = requested.get("goal")
+        task = (ask_run_dir.parent / "repair-task.md").read_text(encoding="utf-8")
+        if (requested.get("schema") != "ask.tau_dag_request.v1"
+                or requested.get("request") != task or not task.strip()
+                or not isinstance(goal, dict)
+                or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(goal.get("goal_hash", "")))):
+            return None
+    except (KeyError, TypeError, ValueError, ValidationError, OSError):
+        return None
+    return {"path": str(root / "compile-status.json"), "failure_code": bundle["failure_code"],
+            "binding_errors": bundle.get("binding_errors", [])}
+
+
 def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
     """Read Ask/Tau stream artifacts into one watchdog status snapshot."""
     record: dict[str, Any] = {
@@ -403,6 +460,11 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
         "reason": "no Ask/Tau stream artifacts observed",
     }
     if not ask_run_dir.exists():
+        return record
+    if refusal := _compile_stop(ask_run_dir):
+        record.update(terminal=True, terminal_status="BLOCKED", current_status="BLOCKED",
+                      stream_readable=True, terminal_source=refusal["path"], compile_refusal=refusal,
+                      reason="Ask rejected the binding before DAG emission; process exit verified")
         return record
 
     for event_path in sorted(ask_run_dir.glob("**/events.jsonl")):
@@ -436,6 +498,11 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
         if receipt:
             item["status"] = receipt.get("status") or receipt.get("verdict") or receipt.get("state")
             item["node_id"] = receipt.get("node_id") or receipt_path.parent.name
+            if receipt.get("failure_code"):
+                item["failure_code"] = receipt["failure_code"]
+            provider = receipt.get("provider_receipt")
+            if isinstance(provider, dict):
+                item["provider_transport"] = provider.get("provider_transport")
         record["node_receipts"].append(item)
 
     candidates: list[dict[str, Any]] = []
@@ -482,6 +549,12 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
     )
     if record["terminal"]:
         record["reason"] = "terminal Ask/Tau stream state observed"
+        failures = [n for n in nodes if n.get("failure_code")]
+        if failures:
+            codes = sorted({str(n["failure_code"]) for n in failures})
+            record["upstream_failure"] = {"failure_codes": codes, "nodes": failures}
+            if len(codes) == 1:
+                record["upstream_failure"]["failure_code"] = codes[0]
     elif record["stream_readable"]:
         record["reason"] = "Ask/Tau stream readable but no terminal status observed"
     return record
@@ -542,6 +615,12 @@ def run_ask_tau_dag_with_stream_monitor(
                  stop_condition="timeout_requires_tau_reconciliation" if timed_out else "process_exited",
                  stdout_path=str(out_path), stderr_path=str(err_path))
     write_json(monitor_path, final)
+    if not final.get("terminal") and not timed_out:
+        # Compile refusals require the now-persisted process-exit evidence.
+        observed = inspect_tau_stream(ask_run_dir)
+        if observed.get("terminal"):
+            final.update(observed)
+            write_json(monitor_path, final)
     return {"command": command, "cwd": str(cwd), "exit_code": 124 if timed_out else proc.returncode,
             "stdout": out_path.read_text(errors="replace"), "stderr": err_path.read_text(errors="replace"),
             "timed_out": timed_out, "duration_seconds": round(time.monotonic() - started, 3),
@@ -1870,7 +1949,7 @@ def finish_primary_operation(record) -> dict[str, Any]:
     if not stream.get("terminal"):
         raise primary.Refusal("native Tau run is not settled; recover the same retained run")
     if stream.get("terminal_status") not in {"PASS", "COMPLETED"}:
-        refused = stream.get("semantic_refusal") or {}
+        refused = stream.get("semantic_refusal") or stream.get("compile_refusal") or stream.get("upstream_failure") or {}
         result = primary.failure(project, issue,
             f"Tau stopped {stream.get('terminal_status')}: {refused.get('failure_code', 'non_passing_run')}; no verified closure")
         result["tau_stream_monitor"] = stream

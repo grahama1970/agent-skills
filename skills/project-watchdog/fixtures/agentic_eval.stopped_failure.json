@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "skill": "project-watchdog",
+  "trials": 2,
+  "proof_scope": "Ticket 1605 stopped-failure recovery boundary; no successful-repair claim",
+  "claims": {
+    "proves": "Complete degraded joins and observed pre-dispatch rejections are terminal failures, while active, incomplete or mismatched evidence cannot authorize recovery",
+    "does_not_prove": "Provider/model correctness, successful repair, independent classifier completeness, or canary 1603 closure"
+  },
+  "cases": [
+    {
+      "name": "degraded-join-fails-before-fix",
+      "type": "negative",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/stopped-before.XXXXXX); uv run --project .. python ../evals/stopped_failure_1605.py boundary --baseline-ref b3f3a3d7a01e33e53e71c267b5bcbbeefbeb2bd7 --out \"$d/proof\""],
+      "expected": {"exit_code": 1, "stderr_contains": ["AssertionError", "'terminal': False", "'status': 'DEGRADED'"]}
+    },
+    {
+      "name": "degraded-join-and-negative-boundaries",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/stopped-boundary.XXXXXX); uv run --project .. python ../evals/stopped_failure_1605.py boundary --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"checks\": 6"]}
+    },
+    {
+      "name": "real-ask-compile-refusal-and-monitor-readback",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 90,
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/stopped-compile.XXXXXX); uv run --project .. python ../evals/stopped_failure_1605.py compile --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"provider_calls\": 0"], "stdout_excludes": ["Traceback"]},
+      "proves": "Actual installed Ask compiler is observed by the production monitor; no model/provider is invoked; altered-observation negatives remain fail-closed"
+    },
+    {
+      "name": "captured-real-degraded-canary",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/stopped-captured.XXXXXX); uv run --project .. python ../evals/stopped_failure_1605.py captured --run-dir /mnt/storage12tb/skills/project-watchdog/outputs/degraded-join-recovery/captured/ask --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"terminal\": true", "\"terminal_status\": \"BLOCKED\""]},
+      "proves": "Recorded #1603 provider failure is recognized as stopped, not successful or still running"
+    }
+  ]
+}
