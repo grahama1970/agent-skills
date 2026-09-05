@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "skill": "project-watchdog",
+  "trials": 2,
+  "proof_scope": "Primary-main scheduling boundaries and live read-only GitHub/checkout observations; not live authoring or closure",
+  "claims": {
+    "proves": "WebGPT-authored adversarial boundary checks, real remote-content admission for Tau #315, and unrelated-lease isolation for Battle #1500",
+    "does_not_prove": "Unattended live repair, provider execution, scheduler-loss recovery, or ticket closure; those require the separate live canary"
+  },
+  "cases": [
+    {
+      "name": "primary-main-adversarial-boundaries",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["bash", "-c", "set -e; d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/primary-boundaries.XXXXXX); cd ..; uv run --project . python evals/primary_main_revision.py unit --output \"$d/result.json\"; python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r[\"status\"]==\"PASS\" and r[\"executed\"]>=44 and all(c[\"status\"]==\"PASS\" for c in r[\"cases\"]); print(\"BOUNDARIES_READ_BACK\", r[\"executed\"], \"MOCKED_GITHUB_PROVIDER\")' \"$d/result.json\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["BOUNDARIES_READ_BACK", "MOCKED_GITHUB_PROVIDER"]},
+      "proves": "Real Git and subprocess boundary experiments; GitHub and provider effects are simulated",
+      "does_not_prove": "Live repair or closure"
+    },
+    {
+      "name": "live-tau315-comma-targets-and-remote-admission",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": ["bash", "-c", "set -e; d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/primary-tau-observe.XXXXXX); cd ..; uv run --project . python evals/primary_main_revision.py observe --project tau --issue 315 --output \"$d/result.json\" > \"$d/stdout.json\"; python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r[\"targets\"]==[\"src/tau_coding/dag_runtime/agent_node_adapter.py\",\"src/tau_coding/runtime_backends/herdr.py\"]; assert set(r[\"classification\"].values())=={\"verified_remote_identical\"}; assert r[\"authoring_executed\"] is False; print(\"LIVE_TAU_TARGETS_ADMITTED_NO_AUTHORING\")' \"$d/result.json\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["LIVE_TAU_TARGETS_ADMITTED_NO_AUTHORING"], "stdout_excludes": ["Traceback"]},
+      "proves": "Real GitHub marker parsing and shipped-target admission from the primary Tau checkout",
+      "does_not_prove": "Issue 315 repaired or its proof obligations satisfied"
+    },
+    {
+      "name": "live-battle-unrelated-lease-does-not-block",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": ["bash", "-c", "set -e; d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/primary-battle-observe.XXXXXX); cd ..; uv run --project . python evals/primary_main_revision.py observe --project battle --issue 1500 --output \"$d/result.json\" > \"$d/stdout.json\"; python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r[\"targets\"]==[\"skills/battle/spectator\"]; assert r[\"scope_conflict\"] is False; assert r[\"authoring_executed\"] is False; assert all(v==\"verified_remote_identical\" for v in r[\"classification\"].values()); print(\"LIVE_BATTLE_SCOPE_CLEAR_NO_AUTHORING\", r[\"foreign_leases\"])' \"$d/result.json\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["LIVE_BATTLE_SCOPE_CLEAR_NO_AUTHORING"], "stdout_excludes": ["Traceback"]},
+      "proves": "Real Battle target observation distinguishes unrelated foreign lease scope",
+      "does_not_prove": "Battle authoring or closure, or removal of any hold"
+    }
+  ]
+}

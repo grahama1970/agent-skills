@@ -29,13 +29,14 @@ import os
 import shlex
 import sys
 import time
+import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 
 from loguru import logger
 
-from . import config, github, registry, streaks
+from . import config, github, primary, registry, streaks
 from .core import (
     acquire_execution_lock,
     acquire_lock,
@@ -46,6 +47,7 @@ from .core import (
     log_event,
     release_execution_lock,
     release_lock,
+    serialize_state,
     run_cmd,
     timestamp,
     write_json,
@@ -71,27 +73,14 @@ _SELF_CLEARING_SKIPS = frozenset(
 
 
 def _handled_result_allows_agent_followup(result: dict[str, Any]) -> bool:
-    """Return true when a failed lane is still an agent-owned next step.
-
-    ``NEEDS_ATTENTION`` used to mean "stop and ask the human" even for errors
-    that named an obvious machine next step, such as a completion attestor that
-    ran but emitted no parseable verdict. That trained supervising agents to
-    bury the real next action in a final status report. A lane may now mark
-    ``requires_human_input: false`` to say: do not claim success, but the next
-    action is authorized for the agent and the tick should not fail as a human
-    blocker.
-    """
-    return result.get("ok") is True or result.get("requires_human_input") is False
+    # Machine-owned failure is still failure. Authorization is separate metadata.
+    return result.get("ok") is True
 
 
 def _handled_tick_status(result: dict[str, Any], *, preview: bool) -> str:
     if preview:
         return "DRY_RUN"
-    if result.get("ok") is True:
-        return "COMPLETED"
-    if result.get("requires_human_input") is False:
-        return "COMPLETED"
-    return "NEEDS_ATTENTION"
+    return "COMPLETED" if result.get("ok") is True else "NEEDS_ATTENTION"
 
 
 def _record_agent_authorization(receipt: dict[str, Any], result: dict[str, Any]) -> None:
@@ -137,36 +126,15 @@ def _record_fleet_stall(receipt: dict[str, Any], skipped: list[dict[str, Any]]) 
         receipt["ok"] = True
 
 
-def _reclaim_stale_leases(
-    repo: str,
-    stale: list[dict[str, Any]],
-    *,
-    apply: bool,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Clear only expired lease labels and return reclaimed rows plus failures."""
-    reclaimed: list[dict[str, Any]] = []
-    failures: list[dict[str, Any]] = []
-    if not apply:
-        return reclaimed, failures
-    for entry in stale:
-        command = github.issue_edit(
-            repo,
-            int(entry["issue_number"]),
-            remove=list(entry.get("labels", [])),
-        )
-        row = {**entry, "command": command}
-        if command.get("exit_code") == 0:
-            row["status"] = "reclaimed"
-            reclaimed.append(row)
-        else:
-            row["status"] = "reclaim_failed"
-            failures.append(row)
-    return reclaimed, failures
+def _reclaim_stale_leases(repo: str, stale: list[dict[str, Any]], *, apply: bool
+                         ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    # Age only indicates that reconciliation is due, never that the owner died.
+    return [], [{**entry, "status": "ownership_unproven", "repo": repo} for entry in stale]
 
 
 def tick(*, apply: bool, project_id: str, max_tickets: int, only_issue: int | None = None) -> int:
     """Run one bounded watchdog tick under the single-tick lock."""
-    run_id = f"project-watchdog-{timestamp()}"
+    run_id = f"project-watchdog-{timestamp()}-{uuid.uuid4().hex[:12]}"
     receipt_dir = config.receipt_root() / run_id
     receipt_dir.mkdir(parents=True, exist_ok=True)
     log_event(run_id, "tick_start", apply=apply, project_id=project_id, max_tickets=max_tickets)
@@ -251,6 +219,7 @@ def _test_hold_lock_if_requested(run_id: str) -> None:
     log_event(run_id, "test_hold_lock_finish", seconds=seconds)
 
 
+@serialize_state
 def _persist_tick_state(state: dict[str, Any]) -> None:
     """Write back only the keys a tick owns, merged onto what is on disk now.
 
@@ -310,6 +279,7 @@ def _audit_targeted_closure(
             pending = registry.list_closed_for_audit(run_id, candidate)
         except RuntimeError as exc:
             logger.error("closure audit scan failed for {}: {}", cid, exc)
+            receipt["errors"].append({"project_id": cid, "error": str(exc), "stage": "closure_scan"})
             continue
         pending_counts[cid] = len(pending)
         match = next((issue for issue in pending if int(issue["number"]) == int(only_issue)), None)
@@ -353,6 +323,7 @@ def _audit_one_closure(
             pending = registry.list_closed_for_audit(run_id, candidate)
         except RuntimeError as exc:
             logger.error("closure audit scan failed for {}: {}", cid, exc)
+            receipt["errors"].append({"project_id": cid, "error": str(exc), "stage": "closure_scan"})
             continue
         if pending:
             pending_by_project.append({"project": candidate, "pending": pending})
@@ -444,9 +415,13 @@ def _attest_completion(
         if now - last < window:
             continue
         try:
+            open_work = github.list_issues(registry.project_repo(candidate), state="open", label=config.READY_LABEL)
+            if any(registry.issue_matches_project_scope(candidate, registry.issue_targets(i)) for i in open_work):
+                continue
             recent = registry.list_recently_closed(run_id, candidate)
         except RuntimeError as exc:
             logger.error("completion scan failed for {}: {}", cid, exc)
+            receipt["errors"].append({"project_id": cid, "stage": "completion_scan", "error": str(exc)})
             continue
         if not recent:
             continue
@@ -577,14 +552,24 @@ def _tick_locked(
             skipped.append({"project_id": cid, "reason": f"project_state_{cstate}"})
             continue
         try:
+            pending = (primary.reconcile(registry.project_worktree(candidate)) if apply
+                       else primary.pending(registry.project_worktree(candidate)))
+            if pending:
+                receipt.setdefault("primary_observations", []).append({"project_id": cid, **pending})
+                if pending.get("writer_active"):
+                    skipped.append({"project_id": cid, "reason": "lane_busy", "operation": pending})
+                    continue
+                # No actual local writer: historical journals hold only their targets.
+                # Do not let a stale/foreign label become monorepo-wide authority.
             in_flight = registry.lane_busy_issues(run_id, candidate)
-        except RuntimeError as exc:
+        except (RuntimeError, OSError, ValueError) as exc:
             # A failed lease scan must never read as "nothing in flight".
             skipped.append({"project_id": cid, "reason": f"lease_scan_failed: {exc}"})
+            receipt["errors"].append({"project_id": cid, "stage": "lease_or_recovery_scan", "error": str(exc)})
             continue
 
-        # Reclaim leases whose holder is gone before deciding this project has
-        # nothing to do -- a stale lease is not work in flight (#1090).
+        # Retain age observations without turning TTL into release authority.
+        # The compatibility reclamation hook is intentionally non-mutating.
         stale = list(registry.LAST_LEASE_SCAN.get("stale", []))
         candidate_staleness = {
             "stale_after_seconds": registry.LAST_LEASE_SCAN.get(
@@ -609,18 +594,39 @@ def _tick_locked(
             continue
 
         busy = registry.busy_targets(in_flight)
+        unresolved = pending or {}
+        for operation in unresolved.get("operations", []):
+            busy.update(operation["targets"])
+        retained_issue_ids = {int(op["issue_number"]) for op in unresolved.get("operations", [])}
+        retained_issue_ids.update(int(op["issue_number"]) for op in unresolved.get("invalid_operations", [])
+                                  if op.get("issue_number") is not None)
+        unknown_leases = [int(i["number"]) for i in in_flight
+                          if registry.UNKNOWN_TARGET in registry.issue_targets(i)]
+        if unknown_leases:
+            receipt.setdefault("lease_scope_warnings", []).append({
+                "repo": registry.project_repo(candidate), "issues": unknown_leases,
+                "disposition": "leased_issue_quarantined_scope_unknown_not_global_writer",
+                "next_commands": [shlex.join([str(config.SKILL_DIR.parent / "ticket/run.sh"),
+                    "lookup", "show", str(n), "--repo", registry.project_repo(candidate)]) for n in unknown_leases]})
+        if in_flight:
+            receipt.setdefault("foreign_lease_observations", []).append({
+                "repo": registry.project_repo(candidate), "issues": [int(i["number"]) for i in in_flight],
+                "known_targets": sorted(registry.busy_targets(in_flight)),
+                "released": False})
         try:
             found = list_routable_issues(
                 run_id,
                 candidate,
                 busy,
-                skip_issue_numbers={int(e["issue_number"]) for e in reclaimed},
+                skip_issue_numbers={int(e["issue_number"]) for e in reclaimed} | retained_issue_ids,
+                skip_issue_reasons={n: "retained_operation_requires_recovery" for n in retained_issue_ids},
                 only_issue=only_issue,
                 apply=apply,
             )
         except (RuntimeError, ValueError) as exc:
             skipped.append({"project_id": cid, "reason": f"issue_scan_failed: {exc}"})
             logger.error("issue scan failed for project {}: {}", cid, exc)
+            receipt["errors"].append({"project_id": cid, "stage": "issue_scan", "error": str(exc)})
             continue
         scan = {
             "project_id": cid,
@@ -692,8 +698,8 @@ def _tick_locked(
         }
         receipt["lease_staleness"] = candidate_staleness
         receipt["reclaimed_leases"] = reclaimed
-        if not apply and stale:
-            receipt["would_reclaim_leases"] = stale
+        if stale:
+            receipt["expired_leases_retained"] = stale
         receipt["in_flight"] = {
             "issues": [int(i["number"]) for i in in_flight],
             "targets": sorted(busy),
@@ -708,6 +714,12 @@ def _tick_locked(
         "skipped": skipped,
     }
     receipt.setdefault("issue_scans", issue_scans)
+
+    if project is None and (receipt["errors"] or any(row.get("writer_active") for row in receipt.get("primary_observations", []))):
+        receipt.update(ok=False, status="NEEDS_ATTENTION", stop_reason="unsettled_execution_or_scan_failure",
+                       requires_human_input=any(x.get("requires_human_input") is True
+                           for x in receipt.get("primary_observations", [])))
+        return finish(run_id, receipt_dir, receipt, 1, persist=apply)
 
     # No repair work anywhere. Before calling the tick idle, check whether any
     # recent closure needs reviewing: closing a ticket is a claim that the work
@@ -735,6 +747,9 @@ def _tick_locked(
             _record_agent_authorization(receipt, audited)
             receipt["status"] = _handled_tick_status(audited, preview=preview)
             return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=not preview)
+        if receipt["errors"]:
+            receipt.update(ok=False, status="NEEDS_ATTENTION", stop_reason="targeted_observation_failed")
+            return finish(run_id, receipt_dir, receipt, 1, persist=apply)
         receipt.update({"ok": True, "status": "SKIPPED",
                         "stop_reason": "targeted_issue_not_routable",
                         "targeted_issue": int(only_issue)})
@@ -760,7 +775,7 @@ def _tick_locked(
 
     # Nothing to repair and nothing to audit: the point where the system would
     # otherwise call itself done. Ask an independent seat whether it actually is.
-    if project is None:
+    if project is None and not receipt.get("primary_observations") and not receipt.get("foreign_lease_observations") and not receipt["errors"]:
         attested = _attest_completion(
             run_id, receipt_dir, state, receipt, apply=apply, candidates=candidates
         )
@@ -774,6 +789,15 @@ def _tick_locked(
             return finish(
                 run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=not preview
             )
+
+    if project is None and receipt["errors"]:
+        receipt.update(ok=False, status="NEEDS_ATTENTION", stop_reason="incomplete_observation")
+        return finish(run_id, receipt_dir, receipt, 1, persist=apply)
+
+    if project is None and (receipt.get("primary_observations") or receipt.get("foreign_lease_observations")):
+        receipt.update(ok=False, status="NEEDS_ATTENTION", stop_reason="only_scoped_claims_remain",
+                       requires_human_input=False)
+        return finish(run_id, receipt_dir, receipt, 1, persist=apply)
 
     if project is None:
         streak = streaks.record_idle(project_id)
@@ -809,8 +833,9 @@ def _tick_locked(
     # Record who was served so the next tick starts after them, not at the head.
     state.setdefault("last_served_project", None)
     state["last_served_project"] = project_id
-    _persist_tick_state(state)
-    streaks.clear_idle(project_id)
+    if apply:
+        _persist_tick_state(state)
+        streaks.clear_idle(project_id)
 
     receipt["scanned_issues"] = issues
     if not issues and receipt.get("dependency_unblocks"):
@@ -843,7 +868,7 @@ def _tick_locked(
     # (observed 2026-09-01: #1553's held target consumed the slot on every
     # tick for hours). Iterate the full routable list until the plan is full.
     for index, issue in enumerate(issues):
-        if len(dispatch_plan) >= max_tickets:
+        if len(dispatch_plan) >= min(max_tickets, 1):
             break
         if defer_for_deadline(index, time.monotonic() - started, deadline):
             receipt["deadline_deferred"] = [int(i["number"]) for i in issues[index:]]
@@ -879,6 +904,7 @@ def _tick_locked(
         execution_lock = entry.get("lock")
         try:
             result = handle_issue(run_id, receipt_dir, project, issue, apply=apply)
+            _record_agent_authorization(receipt, result)
             result.setdefault("execution_lock_targets", entry["targets"])
             if execution_lock is not None:
                 result.setdefault("execution_lock", str(execution_lock))
@@ -886,8 +912,12 @@ def _tick_locked(
         finally:
             release_execution_lock(execution_lock)
     receipt["handled_count"] = len(receipt["handled_issues"])
-    receipt["ok"] = all(item.get("ok") for item in receipt["handled_issues"])
-    receipt["status"] = "COMPLETED" if receipt["ok"] else "NEEDS_ATTENTION"
+    receipt["ok"] = all(item.get("ok") for item in receipt["handled_issues"]) and not receipt["errors"]
+    statuses = {item.get("status") for item in receipt["handled_issues"]}
+    receipt["status"] = ("NEEDS_ATTENTION" if not receipt["ok"] else
+                         "DRY_RUN" if statuses == {"DRY_RUN"} else
+                         "SKIPPED" if not statuses or statuses <= {"SKIPPED"} else
+                         "COMPLETED")
     return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1)
 
 
@@ -927,7 +957,7 @@ def activate(*, apply: bool, minute: str = "*/5") -> int:
     })
 
     state_rc = 0
-    if cron_rc == 0:
+    if cron_rc == 0 and apply:
         with contextlib.redirect_stdout(io.StringIO()):
             state_rc = set_state("global", "active", project_id="", reason="activated by agent")
         steps.append({"step": "set_state_global_active", "exit_code": state_rc})
@@ -1147,6 +1177,7 @@ def install_cron(*, apply: bool, minute: str, allow_every_minute: bool = False) 
     return finish(run_id, receipt_dir, receipt, 0 if receipt["ok"] else 1, persist=True)
 
 
+@serialize_state
 def set_state(scope: str, state_value: str, *, project_id: str, reason: str) -> int:
     """Record an operator state transition at global or project scope."""
     run_id = f"project-watchdog-state-{timestamp()}"
@@ -1197,7 +1228,9 @@ def status_payload() -> dict[str, Any]:
         "cron_log_file": str(config.cron_log_path()),
         "receipt_root": str(receipts),
         "stored_receipt_dirs": stored,
-        "lock_held": config.lock_dir().is_dir(),
+        "lock_held": lock_holder_alive(),
+        "lock_observation": "kernel reservation, not directory existence",
+        "primary_reservations": primary_status(projects),
         "idle_streaks": streaks.all_streaks(),
         "idle_escalation_seconds": config.NOOP_ESCALATION_SECONDS,
         "uv_bin": config.resolve_uv_bin(),
@@ -1216,3 +1249,19 @@ def ui_payload(*, receipt_limit: int = 100) -> dict[str, Any]:
 
 def ui_json(*, receipt_limit: int = 100) -> str:
     return json.dumps(ui_payload(receipt_limit=receipt_limit), indent=2, sort_keys=True)
+
+
+
+def primary_status(projects: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows, seen = [], set()
+    for project in projects:
+        root = registry.project_worktree(project)
+        try:
+            key = str(primary._area(root))
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append({"root": str(root), **primary.observations(root)})
+        except (RuntimeError, OSError, ValueError) as exc:
+            rows.append({"root": str(root), "writer_active": None, "observation_error": str(exc)})
+    return rows

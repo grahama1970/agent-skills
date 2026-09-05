@@ -93,3 +93,47 @@ def issue_close(repo: str, issue_number: int, *, reason: str = "completed") -> d
         ["gh", "issue", "close", str(issue_number), "--repo", repo, "--reason", reason],
         timeout_s=60,
     )
+
+
+def _rest_issue(item: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(item, dict) or "number" not in item:
+        raise RuntimeError("GitHub returned an issue without an identity")
+    return {**item, "url": item.get("html_url", ""),
+            "state": str(item.get("state", "")).upper(),
+            "createdAt": item.get("created_at"), "updatedAt": item.get("updated_at"),
+            "closedAt": item.get("closed_at"),
+            "stateReason": str(item.get("state_reason") or "").upper()}
+
+
+def get_issue(repo: str, number: int) -> dict[str, Any]:
+    result = run_cmd(["gh", "api", f"repos/{repo}/issues/{int(number)}"], timeout_s=60)
+    if result.get("exit_code") != 0:
+        raise RuntimeError(f"direct issue read failed: {repo}#{number}: {result.get('stderr')}")
+    item = json.loads(result["stdout"])
+    if "pull_request" in item:
+        raise RuntimeError("target is a pull request, not a ticket")
+    return _rest_issue(item)
+
+
+def list_issues(repo: str, *, state: str, label: str) -> list[dict[str, Any]]:
+    """All REST pages, oldest first. Failed/partial responses are NOT an empty queue."""
+    from urllib.parse import urlencode
+    query = urlencode({"state": state, "labels": label, "sort": "created",
+                       "direction": "asc", "per_page": 100})
+    result = run_cmd(["gh", "api", "--paginate", "--slurp",
+                      f"repos/{repo}/issues?{query}"], timeout_s=120)
+    if result.get("exit_code") != 0:
+        raise RuntimeError(f"complete issue scan failed for {repo}: {result.get('stderr')}")
+    pages = json.loads(result["stdout"])
+    if not isinstance(pages, list) or any(not isinstance(page, list) for page in pages):
+        raise RuntimeError("issue scan did not return complete paginated arrays")
+    by_number = {}
+    for page in pages:
+        for raw in page:
+            if not isinstance(raw, dict):
+                raise RuntimeError("invalid GitHub issue page entry")
+            if "pull_request" in raw:
+                continue
+            item = _rest_issue(raw)
+            by_number[int(item["number"])] = item
+    return sorted(by_number.values(), key=lambda i: (str(i.get("createdAt") or ""), i["number"]))

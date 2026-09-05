@@ -71,7 +71,7 @@ def project_worktree(project: dict[str, Any]) -> Path:
 
 #: Branches a repair may be authored on. A repair committed onto whatever
 #: branch a worktree happens to hold is unattributable.
-DEFAULT_BRANCHES = ("main", "master")
+DEFAULT_BRANCHES = ("main",)
 
 #: Branch prefix for per-ticket repair worktrees. The lane creates one from
 #: origin/main per dispatch, so its branch is not a default branch and is still
@@ -94,191 +94,27 @@ def remote_main_sha(repo_dir: Path) -> str:
 
 
 def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -> dict[str, Any]:
-    """Create a clean worktree off ``origin/main`` to author one repair in.
-
-    Isolation, not convenience: the registered checkout is a human's working
-    tree and authoring there risks clobbering uncommitted work.
-
-    Managed lifecycle only (operator correction 2026-09-05): ops-worktrees
-    SKILL.md bans raw ``git worktree add``; creation goes through ``wt switch
-    -c`` and removal of a CLEAN leftover through ``wt remove``. The watchdog's
-    unmerged-commits refusal stays in front of both -- ``wt remove`` drops the
-    tree even when the branch is unmerged (verified live 2026-09-05), so it can
-    never be the first line of defense. If ``wt`` is unavailable the dispatch
-    fails closed; there is no raw-git fallback.
-
-    ``worktree`` is only the caller's preferred location; the resolved managed
-    path is returned under ``worktree`` and callers must use that.
-    """
-    import shutil
-
-    branch = f"{REPAIR_BRANCH_PREFIX}{issue_number}"
-    steps: list[dict[str, Any]] = []
-
-    def git(*args: str, cwd: Path) -> dict[str, Any]:
-        result = run_cmd(["git", "-C", str(cwd), *args], timeout_s=120)
-        steps.append({"argv": ["git", *args], "exit_code": result.get("exit_code")})
-        return result
-
-    wt_bin = shutil.which("wt")
-    if wt_bin is None:
-        return {
-            "ok": False,
-            "error": (
-                "wt (ops-worktrees managed worktree lifecycle) is not on PATH; "
-                "raw `git worktree add` is banned by ops-worktrees SKILL.md, so "
-                "the repair lane fails closed. Install wt (~/.local/bin/wt)."
-            ),
-            "steps": steps,
-        }
-
-    def wt(*args: str, cwd: Path) -> dict[str, Any]:
-        result = run_cmd([wt_bin, *args], cwd=cwd, timeout_s=120)
-        steps.append({"argv": ["wt", *args], "exit_code": result.get("exit_code")})
-        return result
-
-    def existing_worktree_for_branch() -> Path | None:
-        listing = git("worktree", "list", "--porcelain", cwd=repo_dir)
-        current: Path | None = None
-        for line in str(listing.get("stdout", "")).splitlines():
-            if line.startswith("worktree "):
-                current = Path(line.split(" ", 1)[1])
-            elif line.startswith("branch ") and current is not None:
-                if line.split(" refs/heads/", 1)[-1] == branch:
-                    return current
-                current = None
-        return None
-
-    # A leftover worktree may hold a finished repair nobody merged yet. wt
-    # remove drops the TREE even for an unmerged branch, so the unmerged
-    # refusal must run BEFORE any managed removal (watchdog-probe#1: a reset
-    # over codex's 9feb862 left the commit unreferenced).
-    existing = existing_worktree_for_branch()
-    if existing is not None:
-        result = run_cmd(
-            ["git", "-C", str(existing), "log", "--oneline", "origin/main..HEAD"],
-            timeout_s=60,
-        )
-        unmerged = [ln for ln in str(result.get("stdout", "")).splitlines() if ln.strip()]
-        if unmerged:
-            return {
-                "ok": False,
-                "error": (
-                    f"{existing} already holds {len(unmerged)} unmerged commit(s) on "
-                    f"{branch} ({unmerged[0]}). Refusing to reset or remove it and "
-                    f"lose that work: merge, archive, or delete the branch first "
-                    f"(ops-worktrees archive composes this per #1589)."
-                ),
-                "unmerged": unmerged,
-                "steps": steps,
-            }
-        removed = wt("remove", branch, cwd=repo_dir)
-        if removed.get("exit_code") != 0:
-            return {
-                "ok": False,
-                "error": f"wt remove of clean leftover failed: {removed.get('stderr')}",
-                "steps": steps,
-            }
-
-    fetched = git("fetch", "origin", "main", cwd=repo_dir)
-    if fetched.get("exit_code") != 0:
-        return {"ok": False, "error": f"fetch failed: {fetched.get('stderr')}", "steps": steps}
-
-    created = wt("switch", "-c", branch, cwd=repo_dir)
-    if created.get("exit_code") != 0:
-        return {
-            "ok": False,
-            "error": f"wt switch -c {branch} failed: {created.get('stderr')}",
-            "steps": steps,
-        }
-    resolved = existing_worktree_for_branch()
-    if resolved is None:
-        return {
-            "ok": False,
-            "error": f"wt reported success but no worktree for {branch} is registered",
-            "steps": steps,
-        }
-    # wt switch -c branches from the current HEAD; the repair must author off
-    # origin/main. The branch is fresh (any leftover was clean-removed above),
-    # so this reset destroys nothing.
-    reset = git("reset", "--hard", "origin/main", cwd=resolved)
-    if reset.get("exit_code") != 0:
-        return {
-            "ok": False,
-            "error": f"fresh worktree reset to origin/main failed: {reset.get('stderr')}",
-            "steps": steps,
-        }
-
-    # Register the lease at creation on the resolved managed path. Without an
-    # owner recorded here the reaper can only report worktrees, never reclaim
-    # them (fixed 2026-09-04: this branch previously read ``returncode``,
-    # which run_cmd never records, so the lease was never registered).
-    _register_worktree_lease(resolved, purpose=f"watchdog:{branch}")
-    return {"ok": True, "branch": branch, "worktree": str(resolved), "steps": steps}
+    """Compatibility entrypoint: primary/main only; the preferred old path is inert."""
+    from . import primary
+    try:
+        root, common = primary.identity(repo_dir)
+        pending = primary.markers(root)
+        if pending:
+            raise primary.Refusal("Git operation in progress: " + ", ".join(pending))
+        return {"ok": True, "branch": "main", "worktree": str(root),
+                "git_common_dir": str(common), "execution_policy": "primary-main-only",
+                "legacy_preferred_path": str(worktree), "steps": []}
+    except (OSError, ValueError, RuntimeError) as exc:
+        return {"ok": False, "error": str(exc), "steps": []}
 
 
 def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[str, Any]:
-    """Report whether a worktree is safe to author a repair in.
-
-    Observed 2026-07-28: the registry pointed ``agent-skills`` at a worktree
-    sitting on an unrelated feature branch, 686 commits behind main, with 543
-    modified tracked files, while a cron lane wrote tracked files into it every
-    few seconds. Dispatching there would author a repair on the wrong branch, on
-    top of foreign uncommitted edits, and could corrupt a running job.
-
-    Dirtiness is judged against ``targets`` when given, not the whole tree. In
-    agent-skills 111 of 364 skills are dirty; requiring the repository to be
-    clean withheld the 253 that are not. A repair confined to a clean skill is
-    not endangered by unrelated edits elsewhere -- and a skill a cron lane is
-    actively writing shows up dirty, so this still refuses exactly that case.
-
-    The branch check stays global: a repair authored on a feature branch never
-    reaches main regardless of which paths it touches.
-
-    Read-only. Returns the facts; the caller decides.
-    """
-    row: dict[str, Any] = {"worktree": str(worktree), "exists": worktree.is_dir()}
-    if not row["exists"]:
-        row["reasons"] = ["worktree_missing"]
-        row["ready"] = False
-        return row
-
-    def git(*args: str) -> tuple[int, str]:
-        result = run_cmd(["git", "-C", str(worktree), *args], timeout_s=30)
-        return int(result.get("exit_code", 1)), str(result.get("stdout", "")).strip()
-
-    code, branch = git("branch", "--show-current")
-    row["branch"] = branch or "(detached HEAD)"
-    if code != 0:
-        row["reasons"] = ["not_a_git_worktree"]
-        row["ready"] = False
-        return row
-
-    scope = sorted(t for t in (targets or set()) if t and t != UNKNOWN_TARGET)
-    row["scope"] = scope or ["<whole worktree>"]
-
-    # `git status -- <path>...` restricts the report to those paths. With no
-    # scope this is the previous whole-tree behaviour.
-    _, dirty_out = git("status", "--porcelain", "--untracked-files=no", "--", *scope)
-    dirty = [line for line in dirty_out.splitlines() if line.strip()]
-    row["dirty_tracked"] = len(dirty)
-    # porcelain is "XY<space>PATH", but the status field width varies with
-    # staged-vs-worktree combinations; a fixed slice truncated the filename.
-    row["dirty_paths"] = [line[2:].strip() for line in dirty[:10]]
-
-    _, untracked_out = git("status", "--porcelain", "--", *scope)
-    row["untracked"] = len([ln for ln in untracked_out.splitlines() if ln.startswith("??")])
-
-    reasons: list[str] = []
-    if row["branch"] not in DEFAULT_BRANCHES and not row["branch"].startswith(
-        REPAIR_BRANCH_PREFIX
-    ):
-        reasons.append(f"branch_is_not_default:{row['branch']}")
-    if dirty:
-        reasons.append(f"tracked_files_dirty:{len(dirty)}")
-    row["reasons"] = reasons
-    row["ready"] = not reasons
-    return row
+    from . import primary
+    try:
+        return primary.readonly_preflight(worktree, primary.safe_targets(targets or {"?"}))
+    except (OSError, ValueError, RuntimeError) as exc:
+        return {"ready": False, "worktree": str(worktree), "reasons": [str(exc)],
+                "requires_human_input": getattr(exc, "human", False)}
 
 
 def list_routable_issues(
@@ -297,26 +133,13 @@ def list_routable_issues(
     them is held back; a ticket against any other target is free to go.
     """
     repo = project_repo(project)
-    command = [
-        "gh",
-        "issue",
-        "list",
-        "--repo",
-        repo,
-        "--state",
-        "open",
-        "--label",
-        config.READY_LABEL,
-        "--limit",
-        "50",
-        "--json",
-        "number,title,body,labels,url",
-    ]
-    result = run_cmd(command, timeout_s=60)
-    log_event(run_id, "github_issue_scan", repo=repo, exit_code=result["exit_code"])
-    if result["exit_code"] != 0:
-        raise RuntimeError(f"gh issue list failed for {repo}: {result['stderr']}")
-    issues = json.loads(result["stdout"] or "[]")
+    if only_issue is not None:
+        direct = github.get_issue(repo, only_issue)
+        issues = [direct] if direct.get("state") == "OPEN" else []
+    else:
+        issues = github.list_issues(repo, state="open", label=config.READY_LABEL)
+    from . import primary
+    issues = primary.queue_order(project_worktree(project), issues)
     routable: list[dict[str, Any]] = []
     unroutable_no_repair_lane = 0
     dependency_unblocks: list[dict[str, Any]] = []
@@ -352,6 +175,9 @@ def list_routable_issues(
         if issue_number in skip_now:
             reason = skip_reasons.get(issue_number, "lease_reclaimed_this_tick")
             excluded.setdefault(reason, []).append(issue_number)
+            continue
+        if policy_held(repo, issue_number):
+            excluded.setdefault("standing_policy_hold", []).append(issue_number)
             continue
         targets = issue_targets(issue)
         if not issue_matches_project_scope(project, targets):
@@ -391,7 +217,6 @@ def list_routable_issues(
         issue["watchdog_targets"] = sorted(targets)
         # Claim them for the rest of this scan: with max_tickets > 1 two tickets
         # against the same target would otherwise both look free.
-        busy_now |= targets
         routable.append(issue)
     if excluded:
         log_event(
@@ -510,7 +335,7 @@ def _upstream_issue_state(run_id: str, ref: str) -> dict[str, Any]:
 def _dependency_resolved(row: dict[str, Any]) -> bool:
     if row["state"] != "CLOSED":
         return False
-    return row["stateReason"] not in {"NOT_PLANNED", "DUPLICATE"}
+    return row["stateReason"] == "COMPLETED"
 
 
 def _remove_dependency_hold_labels(issue: dict[str, Any]) -> None:
@@ -565,23 +390,8 @@ def dependency_gate(
         "removed_labels": removed,
         "applied": False,
     }
-    if removed and apply:
-        command = github.issue_edit(repo, int(issue["number"]), remove=removed)
-        result["command"] = command
-        if command.get("exit_code") != 0:
-            result.update(
-                {
-                    "status": "unblock_failed",
-                    "reason": "dependency_unblock_failed",
-                    "error": command.get("stderr"),
-                }
-            )
-            return result
-        result["applied"] = True
-        result["status"] = "unblocked"
-        result["reason"] = "dependency_unblocked_this_tick"
-    if removed:
-        _remove_dependency_hold_labels(issue)
+    # The classification step still sees every original hold label. A proved
+    # upstream closure is not authority to clear an independently applied hold.
     return result
 
 
@@ -682,21 +492,10 @@ def list_closed_for_audit(
     persisted retry timestamp cools it down instead of parking it forever.
     """
     repo = project_repo(project)
-    result = run_cmd(
-        [
-            "gh", "issue", "list", "--repo", repo, "--state", "closed",
-            "--label", config.READY_LABEL, "--limit", "50",
-            "--json", "number,title,body,labels,url,closedAt,stateReason",
-        ],
-        timeout_s=60,
-    )
-    log_event(run_id, "closure_audit_scan", repo=repo, exit_code=result.get("exit_code"))
-    if result.get("exit_code") != 0:
-        raise RuntimeError(f"closed-issue scan failed for {repo}: {result.get('stderr')}")
-
+    issues = github.list_issues(repo, state="closed", label=config.READY_LABEL)
     cutoff = (now if now is not None else time.time()) - config.CLOSURE_AUDIT_WINDOW_SECONDS
     pending: list[dict[str, Any]] = []
-    for issue in json.loads(result.get("stdout") or "[]"):
+    for issue in issues:
         labels = {str(lbl.get("name")) for lbl in issue.get("labels", [])}
         if not issue_matches_project_scope(project, issue_targets(issue)):
             continue
@@ -715,23 +514,8 @@ def list_closed_for_audit(
 
 
 def list_recently_closed(run_id: str, project: dict[str, Any]) -> list[dict[str, Any]]:
-    """Closed agent-work tickets, newest first, for the completion attestation."""
-    repo = project_repo(project)
-    result = run_cmd(
-        [
-            "gh", "issue", "list", "--repo", repo, "--state", "closed",
-            "--label", config.READY_LABEL, "--limit", "40",
-            "--json", "number,title,body,labels,closedAt,stateReason",
-        ],
-        timeout_s=60,
-    )
-    if result.get("exit_code") != 0:
-        raise RuntimeError(f"closed-issue scan failed for {repo}: {result.get('stderr')}")
-    issues = json.loads(result.get("stdout") or "[]")
-    scoped = [
-        issue for issue in issues
-        if issue_matches_project_scope(project, issue_targets(issue))
-    ]
+    issues = github.list_issues(project_repo(project), state="closed", label=config.READY_LABEL)
+    scoped = [issue for issue in issues if issue_matches_project_scope(project, issue_targets(issue))]
     return sorted(scoped, key=lambda i: str(i.get("closedAt") or ""), reverse=True)
 
 
@@ -767,24 +551,7 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
     repo = str(project["repo"])
     by_number: dict[int, dict[str, Any]] = {}
     for label in sorted(config.LEASE_LABELS):
-        result = run_cmd(
-            [
-                "gh", "issue", "list", "--repo", repo, "--state", "open",
-                "--label", label, "--limit", "20",
-                # body included: the target is read from it, and without it
-                # every in-flight ticket reads as unknown-target.
-                "--json", "number,title,body,labels,url,updatedAt",
-            ],
-            timeout_s=60,
-        )
-        if result.get("exit_code") != 0:
-            # A failed scan must never read as "nothing in flight" -- that would
-            # let the watchdog work ahead precisely when it cannot see the
-            # current state.
-            raise RuntimeError(
-                f"lease scan failed for {repo} on label {label}: {result.get('stderr')}"
-            )
-        for issue in json.loads(result.get("stdout") or "[]"):
+        for issue in github.list_issues(repo, state="open", label=label):
             number = int(issue["number"])
             existing = by_number.get(number, issue)
             scanned = set(existing.get("_watchdog_scanned_labels", []))
@@ -838,7 +605,8 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
             }
             if age_seconds >= config.LEASE_STALE_SECONDS:
                 lease["reason"] = "lease_expired"
-                stale_labels.append(lease)
+                lease["reason"] = "lease_expired_liveness_unproven"
+                fresh_labels.append(lease)
             else:
                 lease["reason"] = "lease_active"
                 fresh_labels.append(lease)
@@ -876,7 +644,7 @@ def lane_busy_issues(run_id: str, project: dict[str, Any]) -> list[dict[str, Any
 
 #: The machine-readable `target: skills/<name>` line `/ticket` writes into every
 #: body. That line is the ticket's own statement of what it will change.
-_TARGET_LINE = re.compile(r"^target:\s*(\S+)\s*$", re.MULTILINE)
+_TARGET_LINE = re.compile(r"^target:[ \t]*([^\r\n]+?)[ \t]*$", re.MULTILINE)
 
 #: Fallback for tickets filed before that line existed: every skill path the
 #: body mentions. Coarser, but it resolves 7 of the 8 leases currently open on
@@ -936,10 +704,20 @@ def issue_targets(issue: dict[str, Any]) -> set[str]:
     body = issue.get("body") or ""
     match = _TARGET_LINE.search(body)
     if match and (declared := match.group(1).strip().rstrip("/")):
-        return {declared}
+        # Legacy markers can mix concrete comma-separated paths with prose
+        # (tau#315: two source paths, then "headless Tau agent worker").
+        # Preserve the explicit paths; never turn that prose into write scope.
+        paths = {part.strip() for part in declared.split(",")
+                 if part.strip() and not any(c.isspace() for c in part.strip())}
+        if paths:
+            return paths
     declared_paths = _markdown_target_paths(body)
     if declared_paths:
         return declared_paths
+    if config.TAU_REPAIR_MARKER in body:
+        return {"experiments/goal-locked-subagents/agent-command-specs/coder/tau-dispatch-command.json"}
+    if config.TAU_HANDOFF_DISPATCH_MARKER in body:
+        return {"experiments/goal-locked-subagents/agent-command-specs"}
     mentioned = {path.rstrip("/") for path in _SKILL_PATH.findall(body)}
     return mentioned or {UNKNOWN_TARGET}
 
@@ -1005,13 +783,18 @@ def busy_targets(issues: list[dict[str, Any]]) -> set[str]:
     """Every target held by the given in-flight issues."""
     held: set[str] = set()
     for issue in issues:
-        held |= issue_targets(issue)
+        held |= issue_targets(issue) - {UNKNOWN_TARGET}
     return held
 
 
 def targets_are_blocked(targets: set[str], busy: set[str]) -> bool:
-    """Whether dispatching ``targets`` would touch something already in flight."""
-    return bool(targets & busy)
+    if not busy:
+        return False
+    if UNKNOWN_TARGET in targets:
+        return bool(busy)
+    busy = busy - {UNKNOWN_TARGET}
+    return any(target_matches_prefix(a, b) or target_matches_prefix(b, a)
+               for a in targets for b in busy)
 
 
 def rotation_order(
@@ -1139,7 +922,7 @@ def classify_issue_with_reason(issue: dict[str, Any]) -> tuple[str | None, str |
         return None, "blocked"
     if config.DONE_LABEL in labels:
         return None, "awaiting_review"
-    if labels & config.HUMAN_HOLD_LABELS:
+    if labels & (config.HUMAN_HOLD_LABELS | {"external-owner"}):
         return None, "human_hold"
     if config.READY_LABEL not in labels:
         return None, "not_ready"
@@ -1166,3 +949,8 @@ def _register_worktree_lease(worktree, *, purpose: str) -> None:
         _register(worktree, purpose=purpose)
     except Exception:
         pass
+
+
+def policy_held(repo: str, number: int) -> bool:
+    """Standing explicit holds cannot be weakened by labels or dependency state."""
+    return repo.casefold() == "grahama1970/agent-skills" and int(number) in {1599, 1600, 1601, 1602}

@@ -30,7 +30,11 @@ Failure modes
 from __future__ import annotations
 
 import hashlib
+import tempfile
 import json
+import fcntl
+import functools
+import uuid
 import os
 import signal
 import subprocess
@@ -100,6 +104,7 @@ def run_cmd(
     env = os.environ.copy()
     uv_parent = str(Path(config.resolve_uv_bin()).parent)
     env["PATH"] = f"{uv_parent}:{env.get('PATH', '')}"
+    from . import primary
     proc = subprocess.Popen(
         command,
         cwd=str(cwd) if cwd else None,
@@ -109,6 +114,7 @@ def run_cmd(
         stderr=subprocess.PIPE,
         text=True,
         start_new_session=True,
+        pass_fds=primary.inherited_fds(),
     )
     try:
         stdout, stderr = proc.communicate(input=input_text, timeout=timeout_s)
@@ -217,8 +223,24 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
+    """Durable replacement; a killed writer cannot truncate the authority record."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    data = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    fd, raw = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary = Path(raw)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        dfd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def acquire_lock(run_id: str) -> bool:
@@ -234,6 +256,39 @@ def execution_lock_key(targets: set[str] | list[str] | tuple[str, ...]) -> str:
     digest = hashlib.sha256("\n".join(normalized).encode("utf-8")).hexdigest()[:16]
     label = normalized[0].replace("/", "_").replace(":", "_")[:80]
     return f"{label}-{digest}"
+
+
+_HELD_LOCKS: dict[str, tuple[int, int, str]] = {}
+
+
+def _kernel_lock_busy(lock: Path) -> bool:
+    path = lock / "reservation.flock"
+    if not path.exists():
+        return False
+    fd = os.open(path, os.O_RDWR)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return False
+        except BlockingIOError:
+            return True
+    finally:
+        os.close(fd)
+
+
+def serialize_state(function):
+    """Serialize complete read/modify/write transactions, not just rename()."""
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        path = config.state_path().resolve().with_suffix(".mutation.flock")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            return function(*args, **kwargs)
+        finally:
+            os.close(fd)
+    return wrapper
 
 
 def acquire_execution_lock(run_id: str, targets: set[str] | list[str] | tuple[str, ...]) -> Path | None:
@@ -252,57 +307,60 @@ def release_execution_lock(lock: Path | None) -> None:
 
 
 def execution_lock_holder_alive(lock: Path) -> bool:
-    owner_path = lock / "owner.json"
-    try:
-        owner = json.loads(owner_path.read_text(encoding="utf-8"))
-    except (OSError, ValueError, TypeError) as exc:
-        logger.error("could not read execution lock owner: {}", exc)
-        return False
-    return _owner_pid_alive(owner)
+    return _kernel_lock_busy(lock)
 
 
 def _acquire_dir_lock(lock: Path, run_id: str, extra_owner_fields: dict[str, Any]) -> bool:
+    lock.mkdir(parents=True, exist_ok=True)
+    fd = os.open(lock / "reservation.flock", os.O_CREAT | os.O_RDWR, 0o600)
     try:
-        lock.mkdir(parents=True)
-    except FileExistsError:
-        if not _reclaim_stale_lock(run_id, lock):
-            return False
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        os.close(fd)
+        return False
+    previous_path = lock / "owner.json"
+    if previous_path.exists():
         try:
-            lock.mkdir(parents=True)
-        except FileExistsError:
-            logger.error("lock reclaim raced with another tick; backing off")
-            return False
-    (lock / "owner.json").write_text(
-        json.dumps(
-            {
-                "run_id": run_id,
-                "pid": os.getpid(),
-                "ts": timestamp(),
-                "epoch": time.time(),
-                **extra_owner_fields,
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+            previous = load_json(previous_path)
+        except (OSError, ValueError):
+            os.close(fd)
+            return False  # An unreadable legacy owner is not proven dead.
+        if previous.get("locking") != "flock-v1":
+            # Missing/malformed owner identity is UNKNOWN, not a dead process.
+            pid = previous.get("pid")
+            if isinstance(pid, bool) or not isinstance(pid, int) or pid <= 0:
+                os.close(fd)
+                return False
+            if _owner_pid_alive(previous):
+                os.close(fd)
+                return False
+            # A nonexistent PID establishes that this LOCAL legacy mutex holder
+            # is dead. It does NOT release an issue or settle remote Tau work.
+            retained = lock / ("legacy-owner-" + hashlib.sha256(previous_path.read_bytes()).hexdigest() + ".json")
+            if not retained.exists():
+                write_json(retained, previous)
+    token = uuid.uuid4().hex
+    try:
+        write_json(previous_path, {"run_id": run_id, "pid": os.getpid(), "locking": "flock-v1",
+                   "owner_token": token, "ts": timestamp(), "epoch": time.time(), **extra_owner_fields})
+    except BaseException:
+        os.close(fd)
+        raise
+    _HELD_LOCKS[str(lock.resolve())] = (os.getpid(), fd, token)
     return True
 
 
 def lock_holder_alive() -> bool:
-    """Whether a live process currently holds the tick lock.
-
-    A tick that steps aside for another tick that is genuinely working is not a
-    failure. Reporting it as one made every minute of a multi-minute audit log
-    BLOCKED and exit 1, so a healthy long-running lane looked like a broken one.
-    """
-    owner_path = config.lock_dir() / "owner.json"
+    lock = config.lock_dir()
+    if _kernel_lock_busy(lock):
+        return True
     try:
-        owner = json.loads(owner_path.read_text(encoding="utf-8"))
-    except (OSError, ValueError, TypeError) as exc:
-        logger.error("could not read lock owner: {}", exc)
+        owner = load_json(lock / "owner.json")
+    except FileNotFoundError:
         return False
-    return _owner_pid_alive(owner)
+    except (OSError, ValueError):
+        return False  # Unknown metadata is reported separately, not a fictitious held flock.
+    return owner.get("locking") != "flock-v1" and _owner_pid_alive(owner)
 
 
 def _owner_pid_alive(owner: dict[str, Any]) -> bool:
@@ -322,39 +380,8 @@ def _owner_pid_alive(owner: dict[str, Any]) -> bool:
 
 
 def _reclaim_stale_lock(run_id: str, lock: Path) -> bool:
-    owner_path = lock / "owner.json"
-    try:
-        owner = json.loads(owner_path.read_text(encoding="utf-8"))
-        age = time.time() - float(owner.get("epoch", 0.0))
-    except (OSError, ValueError, TypeError) as exc:
-        logger.error("unreadable lock owner file {}: {}", owner_path, exc)
-        age = float("inf")
-        owner = {}
-    if age < config.LOCK_STALE_SECONDS:
-        return False
-    if _owner_pid_alive(owner):
-        logger.warning(
-            "watchdog lock held by live pid={} exceeded stale age_s={:.0f}; refusing takeover",
-            owner.get("pid"),
-            age,
-        )
-        log_event(
-            run_id,
-            "stale_lock_owner_still_alive",
-            previous_run_id=owner.get("run_id"),
-            pid=owner.get("pid"),
-            age_seconds=age,
-        )
-        return False
-    logger.warning(
-        "reclaiming stale watchdog lock held by run_id={} pid={} age_s={:.0f}",
-        owner.get("run_id"),
-        owner.get("pid"),
-        age,
-    )
-    log_event(run_id, "stale_lock_reclaimed", previous_run_id=owner.get("run_id"), age_seconds=age)
-    _remove_lock(lock)
-    return True
+    # Deprecated compatibility entry: TTL is not execution-liveness evidence.
+    return False
 
 
 def release_lock() -> None:
@@ -363,13 +390,18 @@ def release_lock() -> None:
 
 
 def _remove_lock(lock: Path) -> None:
+    held = _HELD_LOCKS.pop(str(lock.resolve()), None)
+    if held is None or held[0] != os.getpid():
+        return  # Never remove or unlock another owner's reservation.
+    _, fd, token = held
     try:
-        (lock / "owner.json").unlink(missing_ok=True)
-        lock.rmdir()
-    except FileNotFoundError:
-        logger.debug("lock directory already gone: {}", lock)
-    except OSError as exc:
-        logger.error("failed to release watchdog lock {}: {}", lock, exc)
+        owner = load_json(lock / "owner.json")
+        if owner.get("owner_token") == token:
+            owner.update(released=True, released_at=time.time())
+            write_json(lock / "owner.json", owner)
+    finally:
+        # Closing this process's fd is safe; do not unlink the stable inode.
+        os.close(fd)
 
 
 def base_receipt(run_id: str, receipt_dir: Path, apply: bool) -> dict[str, Any]:

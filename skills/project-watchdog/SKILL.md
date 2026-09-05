@@ -101,7 +101,7 @@ use `--project all`, and installed global cron lines must render that value.
 because the lane hand-authored a contract against Tau's own command-spec tree,
 which only the tau checkout has — so every other registered project was refused
 before it could dispatch. `$ask` compiles the DAG for any repo; a project needs
-only a worktree.
+only its registered primary checkout on main.
 
 Collision is a property of the **target**, not the repository. agent-skills
 holds 364 skills, and two tickets against different ones share no files. Each
@@ -220,26 +220,35 @@ persist a directory. Only eventful runs — `COMPLETED`, `NEEDS_ATTENTION`,
 per-minute cron that persisted uneventful receipts accumulated 41,682
 directories and 329 MB before 2026-07-27.
 
-## Locking
+## Locking and lease ownership
 
-One tick at a time, enforced by a lock directory under the state root. A lock
-whose owner record is older than `LOCK_STALE_SECONDS` (900s) is treated as
-abandoned by a killed process and reclaimed, with the takeover logged at
-WARNING. Without this, a single SIGKILL would leave the watchdog permanently
-`BLOCKED`.
+Scheduler and execution reservations use stable kernel flocks. They are never
+unlinked on TTL expiry. A repository-wide primary reservation lives in the
+canonical Git common directory, so state-root aliases and overlapping target
+prefixes cannot authorize concurrent writers to the same primary checkout.
+Only the owning process may release its own reservation.
 
-## Lease expiry
+The operation journal is durable before lease acquisition and before Ask/Tau
+launch. A detached local reservation holder invokes the existing Ask/Tau path;
+it is not a second execution scheduler or provider transport. Killing the cron
+parent leaves the worker and repository reservation intact. Supervisor loss in
+an ambiguous launch/run window requires reconciliation of that exact run by
+native Tau. Cached progress or elapsed time alone never authorizes a new run.
 
-Issue leases use `agent-active` or `maintainer-active`. Their acquisition time
-comes from GitHub's label event, and new watchdog lease comments also include
-`acquired_at`. A lease becomes stale after
-`PROJECT_WATCHDOG_LEASE_STALE_SECONDS` (default 24 hours).
+New leases use the native ticket helper's `maintainer-active` label and unique
+`--agent` marker. Acquisition and release bind to the exact label-event generation.
+Lost responses are reconciled before execution. Existing `agent-active` and
+`maintainer-active` labels are never cleared because of age. A known foreign
+claim holds only overlapping target paths; an unknown foreign claim quarantines
+its own ticket and emits a native `ticket lookup show` command, not a repository
+wildcard. A live canonical flock still excludes every second cooperating writer.
 
-On an applied tick, stale lease labels are removed before routing. The tick
-receipt names each issue, label, acquisition time, age, expiry window, and
-reason under `reclaimed_leases`. Reclamation removes only the lease label; it
-does not change assignees or dispatch that same issue again in the reclaiming
-tick. A dry run reports `would_reclaim_leases` without mutating GitHub.
+`scripts/watchdog/recover_primary.py --root PRIMARY --apply` is the executable
+recovery path. It advances the same retained native close/release or inspects the
+same Tau run; it does not launch a replacement provider. Per-operation journals,
+queue records, snapshots and closure outboxes are strict Pydantic records.
+Persistent lock directories are not liveness evidence; status and UI probe the
+kernel reservation. GitHub labels are not a distributed compare-and-swap.
 
 ## Pause, Stop, Resume
 
@@ -256,8 +265,8 @@ worker request should become a GitHub comment or watchdog receipt requiring
 human/operator confirmation.
 
 Resume should require a trusted human/operator action and any project-specific
-preconditions listed in `resume_requires`, such as a valid goal capsule, clean
-worktree, or valid GitHub authentication.
+preconditions listed in `resume_requires`, such as a valid goal capsule, exact target ownership,
+or valid GitHub authentication. Checkout-wide dirtiness is not a finding.
 
 ## Dynamic GitHub Actions
 
@@ -291,16 +300,16 @@ project-watchdog-action:tau-handoff-dispatch \
   apply_transport=false
 ```
 
-The watchdog treats `start` as a Tau repo-relative path, rejects absolute paths
-or `..`, runs one bounded `tau handoff-command-loop` tick, writes receipts under
-`~/.local/state/project-watchdog/receipts/<run_id>/`, and comments the evidence
-back to the issue. `apply_transport=true` is allowed only when the issue should
-apply the terminal Tau GitHub transport; otherwise the transport receipt is
-rendered dry-run.
+The adapter validates the original `start`, `max_steps`, goal hash and transport
+intent, then runs the existing `tau handoff-command-loop` and transport-preview
+commands through the primary/main creator-reviewer lane. Coder-spec requests
+retain their exact scoped spec and focused native tests. Neither route is
+blanket-disabled. Raw terminal GitHub mutation is replaced by native ticket
+verification and close after proof; requested transport intent stays in the
+receipt. A continuation or NEEDS_AGENT is not a completed ticket.
 
-Issues with `agent-active` or `agent-blocked` are skipped until a human/operator
-clears the state label. This prevents cron from retrying a failed ticket every
-minute without an explicit retry decision.
+Lease/hold labels are not erased to make an old route eligible. Settled machine
+failures are retriable after an owned native release; genuine human holds remain.
 
 ## Three lanes, in order
 
@@ -311,8 +320,8 @@ audit can never delay a ticket that is actually waiting.
 
 Before repair dispatch, the scan reads `blocked-by` / `depends_on` references.
 When every upstream issue is closed as `COMPLETED`, an applied tick removes only
-the dependency hold labels (`blocked:upstream`, `maintainer-blocked`,
-`needs-human`), records `dependency_unblock` as the handled work, and exits. It
+the dependency-owned label `blocked:upstream` (never independent
+`maintainer-blocked` or `needs-human` holds), records `dependency_unblock` as the handled work, and exits. It
 does not dispatch the newly unblocked ticket in the same tick; the next cron
 tick handles that ticket from a fresh scan. This keeps dependency clearing from
 turning immediately into a repair DAG or a worktree-readiness failure.
@@ -359,7 +368,7 @@ spots is a second pass, not a second opinion, so identical seats are refused
 before dispatch.
 
 Repair creators and repair reviewers must be locally executing lanes that can
-work from the repair worktree and run the ticket's proof command. Browser/web
+work from the registered primary checkout on main and run the ticket's proof command. Browser/web
 model seats such as `webgpt`, `webclaude`, `webkimi`, `webgemini`, and
 `webgrok` cannot run local code and must not be configured as
 `repair_creator` or `repair_reviewer`.
@@ -375,39 +384,57 @@ be given `--handler-workspace` and treated as Codex CLI models. Repo-changing
 OpenCode work needs a separate OpenCode serve/transport authoring lane with its
 own receipt contract.
 
-Each repair is authored in a worktree of its own, created from `origin/main`
-per dispatch under the state root. The registered checkout is a human's working
-tree; authoring there builds on whatever it happens to hold. It is still
-consulted for one thing: whether this ticket's targets are settled.
+Each repair is authored only in the registered **primary checkout on main**.
+No branch/worktree creation, removal, reset, stash, clean, rebase or broad shared
+index commit is allowed. Retained issue-315 refs, worktrees and interrupted Git
+operations are read-only context, never cleanup targets.
 
-The creator commits to its branch and must not push — the immutable goal says
-so, and the lane records `origin/main` before and after, blocking the ticket if
-it moved. That detects the violation; preventing it belongs in branch
-protection.
+The shipped baseline is a freshly observed live `origin/main` SHA, not local
+HEAD or a stale remote-tracking name. Snapshot only authorized literal targets,
+including remote tombstones and target index entries. Remote-identical files are
+eligible even when intentionally dirty/untracked against local HEAD. Other target
+bytes require exact same-ticket, same-task, helper-produced ownership provenance.
+An unknown or changed target remains a scoped conflict; there is no blanket
+`primary_authorized_dirty` map and no automatic needs-human relabel.
 
-Alpha projects that use dependent ticket families may set `auto_land_main:
-true` in `registry/projects.json`. For those projects, a reviewer-passed repair
-with a passing proof gate is rebased onto `origin/main`, pushed to `main`, marked
-`agent-done`, and closed as `COMPLETED` in the same repair tick. Without this,
-the issue remains open with `agent-done` as a branch awaiting review, and
-downstream `blocked-by` tickets stay `dependency_open`.
+`scope_commit.py` creates an unreferenced content commit via a private index.
+It never updates local HEAD or the shared index. The creator checkpoints after
+meaningful edits and the reviewer binds the final commit and on-disk bytes.
+Publication honors `auto_land_main`: it builds against current remote main,
+preserves disjoint remote advances, and uses an ordinary non-forced push only
+when configured. Same-target remote races refuse without restoration or rebase.
+
+The native lifecycle is executable: guarded `lease`, `ticket verify ISSUE --cmd`
+for every reviewed deterministic command, guarded `close --proof --review`, then
+readback of COMPLETED closure and the exact proof. A durable closure record is
+written before mutation; recovery retries that record rather than reauthoring.
+The native helper keeps its lease until close succeeds. Retention auditing is
+mandatory; neither missing audit capability nor a retained worktree finding is
+silently bypassed. There is no REVIEW_READY-only handoff or unimplemented consumer.
+
+Unrelated cron files and unrelated staged work are not hashed or attributed to
+this run. Worker-submitted commits are checked for out-of-scope paths. These
+checks cannot identify an unlogged out-of-scope shell write with no attributable
+commit; native authoring permissions/review remain required. Do not claim OS
+sandboxing or universal concurrent-write provenance.
 
 #### The proof gate — a DAG that exited 0 is not a repaired ticket
 
-`$ask tau-dag` exiting 0 means the seats were reached. Before the lane lands or
-closes anything it checks four things and fails closed on any of them, writing
-`repair-proof-gate.json` into the tick receipt either way:
+Before native verification and closure, the lane requires one unambiguous reviewer
+`VERDICT: PASS`, no explicit seat refusal, all required output/result artifacts
+fresh and passing, and a reviewed content commit bound to this repair's pinned baseline (or the
+already-shipped baseline when verification needs no code change). An abandoned branch's old commit does not count.
+`USABLE_WITH_GAPS`, failed/skipped/unrun cases, stale results, missing results,
+non-JSON existence alone, ambiguous duplicate seat results, or unfinished Tau
+execution cannot produce a passing gate. The actual acceptance criterion still
+requires the native proof and independent review, not a fabricated boolean.
 
-- the reviewer seat declares `VERDICT: PASS` in its own response;
-- no seat declares `FAIL`, `BLOCKED`, or `NEEDS_ATTENTION`;
-- if the ticket's `Required proof` section names artifacts, at least one exists,
-  was written after this dispatch started, and reads as a completed pass;
-- the repair branch is at least one commit ahead of `origin/main`.
-
-Verdicts are read, not inferred: only a `VERDICT:` line or the first word of a
-`## Position` section counts, and prose describing a problem yields no verdict,
-which is unproven. Refusal leaves the ticket open, `agent-blocked`, and
-`NEEDS_ATTENTION`.
+An ordinary settled machine failure stays open and eligible; it is not given
+`agent-blocked` or `needs-human` merely because a seat says NEEDS_ATTENTION.
+The full queue is paginated and ordered by oldest attempt before selection;
+a failed preparation rotates rather than monopolizing the head. An explicitly
+targeted issue is fetched by identity, outside any newest-50 listing limit.
+Holds on agent-skills #1599–1602 are explicit and cannot be cleared by routing.
 
 agent-skills#1499 is why: both node receipts said `status: PASS` while the
 creator's response said it had no tools and the reviewer's said the live proof
@@ -493,3 +520,19 @@ envelope). Produces: tick receipts, proof gates, leases, `lazy_report_shame.cont
 boundary events: dispatch, closure. Failure names come only from the triage-error
 catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
 unrepresentable ecosystem-wide. When open machine work remains, write/validate the continuation ledger through `skills/shame/run.sh guard` so `$shame` rejects `state=done` until the ticket/gate/next command is resolved.
+
+
+## Retained primary/main revision evals
+
+`evals/primary_main_revision.py unit --output OUTSIDE_REPO.json` executes the
+retained pytest boundary cases, with explicit simulated GitHub/provider labeling.
+`observe --project ID --issue NUMBER --output OUTSIDE_REPO.json` reads actual
+ownership, live remote and lease scopes without dispatch.
+`live --project ID --issue NUMBER --output OUTSIDE_REPO.json [--kill-scheduler]`
+uses an existing eligible ticket through the real tick. It never creates a
+fixture branch, worktree or ticket. The optional kill targets only the scheduler
+process spawned by that harness; timeout preserves the author and recovery record.
+
+The additive fixture manifest lists cases and this executable runner. It does not
+replace the repository's existing agentic-evals catalog. Missing installed runtime
+dependencies are collection failures, not skipped passing proof.

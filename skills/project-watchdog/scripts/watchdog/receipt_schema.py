@@ -167,7 +167,11 @@ def _classify_with_triage_error(error_text: str) -> dict[str, Any]:
             timeout=30,
             check=False,
         )
-        return json.loads(proc.stdout)
+        if proc.returncode != 0:
+            raise RuntimeError(f"native triage classifier exited {proc.returncode}: {proc.stderr[:300]}")
+        payload = json.loads(proc.stdout)
+        Triage.model_validate(payload)
+        return payload
     except Exception as exc:  # noqa: BLE001 - validation must not fail on triage IO
         # This fallback code is itself in the triage-error catalog so the
         # "codes come only from the catalog or minted shape" invariant holds

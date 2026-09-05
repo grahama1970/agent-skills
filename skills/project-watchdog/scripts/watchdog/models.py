@@ -29,9 +29,14 @@ class ProjectEntry(BaseModel):
     """One registered project. ``project_id`` and ``repo`` are load-bearing:
     routing, lease scoping, and every GitHub mutation address them."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", strict=True)
     project_id: str = Field(min_length=1)
     repo: str = Field(min_length=1)
+    worktree: str | None = None
+    auto_land_main: bool | None = None
+    ticket_repair_timeout_s: int | None = Field(default=None, gt=0)
+    issue_target_prefixes: list[str] | str | None = None
+    issue_target_exclude_prefixes: list[str] | str | None = None
 
     @field_validator("repo")
     @classmethod
@@ -42,7 +47,7 @@ class ProjectEntry(BaseModel):
 
 
 class RegistryDoc(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", strict=True)
     # The load-bearing authority is the project list and each entry's id/repo,
     # not the schema string. schema is validated only when present so a
     # structurally-valid schema-less doc (internal/minimal) is not refused,
@@ -71,12 +76,12 @@ class GateState(BaseModel):
     """A fail-closed state gate. ``state`` must be one of the three known
     values; an unrecognized gate is refused rather than treated as active."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", strict=True)
     state: Literal[STATE_VALUES]  # type: ignore[valid-type]
 
 
 class StateDoc(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", strict=True)
     # Authority is the global gate literal, not the schema string; validate
     # schema only when present (see RegistryDoc).
     schema_: str | None = Field(default=None, alias="schema")
@@ -92,7 +97,7 @@ class StateDoc(BaseModel):
 
 
 class IssueLabel(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", strict=True)
     name: str = Field(min_length=1)
 
 
@@ -100,7 +105,7 @@ class Issue(BaseModel):
     """A scanned GitHub issue. ``number`` is load-bearing; labels drive
     routability and are normalized to objects with a ``name``."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", strict=True)
     number: int
     title: str = ""
     body: str | None = ""
@@ -114,7 +119,7 @@ class RegistryEnvelope(BaseModel):
     ProjectEntry does NOT fail the envelope -- it is quarantined per-entry so
     one bad entry cannot deny service to the whole fleet (WebGPT P0)."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", strict=True)
     schema_: str | None = Field(default=None, alias="schema")
     projects: list[Any]
 

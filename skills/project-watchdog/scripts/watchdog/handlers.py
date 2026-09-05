@@ -16,8 +16,8 @@ Outputs
 Failure modes
     - Malformed issue directives return ``status=BLOCKED`` without mutating
       GitHub.
-    - A failed bounded command relabels the issue ``agent-blocked`` and returns
-      ``status=NEEDS_ATTENTION`` so cron does not retry it every minute.
+    - A settled machine failure returns NEEDS_ATTENTION, retains scoped work,
+      and releases only its owned native lease; it does not add human holds.
     - Every path is derived from the registered project worktree, so a handler
       cannot act on a repository it was not dispatched for.
 """
@@ -48,33 +48,19 @@ from .issue_fields import (
 from .registry import project_repo, project_worktree, worktree_readiness
 
 
-def handle_issue(
-    run_id: str,
-    receipt_dir: Path,
-    project: dict[str, Any],
-    issue: dict[str, Any],
-    *,
-    apply: bool,
-) -> dict[str, Any]:
-    """Route one issue to the handler named by its ``watchdog_action``."""
-    action = issue.get("watchdog_action")
-    if action == "tau_handoff_dispatch":
-        return handle_tau_handoff_dispatch(run_id, receipt_dir, project, issue, apply=apply)
-    if action == "add_tau_coder_command_spec":
-        return handle_tau_coder_spec(run_id, receipt_dir, project, issue, apply=apply)
-    if action == "ticket_repair":
-        return handle_ticket_repair(run_id, receipt_dir, project, issue, apply=apply)
-    return {
-        "project_id": project.get("project_id"),
-        "issue_number": int(issue["number"]),
-        "issue_url": str(issue.get("url", "")),
-        "action": action,
-        "ok": False,
-        "status": "BLOCKED",
-        "summary": f"no handler registered for watchdog_action={action!r}",
-        "commands": [],
-        "artifacts": [],
-    }
+def handle_issue(run_id: str, receipt_dir: Path, project: dict[str, Any], issue: dict[str, Any], *, apply: bool) -> dict[str, Any]:
+    routes = {"ticket_repair": handle_ticket_repair,
+              "tau_handoff_dispatch": handle_tau_handoff_dispatch,
+              "add_tau_coder_command_spec": handle_tau_coder_spec}
+    handler = routes.get(issue.get("watchdog_action"))
+    if handler is None:
+        return {**_new_result(project, issue, str(issue.get("watchdog_action"))),
+                "ok": False, "status": "BLOCKED", "summary": "unregistered watchdog action"}
+    try:
+        return handler(run_id, receipt_dir, project, issue, apply=apply)
+    except (KeyError, RuntimeError, ValueError, OSError) as exc:
+        from . import primary
+        return primary.failure(project, issue, str(exc), human=getattr(exc, "human", False))
 
 
 def _new_result(project: dict[str, Any], issue: dict[str, Any], action: str) -> dict[str, Any]:
@@ -91,345 +77,34 @@ def _new_result(project: dict[str, Any], issue: dict[str, Any], action: str) -> 
     }
 
 
-def handle_tau_handoff_dispatch(
-    run_id: str,
-    receipt_dir: Path,
-    project: dict[str, Any],
-    issue: dict[str, Any],
-    *,
-    apply: bool,
-) -> dict[str, Any]:
-    """Run one bounded ``tau handoff-command-loop`` tick from an issue directive."""
-    repo = project_repo(project)
-    worktree = project_worktree(project)
-    issue_number = int(issue["number"])
-    log_event(run_id, "handle_handoff_dispatch_start", issue=issue_number, repo=repo)
-    result = _new_result(project, issue, "tau_handoff_dispatch")
-    result["selected_agent"] = "tau-handoff-dispatch"
-
-    try:
-        fields = parse_issue_fields(issue.get("body") or "")
-        if "start" not in fields:
-            raise ValueError("issue directive is missing the required 'start' field")
-        start_path = repo_relative_existing_path(fields["start"], worktree=worktree)
-        max_steps = parse_positive_int(fields.get("max_steps", "1"), field="max_steps")
-        active_goal_hash = parse_goal_hash(
-            fields.get("active_goal_hash", config.TAU_ACTIVE_GOAL_HASH)
-        )
-        apply_transport = parse_bool(
-            fields.get("apply_transport", "false"), field="apply_transport"
-        )
-    except ValueError as exc:
-        result.update({"ok": False, "status": "BLOCKED", "summary": str(exc)})
-        log_event(run_id, "handle_handoff_dispatch_blocked", issue=issue_number, error=str(exc))
-        return result
-
-    resolved = {
-        "schema": "agent_skills.project_watchdog.tau_handoff_dispatch_inputs.v1",
-        "issue": f"issue#{issue_number}",
-        "issue_url": result["issue_url"],
-        "repo": repo,
-        "start": str(start_path.relative_to(worktree.resolve())),
-        "max_steps": max_steps,
-        "active_goal_hash": active_goal_hash,
-        "apply_transport": apply_transport,
-    }
-    resolved_path = receipt_dir / "tau-handoff-dispatch-inputs.json"
-    write_json(resolved_path, resolved)
-    result["artifacts"].append(str(resolved_path))
-
-    if not apply:
-        result.update(
-            {"ok": True, "status": "DRY_RUN", "summary": "would run Tau handoff dispatch"}
-        )
-        return result
-
-    result["commands"].append(
-        github.issue_comment(
-            repo,
-            issue_number,
-            github.watchdog_comment(
-                "Lease acquired",
-                {
-                    "schema": "agent_skills.project_watchdog.lease.v1",
-                    "acquired_at": iso_now(),
-                    "run_id": run_id,
-                    "issue": f"issue#{issue_number}",
-                    "selected_agent": "tau-handoff-dispatch",
-                    "action": "tau_handoff_dispatch",
-                    "inputs": resolved,
-                },
-            ),
-        )
-    )
-    if not acquire_lease(run_id, result, repo, issue_number):
-        return result
-
-    uv_bin = config.resolve_uv_bin()
-    loop_dir = receipt_dir / "tau-command-loop"
-    loop_receipt = loop_dir / "command-loop-receipt.json"
-    loop_result = run_cmd(
-        [
-            uv_bin,
-            "run",
-            "tau",
-            "handoff-command-loop",
-            "--start",
-            str(start_path),
-            "--receipt-dir",
-            str(loop_dir),
-            "--agents-root",
-            str(config.agents_root()),
-            "--command-spec-root",
-            str(worktree / "experiments/goal-locked-subagents/agent-command-specs"),
-            "--active-goal-hash",
-            active_goal_hash,
-            "--max-steps",
-            str(max_steps),
-        ],
-        cwd=worktree,
-        timeout_s=120,
-    )
-    result["commands"].append(loop_result)
-    result["artifacts"].append(str(loop_receipt))
-
-    transport_path = receipt_dir / "tau-github-transport.json"
-    transport_command = [
-        uv_bin,
-        "run",
-        "tau",
-        "handoff-command-loop-github-transport",
-        str(loop_receipt),
-        "--receipt",
-        str(transport_path),
-    ]
-    if apply_transport:
-        transport_command.append("--apply")
-    transport_result = run_cmd(transport_command, cwd=worktree, timeout_s=120)
-    result["commands"].append(transport_result)
-    result["artifacts"].append(str(transport_path))
-
-    if loop_result["exit_code"] != 0 or transport_result["exit_code"] != 0:
-        result.update(
-            {"ok": False, "status": "NEEDS_ATTENTION", "summary": "Tau handoff dispatch failed"}
-        )
-        result["commands"].append(
-            github.issue_edit(
-                repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
-            )
-        )
-        log_event(run_id, "handle_handoff_dispatch_failed", issue=issue_number)
-        return result
-
-    result["commands"].append(
-        github.issue_comment(
-            repo,
-            issue_number,
-            github.watchdog_comment(
-                "Tau handoff dispatch evidence",
-                {
-                    "schema": "agent_skills.project_watchdog.tau_handoff_dispatch_receipt.v1",
-                    "run_id": run_id,
-                    "issue": f"issue#{issue_number}",
-                    "repo": repo,
-                    "inputs": resolved,
-                    "loop_exit_code": loop_result["exit_code"],
-                    "transport_exit_code": transport_result["exit_code"],
-                    "command_loop_receipt": str(loop_receipt),
-                    "github_transport_receipt": str(transport_path),
-                    "mocked": False,
-                    "live": True,
-                    "scope": (
-                        "Runs one bounded Tau handoff command-loop tick from a GitHub issue "
-                        "and renders or applies terminal Tau GitHub transport."
-                    ),
-                },
-            ),
-        )
-    )
-    result["commands"].append(
-        github.issue_edit(
-            repo,
-            issue_number,
-            add=[config.DONE_LABEL],
-            remove=[config.LEASE_LABEL, "next:coder", "next:reviewer", "executor:local"],
-        )
-    )
-    close = github.issue_close(repo, issue_number)
-    result["commands"].append(close)
-    result.update(
-        {
-            "ok": close["exit_code"] == 0,
-            "status": "COMPLETED",
-            "summary": "Tau handoff dispatch executed",
-        }
-    )
-    log_event(run_id, "handle_handoff_dispatch_finish", issue=issue_number, ok=result["ok"])
-    return result
+def handle_tau_handoff_dispatch(run_id: str, receipt_dir: Path, project: dict[str, Any],
+                                issue: dict[str, Any], *, apply: bool) -> dict[str, Any]:
+    """Existing approved Tau CLI, now under the shared primary/lease/review boundary."""
+    from . import primary
+    # Parse the original directive before dispatch, including containment and bounds.
+    fields = parse_issue_fields(issue.get("body") or "")
+    root = project_worktree(project)
+    start = repo_relative_existing_path(fields["start"], worktree=root)
+    parse_positive_int(fields.get("max_steps", "1"), field="max_steps")
+    parse_goal_hash(fields.get("active_goal_hash", config.TAU_ACTIVE_GOAL_HASH))
+    parse_bool(fields.get("apply_transport", "false"), field="apply_transport")
+    routed = dict(issue, watchdog_action="tau_handoff_dispatch")
+    targets = registry.issue_targets(issue)
+    if targets == {registry.UNKNOWN_TARGET}:
+        # This historical route already authorizes its command-spec overlay, not repo root.
+        # A broader command's explicit write targets must still be supplied by the issue.
+        targets = {"experiments/goal-locked-subagents/agent-command-specs"}
+    routed["watchdog_targets"] = sorted(targets)
+    return primary.dispatch(run_id, receipt_dir, project, routed, _handle_ticket_repair_primary, apply=apply)
 
 
-def handle_tau_coder_spec(
-    run_id: str,
-    receipt_dir: Path,
-    project: dict[str, Any],
-    issue: dict[str, Any],
-    *,
-    apply: bool,
-) -> dict[str, Any]:
-    """Write the Tau coder command-spec overlay and prove one command-loop route."""
-    repo = project_repo(project)
-    worktree = project_worktree(project)
-    issue_number = int(issue["number"])
-    log_event(run_id, "handle_coder_spec_start", issue=issue_number, repo=repo)
-    result = _new_result(project, issue, "add_tau_coder_command_spec")
-    result["selected_agent"] = "coder"
-
-    if not apply:
-        result.update({"ok": True, "status": "DRY_RUN", "summary": "would add coder command spec"})
-        return result
-
-    result["commands"].append(
-        github.issue_comment(
-            repo,
-            issue_number,
-            github.watchdog_comment(
-                "Lease acquired",
-                {
-                    "schema": "agent_skills.project_watchdog.lease.v1",
-                    "acquired_at": iso_now(),
-                    "run_id": run_id,
-                    "issue": f"issue#{issue_number}",
-                    "selected_agent": "coder",
-                    "action": "add_tau_coder_command_spec",
-                },
-            ),
-        )
-    )
-    if not acquire_lease(run_id, result, repo, issue_number):
-        return result
-
-    uv_bin = config.resolve_uv_bin()
-    coder_spec = tau_coder_spec_path(worktree)
-    write_json(coder_spec, tau_coder_command_spec(uv_bin))
-    result["artifacts"].append(str(coder_spec))
-
-    start_path = receipt_dir / "tau-coder-start-handoff.json"
-    write_json(
-        start_path,
-        tau_coder_start_handoff(repo, issue_number, result["issue_url"], coder_spec),
-    )
-    result["artifacts"].append(str(start_path))
-
-    loop_dir = receipt_dir / "tau-command-loop"
-    loop_result = run_cmd(
-        [
-            uv_bin,
-            "run",
-            "tau",
-            "handoff-command-loop",
-            "--start",
-            str(start_path),
-            "--receipt-dir",
-            str(loop_dir),
-            "--agents-root",
-            str(config.agents_root()),
-            "--command-spec-root",
-            str(worktree / "experiments/goal-locked-subagents/agent-command-specs"),
-            "--active-goal-hash",
-            config.TAU_ACTIVE_GOAL_HASH,
-            "--max-steps",
-            "2",
-        ],
-        cwd=worktree,
-        timeout_s=120,
-    )
-    result["commands"].append(loop_result)
-    result["artifacts"].append(str(loop_dir / "command-loop-receipt.json"))
-
-    targeted = run_cmd(
-        [
-            uv_bin,
-            "run",
-            "--project",
-            str(worktree),
-            "pytest",
-            "-q",
-            "tests/test_cli.py::test_cli_handoff_agent_adapter_emits_tau_handoff",
-            "tests/test_subagent_receipt.py"
-            "::test_headless_subagent_receipt_import_does_not_require_textual",
-        ],
-        cwd=worktree,
-        timeout_s=120,
-    )
-    result["commands"].append(targeted)
-    result["commands"].append(run_cmd(["git", "status", "--short"], cwd=worktree))
-
-    if loop_result["exit_code"] != 0 or targeted["exit_code"] != 0:
-        result.update(
-            {"ok": False, "status": "NEEDS_ATTENTION", "summary": "repair command failed"}
-        )
-        result["commands"].append(
-            github.issue_edit(
-                repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
-            )
-        )
-        log_event(run_id, "handle_coder_spec_failed", issue=issue_number)
-        return result
-
-    relative_spec = coder_spec.relative_to(worktree.resolve())
-    run_cmd(["git", "add", str(relative_spec)], cwd=worktree)
-    commit = run_cmd(["git", "commit", "-m", "Add Tau coder command spec overlay"], cwd=worktree)
-    result["commands"].append(commit)
-    if commit["exit_code"] == 0:
-        result["commands"].append(
-            run_cmd(["git", "push", "origin", "HEAD"], cwd=worktree, timeout_s=120)
-        )
-
-    result["commands"].append(
-        github.issue_comment(
-            repo,
-            issue_number,
-            github.watchdog_comment(
-                "Repair evidence",
-                {
-                    "schema": "agent_skills.project_watchdog.repair_receipt.v1",
-                    "run_id": run_id,
-                    "issue": f"issue#{issue_number}",
-                    "repo": repo,
-                    "selected_agent": "coder",
-                    "changed_file": str(relative_spec),
-                    "loop_exit_code": loop_result["exit_code"],
-                    "targeted_tests_exit_code": targeted["exit_code"],
-                    "command_loop_receipt": str(loop_dir / "command-loop-receipt.json"),
-                    "mocked": False,
-                    "live": True,
-                    "scope": (
-                        "Adds the missing Tau coder command-spec overlay and verifies "
-                        "one command-loop route to coder."
-                    ),
-                },
-            ),
-        )
-    )
-    result["commands"].append(
-        github.issue_edit(
-            repo,
-            issue_number,
-            add=[config.DONE_LABEL],
-            remove=[config.LEASE_LABEL, "next:coder", "executor:local"],
-        )
-    )
-    close = github.issue_close(repo, issue_number)
-    result["commands"].append(close)
-    result.update(
-        {
-            "ok": close["exit_code"] == 0,
-            "status": "COMPLETED",
-            "summary": "coder command spec added",
-        }
-    )
-    log_event(run_id, "handle_coder_spec_finish", issue=issue_number, ok=result["ok"])
-    return result
+def handle_tau_coder_spec(run_id: str, receipt_dir: Path, project: dict[str, Any],
+                          issue: dict[str, Any], *, apply: bool) -> dict[str, Any]:
+    from . import primary
+    root = project_worktree(project).resolve()
+    routed = dict(issue, watchdog_action="add_tau_coder_command_spec",
+                  watchdog_targets=[str(tau_coder_spec_path(root).relative_to(root))])
+    return primary.dispatch(run_id, receipt_dir, project, routed, _handle_ticket_repair_primary, apply=apply)
 
 
 def tau_coder_spec_path(worktree: Path) -> Path:
@@ -526,17 +201,11 @@ REPAIR_REVIEWER_HANDLER = config.DEFAULT_REPAIR_REVIEWER
 
 
 def repair_immutable_goal(repo: str, issue_number: int) -> str:
-    """The bar every seat in the repair DAG is held to.
-
-    $ask fails preflight without one, before any handler is contacted.
-    """
-    return (
-        f"Resolve {repo}#{issue_number} so its stated acceptance criterion holds, "
-        f"proven by the proof command the ticket names. Change only the paths the "
-        f"ticket targets. Do not weaken or delete a test to make it pass. "
-        f"Commit to the current branch only: do not push, do not merge, and do not "
-        f"modify any other branch. The reviewer seat decides whether this lands."
-    )
+    return (f"Repair {repo}#{issue_number} only in the registered PRIMARY checkout on main. "
+            "Preserve existing work. No worktree or branch creation/removal, reset, stash, rebase, "
+            "merge, force, push or issue closure. Modify only authorized target paths. "
+            "Prove the actual acceptance criteria without weakening tests. Tau owns execution "
+            "and proof; ticket owns verified integration and closure; watchdog only schedules.")
 
 
 def _ticket_repair_execution_timeout(project: dict[str, Any]) -> int:
@@ -568,18 +237,17 @@ def build_repair_task(
     return (
         f"Repair {repo}#{issue_number}: {issue_title}\n\n"
         f"Allowed paths: {', '.join(targets) or '(as stated in the ticket)'}\n\n"
-        f"Commit to the current branch only. Do not push, do not merge, do not "
-        f"switch branches. Whether this reaches main is the reviewer's decision "
-        f"and a human's, not the creator's.\n\n"
-        f"The creator seat implements the fix and commits it. The reviewer seat "
+        f"Work only on primary main. Do not update local HEAD or the shared index. "
+        f"Use the supplied scoped content-commit helper; do not publish or close.\n\n"
+        f"The creator implements the scoped fix and records its content commit. The reviewer seat "
         f"checks whether the code works, whether the ticket's acceptance criterion "
         f"and required proof are satisfied, and whether the changed files comply "
         f"with the ticket's required best-practices-* skills. Nits are not a "
         f"blocking verdict unless they change correctness, proof, safety, or the "
         f"named best-practices contract. The reviewer answers VERDICT: PASS, "
         f"VERDICT: FAIL, or VERDICT: NEEDS_ATTENTION.\n\n"
-        f"The verdict must be on a line of its own. Only VERDICT: PASS closes "
-        f"this ticket, and only when the ticket's proof command has actually run "
+        f"The verdict must be on a line of its own. VERDICT: PASS is review, not closure, "
+        f"and is permitted only when the ticket's proof command has actually run "
         f"and its artifact reads as a completed pass -- name the artifact path in "
         f"the review. A proof that is still running, that failed, or that was not "
         f"run is VERDICT: NEEDS_ATTENTION.\n\n"
@@ -727,18 +395,34 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
             record["current_node"] = item.get("current_node") or item.get("node_id")
             break
 
-    terminal = [
-        item for item in candidates
-        if str(item.get("status", "")).upper() in TAU_STREAM_TERMINAL_STATUSES
-    ]
-    if terminal:
-        last = terminal[-1]
+    aggregate = [item for item in record["progress_files"] if item.get("readable")]
+    statuses = {str(item.get("status", "")).upper() for item in aggregate}
+    nodes = record["node_receipts"]
+    nodes_settled = bool(nodes) and all(n.get("readable") and
+        str(n.get("status", "")).upper() in (TAU_STREAM_TERMINAL_STATUSES | {"SKIPPED", "CANCELLED"}) for n in nodes)
+    # Missing nodes are not terminal. Use the native DAG's declared node set,
+    # not just whichever node receipt happened to arrive first.
+    plans = sorted(ask_run_dir.glob("**/dag.json"))
+    expected = set()
+    if len(plans) == 1:
+        plan = _json_from_file(plans[0]) or {}
+        expected = {str(node["id"]) for node in plan.get("nodes", [])
+                    if isinstance(node, dict) and node.get("id")}
+    observed = [str(node.get("node_id")) for node in nodes]
+    nodes_complete = bool(expected) and expected == set(observed) and len(observed) == len(set(observed))
+    if aggregate and nodes_complete and nodes_settled and len(statuses) == 1 and statuses <= TAU_STREAM_TERMINAL_STATUSES:
         record["terminal"] = True
-        record["terminal_status"] = str(last.get("status")).upper()
-        record["current_node"] = last.get("current_node") or last.get("node_id")
-
+        record["terminal_status"] = next(iter(statuses))
+        # Settlement and success are distinct. An aggregate PASS cannot erase
+        # a declared node's FAIL/CANCELLED/SKIPPED result.
+        if record["terminal_status"] in {"PASS", "COMPLETED"} and any(
+                str(node.get("status", "")).upper() not in {"PASS", "COMPLETED"} for node in nodes):
+            record["terminal_status"] = "NEEDS_ATTENTION"
+            record["inconsistent_terminal"] = "aggregate success contradicts a required node"
+        record["terminal_source"] = "run-level dag-progress.json"
+    # Node receipts remain progress evidence only; they cannot settle a DAG.
     record["stream_readable"] = bool(
-        record["event_count"] or record["progress_files"] or record["node_receipts"]
+        record["event_count"] or any(p.get("readable") for p in record["progress_files"] + record["node_receipts"])
     )
     if record["terminal"]:
         record["reason"] = "terminal Ask/Tau stream state observed"
@@ -748,175 +432,75 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
 
 
 def run_ask_tau_dag_with_stream_monitor(
-    command: list[str],
-    *,
-    cwd: Path,
-    timeout_s: int,
-    ask_run_dir: Path,
-    monitor_path: Path,
-    poll_interval_s: float = 5.0,
+    command: list[str], *, cwd: Path, timeout_s: int, ask_run_dir: Path,
+    monitor_path: Path, poll_interval_s: float = 5.0,
 ) -> dict[str, Any]:
-    """Run Ask/Tau while writing a live stream-monitor receipt."""
-    started = time.time()
+    """Spool continuously to disk; no unconsumed PIPE can deadlock Ask/Tau."""
+    from . import primary
+    started = time.monotonic()
     env = os.environ.copy()
-    uv_parent = str(Path(config.resolve_uv_bin()).parent)
-    env["PATH"] = f"{uv_parent}:{env.get('PATH', '')}"
+    env["PATH"] = f"{Path(config.resolve_uv_bin()).parent}:{env.get('PATH', '')}"
     monitor_path.parent.mkdir(parents=True, exist_ok=True)
-    proc = subprocess.Popen(
-        command,
-        cwd=str(cwd),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        start_new_session=True,
-    )
-    poll_count = 0
-    timed_out = False
-    try:
+    out_path = monitor_path.with_suffix(".stdout.log")
+    err_path = monitor_path.with_suffix(".stderr.log")
+    timed_out, poll_count = False, 0
+    with out_path.open("w") as out, err_path.open("w") as err:
+        try:
+            proc = subprocess.Popen(command, cwd=str(cwd), env=env, stdout=out, stderr=err,
+                                    start_new_session=True, pass_fds=primary.inherited_fds())
+        except OSError:
+            if primary.inherited_fds():
+                primary.checkpoint("leased", launch_failed_before_exec=True)
+            raise
+        if primary.inherited_fds():
+            primary.checkpoint("running", ask_pid=proc.pid, ask_run_dir=str(ask_run_dir))
         while proc.poll() is None:
             poll_count += 1
-            snapshot = inspect_tau_stream(ask_run_dir)
-            snapshot.update(
-                {
-                    "poll_count": poll_count,
-                    "process_running": True,
-                    "elapsed_seconds": round(time.time() - started, 3),
-                    "stop_condition": "process_exit_or_timeout",
-                }
-            )
-            write_json(monitor_path, snapshot)
-            if time.time() - started > timeout_s:
+            row = inspect_tau_stream(ask_run_dir)
+            row.update(poll_count=poll_count, process_running=True, process_id=proc.pid,
+                       elapsed_seconds=round(time.monotonic() - started, 3),
+                       stdout_path=str(out_path), stderr_path=str(err_path),
+                       stop_condition="process_exit_or_deadline")
+            write_json(monitor_path, row)
+            if time.monotonic() - started >= timeout_s:
                 timed_out = True
-                os.killpg(proc.pid, signal.SIGTERM)
+                try:
+                    os.killpg(proc.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    proc.wait(timeout=5)
                 break
-            time.sleep(poll_interval_s)
-        try:
-            stdout, stderr = proc.communicate(timeout=5)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            os.killpg(proc.pid, signal.SIGKILL)
-            stdout, stderr = proc.communicate()
-    finally:
-        final = inspect_tau_stream(ask_run_dir)
-        final.update(
-            {
-                "poll_count": poll_count,
-                "process_running": False,
-                "elapsed_seconds": round(time.time() - started, 3),
-                "stop_condition": "terminal_status" if final.get("terminal") else "process_exit",
-            }
-        )
-        if timed_out:
-            final["stop_condition"] = "timeout"
-        write_json(monitor_path, final)
-
-    return {
-        "command": command,
-        "cwd": str(cwd),
-        "exit_code": 124 if timed_out else proc.returncode,
-        "stdout": stdout,
-        "stderr": stderr,
-        "duration_seconds": round(time.time() - started, 3),
-        "timed_out": timed_out,
-        "stream_monitor": str(monitor_path),
-    }
+            time.sleep(min(poll_interval_s, max(0.05, timeout_s - (time.monotonic() - started))))
+        proc.wait()
+    final = inspect_tau_stream(ask_run_dir)
+    final.update(poll_count=poll_count, process_running=False, process_id=proc.pid,
+                 process_exit_code=proc.returncode,
+                 elapsed_seconds=round(time.monotonic() - started, 3), timed_out=timed_out,
+                 stop_condition="timeout_requires_tau_reconciliation" if timed_out else "process_exited",
+                 stdout_path=str(out_path), stderr_path=str(err_path))
+    write_json(monitor_path, final)
+    return {"command": command, "cwd": str(cwd), "exit_code": 124 if timed_out else proc.returncode,
+            "stdout": out_path.read_text(errors="replace"), "stderr": err_path.read_text(errors="replace"),
+            "timed_out": timed_out, "duration_seconds": round(time.monotonic() - started, 3),
+            "stream_monitor": str(monitor_path), "stdout_path": str(out_path), "stderr_path": str(err_path)}
 
 
 def _land_repair_to_main(worktree: Path, run_id: str, issue_number: int) -> tuple[bool, list[dict[str, Any]]]:
-    """Rebase the reviewer-passed repair branch onto origin/main and push to main.
-
-    Alpha-project policy (operator): main is the single directly-pushable branch.
-    Fails closed on any git error (a rebase conflict aborts and leaves the branch
-    for a human) so a bad landing never corrupts main.
-    """
-    cmds: list[dict[str, Any]] = []
-    fetch = run_cmd(["git", "fetch", "origin", "main"], cwd=worktree, timeout_s=60)
-    cmds.append(fetch)
-    if fetch["exit_code"] != 0:
-        return False, cmds
-    rebase = run_cmd(["git", "rebase", "origin/main"], cwd=worktree, timeout_s=180)
-    cmds.append(rebase)
-    if rebase["exit_code"] != 0:
-        cmds.append(run_cmd(["git", "rebase", "--abort"], cwd=worktree, timeout_s=60))
-        log_event(run_id, "auto_land_rebase_conflict", issue=issue_number)
-        return False, cmds
-    push = run_cmd(["git", "push", "origin", "HEAD:main"], cwd=worktree, timeout_s=120)
-    cmds.append(push)
-    landed = push["exit_code"] == 0
-    log_event(run_id, "auto_land_to_main", issue=issue_number, landed=landed)
-    return landed, cmds
+    # Compatibility only. The active path uses private-index content publication
+    # followed by native ticket proof/closure, never the historical rebase path.
+    return False, [{"exit_code": 1, "stderr": "obsolete landing path; use target_content.publish and native_ticket.close"}]
 
 
-def _cleanup_landed_repair_worktree(
-    project_worktree: Path,
-    repair_worktree: Path,
-    run_id: str,
-    issue_number: int,
-) -> dict[str, Any]:
-    """Archive and unregister a repair worktree after its branch lands on main."""
-    repo_root = Path(__file__).resolve().parents[4]
-    ops_worktrees = repo_root / "skills" / "ops-worktrees" / "run.sh"
-    command = [str(ops_worktrees), "archive", str(repair_worktree), "--apply", "--json"]
-    start = time.monotonic()
-    if not ops_worktrees.exists():
-        return {
-            "cmd": command,
-            "exit_code": 127,
-            "stdout": "",
-            "stderr": f"missing ops-worktrees runtime at {ops_worktrees}",
-            "duration_seconds": 0,
-            "receipt": None,
-        }
-    env = os.environ.copy()
-    env["OPS_WORKTREES_REPO"] = str(project_worktree)
-    try:
-        proc = subprocess.run(command, cwd=repo_root, env=env, text=True, capture_output=True, timeout=120)
-    except subprocess.TimeoutExpired as exc:
-        duration = round(time.monotonic() - start, 3)
-        log_event(
-            run_id,
-            "landed_repair_worktree_cleanup_timeout",
-            issue=issue_number,
-            worktree=str(repair_worktree),
-        )
-        return {
-            "cmd": command,
-            "cwd": str(repo_root),
-            "exit_code": 124,
-            "stdout": exc.stdout or "",
-            "stderr": exc.stderr or "ops-worktrees archive timed out after 120s",
-            "duration_seconds": duration,
-            "receipt": None,
-            "timed_out": True,
-        }
-    duration = round(time.monotonic() - start, 3)
-    receipt: dict[str, Any] | None = None
-    if proc.stdout.strip():
-        try:
-            parsed = json.loads(proc.stdout)
-            if isinstance(parsed, dict):
-                receipt = parsed
-        except json.JSONDecodeError:
-            receipt = None
-    outcome = receipt.get("outcome") if receipt else None
-    log_event(
-        run_id,
-        "landed_repair_worktree_cleanup",
-        issue=issue_number,
-        exit_code=proc.returncode,
-        outcome=outcome,
-        worktree=str(repair_worktree),
-    )
-    return {
-        "cmd": command,
-        "cwd": str(repo_root),
-        "exit_code": proc.returncode,
-        "stdout": proc.stdout,
-        "stderr": proc.stderr,
-        "duration_seconds": duration,
-        "receipt": receipt,
-    }
+def _cleanup_landed_repair_worktree(project_worktree: Path, repair_worktree: Path,
+                                   run_id: str, issue_number: int) -> dict[str, Any]:
+    return {"exit_code": 1, "receipt": None, "stderr": "primary-main-only: watchdog may not archive or remove any worktree"}
 
 
 def _landed_repair_cleanup_ok(command_result: dict[str, Any]) -> bool:
@@ -952,7 +536,7 @@ PROOF_PASS_VALUES = frozenset(
 PROOF_FAIL_VALUES = frozenset(
     {
         "FAIL", "FAILED", "BLOCKED", "ERROR", "ERRORED", "NOT_READY",
-        "NEEDS_ATTENTION", "RUNNING", "PENDING", "IN_PROGRESS", "TIMEOUT",
+        "NEEDS_ATTENTION", "USABLE_WITH_GAPS", "NOT_TESTED", "RUNNING", "PENDING", "IN_PROGRESS", "TIMEOUT",
         "TIMED_OUT", "CANCELLED", "SKIPPED", "UNKNOWN", "FALSE",
     }
 )
@@ -981,47 +565,26 @@ def repair_node_id(handler: str) -> str:
 
 
 def declared_verdict(text: str) -> str | None:
-    """The verdict a seat declared, or ``None`` if it declared none.
-
-    Two structural forms, both of which the repair task and the roundtable
-    prompt ask for by name: a ``VERDICT: <token>`` line, or the first word of
-    the ``## Position`` section. This is extraction, not classification --
-    prose that describes a problem in its own words yields ``None``, and the
-    gate treats "no verdict" as unproven rather than guessing at it.
-    """
-    def token(raw: str) -> str | None:
-        words = raw.strip().split()
-        if not words:
-            return None
-        candidate = words[0].strip("*`_.,:;#—–-").upper()
-        return candidate if candidate in REPAIR_VERDICT_TOKENS else None
-
-    lines = text.splitlines()
-    for line in lines:
-        stripped = line.strip().lstrip("*#>- ").strip()
-        if stripped.upper().startswith("VERDICT:"):
-            found = token(stripped.split(":", 1)[1])
-            if found:
-                return found
-    for index, line in enumerate(lines):
-        if not _POSITION_HEADING.match(line.strip()):
-            continue
-        for following in lines[index + 1:]:
-            if not following.strip():
-                continue
-            return token(following)
-    return None
+    declarations = []
+    for line in text.splitlines():
+        match = re.fullmatch(r"\s*VERDICT:\s*(PASS|FAIL|BLOCKED|NEEDS_ATTENTION)\s*", line, re.I)
+        if match:
+            declarations.append(match.group(1).upper())
+    if len(declarations) != 1:
+        return None
+    return declarations[0]
 
 
 def seat_response_text(ask_run_dir: Path, handler: str) -> str | None:
-    """The response one seat actually wrote, across every ``$ask`` run dir."""
+    """Require one unambiguous response for this run/seat, not first-PASS wins."""
     node_id = repair_node_id(handler)
-    for candidate in sorted(ask_run_dir.glob(f"*/node-artifacts/{node_id}/response.md")):
-        try:
-            return candidate.read_text(encoding="utf-8", errors="replace")
-        except OSError:  # pragma: no cover - unreadable artifact is "no response"
-            continue
-    return None
+    candidates = list(ask_run_dir.glob(f"*/node-artifacts/{node_id}/response.md"))
+    if len(candidates) != 1:
+        return None
+    try:
+        return candidates[0].read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
 
 
 def required_proof_artifacts(issue_body: str) -> list[str]:
@@ -1053,10 +616,13 @@ def required_proof_artifacts(issue_body: str) -> list[str]:
 def _result_values(payload: Any, depth: int = 0) -> list[str]:
     """Every outcome-key value in a parsed artifact, uppercased."""
     if depth > PROOF_SCAN_DEPTH:
-        return []
+        return ["UNKNOWN"] if isinstance(payload, (dict, list)) and payload else []
     found: list[str] = []
     if isinstance(payload, dict):
         for key, value in payload.items():
+            if str(key).lower() in {"failed", "failures", "errored", "errors", "blocked", "skipped", "not_tested", "not_run"}:
+                if (isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0) or (isinstance(value, list) and value):
+                    found.append("FAIL")
             if str(key).lower() in PROOF_RESULT_KEYS and isinstance(value, (str, bool)):
                 found.append(str(value).upper())
             else:
@@ -1095,12 +661,14 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
         record["reason"] = "predates this dispatch"
         return record
     record["fresh"] = True
+    if stat.st_size > 8 * 1024 * 1024:
+        record["reason"] = "proof result exceeds bounded parser size"
+        return record
     if stat.st_size == 0:
         record["reason"] = "empty"
         return record
     if path.suffix.lower() != ".json":
-        record["passed"] = True
-        record["reason"] = "fresh non-empty artifact"
+        record["reason"] = "non-JSON artifact is evidence to inspect, not a machine-verifiable pass"
         return record
     try:
         payload = json.loads(path.read_text(encoding="utf-8", errors="replace"))
@@ -1115,6 +683,10 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
     record["passing_values"] = passing
     if failing:
         record["reason"] = f"reports {', '.join(failing)}"
+        return record
+    unknown = sorted(set(values) - PROOF_PASS_VALUES - PROOF_FAIL_VALUES)
+    if unknown:
+        record["reason"] = "unrecognized result vocabulary: " + ", ".join(unknown)
         return record
     if not passing:
         record["reason"] = "no machine-readable result"
@@ -1148,8 +720,10 @@ def evaluate_repair_proof(
     reviewer: str,
     repair_worktree: Path,
     not_before: float,
+    base_sha: str | None = None,
+    reviewed_commit: str | None = None,
 ) -> dict[str, Any]:
-    """Decide whether this repair may close its ticket.
+    """Decide whether repair evidence is ready for ticket-owned verification.
 
     ``$ask tau-dag`` exiting 0 means the DAG ran, not that the ticket was
     repaired: in agent-skills#1499 both seats reported ``status: PASS`` in
@@ -1161,9 +735,9 @@ def evaluate_repair_proof(
 
     - the reviewer seat declares ``VERDICT: PASS`` in its response;
     - no seat declares FAIL, BLOCKED, or NEEDS_ATTENTION;
-    - if the ticket names proof artifacts, at least one exists, was written
-      during this dispatch, and reads as a completed pass;
-    - the repair branch is at least one commit ahead of ``origin/main``.
+    - every required output and reviewer-declared JSON result is a fresh pass;
+    - independently reviewed target bytes bind to an attributable content commit;
+      local HEAD advancement and abandoned branch work are not attribution.
     """
     gate: dict[str, Any] = {
         "schema": "agent_skills.project_watchdog.repair_proof_gate.v1",
@@ -1199,434 +773,143 @@ def evaluate_repair_proof(
         elif verdict != "PASS" and role == "reviewer":
             reasons.append(f"reviewer seat {handler} declared {verdict}, not PASS")
 
-    artifacts = required_proof_artifacts(issue_body)
+    review_text = seat_response_text(ask_run_dir, reviewer) or ""
+    declared = [line.split(":", 1)[1].strip() for line in review_text.splitlines()
+                if line.startswith("PROOF_ARTIFACT:")]
+    # Ticket output operands remain mandatory; fixture/input JSON paths are not output proof.
+    section = []
+    collecting = False
+    for line in issue_body.splitlines():
+        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
+        if heading:
+            collecting = heading.group(1).strip().lower() == "required proof"
+        elif collecting:
+            section.append(line)
+    section_outputs = _OUTPUT_FLAG.findall("\n".join(section))
+    artifacts = sorted(set(section_outputs + declared))
+    if not artifacts:
+        reasons.append("no explicit result artifacts: reviewer must emit PROOF_ARTIFACT lines")
+    artifacts = [str((repair_worktree / a).resolve()) if not Path(a).expanduser().is_absolute()
+                 else str(Path(a).expanduser().resolve()) for a in artifacts]
     gate["required_proof_artifacts"] = artifacts
     if artifacts:
         results = [inspect_proof_artifact(a, not_before=not_before) for a in artifacts]
         gate["artifact_results"] = results
-        if not any(r["passed"] for r in results):
+        if not all(r["passed"] for r in results):
             detail = "; ".join(f"{r['path']}: {r['reason']}" for r in results)
-            reasons.append(f"no required proof artifact was produced and passing ({detail})")
+            reasons.append(f"not every required proof artifact is a completed pass ({detail})")
 
-    commits = repair_commits_ahead(repair_worktree)
-    gate["commits_ahead"] = commits
-    if commits is None:
-        reasons.append(f"could not read commits on the repair branch in {repair_worktree}")
-    elif commits < 1:
-        reasons.append("the repair branch has no commit ahead of origin/main")
+    gate["reviewed_commit"] = reviewed_commit
+    if not reviewed_commit:
+        reasons.append("no independently reviewed content commit; local HEAD advancement is not attribution")
 
     gate["reasons"] = reasons
     gate["ok"] = not reasons
     return gate
 
 
-def handle_ticket_repair(
-    run_id: str,
-    receipt_dir: Path,
-    project: dict[str, Any],
-    issue: dict[str, Any],
-    *,
-    apply: bool,
-) -> dict[str, Any]:
-    """Repair one ordinary ``/ticket``-filed issue through a Tau DAG contract.
+def handle_ticket_repair(run_id: str, receipt_dir: Path, project: dict[str, Any],
+                         issue: dict[str, Any], *, apply: bool) -> dict[str, Any]:
+    from . import primary
+    return primary.dispatch(run_id, receipt_dir, project, issue, _handle_ticket_repair_primary, apply=apply)
 
-    This is the route for tickets filed the normal way: labelled ``agent-work``
-    with a ``type:``/``route:`` vocabulary and no hand-authored body marker.
 
-    The watchdog compiles the contract and calls ``tau dag-run``. It does not
-    drive the loop, count attempts, or decide when the work is done — Tau does,
-    and its receipt is the verdict.
-    """
-    repo = project_repo(project)
-    worktree = project_worktree(project)
-    issue_number = int(issue["number"])
-    runner_kind = str(project.get("runner_kind", ""))
-    log_event(run_id, "handle_ticket_repair_start", issue=issue_number, repo=repo)
-    result = _new_result(project, issue, "ticket_repair")
-    result["selected_agent"] = "coder"
-    result["runner_kind"] = runner_kind
-
-    # Two seats, deliberately different model families: a reviewer that shares
-    # the creator's blind spots is a second pass, not a second opinion.
-    creator = config.repair_creator(project)
-    reviewer = config.repair_reviewer(project)
-    result["seats"] = {"creator": creator, "reviewer": reviewer}
-    # The reviewer must be an INDEPENDENT second opinion (different provider) AND
-    # able to run the ticket's live proof (not a browser chat). Fail loudly here
-    # rather than dispatch a review that shares the creator's blind spots or a
-    # browser seat that cannot execute the proof (which failed silently as
-    # "$ask tau-dag failed" — agent-skills#1484).
-    try:
-        config.assert_cross_provider_seats(creator, reviewer)
-    except config.SeatIndependenceError as exc:
-        result.update({"ok": False, "status": "BLOCKED", "summary": str(exc)})
-        log_event(run_id, "repair_seats_not_independent", issue=issue_number,
-                  creator=creator, reviewer=reviewer, reason=str(exc))
-        return result
-
-    ask_run = config.ask_run_sh()
-    if not ask_run.is_file():
-        result.update(
-            {
-                "ok": False,
-                "status": "BLOCKED",
-                "summary": f"$ask runner not found at {ask_run}; the repair lane needs it.",
-            }
-        )
-        log_event(run_id, "handle_ticket_repair_no_ask", issue=issue_number, ask_run=str(ask_run))
-        return result
-
-    # Fail closed on an unusable checkout BEFORE leasing the issue or calling
-    # Tau. A repair is authored in a separate worktree from origin/main, so
-    # dirty target files in the registered checkout are operational context, not
-    # an authoring blocker. Branch/missing/non-git failures still block because
-    # they make origin/main discovery and repair-worktree preparation unsafe.
-    targets = registry.issue_targets(issue)
-    result["targets"] = sorted(targets)
-
-    readiness = worktree_readiness(worktree, targets)
-    result["worktree_readiness"] = readiness
-    blocking_reasons = [
-        reason
-        for reason in readiness.get("reasons", [])
-        if not str(reason).startswith("tracked_files_dirty:")
-    ]
-    result["registered_checkout_dirty_tracked"] = readiness.get("dirty_tracked", 0)
-    result["registered_checkout_untracked"] = readiness.get("untracked", 0)
-    result["worktree_dispatch_blocking_reasons"] = blocking_reasons
-    if blocking_reasons:
-        result.update(
-            {
-                "ok": False,
-                "status": "BLOCKED",
-                "summary": (
-                    f"worktree {worktree} is not safe to author a repair in: "
-                    f"{', '.join(blocking_reasons or ['unknown'])}. "
-                    f"branch={readiness.get('branch')} "
-                    f"dirty_tracked={readiness.get('dirty_tracked')} "
-                    f"untracked={readiness.get('untracked')}."
-                ),
-            }
-        )
-        log_event(
-            run_id,
-            "handle_ticket_repair_worktree_unready",
-            issue=issue_number,
-            reasons=readiness.get("reasons"),
-        )
-        return result
-
-    goal_hash = issue_goal_hash(repo, issue_number)
-    result["goal_hash"] = goal_hash
-    ask_run_dir = receipt_dir / "ask"
-    task = build_repair_task(
-        repo=repo,
-        issue_number=issue_number,
-        issue_title=str(issue.get("title", "")),
-        issue_body=str(issue.get("body", "")),
-        targets=sorted(targets),
-    )
-    task_path = receipt_dir / "repair-task.md"
-    task_path.write_text(task, encoding="utf-8")
-    result["artifacts"].append(str(task_path))
-
+def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[str, Any],
+                                  issue: dict[str, Any], *, apply: bool) -> dict[str, Any]:
+    from . import primary, native_ticket, target_content as content, models
+    from .primary_models import OwnedTargets, encoded
+    repo, number, root = project_repo(project), int(issue["number"]), project_worktree(project).resolve()
+    targets = primary.safe_targets(issue.get("watchdog_targets") or registry.issue_targets(issue))
+    result = _new_result(project, issue, str(issue.get("watchdog_action") or "ticket_repair"))
+    result.update(requires_human_input=False, targets=targets)
+    if registry.policy_held(repo, number):
+        raise primary.Refusal("standing pitchdeck hold is immutable", human=True)
+    result["worktree_readiness"] = primary.readonly_preflight(root, targets)
+    primary.assert_repository(root, repo)
     if not apply:
-        result.update(
-            {
-                "ok": True,
-                "status": "DRY_RUN",
-                "summary": (
-                    f"would author {repo}#{issue_number} in a fresh worktree off origin/main "
-                    f"and run $ask tau-dag over {sorted(targets)}"
-                ),
-            }
-        )
+        result.update(ok=True, status="DRY_RUN", summary="would reserve primary/main and use native Tau/ticket lifecycle")
         return result
-
-    # Author in a worktree of our own, created from origin/main per dispatch.
-    repair_worktree = config.repair_worktrees_dir() / f"{project.get('project_id')}-{issue_number}"
-    prepared = registry.prepare_repair_worktree(worktree, repair_worktree, issue_number)
-    result["repair_worktree"] = prepared
-    if prepared.get("ok"):
-        # Managed (wt) worktrees resolve to their own location; every consumer
-        # below must use the resolved path, not the preferred one.
-        repair_worktree = Path(prepared["worktree"])
-    if not prepared.get("ok"):
-        result.update(
-            {
-                "ok": False,
-                "status": "BLOCKED",
-                "summary": f"could not prepare a repair worktree: {prepared.get('error')}",
-            }
-        )
-        log_event(run_id, "repair_worktree_failed", issue=issue_number, error=prepared.get("error"))
-        return result
-    result["artifacts"].append(str(repair_worktree))
-
-    # The creator commits on its own branch; only the reviewer's verdict should
-    # move main. Observed 2026-07-28: the codex seat pushed a850e22a6 straight to
-    # origin/main while its own DAG node reported NEEDS_ATTENTION and the ticket
-    # stayed agent-blocked -- unreviewed work landed anyway.
-    main_before = registry.remote_main_sha(worktree)
-    result["origin_main_before"] = main_before
-
-    result["commands"].append(
-        github.issue_comment(
-            repo,
-            issue_number,
-            github.watchdog_comment(
-                "Lease acquired",
-                {
-                    "schema": "agent_skills.project_watchdog.lease.v1",
-                    "acquired_at": iso_now(),
-                    "run_id": run_id,
-                    "issue": f"issue#{issue_number}",
-                    "repo": repo,
-                    "selected_agent": "coder",
-                    "action": "ticket_repair",
-                    "targets": sorted(targets),
-                    "goal_hash": goal_hash,
-                },
-            ),
-        )
-    )
-    if not acquire_lease(run_id, result, repo, issue_number):
-        return result
-
-    # $ask compiles the creator/reviewer DAG and Tau executes it. The watchdog
-    # does not hand-author a tau.dag_contract.v1: doing so bound this lane to
-    # Tau's own command-spec tree, which only the tau checkout has, so every
-    # other project was refused before it could dispatch anything.
-    # Everything the proof gate accepts must be written after this instant: a
-    # proof artifact older than the dispatch proves a previous run, not this one.
-    dispatched_at = time.time()
-    dag_command = [
-        str(config.ask_run_sh()),
-        "tau-dag",
-        task,
-        "--repo", repo,
-        "--target", ",".join(sorted(targets)),
-        "--immutable-goal", repair_immutable_goal(repo, issue_number),
-        "--dag-template", "creator-reviewer",
-        "--handler", creator,
-        "--handler-workspace", f"{creator}={repair_worktree}",
-        "--handler", reviewer,
-        "--topology", "sequential",
-        "--run-output-root", str(ask_run_dir),
-        "--execute",
-        "--execution-timeout-seconds", str(_ticket_repair_execution_timeout(project)),
-        "--allow-provider-calls",
-        "--json",
-    ]
-    stream_monitor_path = receipt_dir / "tau-stream-monitor.json"
-    dag_result = run_ask_tau_dag_with_stream_monitor(
-        dag_command,
-        cwd=config.ask_run_sh().parent,
-        timeout_s=int(project.get("ticket_repair_timeout_s", 1800)),
-        ask_run_dir=ask_run_dir,
-        monitor_path=stream_monitor_path,
-    )
-    result["commands"].append(dag_result)
-    result["artifacts"].append(str(ask_run_dir))
-    result["artifacts"].append(str(stream_monitor_path))
-    result["tau_stream_monitor"] = inspect_tau_stream(ask_run_dir)
-
-    if dag_result["exit_code"] != 0:
-        result.update(
-            {
-                "ok": False,
-                "status": "NEEDS_ATTENTION",
-                "summary": f"$ask tau-dag failed for {repo}#{issue_number}",
-            }
-        )
-        result["commands"].append(
-            github.issue_edit(
-                repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
-            )
-        )
-        log_event(run_id, "handle_ticket_repair_failed", issue=issue_number)
-        return result
-
-    result["commands"].append(
-        github.issue_comment(
-            repo,
-            issue_number,
-            github.watchdog_comment(
-                "Ticket repair evidence",
-                {
-                    "schema": "agent_skills.project_watchdog.ticket_repair_receipt.v1",
-                    "run_id": run_id,
-                    "issue": f"issue#{issue_number}",
-                    "repo": repo,
-                    "targets": sorted(targets),
-                    "goal_hash": goal_hash,
-                    "dag_exit_code": dag_result["exit_code"],
-                    "ask_run_dir": str(ask_run_dir),
-                    "mocked": False,
-                    "live": True,
-                    "scope": (
-                        "Runs one $ask creator-reviewer Tau DAG for a /ticket-filed issue. "
-                        "Closure and evidence acceptance are owned by Tau's DAG receipt, "
-                        "not by this watchdog."
-                    ),
-                },
-            ),
-        )
-    )
-    main_after = registry.remote_main_sha(worktree)
-    result["origin_main_after"] = main_after
-    if main_before and main_after and main_before != main_after:
-        result.update(
-            {
-                "ok": False,
-                "status": "NEEDS_ATTENTION",
-                "summary": (
-                    f"origin/main moved during this repair ({main_before[:9]} -> "
-                    f"{main_after[:9]}). The creator seat must commit to its own branch "
-                    f"and let the reviewer decide what lands; unreviewed work on main is "
-                    f"exactly what the two-seat loop exists to prevent."
-                ),
-            }
-        )
-        log_event(run_id, "origin_main_moved_during_repair", issue=issue_number,
-                  before=main_before, after=main_after)
-        result["commands"].append(
-            github.issue_edit(repo, issue_number, add=[config.BLOCKED_LABEL],
-                              remove=[config.LEASE_LABEL])
-        )
-        return result
-
-    # A DAG that exited 0 says the seats were reached, nothing more. Closure
-    # needs the reviewer's own PASS, the ticket's proof, and a commit --
-    # agent-skills#1499 was closed as completed with none of the three.
-    gate = evaluate_repair_proof(
-        ask_run_dir=ask_run_dir,
-        issue_body=str(issue.get("body", "")),
-        creator=creator,
-        reviewer=reviewer,
-        repair_worktree=repair_worktree,
-        not_before=dispatched_at,
-    )
-    result["proof_gate"] = gate
-    gate_path = receipt_dir / "repair-proof-gate.json"
-    write_json(gate_path, gate)
-    result["artifacts"].append(str(gate_path))
-    if not gate["ok"]:
-        result.update(
-            {
-                "ok": False,
-                "status": "NEEDS_ATTENTION",
-                "summary": (
-                    f"$ask tau-dag passed but the repair is unproven for "
-                    f"{repo}#{issue_number}: {'; '.join(gate['reasons'])}. "
-                    f"Not landing and not closing."
-                ),
-            }
-        )
-        result["commands"].append(
-            github.issue_comment(
-                repo,
-                issue_number,
-                github.watchdog_comment("Repair proof gate refused closure", gate),
-            )
-        )
-        # A seat that actively rejected the reviewer's classification with
-        # NEEDS_ATTENTION is a human-decision signal, not a retryable machine
-        # failure: route the ticket to a person instead of parking it only as
-        # agent-blocked (operator 2026-09-03).
-        refusal_labels = [config.BLOCKED_LABEL]
-        seat_needs_attention = any(
-            (seat or {}).get("verdict") == "NEEDS_ATTENTION"
-            for seat in gate.get("seat_verdicts", {}).values()
-        )
-        if seat_needs_attention:
-            refusal_labels.append("needs-human")
-        result["commands"].append(
-            github.issue_edit(
-                repo, issue_number, add=refusal_labels, remove=[config.LEASE_LABEL]
-            )
-        )
-        log_event(run_id, "repair_proof_gate_refused", issue=issue_number,
-                  reasons=gate["reasons"])
-        return result
-
-    # Alpha projects (operator rule): a reviewer-passed repair lands directly on
-    # main -- main is the single directly-pushable branch until a project is
-    # stable-reliable, so the branch-and-await-human dance is skipped here.
-    if config.auto_land_main(project):
-        landed, land_cmds = _land_repair_to_main(repair_worktree, run_id, issue_number)
-        result["commands"].extend(land_cmds)
-        if landed:
-            cleanup = _cleanup_landed_repair_worktree(worktree, repair_worktree, run_id, issue_number)
-            result["repair_worktree_cleanup"] = cleanup
-            result["commands"].append(cleanup)
-            if not _landed_repair_cleanup_ok(cleanup):
-                result.update(
-                    {
-                        "ok": False,
-                        "status": "NEEDS_ATTENTION",
-                        "summary": (
-                            f"$ask tau-dag repair for {repo}#{issue_number} landed on main, "
-                            "but project-watchdog could not archive/remove the repair worktree."
-                        ),
-                    }
-                )
-                result["commands"].append(
-                    github.issue_comment(
-                        repo,
-                        issue_number,
-                        github.watchdog_comment("Landed repair worktree cleanup failed", cleanup),
-                    )
-                )
-                result["commands"].append(
-                    github.issue_edit(
-                        repo, issue_number, add=[config.BLOCKED_LABEL], remove=[config.LEASE_LABEL]
-                    )
-                )
-                log_event(
-                    run_id,
-                    "handle_ticket_repair_landed_cleanup_failed",
-                    issue=issue_number,
-                    cleanup_exit_code=cleanup.get("exit_code"),
-                )
-                return result
-            result["commands"].append(
-                github.issue_edit(repo, issue_number, add=[config.DONE_LABEL], remove=[config.LEASE_LABEL])
-            )
-            result["commands"].append(
-                github.issue_comment(
-                    repo, issue_number,
-                    "Project Watchdog: reviewer passed; repair landed directly on main "
-                    "(alpha project, main is the single branch). Repair worktree archived. Closing.",
-                )
-            )
-            result["commands"].append(github.issue_close(repo, issue_number, reason="completed"))
-            result.update({"ok": True, "status": "LANDED",
-                           "summary": f"$ask tau-dag repair for {repo}#{issue_number} passed review and landed on main"})
-            log_event(run_id, "handle_ticket_repair_finish", issue=issue_number, ok=True, landed=True)
-            return result
-        # Landing failed (e.g. rebase conflict): fall through to await-review.
-
-    # Mark the repair done and stop routing it. The ticket stays OPEN because the
-    # work has not landed -- it is a branch awaiting review -- but leaving it
-    # routable made cron re-dispatch every tick, and each dispatch reset the
-    # branch over the previous repair.
-    result["commands"].append(
-        github.issue_edit(
-            repo, issue_number,
-            add=[config.DONE_LABEL],
-            remove=[config.LEASE_LABEL],
-        )
-    )
-    result.update(
-        {
-            "ok": True,
-            "status": "COMPLETED",
-            "summary": f"$ask tau-dag completed for {repo}#{issue_number}; branch {prepared.get('branch')} awaiting review",
-        }
-    )
-    log_event(run_id, "handle_ticket_repair_finish", issue=issue_number, ok=True)
-    return result
+    state = json.loads(config.state_path().read_text())
+    models.validate_state(state)
+    if state["global"]["state"] != "active" or state.get("projects", {}).get(project["project_id"], {}).get("state") != "active":
+        raise primary.Refusal("runtime authorization changed", human=True)
+    # Recheck foreign scopes at the actual reservation boundary, not only at scan time.
+    foreign = registry.lane_busy_issues(run_id, project)
+    if registry.targets_are_blocked(set(targets), registry.busy_targets(foreign)):
+        raise primary.Refusal("known foreign lease overlaps this target; unrelated scopes remain eligible")
+    pin = content.remote_pin(root)
+    before = content.snapshot(root, targets, pin, receipt_dir / "primary-before-blobs")
+    write_json(receipt_dir / "primary-before.json", encoded(before))
+    ownership_path = primary._area(root) / "owned" / f"{number}.json"
+    previous = OwnedTargets.model_validate(json.loads(ownership_path.read_text())) if ownership_path.exists() else None
+    classification = content.classify(root, before, repo=repo, number=number,
+                                      task_sha256=primary.current().task_sha256, owned=previous)
+    result["target_ownership"] = classification
+    write_json(receipt_dir / "target-ownership.json", classification)
+    conflicts = {p: why for p, why in classification.items()
+                 if why not in {"verified_remote_identical", "verified_current_task_owned"}}
+    if conflicts:
+        raise primary.Refusal(f"target ownership conflict (not checkout dirtiness): {conflicts}")
+    legacy = primary.legacy_inventory(root, number)
+    write_json(receipt_dir / "legacy-repair.json", legacy)
+    native_ticket.acquire(primary.current(), result, primary.checkpoint)
+    # Close the snapshot/lease race without rehashing the monorepo.
+    current_pin = content.remote_pin(root)
+    if content.remote_entries(root, current_pin, targets) != content.remote_entries(root, pin, targets):
+        raise primary.Refusal("remote target changed while acquiring native lease")
+    content.require_unchanged(before, content.snapshot(root, targets, current_pin))
+    creator, reviewer = config.repair_seats(project)
+    result["seats"] = {"creator": creator, "reviewer": reviewer}
+    task = build_repair_task(repo=repo, issue_number=number, issue_title=str(issue.get("title", "")),
+                             issue_body=str(issue.get("body") or ""), targets=targets)
+    import shlex
+    commit_tool = Path(__file__).with_name("scope_commit.py")
+    commit_command = shlex.join([config.resolve_uv_bin(), "run", "--project", str(config.SKILL_DIR),
+        "python", str(commit_tool), "--root", str(root), "--journal", primary.current().journal,
+        "--before", str(receipt_dir / "primary-before.json"), "--output", str(receipt_dir / "authored-commit.json")])
+    clauses = required_proof_clauses(str(issue.get("body") or "")) or ["legacy_native_route"]
+    task += (f"\nPrimary checkout on MAIN only: {root}. Both seats use that exact path.\n"
+             "Do not create/switch/remove branches or worktrees. No reset, stash, clean, rebase, merge, "
+             "shared-index staging, local HEAD commit, amend, direct push, lease mutation or issue closure. "
+             "Unrelated cron work is normal: do not inspect/hash/change all repository files. "
+             "Inspect old repair refs with git show from primary only; preserve the old branch/worktree.\n"
+             f"The starting shipped SHA is {pin}, NOT local HEAD {before.head}.\n"
+             "After each meaningful scoped edit and before final review, creator MUST checkpoint with this private-index helper:\n"
+             f"{commit_command}\n"
+             "The helper creates an unreferenced content commit, never a branch or worktree. "
+             "Reviewer must verify that exact commit and the on-disk target bytes, not an unrelated HEAD.\n"
+             "Reviewer output must include one REVIEW_COMMIT: <full SHA> line, one VERDICT: PASS|FAIL|NEEDS_ATTENTION line, "
+             "each PROOF_ARTIFACT: <absolute JSON RESULT path>, and one VERIFY_PLAN: <single-line JSON> line. "
+             "VERIFY_PLAN has schema agent_skills.project_watchdog.verification_plan.v1, commands (nonempty list of "
+             "deterministic commands suitable for ticket verify), artifacts (all result paths), and coverage "
+             "(map from EVERY exact required clause below to the real command/artifact that proves it). "
+             "Do not put model output, fabricated result JSON, fixture inputs, abbreviated comparisons, "
+             "or a still-running background proof in place of an experiment. The watchdog reruns verification "
+             "through ticket verify before native close. Report any inability as NEEDS_ATTENTION, not PASS.\n"
+             f"Required coverage keys: {json.dumps(clauses)}\n")
+    task += legacy_route_task(project, issue, receipt_dir)
+    (receipt_dir / "repair-task.md").write_text(task)
+    ask_dir = receipt_dir / "ask"
+    command = [str(config.ask_run_sh()), "tau-dag", task, "--repo", repo, "--target", ",".join(targets),
+               "--immutable-goal", repair_immutable_goal(repo, number), "--dag-template", "creator-reviewer",
+               "--handler", creator, "--handler-workspace", f"{creator}={root}",
+               "--handler", reviewer, "--handler-workspace", f"{reviewer}={root}",
+               "--topology", "sequential", "--run-output-root", str(ask_dir), "--execute",
+               "--execution-timeout-seconds", str(_ticket_repair_execution_timeout(project)),
+               "--allow-provider-calls", "--json"]
+    primary.checkpoint("launching", ask_run_dir=str(ask_dir), dispatched_at=time.time())
+    execution = run_ask_tau_dag_with_stream_monitor(command, cwd=config.ask_run_sh().parent,
+        timeout_s=int(project.get("ticket_repair_timeout_s", 1800)), ask_run_dir=ask_dir,
+        monitor_path=receipt_dir / "tau-stream-monitor.json")
+    result["commands"].append(execution)
+    primary.checkpoint(primary.current().phase, result=result)
+    stream = inspect_tau_stream(ask_dir)
+    if not stream.get("terminal"):
+        raise primary.Refusal("native Tau run is not settled; recover the same retained run")
+    primary.checkpoint("settled", tau_settled=True)
+    if execution.get("exit_code") != 0 or execution.get("timed_out"):
+        raise primary.Refusal("Ask process failed or timed out despite terminal-looking stream; no closure")
+    return finish_primary_operation(primary.current())
 
 
 # --------------------------------------------------------------------------- #
@@ -2450,3 +1733,168 @@ def extract_reopen_list(text: str, *, allowed: set[int]) -> list[int]:
             if number in allowed and number not in numbers:
                 numbers.append(number)
     return numbers
+
+
+
+def legacy_route_task(project: dict[str, Any], issue: dict[str, Any], receipt_dir: Path) -> str:
+    """Executable compatibility instructions use the exact existing Tau interfaces.
+
+    The original transport's unchecked raw-GitHub close is replaced by native
+    ticket closure AFTER proof. Requested apply_transport remains explicit in the
+    retained inputs; it is never silently run early or dropped.
+    """
+    import shlex
+    root, uv = project_worktree(project).resolve(), config.resolve_uv_bin()
+    action = issue.get("watchdog_action")
+    if action not in {"tau_handoff_dispatch", "add_tau_coder_command_spec"}:
+        return ""
+    if action == "tau_handoff_dispatch":
+        fields = parse_issue_fields(issue.get("body") or "")
+        start = repo_relative_existing_path(fields["start"], worktree=root)
+        steps = parse_positive_int(fields.get("max_steps", "1"), field="max_steps")
+        goal = parse_goal_hash(fields.get("active_goal_hash", config.TAU_ACTIVE_GOAL_HASH))
+        requested = parse_bool(fields.get("apply_transport", "false"), field="apply_transport")
+        extra = ""
+    else:
+        start = receipt_dir / "tau-coder-start-handoff.json"
+        spec = tau_coder_spec_path(root)
+        write_json(start, tau_coder_start_handoff(project_repo(project), int(issue["number"]), str(issue["url"]), spec))
+        steps, goal, requested = 2, config.TAU_ACTIVE_GOAL_HASH, False
+        extra = (f"Write the exact scoped coder spec at {spec}:\n"
+                 f"```json\n{json.dumps(tau_coder_command_spec(uv), indent=2)}\n```\n"
+                 "Also run the existing deterministic tests: " + shlex.join([
+                  uv, "run", "--project", str(root), "pytest", "-q",
+                  "tests/test_cli.py::test_cli_handoff_agent_adapter_emits_tau_handoff",
+                  "tests/test_subagent_receipt.py::test_headless_subagent_receipt_import_does_not_require_textual"]) + "\n")
+    loop = receipt_dir / "tau-command-loop"
+    command = [uv, "run", "tau", "handoff-command-loop", "--start", str(start),
+               "--receipt-dir", str(loop), "--agents-root", str(config.agents_root()),
+               "--command-spec-root", str(root / "experiments/goal-locked-subagents/agent-command-specs"),
+               "--active-goal-hash", goal, "--max-steps", str(steps)]
+    transport = [uv, "run", "tau", "handoff-command-loop-github-transport",
+                 str(loop / "command-loop-receipt.json"), "--receipt", str(receipt_dir / "tau-github-transport.json")]
+    write_json(receipt_dir / "legacy-route-inputs.json", {"action": action, "command": command,
+               "transport_preview_command": transport, "requested_apply_transport": requested,
+               "terminal_mutation_adapter": "native_ticket.close after independent review and deterministic proof"})
+    return ("\nCompatibility route (do not replace with a generic implementation):\n" + extra +
+            shlex.join(command) + "\n" + shlex.join(transport) + "\n"
+            "Read back and validate the native command-loop and transport receipt. "
+            "A NEEDS_AGENT or human continuation is bounded progress, not completed ticket proof. "
+            "Do not apply raw GitHub transport; the watchdog applies the native ticket lifecycle "
+            "only after all required proof, with the retained requested transport intent visible.\n")
+
+def required_proof_clauses(body: str) -> list[str]:
+    collecting, clauses = False, []
+    for line in body.splitlines():
+        heading = re.match(r"^#{1,6}\s+(.+)$", line.strip())
+        if heading:
+            collecting = heading.group(1).strip().lower() == "required proof"
+        elif collecting and line.strip() and not line.strip().startswith("```"):
+            clauses.append(line.strip())
+    if not clauses:
+        clauses = [m.group(1).strip() for m in re.finditer(r"(?im)^proof:\s*(.+)$", body)]
+    return clauses
+
+def finish_primary_operation(record) -> dict[str, Any]:
+    """Shared by normal execution and recovery; never re-dispatches the provider."""
+    from . import primary, native_ticket, target_content as content, models
+    from .primary_models import TargetSnapshot, OwnedTargets, VerificationPlan, NativeClosure, encoded
+    root, receipt_dir = Path(record.root), Path(record.receipt_dir)
+    project = json.loads((receipt_dir / "dispatch-project.json").read_text())
+    issue = json.loads((receipt_dir / "dispatch-issue.json").read_text())
+    models.validate_project_entry(project)
+    models.validate_issue(issue)
+    live = github.get_issue(record.repo, record.issue_number)
+    if content.digest((live.get("body") or "").encode()) != record.task_sha256:
+        raise primary.Refusal("ticket acceptance changed; retain edits and reauthorize a new attempt")
+    native_ticket.assert_mutable(record)
+    primary.readonly_preflight(root, record.targets)
+    stream = inspect_tau_stream(Path(record.ask_run_dir))
+    if not stream.get("terminal") or stream.get("terminal_status") not in {"PASS", "COMPLETED"}:
+        raise primary.Refusal("native Tau did not settle PASS; no verified closure")
+    monitor = _json_from_file(receipt_dir / "tau-stream-monitor.json") or {}
+    if monitor.get("timed_out") or monitor.get("process_exit_code") not in {None, 0}:
+        raise primary.Refusal("retained Ask invocation failed/timed out; no automatic closure")
+    creator, reviewer = config.repair_seats(project)
+    text = seat_response_text(Path(record.ask_run_dir), reviewer) or ""
+    declared = [line.partition(":")[2].strip() for line in text.splitlines() if line.startswith("REVIEW_COMMIT:")]
+    if len(declared) != 1 or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", declared[0]):
+        raise primary.Refusal("review must bind exactly one full content-commit SHA")
+    review_commit = declared[0]
+    plans = [line.partition(":")[2].strip() for line in text.splitlines() if line.startswith("VERIFY_PLAN:")]
+    if len(plans) != 1:
+        raise primary.Refusal("review must supply exactly one native verification plan")
+    plan = VerificationPlan.model_validate(json.loads(plans[0]))
+    clauses = required_proof_clauses(str(issue.get("body") or ""))
+    if not clauses and record.action == "ticket_repair":
+        raise primary.Refusal("ordinary ticket has no explicit required proof; do not invent acceptance")
+    clauses = clauses or ["legacy_native_route"]
+    if set(plan.coverage) != set(clauses) or any(not value.strip() for value in plan.coverage.values()):
+        raise primary.Refusal("proof plan does not cover every exact required clause")
+    before = TargetSnapshot.model_validate(json.loads((receipt_dir / "primary-before.json").read_text()))
+    after = content.snapshot(root, record.targets, before.remote_sha, receipt_dir / "primary-after-blobs")
+    if after.index_entries != before.index_entries:
+        raise primary.Refusal("target's shared index intent changed; preserve it")
+    if content.remote_entries(root, review_commit, record.targets) != content.versions(after):
+        raise primary.Refusal("working target bytes do not match the independently reviewed commit")
+    if review_commit != before.remote_sha:
+        parent = content.git_bytes(root, "rev-parse", f"{review_commit}^").decode().strip()
+        message = content.git_bytes(root, "show", "-s", "--format=%B", review_commit).decode()
+        if parent != before.remote_sha or f"Watchdog-Run: {record.run_id}\n" not in message:
+            raise primary.Refusal("commit is not this run's scoped authoring artifact; old repair work is not new proof")
+        content.assert_scoped_commit(root, review_commit, record.targets)
+    # Exact authored content may survive a failed proof and be retried by this same task.
+    owned = OwnedTargets(repo=record.repo, issue_number=record.issue_number, task_sha256=record.task_sha256,
+                         run_id=record.run_id, targets=record.targets, files=after.files, provenance="settled_attempt")
+    write_json(primary._area(root) / "owned" / f"{record.issue_number}.json", encoded(owned))
+    write_json(receipt_dir / "primary-after.json", encoded(after))
+    initial_gate = evaluate_repair_proof(ask_run_dir=Path(record.ask_run_dir), issue_body=str(issue.get("body") or ""),
+        creator=creator, reviewer=reviewer, repair_worktree=root, not_before=record.dispatched_at,
+        reviewed_commit=review_commit)
+    if not initial_gate["ok"]:
+        raise primary.Refusal("independent proof gate failed: " + "; ".join(initial_gate["reasons"]))
+    needed = {str(Path(p).expanduser().resolve() if Path(p).is_absolute() else (root / p).resolve())
+              for p in initial_gate["required_proof_artifacts"]}
+    provided = {str(Path(p).expanduser().resolve() if Path(p).is_absolute() else (root / p).resolve()) for p in plan.artifacts}
+    if not needed <= provided:
+        raise primary.Refusal("native verification plan omits a mandatory result artifact")
+    prior_stamps = {p: (Path(p).stat().st_mtime_ns, Path(p).stat().st_size) if Path(p).exists() else None
+                    for p in provided}
+    verify_started = time.time()
+    commands = native_ticket.verify(root, record.issue_number, plan,
+        timeout_s=int(project.get("ticket_repair_timeout_s", 1800)))
+    write_json(receipt_dir / "native-verification-commands.json", {"commands": commands})
+    content.require_unchanged(after, content.snapshot(root, record.targets, before.remote_sha))
+    artifacts = [inspect_proof_artifact(p, not_before=verify_started) for p in sorted(provided)]
+    unchanged_results = [p for p in provided if Path(p).exists() and
+                         prior_stamps[p] == (Path(p).stat().st_mtime_ns, Path(p).stat().st_size)]
+    if unchanged_results:
+        raise primary.Refusal("native verify did not rewrite required result files: " + str(unchanged_results))
+    if not artifacts or not all(a["passed"] for a in artifacts):
+        raise primary.Refusal("native ticket verification did not freshly pass every required result")
+    gate_path = receipt_dir / "repair-proof-gate.json"
+    gate = {**initial_gate, "native_verification": commands, "native_artifacts": artifacts,
+            "coverage": plan.coverage, "reviewed_commit": review_commit}
+    write_json(gate_path, gate)
+    remote_required = bool(config.auto_land_main(project))
+    commit = content.publish(root, before, after, receipt_dir, record.run_id, record.issue_number,
+                             remote_required=remote_required)
+    proof = receipt_dir / "native-ticket-proof.md"
+    review = receipt_dir / "native-ticket-review.md"
+    proof.write_text(f"<!-- watchdog-proof:{record.owner_token} -->\n"
+        f"Verified {record.repo}#{record.issue_number}; content commit {commit}.\n"
+        f"Remote publication required: {remote_required}. Local HEAD/index were not used as publication state.\n"
+        f"Target scope: {', '.join(record.targets)}\n"
+        "```json\n" + json.dumps(gate, indent=2) + "\n```\n")
+    review.write_text(text)
+    closure = NativeClosure(proof_path=str(proof), proof_sha256=content.digest(proof.read_bytes()),
+        review_path=str(review), review_sha256=content.digest(review.read_bytes()), commit=commit,
+        remote_required=remote_required, scope=record.targets, content=after)
+    primary.checkpoint("closing", closure=encoded(closure))
+    closed = native_ticket.close(primary.current())
+    result = {**(record.result or _new_result(project, issue, record.action)), **closed,
+              "requires_human_input": False, "proof_gate": str(gate_path),
+              "artifacts": [str(proof), str(review), str(gate_path), str(receipt_dir / "tau-stream-monitor.json")],
+              "preservation_scope": "target files and target index entries; unrelated cron changes are not attributed to this run"}
+    primary.checkpoint("releasing", result=result)
+    return result
