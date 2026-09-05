@@ -473,14 +473,14 @@
         "run",
         "--project",
         "..",
-        "python",
-        "-c",
-        "import sys, pathlib, tempfile; sys.path.insert(0,'../scripts'); from watchdog import registry; d=pathlib.Path(tempfile.mkdtemp()); wt=d/'wt'; wt.mkdir(); calls=[];\nregistry.run_cmd=lambda cmd, timeout_s=None: (calls.append(cmd), {'exit_code':0,'stdout':'9feb862 Fix partial-window rolling means\\n' if 'log' in cmd else '','stderr':''})[1]\nout=registry.prepare_repair_worktree(d/'repo', wt, 1); assert out['ok'] is False, out; assert 'lose that work' in out['error']; assert not any('remove' in c for c in calls); print('PROTECTED', out['unmerged'][0])"
+        "pytest",
+        "-q",
+        "../tests/test_project_watchdog.py::test_a_worktree_holding_unmerged_work_is_not_reset"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "PROTECTED 9feb862"
+          "1 passed"
         ]
       }
     },
