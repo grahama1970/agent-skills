@@ -2127,9 +2127,15 @@ def test_a_worktree_holding_unmerged_work_is_not_reset(tmp_path, monkeypatch) ->
     wt = tmp_path / "wt"
     wt.mkdir()
     calls: list[list[str]] = []
+    monkeypatch.setattr("shutil.which", lambda n: "/usr/bin/wt" if n == "wt" else None)
 
-    def fake_run(cmd, timeout_s=None):
+    def fake_run(cmd, *, cwd=None, input_text=None, timeout_s=120):
         calls.append(cmd)
+        argv = " ".join(cmd)
+        if "worktree list --porcelain" in argv:
+            return {"exit_code": 0, "stdout": (
+                f"worktree {tmp_path / 'repo'}\nbranch refs/heads/main\n\n"
+                f"worktree {wt}\nbranch refs/heads/watchdog/issue-1\n"), "stderr": ""}
         if "log" in cmd:
             return {"exit_code": 0, "stdout": "9feb862 Fix partial-window rolling means\n"}
         return {"exit_code": 0, "stdout": "", "stderr": ""}
@@ -2140,7 +2146,8 @@ def test_a_worktree_holding_unmerged_work_is_not_reset(tmp_path, monkeypatch) ->
     assert out["ok"] is False
     assert "unmerged" in out and out["unmerged"]
     assert "lose that work" in out["error"]
-    assert not any("remove" in c for c in calls), "must not remove a worktree holding work"
+    assert not any(c[0] == "/usr/bin/wt" and "remove" in c for c in calls), \
+        "must not wt-remove a worktree holding unmerged work"
 
 
 def test_a_panel_that_could_not_reach_a_provider_names_the_cause(tmp_path) -> None:

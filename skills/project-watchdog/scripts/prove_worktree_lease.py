@@ -27,6 +27,7 @@ sh("git", "push", "-q", "origin", "HEAD:main", cwd=repo)
 wt = base / "wt-42"
 result = wreg.prepare_repair_worktree(repo, wt, 42)
 assert result.get("ok") is True, result
+wt = Path(result["worktree"])  # wt-managed worktrees resolve to their own path
 
 # READBACK: the lease registry entry for this worktree, from disk.
 entries = [json.loads(l) for l in registry_file.read_text().splitlines() if l.strip()]

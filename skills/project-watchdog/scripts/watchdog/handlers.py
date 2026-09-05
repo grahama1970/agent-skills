@@ -1347,6 +1347,10 @@ def handle_ticket_repair(
     repair_worktree = config.repair_worktrees_dir() / f"{project.get('project_id')}-{issue_number}"
     prepared = registry.prepare_repair_worktree(worktree, repair_worktree, issue_number)
     result["repair_worktree"] = prepared
+    if prepared.get("ok"):
+        # Managed (wt) worktrees resolve to their own location; every consumer
+        # below must use the resolved path, not the preferred one.
+        repair_worktree = Path(prepared["worktree"])
     if not prepared.get("ok"):
         result.update(
             {

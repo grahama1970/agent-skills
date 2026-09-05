@@ -94,15 +94,24 @@ def remote_main_sha(repo_dir: Path) -> str:
 
 
 def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -> dict[str, Any]:
-    """Create a clean worktree from ``origin/main`` to author one repair in.
+    """Create a clean worktree off ``origin/main`` to author one repair in.
 
-    Isolation, not convenience. The registered checkout is a human's working
-    tree; authoring there builds on whatever it happens to hold and risks
-    clobbering uncommitted work. A fresh worktree off the fetched origin/main is
-    clean by construction and current by construction.
+    Isolation, not convenience: the registered checkout is a human's working
+    tree and authoring there risks clobbering uncommitted work.
 
-    Returns the git commands run and the resolved branch, or an ``error``.
+    Managed lifecycle only (operator correction 2026-09-05): ops-worktrees
+    SKILL.md bans raw ``git worktree add``; creation goes through ``wt switch
+    -c`` and removal of a CLEAN leftover through ``wt remove``. The watchdog's
+    unmerged-commits refusal stays in front of both -- ``wt remove`` drops the
+    tree even when the branch is unmerged (verified live 2026-09-05), so it can
+    never be the first line of defense. If ``wt`` is unavailable the dispatch
+    fails closed; there is no raw-git fallback.
+
+    ``worktree`` is only the caller's preferred location; the resolved managed
+    path is returned under ``worktree`` and callers must use that.
     """
+    import shutil
+
     branch = f"{REPAIR_BRANCH_PREFIX}{issue_number}"
     steps: list[dict[str, Any]] = []
 
@@ -111,14 +120,43 @@ def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -
         steps.append({"argv": ["git", *args], "exit_code": result.get("exit_code")})
         return result
 
-    # A leftover worktree from an earlier attempt may hold a finished repair
-    # that nobody has merged yet. `worktree add -B` resets the branch to
-    # origin/main, so removing and re-adding blindly DESTROYS that work --
-    # observed on watchdog-probe#1: codex committed 9feb862, a later dispatch
-    # reset the branch, and the commit was left unreferenced.
-    if worktree.exists():
+    wt_bin = shutil.which("wt")
+    if wt_bin is None:
+        return {
+            "ok": False,
+            "error": (
+                "wt (ops-worktrees managed worktree lifecycle) is not on PATH; "
+                "raw `git worktree add` is banned by ops-worktrees SKILL.md, so "
+                "the repair lane fails closed. Install wt (~/.local/bin/wt)."
+            ),
+            "steps": steps,
+        }
+
+    def wt(*args: str, cwd: Path) -> dict[str, Any]:
+        result = run_cmd([wt_bin, *args], cwd=cwd, timeout_s=120)
+        steps.append({"argv": ["wt", *args], "exit_code": result.get("exit_code")})
+        return result
+
+    def existing_worktree_for_branch() -> Path | None:
+        listing = git("worktree", "list", "--porcelain", cwd=repo_dir)
+        current: Path | None = None
+        for line in str(listing.get("stdout", "")).splitlines():
+            if line.startswith("worktree "):
+                current = Path(line.split(" ", 1)[1])
+            elif line.startswith("branch ") and current is not None:
+                if line.split(" refs/heads/", 1)[-1] == branch:
+                    return current
+                current = None
+        return None
+
+    # A leftover worktree may hold a finished repair nobody merged yet. wt
+    # remove drops the TREE even for an unmerged branch, so the unmerged
+    # refusal must run BEFORE any managed removal (watchdog-probe#1: a reset
+    # over codex's 9feb862 left the commit unreferenced).
+    existing = existing_worktree_for_branch()
+    if existing is not None:
         result = run_cmd(
-            ["git", "-C", str(worktree), "log", "--oneline", "origin/main..HEAD"],
+            ["git", "-C", str(existing), "log", "--oneline", "origin/main..HEAD"],
             timeout_s=60,
         )
         unmerged = [ln for ln in str(result.get("stdout", "")).splitlines() if ln.strip()]
@@ -126,34 +164,57 @@ def prepare_repair_worktree(repo_dir: Path, worktree: Path, issue_number: int) -
             return {
                 "ok": False,
                 "error": (
-                    f"{worktree} already holds {len(unmerged)} unmerged commit(s) on "
-                    f"{branch} ({unmerged[0]}). Refusing to reset it and lose that work: "
-                    f"merge or delete the branch first."
+                    f"{existing} already holds {len(unmerged)} unmerged commit(s) on "
+                    f"{branch} ({unmerged[0]}). Refusing to reset or remove it and "
+                    f"lose that work: merge, archive, or delete the branch first "
+                    f"(ops-worktrees archive composes this per #1589)."
                 ),
                 "unmerged": unmerged,
                 "steps": steps,
             }
-        git("worktree", "remove", "--force", str(worktree), cwd=repo_dir)
-    git("worktree", "prune", cwd=repo_dir)
+        removed = wt("remove", branch, cwd=repo_dir)
+        if removed.get("exit_code") != 0:
+            return {
+                "ok": False,
+                "error": f"wt remove of clean leftover failed: {removed.get('stderr')}",
+                "steps": steps,
+            }
 
     fetched = git("fetch", "origin", "main", cwd=repo_dir)
     if fetched.get("exit_code") != 0:
         return {"ok": False, "error": f"fetch failed: {fetched.get('stderr')}", "steps": steps}
 
-    worktree.parent.mkdir(parents=True, exist_ok=True)
-    added = git("worktree", "add", "-B", branch, str(worktree), "origin/main", cwd=repo_dir)
-    if added.get("exit_code") == 0:
-        # Register the lease at creation. The watchdog owns 58 of this repo's
-        # worktrees and has never removed one; without an owner recorded here
-        # the reaper can only report them, never reclaim them.
-        # NOTE 2026-09-04: this branch read ``returncode``, but git()/run_cmd
-        # record ``exit_code`` only, so the lease was NEVER registered and the
-        # reaper could never reclaim -- the stranded-worktree root cause
-        # (memory#158). Keyed on exit_code now.
-        _register_worktree_lease(worktree, purpose=f"watchdog:{branch}")
-    if added.get("exit_code") != 0:
-        return {"ok": False, "error": f"worktree add failed: {added.get('stderr')}", "steps": steps}
-    return {"ok": True, "branch": branch, "worktree": str(worktree), "steps": steps}
+    created = wt("switch", "-c", branch, cwd=repo_dir)
+    if created.get("exit_code") != 0:
+        return {
+            "ok": False,
+            "error": f"wt switch -c {branch} failed: {created.get('stderr')}",
+            "steps": steps,
+        }
+    resolved = existing_worktree_for_branch()
+    if resolved is None:
+        return {
+            "ok": False,
+            "error": f"wt reported success but no worktree for {branch} is registered",
+            "steps": steps,
+        }
+    # wt switch -c branches from the current HEAD; the repair must author off
+    # origin/main. The branch is fresh (any leftover was clean-removed above),
+    # so this reset destroys nothing.
+    reset = git("reset", "--hard", "origin/main", cwd=resolved)
+    if reset.get("exit_code") != 0:
+        return {
+            "ok": False,
+            "error": f"fresh worktree reset to origin/main failed: {reset.get('stderr')}",
+            "steps": steps,
+        }
+
+    # Register the lease at creation on the resolved managed path. Without an
+    # owner recorded here the reaper can only report worktrees, never reclaim
+    # them (fixed 2026-09-04: this branch previously read ``returncode``,
+    # which run_cmd never records, so the lease was never registered).
+    _register_worktree_lease(resolved, purpose=f"watchdog:{branch}")
+    return {"ok": True, "branch": branch, "worktree": str(resolved), "steps": steps}
 
 
 def worktree_readiness(worktree: Path, targets: set[str] | None = None) -> dict[str, Any]:

@@ -67,28 +67,101 @@ def test_verified_sent_with_message_id_advances_dedupe(monkeypatch, tmp_path):
     assert state_path.exists(), "a verified delivery must record the dedupe timestamp"
 
 
-def test_worktree_lease_registered_on_exit_code_zero(monkeypatch, tmp_path):
-    # The registration branch read added.get("returncode"), but git()/run_cmd
-    # record exit_code, so the lease NEVER registered (stranded-worktree root
-    # cause, memory#158). Prove it fires on exit_code 0 now.
+def test_repair_worktree_uses_wt_and_registers_lease(monkeypatch, tmp_path):
+    # Managed lifecycle (operator 2026-09-05): creation via `wt switch -c`,
+    # never raw `git worktree add`; lease registered on the RESOLVED path.
     from watchdog import registry
 
-    calls = {"registered": 0}
-    monkeypatch.setattr(
-        registry, "_register_worktree_lease",
-        lambda *a, **k: calls.__setitem__("registered", calls["registered"] + 1))
+    calls = {"lease": 0, "argv": []}
+    monkeypatch.setattr(registry, "_register_worktree_lease",
+                        lambda *a, **k: calls.__setitem__("lease", calls["lease"] + 1))
+    monkeypatch.setattr("shutil.which", lambda n: "/usr/bin/wt" if n == "wt" else None)
+    resolved = tmp_path / "repo.watchdog-issue-42"
 
-    # git() is a nested closure over run_cmd; mock run_cmd so every git
-    # subcommand reports exit_code 0 with empty output.
-    monkeypatch.setattr(
-        registry, "run_cmd",
-        lambda *a, **k: {"exit_code": 0, "stdout": "", "stderr": ""})
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    wt = tmp_path / "wt"
-    result = registry.prepare_repair_worktree(repo, wt, 42)
-    assert result["ok"] is True
-    assert calls["registered"] == 1, "lease must register when worktree add exits 0"
+    def fake_run_cmd(command, *, cwd=None, input_text=None, timeout_s=120):
+        calls["argv"].append(list(command))
+        argv = " ".join(command)
+        if "worktree list --porcelain" in argv:
+            return {"exit_code": 0, "stdout": f"worktree {tmp_path/'repo'}\nbranch refs/heads/main\n\nworktree {resolved}\nbranch refs/heads/watchdog/issue-42\n", "stderr": ""}
+        if command[0] == "/usr/bin/wt":
+            return {"exit_code": 0, "stdout": "created", "stderr": ""}
+        return {"exit_code": 0, "stdout": "", "stderr": ""}
+
+    monkeypatch.setattr(registry, "run_cmd", fake_run_cmd)
+    result = registry.prepare_repair_worktree(tmp_path / "repo", tmp_path / "preferred", 42)
+    assert result["ok"] is True, result
+    assert result["worktree"] == str(resolved)
+    assert calls["lease"] == 1
+    assert not any(a[:2] == ["git", "worktree"] and "add" in a for a in calls["argv"]), \
+        "raw git worktree add is banned"
+    assert any(a[0] == "/usr/bin/wt" and "switch" in a and "-c" in a for a in calls["argv"])
+
+
+def test_wt_missing_fails_closed(monkeypatch, tmp_path):
+    from watchdog import registry
+    monkeypatch.setattr("shutil.which", lambda n: None)
+    result = registry.prepare_repair_worktree(tmp_path, tmp_path / "w", 7)
+    assert result["ok"] is False
+    assert "banned" in result["error"] and "wt" in result["error"]
+
+
+def test_minted_triage_code_from_watchdog_layer_passes_receipt_validator():
+    # triage-error mints from the layer; the code it produces for
+    # 'project-watchdog' must satisfy the receipt validator, not be rejected.
+    assert receipt_schema.is_valid_failure_code(
+        "project_watchdog_unclassified_abcd1234"
+    )
+    # the pre-fix hyphenated shape must NOT validate (proves the fix matters)
+    assert not receipt_schema.is_valid_failure_code(
+        "project-watchdog_unclassified_abcd1234"
+    )
+
+
+def _run_alert(monkeypatch, tmp_path, notify_stdout, returncode, dry):
+    import subprocess
+
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(tmp_path))
+
+    class _Proc:
+        def __init__(self):
+            self.stdout = notify_stdout
+            self.stderr = ""
+            self.returncode = returncode
+
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _Proc())
+    fake_run_sh = tmp_path / "ops-discord-run.sh"
+    fake_run_sh.write_text("#!/bin/sh\n")
+    monkeypatch.setattr(alerts, "OPS_DISCORD_RUN_SH", fake_run_sh)
+    receipt = {
+        "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+        "run_id": "r", "status": "BLOCKED", "apply": not dry, "project": "p",
+        "handled_issues": [],
+    }
+    alerts.maybe_alert(receipt)
+    return receipt["alert"], alerts._alerts_state_path()
+
+
+def test_dry_run_exit_zero_does_not_advance_dedupe(monkeypatch, tmp_path):
+    alert, state_path = _run_alert(
+        monkeypatch, tmp_path, '{"status":"DRY_RUN"}', 0, dry=True)
+    assert alert["delivered"] is False
+    assert not state_path.exists(), "dry run must not write a dedupe timestamp"
+
+
+def test_unverified_send_without_message_ref_does_not_advance_dedupe(monkeypatch, tmp_path):
+    alert, state_path = _run_alert(
+        monkeypatch, tmp_path, '{"status":"SENT"}', 0, dry=False)
+    assert alert["delivered"] is False, "SENT without message_id/url is unverified"
+    assert not state_path.exists()
+
+
+def test_verified_sent_with_message_id_advances_dedupe(monkeypatch, tmp_path):
+    alert, state_path = _run_alert(
+        monkeypatch, tmp_path,
+        '{"status":"SENT","message_id":"123","message_url":"https://x/1"}',
+        0, dry=False)
+    assert alert["delivered"] is True
+    assert state_path.exists(), "a verified delivery must record the dedupe timestamp"
 
 
 def _tick_env(monkeypatch, tmp_path, state_doc, registry_doc):
