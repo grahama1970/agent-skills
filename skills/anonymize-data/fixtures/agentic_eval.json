@@ -9,6 +9,21 @@
   },
   "cases": [
     {
+      "name": "release-artifact-relative-and-symlink-boundary",
+      "type": "adversarial",
+      "real_world": true,
+      "readback": true,
+      "command": [
+        "bash", "../run.sh", "sanity", "-k",
+        "test_work_artifacts_cannot_enter_release_via_relative_or_symlink_paths"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["1 passed", "WRAPPER_BOUNDARY_PASS"]
+      },
+      "timeout_seconds": 180
+    },
+    {
       "name": "four-format-and-relative-path-controls",
       "type": "positive",
       "real_world": true,

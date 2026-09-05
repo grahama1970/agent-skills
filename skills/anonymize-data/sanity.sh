@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Exercise the real project matrix THROUGH this wrapper; no copied engine/tests.
+# Includes real READY-release relative/symlink rejection and private work controls.
 set -euo pipefail
 unset VIRTUAL_ENV PYTHONPATH
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
