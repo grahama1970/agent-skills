@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "skill": "anonymize-data",
+  "trials": 3,
+  "proof_scope": "Real thin skill wrapper delegating to the canonical project CLI. Synthetic inputs, real file effects; no copied implementation or mocked services.",
+  "claims": {
+    "proves": "The wrapper executes four-format anonymization and explicit fuzzy-policy review while preserving input, approval, privacy, installation and filesystem boundaries.",
+    "does_not_prove": "Human identity adjudication, general PII discovery, production scale, old trial qualification covering the extension, or Google Meet/screen sharing."
+  },
+  "cases": [
+    {
+      "name": "four-format-and-relative-path-controls",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "sanity",
+        "-k",
+        "all_four_formats or single_file_relative_paths or customer_file_named"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WRAPPER_BOUNDARY_PASS"
+        ]
+      },
+      "timeout_seconds": 180
+    },
+    {
+      "name": "forged-stale-and-unauthorized-approvals",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "sanity",
+        "-k",
+        "forged or stale_or_edited or approval_requires or approval_rechecks"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WRAPPER_BOUNDARY_PASS"
+        ]
+      },
+      "timeout_seconds": 180
+    },
+    {
+      "name": "identity-scope-protected-and-ambiguity-boundaries",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "sanity",
+        "-k",
+        "noise or near_ties or aliases_of_one or policy_without or deterministic_and"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WRAPPER_BOUNDARY_PASS"
+        ]
+      },
+      "timeout_seconds": 180
+    },
+    {
+      "name": "malformed-settings-resources-and-forbidden-writes",
+      "type": "negative",
+      "real_world": true,
+      "command": [
+        "bash",
+        "../run.sh",
+        "sanity",
+        "-k",
+        "invalid or malformed or budget or special_file or work_artifacts"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "WRAPPER_BOUNDARY_PASS"
+        ]
+      },
+      "timeout_seconds": 180
+    }
+  ]
+}

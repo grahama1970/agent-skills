@@ -1,5 +1,11 @@
 schema: best-practices-skills.capability_vocabulary.v1
 capabilities:
+  data-anonymization:
+    providers:
+      - anonymize-data
+  name-alias-discovery:
+    providers:
+      - anonymize-data
   google-meet-preflight:
     providers:
       - ops-google-meet
