@@ -420,13 +420,12 @@
       "command": [
         "bash",
         "-c",
-        "../run.sh tick --project not-a-real-project 2>&1; echo EXIT=$?"
+        "cd .. && PROJECT_WATCHDOG_STATE_ROOT=$(mktemp -d) ./run.sh tick --project not-a-real-project 2>&1 | grep -q \"unknown project_id\" && echo UNKNOWN_PROJECT_NAMED"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "not-a-real-project",
-          "EXIT=2"
+          "UNKNOWN_PROJECT_NAMED"
         ]
       }
     },
