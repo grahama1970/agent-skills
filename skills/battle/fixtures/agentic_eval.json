@@ -1184,6 +1184,38 @@
           }
         ]
       }
+    },
+    {
+      "name": "small-medium-production-battle",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.production.small_medium_local"
+      ],
+      "seams": [
+        "production.small_medium_local_battle"
+      ],
+      "timeout_seconds": 300,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python ../scripts/agentic_eval_probe.py small-medium-production-battle --summary /tmp/battle-agentic-evals/small-medium-production-battle.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=small-medium-production-battle"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/small-medium-production-battle.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
     }
   ]
 }

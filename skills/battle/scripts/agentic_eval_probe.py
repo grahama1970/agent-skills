@@ -1708,6 +1708,72 @@ def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
     )
 
 
+def probe_small_medium_production_battle(summary_path: Path) -> int:
+    suite = "small-medium-production-battle"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    run = _run_in(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "run_small_medium_production_battle.py"),
+            "--out",
+            str(out_root),
+        ],
+        cwd=REPO_ROOT,
+        timeout=300,
+        env={"PYTHONPATH": f"{REPO_ROOT / 'skills'}:{BATTLE_DIR / 'src'}"},
+    )
+    (out_root.parent / f"{suite}.stdout.txt").write_text(run.stdout, encoding="utf-8")
+    (out_root.parent / f"{suite}.stderr.txt").write_text(run.stderr, encoding="utf-8")
+    if run.returncode != 0:
+        raise AssertionError("small/medium production Battle failed: " + run.stdout + run.stderr)
+    receipt_path = out_root / "run-receipt.json"
+    scorekeeper_path = out_root / "scorekeeper-receipt.json"
+    report_path = out_root / "REPORT.md"
+    auth_path = out_root / "authorization-validation.json"
+    receipt = _read_json(receipt_path)
+    scorekeeper = _read_json(scorekeeper_path)
+    auth = _read_json(auth_path)
+    rounds = receipt.get("rounds") or []
+    docker_attempts = [attempt for item in rounds for attempt in item.get("docker_attempts", [])]
+    checks = [
+        {"name": "authorization_passed_before_execution", "status": "PASS" if auth.get("status") == "PASS" else "FAIL", "authorization": str(auth_path)},
+        {"name": "six_round_medium_arena", "status": "PASS" if len(rounds) == 6 else "FAIL", "round_count": len(rounds)},
+        {"name": "round_wins_even", "status": "PASS" if scorekeeper.get("red_round_wins") == scorekeeper.get("blue_round_wins") == 3 else "FAIL", "red_round_wins": scorekeeper.get("red_round_wins"), "blue_round_wins": scorekeeper.get("blue_round_wins")},
+        {"name": "docker_attempts_present", "status": "PASS" if len(docker_attempts) == 12 else "FAIL", "docker_attempt_count": len(docker_attempts)},
+        {"name": "plain_report_written", "status": "PASS" if report_path.is_file() and "## Human summary" in report_path.read_text(encoding="utf-8") else "FAIL", "report": str(report_path)},
+    ]
+    failed = [item for item in checks if item["status"] != "PASS"]
+    if failed:
+        raise AssertionError(f"small/medium production Battle checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="local_docker_judge_medium_arena",
+            checks=checks,
+            artifacts={
+                "run_receipt": str(receipt_path),
+                "scorekeeper_receipt": str(scorekeeper_path),
+                "authorization_validation": str(auth_path),
+                "report": str(report_path),
+            },
+            claims_proves=[
+                "A local small/medium Battle ran six Docker-judged rounds after authorization.",
+                "The arena produced even round wins: Red 3 and Blue 3, with scoring decided by Judge-backed defense value.",
+                "A plainspoken report was written as the primary human artifact.",
+            ],
+            claims_does_not_prove=[
+                "External production deployment readiness.",
+                "Provider/Tau-generated Red and Blue creativity.",
+                "1000-round overnight throughput.",
+                "Arbitrary external target exploitability.",
+            ],
+        ),
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run a Battle agentic-eval probe")
     parser.add_argument("suite")
@@ -1821,6 +1887,8 @@ def main() -> int:
             return probe_production_positive_readiness(args.summary)
         if args.suite == "production-fail-closed":
             return probe_production_fail_closed(args.summary)
+        if args.suite == "small-medium-production-battle":
+            return probe_small_medium_production_battle(args.summary)
         raise SystemExit(f"unknown suite: {args.suite}")
     except Exception as exc:
         failure = {
