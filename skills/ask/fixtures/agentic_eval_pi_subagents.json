@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "Ask-in-Pi native routing, fresh child outputs, per-child model/reasoning attribution and refusal boundaries; not a Python-to-Pi bridge or arbitrary task acceptance",
+  "claims": {
+    "proves": "The real Pi host follows Ask native-target instructions for the bounded cases; independent readback checks actual child outputs and model/thinking fields",
+    "does_not_prove": "All provider/model combinations, arbitrary code-writing safety, Battle readiness, or impossibility of every future regression"
+  },
+  "capability_claims": [
+    {"id": "ask.pi.single", "description": "One explicit Pi reviewer returns fresh file-derived output with the requested model and reasoning", "criticality": "critical", "evidence_required": {"live_e2e": true}},
+    {"id": "ask.pi.team", "description": "Two concurrent native reviewers preserve distinct tasks, outputs and per-child low/high reasoning", "criticality": "critical", "evidence_required": {"live_e2e": true}},
+    {"id": "ask.pi.refusal", "description": "Unavailable native tool or named agent does not become another provider or fabricated child result", "criticality": "critical", "evidence_required": {"adversarial_live_e2e": true}}
+  ],
+  "seams": [
+    {"seam_id": "pi.single_model_output", "seam_type": "multi-agent/orchestration", "criticality": "critical", "claim_id": "ask.pi.single", "required_evidence": ["live_e2e"]},
+    {"seam_id": "pi.team_model_output", "seam_type": "multi-agent/orchestration", "criticality": "critical", "claim_id": "ask.pi.team", "required_evidence": ["live_e2e"]},
+    {"seam_id": "pi.native_refusal", "seam_type": "multi-agent/orchestration", "criticality": "critical", "claim_id": "ask.pi.refusal", "required_evidence": ["adversarial_live_e2e"]}
+  ],
+  "cases": [
+    {
+      "name": "pi-native-single-model-output",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["ask.pi.single"],
+      "seams": ["pi.single_model_output"],
+      "timeout_seconds": 600,
+      "command": ["python3", "../evals/pi_native_subagents.py", "single"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/single.json", "json_pointer": "/status", "equals": "PASS"}, {"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/single.json", "json_pointer": "/checks/resolved_models/0/thinking", "equals": "low"}]}
+    },
+    {
+      "name": "pi-native-team-model-output",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "supports_claims": ["ask.pi.team"],
+      "seams": ["pi.team_model_output"],
+      "timeout_seconds": 600,
+      "command": ["python3", "../evals/pi_native_subagents.py", "team"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/team.json", "json_pointer": "/status", "equals": "PASS"}, {"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/team.json", "json_pointer": "/checks/resolved_models/0/thinking", "equals": "low"}, {"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/team.json", "json_pointer": "/checks/resolved_models/1/thinking", "equals": "high"}]}
+    },
+    {
+      "name": "pi-native-tool-unavailable",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": ["ask.pi.refusal"],
+      "seams": ["pi.native_refusal"],
+      "timeout_seconds": 600,
+      "command": ["python3", "../evals/pi_native_subagents.py", "unavailable"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/unavailable.json", "json_pointer": "/checks/refusal", "equals": "PI_SUBAGENTS_UNAVAILABLE"}]}
+    },
+    {
+      "name": "pi-native-named-agent-unavailable",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": ["ask.pi.refusal"],
+      "seams": ["pi.native_refusal"],
+      "timeout_seconds": 600,
+      "command": ["python3", "../evals/pi_native_subagents.py", "missing-agent"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/missing-agent.json", "json_pointer": "/checks/refusal", "equals": "PI_SUBAGENT_NOT_EXECUTABLE"}]}
+    },
+    {
+      "name": "pi-native-evidence-tampering-rejected",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "timeout_seconds": 30,
+      "command": ["python3", "../evals/pi_native_subagents.py", "adversarial"],
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/mnt/storage12tb/skills/ask/outputs/pi-subagents-evals/adversarial.json", "json_pointer": "/checks/rejected_count", "equals": 5}]}
+    },
+    {
+      "name": "pi-native-change-preserves-webgpt-tau-route",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 600,
+      "command": ["python3", "../scripts/check_help_dispatch_consistency.py"],
+      "expected": {"exit_code": 0, "stdout_contains": ["HELP_DISPATCH_CONSISTENT"]}
+    }
+  ]
+}

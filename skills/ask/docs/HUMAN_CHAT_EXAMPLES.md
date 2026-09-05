@@ -5,6 +5,22 @@ accepts natural phrasing, then maps it to memory recall, oracle synthesis,
 persona consultation, argue, roundtable review, parallel review, CAE gap review,
 or deep review.
 
+## Pi-native subagents (inside Pi)
+
+```text
+$ask pi reviewer inspect skills/battle/src/battle_skill/orchestrator.py. Read-only; cite file:line evidence.
+$ask use Pi-native subagents as two read-only scouts for Battle: trace CLI-to-Judge wiring and independently check saved artifact hashes. Run concurrently, return both reports, then propose one repair plan. Do not edit or launch a campaign.
+$ask pi worker apply only the approved documentation change, with one writer on primary main, no worktrees, and read-back proof.
+```
+
+These explicit Pi targets use Nico's native `subagent` tool, not the legacy
+oracle routes below. The parent discovers agents first, uses one async workflow
+for a team, and preserves each child's output reference. Missing native tools
+or agents stop the request; they do not trigger a silent provider fallback.
+See [Pi-native subagent examples and retained evals](PI_NATIVE_SUBAGENTS.md).
+For current browser/model routing, follow [SKILL.md](../SKILL.md); older oracle
+examples below do not override its four-target routing contract.
+
 ## Defaults
 
 - Use memory first for ordinary knowledge questions.

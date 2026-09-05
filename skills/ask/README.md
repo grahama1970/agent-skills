@@ -72,6 +72,20 @@ $ask is memory healthy?
 Project agents translate those prompts into the correct CLI route. That is
 enough to start.
 
+## Pi-native subagents and teams
+
+Inside Pi, keep `$ask` as the entry point and name the native target:
+
+```text
+$ask pi reviewer inspect skills/battle/src/battle_skill/orchestrator.py. Read-only; cite file:line evidence.
+$ask use Pi-native subagents as two read-only scouts: one traces Battle CLI-to-Judge wiring; the other checks saved artifact hashes. Run concurrently and propose a repair plan. Do not edit or launch a campaign.
+```
+
+Ask directs the parent to Nico's native `subagent` tool after live agent
+discovery. Browser reviewers and Tau workflows keep their existing routes.
+This is not a new `./run.sh pi` command or a replacement for Tau.
+See [copyable prompts, host-tool examples, and live regression evals](docs/PI_NATIVE_SUBAGENTS.md).
+
 ## Quick Start
 
 The basics: just ask.

@@ -9,6 +9,18 @@
   },
   "cases": [
     {
+      "name": "pi-native-docs-and-retained-evals",
+      "type": "positive",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 30,
+      "command": ["python3", "../evals/pi_native_subagents.py", "documentation"],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["\"documentation_contract\": \"PASS\"", "\"live_execution_proven\": false"]
+      },
+      "proves": "Copyable native single/team/model examples and their dedicated live fixture remain present; this does not execute Pi children. Run agentic_eval_pi_subagents.json for live acceptance."
+    },
+    {
       "name": "browser-availability-entrypoint",
       "type": "positive",
       "real_world": true,
