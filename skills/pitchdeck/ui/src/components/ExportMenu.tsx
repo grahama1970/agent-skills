@@ -19,10 +19,13 @@ export function ExportMenu() {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [source, setSource] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (!open) return
+    setSource(null)
+    void fetch('/api/deck-context').then(r => { if (!r.ok) throw new Error('Cannot identify the active export source'); return r.json() }).then(c => setSource(c.source)).catch(e => setError(String(e)))
     const onClick = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false)
     }
@@ -80,13 +83,13 @@ export function ExportMenu() {
               role="menuitem"
               data-qid={qid}
               data-qs-action={action}
-              title={label}
-              disabled={busy !== null}
+              title={source === 'emit-document-ui' && !['pptx', 'pdf'].includes(format) ? 'Unavailable for canonical documents; public delivery requires verify-publish' : label}
+              disabled={busy !== null || !source || source === 'emit-document-ui' && !['pptx', 'pdf'].includes(format)}
               onClick={() => void download(format)}
               className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-slate-200 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Icon aria-hidden className="h-4 w-4 text-cyan-300" />
-              {busy === format ? 'Building…' : label}
+              {busy === format ? 'Building…' : source === 'emit-document-ui' && format === 'pptx' ? 'Editable PPTX (authoring preview)' : source === 'emit-document-ui' && format === 'pdf' ? 'PDF preview' : label}
             </Button>
           ))}
           {error ? (

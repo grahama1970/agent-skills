@@ -24,6 +24,10 @@ import { type UiDeckBundle } from './types'
 // Direct import, never a barrel file (best-practices-react).
 import { Button } from './components/ui/button'
 import { SlideViewport } from './components/SlideViewport'
+import { useSlideNavigation } from './useSlideNavigation'
+import { DeckNavigator } from './components/DeckNavigator'
+import { DebuggerControls } from './components/DebuggerControls'
+import { RehearsalControls } from './components/RehearsalControls'
 
 function usePersistentPane(key: string, initial: boolean): [boolean, React.Dispatch<React.SetStateAction<boolean>>] {
   const [value, setValue] = useState<boolean>(() => {
@@ -158,12 +162,13 @@ function EditPanel({
 
 export function App() {
   const { deck, error, reload } = useDeck()
-  const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'fwd' | 'back'>('fwd')
   const [view, setView] = useState<View>(viewFromHash)
   const [sheetTab, setSheetTab] = useState<RightSheetTab>('chat')
   const [chatCollapsed, setChatCollapsed] = usePersistentPane('deck-pane-chat-collapsed', true)
   const [editing, setEditing] = useState(false)
+  const { index, setIndex, notice } = useSlideNavigation(deck, editing)
+  const [rehearsing, setRehearsing] = useState(() => new URLSearchParams(location.search).get('rehearse') === '1')
   const [pendingEdit, setPendingEdit] = useState<EditRequest | null>(null)
   const [railCollapsed, setRailCollapsed] = usePersistentPane('deck-pane-rail-collapsed', false)
   const [zoom, setZoom] = useState('fit')
@@ -228,7 +233,7 @@ export function App() {
       setIndex(next)
       setFragment(0)
     },
-    [index, editing, fragment],
+    [index, editing, fragment, setIndex],
   )
 
   useEffect(() => {
@@ -262,7 +267,7 @@ export function App() {
   // Shortcut matrix: Ctrl+\ source · Ctrl+B rail · Ctrl+Shift+I inspector · Ctrl+Shift+F focus
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey)) return
+      if (rehearsing || !(event.metaKey || event.ctrlKey)) return
       if (event.key === '\\') {
         event.preventDefault()
         setShowSource((value) => !value)
@@ -302,7 +307,7 @@ export function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [toggleFocusMode, setShowSource, setRailCollapsed, setChatCollapsed, editing, reloadAll])
+  }, [toggleFocusMode, setShowSource, setRailCollapsed, setChatCollapsed, editing, reloadAll, rehearsing])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -359,7 +364,7 @@ export function App() {
       s: () => setMode('source'),
       g: () => setView((value) => (value === 'overview' ? 'present' : 'overview')),
     },
-    { enabled: !presenting },
+    { enabled: !presenting && !rehearsing },
   )
 
 
@@ -388,7 +393,7 @@ export function App() {
       ) : null}
       <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
       <Toasts />
-      <header className="deck-header grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 border-b border-slate-800 px-4 py-1.5">
+      {!rehearsing ? <header className="deck-header grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 border-b border-slate-800 px-4 py-1.5">
         <div className="flex min-w-0 items-center gap-3">
           {editing ? (
             <>
@@ -545,18 +550,24 @@ export function App() {
           </Button>
           <ExportMenu />
         </nav>
-      </header>
+      </header> : null}
+      {!rehearsing ? <DeckNavigator deck={deck} onSelect={id => { setMode('present'); location.hash = `#/slide/${encodeURIComponent(id)}`; setFragment(0) }} /> : null}
+      <div className="flex shrink-0 flex-wrap gap-2 border-b border-slate-800 p-2">
+        <RehearsalControls active={rehearsing} onToggle={() => { setRehearsing(v => !v); setMode('present'); setPresenting(false); const url = new URL(location.href); if (rehearsing) url.searchParams.delete('rehearse'); else url.searchParams.set('rehearse', '1'); history.replaceState(null, '', url) }} />
+        <DebuggerControls slideId={slide.id} />
+      </div>
+      {notice ? <p role="status" className="m-0 px-2 text-xs text-amber-300">{notice}</p> : null}
 
-      {view === 'claims' ? (
+      {!rehearsing && view === 'claims' ? (
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_420px]">
           <ClaimReview deck={deck} onChanged={reloadAll} />
           <aside aria-label="Claim review chat" className="min-h-0 overflow-hidden border-t border-slate-800 lg:border-l lg:border-t-0">
             <DeckChat deck={deck} onChanged={reloadAll} />
           </aside>
         </div>
-      ) : view === 'overview' ? (
+      ) : !rehearsing && view === 'overview' ? (
         <Overview
-          deck={deck}
+          deck={{ ...deck, slides: navSlides }}
           onSelect={(next) => {
             setIndex(next)
             setFragment(0)
@@ -630,7 +641,7 @@ export function App() {
                 </EditContext.Provider>
               </AssetDropZone>
             </div>
-            {!presenting ? (
+            {!presenting && !rehearsing ? (
               <RightSheet
                 collapsed={chatCollapsed}
                 tab={sheetTab}

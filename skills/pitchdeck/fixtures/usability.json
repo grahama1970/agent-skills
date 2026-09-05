@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Live Vite API, real exported PPTX, Surf UI navigation, and visible VS Code debugpy breakpoint/control",
+  "claims": {
+    "proves": "Isolated active-deck edits/exports, stale revision rejection, slide links/reload/search/history, clean rehearsal controls, UI-triggered breakpoint pause with expanded locals and session-bound inspect/step/continue",
+    "does_not_prove": "User-approved screen/microphone recording, arbitrary language adapters, external public delivery, unsupported canonical editing operations, or manual-interference session recovery"
+  },
+  "cases": [
+    {
+      "name": "live-deck-navigation-debugger",
+      "type": "positive",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_usability.py", "--out", "/tmp/pitchdeck-usability-123-live.json"],
+      "timeout_seconds": 600,
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-usability-123-live.json", "json_pointer": "/status", "equals": "PASS"}]}
+    },
+    {
+      "name": "refuse-untrusted-deck-and-unmapped-debugger",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["python3", "../scripts/eval_usability.py", "--negative", "--out", "/tmp/pitchdeck-usability-123-negative.json"],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/pitchdeck-usability-123-negative.json", "json_pointer": "/status", "equals": "PASS"}]}
+    }
+  ]
+}

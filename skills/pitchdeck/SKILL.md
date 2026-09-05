@@ -416,6 +416,40 @@ per the storage policy. The browser deck is the animation surface; PPTX stays
 animation-free by design (python-pptx has no animation API and Google Slides
 import drops PowerPoint animations).
 
+## Active deck, slide links, rehearsal, and VS Code sync (ui/)
+
+Every `/api/*` write binds to ONE server-resolved deck (`X-Pitchdeck-Deck`
+header or the page's `?deck=` URL, localhost same-origin only); a missing
+source, cross-origin caller, or foreign path is refused with 409 rather than
+falling back to another deck. Canonical documents export PPTX/PDF through
+`emit-document-pptx` as `authoring-preview-not-publication-proof`; public
+delivery still requires `verify-publish`. Slides have stable `#/slide/<id>`
+links, per-deck resume, title/ID search, and Back/Forward history.
+
+`Rehearse` hides editing chrome and private notes and offers a browser
+`getDisplayMedia` recorder — the human chooses the capture source and mic;
+nothing is recorded without that permission. `Sync VS Code` (Lucide `CodeXml`)
+reveals the slide's mapped source through `$debugger`'s bridge on slide change
+and never executes anything; `Run`/`Inspect`/`Step`/`Continue`/`Stop` are
+explicit, bound to the bridge session id + stop sequence (stale commands are
+refused), and require a `debugger.json` map beside the emitted deck:
+
+```bash
+python3 scripts/configure_debugger.py --deck-data ui/public/<deck>/deck.data.json \
+  --slide-id m-cover --file skills/pitchdeck/src/pitchdeck/document_pptx.py \
+  --line 551 --local root --create-export-launch     # writes launch.json + map only
+```
+
+Retained live gate: `fixtures/usability.json` (isolated edits/exports for two
+decks, stale-revision refusal, links/reload/search/history, clean rehearsal,
+UI-triggered debugpy pause at the mapped line with expanded locals, then
+inspect/step/continue). It does not prove a recorded video or arbitrary
+language adapters. Set `debug.focusWindowOnBreak=false` in the workspace so a
+pause never steals keyboard focus (observed 2026-09-05: stray keystrokes
+overwrote the paused line). `ui/public/` is deliberately unwatched by Vite and
+served from disk because new emitted deck directories crashed the dev server
+when the workstation's inotify budget was exhausted.
+
 ## Visual sync (Qdrant multimodal)
 
 `visual-sync` embeds rendered `slide-N.png` images (text_mm + image_mm named

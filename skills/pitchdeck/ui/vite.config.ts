@@ -1,12 +1,15 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { execFile } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createReadStream, existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
+import { bindDeck, deckContext, listDecks } from './server/deck-context'
+import { canonicalExport } from './server/canonical-export'
+import { debuggerApi } from './server/debugger-api'
 
 // Canonical shared UI package (agent-skills/skills/ux-lab/ui), imported from
 // source via alias so the dependency stays versioned in this repo.
@@ -23,7 +26,33 @@ function slideEditApi(): Plugin {
   return {
     name: 'deck-slide-edit-api',
     configureServer(server) {
+      // Emitted decks/exports land in public/ after startup and are excluded
+      // from the file watcher (inotify ENOSPC crashed the server), so Vite's
+      // cached public-file list never learns them. Serve them from disk.
+      const types: Record<string, string> = { '.json': 'application/json', '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', '.pdf': 'application/pdf', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.webm': 'video/webm', '.md': 'text/markdown', '.html': 'text/html', '.gif': 'image/gif', '.ico': 'image/x-icon', '.css': 'text/css' }
+      server.middlewares.use((req, res, next) => {
+        const pathname = decodeURIComponent(new URL(req.url || '/', 'http://localhost').pathname)
+        const ext = extname(pathname)
+        if (!types[ext] || pathname.includes('..')) return next()
+        const file = join(publicDir, pathname)
+        if (!file.startsWith(publicDir) || !existsSync(file) || !statSync(file).isFile()) return next()
+        res.setHeader('Content-Type', types[ext])
+        res.setHeader('Cache-Control', 'no-store')
+        createReadStream(file).pipe(res)
+      })
+      server.middlewares.use((req, res, next) => bindDeck(publicDir, req, res, next))
+      server.middlewares.use('/api/debugger', debuggerApi(skillRoot))
+      server.middlewares.use('/api/decks', (req, res) => {
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify(listDecks(publicDir)))
+      })
+      server.middlewares.use('/api/deck-context', (req, res) => {
+        const c = deckContext(req)
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ url: c.url, deck_id: c.deck.deck_id, title: c.deck.title, revision: c.deck.revision, source: c.receipt.operation }))
+      })
       server.middlewares.use('/api/deck-op', (req, res) => {
+        const publicDir = deckContext(req).directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -67,6 +96,7 @@ function slideEditApi(): Plugin {
         })
       })
       server.middlewares.use('/api/record-note', (req, res) => {
+        const publicDir = deckContext(req).directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -128,6 +158,7 @@ function slideEditApi(): Plugin {
         )
       })
       server.middlewares.use('/api/claim-decide', (req, res) => {
+        const publicDir = deckContext(req).directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -164,6 +195,7 @@ function slideEditApi(): Plugin {
         })
       })
       server.middlewares.use('/api/simulate', (req, res) => {
+        const publicDir = deckContext(req).directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -203,6 +235,7 @@ function slideEditApi(): Plugin {
         })
       })
       server.middlewares.use('/api/undo', (req, res) => {
+        const publicDir = deckContext(req).directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -236,13 +269,15 @@ function slideEditApi(): Plugin {
         }
       })
       server.middlewares.use('/api/source', (req, res) => {
+        const publicDir = deckContext(req).directory
         const receiptPath = `${publicDir}/emit_ui_receipt.json`
         if (req.method === 'GET') {
           try {
             const receipt = JSON.parse(readFileSync(receiptPath, 'utf-8'))
             const bundleDir = receipt?.outputs?.bundle_dir
             res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ yaml: readFileSync(`${bundleDir}/deck.public.yaml`, 'utf-8') }))
+            const source = receipt.operation === 'emit-document-ui' ? receipt.outputs.document_path : `${bundleDir}/deck.public.yaml`
+            res.end(JSON.stringify({ yaml: readFileSync(source, 'utf-8') }))
           } catch (error) {
             res.statusCode = 500
             res.end(JSON.stringify({ error: String(error) }))
@@ -291,6 +326,7 @@ function slideEditApi(): Plugin {
         })
       })
       server.middlewares.use('/api/asset-drop', (req, res) => {
+        const publicDir = deckContext(req).directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -361,6 +397,9 @@ function slideEditApi(): Plugin {
         })
       })
       server.middlewares.use('/api/export', (req, res) => {
+        const publicRoot = server.config.publicDir
+        const context = deckContext(req)
+        const publicDir = context.directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -371,6 +410,13 @@ function slideEditApi(): Plugin {
         req.on('end', () => {
           try {
             const { format } = JSON.parse(body) as { format?: string }
+            if (context.receipt.operation === 'emit-document-ui') {
+              void canonicalExport(skillRoot, publicRoot, context, String(format)).then(
+                result => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(result)) },
+                error => { res.statusCode = 422; res.end(JSON.stringify({ error: String(error) })) },
+              )
+              return
+            }
             const receipt = JSON.parse(readFileSync(`${publicDir}/emit_ui_receipt.json`, 'utf-8'))
             const bundleDir = receipt?.outputs?.bundle_dir
             if (!bundleDir) {
@@ -386,7 +432,8 @@ function slideEditApi(): Plugin {
                 res.end(JSON.stringify({ error: stderr.trim() || String(error) }))
                 return
               }
-              res.end(JSON.stringify({ url }))
+              const prefix = context.url.slice(0, -'deck.data.json'.length).replace(/\/$/, '')
+              res.end(JSON.stringify({ url: prefix + url, deck_id: context.deck.deck_id, revision: context.deck.revision }))
             }
             const buildArgs = [
               'build',
@@ -445,6 +492,7 @@ function slideEditApi(): Plugin {
         })
       })
       server.middlewares.use('/api/slide-edit', (req, res) => {
+        const publicDir = deckContext(req).directory
         if (req.method !== 'POST') {
           res.statusCode = 405
           res.end(JSON.stringify({ error: 'POST only' }))
@@ -464,6 +512,11 @@ function slideEditApi(): Plugin {
             // Document-pipeline decks (#1388) edit the canonical document;
             // legacy bundle decks keep the apply-edit path unchanged.
             const isDocument = receipt?.operation === 'emit-document-ui'
+            if (isDocument && base_revision !== undefined && Number(base_revision) !== deckContext(req).deck.revision) {
+              res.statusCode = 409
+              res.end(JSON.stringify({ error: 'Stale deck revision; reload before editing' }))
+              return
+            }
             const bundleDir = receipt?.outputs?.bundle_dir
             if (!isDocument && !bundleDir) {
               res.statusCode = 409
@@ -537,5 +590,8 @@ export default defineConfig({
       'lucide-react',
     ],
   },
-  server: { port: 3006, fs: { allow: ['.', uxLabUi] } },
+  server: { port: 3006, fs: { allow: ['.', uxLabUi] }, // public/ is not watched at all: emitted decks create new dirs at runtime and
+  // this workstation's inotify budget is routinely exhausted by other tools, which
+  // killed the server. Public files are served from disk by the middleware above.
+  watch: { ignored: [`${publicDir}/**`] } },
 })
