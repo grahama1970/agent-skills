@@ -475,7 +475,7 @@ def run(
     browser_selection = browser_selection if "browser_selection" in locals() else _skipped_browser_provider_selection()
     exit_code = 0
 
-    if bundle.get("status") == "NEEDS_INTERVIEW":
+    if bundle.get("status") in {"NEEDS_INTERVIEW", "BLOCKED"}:
         exit_code = 2
     else:
         if input_payload.handlers:
@@ -813,7 +813,7 @@ def compete(
     execution = None
     browser_selection = browser_selection if "browser_selection" in locals() else _skipped_browser_provider_selection()
     exit_code = 0
-    if bundle.get("status") == "NEEDS_INTERVIEW":
+    if bundle.get("status") in {"NEEDS_INTERVIEW", "BLOCKED"}:
         exit_code = 2
     else:
         provider_gate = {

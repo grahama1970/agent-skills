@@ -23,10 +23,11 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+from pydantic import ValidationError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from ask import browser_windows, model_provenance  # noqa: E402
-from ask.tau_dag import resolve_scillm_model_route  # noqa: E402
+from ask.tau_dag import _handler_policy, resolve_handler_execution_binding, resolve_scillm_model_route  # noqa: E402
 from ask.seam_models import enforce  # noqa: E402
 
 
@@ -542,6 +543,11 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     response_quarantine: dict[str, Any] | None = None
     started = _now()
     try:
+        binding = resolve_handler_execution_binding(
+            handler, workspace=str(getattr(args, "codex_workspace", "") or ""),
+            provider_hint=str(getattr(args, "provider_hint", "") or ""),
+            local_model=str(getattr(args, "subagent_model", "") or ""),
+        )
         prior_failures = [
             f"{item.get('node_id')}: {item.get('failure') or item.get('status')}"
             for item in prior_receipts
@@ -549,7 +555,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         ]
         if prior_failures:
             raise RuntimeError("prior_handler_receipts_not_ready: " + "; ".join(prior_failures))
-        if str(getattr(args, "codex_workspace", "") or "").strip():
+        if binding.transport == "codex.exec":
             response_text, submit_meta, codex_commands = _run_codex_handler(
                 args,
                 prompt_path=prompt_path,
@@ -558,7 +564,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 meta_path=meta_path,
             )
             commands.extend(codex_commands)
-        elif _is_subagent_handler_args(args):
+        elif binding.transport == "subagent-runner.codex_exec":
             response_text, submit_meta, subagent_commands = _run_subagent_handler(
                 args,
                 prompt_path=prompt_path,
@@ -568,26 +574,6 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 artifact_dir=artifact_dir,
             )
             commands.extend(subagent_commands)
-        elif handler == "codex":
-            response_text, submit_meta, codex_commands = _run_codex_handler(
-                args,
-                prompt_path=prompt_path,
-                response_path=response_path,
-                raw_path=raw_path,
-                meta_path=meta_path,
-            )
-            commands.extend(codex_commands)
-        elif _is_direct_claude_cli_handler(handler):
-            # Local Claude Code CLI reviewer: a different provider than the codex
-            # creator that can run the ticket's live proof in the worktree.
-            response_text, submit_meta, claude_commands = _run_claude_handler(
-                args,
-                prompt_path=prompt_path,
-                response_path=response_path,
-                raw_path=raw_path,
-                meta_path=meta_path,
-            )
-            commands.extend(claude_commands)
         elif handler in HANDLER_SUBMIT_COMMANDS:
             project = args.browser_oracle_project or handler
             resolve = _run_cmd(
@@ -860,7 +846,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             if isinstance(submit_meta, dict)
             else None
         )
-        if ok and requested_attachments and _is_direct_claude_cli_handler(handler):
+        if ok and requested_attachments and submit_meta.get("schema") == "ask.claude_handler_meta.v1":
             if not isinstance(local_attachment_delivery, dict) or local_attachment_delivery.get("delivered") is not True:
                 failure = (
                     "local_model_attachment_delivery_missing: requested attachments were not "
@@ -887,6 +873,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         provider_live = ok
     except Exception as exc:
         failure = str(exc)
+        if isinstance(exc, ValidationError) and exc.title == "HandlerExecutionBinding":
+            submit_meta["binding_validation"] = {
+                "valid": False, "errors": exc.errors(include_input=False, include_url=False),
+            }
         status = "ERROR"
         ok = False
         provider_live = False
@@ -4688,6 +4678,10 @@ def _handler_failure_recovery_packet(
 
 def _classify_handler_failure(*, handler: str, failure: str, submit_meta: dict[str, Any]) -> str:
     haystack = "\n".join([handler, failure, json.dumps(submit_meta, sort_keys=True, default=str)]).lower()
+    if "handlerexecutionbinding" in haystack:
+        return "ask_handler_binding_invalid"
+    if "codex exec failed" in haystack and ("not supported" in haystack or "unknown model" in haystack):
+        return "codex_model_not_supported"
     if "prior_handler_receipts_not_ready" in haystack:
         return "prior_handler_receipts_not_ready"
     if (
@@ -4820,6 +4814,8 @@ def _extract_model_route(text: str) -> tuple[str | None, list[str]]:
 
 def _handler_recovery_reason(failure_code: str) -> str:
     return {
+        "ask_handler_binding_invalid": "Ask rejected a handler/model/workspace combination that contradicts its declared transport.",
+        "codex_model_not_supported": "Codex CLI rejected its model selection; this is not a SciLLM response.",
         "prior_handler_receipts_not_ready": "A sequential lane could not run because an upstream handler receipt was not usable.",
         "scillm_auth_invalid_api_key": "SciLLM rejected the configured bearer token.",
         "scillm_model_not_found": "SciLLM routed the requested model to a provider/model id that is not available.",
@@ -4833,6 +4829,8 @@ def _handler_recovery_reason(failure_code: str) -> str:
 
 
 def _handler_auto_retry_blocked_reason(failure_code: str) -> str:
+    if failure_code in {"ask_handler_binding_invalid", "codex_model_not_supported"}:
+        return "handler_binding_requires_configuration_repair"
     if failure_code == "scillm_auth_invalid_api_key":
         return "auth_requires_configured_scillm_proxy_key"
     if failure_code in {"scillm_model_not_found", "scillm_provider_route_failed"}:
@@ -4849,6 +4847,8 @@ def _handler_recovery_next_command(
     request_payload: dict[str, Any],
     failure_code: str,
 ) -> str:
+    if failure_code in {"ask_handler_binding_invalid", "codex_model_not_supported"}:
+        return shlex.join(["python3", "-m", "json.tool", str(Path(args.artifact_dir) / "node-receipt.json")])
     request_text = str(request_payload.get("request") or "").strip()
     parts = ["cd", "skills/ask", "&&", "./run.sh", "tau-dag", request_text or "repeat the same request"]
     for key, flag in (
@@ -4887,6 +4887,8 @@ def _handler_recovery_next_command(
 
 
 def _handler_fallback_instruction(failure_code: str) -> str:
+    if failure_code in {"ask_handler_binding_invalid", "codex_model_not_supported"}:
+        return "Repair the declared handler/transport/workspace contract before recompiling. Do not switch providers, drop required local tools, or retry the same invalid binding."
     if failure_code == "scillm_auth_invalid_api_key":
         return "Configure SCILLM_PROXY_KEY, SCILLM_MASTER_KEY, or LITELLM_MASTER_KEY for the running SciLLM proxy before retrying."
     if failure_code == "scillm_model_not_found":
@@ -6301,11 +6303,10 @@ def _is_subagent_handler_args(args: argparse.Namespace) -> bool:
 def _provider_transport_for_args(args: argparse.Namespace, handler: str) -> str:
     if handler in HANDLER_SUBMIT_COMMANDS:
         return "$surf"
-    if _is_direct_claude_cli_handler(handler):
-        return "$claude-cli"
-    if str(getattr(args, "codex_workspace", "") or "").strip():
+    transport = _handler_policy(handler, provider_hint=str(getattr(args, "provider_hint", "") or ""))["transport"]
+    if transport == "codex.exec":
         return "$codex-cli"
-    if _is_subagent_handler_args(args):
+    if transport == "subagent-runner.codex_exec":
         return "$subagent-runner"
     return "$scillm"
 
@@ -6313,13 +6314,7 @@ def _provider_transport_for_args(args: argparse.Namespace, handler: str) -> str:
 def _transport_for_args(args: argparse.Namespace, handler: str) -> str:
     if handler in HANDLER_SUBMIT_COMMANDS:
         return HANDLER_SUBMIT_COMMANDS[handler]
-    if _is_direct_claude_cli_handler(handler):
-        return "claude.cli"
-    if str(getattr(args, "codex_workspace", "") or "").strip():
-        return "codex.exec"
-    if _is_subagent_handler_args(args):
-        return "subagent-runner.codex_exec"
-    return "scillm.chat"
+    return str(_handler_policy(handler, provider_hint=str(getattr(args, "provider_hint", "") or ""))["transport"])
 
 
 def _run_subagent_handler(

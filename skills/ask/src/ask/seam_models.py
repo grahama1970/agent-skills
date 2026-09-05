@@ -23,7 +23,8 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic_core import PydanticCustomError
 
 
 class SeamViolation(RuntimeError):
@@ -33,6 +34,44 @@ class SeamViolation(RuntimeError):
         self.kind = kind
         self.errors = errors
         super().__init__(f"seam {kind!r} violated its contract: {errors}")
+
+
+class HandlerExecutionBinding(BaseModel):
+    """Workspace context must not override a resolved provider transport."""
+
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
+    handler: str = Field(min_length=1)
+    transport: Literal[
+        "codex.exec", "subagent-runner.codex_exec", "scillm.chat",
+        "webgpt.submit", "claude.submit", "kimi.submit", "gemini.submit",
+        "grok.submit", "deepseek.submit",
+    ]
+    model: str | None = Field(min_length=1)
+    workspace: str | None = None
+
+    @model_validator(mode="after")
+    def compatible_transport(self) -> "HandlerExecutionBinding":
+        if self.transport in {"codex.exec", "subagent-runner.codex_exec"} and (
+            not self.model or not self.model.startswith(("gpt-", "codex-"))
+        ):
+            raise PydanticCustomError(
+                "handler_model_transport_mismatch", "Model {model} cannot use {transport}",
+                {"model": self.model, "transport": self.transport},
+            )
+        if self.transport == "scillm.chat" and not self.model:
+            raise PydanticCustomError("handler_model_required", "SciLLM requires a model", {})
+        if self.workspace and (self.transport != "codex.exec" or self.handler != "codex"):
+            raise PydanticCustomError(
+                "handler_workspace_transport_mismatch",
+                "Workspace binding for {handler} cannot use declared transport {transport}; "
+                "local authoring requires the explicit codex handler, while API models stay on SciLLM",
+                {"handler": self.handler, "transport": self.transport},
+            )
+        if self.transport == "codex.exec" and (self.handler != "codex" or not self.workspace):
+            raise PydanticCustomError(
+                "handler_workspace_required", "The codex transport requires handler=codex and a workspace", {},
+            )
+        return self
 
 
 class _SeamModel(BaseModel):

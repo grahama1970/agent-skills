@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "Ticket 1604 handler/model/workspace compatibility and declared execution routes",
+  "claims": {
+    "proves": "Strict binding validation; incompatible Claude workspace binding fails before nodes execute; valid SciLLM API and explicit Codex workspace routes return independently checked data",
+    "does_not_prove": "API chat has local tools, watchdog classifier completeness, or canary 1603 closure"
+  },
+  "cases": [
+    {
+      "name": "strict-binding-fields",
+      "type": "adversarial",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/binding-schema.XXXXXX); uv run --project .. python ../evals/handler_binding_1604.py schema --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "handler_model_transport_mismatch", "extra_forbidden", "missing"]},
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "reject-claude-workspace-before-creator",
+      "type": "adversarial",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/binding-invalid.XXXXXX); uv run --project .. python ../evals/handler_binding_1604.py invalid --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"provider_calls\": 0"]},
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "live-claude-api-stays-on-scillm",
+      "timeout_seconds": 660,
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/binding-api.XXXXXX); uv run --project .. python ../evals/handler_binding_1604.py api --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"transport\": \"$scillm\"", "\"response_verified\": true"], "stdout_excludes": ["Traceback"]},
+      "evidence_class": "live_e2e"
+    },
+    {
+      "name": "live-explicit-codex-reads-local-nonce",
+      "timeout_seconds": 660,
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/binding-codex.XXXXXX); uv run --project .. python ../evals/handler_binding_1604.py codex --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"transport\": \"$codex-cli\"", "\"response_verified\": true"], "stdout_excludes": ["Traceback"]},
+      "evidence_class": "live_e2e"
+    }
+  ]
+}

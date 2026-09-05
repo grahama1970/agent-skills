@@ -488,6 +488,29 @@ read back from a real compiled dag.json):
 Before executing any multi-seat DAG, compile first (omit `--execute`), show
 the human the ASCII chart the CLI prints, and run only on their confirmation.
 
+### Model selection is not execution-mode selection
+
+For model/API work the route is **Ask → Tau → SciLLM**. A workspace binding
+must never silently replace that route with a CLI runner.
+
+| Selector | Workspace binding | Declared execution route |
+| --- | --- | --- |
+| `claude-fable-low`, other `claude-*`, or `gpt-5.5-high` | Not supported | Tau-owned `scillm.chat` |
+| `gpt-5.5-xhigh` | Not supported | Tau-owned `subagent-runner.codex_exec` advisory lane |
+| `codex` | Required: `--handler-workspace codex=/absolute/path` | Explicit local `codex.exec` authoring lane |
+| `webgpt` and other browser handlers | Not supported | Provider-specific Surf adapter |
+
+`--handler-workspace` is **not** a generic way to give an API model filesystem
+access. API chat does not execute local proof commands. Use an explicitly
+supported Tau tool-execution workflow when that capability is required; do not
+turn a model selector into a different provider/runner by attaching a path.
+
+Compilation and workers validate `HandlerExecutionBinding` with strict Pydantic
+fields. An incompatible binding returns `ask_handler_binding_invalid` before
+DAG dispatch. Old contradictory command specifications are rejected at the
+worker boundary as well. Missing required fields or extra binding fields are
+validation errors, not a reason to try another model.
+
 ### Reasoning / Effort Selection
 
 For Tau handler DAGs, choose reasoning effort as part of the non-browser

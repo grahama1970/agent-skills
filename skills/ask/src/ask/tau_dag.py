@@ -18,9 +18,10 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from pydantic import ValidationError
 
 from .env import load_dotenv_once
-from .seam_models import enforce as _enforce_seam
+from .seam_models import HandlerExecutionBinding, enforce as _enforce_seam
 
 load_dotenv_once()
 
@@ -746,6 +747,25 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
                 _write_command_spec(
                     command_specs_dir,
                     node=node,
+    binding_errors = []
+    for index, handler in enumerate(input.handlers):
+        try:
+            resolve_handler_execution_binding(
+                handler, workspace=_handler_workspace(input, handler),
+                provider_hint=_handler_provider_hint(input, index), workflow_mode=input.workflow_mode,
+            )
+        except ValidationError as exc:
+            binding_errors.append({"handler": handler, "errors": exc.errors(include_input=False, include_url=False)})
+    if binding_errors:
+        blocked = {
+            "schema": ASK_TAU_DAG_BUNDLE_SCHEMA, "status": "BLOCKED",
+            "failure_code": "ask_handler_binding_invalid", "run_dir": str(run_dir),
+            "request_path": str(request_path), "binding_errors": binding_errors,
+            "message": "Handler/workspace binding contradicts its declared transport; no DAG nodes were dispatched.",
+        }
+        _write_json(run_dir / "compile-status.json", blocked)
+        return blocked
+
                     input=input,
                     worker_path=worker_path,
                     run_dir=run_dir,
@@ -3137,6 +3157,11 @@ def _handler_project(input: TauDagCompileInput, handler: str) -> str:
 
 def _handler_workspace(input: TauDagCompileInput, handler: str) -> str:
     """Workspace directory bound to a local-CLI handler (codex coder node)."""
+        if handler == "codex":
+            policy["model_policy"] = {
+                **_subagent_model_policy("gpt-5.5-high"),
+                "provider_transport": "$codex-cli", "service": "codex_cli_workspace",
+            }
     prefix = f"{handler}="
     for item in input.handler_workspaces:
         if item.startswith(prefix):
@@ -3180,6 +3205,18 @@ def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:
 def _roundtable_prior_nodes(input: TauDagCompileInput, node_id: str) -> list[str]:
     if input.topology != "sequential" or not node_id.startswith("handler-"):
         return []
+def resolve_handler_execution_binding(
+    handler: str, *, workspace: str = "", provider_hint: str = "", workflow_mode: str = "roundtable",
+    local_model: str = "",
+) -> HandlerExecutionBinding:
+    policy = _handler_policy(handler, provider_hint=provider_hint, workflow_mode=workflow_mode)
+    model = (policy.get("model_policy") or {}).get("model") or policy.get("model")
+    if local_model and policy["transport"] in {"codex.exec", "subagent-runner.codex_exec"}:
+        model = local_model
+    return HandlerExecutionBinding(handler=handler, transport=policy["transport"],
+                                   model=model, workspace=workspace or None)
+
+
     node_ids = _handler_node_ids(input.handlers)
     try:
         index = node_ids.index(node_id)
