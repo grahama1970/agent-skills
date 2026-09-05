@@ -22,19 +22,19 @@
       "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "command": ["bash", "-c", "set -e; d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/primary-tau-observe.XXXXXX); cd ..; uv run --project . python evals/primary_main_revision.py observe --project tau --issue 315 --output \"$d/result.json\" > \"$d/stdout.json\"; python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r[\"targets\"]==[\"src/tau_coding/dag_runtime/agent_node_adapter.py\",\"src/tau_coding/runtime_backends/herdr.py\"]; assert set(r[\"classification\"].values())=={\"verified_remote_identical\"}; assert r[\"authoring_executed\"] is False; print(\"LIVE_TAU_TARGETS_ADMITTED_NO_AUTHORING\")' \"$d/result.json\""],
-      "expected": {"exit_code": 0, "stdout_contains": ["LIVE_TAU_TARGETS_ADMITTED_NO_AUTHORING"], "stdout_excludes": ["Traceback"]},
-      "proves": "Real GitHub marker parsing and shipped-target admission from the primary Tau checkout",
+      "command": ["bash", "-c", "set -e; d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/primary-tau-observe.XXXXXX); cd ..; uv run --project . python evals/primary_main_revision.py observe --project tau --issue 315 --output \"$d/result.json\" > \"$d/stdout.json\"; python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r[\"targets\"]==[\"src/tau_coding/dag_runtime/agent_node_adapter.py\",\"src/tau_coding/runtime_backends/herdr.py\"]; assert r[\"authoring_executed\"] is False; active=r[\"writer_active\"]; assert (r[\"exclusion\"]==\"leased\" and any(o[\"issue_number\"]==315 and o[\"targets\"]==r[\"targets\"] and o[\"phase\"]==\"running\" for o in r[\"recovery\"][\"operations\"])) if active else set(r[\"classification\"].values())=={\"verified_remote_identical\"}; print(\"LIVE_TAU_TARGETS_OBSERVED_NO_AUTHORING\", \"ACTIVE_RESERVATION_EXCLUDES_DUPLICATE\" if active else \"REMOTE_IDENTICAL_ADMITTED\")' \"$d/result.json\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["LIVE_TAU_TARGETS_OBSERVED_NO_AUTHORING"], "stdout_excludes": ["Traceback"]},
+      "proves": "Real GitHub marker parsing: shipped targets are admitted when idle; an active same-ticket reservation and GitHub lease exclude duplicate authoring while the creator changes those files",
       "does_not_prove": "Issue 315 repaired or its proof obligations satisfied"
     },
     {
-      "name": "live-battle-unrelated-lease-does-not-block",
-      "type": "adversarial",
+      "name": "live-battle-scoped-admission-and-default-state",
+      "type": "positive",
       "real_world": true,
       "evidence_class": "live_e2e",
-      "command": ["bash", "-c", "set -e; d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/primary-battle-observe.XXXXXX); cd ..; uv run --project . python evals/primary_main_revision.py observe --project battle --issue 1500 --output \"$d/result.json\" > \"$d/stdout.json\"; python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r[\"targets\"]==[\"skills/battle/spectator\"]; assert r[\"scope_conflict\"] is False; assert r[\"authoring_executed\"] is False; assert all(v==\"verified_remote_identical\" for v in r[\"classification\"].values()); print(\"LIVE_BATTLE_SCOPE_CLEAR_NO_AUTHORING\", r[\"foreign_leases\"])' \"$d/result.json\""],
+      "command": ["bash", "-c", "set -e; d=$(mktemp -d /mnt/storage12tb/skills/project-watchdog/outputs/primary-battle-observe.XXXXXX); cd ..; uv run --project . python evals/primary_main_revision.py observe --project battle --issue 1500 --output \"$d/result.json\" > \"$d/stdout.json\"; python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert r[\"targets\"]==[\"skills/battle/spectator\"]; assert r[\"scope_conflict\"] is False; assert r[\"effective_project_state\"]==\"active\"; assert r[\"authoring_executed\"] is False; assert all(v==\"verified_remote_identical\" for v in r[\"classification\"].values()); print(\"LIVE_BATTLE_SCOPE_CLEAR_NO_AUTHORING\", r[\"foreign_leases\"])' \"$d/result.json\""],
       "expected": {"exit_code": 0, "stdout_contains": ["LIVE_BATTLE_SCOPE_CLEAR_NO_AUTHORING"], "stdout_excludes": ["Traceback"]},
-      "proves": "Real Battle target observation distinguishes unrelated foreign lease scope",
+      "proves": "Real Battle target content, current lease-scope observation, and active registry-default policy; synthetic foreign-lease negatives are covered separately by the boundary case",
       "does_not_prove": "Battle authoring or closure, or removal of any hold"
     }
   ]

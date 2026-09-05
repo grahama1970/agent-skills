@@ -831,7 +831,8 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
         return result
     state = json.loads(config.state_path().read_text())
     models.validate_state(state)
-    if state["global"]["state"] != "active" or state.get("projects", {}).get(project["project_id"], {}).get("state") != "active":
+    from .commands import _project_runtime_state
+    if state["global"]["state"] != "active" or _project_runtime_state(project, state) != "active":
         raise primary.Refusal("runtime authorization changed", human=True)
     # Recheck foreign scopes at the actual reservation boundary, not only at scan time.
     foreign = registry.lane_busy_issues(run_id, project)

@@ -66,7 +66,7 @@ def context(project_id: str, number: int):
 
 
 def observe(project_id: str, number: int, output: Path) -> int:
-    from watchdog import primary, registry, target_content as content
+    from watchdog import commands, config, core, primary, registry, target_content as content
     from watchdog.primary_models import OwnedTargets
     project, root, issue, targets = context(project_id, number)
     if output.resolve().is_relative_to(root):
@@ -86,6 +86,7 @@ def observe(project_id: str, number: int, output: Path) -> int:
         "repo": project["repo"], "issue_number": number, "root": str(root), "targets": targets,
         "local_HEAD": current.head, "live_origin_main": remote, "classification": classification,
         "writer_active": primary.writer_active(root), "route": action, "exclusion": excluded,
+        "effective_project_state": commands._project_runtime_state(project, core.load_json(config.state_path())),
         "scope_conflict": registry.targets_are_blocked(set(targets), busy),
         "foreign_leases": [{"number": i["number"], "targets": sorted(registry.issue_targets(i))} for i in foreign],
         "recovery": primary.observations(root), "retained_legacy": primary.legacy_inventory(root, number)}
