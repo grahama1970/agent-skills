@@ -1,0 +1,6 @@
+[project]
+name = "ops-google-meet"
+version = "0.1.0"
+description = "Skill-composed Google Meet preflight and companion launch planning"
+requires-python = ">=3.12"
+dependencies = ["typer>=0.12", "pydantic>=2.7", "python-dotenv>=1.0"]

@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "skill": "ops-google-meet",
+  "trials": 3,
+  "proof_scope": "Read-only skill composition and URL safety. Doctor calls real Calendar/audio/TTS/Surf diagnostics; plan cases do not open a browser or start capture.",
+  "claims": {
+    "proves": "Existing owner diagnostics are consumed with typed envelopes; attention remains explicit; Meet launch plans require the companion and reject off-domain URLs.",
+    "does_not_prove": "Calendar auth, automatic launching/monitoring, monitor placement, audio/video recovery, meeting join/capture or real Google Meet readiness."
+  },
+  "cases": [
+    {
+      "name": "live-owner-preflight-exposes-unfinished-readiness",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": ["bash", "../run.sh", "doctor", "--output", "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json"],
+      "timeout_seconds": 260,
+      "expected": {
+        "exit_code": 1,
+        "artifacts": [
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json", "json_pointer": "/status", "equals": "NEEDS_ATTENTION"},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json", "json_pointer": "/capture_started", "equals": false},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json", "json_pointer": "/probes/0/owner", "equals": "ops-google-calendar"},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json", "json_pointer": "/probes/1/owner", "equals": "ops-workstation"},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json", "json_pointer": "/probes/2/owner", "equals": "ops-chatterbox"},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json", "json_pointer": "/probes/3/owner", "equals": "surf"},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-doctor.json", "json_pointer": "/probes/4/owner", "equals": "live-evidence"}
+        ]
+      }
+    },
+    {
+      "name": "meeting-plan-requires-companion-without-joining",
+      "type": "positive",
+      "command": ["bash", "../run.sh", "plan", "https://meet.google.com/abc-defg-hij", "--output", "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-plan.json"],
+      "expected": {
+        "exit_code": 0,
+        "artifacts": [
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-plan.json", "json_pointer": "/plan/1/required", "equals": true},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-plan.json", "json_pointer": "/plan/2/display", "equals": "right"},
+          {"path": "/mnt/storage12tb/skills/ops-google-meet/outputs/eval-plan.json", "json_pointer": "/meeting_joined", "equals": false}
+        ]
+      }
+    },
+    {
+      "name": "off-domain-meet-lookalike-rejected",
+      "type": "negative",
+      "command": ["bash", "../run.sh", "plan", "https://meet.google.com.example.org/abc-defg-hij"],
+      "expected": {"exit_code": 2, "stderr_contains": ["Use an HTTPS meet.google.com URL"]}
+    },
+    {
+      "name": "embedded-credentials-rejected",
+      "type": "adversarial",
+      "command": ["bash", "../run.sh", "plan", "https://someone@meet.google.com/abc-defg-hij"],
+      "expected": {"exit_code": 2, "stderr_contains": ["without embedded credentials"]}
+    }
+  ]
+}

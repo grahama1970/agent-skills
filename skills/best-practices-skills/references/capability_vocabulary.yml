@@ -1,5 +1,11 @@
 schema: best-practices-skills.capability_vocabulary.v1
 capabilities:
+  google-meet-preflight:
+    providers:
+      - ops-google-meet
+  meeting-companion-launch-plan:
+    providers:
+      - ops-google-meet
   llm-completion:
     providers:
       - scillm
