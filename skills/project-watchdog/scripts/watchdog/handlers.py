@@ -1001,11 +1001,12 @@ def evaluate_repair_proof(
         return str((repair_worktree / p).resolve()) if not p.is_absolute() else str(p.resolve())
 
     artifacts = [normalize(a) for a in artifacts]
-    gate["required_proof_artifacts"] = artifacts
+    mandatory = {normalize(a) for a in section_outputs} or set(artifacts)
+    gate["required_proof_artifacts"] = sorted(mandatory)
+    gate["declared_proof_artifacts"] = artifacts
     if artifacts:
         results = [inspect_proof_artifact(a, not_before=not_before) for a in artifacts]
         gate["artifact_results"] = results
-        mandatory = {normalize(a) for a in section_outputs} or set(artifacts)
         failed = [r for r in results if r["path"] in mandatory and not r["passed"]]
         if failed:
             detail = "; ".join(f"{r['path']}: {r['reason']}" for r in failed)

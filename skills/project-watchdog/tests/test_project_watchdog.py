@@ -785,6 +785,7 @@ def test_repair_proof_gate_allows_stale_declared_artifacts_before_native_verify(
         reviewed_commit="a" * 40,
     )
     assert gate["ok"] is True
+    assert gate["required_proof_artifacts"] == [str(fresh.resolve())]
 
 
 def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
