@@ -384,6 +384,7 @@
         "../tests/test_project_watchdog.py::test_required_proof_artifacts_ignore_out_dirs_and_strip_punctuation",
         "../tests/test_project_watchdog.py::test_proof_artifact_ignores_provider_status_noise_and_domain_enums",
         "../tests/test_project_watchdog.py::test_review_commit_lines_keep_invalid_sha_out_of_valid_set",
+        "../tests/test_project_watchdog.py::test_required_proof_clauses_skip_fenced_command_bodies",
         "../tests/test_project_watchdog.py::test_proof_plan_coverage_all_required_clauses_is_valid",
         "../tests/test_project_watchdog.py::test_repair_proof_gate_allows_stale_declared_artifacts_before_native_verify",
         "-q"
@@ -391,7 +392,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "7 passed"
+          "8 passed"
         ]
       }
     },

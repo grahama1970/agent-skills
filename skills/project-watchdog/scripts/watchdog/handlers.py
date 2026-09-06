@@ -2011,13 +2011,17 @@ def legacy_route_task(project: dict[str, Any], issue: dict[str, Any], receipt_di
             "only after all required proof, with the retained requested transport intent visible.\n")
 
 def required_proof_clauses(body: str) -> list[str]:
-    collecting, clauses = False, []
+    collecting, in_fence, clauses = False, False, []
     for line in body.splitlines():
-        heading = re.match(r"^#{1,6}\s+(.+)$", line.strip())
+        stripped = line.strip()
+        heading = re.match(r"^#{1,6}\s+(.+)$", stripped)
         if heading:
             collecting = heading.group(1).strip().lower() == "required proof"
-        elif collecting and line.strip() and not line.strip().startswith("```"):
-            clauses.append(line.strip())
+            in_fence = False
+        elif collecting and stripped.startswith("```"):
+            in_fence = not in_fence
+        elif collecting and stripped and not in_fence:
+            clauses.append(stripped)
     if not clauses:
         clauses = [m.group(1).strip() for m in re.finditer(r"(?im)^proof:\s*(.+)$", body)]
     return clauses
@@ -2026,7 +2030,7 @@ def required_proof_clauses(body: str) -> list[str]:
 def proof_plan_covers_clauses(coverage: dict[str, str], clauses: list[str]) -> bool:
     if any(not value.strip() for value in coverage.values()):
         return False
-    if set(coverage) == set(clauses):
+    if set(coverage) >= set(clauses):
         return True
     return bool(coverage) and set(coverage) <= {"all required clauses", "all_required_clauses"}
 

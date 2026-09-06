@@ -761,9 +761,26 @@ def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
     assert handlers.valid_review_commits(text) == []
 
 
+def test_required_proof_clauses_skip_fenced_command_bodies() -> None:
+    body = """## Required proof
+
+Run the eval.
+
+```bash
+python - <<'PY'
+print('not a separate clause')
+PY
+```
+
+Read back the receipt.
+"""
+    assert handlers.required_proof_clauses(body) == ["Run the eval.", "Read back the receipt."]
+
+
 def test_proof_plan_coverage_all_required_clauses_is_valid() -> None:
     clauses = ["run exact proof command", "read back artifact"]
     assert handlers.proof_plan_covers_clauses({"all required clauses": "commands[0-1]"}, clauses)
+    assert handlers.proof_plan_covers_clauses({"run exact proof command": "command[0]", "read back artifact": "artifact[0]", "extra detail": "ok"}, clauses)
     assert not handlers.proof_plan_covers_clauses({"all required clauses": ""}, clauses)
     assert not handlers.proof_plan_covers_clauses({"partial": "commands[0]"}, clauses)
 
