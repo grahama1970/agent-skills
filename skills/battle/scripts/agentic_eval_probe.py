@@ -1805,6 +1805,72 @@ def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: s
     )
 
 
+def probe_provider_tau_memory_promotion(summary_path: Path, *, proof_root: str | None) -> int:
+    suite = "provider-tau-memory-promotion"
+    out_root = Path(proof_root) if proof_root else Path(
+        os.environ.get(
+            "BATTLE_PROVIDER_TAU_SEEDED_ROOT",
+            "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z",
+        )
+    )
+    campaign = out_root / "source-run" / "campaign-receipt.json"
+    if not campaign.is_file():
+        raise AssertionError(f"missing provider/Tau seeded campaign receipt: {campaign}")
+    promote_root = out_root / "memory-promotion-eval"
+    if promote_root.exists():
+        shutil.rmtree(promote_root)
+    promotion = _run(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "promote_provider_tau_lineage_memory.py"),
+            "--campaign-receipt",
+            str(campaign),
+            "--out",
+            str(promote_root),
+        ],
+        timeout=300,
+    )
+    (out_root / "memory-promotion-eval.stdout.txt").write_text(promotion.stdout, encoding="utf-8")
+    (out_root / "memory-promotion-eval.stderr.txt").write_text(promotion.stderr, encoding="utf-8")
+    if promotion.returncode != 0:
+        raise AssertionError("provider/Tau memory promotion failed: " + promotion.stdout + promotion.stderr)
+    receipt_path = promote_root / "memory-promotion-live-receipt.json"
+    receipt = _read_json(receipt_path)
+    promotions = receipt.get("promotions") or []
+    checks = [
+        {"name": "memory_promotion_receipt_passed", "status": "PASS" if receipt.get("status") == "PASS" else "FAIL", "receipt": str(receipt_path)},
+        {"name": "two_team_promotions_written", "status": "PASS" if {p.get("team") for p in promotions} == {"red", "blue"} else "FAIL", "teams": sorted(p.get("team") for p in promotions)},
+        {"name": "learn_commands_succeeded", "status": "PASS" if all((p.get("learn") or {}).get("exit_code") == 0 for p in promotions) else "FAIL"},
+        {"name": "recall_items_return_markers", "status": "PASS" if all((p.get("recall") or {}).get("marker_found") is True for p in promotions) else "FAIL"},
+        {"name": "campaign_receipt_hash_bound", "status": "PASS" if receipt.get("campaign_receipt_sha256") else "FAIL", "campaign_receipt": str(campaign)},
+    ]
+    failed = [item for item in checks if item["status"] != "PASS"]
+    if failed:
+        raise AssertionError(f"provider/Tau memory promotion checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="memory_skill_write_and_recall_for_provider_tau_lineage",
+            checks=checks,
+            artifacts={
+                "memory_promotion_receipt": str(receipt_path),
+                "red_recall": str(promote_root / "red" / "memory-recall.stdout.txt"),
+                "blue_recall": str(promote_root / "blue" / "memory-recall.stdout.txt"),
+            },
+            claims_proves=[
+                "Selected provider/Tau Red and Blue lineage children were written through the Memory skill.",
+                "Both promoted lessons were independently recalled from Memory by marker-bearing item text.",
+            ],
+            claims_does_not_prove=[
+                "automatic future strategy reuse",
+                "memory ranking quality",
+                "external target exploitability",
+            ],
+        ),
+    )
+
+
 def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
     suite = "current-status-adaptive-lineage-receipt"
     out_root = summary_path.parent / suite
@@ -1857,8 +1923,23 @@ def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
         if evidence.get(required) is not None and evidence.get(passed) != evidence.get(required):
             raise AssertionError(f"adaptive lineage qualification proof counts drifted: {evidence}")
     primary_proof = status.get("primary_proof") or {}
-    if status.get("immutable_goal_status") != "MET" or not all(primary_proof.values()):
+    required_primary = {
+        "backend_qualification",
+        "pixi_receipt_binding",
+        "pixi_gameplay_browser_proof",
+        "surf_text_readback",
+        "surf_screenshot",
+        "provider_tau_seeded_lineage",
+        "memory_promotion_live",
+    }
+    missing_primary = sorted(key for key in required_primary if primary_proof.get(key) is not True)
+    if status.get("immutable_goal_status") != "MET" or missing_primary:
         raise AssertionError(f"immutable goal primary proof drifted: {primary_proof}")
+    proven = {item.get("id"): item for item in status.get("proven", [])}
+    for claim_id in ["provider_tau_seeded_lineage_spawn", "provider_tau_memory_promotion"]:
+        claim = proven.get(claim_id) or {}
+        if claim.get("status") != "PASS" or (claim.get("evidence") or {}).get("checks_ok") is not True:
+            raise AssertionError(f"current-status claim drifted: {claim_id}: {claim}")
     return _emit(
         summary_path,
         _summary(
@@ -2008,6 +2089,8 @@ def main() -> int:
             return probe_adaptive_lineage_live_exact_chain(args.summary, proof_root=args.proof_root)
         if args.suite == "provider-tau-seeded-lineage-spawn":
             return probe_provider_tau_seeded_lineage_spawn(args.summary, proof_root=args.proof_root)
+        if args.suite == "provider-tau-memory-promotion":
+            return probe_provider_tau_memory_promotion(args.summary, proof_root=args.proof_root)
         if args.suite == "current-status-adaptive-lineage-receipt":
             return probe_current_status_adaptive_lineage_receipt(args.summary)
         if args.suite == "adaptive-lineage-same-run-backend-contracts":

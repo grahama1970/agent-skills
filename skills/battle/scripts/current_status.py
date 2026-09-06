@@ -225,6 +225,74 @@ def _adaptive_lineage_qualification_evidence(path: Path | None) -> dict[str, Any
     }
 
 
+def _latest_provider_tau_seeded_root() -> Path | None:
+    roots = []
+    for receipt_path in Path("/mnt/storage12tb/skills/battle").glob(
+        "provider-tau-seeded-*/source-run/campaign-receipt.json"
+    ):
+        root = receipt_path.parents[1]
+        if (
+            (root / "broadcast" / "provider-tau-lineage-broadcast-receipt.json").is_file()
+            and (root / "memory-promotion-eval" / "memory-promotion-live-receipt.json").is_file()
+        ):
+            roots.append(root)
+    return max(roots, key=lambda path: path.stat().st_mtime) if roots else None
+
+
+def _provider_tau_seeded_evidence(root: Path | None) -> dict[str, Any]:
+    if root is None:
+        return {"status": None, "checks_ok": False}
+    campaign_path = root / "source-run" / "campaign-receipt.json"
+    broadcast_path = root / "broadcast" / "provider-tau-lineage-broadcast-receipt.json"
+    visibility_path = root / "source-run" / "generation-2" / "visibility-validation.json"
+    if not all(path.is_file() for path in [campaign_path, broadcast_path, visibility_path]):
+        return {"status": None, "checks_ok": False, "root": str(root)}
+    campaign = _read_json(campaign_path)
+    broadcast = _read_json(broadcast_path)
+    visibility = _read_json(visibility_path)
+    ack_values = list((campaign.get("inheritance") or {}).values())
+    checks = {
+        "campaign_passed": campaign.get("status") == "PASS",
+        "seed_bundle_bound": (campaign.get("mutation_seed_receipts") or {}).get("status") == "PASS",
+        "provider_cited_seed_hashes": bool(ack_values)
+        and all(ack.get("mutation_seed_receipts_cited_in_provider_response") is True for ack in ack_values),
+        "visibility_passed": visibility.get("status") == "PASS" and not visibility.get("private_input_leaks"),
+        "broadcast_passed": broadcast.get("status") == "PASS",
+    }
+    return {
+        "status": "PASS" if all(checks.values()) else "FAIL",
+        "checks_ok": all(checks.values()),
+        "root": str(root),
+        "campaign_receipt": str(campaign_path),
+        "broadcast_receipt": str(broadcast_path),
+        "visibility_receipt": str(visibility_path),
+        "checks": checks,
+        "seed_count": len((campaign.get("mutation_seed_receipts") or {}).get("receipts", [])),
+    }
+
+
+def _memory_promotion_evidence(root: Path | None) -> dict[str, Any]:
+    if root is None:
+        return {"status": None, "checks_ok": False}
+    path = root / "memory-promotion-eval" / "memory-promotion-live-receipt.json"
+    if not path.is_file():
+        return {"status": None, "checks_ok": False, "path": str(path)}
+    receipt = _read_json(path)
+    promotions = receipt.get("promotions") or []
+    checks = {
+        "receipt_passed": receipt.get("status") == "PASS",
+        "two_teams": {item.get("team") for item in promotions} == {"red", "blue"},
+        "learn_succeeded": all((item.get("learn") or {}).get("exit_code") == 0 for item in promotions),
+        "recall_markers_found": all((item.get("recall") or {}).get("marker_found") is True for item in promotions),
+    }
+    return {
+        "status": "PASS" if all(checks.values()) else "FAIL",
+        "checks_ok": all(checks.values()),
+        "path": str(path),
+        "checks": checks,
+    }
+
+
 def _adaptive_lineage_evidence_passes(evidence: dict[str, Any]) -> bool:
     if evidence.get("status") != "PASS" or evidence.get("checks_ok") is not True:
         return False
@@ -341,6 +409,9 @@ def generate(out: Path) -> int:
     adaptive_lineage_evidence = _adaptive_lineage_qualification_evidence(
         adaptive_lineage_qualification
     )
+    provider_tau_root = _latest_provider_tau_seeded_root()
+    provider_tau_evidence = _provider_tau_seeded_evidence(provider_tau_root)
+    memory_promotion_evidence = _memory_promotion_evidence(provider_tau_root)
     adaptive_proof_dir = adaptive_lineage_qualification.parent if adaptive_lineage_qualification else None
     pixi_binding_path = (
         adaptive_proof_dir / "pixi-replay-proof.json" if adaptive_proof_dir else BATTLE_DIR / "local" / "MISSING" / "pixi-replay-proof.json"
@@ -358,6 +429,21 @@ def generate(out: Path) -> int:
     receipts["adaptive_lineage_pixi_gameplay"] = _receipt(pixi_gameplay_path)
     receipts["adaptive_lineage_surf_text"] = _artifact(surf_text_path)
     receipts["adaptive_lineage_surf_screenshot"] = _artifact(surf_screenshot_path)
+    receipts["provider_tau_seeded_campaign"] = _receipt(
+        provider_tau_root / "source-run" / "campaign-receipt.json"
+        if provider_tau_root
+        else Path("/mnt/storage12tb/skills/battle/MISSING/provider-tau/campaign-receipt.json")
+    )
+    receipts["provider_tau_seeded_broadcast"] = _receipt(
+        provider_tau_root / "broadcast" / "provider-tau-lineage-broadcast-receipt.json"
+        if provider_tau_root
+        else Path("/mnt/storage12tb/skills/battle/MISSING/provider-tau/broadcast/provider-tau-lineage-broadcast-receipt.json")
+    )
+    receipts["provider_tau_memory_promotion"] = _receipt(
+        provider_tau_root / "memory-promotion-eval" / "memory-promotion-live-receipt.json"
+        if provider_tau_root
+        else Path("/mnt/storage12tb/skills/battle/MISSING/provider-tau/memory-promotion-live-receipt.json")
+    )
     pixi_binding = _read_json(pixi_binding_path) if pixi_binding_path.is_file() else {}
     pixi_gameplay = _read_json(pixi_gameplay_path) if pixi_gameplay_path.is_file() else {}
     pixi_binding_passes = (
@@ -399,6 +485,8 @@ def generate(out: Path) -> int:
             "pixi_gameplay_browser_proof": pixi_gameplay_passes,
             "surf_text_readback": surf_text_path.is_file(),
             "surf_screenshot": surf_screenshot_path.is_file(),
+            "provider_tau_seeded_lineage": provider_tau_evidence.get("checks_ok") is True,
+            "memory_promotion_live": memory_promotion_evidence.get("checks_ok") is True,
         },
         "source_context": {
             key: _source_context_item(value) for key, value in SOURCE_CONTEXT.items()
@@ -447,6 +535,28 @@ def generate(out: Path) -> int:
                 "does_not_prove": [
                     "production deployment readiness.",
                     "arbitrary target exploitability beyond the authorized battle-004 proof.",
+                ],
+            },
+            {
+                "id": "provider_tau_seeded_lineage_spawn",
+                "status": "PASS" if provider_tau_evidence.get("checks_ok") is True else "MISSING_OR_STALE",
+                "issue_refs": [],
+                "receipt": receipts["provider_tau_seeded_campaign"]["path"],
+                "evidence": provider_tau_evidence,
+                "does_not_prove": [
+                    "production deployment readiness.",
+                    "arbitrary target exploitability beyond the authorized battle-004 proof.",
+                ],
+            },
+            {
+                "id": "provider_tau_memory_promotion",
+                "status": "PASS" if memory_promotion_evidence.get("checks_ok") is True else "MISSING_OR_STALE",
+                "issue_refs": [],
+                "receipt": receipts["provider_tau_memory_promotion"]["path"],
+                "evidence": memory_promotion_evidence,
+                "does_not_prove": [
+                    "automatic future strategy reuse.",
+                    "memory ranking quality.",
                 ],
             },
             {
@@ -642,6 +752,8 @@ def check(path: Path) -> int:
             "pixi_gameplay_browser_proof",
             "surf_text_readback",
             "surf_screenshot",
+            "provider_tau_seeded_lineage",
+            "memory_promotion_live",
         ]:
             if primary_proof.get(key) is not True:
                 errors.append(f"immutable_goal_primary_proof_false:{key}")
@@ -668,6 +780,30 @@ def check(path: Path) -> int:
     )
     if pixi_claim.get("status") != "PASS":
         errors.append("adaptive_lineage_pixi_receipt_replay_claim_not_pass")
+    provider_claim = next(
+        (
+            item
+            for item in status.get("proven", [])
+            if item.get("id") == "provider_tau_seeded_lineage_spawn"
+        ),
+        {},
+    )
+    if provider_claim.get("status") != "PASS":
+        errors.append("provider_tau_seeded_lineage_spawn_claim_not_pass")
+    if (provider_claim.get("evidence") or {}).get("checks_ok") is not True:
+        errors.append("provider_tau_seeded_lineage_checks_not_green")
+    memory_claim = next(
+        (
+            item
+            for item in status.get("proven", [])
+            if item.get("id") == "provider_tau_memory_promotion"
+        ),
+        {},
+    )
+    if memory_claim.get("status") != "PASS":
+        errors.append("provider_tau_memory_promotion_claim_not_pass")
+    if (memory_claim.get("evidence") or {}).get("checks_ok") is not True:
+        errors.append("provider_tau_memory_promotion_checks_not_green")
 
     closed = {
         str(issue["number"])

@@ -62,6 +62,7 @@
           "agent-work",
           "agent:frontend-coder",
           "battle",
+          "closure-unverified",
           "lane:fe",
           "route:frontend_code",
           "skill-bug",
@@ -77,6 +78,7 @@
           "agent-work",
           "agent:frontend-coder",
           "battle",
+          "closure-unverified",
           "lane:fe",
           "route:frontend_code",
           "type:feature"
@@ -602,8 +604,10 @@
   "partial": [],
   "primary_proof": {
     "backend_qualification": true,
+    "memory_promotion_live": true,
     "pixi_gameplay_browser_proof": true,
     "pixi_receipt_binding": true,
+    "provider_tau_seeded_lineage": true,
     "surf_screenshot": true,
     "surf_text_readback": true
   },
@@ -696,6 +700,53 @@
         1501
       ],
       "receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-1503-fresh-adaptive-lineage-20260905T172211Z/pixi-gameplay-video-proof.json",
+      "status": "PASS"
+    },
+    {
+      "does_not_prove": [
+        "production deployment readiness.",
+        "arbitrary target exploitability beyond the authorized battle-004 proof."
+      ],
+      "evidence": {
+        "broadcast_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/provider-tau-lineage-broadcast-receipt.json",
+        "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+        "checks": {
+          "broadcast_passed": true,
+          "campaign_passed": true,
+          "provider_cited_seed_hashes": true,
+          "seed_bundle_bound": true,
+          "visibility_passed": true
+        },
+        "checks_ok": true,
+        "root": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z",
+        "seed_count": 2,
+        "status": "PASS",
+        "visibility_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/visibility-validation.json"
+      },
+      "id": "provider_tau_seeded_lineage_spawn",
+      "issue_refs": [],
+      "receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+      "status": "PASS"
+    },
+    {
+      "does_not_prove": [
+        "automatic future strategy reuse.",
+        "memory ranking quality."
+      ],
+      "evidence": {
+        "checks": {
+          "learn_succeeded": true,
+          "recall_markers_found": true,
+          "receipt_passed": true,
+          "two_teams": true
+        },
+        "checks_ok": true,
+        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-eval/memory-promotion-live-receipt.json",
+        "status": "PASS"
+      },
+      "id": "provider_tau_memory_promotion",
+      "issue_refs": [],
+      "receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-eval/memory-promotion-live-receipt.json",
       "status": "PASS"
     },
     {
@@ -816,7 +867,7 @@
   "schema": "battle.current_status.v1",
   "source": {
     "battle_tree": "52a8ca3b292aec366a5ebba1d0370ad1126f5b85",
-    "commit": "f1e32a7a9ed5cca9ad13a04bbde047538a6adf82",
+    "commit": "70e81690e2443edc7cb2cb64a87a9a81764a8c98",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -980,6 +1031,33 @@
       "sha256": "479429520aee2d288dbea58d00b7ca265de8a233bd00a352cafd63490d956293",
       "status": "NEEDS_ATTENTION"
     },
+    "provider_tau_memory_promotion": {
+      "exists": true,
+      "live": null,
+      "mocked": null,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-eval/memory-promotion-live-receipt.json",
+      "schema": "battle.memory_promotion_live_receipt.v1",
+      "sha256": "1e5023b6994285fcd57a7728fd65861371790761ea913f6dabb3af670c28de7a",
+      "status": "PASS"
+    },
+    "provider_tau_seeded_broadcast": {
+      "exists": true,
+      "live": null,
+      "mocked": null,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/provider-tau-lineage-broadcast-receipt.json",
+      "schema": "battle.provider_tau_lineage_broadcast.v1",
+      "sha256": "48bdd59814223de11cd7578f804dcf94b48152ad150369de3fc45118fb3c04c7",
+      "status": "PASS"
+    },
+    "provider_tau_seeded_campaign": {
+      "exists": true,
+      "live": true,
+      "mocked": false,
+      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+      "schema": "battle.adaptive_red_blue_lineage_canary.v1",
+      "sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+      "status": "PASS"
+    },
     "same_run_qualification": {
       "exists": false,
       "path": "/tmp/battle-same-run-qualification-1143-pushed-20260801T124449Z/qualification-receipt.json",
@@ -1021,5 +1099,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-09-05T20:09:18Z"
+  "updated_at": "2026-09-06T13:46:00Z"
 }

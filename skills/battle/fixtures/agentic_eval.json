@@ -77,6 +77,14 @@
       }
     },
     {
+      "id": "battle.memory.provider_tau_promotion",
+      "description": "Selected provider/Tau Red and Blue lineage children are durably written through the Memory skill and independently recalled by marker-bearing item text.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.current_status.adaptive_lineage_receipt",
       "description": "CURRENT_STATUS.json binds the newest durable adaptive-lineage qualification plus retained Pixi/browser proof and fails closed when the immutable primary proof is missing or stale",
       "criticality": "critical",
@@ -322,6 +330,20 @@
         "Dogpile or memory seed is not bound into the provider prompt",
         "provider-generated child ignores seed receipt hashes",
         "broadcast report invents lineage instead of reading campaign receipts"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "memory.provider_tau_promotion",
+      "claim_id": "battle.memory.provider_tau_promotion",
+      "seam_type": "memory/write-readback",
+      "criticality": "critical",
+      "failure_modes": [
+        "selected lineage is evaluated but never written to Memory",
+        "recall proof matches only query metadata instead of stored item text",
+        "Battle writes around the Memory skill"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -770,6 +792,38 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/provider-tau-seeded-lineage-spawn.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "provider-tau-memory-promotion",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.memory.provider_tau_promotion"
+      ],
+      "seams": [
+        "memory.provider_tau_promotion"
+      ],
+      "timeout_seconds": 360,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py provider-tau-memory-promotion --summary /tmp/battle-agentic-evals/provider-tau-memory-promotion.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=provider-tau-memory-promotion"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/provider-tau-memory-promotion.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
