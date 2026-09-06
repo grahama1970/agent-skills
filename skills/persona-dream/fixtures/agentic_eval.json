@@ -229,6 +229,40 @@
   ],
   "cases": [
     {
+      "name": "pydantic-step-gate-blocks-corrupt-input",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate --command noop --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces ''; ec=$?; cat \"$T/receipt.json\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "pydantic_gate_input",
+          "\"type\": \"missing\"",
+          "BLOCKED"
+        ]
+      }
+    },
+    {
+      "name": "pydantic-step-gate-passes-valid-envelope",
+      "type": "positive",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"schema\":\"some.thing.v1\"}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate2 --command help --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces '' >/dev/null; python3 -c \"import json;r=json.load(open('$T/receipt.json'));print('gate_errors',len(r['pydantic_errors']))\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "gate_errors 0"
+        ]
+      }
+    },
+    {
       "command": [
         "bash",
         "-lc",

@@ -322,6 +322,22 @@ metadata for skill-maintainer and `/skills-ci`.
    - Do not summarize skipped routes as success. Skipped required release checks are
      release blockers; skipped non-required checks are coverage gaps.
 
+## LLM Data Validation (DEAL-KILLING, NON-NEGOTIABLE)
+
+Any skill artifact that touches an LLM — compiled prompts, model/agent
+responses, tool-call arguments, receipts derived from model output, or
+pipeline-step data produced/consumed around a model call — MUST pass a
+Pydantic model (boundary data) or typed dataclass with explicit `validate()`
+(internal records) as the FIRST deterministic check, before any use,
+persistence, or handoff. This is a deal-killing review requirement (operator
+directive 2026-09-06): raw-dict poking or jsonschema-only prose errors on an
+LLM seam fails the skill review outright. Steering must come from Pydantic
+`errors()` data, not prose. A shared choke point (e.g. a DAG-step shim that
+every pipeline step routes through) satisfies the rule for the steps that
+route through it. Reference implementation:
+`skills/persona-dream/scripts/pydantic_step_gate.py` wired into `dag_step.py`.
+Cross-ref: `best-practices-python` rule `correctness-llm-io-typed-validation`.
+
 ## Typed Seam Contracts (Multi-Layer Skills, NON-NEGOTIABLE)
 
 Any skill whose workflow crosses a boundary — into another skill, a runtime

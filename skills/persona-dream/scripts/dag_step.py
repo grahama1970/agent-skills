@@ -26,9 +26,18 @@ import time
 from pathlib import Path
 from typing import Any
 
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pydantic_step_gate import validate_artifacts  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 RUN_SH = ROOT / "run.sh"
 NODE_RECEIPT_SCHEMA = "tau.generic_dag_node_receipt.v1"
+
+
+class _PydanticGateBlocked(Exception):
+    """Consumed-artifact pydantic gate failed; the step must not execute."""
 
 
 def _sha256(path: Path) -> str:
@@ -47,6 +56,9 @@ def main() -> int:
                          "directory, not the DAG's bookkeeping directory.")
     ap.add_argument("--run-dir-arg", default="", help="empty when the step takes none")
     ap.add_argument("--produces", default="", help="comma-separated declared artifacts")
+    ap.add_argument("--consumes", default="",
+                    help="comma-separated input artifacts, pydantic-validated "
+                         "BEFORE the step runs (first deterministic gate)")
     ap.add_argument("--proves", default="")
     ap.add_argument("--does-not-prove", default="")
     ap.add_argument("--goal-hash", default="",
@@ -66,7 +78,19 @@ def main() -> int:
     exit_code: int | None = None
     stderr_tail = ""
 
+    # Pydantic FIRST gate: consumed artifacts must validate before the step runs.
+    consume_dir = args.artifact_dir or args.run_dir
+    consumed = [consume_dir / n for n in args.consumes.split(",") if n]
+    pydantic_errors = validate_artifacts(consumed, json_only=False)
+    if pydantic_errors:
+        errors.extend(
+            f"pydantic_gate_input {e['type']} at {e['loc']}: {e.get('msg', '')}"
+            for e in pydantic_errors
+        )
+
     try:
+        if errors:
+            raise _PydanticGateBlocked
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
         exit_code = proc.returncode
         stderr_tail = proc.stderr[-8000:]
@@ -74,6 +98,8 @@ def main() -> int:
             errors.append(f"{args.command} exited {proc.returncode}: {stderr_tail[-2500:]}")
     except subprocess.TimeoutExpired:
         errors.append(f"{args.command} exceeded 1800s")
+    except _PydanticGateBlocked:
+        pass  # consumed-artifact validation failed; step never ran
     except FileNotFoundError:
         errors.append(f"run.sh not executable at {RUN_SH}")
 
@@ -87,6 +113,15 @@ def main() -> int:
                               "bytes": path.stat().st_size})
         else:
             errors.append(f"declared artifact not produced: {artifact_dir / name}")
+    # Pydantic gate on produced JSON artifacts (producer-side seam validation).
+    produced_errors = validate_artifacts(
+        [artifact_dir / n for n in produces if (artifact_dir / n).is_file()]
+    )
+    errors.extend(
+        f"pydantic_gate_output {e['type']} at {e['loc']}: {e.get('msg', '')}"
+        for e in produced_errors
+    )
+    pydantic_errors.extend(produced_errors)
 
     ok = not errors
     receipt = {
@@ -106,6 +141,7 @@ def main() -> int:
         ),
         "proves": args.proves,
         "does_not_prove": args.does_not_prove,
+        "pydantic_errors": pydantic_errors,
         "mocked": False,
         "live": True,
         "stderr_tail": stderr_tail,

@@ -301,6 +301,29 @@ payload = TaskPayload.model_validate(response.json())
 
 Do not pass raw provider dictionaries across multiple modules. Convert them into a named model at the boundary, then pass the typed object.
 
+### Rule: `correctness-llm-io-typed-validation` (DEAL-KILLING, NON-NEGOTIABLE)
+
+**Anything LLM-related — prompts compiled for a model, LLM/VLM responses, agent
+output, tool-call arguments, receipts derived from model output, pipeline-step
+artifacts produced or consumed around a model call — MUST be validated through
+a Pydantic model (external/boundary data) or a typed dataclass with explicit
+`validate()` (internal records) as the FIRST deterministic check, before any
+business logic, scoring, persistence, or downstream handoff. No exceptions.**
+
+This is a deal-killing requirement (operator directive 2026-09-06): a review
+that finds LLM input/output flowing through raw dicts, string poking, or
+jsonschema-only prose errors FAILS the review outright — it is not a warning.
+An LLM is a nondeterministic producer; unvalidated model output laundered into
+the grammar of trusted data is exactly the failure class every seam incident
+in this repo traces back to.
+
+- The gate runs first: parse → `Model.model_validate()` → only then use.
+- Steering comes from `errors()` (`type`/`loc`/`ctx`), never rendered prose.
+- A choke point (e.g. a DAG-step shim) satisfies the rule for every step that
+  routes through it; steps that bypass the choke point do not comply.
+- Existing JSON Schemas may remain as documentation, but the executable gate
+  is the typed model.
+
 ### Rule: `correctness-pydantic-steering`
 
 When a Python schema validates agent output or a cross-skill receipt, the validation error itself is the steering contract. Use Pydantic v2 `ValidationError.errors()` plus `PydanticCustomError` `type` and `ctx` fields for deterministic repair data. Do not parse the rendered exception string, do not classify the agent's prose, and do not add a parallel prose checklist.
