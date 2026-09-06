@@ -814,7 +814,7 @@ def _result_values(payload: Any, depth: int = 0) -> list[str]:
     found: list[str] = []
     if isinstance(payload, dict):
         for key, value in payload.items():
-            if str(key).lower() == "provider_statuses":
+            if str(key).lower() in {"provider_statuses", "source_receipts"}:
                 continue
             if str(key).lower() in {"failed", "failures", "errored", "errors", "blocked", "skipped", "not_tested", "not_run"}:
                 if (isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0) or (isinstance(value, list) and value):
@@ -980,15 +980,7 @@ def evaluate_repair_proof(
     declared = [p for p in declared if _is_machine_result_path(p)
                 and Path(p).name != "authored-commit.json"]
     # Ticket output operands remain mandatory; fixture/input JSON paths are not output proof.
-    section = []
-    collecting = False
-    for line in issue_body.splitlines():
-        heading = re.match(r"^#{1,6}\s*(.+?)\s*$", line.strip())
-        if heading:
-            collecting = heading.group(1).strip().lower() == "required proof"
-        elif collecting:
-            section.append(line)
-    section_outputs = _OUTPUT_FLAG.findall("\n".join(section))
+    section_outputs = required_proof_artifacts(issue_body)
     artifacts = sorted(set(section_outputs + declared))
     if not artifacts:
         reasons.append("no explicit result artifacts: reviewer must emit PROOF_ARTIFACT lines")

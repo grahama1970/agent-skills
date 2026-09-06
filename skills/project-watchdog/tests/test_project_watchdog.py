@@ -748,6 +748,7 @@ def test_proof_artifact_ignores_provider_status_noise_and_domain_enums(tmp_path)
         "status": "PASS",
         "immutable_goal_status": "MET",
         "seed_receipts": [{"provider_statuses": [{"status": "error"}, {"status": "skipped"}]}],
+        "source_receipts": {"project_agent_dispatch": {"status": "NEEDS_ATTENTION"}},
         "variants": [{"result": "PARENT_RETAINED"}],
     }), encoding="utf-8")
     record = handlers.inspect_proof_artifact(str(artifact), not_before=0)
