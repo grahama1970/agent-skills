@@ -757,6 +757,18 @@ def declared_verdict(text: str) -> str | None:
     return declarations[0]
 
 
+def review_commit_lines(text: str) -> list[str]:
+    return [line.partition(":")[2].strip() for line in text.splitlines() if line.startswith("REVIEW_COMMIT:")]
+
+
+def valid_review_commits(text: str) -> list[str]:
+    return [sha for sha in review_commit_lines(text) if re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", sha)]
+
+
+def verify_plan_lines(text: str) -> list[str]:
+    return [line.partition(":")[2].strip() for line in text.splitlines() if line.startswith("VERIFY_PLAN:")]
+
+
 def seat_response_text(ask_run_dir: Path, handler: str, occurrence: int = 1) -> str | None:
     """Require one unambiguous response for this run/seat, not first-PASS wins."""
     node_id = repair_node_id(handler, occurrence)
@@ -2034,13 +2046,29 @@ def finish_primary_operation(record) -> dict[str, Any]:
     creator, reviewer = config.repair_seats(project)
     creator_handler, reviewer_handler = repair_execution_handlers(creator, reviewer)
     text = seat_response_text(Path(record.ask_run_dir), reviewer_handler) or ""
-    declared = [line.partition(":")[2].strip() for line in text.splitlines() if line.startswith("REVIEW_COMMIT:")]
-    if len(declared) != 1 or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", declared[0]):
-        raise primary.Refusal("review must bind exactly one full content-commit SHA")
-    review_commit = declared[0]
-    plans = [line.partition(":")[2].strip() for line in text.splitlines() if line.startswith("VERIFY_PLAN:")]
+    creator_text = seat_response_text(Path(record.ask_run_dir), creator_handler) or ""
+    declared = valid_review_commits(text)
+    commit_binding_warnings: list[str] = []
+    if len(declared) == 1:
+        review_commit = declared[0]
+    else:
+        creator_declared = valid_review_commits(creator_text)
+        authored = _json_from_file(receipt_dir / "authored-commit.json") or {}
+        if (declared_verdict(text) == "PASS" and review_commit_lines(text) and len(creator_declared) == 1
+                and creator_declared[0] == authored.get("commit")):
+            review_commit = creator_declared[0]
+            commit_binding_warnings.append("reviewer REVIEW_COMMIT was malformed; used creator-authored commit after reviewer PASS")
+        else:
+            raise primary.Refusal("review must bind exactly one full content-commit SHA")
+    plans = verify_plan_lines(text)
+    plan_source = "reviewer"
     if len(plans) != 1:
-        raise primary.Refusal("review must supply exactly one native verification plan")
+        creator_plans = verify_plan_lines(creator_text)
+        if declared_verdict(text) == "PASS" and len(creator_plans) == 1:
+            plans = creator_plans
+            plan_source = "creator"
+        else:
+            raise primary.Refusal("review must supply exactly one native verification plan")
     plan = VerificationPlan.model_validate(json.loads(plans[0]))
     clauses = required_proof_clauses(str(issue.get("body") or ""))
     if not clauses and record.action == "ticket_repair":
@@ -2091,7 +2119,9 @@ def finish_primary_operation(record) -> dict[str, Any]:
         raise primary.Refusal("native ticket verification did not freshly pass every required result")
     gate_path = receipt_dir / "repair-proof-gate.json"
     gate = {**initial_gate, "native_verification": commands, "native_artifacts": artifacts,
-            "coverage": plan.coverage, "reviewed_commit": review_commit}
+            "coverage": plan.coverage, "reviewed_commit": review_commit,
+            "verification_plan_source": plan_source,
+            "commit_binding_warnings": commit_binding_warnings}
     write_json(gate_path, gate)
     remote_required = bool(config.auto_land_main(project))
     commit = content.publish(root, before, after, receipt_dir, record.run_id, record.issue_number,

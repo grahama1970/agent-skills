@@ -755,6 +755,12 @@ def test_proof_artifact_ignores_provider_status_noise_and_domain_enums(tmp_path)
     assert record["passed"] is True
 
 
+def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
+    text = "REVIEW_COMMIT: 9ae45ee8d5099b6b9b18a373c2d0e32a8aaf052f5\n"
+    assert handlers.review_commit_lines(text) == ["9ae45ee8d5099b6b9b18a373c2d0e32a8aaf052f5"]
+    assert handlers.valid_review_commits(text) == []
+
+
 def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
     """#1499 had a July receipt on disk; accepting it would close on a stale pass."""
     artifact = tmp_path / "proof.json"
