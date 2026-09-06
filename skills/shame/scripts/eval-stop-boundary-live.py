@@ -46,9 +46,10 @@ For each of the SIX continuing stops, emit this EXACT same block without edits o
 {"schema":"pi.agent_status.v1","goal":"live sum probe","state":"continuing","changed":["another input read; remaining work"],"not_done":[{"item":"finish reading inputs","next_command":"Read the next unread numbered input from the original list; after the seventh read write the sum file and emit done."}]}
 ```
 '''
-repair_proof = '--proof-repair' in sys.argv
-if repair_proof:
-    prompt += '\nA test transport will corrupt your first proof reference. If a correction arrives, use the already observed values and output path to correct the status only. Do not call any tools during report repair. Never fabricate evidence.'
+fault_kind = next((kind for flag, kind in [('--missing-footer', 'missing-footer'), ('--duplicate-key', 'duplicate-key'), ('--missing-verified', 'missing-verified'), ('--misleading-prose', 'misleading-prose'), ('--proof-repair', 'proof')] if flag in sys.argv), None)
+repair_proof = fault_kind is not None and fault_kind != 'misleading-prose'
+if fault_kind:
+    prompt += '\nA test transport will alter your first status report. If a correction arrives, use the already observed values and output path to correct the status only. Do not call any tools during report repair. Never fabricate evidence.'
     # Corrupt exactly one real terminal message rather than asking the model
     # to fabricate a completion claim. The recovery still uses the live model.
     fault = work / 'fault.ts'
@@ -63,22 +64,31 @@ export default function(pi) {
   const start=part.text.indexOf('```json')+7, end=part.text.indexOf('```',start);
   const status=JSON.parse(part.text.slice(start,end));
   if(status.state!=='done') return;
-  injected=true;status.proof=['https://shame.invalid/nonexistent.json'];
-  writeFileSync('fault.json',JSON.stringify({injected:true,proof:status.proof}));
-  return {message:{...e.message,content:parts.map(p=>p===part?{...p,text:'```json\\n'+JSON.stringify(status)+'\\n```'}:p)}};
+  injected=true;
+  const mode=process.env.SHAME_EVAL_FAULT;
+  if(mode==='proof') status.proof=['https://shame.invalid/'+encodeURIComponent(process.cwd())];
+  if(mode==='missing-verified') status.verified=[];
+  let body=JSON.stringify(status);
+  if(mode==='duplicate-key') body=body.replace('"schema":"pi.agent_status.v1"','"schema":"pi.agent_status.v1","schema":"pi.agent_status.v1"');
+  const prefix=mode==='misleading-prose'?'Status Report\\n- Goal: unrelated\\n- State: failed\\n':'';
+  writeFileSync('fault.json',JSON.stringify({injected:true,mode}));
+  const text=mode==='missing-footer'?'Result ready.':prefix+'```json\\n'+body+'\\n```';
+  return {message:{...e.message,content:parts.map(p=>p===part?{...p,text}:p)}};
  });
 }''')
-env = {**os.environ, 'LAZY_REPORT_SHAME_DEFAULT_MODE': 'strict',
-       'LAZY_REPORT_SHAME_FAILURE_LOG': str(work / 'failures.jsonl'),
+shared = Path(os.environ.get('SHAME_EVAL_SHARED_ROOT', str(work)))
+shared.mkdir(parents=True, exist_ok=True)
+env = {**os.environ, 'SHAME_EVAL_FAULT': fault_kind or '', 'LAZY_REPORT_SHAME_DEFAULT_MODE': 'normal' if '--normal' in sys.argv else 'strict',
+       'LAZY_REPORT_SHAME_FAILURE_LOG': str(shared / 'failures.jsonl'),
        'LAZY_REPORT_SHAME_AUDIO_ENABLED': '0', 'LAZY_REPORT_SHAME_MEMORY_ENABLED': '0',
-       'LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET': str(work / 'pending.json'),
+       'LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET': str(shared / 'pending.json'),
        'LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE': str(work / 'ledger.json')}
-command = ['pi', '--print', '--mode', 'json', '--no-session', '--no-extensions',
+command = ['pi', '--print', '--mode', 'json', '--session', str(work / 'session.jsonl'), '--no-extensions',
            '--no-skills', '--no-context-files', '--no-prompt-templates', '--no-themes',
            '--extension', index, '--tools', 'read,write', '--thinking', 'low',
            '--provider', os.environ.get('PI_PROVIDER', 'openai-codex'),
            '--model', os.environ.get('PI_MODEL', 'gpt-6-astra'), prompt]
-if repair_proof:
+if fault_kind:
     position=command.index('--extension')
     command[position:position]=['--extension', str(fault)]
 result = subprocess.run(command, cwd=work, env=env, capture_output=True, text=True, timeout=180)
@@ -95,9 +105,10 @@ tool_messages = [m for m in assistant if any(p.get('type') == 'toolCall' for p i
 mixed = [m for m in tool_messages if any(p.get('type') == 'text' and p.get('text', '').strip() for p in m['content'])]
 assert len(tool_messages) >= 5, 'missing separate live read/write calls'
 assert mixed, 'live model did not exercise mixed text/tool-call seam'
-packet_exists = (work / 'pending.json').exists() or (work / 'pending.json.sessions').exists()
+session_id = json.loads((work / 'session.jsonl').read_text().splitlines()[0])['id']
+packet_exists = (shared / 'pending.json').exists() or (shared / 'pending.json.sessions').exists()
 assert packet_exists == repair_proof, 'unexpected pending rejection packet state'
-if repair_proof:
+if fault_kind:
     assert json.loads((work / 'fault.json').read_text())['injected'] is True
 actual = json.loads(output.read_text())
 assert actual['values'] == values and actual['sum'] == sum(values), (actual, values)
@@ -110,6 +121,8 @@ if '--repeat-status' in sys.argv:
     assert len(set(continued)) == 1, 'live run did not exercise byte-identical repeated continuation reports'
 last_text = '\n'.join(p.get('text', '') for p in assistant[-1].get('content', []))
 assert 'State: done' in last_text, last_text
+if fault_kind == 'misleading-prose':
+    assert 'State: failed' not in last_text and 'Goal: unrelated' not in last_text, last_text
 rejections = sum(any('REJECTED_BY_SLOTH_COURT' in p.get('text', '') for p in m.get('content', [])) for m in assistant)
 assert rejections == (1 if repair_proof else 0), f'unexpected reporting repairs: {rejections}'
 if repair_proof:
@@ -117,16 +130,17 @@ if repair_proof:
     assert not any(p.get('type') == 'toolCall' for m in assistant[rejected_at + 1:] for p in m.get('content', [])), 'format correction reopened tool execution'
 history_verified = False
 if repair_proof:
-    rows = [json.loads(line) for line in (work / 'failures.jsonl').read_text().splitlines()]
-    rejected = [row for row in rows if row['kind'] == 'report_rejected']
-    assert len(rejected) == 1 and 'proof_reference_unresolved' in rejected[0]['reason_codes'], rejected
+    rows = [json.loads(line) for line in (shared / 'failures.jsonl').read_text().splitlines()]
+    rejected = [row for row in rows if row['kind'] == 'report_rejected' and row['session_id'] == session_id]
+    reason = {'missing-footer':'missing_agent_status_json','proof':'proof_reference_unresolved','duplicate-key':'duplicate_agent_status_key','missing-verified':'done_requires_verified'}[fault_kind]
+    assert len(rejected) == 1 and reason in rejected[0]['reason_codes'], rejected
     snapshot = json.loads(Path(rejected[0]['review_packet']).read_text())
     assert snapshot['candidate_hash'] == rejected[0]['candidate_hash']
     reader = subprocess.run(['node', str(Path(index).with_name('failure-history.mjs')), '--session-id', rejected[0]['session_id'], '--json'], env=env, text=True, capture_output=True, timeout=10)
     assert reader.returncode == 0
     assert any(row['event_id'] == rejected[0]['event_id'] for row in json.loads(reader.stdout)['events'])
     history_verified = True
-report = {'failure_history_verified': history_verified, 'live_model': env.get('PI_MODEL', 'gpt-6-astra'), 'tool_messages': len(tool_messages),
+report = {'fault': fault_kind, 'session_id': session_id, 'session_file': str(work / 'session.jsonl'), 'failure_history_verified': history_verified, 'live_model': env.get('PI_MODEL', 'gpt-6-astra'), 'tool_messages': len(tool_messages),
           'mixed_text_tool_messages': len(mixed), 'report_retries': rejections, 'continuations': continuation_count,
           'sum_readback_correct': True, 'done_rendered': True,
           'events': str(work / 'events.jsonl'), 'output': str(output)}

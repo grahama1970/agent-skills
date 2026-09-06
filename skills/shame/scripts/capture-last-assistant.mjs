@@ -206,6 +206,10 @@ async function storeMemory(example, opts) {
       _key: shadowKey,
       schema: 'lazy_report_shame.training_example_search.v1',
       kind: 'agent_status_shame_training_search_doc',
+      problem: `Human-labeled agent status example: ${example.human_verdict} ${example.human_reasons.join(', ')}`,
+      solution: example.retrieval_text,
+      project: 'agent-skills',
+      scope: 'agent-skills',
       example_ref: `${opts.memoryCollection}/${example._key}`,
       created_at: example.created_at,
       tags: example.tags,
@@ -222,13 +226,23 @@ async function storeMemory(example, opts) {
       throw new Error(`search shadow read-back failed for ${opts.searchCollection}/${shadowKey}`);
     }
     result.search = { collection: opts.searchCollection, key: shadowKey, read_back_count: shadowBack.documents.length };
-    const recall = await postJson(`${opts.memoryUrl}/recall`, {
-      query: example.retrieval_text.slice(0, 200),
+    const recallBody = {
+      q: example.retrieval_text.slice(0, 200),
+      scope: 'agent-skills',
+      collections: [opts.searchCollection],
       tags: ['shame'],
-      limit: 10,
-    });
-    const items = Array.isArray(recall.items) ? recall.items : Array.isArray(recall.documents) ? recall.documents : [];
-    result.recall_found = items.length > 0;
+      k: 10,
+      threshold: 0.0,
+    };
+    // Same bounded index-visibility readback as the Pi extension; never repeat the write.
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const recall = await postJson(`${opts.memoryUrl}/recall`, recallBody);
+      const items = Array.isArray(recall.items) ? recall.items : Array.isArray(recall.documents) ? recall.documents : [];
+      result.recall_found = items.some((item) => item?._key === shadowKey);
+      if (result.recall_found) break;
+      if (attempt < 4) await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    if (!result.recall_found) throw new Error(`search recall did not return ${opts.searchCollection}/${shadowKey}`);
   }
   return result;
 }

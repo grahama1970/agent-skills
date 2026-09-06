@@ -182,13 +182,14 @@ commit/push when no external blocker prevents it; Git metadata is not product pr
 ```bash
 uv run --with pydantic python3 skills/shame/scripts/immutable_goal_schema.py validate skills/shame/immutable_goal.json
 skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --output /tmp/shame-agentic-eval.json
-skills/agentic-evals/run.sh run skills/shame/fixtures/failure_history_eval.json --output /tmp/shame-failure-history-eval.json
+skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --case invalid-proof-recovery --output /tmp/shame-proof-recovery-eval.json
 ```
 
-Focused fixture families: `stop_boundary_eval.json`, `hardening_eval.json`,
-`task_budget_eval.json`, and `conversation_guard_eval.json`. They distinguish synthetic lifecycle/negative probes from
-live provider/tool paths. Never present a read skill, green fixture count, or
-reviewer opinion as proof of unchecked project outcomes.
+One canonical catalog covers real Pi conversations, tool execution, CLI operations,
+Memory, and installed audio. The extension catalog aliases it; do not run both.
+Use `--case NAME` for focused checks. Mock-Pi drivers, fabricated proof helpers,
+and the old prose-variation catalog are removed. See `fixtures/EVALUATION.md` for
+coverage and explicit gaps. Never present a green count as proof of unchecked outcomes.
 
 ## Ecosystem
 

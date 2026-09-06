@@ -28,11 +28,11 @@ The default mode is `normal`; ordinary chat is not forced through the status con
 
 Intermediate responses cannot erase pending tool calls or exhaust report repairs. Cancellation, provider errors, length limits, and shutdown do not restart the model. Host-queued work takes precedence over reporting repair. The final message is validated/rendered before display; `agent_end` owns follow-up dispatch, not message replacement. Pi drains follow-ups queued by `agent_end` inside the current prompt; `agent_settled` is too late for reliable print-mode continuation and is reserved for idle observation.
 
-Repeated status text is not a duplicate event: legitimate polling continuations dispatch at each distinct stop, while replaying the same terminal event dispatches once. `skills/shame/fixtures/hardening_eval.json` retains this live case plus session ownership and evidence-resolution regressions.
+Repeated status text is not a duplicate event: legitimate polling continuations dispatch at each distinct stop, while replaying the same terminal event dispatches once. The canonical agentic suite covers this as `work-continues-to-artifact`, with separate feedback/session and proof-recovery workflows.
 
-Retained proof: `skills/shame/fixtures/stop_boundary_eval.json` covers lifecycle replay plus a live Pi model with real file reads, writes, and independent result readback. This is not proof that every project is semantically complete.
+Retained proof: `skills/shame/fixtures/agentic_eval.json` runs real Pi/CLI workflows with independent artifact readback. It is not proof that every project is semantically complete.
 
-The real conversational seam is covered by `skills/shame/fixtures/conversation_guard_eval.json`: advisory mentions answer once without tools/rejections; a fault-injected report gets one live, tool-free correction. Strict mode and mutation enforcement are positive controls, not silently disabled.
+The `advisory-question` and `single-format-correction` cases exercise the actual conversational seam: one advisory answer, and one tool-free correction after real file work.
 
 ## Operator-armed task budgets
 
@@ -82,8 +82,8 @@ shows the phase and receipt. `/shame-task` remains a compatibility alias. This i
   requires a new operator-armed contract; there is no prose intent classifier.
 
 Receipts live under `SHAME_TASK_RECEIPT_DIR` (default: `/tmp/shame-task-budgets`).
-Retained proof: `skills/shame/fixtures/task_budget_eval.json` — synthetic adversarial
-lifecycle cases plus a live model producing an independently checked artifact.
+Retained proof: canonical case `task-scope-and-acceptance` injects prohibited tool
+calls into a real Pi run and independently checks that only the approved artifact exists.
 
 ## Continuation guard file
 
@@ -153,7 +153,7 @@ runtime loads; old session transcripts are not automatically backfilled.
 
 Log-write failures produce visible warnings without starting another retry loop.
 Journal files are created owner-only. Retained proof lives in
-`skills/shame/fixtures/failure_history_eval.json`.
+canonical cases `invalid-proof-recovery` and `feedback-and-session-isolation`.
 
 ## Collaborative correction loop
 
@@ -179,7 +179,7 @@ These fail outright on guarded turns:
 - `state=needs_human` without an exact human action and reason.
 - Missing or malformed status JSON. Trailing prose after a valid status JSON block is ignored, not accepted as truth.
 
-The retained `$agentic-evals` include `skills/shame/scripts/check-status-guard-data-first.mjs`. That check fails if `status-json-check.mjs` reintroduces status-prose policy symbols, regex helpers, or a live behavior where bad prose overrides valid JSON or good prose rescues invalid JSON.
+The `data-not-prose-decides` workflow inserts misleading prose into a real model response while preserving valid status data. It fails if prose overrides that data or leaks into the rendered status. The obsolete prose-variation/mock-Pi tests have been removed.
 
 ## Required report shape
 
