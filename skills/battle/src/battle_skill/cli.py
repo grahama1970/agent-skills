@@ -1123,6 +1123,8 @@ def adaptive_red_blue_lineage_canary(
     scillm_base_url: str = typer.Option("http://localhost:4001", "--scillm-base-url"),
     timeout_s: float = typer.Option(300.0, "--timeout-s", min=60.0),
     authorization_manifest: Optional[Path] = typer.Option(None, "--authorization-manifest"),
+    dogpile_seed_receipt: Optional[Path] = typer.Option(None, "--dogpile-seed-receipt", exists=True, readable=True),
+    memory_seed_receipt: Optional[Path] = typer.Option(None, "--memory-seed-receipt", exists=True, readable=True),
 ):
     """Run simultaneous Red/Blue parent and child generations through Tau, Docker, and Judge."""
     import json as _json
@@ -1138,6 +1140,8 @@ def adaptive_red_blue_lineage_canary(
         scillm_base_url=scillm_base_url,
         timeout_s=timeout_s,
         authorization_manifest=authorization_manifest,
+        dogpile_seed_receipt=dogpile_seed_receipt,
+        memory_seed_receipt=memory_seed_receipt,
     )
     print(_json.dumps(receipt, indent=2, sort_keys=True))
     if receipt.get("status") != "PASS":

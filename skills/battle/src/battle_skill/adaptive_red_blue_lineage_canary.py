@@ -49,6 +49,8 @@ def run_adaptive_red_blue_lineage_canary(
     scillm_base_url: str = "http://localhost:4001",
     timeout_s: float = 300.0,
     authorization_manifest: Path | None = None,
+    dogpile_seed_receipt: Path | None = None,
+    memory_seed_receipt: Path | None = None,
 ) -> dict[str, Any]:
     """Run two authorized simultaneous Red/Blue generations against one Arena target."""
     from common.security_authorization import validate_target_authorization
@@ -306,6 +308,19 @@ def run_adaptive_red_blue_lineage_canary(
         team="blue",
         payload={"source_count": blue_research["source_count"]},
     )
+    seed_bundle = _seed_bundle(
+        dogpile_seed_receipt=dogpile_seed_receipt,
+        memory_seed_receipt=memory_seed_receipt,
+    )
+    seed_prompt_refs = _seed_prompt_refs(seed_bundle)
+    seed_bundle_path = _write_json(knowledge_root / "mutation-seed-bundle.json", seed_bundle)
+    for seed in seed_bundle["receipts"]:
+        journal.append(
+            event_type="mutation_seed_bound",
+            source_receipt=Path(seed["path"]),
+            generation=2,
+            payload={"kind": seed["kind"], "sha256": seed["sha256"]},
+        )
 
     _copy_public_arena(generation_1_dir, generation_2_dir)
     context_path = _write_tau_public_context(
@@ -323,6 +338,7 @@ def run_adaptive_red_blue_lineage_canary(
             "blue_inherited_knowledge": str(blue_packet_path),
             "red_external_research": str(red_research["source_receipt_path"]),
             "blue_external_research": str(blue_research["source_receipt_path"]),
+            "mutation_seed_receipts": str(seed_bundle_path),
         }
     )
     context["summary"]["generation"] = 2
@@ -334,11 +350,12 @@ def run_adaptive_red_blue_lineage_canary(
         "red": red_research,
         "blue": blue_research,
     }
+    context["summary"]["mutation_seed_receipts"] = seed_prompt_refs
     context["summary"]["teams"]["red"]["objective"] = _generation_2_objective(
-        "red", red_packet, red_research
+        "red", red_packet, red_research, seed_bundle
     )
     context["summary"]["teams"]["blue"]["objective"] = _generation_2_objective(
-        "blue", blue_packet, blue_research
+        "blue", blue_packet, blue_research, seed_bundle
     )
     _write_json(context_path, context)
 
@@ -402,10 +419,10 @@ def run_adaptive_red_blue_lineage_canary(
     g2_red = _single_materialized(g2_manifest, "red")
     g2_blue = _single_materialized(g2_manifest, "blue")
     red_ack = _knowledge_acknowledgement(
-        "red", red_packet, red_research, g2_manifest, g2_red
+        "red", red_packet, red_research, seed_bundle, g2_manifest, g2_red
     )
     blue_ack = _knowledge_acknowledgement(
-        "blue", blue_packet, blue_research, g2_manifest, g2_blue
+        "blue", blue_packet, blue_research, seed_bundle, g2_manifest, g2_blue
     )
     red_ack_path = _write_json(
         generation_2_dir / "red-inherited-knowledge-acknowledgement.json", red_ack
@@ -567,6 +584,8 @@ def run_adaptive_red_blue_lineage_canary(
         "spawn": {"red": red_spawn, "blue": blue_spawn},
         "inheritance": {"red": red_ack, "blue": blue_ack},
         "research": {"red": red_research, "blue": blue_research},
+        "mutation_seed_receipts": seed_bundle,
+        "mutation_seed_bundle_path": str(seed_bundle_path),
         "selection": selection,
         "observations": {
             "generation_1": g1_observations,
@@ -979,8 +998,70 @@ def _knowledge_packet(
     }
 
 
+def _seed_bundle(
+    *, dogpile_seed_receipt: Path | None, memory_seed_receipt: Path | None
+) -> dict[str, Any]:
+    receipts: list[dict[str, Any]] = []
+    for kind, path in (
+        ("dogpile", dogpile_seed_receipt),
+        ("memory", memory_seed_receipt),
+    ):
+        if path is None:
+            continue
+        resolved = path.expanduser().resolve()
+        if not resolved.is_file():
+            raise RuntimeError(f"{kind} seed receipt missing: {resolved}")
+        seed: dict[str, Any] = {
+            "kind": kind,
+            "path": str(resolved),
+            "sha256": _sha(resolved),
+            "bytes": resolved.stat().st_size,
+        }
+        if kind == "dogpile":
+            data = _read_json(resolved)
+            seed["schema"] = data.get("schema")
+            seed["source_bearing_evidence_count"] = data.get(
+                "source_bearing_evidence_count"
+            )
+            seed["provider_statuses"] = data.get("provider_statuses", [])
+        receipts.append(seed)
+    return {
+        "schema": "battle.mutation_seed_receipt_bundle.v1",
+        "status": "PASS" if receipts else "SKIPPED",
+        "receipts": receipts,
+        "claims": {
+            "proves": [
+                "Battle bound external Dogpile and/or memory readback hashes into the Generation 2 mutation prompt."
+            ]
+            if receipts
+            else [],
+            "does_not_prove": ["The seeded child improved; Judge and selection decide that."],
+        },
+    }
+
+
+def _seed_prompt_refs(seed_bundle: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": "battle.mutation_seed_prompt_refs.v1",
+        "status": seed_bundle.get("status"),
+        "receipts": [
+            {
+                "kind": seed["kind"],
+                "sha256": seed["sha256"],
+                "source_bearing_evidence_count": seed.get(
+                    "source_bearing_evidence_count"
+                ),
+            }
+            for seed in seed_bundle.get("receipts", [])
+        ],
+    }
+
+
 def _generation_2_objective(
-    team: str, packet: dict[str, Any], research: dict[str, Any]
+    team: str,
+    packet: dict[str, Any],
+    research: dict[str, Any],
+    seed_bundle: dict[str, Any] | None = None,
 ) -> str:
     artifact = "exploit" if team == "red" else "patch"
     materialization_contract = (
@@ -994,12 +1075,21 @@ def _generation_2_objective(
             "tests, and extra top-level keys such as candidate or destination. "
         )
     )
+    seed_hashes = [seed["sha256"] for seed in (seed_bundle or {}).get("receipts", [])]
+    seed_instruction = (
+        " It must cite mutation_seed_receipt_sha256 values "
+        + ", ".join(seed_hashes)
+        + "."
+        if seed_hashes
+        else ""
+    )
     return (
         f"Produce a new {artifact} artifact after reading inherited packet {packet['packet_id']}. "
         f"Your JSON rationale must cite packet_id {packet['packet_id']} or parent artifact sha256 {packet['parent_artifact_sha256']}. "
         f"The rationale must cite inherited_genome_sha256 {packet['parent_semantic_genome_sha256']}, "
         "name one inherited observation, and include the literal label first_plan_action followed by the first action. "
-        f"It must also cite external research receipt sha256 {research['source_receipt_sha256']}. "
+        f"It must also cite external research receipt sha256 {research['source_receipt_sha256']}."
+        f"{seed_instruction} "
         f"{materialization_contract}"
         "Return strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation. "
         "Change the parent strategy using the inherited Judge observation and public target only."
@@ -1010,6 +1100,7 @@ def _knowledge_acknowledgement(
     team: str,
     packet: dict[str, Any],
     research: dict[str, Any],
+    seed_bundle: dict[str, Any],
     manifest: dict[str, Any],
     child: dict[str, Any],
 ) -> dict[str, Any]:
@@ -1032,6 +1123,15 @@ def _knowledge_acknowledgement(
     )
     first_plan_action = "first_plan_action" in response_text
     research_cited = research["source_receipt_sha256"] in response_text
+    seed_citations = [
+        {
+            "kind": seed["kind"],
+            "sha256": seed["sha256"],
+            "cited_in_provider_response": seed["sha256"] in response_text,
+        }
+        for seed in seed_bundle.get("receipts", [])
+    ]
+    seeds_cited = all(item["cited_in_provider_response"] for item in seed_citations)
     child_sha = _sha(Path(child["path"]))
     changed = child_sha != parent_sha
     return {
@@ -1042,6 +1142,7 @@ def _knowledge_acknowledgement(
         and inherited_observation_cited
         and first_plan_action
         and research_cited
+        and seeds_cited
         and changed
         else "BLOCKED",
         "team": team,
@@ -1055,12 +1156,14 @@ def _knowledge_acknowledgement(
         "first_plan_action_declared": first_plan_action,
         "external_research_receipt_sha256": research["source_receipt_sha256"],
         "external_research_cited_in_provider_response": research_cited,
+        "mutation_seed_citations": seed_citations,
+        "mutation_seed_receipts_cited_in_provider_response": seeds_cited,
         "provider_response_sha256": _sha(Path(entry["scillm_call"])),
         "claims": {
             "proves": [
                 "The provider response cited inherited evidence and external research, then materialized a changed artifact."
             ]
-            if cited and research_cited and changed
+            if cited and research_cited and seeds_cited and changed
             else [],
             "does_not_prove": ["The child improved."],
         },

@@ -134,6 +134,7 @@ def _fresh_authorization(
     *,
     target_identity: str = TARGET_IDENTITY,
     runtime_modes: list[str] | None = None,
+    probe_classes: list[str] | None = None,
 ) -> dict[str, Any]:
     manifest = _read_json(AUTH_TEMPLATE)
     manifest["expires_at"] = "2099-01-01T00:00:00Z"
@@ -142,6 +143,8 @@ def _fresh_authorization(
     manifest["target"]["immutable_ref"] = immutable_ref
     manifest["allowed_actions"] = ["authorization-preflight", "battle"]
     manifest["runtime_modes"] = runtime_modes or ["battle", "local_docker_fixture"]
+    if probe_classes is not None:
+        manifest["allowed_probe_classes"] = probe_classes
     _write_json(path, manifest)
     return manifest
 
@@ -288,6 +291,7 @@ def _regenerate_adaptive_lineage_proof_root(summary_path: Path) -> Path | None:
         authorization,
         target_identity=_battle_004_target_identity(),
         runtime_modes=["docker"],
+        probe_classes=["path_traversal"],
     )
     canary = _run(
         [
@@ -1623,6 +1627,184 @@ def probe_adaptive_lineage_live_exact_chain(summary_path: Path, *, proof_root: s
     )
 
 
+def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: str | None) -> int:
+    suite = "provider-tau-seeded-lineage-spawn"
+    out_root = Path(proof_root) if proof_root else summary_path.parent / suite
+    if proof_root is None and out_root.exists():
+        shutil.rmtree(out_root)
+    source_root = out_root / "source-run"
+    broadcast_root = out_root / "broadcast"
+    logs_root = out_root / "logs"
+    logs_root.mkdir(parents=True, exist_ok=True)
+
+    if not (source_root / "campaign-receipt.json").is_file():
+        dogpile_root = out_root / "dogpile-seed"
+        dogpile_root.mkdir(parents=True, exist_ok=True)
+        dogpile_seed = dogpile_root / "dogpile-security-packet.json"
+        dogpile = _run_in(
+            [
+                str(REPO_ROOT / "skills" / "dogpile" / "run.sh"),
+                "search",
+                "Zip Slip archive traversal mitigation Python safe extraction",
+                "--no-interactive",
+                "--output-dir",
+                str(dogpile_root),
+                "--security-packet-out",
+                str(dogpile_seed),
+                "--persona",
+                "battle-red",
+                "--rationale",
+                "Battle adaptive-lineage seed needs source-bearing public exploit and mitigation ingredients",
+                "--context",
+                "Design input only. Battle Docker/Judge receipts decide exploit and patch outcomes.",
+            ],
+            cwd=REPO_ROOT,
+            timeout=300,
+        )
+        (logs_root / "dogpile.stdout.txt").write_text(dogpile.stdout, encoding="utf-8")
+        (logs_root / "dogpile.stderr.txt").write_text(dogpile.stderr, encoding="utf-8")
+        if dogpile.returncode != 0 or not dogpile_seed.is_file():
+            raise AssertionError("Dogpile seed generation failed: " + dogpile.stdout + dogpile.stderr)
+
+        memory_seed = out_root / "memory-recall.txt"
+        memory = _run_in(
+            [
+                str(REPO_ROOT / "skills" / "memory" / "run.sh"),
+                "recall",
+                "--q",
+                "Battle adaptive lineage warm pond Dogpile Docker Judge spawn",
+                "--k",
+                "5",
+                "--brief",
+            ],
+            cwd=REPO_ROOT,
+            timeout=180,
+        )
+        memory_seed.write_text(memory.stdout, encoding="utf-8")
+        (logs_root / "memory.stderr.txt").write_text(memory.stderr, encoding="utf-8")
+        if memory.returncode != 0 or "\"found\": true" not in memory.stdout:
+            raise AssertionError("Memory seed recall failed: " + memory.stdout + memory.stderr)
+
+        authorization = out_root / "authorization.json"
+        _fresh_authorization(
+            authorization,
+            target_identity=_battle_004_target_identity(),
+            runtime_modes=["docker"],
+            probe_classes=["path_traversal"],
+        )
+        run_id = f"battle-provider-tau-seeded-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+        timeout_s = float(os.environ.get("BATTLE_ADAPTIVE_LINEAGE_TIMEOUT_S", "300"))
+        canary = _run(
+            [
+                str(RUN_SH),
+                "adaptive-red-blue-lineage-canary",
+                "battle-004",
+                "--out",
+                str(source_root),
+                "--run-id",
+                run_id,
+                "--timeout-s",
+                str(timeout_s),
+                "--authorization-manifest",
+                str(authorization),
+                "--dogpile-seed-receipt",
+                str(dogpile_seed),
+                "--memory-seed-receipt",
+                str(memory_seed),
+            ],
+            timeout=int(timeout_s) + 180,
+        )
+        (logs_root / "canary.stdout.txt").write_text(canary.stdout, encoding="utf-8")
+        (logs_root / "canary.stderr.txt").write_text(canary.stderr, encoding="utf-8")
+        if canary.returncode != 0:
+            raise AssertionError("seeded provider/Tau canary failed: " + canary.stdout + canary.stderr)
+    else:
+        campaign_seed_bundle = _read_json(source_root / "campaign-receipt.json").get("mutation_seed_receipts") or {}
+        seed_paths = {
+            item.get("kind"): Path(str(item.get("path")))
+            for item in campaign_seed_bundle.get("receipts", [])
+            if isinstance(item, dict) and item.get("path")
+        }
+        dogpile_seed = seed_paths.get("dogpile")
+        memory_seed = seed_paths.get("memory")
+        if dogpile_seed is None or memory_seed is None or not dogpile_seed.is_file() or not memory_seed.is_file():
+            raise AssertionError(f"proof_root lacks readable seed receipts: {out_root}")
+
+    renderer = _run(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "render_provider_tau_lineage_report.py"),
+            "--campaign-receipt",
+            str(source_root / "campaign-receipt.json"),
+            "--out",
+            str(broadcast_root),
+            "--dogpile-seed",
+            str(dogpile_seed),
+            "--memory-seed",
+            str(memory_seed),
+        ],
+        timeout=120,
+    )
+    (logs_root / "broadcast.stdout.txt").write_text(renderer.stdout, encoding="utf-8")
+    (logs_root / "broadcast.stderr.txt").write_text(renderer.stderr, encoding="utf-8")
+    if renderer.returncode != 0:
+        raise AssertionError("provider/Tau broadcast renderer failed: " + renderer.stdout + renderer.stderr)
+
+    campaign = _read_json(source_root / "campaign-receipt.json")
+    broadcast = _read_json(broadcast_root / "provider-tau-lineage-broadcast-receipt.json")
+    visibility = _read_json(source_root / "generation-2" / "visibility-validation.json")
+    dogpile_packet = _read_json(Path(dogpile_seed))
+    report_text = (broadcast_root / "PROVIDER_TAU_LINEAGE_REPORT.md").read_text(encoding="utf-8")
+    event_text = (broadcast_root / "provider-tau-event-ledger.jsonl").read_text(encoding="utf-8")
+    ack_values = list((campaign.get("inheritance") or {}).values())
+    seed_cited = bool(ack_values) and all(
+        ack.get("mutation_seed_receipts_cited_in_provider_response") is True
+        for ack in ack_values
+    )
+    checks = [
+        {"name": "campaign_passed", "status": "PASS" if campaign.get("status") == "PASS" else "FAIL", "reason": campaign.get("reason")},
+        {"name": "dogpile_seed_source_bearing", "status": "PASS" if int(dogpile_packet.get("source_bearing_evidence_count") or 0) > 0 else "FAIL", "source_bearing_evidence_count": dogpile_packet.get("source_bearing_evidence_count")},
+        {"name": "memory_seed_readback", "status": "PASS" if memory_seed.is_file() and memory_seed.stat().st_size > 200 else "FAIL", "memory_seed": str(memory_seed)},
+        {"name": "seed_bundle_bound", "status": "PASS" if (campaign.get("mutation_seed_receipts") or {}).get("status") == "PASS" else "FAIL"},
+        {"name": "provider_cited_seed_hashes", "status": "PASS" if seed_cited else "FAIL"},
+        {"name": "tau_public_visibility_passed", "status": "PASS" if visibility.get("status") == "PASS" else "FAIL", "private_input_leaks": visibility.get("private_input_leaks")},
+        {"name": "child_specimens_materialized", "status": "PASS" if "generation-2" in json.dumps(campaign.get("generations", [])) else "FAIL"},
+        {"name": "docker_judge_replay_bound", "status": "PASS" if (campaign.get("artifact_integrity") or {}).get("matched_replay_count") == 2 else "FAIL"},
+        {"name": "broadcast_report_arena_first", "status": "PASS" if report_text.startswith("# Provider/Tau Adaptive-Lineage Battle Broadcast\n\n## Arena prologue") and "## Warm pond lineage" in report_text else "FAIL", "report": str(broadcast_root / "PROVIDER_TAU_LINEAGE_REPORT.md")},
+        {"name": "broadcast_event_ledger_written", "status": "PASS" if "provider_seed_ack" in event_text and "selection_decision" in event_text else "FAIL", "event_ledger": str(broadcast_root / "provider-tau-event-ledger.jsonl")},
+        {"name": "broadcast_receipt_passed", "status": "PASS" if broadcast.get("status") == "PASS" else "FAIL"},
+    ]
+    failed = [item for item in checks if item["status"] != "PASS"]
+    if failed:
+        raise AssertionError(f"provider/Tau seeded lineage checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="dogpile_memory_seeded_tau_scillm_docker_judge_lineage",
+            checks=checks,
+            artifacts={
+                "campaign_receipt": str(source_root / "campaign-receipt.json"),
+                "broadcast_receipt": str(broadcast_root / "provider-tau-lineage-broadcast-receipt.json"),
+                "report": str(broadcast_root / "PROVIDER_TAU_LINEAGE_REPORT.md"),
+                "event_ledger": str(broadcast_root / "provider-tau-event-ledger.jsonl"),
+                "dogpile_seed": str(dogpile_seed),
+                "memory_seed": str(memory_seed),
+            },
+            claims_proves=[
+                "Dogpile and memory readback receipts seeded the Generation 2 provider/Tau mutation prompt by hash.",
+                "Provider responses cited those seed hashes before Battle materialized child Red/Blue specimens.",
+                "Docker/Judge replay and deterministic selection receipts back the broadcast report.",
+            ],
+            claims_does_not_prove=[
+                "external target exploitability",
+                "durable memory write promotion",
+                "overnight production throughput",
+            ],
+        ),
+    )
+
+
 def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
     suite = "current-status-adaptive-lineage-receipt"
     out_root = summary_path.parent / suite
@@ -1824,6 +2006,8 @@ def main() -> int:
             )
         if args.suite == "adaptive-lineage-live-exact-chain":
             return probe_adaptive_lineage_live_exact_chain(args.summary, proof_root=args.proof_root)
+        if args.suite == "provider-tau-seeded-lineage-spawn":
+            return probe_provider_tau_seeded_lineage_spawn(args.summary, proof_root=args.proof_root)
         if args.suite == "current-status-adaptive-lineage-receipt":
             return probe_current_status_adaptive_lineage_receipt(args.summary)
         if args.suite == "adaptive-lineage-same-run-backend-contracts":
