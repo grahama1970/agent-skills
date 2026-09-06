@@ -1,4 +1,8 @@
-"""Create and update architecture diagrams in UX Lab's Excalidraw canvas."""
+"""Architecture hub CLI and legacy gated UX Lab Excalidraw operations.
+
+Accepts source paths and typed hub requests, or legacy pipeline definitions.
+New hub commands publish draft bundles; legacy mutations require authorization.
+"""
 
 import builtins
 import json
@@ -11,8 +15,11 @@ import httpx
 import typer
 import yaml
 from rich.console import Console
+from loguru import logger
+from hub_cli import register
 
-app = typer.Typer(help="Architecture diagram generator for UX Lab Excalidraw canvas")
+app = typer.Typer(help="Explain systems from source and compose specialist diagram tools")
+register(app)
 console = Console()
 
 UX_LAB_URL = "http://localhost:3001"
@@ -59,7 +66,8 @@ def validate_execution_gate(
         return ["missing_execution_gate"]
     try:
         gate = json.loads(gate_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.error("Cannot read execution gate: {}", exc)
         return ["invalid_execution_gate_json"]
     if not isinstance(gate, dict):
         return ["execution_gate_must_be_object"]

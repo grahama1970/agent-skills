@@ -2,22 +2,53 @@
   "version": 2,
   "skill": "create-architecture",
   "trials": 3,
-  "proof_scope": "fixture wiring smoke",
+  "proof_scope": "Real CLI source inventory, routing, four renderer draft deliveries and fail-closed guards",
   "claims": {
-    "proves": "the existing skill entrypoint exits with the expected status",
-    "does_not_prove": "semantic correctness, live service behavior, or full skill readiness"
+    "proves": "Source-bound draft delivery through PHART, create-svg, create-figure and memory-backed GSN AC-1, with artifact readbacks",
+    "does_not_prove": "Agent semantic interpretation, visual acceptance, comprehensive GSN evidence truth, interactive React Flow or Excalidraw service mutation"
   },
   "cases": [
     {
-      "name": "sanity",
+      "name": "source-routing-and-legacy-gate",
       "type": "positive",
-      "command": [
-        "bash",
-        "../sanity.sh"
-      ],
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": ["env", "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/create-architecture/.venv", "uv", "run", "--project", "..", "python", "../scripts/eval_hub.py", "--mode", "smoke"],
       "expected": {
-        "exit_code": 0
+        "exit_code": 0,
+        "stdout_contains": ["\"readback\": true"],
+        "stdout_excludes": ["Traceback"]
       }
+    },
+    {
+      "name": "three-real-renderers",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": ["env", "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/create-architecture/.venv", "uv", "run", "--project", "..", "python", "../scripts/eval_hub.py", "--mode", "live"],
+      "timeout_seconds": 900,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"readback\": true"], "stdout_excludes": ["Traceback"]}
+    },
+    {
+      "name": "memory-backed-gsn-control",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "readback": true,
+      "command": ["env", "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/create-architecture/.venv", "uv", "run", "--project", "..", "python", "../scripts/eval_hub.py", "--mode", "gsn"],
+      "timeout_seconds": 240,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"readback\": true"], "stdout_excludes": ["Traceback"]}
+    },
+    {
+      "name": "stale-lossy-cycle-and-handoff-guards",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "readback": true,
+      "command": ["env", "UV_PROJECT_ENVIRONMENT=/mnt/storage12tb/skills/create-architecture/.venv", "uv", "run", "--project", "..", "python", "../scripts/eval_hub.py", "--mode", "adversarial"],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"readback\": true"], "stdout_excludes": ["Traceback"]}
     }
   ]
 }
