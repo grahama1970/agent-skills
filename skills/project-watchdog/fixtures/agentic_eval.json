@@ -381,12 +381,14 @@
         "pytest",
         "../tests/test_project_watchdog.py::test_repair_execution_handlers_keep_reviewer_remote",
         "../tests/test_project_watchdog.py::test_remote_reviewer_prompt_defers_local_readback_to_watchdog",
+        "../tests/test_project_watchdog.py::test_required_proof_artifacts_ignore_out_dirs_and_strip_punctuation",
+        "../tests/test_project_watchdog.py::test_proof_artifact_ignores_provider_status_noise_and_domain_enums",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "4 passed"
         ]
       }
     },

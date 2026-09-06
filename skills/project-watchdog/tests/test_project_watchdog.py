@@ -733,6 +733,27 @@ def test_only_the_proof_section_names_required_artifacts() -> None:
     assert handlers.required_proof_artifacts("## Target\n\nskills/x\n") == []
 
 
+def test_required_proof_artifacts_ignore_out_dirs_and_strip_punctuation() -> None:
+    body = (
+        "## Required proof\n\n"
+        "Run eval --output /tmp/proof-gate.json; then run live --out /tmp/live-run "
+        "and read /tmp/live-run/campaign-receipt.json.\n"
+    )
+    assert handlers.required_proof_artifacts(body) == ["/tmp/proof-gate.json"]
+
+
+def test_proof_artifact_ignores_provider_status_noise_and_domain_enums(tmp_path) -> None:
+    artifact = tmp_path / "proof.json"
+    artifact.write_text(json.dumps({
+        "status": "PASS",
+        "immutable_goal_status": "MET",
+        "seed_receipts": [{"provider_statuses": [{"status": "error"}, {"status": "skipped"}]}],
+        "variants": [{"result": "PARENT_RETAINED"}],
+    }), encoding="utf-8")
+    record = handlers.inspect_proof_artifact(str(artifact), not_before=0)
+    assert record["passed"] is True
+
+
 def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
     """#1499 had a July receipt on disk; accepting it would close on a stale pass."""
     artifact = tmp_path / "proof.json"

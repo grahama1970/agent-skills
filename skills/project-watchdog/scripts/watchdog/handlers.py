@@ -708,7 +708,7 @@ REPAIR_REFUSAL_TOKENS = frozenset({"FAIL", "NEEDS_ATTENTION", "BLOCKED"})
 #: Values a machine-readable proof artifact may carry that mean "this run
 #: finished and passed".
 PROOF_PASS_VALUES = frozenset(
-    {"PASS", "PASSED", "READY", "OK", "COMPLETED", "SUCCESS", "GREEN", "TRUE"}
+    {"PASS", "PASSED", "READY", "OK", "COMPLETED", "SUCCESS", "GREEN", "TRUE", "MET"}
 )
 
 #: Values that mean the proof did not finish, or finished badly. ``RUNNING``
@@ -726,7 +726,7 @@ PROOF_FAIL_VALUES = frozenset(
 #: per-case ``status: FAIL`` inside an otherwise READY report still fails.
 PROOF_RESULT_KEYS = frozenset(
     {"readiness", "status", "verdict", "result", "outcome", "overall",
-     "overall_status", "state", "ok", "passed"}
+     "overall_status", "state", "ok", "passed", "immutable_goal_status"}
 )
 
 #: How far into a proof artifact to read result keys. Deep enough for a
@@ -769,6 +769,14 @@ def seat_response_text(ask_run_dir: Path, handler: str, occurrence: int = 1) -> 
         return None
 
 
+def _clean_proof_path(path: str) -> str:
+    return path.strip().strip("`.,;:)]}")
+
+
+def _is_machine_result_path(path: str) -> bool:
+    return Path(path).suffix.lower() == ".json"
+
+
 def required_proof_artifacts(issue_body: str) -> list[str]:
     """The artifact paths the ticket's own proof section names.
 
@@ -789,10 +797,14 @@ def required_proof_artifacts(issue_body: str) -> list[str]:
     text = "\n".join(section)
     if not text.strip():
         return []
-    outputs = [m.group(1) for m in _OUTPUT_FLAG.finditer(text)]
+    outputs = [_clean_proof_path(m.group(1)) for m in _OUTPUT_FLAG.finditer(text)]
+    outputs = [p for p in outputs if _is_machine_result_path(p)]
     if outputs:
         return sorted(dict.fromkeys(outputs))
-    return sorted(dict.fromkeys(m.group(1) for m in _PROOF_PATH.finditer(text)))
+    return sorted(dict.fromkeys(
+        p for p in (_clean_proof_path(m.group(1)) for m in _PROOF_PATH.finditer(text))
+        if _is_machine_result_path(p)
+    ))
 
 
 def _result_values(payload: Any, depth: int = 0) -> list[str]:
@@ -802,6 +814,8 @@ def _result_values(payload: Any, depth: int = 0) -> list[str]:
     found: list[str] = []
     if isinstance(payload, dict):
         for key, value in payload.items():
+            if str(key).lower() == "provider_statuses":
+                continue
             if str(key).lower() in {"failed", "failures", "errored", "errors", "blocked", "skipped", "not_tested", "not_run"}:
                 if (isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0) or (isinstance(value, list) and value):
                     found.append("FAIL")
@@ -867,7 +881,8 @@ def inspect_proof_artifact(raw_path: str, *, not_before: float) -> dict[str, Any
         record["reason"] = f"reports {', '.join(failing)}"
         return record
     unknown = sorted(set(values) - PROOF_PASS_VALUES - PROOF_FAIL_VALUES)
-    if unknown:
+    record["unknown_values"] = unknown
+    if unknown and not passing:
         record["reason"] = "unrecognized result vocabulary: " + ", ".join(unknown)
         return record
     if not passing:
@@ -960,8 +975,10 @@ def evaluate_repair_proof(
             reasons.append(f"reviewer seat {handler} declared {verdict}, not PASS")
 
     review_text = seat_response_text(ask_run_dir, reviewer, 2 if reviewer == creator else 1) or ""
-    declared = [line.split(":", 1)[1].strip() for line in review_text.splitlines()
+    declared = [_clean_proof_path(line.split(":", 1)[1]) for line in review_text.splitlines()
                 if line.startswith("PROOF_ARTIFACT:")]
+    declared = [p for p in declared if _is_machine_result_path(p)
+                and Path(p).name != "authored-commit.json"]
     # Ticket output operands remain mandatory; fixture/input JSON paths are not output proof.
     section = []
     collecting = False
