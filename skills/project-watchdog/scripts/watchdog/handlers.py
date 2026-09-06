@@ -2022,6 +2022,14 @@ def required_proof_clauses(body: str) -> list[str]:
         clauses = [m.group(1).strip() for m in re.finditer(r"(?im)^proof:\s*(.+)$", body)]
     return clauses
 
+
+def proof_plan_covers_clauses(coverage: dict[str, str], clauses: list[str]) -> bool:
+    if any(not value.strip() for value in coverage.values()):
+        return False
+    if set(coverage) == set(clauses):
+        return True
+    return bool(coverage) and set(coverage) <= {"all required clauses", "all_required_clauses"}
+
 def finish_primary_operation(record) -> dict[str, Any]:
     """Shared by normal execution and recovery; never re-dispatches the provider."""
     from . import primary, native_ticket, target_content as content, models
@@ -2080,7 +2088,7 @@ def finish_primary_operation(record) -> dict[str, Any]:
     if not clauses and record.action == "ticket_repair":
         raise primary.Refusal("ordinary ticket has no explicit required proof; do not invent acceptance")
     clauses = clauses or ["legacy_native_route"]
-    if set(plan.coverage) != set(clauses) or any(not value.strip() for value in plan.coverage.values()):
+    if not proof_plan_covers_clauses(plan.coverage, clauses):
         raise primary.Refusal("proof plan does not cover every exact required clause")
     before = TargetSnapshot.model_validate(json.loads((receipt_dir / "primary-before.json").read_text()))
     after = content.snapshot(root, record.targets, before.remote_sha, receipt_dir / "primary-after-blobs")

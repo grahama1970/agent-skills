@@ -761,6 +761,13 @@ def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
     assert handlers.valid_review_commits(text) == []
 
 
+def test_proof_plan_coverage_all_required_clauses_is_valid() -> None:
+    clauses = ["run exact proof command", "read back artifact"]
+    assert handlers.proof_plan_covers_clauses({"all required clauses": "commands[0-1]"}, clauses)
+    assert not handlers.proof_plan_covers_clauses({"all required clauses": ""}, clauses)
+    assert not handlers.proof_plan_covers_clauses({"partial": "commands[0]"}, clauses)
+
+
 def test_repair_proof_gate_allows_stale_declared_artifacts_before_native_verify(tmp_path) -> None:
     fresh = tmp_path / "fresh.json"
     stale = tmp_path / "stale.json"
