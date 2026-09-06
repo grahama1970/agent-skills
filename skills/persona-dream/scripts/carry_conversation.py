@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from pydantic_step_gate import validate_http_json
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ROOT.parents[1]
 MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
@@ -165,7 +166,7 @@ def carry(docs: list[dict[str, Any]], persona: str, date: str) -> tuple[list[dic
                         "AND d.persona_id == @p RETURN d._key"),
                 "bind_vars": {"@col": COLLECTION, "day": date, "p": persona},
             })
-            body = resp.json() or {}
+            body = validate_http_json("memory_query", resp.json() or {})
             for raw in (body.get("documents") or body.get("result") or []):
                 key = raw if isinstance(raw, str) else str(raw.get("_key", ""))
                 if key in keys:

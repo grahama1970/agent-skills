@@ -2,6 +2,8 @@
 """Persist and exactly reread Persona Dream audio steps 37 and 38."""
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -31,6 +33,7 @@ def read_json(path: Path) -> Any:
 
 
 def response_documents(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+    validate_http_json("memory_store", dict(payload))
     value = payload.get("documents") or payload.get("items") or []
     return [dict(item) for item in value if isinstance(item, Mapping)]
 

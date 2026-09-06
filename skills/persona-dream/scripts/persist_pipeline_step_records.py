@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 
+from pydantic_step_gate import validate_http_json
 SERVER_OWNED_FIELDS = (
     "semantic_sync_state",
     "qdrant_collection",
@@ -26,6 +27,7 @@ SERVER_OWNED_FIELDS = (
 
 
 def response_documents(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    validate_http_json("memory_store", payload)
     return payload.get("documents") or payload.get("items") or []
 
 

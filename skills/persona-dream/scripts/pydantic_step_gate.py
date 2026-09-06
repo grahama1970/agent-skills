@@ -178,6 +178,66 @@ def validate_payload_or_raise(schema: dict[str, Any], value: Any) -> None:
         raise ValueError("; ".join(validate_payload_messages(schema, value)))
 
 
+class MemoryQueryResponse(BaseModel):
+    """POST /query response: documents or result list."""
+
+    model_config = ConfigDict(extra="allow")
+    documents: list[Any] | None = None
+    result: list[Any] | None = None
+
+
+class MemoryRecallResponse(BaseModel):
+    """POST /recall response: items/results list."""
+
+    model_config = ConfigDict(extra="allow")
+    items: list[Any] | None = None
+    results: list[Any] | None = None
+
+
+class MemoryListResponse(BaseModel):
+    """POST /list response: total or count."""
+
+    model_config = ConfigDict(extra="allow")
+    total: int | None = None
+    count: int | None = None
+
+
+class MemoryStoreResponse(BaseModel):
+    """POST /store response: documents/items written."""
+
+    model_config = ConfigDict(extra="allow")
+    documents: list[Any] | None = None
+    items: list[Any] | None = None
+    stored: bool | None = None
+
+
+HTTP_RESPONSE_MODELS: dict[str, type[BaseModel]] = {
+    "memory_query": MemoryQueryResponse,
+    "memory_recall": MemoryRecallResponse,
+    "memory_list": MemoryListResponse,
+    "memory_store": MemoryStoreResponse,
+}
+
+
+def validate_http_json(kind: str, payload: Any) -> dict[str, Any]:
+    """Pydantic-first gate for HTTP JSON responses at model/memory call seams.
+
+    Returns the payload dict on pass; raises ValueError carrying pydantic
+    errors() data on failure. A response that is not a JSON object fails.
+    """
+    model = HTTP_RESPONSE_MODELS.get(kind)
+    if model is None:
+        raise ValueError(f"unknown http response kind: {kind}")
+    try:
+        model.model_validate(payload)
+    except ValidationError as exc:
+        errors = exc.errors(include_url=False, include_input=False)
+        raise ValueError(f"http_response_invalid kind={kind}: {errors}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"http_response_invalid kind={kind}: JSON object required")
+    return payload
+
+
 def pydantic_error_messages(schema: dict[str, Any], value: Any) -> list[str]:
     """Pure-pydantic error messages (no jsonschema); [] means the model accepts."""
     model = _resolve_model(schema, value)

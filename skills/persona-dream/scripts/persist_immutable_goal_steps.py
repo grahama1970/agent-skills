@@ -13,6 +13,7 @@ from typing import Any
 import httpx
 
 
+from pydantic_step_gate import validate_http_json
 RUN_ID = "pipeline-complete"
 REVISION_ID = "rev_upstream_bf3b05d47fb8"
 REQUEST_KEY = "ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f"
@@ -249,6 +250,7 @@ def make_documents(revision_root: Path, observed_at: str) -> list[dict[str, Any]
 
 
 def response_documents(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    validate_http_json("memory_store", payload)
     return payload.get("documents") or payload.get("items") or []
 
 

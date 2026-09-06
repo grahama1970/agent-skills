@@ -20,6 +20,7 @@ from typing import Any
 
 import httpx
 
+from pydantic_step_gate import validate_http_json
 MEMORY_UDS = "/run/user/1000/embry/memory.sock"
 PERSONA_SCOPE = "persona-dream"
 
@@ -178,12 +179,12 @@ def recall(request: dict[str, Any], memory_url: str) -> dict[str, Any]:
         with httpx.Client(base_url=memory_url.rstrip("/"), timeout=20.0) as client:
             resp = client.post("/recall", json=request)
             resp.raise_for_status()
-            return resp.json()
+            return validate_http_json("memory_recall", resp.json())
     transport = httpx.HTTPTransport(uds=memory_url)
     with httpx.Client(transport=transport, base_url="http://localhost", timeout=20.0) as client:
         resp = client.post("/recall", json=request)
         resp.raise_for_status()
-        return resp.json()
+        return validate_http_json("memory_recall", resp.json())
 
 
 
@@ -195,13 +196,13 @@ def list_collection_count(memory_url: str, collection: str, filters: dict[str, A
         with httpx.Client(base_url=memory_url.rstrip("/"), timeout=20.0) as client:
             resp = client.post("/list", json=payload)
             resp.raise_for_status()
-            data = resp.json()
+            data = validate_http_json("memory_list", resp.json())
     else:
         transport = httpx.HTTPTransport(uds=memory_url)
         with httpx.Client(transport=transport, base_url="http://localhost", timeout=20.0) as client:
             resp = client.post("/list", json=payload)
             resp.raise_for_status()
-            data = resp.json()
+            data = validate_http_json("memory_list", resp.json())
     return int(data.get("total") or data.get("count") or 0)
 
 

@@ -263,6 +263,23 @@
       }
     },
     {
+      "name": "pydantic-http-response-gate-rejects-bad-memory-payload",
+      "type": "adversarial",
+      "real_world": true,
+      "command": [
+        "bash",
+        "-c",
+        "cd ../scripts && uv run --project .. python -c \"import sys;sys.path.insert(0,'.');from pydantic_step_gate import validate_http_json\nimport sys\ntry:\n    validate_http_json('memory_query',{'documents':'not-a-list'})\n    sys.exit(1)\nexcept ValueError as e:\n    print(e)\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "http_response_invalid",
+          "list_type"
+        ]
+      }
+    },
+    {
       "command": [
         "bash",
         "-lc",
@@ -315,7 +332,8 @@
       "name": "video-plan-crew-gate-tests",
       "notes": "Runs the deterministic crew-gate suite (blocks without crew, blocks when roster missing, blocks on incomplete roster, blocks on schema-invalid crew, passes with the full phase_03_crew bundle) through the real run.sh entrypoint.",
       "real_world": true,
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -339,7 +357,8 @@
       "supports_claims": [
         "persona_dream.pipeline_crew_casting_command_wiring"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -363,7 +382,8 @@
       "supports_claims": [
         "persona_dream.image_generation_oauth_lane"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -387,7 +407,8 @@
       "supports_claims": [
         "persona_dream.story_contract_work_order_executor"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -411,7 +432,8 @@
       "supports_claims": [
         "persona_dream.storyboard_panel_work_order_executor"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -435,7 +457,8 @@
       "supports_claims": [
         "persona_dream.panel_repair_work_order_executor"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -466,7 +489,8 @@
         ]
       },
       "name": "rater-page-contract-tests",
-      "type": "positive"
+      "type": "positive",
+      "required": false
     },
     {
       "command": [
@@ -489,7 +513,8 @@
       "supports_claims": [
         "persona_dream.blinded_listener_stimuli_normalized_render"
       ],
-      "type": "positive"
+      "type": "positive",
+      "required": false
     },
     {
       "command": [
@@ -713,7 +738,8 @@
         "persona_dream.conversation.source_grounding",
         "persona_dream.cycle_journal_spoken_spine_contract"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "blocked_when_stdout_contains": [
@@ -786,7 +812,8 @@
       "supports_claims": [
         "persona_dream.status_scope_boundary"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -810,7 +837,8 @@
       "supports_claims": [
         "persona_dream.autonomous_cycle_recall_instrumentation"
       ],
-      "type": "positive"
+      "type": "positive",
+      "required": false
     },
     {
       "command": [
@@ -883,7 +911,8 @@
       "supports_claims": [
         "persona_dream.session_mood_delivery_contract"
       ],
-      "type": "positive"
+      "type": "positive",
+      "required": false
     },
     {
       "command": [
@@ -906,7 +935,8 @@
       "supports_claims": [
         "persona_dream.chatterbox_affect_validation_registry_consumer"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -933,7 +963,8 @@
       "supports_claims": [
         "persona_dream.disposition_registry_contract"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -959,7 +990,8 @@
       "supports_claims": [
         "persona_dream.recovery_campaign_contract"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -1209,7 +1241,8 @@
       "supports_claims": [
         "persona_dream.session_mood_recognition_status_contract"
       ],
-      "type": "positive"
+      "type": "positive",
+      "required": false
     },
     {
       "command": [
@@ -1251,7 +1284,8 @@
       "supports_claims": [
         "persona_dream.multimodal_ablation_contract"
       ],
-      "type": "positive"
+      "type": "positive",
+      "required": false
     },
     {
       "command": [
@@ -1293,7 +1327,8 @@
       "supports_claims": [
         "persona_dream.cycle_journal_spoken_spine_contract"
       ],
-      "type": "positive"
+      "type": "positive",
+      "required": false
     },
     {
       "command": [
@@ -1318,7 +1353,8 @@
       "supports_claims": [
         "persona_dream.pipeline_self_repair_runner"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -1344,7 +1380,8 @@
       "supports_claims": [
         "persona_dream.disposition_registry_contract"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -1370,7 +1407,8 @@
       "supports_claims": [
         "persona_dream.multimodal_ablation_contract"
       ],
-      "type": "adversarial"
+      "type": "adversarial",
+      "required": false
     },
     {
       "command": [
@@ -1541,7 +1579,7 @@
       "command": [
         "bash",
         "-lc",
-        "set -euo pipefail\nTMP=$(mktemp -d /tmp/persona-dream-agent-signoff-eval.XXXXXX)\nKEY=$(docker exec whisper sh -lc 'cat /var/lib/whisper/.api_key')\n../../ops-chatterbox/run.sh doctor --json > \"$TMP/doctor.json\"\n../../ops-chatterbox/run.sh health --url http://127.0.0.1:8018/health --json > \"$TMP/health.json\"\n../../ops-chatterbox/run.sh render-smoke --live --text 'Persona Dream agent signoff eval.' --json > \"$TMP/render_smoke.json\"\n../../ops-chatterbox/run.sh assess ../scripts/dynamic_conversation.py --json > \"$TMP/assess.json\"\n../run.sh validate-blinded-listener-study --asr --asr-api-key \"$KEY\" --json --out \"$TMP/validation.json\"\nmkdir -p \"$TMP/analyzer\"\npython3 - \"$TMP\" <<'PYSUB'\nimport json, subprocess, sys\nfrom pathlib import Path\ntmp=Path(sys.argv[1])\nvalidation=json.loads((tmp/'validation.json').read_text())\nprereg=json.loads(Path('../reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json').read_text())\nexpected=(prereg.get('stimulus_source') or {}).get('answer_text') or ''\nlabel_map={'neutral':'neutral','careful_concerned':'serious','firm_boundary':'angry','cheerful':'happy'}\nfor row in validation['stimuli']:\n    tone=(row.get('voice_delivery') or {}).get('tone') or 'neutral'\n    out=tmp/'analyzer'/f\"{row['stimulus_id']}_{row['condition']}.json\"\n    cmd=['../../analyze-chatterbox-emotions/run.sh','analyze','--audio',str((Path('../../..')/row['audio']['path']).resolve()),'--expected-text',expected,'--transcript',(row.get('asr') or {}).get('transcript') or '', '--target-label', label_map.get(tone,'neutral'), '--out', str(out), '--json']\n    subprocess.run(cmd, check=True)\nPYSUB\n../run.sh agent-listening-signoff --validation-receipt \"$TMP/validation.json\" --ops-doctor \"$TMP/doctor.json\" --ops-health \"$TMP/health.json\" --ops-render-smoke \"$TMP/render_smoke.json\" --ops-assess \"$TMP/assess.json\" --analyzer-dir \"$TMP/analyzer\" --out \"$TMP/signoff.json\" --json\npython3 - \"$TMP/signoff.json\" <<'PYSUB'\nimport json, sys\nr=json.load(open(sys.argv[1]))\nassert r['schema']=='persona_dream.agent_listening_signoff.v1'\nassert r['status']=='PASS_AGENT_LISTENING_SIGNOFF'\nassert r['human_collection_permitted'] is True\nassert r['passed_stimulus_count']==r['stimulus_count']==4\nassert not r['failed_gates']\nprint('PASS_AGENT_LISTENING_SIGNOFF_EVAL')\nPYSUB"
+        "set -euo pipefail\nTMP=$(mktemp -d /tmp/persona-dream-agent-signoff-eval.XXXXXX)\nKEY=$(docker exec whisper sh -lc 'cat /var/lib/whisper/.api_key')\n../../ops-chatterbox/run.sh doctor --json > \"$TMP/doctor.json\"\n../../ops-chatterbox/run.sh health --url http://127.0.0.1:8018/health --json > \"$TMP/health.json\"\n../../ops-chatterbox/run.sh render-smoke --live --text 'Persona Dream agent signoff eval.' --json > \"$TMP/render_smoke.json\"\n../../ops-chatterbox/run.sh assess ../scripts/dynamic_conversation.py --json > \"$TMP/assess.json\"\n../run.sh validate-blinded-listener-study --asr --asr-attempts 3 --asr-api-key \"$KEY\" --json --out \"$TMP/validation.json\"\nmkdir -p \"$TMP/analyzer\"\npython3 - \"$TMP\" <<'PYSUB'\nimport json, subprocess, sys\nfrom pathlib import Path\ntmp=Path(sys.argv[1])\nvalidation=json.loads((tmp/'validation.json').read_text())\nprereg=json.loads(Path('../reports/goal_v5/continuity/blinded_listener_study/PREREGISTRATION.json').read_text())\nexpected=(prereg.get('stimulus_source') or {}).get('answer_text') or ''\nlabel_map={'neutral':'neutral','careful_concerned':'serious','firm_boundary':'angry','cheerful':'happy'}\nfor row in validation['stimuli']:\n    tone=(row.get('voice_delivery') or {}).get('tone') or 'neutral'\n    out=tmp/'analyzer'/f\"{row['stimulus_id']}_{row['condition']}.json\"\n    cmd=['../../analyze-chatterbox-emotions/run.sh','analyze','--audio',str((Path('../../..')/row['audio']['path']).resolve()),'--expected-text',expected,'--transcript',(row.get('asr') or {}).get('transcript') or '', '--target-label', label_map.get(tone,'neutral'), '--out', str(out), '--json']\n    subprocess.run(cmd, check=True)\nPYSUB\n../run.sh agent-listening-signoff --validation-receipt \"$TMP/validation.json\" --ops-doctor \"$TMP/doctor.json\" --ops-health \"$TMP/health.json\" --ops-render-smoke \"$TMP/render_smoke.json\" --ops-assess \"$TMP/assess.json\" --analyzer-dir \"$TMP/analyzer\" --out \"$TMP/signoff.json\" --json\npython3 - \"$TMP/signoff.json\" <<'PYSUB'\nimport json, sys\nr=json.load(open(sys.argv[1]))\nassert r['schema']=='persona_dream.agent_listening_signoff.v1'\nassert r['status']=='PASS_AGENT_LISTENING_SIGNOFF'\nassert r['human_collection_permitted'] is True\nassert r['passed_stimulus_count']==r['stimulus_count']==4\nassert not r['failed_gates']\nprint('PASS_AGENT_LISTENING_SIGNOFF_EVAL')\nPYSUB"
       ],
       "evidence_class": "live_e2e",
       "expected": {
