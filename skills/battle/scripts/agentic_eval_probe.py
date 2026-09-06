@@ -1732,7 +1732,11 @@ def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: s
 
     renderer = _run(
         [
-            sys.executable,
+            "uv",
+            "run",
+            "--project",
+            str(BATTLE_DIR),
+            "python",
             str(BATTLE_DIR / "scripts" / "render_provider_tau_lineage_report.py"),
             "--campaign-receipt",
             str(source_root / "campaign-receipt.json"),
@@ -1752,6 +1756,10 @@ def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: s
 
     campaign = _read_json(source_root / "campaign-receipt.json")
     broadcast = _read_json(broadcast_root / "provider-tau-lineage-broadcast-receipt.json")
+    arena_receipt = _read_json(Path(broadcast["arena_receipt"]))
+    red_activity = _read_json(Path(broadcast["red_team_activity_receipt"]))
+    blue_activity = _read_json(Path(broadcast["blue_team_activity_receipt"]))
+    commentary_receipt = _read_json(Path(broadcast["sports_play_by_play_commentary_receipt"]))
     visibility = _read_json(source_root / "generation-2" / "visibility-validation.json")
     dogpile_packet = _read_json(Path(dogpile_seed))
     report_text = (broadcast_root / "PROVIDER_TAU_LINEAGE_REPORT.md").read_text(encoding="utf-8")
@@ -1772,6 +1780,9 @@ def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: s
         {"name": "docker_judge_replay_bound", "status": "PASS" if (campaign.get("artifact_integrity") or {}).get("matched_replay_count") == 2 else "FAIL"},
         {"name": "broadcast_report_arena_first", "status": "PASS" if report_text.startswith("# Provider/Tau Adaptive-Lineage Battle Broadcast\n\n## Arena prologue") and "## Warm pond lineage" in report_text else "FAIL", "report": str(broadcast_root / "PROVIDER_TAU_LINEAGE_REPORT.md")},
         {"name": "broadcast_event_ledger_written", "status": "PASS" if "provider_seed_ack" in event_text and "selection_decision" in event_text else "FAIL", "event_ledger": str(broadcast_root / "provider-tau-event-ledger.jsonl")},
+        {"name": "pydantic_arena_receipt", "status": "PASS" if arena_receipt.get("schema") == "battle.arena_receipt.v1" and arena_receipt.get("status") == "PASS" else "FAIL", "receipt": broadcast.get("arena_receipt")},
+        {"name": "pydantic_red_blue_activity_receipts", "status": "PASS" if red_activity.get("schema") == "battle.team_activity_receipt.v1" and red_activity.get("team") == "red" and blue_activity.get("schema") == "battle.team_activity_receipt.v1" and blue_activity.get("team") == "blue" else "FAIL", "red": broadcast.get("red_team_activity_receipt"), "blue": broadcast.get("blue_team_activity_receipt")},
+        {"name": "sports_play_by_play_json_event_logger", "status": "PASS" if commentary_receipt.get("schema") == "battle.sports_play_by_play_commentary_receipt.v1" and len(commentary_receipt.get("commentary_lines") or []) >= 3 and all(line.get("source_receipts") for line in commentary_receipt.get("commentary_lines") or []) else "FAIL", "receipt": broadcast.get("sports_play_by_play_commentary_receipt")},
         {"name": "broadcast_receipt_passed", "status": "PASS" if broadcast.get("status") == "PASS" else "FAIL"},
     ]
     failed = [item for item in checks if item["status"] != "PASS"]
@@ -1786,6 +1797,10 @@ def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: s
             artifacts={
                 "campaign_receipt": str(source_root / "campaign-receipt.json"),
                 "broadcast_receipt": str(broadcast_root / "provider-tau-lineage-broadcast-receipt.json"),
+                "arena_receipt": broadcast.get("arena_receipt"),
+                "red_team_activity_receipt": broadcast.get("red_team_activity_receipt"),
+                "blue_team_activity_receipt": broadcast.get("blue_team_activity_receipt"),
+                "sports_play_by_play_commentary_receipt": broadcast.get("sports_play_by_play_commentary_receipt"),
                 "report": str(broadcast_root / "PROVIDER_TAU_LINEAGE_REPORT.md"),
                 "event_ledger": str(broadcast_root / "provider-tau-event-ledger.jsonl"),
                 "dogpile_seed": str(dogpile_seed),
@@ -1795,6 +1810,7 @@ def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: s
                 "Dogpile and memory readback receipts seeded the Generation 2 provider/Tau mutation prompt by hash.",
                 "Provider responses cited those seed hashes before Battle materialized child Red/Blue specimens.",
                 "Docker/Judge replay and deterministic selection receipts back the broadcast report.",
+                "Arena, Red activity, Blue activity, and sports play-by-play are Pydantic-validated JSON receipts.",
             ],
             claims_does_not_prove=[
                 "external target exploitability",
@@ -1931,6 +1947,7 @@ def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
         "surf_screenshot",
         "provider_tau_seeded_lineage",
         "memory_promotion_live",
+        "pydantic_event_commentary",
     }
     missing_primary = sorted(key for key in required_primary if primary_proof.get(key) is not True)
     if status.get("immutable_goal_status") != "MET" or missing_primary:
@@ -1940,6 +1957,9 @@ def probe_current_status_adaptive_lineage_receipt(summary_path: Path) -> int:
         claim = proven.get(claim_id) or {}
         if claim.get("status") != "PASS" or (claim.get("evidence") or {}).get("checks_ok") is not True:
             raise AssertionError(f"current-status claim drifted: {claim_id}: {claim}")
+    provider_checks = (proven.get("provider_tau_seeded_lineage_spawn") or {}).get("evidence", {}).get("checks") or {}
+    if provider_checks.get("pydantic_arena_team_commentary_receipts") is not True:
+        raise AssertionError("current-status pydantic event commentary proof missing")
     return _emit(
         summary_path,
         _summary(

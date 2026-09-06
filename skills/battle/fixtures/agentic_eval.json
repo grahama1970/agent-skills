@@ -6,7 +6,7 @@
   "live": true,
   "proof_scope": "Battle feature regression coverage through existing Battle entrypoints, local Docker proof receipts, local transport receipts, receipt-backed Pixi replay browser proof, focused contract suites, an explicit fail-closed adaptive-lineage exact-chain receipt gate, and explicit uncovered seams for Battle features that still need agentic evals",
   "claims": {
-    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
+    "proves": "Battle's authorization gate, isolated local Docker reactive Judge round, Red/Judge/Blue visibility boundary, scorekeeper authority, adaptive-lineage contract guards, durable adaptive-lineage exact-chain proof, browser-visible receipt-backed Pixi replay, immutable-goal close-gate readiness, Pydantic arena/Red/Blue/play-by-play event receipts, memory-lineage contract guards, same-run transport, pause/resume transport safety, and staging fail-closed behavior are covered by agentic eval seams with artifact readback",
     "does_not_prove": "arbitrary target exploitability, a real 1000-round overnight campaign, QEMU boot execution, production WebSocket TLS/auth/fanout against a real public endpoint, or full visual design acceptance"
   },
   "what_was_exercised": "uv-run Battle probe script invocations that call Battle run.sh commands, local Docker proof generation, focused pytest contract suites, independent JSON receipt readback, and a built spectator bundle served over local HTTP for Playwright Pixi replay proof",
@@ -70,7 +70,7 @@
     },
     {
       "id": "battle.adaptive_lineage.provider_tau_seeded_spawn",
-      "description": "Dogpile and memory readback receipts seed the Generation 2 provider/Tau mutation prompt; provider responses cite those seed hashes before child specimens are materialized, Docker/Judge replayed, selected, and rendered into an arena-first broadcast report.",
+      "description": "Dogpile and memory readback receipts seed the Generation 2 provider/Tau mutation prompt; provider responses cite those seed hashes before child specimens are materialized, Docker/Judge replayed, selected, and rendered into Pydantic-validated arena, Red activity, Blue activity, and sports play-by-play commentary receipts.",
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true
@@ -86,7 +86,7 @@
     },
     {
       "id": "battle.current_status.adaptive_lineage_receipt",
-      "description": "CURRENT_STATUS.json binds the newest durable adaptive-lineage qualification plus retained Pixi/browser proof and fails closed when the immutable primary proof is missing or stale",
+      "description": "CURRENT_STATUS.json binds the newest durable adaptive-lineage qualification plus retained Pixi/browser proof and fails closed when the immutable primary proof or Pydantic event-commentary receipts are missing or stale",
       "criticality": "critical",
       "evidence_required": {
         "adversarial_live_e2e": true

@@ -104,7 +104,12 @@ Produce and keep reproducible **one** adaptive Battle in which:
 2. the adaptive decision is derived from same-run Battle evidence, not static UI
    fixtures, self-certification, or post-hoc narrative; and
 3. the spectator UI at `#battle`/PixiJS replays that same receipt set with an
-   honest live/recorded proof badge and no invented lineage truth.
+   honest live/recorded proof badge and no invented lineage truth; and
+4. the arena setup, Red-team activity, Blue-team activity, and sports-style
+   play-by-play commentary are emitted as Pydantic-validated JSON receipts.
+   The commentary is an event log in the receipt schema: every line cites the
+   arena receipt or exact Red/Blue activity indices it narrates, and Markdown
+   reports are downstream renderings of that JSON, not a separate authority.
 
 The UI must reflect the backend. A stale deployment that does not contain the
 current adaptive-lineage code is a goal failure, not an acceptable "it works in
@@ -112,7 +117,8 @@ tests" state.
 
 PixiJS is acceptance evidence for receipt inspectability, not the core closure
 criterion. The immutable goal remains unmet if backend Red/Blue/Judge/
-scorekeeper/memory lineage is not proven, even when the replay looks good.
+scorekeeper/memory lineage is not proven, or if the arena/team/commentary JSON
+receipts are missing or unvalidated, even when the replay looks good.
 
 ## Backend Acceptance (the proof)
 
@@ -227,15 +233,20 @@ four specimens distinct.
 
 ## Primary Proof
 
-Three artifacts, all required, none optional:
+Four artifacts, all required, none optional:
 
 1. **Backend receipt** — a fresh passing
    `arena-adaptive-lineage-qualification battle-004` run (paths + the 11-check
    summary), independently recomputable.
-2. **Deterministic renderer proof** — spectator lineage suite green
+2. **Pydantic event receipts** — `battle.arena_receipt.v1`, Red and Blue
+   `battle.team_activity_receipt.v1`, and
+   `battle.sports_play_by_play_commentary_receipt.v1` all validate and bind to
+   the same campaign hash. Commentary lines cite arena/team receipt paths and
+   Red/Blue activity indices.
+3. **Deterministic renderer proof** — spectator lineage suite green
    (`npx vitest run src/lineage/ src/lib/battle-adaptive-lineage.test.ts`) and
    the pixi sprite-mapping test green.
-3. **Live-browser screenshot** — `#battle` in a real browser showing the four
+4. **Live-browser screenshot** — `#battle` in a real browser showing the four
    distinct sprites, the `G0 -> {G1-A, G1-B} -> G2` panel, the selection row, and
    the `LIVE` badge when the loaded fixture is `data_source:"live"`. This is the
    artifact that closes the "looks unfinished" gap; deterministic tests alone do

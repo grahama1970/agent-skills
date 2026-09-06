@@ -251,6 +251,28 @@ def _provider_tau_seeded_evidence(root: Path | None) -> dict[str, Any]:
     broadcast = _read_json(broadcast_path)
     visibility = _read_json(visibility_path)
     ack_values = list((campaign.get("inheritance") or {}).values())
+    arena_path = Path(str(broadcast.get("arena_receipt") or ""))
+    red_path = Path(str(broadcast.get("red_team_activity_receipt") or ""))
+    blue_path = Path(str(broadcast.get("blue_team_activity_receipt") or ""))
+    commentary_path = Path(str(broadcast.get("sports_play_by_play_commentary_receipt") or ""))
+    pydantic_receipts = {}
+    for name, path in [
+        ("arena", arena_path),
+        ("red", red_path),
+        ("blue", blue_path),
+        ("commentary", commentary_path),
+    ]:
+        pydantic_receipts[name] = _read_json(path) if path.is_file() else {}
+    commentary_lines = pydantic_receipts["commentary"].get("commentary_lines") or []
+    red_activities = pydantic_receipts["red"].get("activities") or []
+    blue_activities = pydantic_receipts["blue"].get("activities") or []
+    commentary_grounded = bool(commentary_lines)
+    for line in commentary_lines:
+        for team, indices in (line.get("source_activity_indices") or {}).items():
+            activities = red_activities if team == "red" else blue_activities if team == "blue" else []
+            commentary_grounded = commentary_grounded and all(
+                isinstance(index, int) and 0 <= index < len(activities) for index in indices
+            )
     checks = {
         "campaign_passed": campaign.get("status") == "PASS",
         "seed_bundle_bound": (campaign.get("mutation_seed_receipts") or {}).get("status") == "PASS",
@@ -258,6 +280,20 @@ def _provider_tau_seeded_evidence(root: Path | None) -> dict[str, Any]:
         and all(ack.get("mutation_seed_receipts_cited_in_provider_response") is True for ack in ack_values),
         "visibility_passed": visibility.get("status") == "PASS" and not visibility.get("private_input_leaks"),
         "broadcast_passed": broadcast.get("status") == "PASS",
+        "pydantic_arena_team_commentary_receipts": (
+            pydantic_receipts["arena"].get("schema") == "battle.arena_receipt.v1"
+            and pydantic_receipts["arena"].get("status") == "PASS"
+            and pydantic_receipts["red"].get("schema") == "battle.team_activity_receipt.v1"
+            and pydantic_receipts["red"].get("status") == "PASS"
+            and pydantic_receipts["red"].get("team") == "red"
+            and pydantic_receipts["blue"].get("schema") == "battle.team_activity_receipt.v1"
+            and pydantic_receipts["blue"].get("status") == "PASS"
+            and pydantic_receipts["blue"].get("team") == "blue"
+            and pydantic_receipts["commentary"].get("schema")
+            == "battle.sports_play_by_play_commentary_receipt.v1"
+            and pydantic_receipts["commentary"].get("status") == "PASS"
+            and commentary_grounded
+        ),
     }
     return {
         "status": "PASS" if all(checks.values()) else "FAIL",
@@ -266,6 +302,11 @@ def _provider_tau_seeded_evidence(root: Path | None) -> dict[str, Any]:
         "campaign_receipt": str(campaign_path),
         "broadcast_receipt": str(broadcast_path),
         "visibility_receipt": str(visibility_path),
+        "arena_receipt": str(arena_path),
+        "red_team_activity_receipt": str(red_path),
+        "blue_team_activity_receipt": str(blue_path),
+        "sports_play_by_play_commentary_receipt": str(commentary_path),
+        "commentary_line_count": len(commentary_lines),
         "checks": checks,
         "seed_count": len((campaign.get("mutation_seed_receipts") or {}).get("receipts", [])),
     }
@@ -462,6 +503,8 @@ def generate(out: Path) -> int:
         and pixi_gameplay_passes
         and surf_text_path.is_file()
         and surf_screenshot_path.is_file()
+        and provider_tau_evidence.get("checks_ok") is True
+        and memory_promotion_evidence.get("checks_ok") is True
     )
     open_issues = [_issue_ref(issue) for issue in _gh_issue_list("open")]
     all_issues = [_issue_ref(issue) for issue in _gh_issue_list("all")]
@@ -487,6 +530,7 @@ def generate(out: Path) -> int:
             "surf_screenshot": surf_screenshot_path.is_file(),
             "provider_tau_seeded_lineage": provider_tau_evidence.get("checks_ok") is True,
             "memory_promotion_live": memory_promotion_evidence.get("checks_ok") is True,
+            "pydantic_event_commentary": (provider_tau_evidence.get("checks") or {}).get("pydantic_arena_team_commentary_receipts") is True,
         },
         "source_context": {
             key: _source_context_item(value) for key, value in SOURCE_CONTEXT.items()
@@ -754,6 +798,7 @@ def check(path: Path) -> int:
             "surf_screenshot",
             "provider_tau_seeded_lineage",
             "memory_promotion_live",
+            "pydantic_event_commentary",
         ]:
             if primary_proof.get(key) is not True:
                 errors.append(f"immutable_goal_primary_proof_false:{key}")
@@ -792,6 +837,9 @@ def check(path: Path) -> int:
         errors.append("provider_tau_seeded_lineage_spawn_claim_not_pass")
     if (provider_claim.get("evidence") or {}).get("checks_ok") is not True:
         errors.append("provider_tau_seeded_lineage_checks_not_green")
+    provider_checks = (provider_claim.get("evidence") or {}).get("checks") or {}
+    if provider_checks.get("pydantic_arena_team_commentary_receipts") is not True:
+        errors.append("pydantic_event_commentary_checks_not_green")
     memory_claim = next(
         (
             item

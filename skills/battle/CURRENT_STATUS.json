@@ -608,6 +608,7 @@
     "pixi_gameplay_browser_proof": true,
     "pixi_receipt_binding": true,
     "provider_tau_seeded_lineage": true,
+    "pydantic_event_commentary": true,
     "surf_screenshot": true,
     "surf_text_readback": true
   },
@@ -708,18 +709,24 @@
         "arbitrary target exploitability beyond the authorized battle-004 proof."
       ],
       "evidence": {
+        "arena_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/arena-receipt.json",
+        "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/blue-team-activity-receipt.json",
         "broadcast_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/provider-tau-lineage-broadcast-receipt.json",
         "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
         "checks": {
           "broadcast_passed": true,
           "campaign_passed": true,
           "provider_cited_seed_hashes": true,
+          "pydantic_arena_team_commentary_receipts": true,
           "seed_bundle_bound": true,
           "visibility_passed": true
         },
         "checks_ok": true,
+        "commentary_line_count": 7,
+        "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/red-team-activity-receipt.json",
         "root": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z",
         "seed_count": 2,
+        "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/sports-play-by-play-commentary-receipt.json",
         "status": "PASS",
         "visibility_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/visibility-validation.json"
       },
@@ -1037,7 +1044,7 @@
       "mocked": null,
       "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-eval/memory-promotion-live-receipt.json",
       "schema": "battle.memory_promotion_live_receipt.v1",
-      "sha256": "1e5023b6994285fcd57a7728fd65861371790761ea913f6dabb3af670c28de7a",
+      "sha256": "d1913d45aca56113ab5a13d6174d5429ee2a208234044c74c4cc85aa07ce5b4f",
       "status": "PASS"
     },
     "provider_tau_seeded_broadcast": {
@@ -1046,7 +1053,7 @@
       "mocked": null,
       "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/provider-tau-lineage-broadcast-receipt.json",
       "schema": "battle.provider_tau_lineage_broadcast.v1",
-      "sha256": "48bdd59814223de11cd7578f804dcf94b48152ad150369de3fc45118fb3c04c7",
+      "sha256": "90eb428a3e63aee8b9c2fb3f20754451833468c4fb455590b6dc6c21fc86894b",
       "status": "PASS"
     },
     "provider_tau_seeded_campaign": {
@@ -1099,5 +1106,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-09-06T13:46:00Z"
+  "updated_at": "2026-09-06T14:20:27Z"
 }
