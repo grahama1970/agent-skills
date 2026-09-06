@@ -82,10 +82,16 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
 
     nodes: list[dict[str, Any]] = []
     previous: str | None = None
+    previous_produces: list[str] = []
 
     for step in spine["steps"]:
         node_id = str(step["id"])
         produces = ",".join(str(p) for p in step.get("produces") or [])
+        # Pydantic-first input gate: a step consumes what the contract declares,
+        # else the previous sequential step's produced artifacts.
+        consumes = ",".join(
+            str(c) for c in (step.get("consumes") or previous_produces)
+        )
         run_dir_arg = step.get("run_dir_arg", "--run-dir")
 
         command = [
@@ -107,6 +113,8 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
         # would otherwise read it as the next flag.
         if run_dir_arg:
             command += [f"--run-dir-arg={run_dir_arg}"]
+        if consumes:
+            command += [f"--consumes={consumes}"]
         subs = {"persona": persona, "cycle_id": cycle_id, "idea": idea,
                 "run_dir": str(run_dir)}
         rendered = [str(raw).format(**subs) for raw in step.get("args") or []]
@@ -137,6 +145,7 @@ def build_spec(*, contract: Path, run_dir: Path, run_id: str,
             "max_attempts": 1,
         })
         previous = node_id
+        previous_produces = [str(p) for p in step.get("produces") or []]
 
     return {
         "schema": DAG_SPEC_SCHEMA,

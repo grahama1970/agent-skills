@@ -81,7 +81,11 @@ def main() -> int:
     # Pydantic FIRST gate: consumed artifacts must validate before the step runs.
     consume_dir = args.artifact_dir or args.run_dir
     consumed = [consume_dir / n for n in args.consumes.split(",") if n]
-    pydantic_errors = validate_artifacts(consumed, json_only=False)
+    pydantic_errors = [
+        {"type": "artifact_missing", "loc": [str(path)], "msg": "file not found"}
+        for path in consumed if not path.is_file()
+    ]
+    pydantic_errors += validate_artifacts([p for p in consumed if p.is_file()])
     if pydantic_errors:
         errors.extend(
             f"pydantic_gate_input {e['type']} at {e['loc']}: {e.get('msg', '')}"
