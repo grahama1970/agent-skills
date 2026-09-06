@@ -9,6 +9,14 @@
   },
   "cases": [
     {
+      "name": "native-plan-whole-input-typed-boundary",
+      "type": "adversarial",
+      "timeout_seconds": 360,
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/native-plan-fields.XXXXXX); uv run --project .. python ../scripts/prove_native_plan_cli.py plan-fields --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "nine malformed plan shapes", "genuine interview preserved"]},
+      "evidence_class": "deterministic"
+    },
+    {
       "name": "native-plan-schema-boundary",
       "type": "adversarial",
       "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/native-plan-schema.XXXXXX); uv run --project .. python ../scripts/prove_native_plan_cli.py schema --out \"$d/proof\""],

@@ -17,7 +17,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ask.project_plan import DEFAULT_HARNESS_MODE, NativeWorkstream, validate_project_plan
+from pydantic import ValidationError
+
+from ask.project_plan import DEFAULT_HARNESS_MODE, NativeWorkstream, ProjectPlan
 
 TAU_SPEC_SCHEMA = "tau.generic_dag_spec.v1"
 
@@ -190,9 +192,13 @@ def compile_plan_to_tau_spec(
     node payload (excluding the stamp itself). Raises ValueError on an
     invalid plan — compilation never silently repairs proposal data.
     """
-    ok, errors = validate_project_plan(plan)
-    if not ok:
-        raise ValueError(f"invalid ask.project_plan.v1: {errors}")
+    try:
+        proposal = ProjectPlan.model_validate(plan)
+    except ValidationError as exc:
+        raise ValueError(f"invalid ask.project_plan.v1: {exc.errors(include_url=False, include_input=False)}") from exc
+    if proposal.unresolved:
+        raise ValueError("unresolved plan requires interview before compilation")
+    plan = proposal.model_dump(by_alias=True, exclude_none=True)
 
     profiles = resolve_role_profiles(plan)
     profiles = enforce_independent_review(

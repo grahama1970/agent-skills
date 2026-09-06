@@ -17,7 +17,7 @@ from ask.project_plan import validate_project_plan
 from ask.project_plan_to_tau import compile_plan_to_tau_spec
 
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", choices=["schema", "live", "missing-tools", "reuse"])
+parser.add_argument("mode", choices=["schema", "live", "missing-tools", "reuse", "plan-fields"])
 parser.add_argument("--out", required=True, type=Path)
 parser.add_argument("--watch", action="store_true")
 args = parser.parse_args()
@@ -42,7 +42,44 @@ plan = {
     "execution": {"topology": "sequential", "max_concurrency": 1, "max_retries": 0},
     "unresolved": [],
 }
-if args.mode == "schema":
+if args.mode == "plan-fields":
+    mutations = [
+        (None, "administrative_override", True),
+        ("target", "repo", True),
+        ("target", "workspace", 42),
+        ("target", "undeclared_field", True),
+        ("execution", "topology", []),
+        ("execution", "max_retries", True),
+        ("team", "role_profiles", []),
+        (None, "unresolved", {"fake": "question"}),
+        (None, "deliverables", [{"name": [], "acceptance_criteria": ["proof"]}]),
+    ]
+    for i, (section, key, value) in enumerate(mutations):
+        bad = copy.deepcopy(plan)
+        (bad[section] if section else bad)[key] = value
+        plan_path = args.out / f"invalid-{i}.json"
+        plan_path.write_text(json.dumps(bad))
+        command = [str(SKILL / "run.sh"), "team-plan", goal, "--plan-file", str(plan_path), "--out", str(args.out / f"rejected-{i}"), "--json"]
+        proc = subprocess.run(command, capture_output=True, text=True, timeout=30)
+        (args.out / f"invalid-{i}.stdout.json").write_text(proc.stdout)
+        (args.out / f"invalid-{i}.stderr.log").write_text(proc.stderr)
+        response = json.loads(proc.stdout)
+        assert proc.returncode == 2 and response["status"] == "INVALID_PLAN", response
+        assert response["validation_errors"] and all("type" in e and "loc" in e for e in response["validation_errors"])
+        assert "Traceback" not in proc.stderr and not (args.out / f"rejected-{i}").exists()
+    proc = subprocess.run([str(SKILL / "run.sh"), "team-plan", "do something vague", "--json"], capture_output=True, text=True, timeout=30)
+    (args.out / "genuine-interview.json").write_text(proc.stdout)
+    assert proc.returncode == 2 and json.loads(proc.stdout)["status"] == "NEEDS_INTERVIEW"
+    draft = copy.deepcopy(plan)
+    draft["unresolved"] = ["acceptance criteria"]
+    try:
+        compile_plan_to_tau_spec(draft, run_id="refuse-draft", run_dir=args.out / "draft")
+    except ValueError as exc:
+        assert "unresolved plan" in str(exc)
+    else:
+        raise AssertionError("unresolved proposal compiled")
+    result = {"status": "PASS", "mocked": False, "live": False, "scope": "real CLI rejects nine malformed plan shapes with typed diagnostics before artifacts; genuine interview preserved"}
+elif args.mode == "schema":
     assert validate_project_plan(plan)[0]
     for mutation in [{"max_turns": True}, {"allowed_tools": "read"}, {"surprise": 1}, {"depends_on": True}]:
         bad = copy.deepcopy(plan)

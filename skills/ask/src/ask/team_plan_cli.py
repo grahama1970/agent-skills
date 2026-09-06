@@ -19,7 +19,9 @@ from typing import Any, Optional
 
 import typer
 
-from ask.project_plan import SCHEMA_ID, validate_project_plan
+from pydantic import ValidationError
+
+from ask.project_plan import ProjectPlan, SCHEMA_ID, validate_project_plan
 from ask.project_plan_to_tau import (
     TEAM_PRESETS,
     compile_plan_to_tau_spec,
@@ -143,14 +145,21 @@ def plan(
         except (OSError, ValueError) as exc:
             typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": [str(exc)]}))
             raise typer.Exit(2) from exc
-        if not isinstance(plan_payload, dict) or plan_payload.get("goal") != request:
-            typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": ["edited plan goal must match the explicit request"]}))
-            raise typer.Exit(2)
     elif team.startswith("strengths-"):
         strength_mode = team.removeprefix("strengths-")
         plan_payload = render_team_plan(request, repo=repo, team="fullstack-premium")
     else:
         plan_payload = render_team_plan(request, repo=repo, team=team)
+    try:
+        proposal = ProjectPlan.model_validate(plan_payload)
+    except ValidationError as exc:
+        issues = exc.errors(include_url=False, include_input=False)
+        typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": [e["msg"] for e in issues], "validation_errors": issues}))
+        raise typer.Exit(2) from exc
+    if plan_file is not None and proposal.goal != request:
+        typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": ["edited plan goal must match the explicit request"]}))
+        raise typer.Exit(2)
+    plan_payload = proposal.model_dump(by_alias=True, exclude_none=True)
     registry: list[dict[str, Any]] = []
     if strength_mode:
         from ask.tau_harness import fetch_profile_registry

@@ -143,8 +143,12 @@ new goal from the file.
 ./run.sh team-plan "The exact goal in plan.json" --plan-file plan.json --out /absolute/output --execute --live --watch
 ```
 
-Native workstreams validate through strict Pydantic fields. For file-reading
-work, declare `allowed_tools` explicitly (currently `read`, `ls`, `grep`, `find`
+The complete proposal (target, deliverables, team, execution, workstreams, and
+unresolved fields) passes strict Pydantic validation before routing or writing
+artifacts. Invalid input returns `INVALID_PLAN` with machine-readable
+`validation_errors` (`type`, `loc`, `ctx`), not an interview request. A genuinely
+unresolved, well-typed proposal remains interview input and cannot compile.
+For file-reading work, declare `allowed_tools` explicitly (currently `read`, `ls`, `grep`, `find`
 through Tau's native CLI), `allowed_paths`, and `cwd` or `target.workspace`.
 A scoped workstream that requires tool-effect evidence but declares no tools is
 refused before execution. Paths alone do not grant tools. Native write/edit/bash
