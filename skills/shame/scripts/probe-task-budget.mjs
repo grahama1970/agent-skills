@@ -9,6 +9,7 @@ const root='/home/graham/workspace/experiments/agent-skills';
 const index=process.env.LAZY_REPORT_SHAME_INDEX || `${root}/extensions/pi/lazy-report-shame-shame-shame/index.ts`;
 const {TaskBudget,runApprovedCommand}=await import(pathToFileURL(join(index,'..','task-budget.ts')).href);
 const dir=mkdtempSync(join(tmpdir(),'task-budget-'));
+process.env.LAZY_REPORT_SHAME_FAILURE_LOG=join(dir,'failures.jsonl');
 let executions=0, aborts=0;
 const ctx={cwd:dir,abort(){aborts++;},ui:{notify(){},setStatus(){}}};
 async function execute(cmd,args,opt){

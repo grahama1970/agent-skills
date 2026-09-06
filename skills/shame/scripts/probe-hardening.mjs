@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const dir=mkdtempSync(join(tmpdir(),'shame-hardening-'));
 const packet=join(dir,'pending.json');
+process.env.LAZY_REPORT_SHAME_FAILURE_LOG=join(dir,'failures.jsonl');
 Object.assign(process.env,{LAZY_REPORT_SHAME_AUDIO_ENABLED:'0',LAZY_REPORT_SHAME_MEMORY_ENABLED:'0',LAZY_REPORT_SHAME_DEFAULT_MODE:'strict',LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET:packet,LAZY_REPORT_SHAME_TRAINING_JSONL:join(dir,'training.jsonl'),LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE:join(dir,'ledger.json')});
 const root='/home/graham/workspace/experiments/agent-skills';
 const index=process.env.LAZY_REPORT_SHAME_INDEX||`${root}/extensions/pi/lazy-report-shame-shame-shame/index.ts`;

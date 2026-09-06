@@ -69,6 +69,7 @@ export default function(pi) {
  });
 }''')
 env = {**os.environ, 'LAZY_REPORT_SHAME_DEFAULT_MODE': 'strict',
+       'LAZY_REPORT_SHAME_FAILURE_LOG': str(work / 'failures.jsonl'),
        'LAZY_REPORT_SHAME_AUDIO_ENABLED': '0', 'LAZY_REPORT_SHAME_MEMORY_ENABLED': '0',
        'LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET': str(work / 'pending.json'),
        'LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE': str(work / 'ledger.json')}
@@ -87,6 +88,9 @@ assert result.returncode == 0, f'CLI exit {result.returncode}: {result.stderr[-2
 events = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
 messages = [e['message'] for e in events if e.get('type') == 'message_end']
 assistant = [m for m in messages if m.get('role') == 'assistant']
+if assistant and assistant[-1].get('stopReason') == 'error':
+    print(json.dumps({'provider_error': assistant[-1].get('errorMessage'), 'events': str(work / 'events.jsonl')}))
+    raise SystemExit(1)
 tool_messages = [m for m in assistant if any(p.get('type') == 'toolCall' for p in m.get('content', []))]
 mixed = [m for m in tool_messages if any(p.get('type') == 'text' and p.get('text', '').strip() for p in m['content'])]
 assert len(tool_messages) >= 5, 'missing separate live read/write calls'
@@ -108,7 +112,18 @@ last_text = '\n'.join(p.get('text', '') for p in assistant[-1].get('content', []
 assert 'State: done' in last_text, last_text
 rejections = sum(any('REJECTED_BY_SLOTH_COURT' in p.get('text', '') for p in m.get('content', [])) for m in assistant)
 assert rejections == (1 if repair_proof else 0), f'unexpected reporting repairs: {rejections}'
-report = {'live_model': env.get('PI_MODEL', 'gpt-6-astra'), 'tool_messages': len(tool_messages),
+history_verified = False
+if repair_proof:
+    rows = [json.loads(line) for line in (work / 'failures.jsonl').read_text().splitlines()]
+    rejected = [row for row in rows if row['kind'] == 'report_rejected']
+    assert len(rejected) == 1 and 'proof_reference_unresolved' in rejected[0]['reason_codes'], rejected
+    snapshot = json.loads(Path(rejected[0]['review_packet']).read_text())
+    assert snapshot['candidate_hash'] == rejected[0]['candidate_hash']
+    reader = subprocess.run(['node', str(Path(index).with_name('failure-history.mjs')), '--session-id', rejected[0]['session_id'], '--json'], env=env, text=True, capture_output=True, timeout=10)
+    assert reader.returncode == 0
+    assert any(row['event_id'] == rejected[0]['event_id'] for row in json.loads(reader.stdout)['events'])
+    history_verified = True
+report = {'failure_history_verified': history_verified, 'live_model': env.get('PI_MODEL', 'gpt-6-astra'), 'tool_messages': len(tool_messages),
           'mixed_text_tool_messages': len(mixed), 'report_retries': rejections, 'continuations': continuation_count,
           'sum_readback_correct': True, 'done_rendered': True,
           'events': str(work / 'events.jsonl'), 'output': str(output)}

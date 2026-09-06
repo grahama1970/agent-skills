@@ -1,0 +1,70 @@
+#!/usr/bin/env node
+// Synthetic lifecycle events; real append/read/CLI operations on isolated files.
+import assert from 'node:assert/strict';
+import { appendFileSync, mkdtempSync, readFileSync, writeFileSync, statSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
+import { spawnSync } from 'node:child_process';
+const root='/home/graham/workspace/experiments/agent-skills';
+const dir=mkdtempSync(join(tmpdir(),'shame-history-'));
+Object.assign(process.env,{LAZY_REPORT_SHAME_FAILURE_LOG:join(dir,'events.jsonl'),LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET:join(dir,'pending.json'),LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE:join(dir,'ledger.json'),LAZY_REPORT_SHAME_AUDIO_ENABLED:'0',LAZY_REPORT_SHAME_MEMORY_ENABLED:'0',LAZY_REPORT_SHAME_DEFAULT_MODE:'strict'});
+const index=process.env.LAZY_REPORT_SHAME_INDEX||`${root}/extensions/pi/lazy-report-shame-shame-shame/index.ts`;
+const {readFailureHistory,recordFailure}=await import(pathToFileURL(join(dirname(index),'failure-history.mjs')).href);
+const factory=(await import(pathToFileURL(index).href)).default;
+function instance(id,throwDispatch=false){
+ const handlers={},commands={},tools={},sent=[],notices=[],badges={};
+ const ctx={cwd:dir,hasUI:false,isIdle:()=>true,hasPendingMessages:()=>false,ui:{notify:t=>notices.push(t),setStatus:(k,v)=>badges[k]=v},sessionManager:{getSessionId:()=>id,getSessionFile:()=>join(dir,id+'.jsonl'),getBranch:()=>[]}};
+ factory({on:(k,f)=>(handlers[k]??=[]).push(f),registerCommand:(k,c)=>commands[k]=c,registerTool:t=>tools[t.name]=t,sendUserMessage:t=>{if(throwDispatch)throw new Error('dispatch probe failure');sent.push(t);},appendEntry(){}});
+ return {handlers,commands,tools,sent,notices,badges,ctx};
+}
+async function emit(x,k,e={}){let result;for(const fn of x.handlers[k]||[]){const r=await fn(e,x.ctx);if(r!==undefined)result=r;if(r?.block)break;}return result;}
+function final(text,id){return {message:{role:'assistant',stopReason:'stop',id,content:[{type:'text',text}]}};}
+const a=instance('A');await emit(a,'input',{text:'task A',source:'interactive'});
+await emit(a,'message_end',final('first invalid report','first'));await emit(a,'agent_end');
+await emit(a,'input',{text:a.sent[0],source:'extension'});
+await emit(a,'message_end',final('second invalid report','second'));
+let history=readFailureHistory({sessionId:'A'});
+assert.equal(history.events.length,2,'history must survive pending snapshot replacement');
+assert.ok(history.events.every(e=>e.kind==='report_rejected'));
+assert.notEqual(history.events[0].event_id,history.events[1].event_id);
+assert.equal(history.events[0].excerpt,'first invalid report');
+assert.equal(statSync(process.env.LAZY_REPORT_SHAME_FAILURE_LOG).mode & 0o077,0,'journal should not be group/world-readable');
+const b=instance('B');await emit(b,'input',{text:'task B',source:'interactive'});
+await emit(b,'tool_result',{toolName:'bash',toolCallId:'b1',isError:true,content:[{type:'text',text:'bounded error'}]});
+assert.equal(readFailureHistory({sessionId:'A'}).events.length,2);
+assert.equal(readFailureHistory({all:true}).events.length,3);
+const reloaded=instance('A');await reloaded.commands.shame.handler('failures --limit 1',reloaded.ctx);
+const shown=JSON.parse(reloaded.notices.at(-1));assert.equal(shown.events.length,1);assert.equal(shown.events[0].session_id,'A');
+const tool=await reloaded.tools.shame_failures.execute('r',{limit:20},undefined,undefined,reloaded.ctx);
+assert.equal(tool.details.events.length,2);
+await reloaded.commands.shame.handler('off',reloaded.ctx);assert.match(reloaded.badges.shame,/OFF/);
+await reloaded.commands.shame.handler('normal',reloaded.ctx);assert.match(reloaded.badges.shame,/ON · normal/);
+await reloaded.commands.shame.handler('status',reloaded.ctx);
+const status=JSON.parse(reloaded.notices.at(-1));assert.equal(status.enabled,true);assert.equal(status.reload_required,false);assert.equal(status.failure_log,process.env.LAZY_REPORT_SHAME_FAILURE_LOG);
+const contract=join(dir,'question.json');writeFileSync(contract,JSON.stringify({schema:'pi.task_budget.v1',mode:'question',deliverable:'read failure history',allowed_paths:[],checks:[],elapsed_ms:60000}));
+await reloaded.commands.shame.handler('task start '+contract,reloaded.ctx);
+assert.equal(await emit(reloaded,'tool_call',{toolName:'shame_failures',input:{}}),undefined);
+assert.equal((await emit(reloaded,'tool_call',{toolName:'write',input:{path:'outside.txt'}})).block,true);
+assert.ok(readFailureHistory({sessionId:'A'}).events.some(e=>e.kind==='task_violation'));
+await emit(reloaded,'session_shutdown');
+appendFileSync(process.env.LAZY_REPORT_SHAME_FAILURE_LOG,'bad-json\nnull\n');
+assert.equal(readFailureHistory({all:true}).malformed_lines,2);
+const cli=spawnSync('node',[join(dirname(index),'failure-history.mjs'),'--session-id','B','--json'],{env:process.env,encoding:'utf8'});
+assert.equal(cli.status,0);assert.equal(JSON.parse(cli.stdout).events.length,1);
+const invalid=spawnSync('node',[join(dirname(index),'failure-history.mjs'),'--limit','0'],{env:process.env,encoding:'utf8'});assert.equal(invalid.status,2);
+const p=instance('provider-error');
+assert.equal(await emit(p,'message_end',{message:{role:'assistant',stopReason:'error',provider:'probe-provider',model:'probe-model',errorMessage:'provider overloaded',content:[]}}),undefined);
+await emit(p,'agent_end');assert.equal(p.sent.length,0,'observed provider errors must not create Shame retries');
+assert.equal(readFailureHistory({sessionId:'provider-error'}).events[0].kind,'provider_error_observed');
+const d=instance('D',true);await emit(d,'input',{text:'task D',source:'interactive'});
+await emit(d,'message_end',final('invalid report D','D-final'));
+await assert.rejects(()=>emit(d,'agent_end'),/dispatch probe failure/);
+assert.ok(readFailureHistory({sessionId:'D'}).events.some(e=>e.kind==='continuation_dispatch_exception'));
+recordFailure(a.ctx,{kind:'large-observation',goal:'x'.repeat(40000)});
+const bounded=readFailureHistory({all:true});assert.equal(bounded.output_limited,true);assert.ok(Buffer.byteLength(JSON.stringify(bounded))<=32768);
+const original=process.env.LAZY_REPORT_SHAME_FAILURE_LOG;const bad=join(dir,'directory');mkdirSync(bad);process.env.LAZY_REPORT_SHAME_FAILURE_LOG=bad;
+assert.equal(recordFailure(a.ctx,{kind:'probe'}),null);assert.ok(a.notices.at(-1).includes('failure_history_write_failed'));
+process.env.LAZY_REPORT_SHAME_FAILURE_LOG=original;
+const result={append_only:true,session_filter:true,cli_readback:true,tool_access:true,status_on_off:true,task_alias:true,write_failure_visible:true,journal:original};
+writeFileSync(join(dir,'report.json'),JSON.stringify(result,null,2));console.log(JSON.stringify({...result,report:join(dir,'report.json')}));console.log('FAILURE_HISTORY_PROBE_PASS');

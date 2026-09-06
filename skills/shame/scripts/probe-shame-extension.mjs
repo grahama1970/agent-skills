@@ -10,6 +10,7 @@ function pendingPacketPath() {
 
 const mode = process.argv[2] || 'all';
 process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED ||= '0';
+process.env.LAZY_REPORT_SHAME_FAILURE_LOG ||= `/tmp/shame-probe-${mode}-${process.pid}-failures.jsonl`;
 process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED ||= '0';
 process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET ||= `/tmp/shame-probe-${mode}-pending-packet.json`;
 process.env.LAZY_REPORT_SHAME_TRAINING_JSONL ||= `/tmp/shame-probe-${mode}-training.jsonl`;

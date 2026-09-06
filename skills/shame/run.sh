@@ -15,6 +15,11 @@ case "$cmd" in
   guard)
     uv run --with pydantic python3 "$SKILL_DIR/scripts/continuation_guard_schema.py" "$@"
     ;;
+  failures)
+    history="$(realpath "$SKILL_DIR")/../../extensions/pi/lazy-report-shame-shame-shame/failure-history.mjs"
+    if [[ ! -f "$history" ]]; then history="$HOME/.pi/agent/extensions/lazy-report-shame-shame-shame/failure-history.mjs"; fi
+    node "$history" "$@"
+    ;;
   path)
     printf '%s\n' "${LAZY_REPORT_SHAME_TRAINING_JSONL:-/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl}"
     ;;
@@ -30,7 +35,11 @@ Usage:
   run.sh audio status [--extension-dir DIR]
   run.sh guard validate <file.json|->
   run.sh guard write <out.json> <target> <next_command>
+  run.sh failures [--all | --session-id ID] [--limit 1..200] [--json]
   run.sh path
+
+Failure history: /mnt/storage12tb/skills/shame/failures/events.jsonl
+Human-labeled training data remains separate.
 
 Audio command installs one short Chatterbox word: "shame". No bell, no loop.
 

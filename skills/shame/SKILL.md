@@ -1,7 +1,7 @@
 ---
 name: shame
 description: >
-  Capture bullshit, vague, Git-heavy, proof-laundering, or otherwise bad agent status updates as human-labeled training data in JSONL and a $memory collection. Use when the human says /shame, shame this response, record this bullshit update, add this response to shame training, mark commit laundering, false positive, false negative, good status report, or jargon without proof.
+  Capture human-labeled bad agent updates, inspect retained failure history, and operate the Pi status/continuation guard and bounded task harness.
 triggers:
   - shame this response
   - record this bullshit update
@@ -14,6 +14,7 @@ triggers:
 provides:
   - classifier-training-data
   - response-label-capture
+  - failure-history
 composes:
   - memory
   - agentic-evals
@@ -34,205 +35,161 @@ disciplines:
 
 # Shame
 
-Capture bad agent status updates into a JSONL training set, the structured `shame_training_examples` Memory collection, and a searchable `project_knowledge` shadow document for a future `lazy-report-shame-shame-shame` classifier loop.
+One status/continuation guard, one bounded task runner, and one failure journal.
+Human labels are separate from machine-observed failures. This skill records
+examples; it does not train or promote a classifier.
 
-This is a recording skill, not a scolding skill. Do not generate essays about agent behavior. Store the labeled example and return the receipt.
+The immutable goal and completion criteria live in `immutable_goal.json`.
+The executable status contract is `scripts/agent_status_schema.py` (pydantic,
+`extra="forbid"`). Full command examples and runtime details live in the primary
+checkout's `extensions/pi/lazy-report-shame-shame-shame/README.md`.
 
-`$shame` is also a self-correction trigger for the installed Pi extension. The immutable goal is defined in `immutable_goal.json` and validated by `scripts/immutable_goal_schema.py`: make it impossible for project agents to ignore explicit instructions by converting instruction-obedience and completion-reporting into typed pydantic-validated contracts, deterministic extension gates, and retained agentic evals; prose is display only and cannot decide success. The extension is data-first: it never classifies prose and never uses LLM judgment over user/assistant text. A mutating or guard-forced run must end with a fenced ```json block containing one valid `pi.agent_status.v1` object. Intermediate responses, including mixed text plus tool calls, are never reporting checkpoints. The extension validates only terminal assistant `stopReason="stop"` messages without tool calls or queued work; it dispatches repairs and continuations at `agent_end`. Aborts, errors, length limits, and shutdown do not trigger reporting retries. Valid continuations do not consume the three-attempt formatting-repair budget; accepted status data resets that budget. Distinct terminal events may repeat identical status text (for polling); replaying the same event does not dispatch twice. The extension validates that JSON with the pydantic model in `scripts/agent_status_schema.py`, compiles `continuing.not_done[].next_command` into the next follow-up command, strips the raw JSON from the visible answer, and renders the human `Status Report` itself. A rejection shows a correction packet, queues up to three forced retries, and tells the human how to label the raw rejected candidate. After two `state=failed` reports with the same goal plus triage fingerprint, the extension blocks another stale failure report until the agent either asks one plain human question, cites valid `debugger.proof.v1` breakpoint/local-state proof, or cites a `lazy_report_shame.debugger_failure_handoff.v1` file with exact file:line and debugger error.
-
-Missing per-feature `$agentic-evals` coverage is shame. For every new feature, add or update a retained `$agentic-evals` fixture, run it, and cite the receipt before reporting the feature done. Leaving relevant files, skills, or project changes uncommitted or unpushed when no external blocker exists is also shame.
-
-It also owns the installed shame audio policy: one short Chatterbox word, `shame`, with no bell and no repeated shame loop.
-
-Preferred human UX is collaborative, not punitive:
-
-1. Extension rejects the bad answer and shows the raw candidate hash, machine reason, excerpt, and correction target.
-2. Extension atomically writes `/mnt/storage12tb/skills/shame/training/pending-review-packet.json.sessions/<sha256(session-id)>.json` so `/shame show` recovers only this session's candidate after a reload.
-3. Agent rewrites the answer and ends with one valid `pi.agent_status.v1` JSON block; the extension renders the visible `Status Report` from that object.
-4. Human labels the raw candidate with the Pi extension command:
+## Operator and agent entrypoints
 
 ```text
-/shame review
-/shame reject commit_laundering -- no final Status Report
-/shame allow normal_answer -- this was an explanatory Git answer
+/shame status                         # enabled/mode, last report, task, history, entrypoint hash
+/shame task start /absolute/task.json # operator-approved task budget
+/shame task status
+/shame failures                       # recent failures from this session
+/shame failures --all --limit 20       # explicit cross-session view
+/shame show                           # latest raw candidate, not failure history
+/shame review                         # interactive human label picker
+/shame reject commit_laundering -- human explanation
+/shame allow normal_answer -- human explanation
 /shame warn jargon_no_status
-/shame show
 /shame undo
+/shame off|normal|strict
 ```
 
-Use `/shame review` for an interactive label picker when the TUI/RPC UI is available. Use the direct commands above in print/headless mode.
+Agents can read the same journal with the read-only `shame_failures` tool
+(`limit`, optional `all`) or `skills/shame/run.sh failures --json`.
+`/shame-task` and `/lazy-report-shame-shame-shame` remain compatibility commands.
 
-The extension command stores the most recent raw classifier candidate. After a rejection, that means the rejected assistant answer, not the replacement shame notice. Use `/shame show` when the human wants to see the candidate hash, pending packet path, machine decision, checker version, excerpt, and copyable label commands before deciding. Use `/shame review` to choose the label without remembering the exact command syntax.
+## Stop-boundary behavior
 
-## Bounded task execution
+- Preserve intermediate responses and tool calls. Validate only terminal
+  assistant `stopReason="stop"` messages with no tool calls or queued work.
+- Mutating or guard-forced runs must include one fenced `json` block containing
+  `pi.agent_status.v1`. `$shame`/`UNLAZY_FORCED_RETRY` activates self-correction.
+- Pydantic data decides status validity. Never classify status prose with regex
+  or an LLM. Strip model status prose/raw JSON; render the visible `Status Report`
+  from validated data. Trailing prose after valid JSON is ignored.
+- Compile actionable status data once and dispatch at `agent_end`. Identical
+  status text at distinct stops is legitimate; replaying one event is not.
+- Aborts, errors, length limits, and shutdown do not start reporting retries.
+- Unarmed compatibility mode allows up to three report corrections. An armed
+  task allows one tool-free format correction; it cannot reopen accepted work.
+- After two same-goal/triage failure fingerprints, require a plain human question,
+  valid `debugger.proof.v1`, or `lazy_report_shame.debugger_failure_handoff.v1`
+  with exact file:line and debugger error. Preserve the failure evidence.
 
-The existing extension supports an operator-armed `pi.task_budget.v1` contract.
-Use `/shame-task start /absolute/contract.json` or launch Pi with `SHAME_TASK_BUDGET`
-set; see `extensions/pi/lazy-report-shame-shame-shame/README.md` in the primary
-agent-skills checkout for the complete example. No task budget is silently inferred
-from prose. Unarmed sessions retain existing behavior.
+## pi.agent_status.v1
 
-An armed task fixes one deliverable, allowed write/edit paths, named argv checks,
-file inputs/check definitions, and explicit elapsed/check/review deadlines. Raw
-Bash and unapproved custom tools are blocked; `task_check` runs only named checks.
-Unchanged passing inputs reuse evidence, failures permit two repairs, reviews do
-not automatically resubmit, and all required checks/delivery readbacks passing
-locks the task in `accepted`. One report-format correction is tool-free and cannot
-reopen an accepted task. Explicit question mode permits read/search only and skips
-status/quality gates. Approved commands are trusted capabilities, not OS-sandboxed
-code; these controls do not require sudo or promise same-user tamper resistance.
+Every status requires a non-empty `goal` and `changed` (use `no change: <reason>`
+when appropriate). State-specific data:
 
-Retained proof: `skills/shame/fixtures/task_budget_eval.json` (synthetic boundary
-cases plus a live model/real-tool artifact run).
+| State | Required data |
+|---|---|
+| `done` | non-empty `verified[]` and `proof[]`; no `not_done` |
+| `continuing` | `not_done[].item` and runnable `next_command` |
+| `needs_human` | exact `needs_human.action` and `reason` |
+| `failed` | `failure.triage.code` from triage-error or minted `*_unclassified_<8hex>` |
+| `needs_brave_search` | `queries[]` |
+| `needs_agent` | `handler` and `question`; use a cross-family handler |
+| `needs_webgpt` | `question` and typed prior-rung `parent_refs[]` |
+| `needs_roundtable` | immutable goal, question, at least three handlers |
+| `needs_competition` | immutable goal, task, at least two handlers, criteria |
 
-## pi.agent_status.v1 — the status contract
+`not_done` is legal only with `continuing`; human actions belong in `needs_human`.
+For `done`, proofs must be non-empty local files. Materialize URLs/digests through
+the owning skill first. Known receipt schemas must pass their checks, and each
+verified command/result pair must appear in proof text. This proves consistency,
+not authenticity of arbitrary agent-writable evidence or universal obedience.
 
-One JSON object per report-like turn, validated by `scripts/agent_status_schema.py` (pydantic, `extra="forbid"`). Nine states, each with a typed payload that makes the wrong thing unrepresentable:
+## Failure history versus human labels
 
-| state | required payload | enforces |
-| --- | --- | --- |
-| `done` | `verified[]` + `proof[]` + empty `not_done` | no proof-less completion; parked work cannot hide in a done report |
-| `continuing` | `not_done[].next_command` | deterministic keep-going; the extension queues the command |
-| `needs_human` | `needs_human.action` + `reason` | exact human action; no auto follow-up |
-| `failed` | `failure.triage.code` | triage-error catalog or minted `*_unclassified_<8hex>` code; ambiguous labels fail validation |
-| `needs_brave_search` | `queries[]` | escalation rung 0 |
-| `needs_agent` | cross-family `handler` + `question` | escalation rung 1 |
-| `needs_webgpt` | `question` + `parent_refs[]` for both prior rung receipts | rung 2; the ladder cannot be skipped or faked with ad hoc paths |
-| `needs_roundtable` | `immutable_goal` + >=3 `handlers` | $ask roundtable quorum floor |
-| `needs_competition` | `immutable_goal` + >=2 `handlers` + `criteria[]` | $ask compete candidate floor |
-
-Two invariants hold for every report regardless of state: `changed` must be non-empty (say what is different, or explicitly `no change: <reason>`), and `not_done` is only legal with `state=continuing`. If the JSON says unfinished agent-executable work exists, the extension compiles `not_done[0].next_command` and queues it deterministically. Use `needs_human.action` instead of `not_done` when a person must act; use `failed.failure.triage` instead of `not_done` for a terminal failure.
-
-`compile-status-command.mjs` compiles each `continuing`/`needs_*` payload into its exact runnable brave-search/$ask command with zero interpretation; `done`/`needs_human`/`failed` compile to no command. The extension prepares the compiled command at the terminal `message_end` and dispatches it once at `agent_end`, after tools and host-managed continuations have finished.
-
-The visible `Status Report` is rendered by the extension from the validated JSON object. Model-authored prose is not trusted as the contract; the `pi.agent_status.v1` JSON remains the typed contract the checker enforces, and trailing prose after a valid status block is ignored rather than rejected. For `state=done`, every `proof[]` entry must be a non-empty local file. URLs and bare digests must first be materialized through the owning skill as local evidence; the validator does not fetch arbitrary network locations. Known JSON receipt schemas are validated, and each `verified[]` command/result pair must appear in the local proof text. These checks establish evidence presence and consistency, not authenticity of arbitrary agent-writable files. On rejection, Pydantic `errors()` data (`type`, `loc`, `ctx`) is the steering contract; extension retry packets must carry `pi.agent_status.validation_result.v1` and must not require prose status sections, prose checklists, or LLM judgment to course-correct.
-
-Each session's pending review packet is atomically replaced on rejection:
+Automatic append-only journal:
 
 ```text
-/mnt/storage12tb/skills/shame/training/pending-review-packet.json.sessions/<sha256(session-id)>.json
+/mnt/storage12tb/skills/shame/failures/events.jsonl
 ```
 
-`LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET` changes the base path, not session isolation. Legacy single-file packets are recoverable only by their recorded session owner and with a matching candidate hash.
+`LAZY_REPORT_SHAME_FAILURE_LOG` overrides the path. Events retain session identity,
+kind, reason codes, goal when available, candidate/failure fingerprints, bounded
+excerpts, and receipt paths. They cover rejected reports, agent-reported failures,
+observed tool/provider errors, task-budget failures, and continuation dispatch exceptions.
+An agent-reported failure is not independent proof of its underlying cause.
 
-Training data is written to all of these:
+History reads default to the current session when available; `--all` requests all
+sessions. The reader scans the last 4 MiB and bounds returned JSON to 32 KiB;
+`tail_limited`, `output_limited`, and `malformed_lines` expose incomplete reads.
+A log-write error is visible and does not create another retry loop. No automatic
+backfill or classifier labeling is performed.
 
-```text
-/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl
-Memory structured collection: shame_training_examples
-Memory searchable collection: project_knowledge (`kind=agent_status_shame_training_search_doc`)
-```
+Latest candidate recovery remains session-scoped and atomic:
+`/mnt/storage12tb/skills/shame/training/pending-review-packet.json.sessions/<sha256(session-id)>.json`.
+`LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET` changes the base path, not isolation.
+Legacy packets are read only by their recorded owner with a matching candidate hash.
 
-The CLI writes to Memory through `POST /store` only. It verifies the structured row with `POST /recall/by-keys`, verifies the searchable shadow row with `POST /recall/by-keys`, then verifies the shadow row is findable through `POST /recall` using `tags=["shame"]`. It never uses raw AQL, direct Arango imports, or Qdrant writes.
+Human labels use `lazy_report_shame.training_example.v2` and go to:
+- `/mnt/storage12tb/skills/shame/training/classifier-feedback.jsonl`
+- Memory `shame_training_examples`
+- Searchable `project_knowledge` shadow documents
 
-## CLI fallback
-
-Use the script when a direct extension command is unavailable or when processing a saved session file:
+Use Memory `POST /store`; verify both rows through `/recall/by-keys` and the shadow
+through `/recall` with `tags=["shame"]`. No raw AQL or direct Arango/Qdrant writes.
 
 ```bash
-skills/shame/run.sh capture --verdict reject --reason commit_laundering --note "commit-heavy with no actual status"
 skills/shame/run.sh capture --text "Committed and pushed." --verdict reject --reason vague_git_update
-skills/shame/run.sh capture --session "$PI_SESSION_FILE" --entry-id <assistant-entry-id> --verdict allow --reason normal_answer
-skills/shame/run.sh capture --session "$PI_SESSION_FILE" --response-sha256 sha256:<hash> --verdict warn --reason jargon_no_status
+skills/shame/run.sh capture --session "$PI_SESSION_FILE" --entry-id ID --verdict allow --reason normal_answer
 skills/shame/run.sh capture --no-memory --text "fixture" --verdict reject --reason synthetic_fixture
-skills/shame/run.sh capture --text "Committed and pushed." --verdict reject --reason vague_git_update --search-collection project_knowledge
-skills/shame/run.sh path
-```
-
-## Chatterbox shame word audio
-
-Install or inspect the extension audio with:
-
-```bash
-skills/shame/run.sh audio install --source /path/to/chatterbox-single-shame.wav
+skills/shame/run.sh failures --all --limit 20 --json
 skills/shame/run.sh audio status
+skills/shame/run.sh audio install --source /path/to/single-shame.wav
 ```
 
-If no `--source` is passed, the installer looks for `SHAME_WORD_WAV`, then the retained Chatterbox single-word fixture paths under `/tmp`. It rejects audio longer than 2.5 seconds, shorter than 0.9 seconds, or with less than 0.45 seconds of active speech so a three-part loop, handbell, or sped-up/header-mismatched word cannot be installed accidentally.
+Legacy labels remain supported. Audio policy: one short Chatterbox word, no bell
+or loop; installer bounds are 0.9–2.5 seconds and at least 0.45 seconds active speech.
 
-The installer writes:
+## Bounded tasks and ownership
 
-```text
-~/.pi/agent/extensions/lazy-report-shame-shame-shame/shame.wav
-~/.pi/agent/extensions/lazy-report-shame-shame-shame/shame-audio-receipt.json
-```
+An operator arms `pi.task_budget.v1` through `/shame task start` or
+`SHAME_TASK_BUDGET`. It fixes one deliverable, write paths, named argv checks,
+input/check-definition files, and deadlines. Raw shell/unapproved tools are
+blocked; `task_check` runs approved checks. Passing unchanged inputs reuse evidence;
+failures permit two repairs; reviews never automatically resubmit. All required
+checks and delivery readbacks passing makes `accepted` terminal.
 
-Legacy `--label` values are accepted and mapped into verdict plus reason:
+Explicit question mode is read/search-only and skips status/quality gates. Fresh
+human questions after accepted/exhausted tasks can inspect history without reopening
+execution. Approved commands are trusted capabilities, not OS-sandboxed programs.
+No sudo is needed for these controls. Unarmed sessions retain compatibility behavior.
 
-- `false_positive` -> `allow` + `false_positive`
-- `false_negative` -> `reject` + `false_negative`
-- `good_status_report` -> `allow` + `good_status_report`
-- `commit_laundering` -> `reject` + `commit_laundering`
-- `jargon_no_status` -> `reject` + `jargon_no_status`
+Ponytail remains generation guidance, not another gate. Architecture diagrams are
+optional predeclared deliverables, never automatic stop-time work. Do not add
+review rounds, new gates, or unrelated improvements after acceptance.
 
-## Output contract
+## Retained validation
 
-Each line is one JSON object:
-
-```json
-{
-  "schema": "lazy_report_shame.training_example.v2",
-  "example_id": "sha256:<hash>",
-  "created_at": "ISO-8601",
-  "source": "pi-extension-command:/shame or shame-skill-cli",
-  "kind": "agent_status_shame_training_example",
-  "human_verdict": "allow|reject|warn|needs_review",
-  "human_reasons": ["commit_laundering"],
-  "note": "human note",
-  "machine_decision": "pass|reject|error|unknown",
-  "machine_reason_codes": [],
-  "checker_version": "checker version or unknown",
-  "force_status": false,
-  "user_text": "user request when available",
-  "assistant_text": "full assistant response",
-  "assistant_entry_id": "entry id from session JSONL",
-  "session_file": "/path/to/session.jsonl",
-  "turn_id": "sha256:<hash>",
-  "response_sha256": "sha256:<hash>",
-  "tags": ["shame", "classifier-training", "verdict:reject", "reason:commit_laundering"],
-  "retrieval_text": "verdict/reasons/user/assistant text for Memory recall"
-}
-```
-
-## Agentic evals
-
-Run the immutable-goal validator and retained eval before changing the CLI contract:
+Every enforcement feature must have retained `$agentic-evals` coverage and a
+read-back receipt before completion is reported. Retain scoped changes through
+commit/push when no external blocker prevents it; Git metadata is not product proof.
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills
 uv run --with pydantic python3 skills/shame/scripts/immutable_goal_schema.py validate skills/shame/immutable_goal.json
 skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --output /tmp/shame-agentic-eval.json
-skills/agentic-evals/run.sh run skills/shame/fixtures/stop_boundary_eval.json --output /tmp/shame-stop-boundary-eval.json
-skills/agentic-evals/run.sh run skills/shame/fixtures/hardening_eval.json --output /tmp/shame-hardening-eval.json
+skills/agentic-evals/run.sh run skills/shame/fixtures/failure_history_eval.json --output /tmp/shame-failure-history-eval.json
 ```
 
-The stop-boundary fixture retains the mixed-text/tool-call regression, six consecutive valid continuations, cancellation, and a live Pi model reading four files and writing an independently checked sum. Lifecycle replay is synthetic; the CLI case uses a real provider and real read/write tools. It does not establish arbitrary project completion.
-
-The fixture must prove:
-- `immutable_goal.json` remains pydantic-valid and names every ecosystem component plus what it MUST do;
-- local JSONL capture works without Memory (`--no-memory`);
-- live Memory capture writes to `shame_training_examples` and reads the same `_key` back;
-- related examples are recallable through `$memory recall` from `retrieval_text` and tags;
-- legacy labels still map to verdict/reason pairs;
-- strict self-correction rejects a new-feature status when `$agentic-evals` was not added/run;
-- strict self-correction rejects uncommitted/unpushed relevant work when no blocker exists;
-- strict self-correction rejects control-plane non-status updates that show no immutable-goal progress and no next step;
-- every valid `pi.agent_status.v1` report can be rendered into a visible `Status Report` by the extension;
-- fake `proof[]` receipt paths, failed known receipt schemas, and `verified[]` entries not backed by local proof text are rejected by pydantic before visible report rendering;
-- JSON-only reports are accepted after pydantic validation, trailing prose after valid JSON is ignored, model-authored status prose is stripped before display, and a static/live guard fails if `status-json-check.mjs` reintroduces regex/prose status policy;
-- repeated same-fingerprint failures are blocked unless the next report asks one plain human question, cites `debugger.proof.v1`, or cites an exact file:line debugger failure handoff;
-- extension rejection notices are correction packets naming the pydantic/checker reason rather than bare gate JSON;
-- `UNLAZY_FORCED_RETRY` follow-up prompts keep the guard active and reject plain/vague footers that omit final `pi.agent_status.v1` JSON;
-- rejected candidates are written to a pending review packet that `/shame show` and `/shame review` can read back after reload;
-- the audio installer accepts one short Chatterbox shame word and rejects long loop/bell audio.
-
-The skill records examples only. It does not train or promote a classifier.
+Focused fixture families: `stop_boundary_eval.json`, `hardening_eval.json`, and
+`task_budget_eval.json`. They distinguish synthetic lifecycle/negative probes from
+live provider/tool paths. Never present a read skill, green fixture count, or
+reviewer opinion as proof of unchecked project outcomes.
 
 ## Ecosystem
 
-Member of the agent-governance ecosystem (see `skills/agent-ecosystem/SKILL.md`
-for the shared map, mermaid graph, and the `pi.receipt_envelope.v1` boundary
-envelope). Produces: `pi.agent_status.v1`, shame training examples. Consumes: triage-error codes, human labels. Envelope-wrapped
-boundary events: escalation, durable failure. Failure names come only from the triage-error
-catalog or minted `*_unclassified_<8hex>` codes; ambiguous labels are
-unrepresentable ecosystem-wide.
+See `skills/agent-ecosystem/SKILL.md`. Shame owns status, feedback, and history;
+the runner owns execution/acceptance; triage-error owns failure vocabulary;
+Memory owns durable recall; Ponytail shapes generation. Authority-changing handoffs
+use `pi.receipt_envelope.v1` or owner-specific typed receipts. Internal observations
+and failure-history rows are not new acceptance authorities.

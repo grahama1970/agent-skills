@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beginGuardTurn, claimGuardFollowUp, isAssistantStop, resetGuardRepairBudget } from "../_shared/guard-pipeline-shared.ts";
 import { installTaskBudget } from "./task-budget.ts";
+import { failureLogPath, historyOptions, readFailureHistory, recordFailure } from "./failure-history.mjs";
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 // JSON-first checker (2026-09-01): regex/prose classification is banned.
@@ -66,7 +67,6 @@ function isMutatingShellCommand(command: string): boolean {
 
 const MEMORY_ENABLED = !flagDisabled(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
 const AUDIO_COOLDOWN_MS = 10_000;
-const MAX_REJECTED_EXCERPT_CHARS = 8_000;
 const CONTINUATION_GUARD_FILE = process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE || "/mnt/storage12tb/skills/shame/continuation-guard/current.json";
 
 const HOLD_LABELS = new Set([
@@ -143,7 +143,7 @@ type Candidate = {
   turn_id: string;
 };
 
-function stripStatusJson(content: unknown, statusJsonText: string): unknown {
+function stripStatusJson(content: unknown): unknown {
   // The model supplies data; the extension renders the human status. Drop the
   // final machine JSON and any model-authored Status Report block before it.
   const removeFrom = (text: string): string => {
@@ -154,7 +154,6 @@ function stripStatusJson(content: unknown, statusJsonText: string): unknown {
     const block = text.slice(fenceStart, fenceEnd + 3);
     if (!block.includes('"pi.agent_status.v1"')) return text;
     const beforeJson = text.slice(0, fenceStart).trimEnd();
-    const afterJson = text.slice(fenceEnd + 3);
     const reportAt = Math.max(beforeJson.lastIndexOf("\nStatus Report"), beforeJson.startsWith("Status Report") ? 0 : -1);
     const beforeReport = reportAt >= 0 ? beforeJson.slice(0, reportAt).trimEnd() : beforeJson;
     return beforeReport.trimEnd();
@@ -236,11 +235,6 @@ function activatesShameSelfCorrection(text: string): boolean {
 
 function sha256(value: string): string {
   return "sha256:" + createHash("sha256").update(value).digest("hex");
-}
-
-function truncateForRetry(text: string): string {
-  if (text.length <= MAX_REJECTED_EXCERPT_CHARS) return text;
-  return text.slice(0, MAX_REJECTED_EXCERPT_CHARS) + `\n\n[truncated by lazy-report-shame-shame-shame at ${MAX_REJECTED_EXCERPT_CHARS} chars]`;
 }
 
 function parseCheckerPayload(stdout: string, stderr: string, status: number | null): CheckResult {
@@ -832,17 +826,22 @@ export default function lazyReportShameShameShame(pi: any) {
   let shameSkillContractRequired = false;
   let shameSkillContractRead = false;
   let currentUserText = "";
-  let retryInProgress = false;
   let pendingFollowUp: string | null = null;
   // Feature 1 (from ponytail): session-persisted guard mode via custom entries.
   // off = no enforcement; normal = mutating turns need status JSON; strict = every substantive turn.
   let sessionMode: string = DEFAULT_SHAME_MODE;
   let lastCandidate: Candidate | null = null;
   let lastWrittenExampleId: string | null = null;
-  const retriedTurnIds = new Set<string>();
   const failureCounts = new Map<string, number>();
   const repeatedFailure = { fingerprint: null as string | null, count: 0 };
   const lastAudioPlayedAt = { value: 0 };
+  const loadedSourceHash = sha256(readFileSync(fileURLToPath(import.meta.url), "utf8"));
+  let lastReportState: string | undefined;
+  const enabled = () => sessionMode !== "off" || budget?.current?.contract.mode === "task";
+  function syncBadge(ctx: any) {
+    const label = enabled() ? `ON · ${sessionMode === "off" ? "task policy" : sessionMode}` : "OFF";
+    ctx?.ui?.setStatus?.("shame", `🦥 ${label}${lastReportState ? ` · last: ${lastReportState}` : ""}`);
+  }
 
   pi.on("session_start", async (event: any, ctx: any) => {
     const entries = Array.isArray(event?.entries) ? event.entries : [];
@@ -853,7 +852,7 @@ export default function lazyReportShameShameShame(pi: any) {
         break;
       }
     }
-    try { ctx?.ui?.setStatus?.("shame", `\ud83e\udda5 ${sessionMode}`); } catch { /* optional */ }
+    try { syncBadge(ctx); } catch { /* optional UI */ }
   });
 
   pi.on("input", async (event: any) => {
@@ -862,7 +861,6 @@ export default function lazyReportShameShameShame(pi: any) {
     currentUserText = text;
     pendingFollowUp = null;
     mutatingTurn = false;
-    if (event.source !== "extension") retryInProgress = false;
     if (activatesGuard(text)) turnGuardActive = true;
     if (activatesShameSelfCorrection(text)) {
       shameSelfCorrectTurn = true;
@@ -872,7 +870,9 @@ export default function lazyReportShameShameShame(pi: any) {
     return { action: "continue" };
   });
 
-  pi.on("tool_result", async (event: any) => {
+  pi.on("tool_result", async (event: any, ctx: any) => {
+    if (event.isError) recordFailure(ctx, { kind: "tool_error_observed", tool_name: event.toolName, tool_call_id: event.toolCallId,
+      error_excerpt: contentToText(event.content).slice(0, 1000) });
     const tool = baseToolName(event.toolName);
     const input = event.input || {};
     const path = String(input.path || "");
@@ -904,7 +904,8 @@ export default function lazyReportShameShameShame(pi: any) {
     }
   });
 
-  pi.on("before_agent_start", async (event: any) => {
+  pi.on("before_agent_start", async (event: any, ctx: any) => {
+    try { syncBadge(ctx); } catch { /* optional UI */ }
     const prompt = String(event.prompt || "");
     if (sessionGuardActive || turnGuardActive || activatesGuard(prompt)) {
       turnGuardActive = true;
@@ -921,13 +922,20 @@ export default function lazyReportShameShameShame(pi: any) {
     if (!pendingFollowUp || ctx?.hasPendingMessages?.() || ctx?.signal?.aborted) return;
     const prompt = pendingFollowUp;
     pendingFollowUp = null;
-    pi.sendUserMessage(prompt, { deliverAs: "followUp", expandPromptTemplates: false });
+    try { pi.sendUserMessage(prompt, { deliverAs: "followUp", expandPromptTemplates: false }); }
+    catch (error) {
+      recordFailure(ctx, { kind: "continuation_dispatch_exception", error_excerpt: String(error).slice(0, 1000) });
+      throw error;
+    }
   });
 
   pi.on("session_shutdown", async () => { pendingFollowUp = null; });
 
   pi.on("message_end", async (event: any, ctx: any) => {
     if (event.message?.role !== "assistant") return;
+    if (event.message.stopReason === "error") recordFailure(ctx, { kind: "provider_error_observed",
+      provider: event.message.provider, model: event.message.model, response_id: event.message.responseId,
+      error_excerpt: String(event.message.errorMessage || "provider error without message").slice(0, 1000) });
     pendingFollowUp = null;
     // Preserve intermediate text AND tool calls, guard state, and retry budget.
     // Only a terminal model response can be a completion-report candidate.
@@ -975,6 +983,8 @@ export default function lazyReportShameShameShame(pi: any) {
         lastCandidate = makeCandidate(ctx, currentUserText, String(event.message.id || event.id || "unknown"), text, check, forceStatus);
       }
       if (check.decision !== "reject") {
+        if (statusState === "failed") recordFailure(ctx, { kind: "agent_reported_failure", goal: status.goal,
+          reason_codes: [status.failure?.triage?.code], cause: status.failure?.triage?.cause, candidate_hash: lastCandidate.response_sha256 });
         // JSON-first keep-going and escalation: every validated status compiles
         // through compile-status-command.mjs (pure data -> command; no regex).
         // continuing and needs_* escalation states queue their exact compiled
@@ -985,10 +995,11 @@ export default function lazyReportShameShameShame(pi: any) {
           // Human directive (2026-08-31): agent output is not polluted with JSON.
           // Validate, act, persist, then strip the model JSON and render status
           // from the pydantic-validated object.
-          const strippedContent = stripStatusJson(event.message.content, "");
+          const strippedContent = stripStatusJson(event.message.content);
           const line = renderStatusLine(status);
           displayReturn = { message: { ...event.message, content: appendText(strippedContent, line) } };
-          try { ctx?.ui?.setStatus?.("shame", `\ud83e\udda5 ${sessionMode} \u00b7 ${statusState}`); } catch { /* status bar optional */ }
+          lastReportState = statusState;
+          try { syncBadge(ctx); } catch { /* optional UI */ }
           const compiled = compileStatusCommand(status);
           if (compiled?.command) {
             const claim = claimGuardFollowUp({
@@ -1018,9 +1029,8 @@ export default function lazyReportShameShameShame(pi: any) {
         reason: [...check.reason_codes, ...check.footer_failures].join(","),
         maxRetries: budget.current ? 1 : 3,
       });
-      const alreadyRetried = !formatAllowed || retriedTurnIds.has(turnId) || !pipelineClaim.ok;
+      const alreadyRetried = !formatAllowed || !pipelineClaim.ok;
       if (alreadyRetried && budget.current) budget.current.save("task_format_repair_exhausted");
-      if (!alreadyRetried) retriedTurnIds.add(turnId);
 
       let reviewPacketPath = PENDING_REVIEW_PACKET;
       try {
@@ -1029,10 +1039,12 @@ export default function lazyReportShameShameShame(pi: any) {
         ctx?.ui?.notify?.(`lazy-report-shame-shame-shame could not write review packet: ${error instanceof Error ? error.message : String(error)}`, "warning");
       }
 
+      recordFailure(ctx, { kind: "report_rejected", goal: status?.goal || null, candidate_hash: lastCandidate.response_sha256,
+        reason_codes: check.reason_codes, checker_version: check.checker_version, review_packet: reviewPacketPath,
+        excerpt: candidateExcerpt(lastCandidate), retry: { planned: !alreadyRetried, reason: pipelineClaim.reason } });
       const notice = rejectionNotice(lastCandidate, check, alreadyRetried, reviewPacketPath);
       playShameAudio(lastAudioPlayedAt);
       if (!alreadyRetried) {
-        retryInProgress = true;
         keepGuardForRetry = strictStatus;
         pendingFollowUp = retryPrompt(lastCandidate, check, reviewPacketPath, budget.current ? {
           phase: budget.current.phase, receipt: budget.current.receipt, allowed_tools: [], format_repair_limit: 1,
@@ -1049,7 +1061,6 @@ export default function lazyReportShameShameShame(pi: any) {
       if (!sessionGuardActive && !keepGuardForRetry) turnGuardActive = false;
       if (!keepGuardForRetry) shameSelfCorrectTurn = false;
       mutatingTurn = false;
-      if (check.decision !== "reject") retryInProgress = false;
     }
   });
 
@@ -1072,8 +1083,25 @@ export default function lazyReportShameShameShame(pi: any) {
       if (SHAME_MODES.has(modeArg)) {
         sessionMode = modeArg;
         try { pi.appendEntry("shame-mode", { mode: modeArg }); } catch { /* persistence best-effort */ }
-        try { ctx?.ui?.setStatus?.("shame", `\ud83e\udda5 ${sessionMode}`); } catch { /* optional */ }
+        try { syncBadge(ctx); } catch { /* optional UI */ }
         ctx.ui.notify(`shame guard mode: ${sessionMode} (persisted for this session)`, "info");
+        return;
+      }
+      if (modeArg === "status") {
+        syncBadge(ctx);
+        ctx.ui.notify(JSON.stringify({ enabled: enabled(), mode: sessionMode, last_report: lastReportState || null,
+          task: budget.current?.phase || "unarmed", failure_log: failureLogPath(), loaded_source_hash: loadedSourceHash,
+          reload_required: loadedSourceHash !== sha256(readFileSync(fileURLToPath(import.meta.url), "utf8")) }, null, 2), "info");
+        return;
+      }
+      if (modeArg === "task" || modeArg.startsWith("task ")) {
+        await budget.command(args.trim().slice(4).trim(), ctx); syncBadge(ctx); return;
+      }
+      if (modeArg === "failures" || modeArg.startsWith("failures ")) {
+        try {
+          const options = historyOptions(args.trim().split(/\s+/).slice(1));
+          ctx.ui.notify(JSON.stringify(readFailureHistory({ sessionId: sessionIdentity(ctx), ...options }), null, 2), "info");
+        } catch (error) { ctx.ui.notify(String(error), "error"); }
         return;
       }
       let parsed = parseShameArgs(args);
@@ -1197,6 +1225,14 @@ export default function lazyReportShameShameShame(pi: any) {
       } else {
         ctx.ui.notify(`Saved /shame JSONL example ${exampleId.slice(0, 19)} (${parsed.verdict}${parsed.reasons.length ? ":" + parsed.reasons.join(",") : ""}); memory disabled`, "info");
       }
+    },
+  });
+  pi.registerTool?.({ name: "shame_failures", label: "Shame failure history",
+    description: "Read retained Shame failures. Current session by default; all=true explicitly requests cross-session history. No checks or writes.",
+    parameters: { type: "object", properties: { limit: { type: "integer", minimum: 1, maximum: 200 }, all: { type: "boolean" } }, additionalProperties: false },
+    async execute(_id: string, params: any, _signal: any, _update: any, ctx: any) {
+      const data = readFailureHistory({ sessionId: sessionIdentity(ctx), ...params });
+      return { content: [textBlock(JSON.stringify(data))], details: data };
     },
   });
   budget = installTaskBudget(pi);

@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url';
 
 const dir = mkdtempSync(join(tmpdir(), 'shame-stop-'));
 process.env.LAZY_REPORT_SHAME_AUDIO_ENABLED = '0';
+process.env.LAZY_REPORT_SHAME_FAILURE_LOG = join(dir, 'failures.jsonl');
 process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED = '0';
 process.env.LAZY_REPORT_SHAME_DEFAULT_MODE = 'strict';
 process.env.LAZY_REPORT_SHAME_PENDING_REVIEW_PACKET = join(dir, 'pending.json');

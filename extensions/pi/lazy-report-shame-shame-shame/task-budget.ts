@@ -5,12 +5,13 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
+import { recordFailure } from './failure-history.mjs';
 
 type Check = { id: string; argv: string[]; inputs: string[]; definition_files?: string[]; timeout_ms: number; kind?: 'check' | 'review' | 'delivery' };
 type Contract = { schema: 'pi.task_budget.v1'; mode: 'task' | 'question'; deliverable: string; allowed_paths: string[]; elapsed_ms: number; checks: Check[] };
 type Run = { command: string; argv: string[]; result: string; stdout: string; stderr: string; exit_code: number; input_hash: string; passed: boolean; attempts: number; failures: number };
 const hash = (s: string | Buffer) => createHash('sha256').update(s).digest('hex');
-const readers = new Set(['read', 'grep', 'find', 'ls']);
+const readers = new Set(['read', 'grep', 'find', 'ls', 'shame_failures']);
 const baseTool = (s: string) => String(s).split('.').at(-1)?.split('/').at(-1) || '';
 
 function canonical(path: string): string {
@@ -116,6 +117,9 @@ export class TaskBudget {
   private inputs(c: Check) { return this.fingerprint(c.inputs); }
   save(reason?: string) {
     writeFileSync(this.receipt, JSON.stringify({ schema: 'pi.task_budget.receipt.v1', contract_hash: hash(JSON.stringify(this.contract)), deliverable: this.contract.deliverable, phase: this.phase, deadline: this.deadline, reason, checks: Object.fromEntries(this.runs) }, null, 2));
+    if (reason) recordFailure(this.ctx, { kind: 'task_budget_event', goal: this.contract.deliverable,
+      reason_codes: [reason], phase: this.phase, task_receipt: this.receipt,
+      check_attempts: Object.fromEntries([...this.runs].map(([id, run]) => [id, run.attempts])) });
     this.ctx.ui?.setStatus?.('shame-task', `task: ${this.phase}`);
   }
   dispose() { clearTimeout(this.timer); }
@@ -200,22 +204,26 @@ export function installTaskBudget(pi: any) {
   }
   pi.on('session_start', (_e: any, ctx: any) => { if (process.env.SHAME_TASK_BUDGET) start(process.env.SHAME_TASK_BUDGET, ctx); });
   pi.on('session_shutdown', () => { current?.dispose(); current = null; });
-  pi.on('input', (e: any) => { if (current && e.source !== 'extension' && current.phase === 'accepted') current.answerOnlyTurn = true; });
+  pi.on('input', (e: any) => { if (current && e.source !== 'extension' && ['accepted', 'exhausted'].includes(current.phase)) current.answerOnlyTurn = true; });
   pi.on('before_agent_start', () => current ? { message: {
     customType: 'task-budget', display: false,
     content: JSON.stringify({ contract: current.contract, phase: current.phase, remaining_ms: Math.max(0, current.deadline - Date.now()), receipt: current.receipt, output_only: current.formatOnly, question_only: current.answerOnlyTurn || current.contract.mode === 'question' }),
   } } : undefined);
-  pi.on('tool_call', (e: any) => {
+  pi.on('tool_call', (e: any, ctx: any) => {
     const reason = current?.tool(e);
-    if (reason) return { block: true, terminate: Boolean(current?.formatOnly || current?.phase === 'accepted' || current?.phase === 'exhausted'), reason: JSON.stringify({ schema: 'pi.task_budget.violation.v1', code: reason, phase: current?.phase, receipt: current?.receipt }) };
+    if (reason) {
+      recordFailure(ctx, { kind: 'task_violation', goal: current?.contract.deliverable, reason_codes: [reason],
+        tool_name: e.toolName, tool_call_id: e.toolCallId, phase: current?.phase, task_receipt: current?.receipt });
+      return { block: true, terminate: Boolean(current?.formatOnly || current?.phase === 'accepted' || current?.phase === 'exhausted'), reason: JSON.stringify({ schema: 'pi.task_budget.violation.v1', code: reason, phase: current?.phase, receipt: current?.receipt }) };
+    }
   });
   pi.on('tool_result', (e: any) => current?.toolResult(e));
+  async function command(args: string, ctx: any) {
+    if (args.trim().startsWith('start ')) start(args.trim().slice(6).trim(), ctx);
+    ctx.ui.notify(current ? JSON.stringify({ phase: current.phase, deliverable: current.contract.deliverable, receipt: current.receipt }) : 'No task budget armed', 'info');
+  }
   pi.registerCommand('shame-task', {
-    description: 'Arm an operator-approved task budget: /shame-task start <contract.json> or status',
-    handler: async (args: string, ctx: any) => {
-      if (args.trim().startsWith('start ')) start(args.trim().slice(6).trim(), ctx);
-      ctx.ui.notify(current ? JSON.stringify({ phase: current.phase, deliverable: current.contract.deliverable, receipt: current.receipt }) : 'No task budget armed', 'info');
-    },
+    description: 'Compatibility alias for /shame task start <contract.json> or status', handler: command,
   });
   pi.registerTool?.({
     name: 'task_check', label: 'Approved task check', description: 'Run an operator-approved named check. No custom commands or arguments. Returns cached success when declared inputs have not changed.',
@@ -226,5 +234,5 @@ export function installTaskBudget(pi: any) {
       return { content: [{ type: 'text', text: JSON.stringify(result) }], details: result };
     },
   });
-  return { get current() { return current; } };
+  return { command, get current() { return current; } };
 }

@@ -1,16 +1,10 @@
 # lazy-report-shame-shame-shame
 
-A serious Pi extension wearing a joke hat, for agentic engineers who have personally suffered through “committed and pushed, done” while the actual product still does not work.
+Pi status/continuation enforcement, operator-armed task budgets, and accessible failure history. Human feedback remains a separate training dataset.
 
-When an assistant tries to turn commit-heavy or GitHub-heavy delivery prose into progress without ending in validated `pi.agent_status.v1` data, the extension rejects the answer, plays one Chatterbox “shame”, and starts a short correction workflow: the agent rewrites the answer, then the human labels the raw rejected candidate for training.
+Start with `/shame status`, `/shame failures`, `/shame task status`, or `/shame review`. The status indicator distinguishes `ON`/`OFF`, configured mode, and the **last reported** task state. `/shame status` also compares the loaded entrypoint hash with its on-disk source; that comparison does not attest every imported dependency.
 
-It is meant to be funny because the failure mode is otherwise exhausting. The humor is restorative; the enforcement is not optional.
-
-> Shame.
-
-Every agentic engineer knows the feeling: the model confidently writes a status update where a proof should be. This extension turns that moment into one short spoken word, a plain correction packet, and a human-labeling step.
-
-The installed `shame.wav` policy is deliberately small: one Chatterbox-generated word, “shame”, and no bell. Replace it only with another short single-word local file.
+Ponytail supplies generation guidance; this harness owns execution limits. Architecture diagrams remain optional, predeclared deliverables—not new work automatically started at a stop.
 
 ## What it enforces
 
@@ -40,9 +34,9 @@ Retained proof: `skills/shame/fixtures/stop_boundary_eval.json` covers lifecycle
 
 ## Operator-armed task budgets
 
-Arm a bounded task with `/shame-task start /absolute/contract.json`, or set
-`SHAME_TASK_BUDGET=/absolute/contract.json` when launching Pi. `/shame-task status`
-shows the phase and receipt. This is opt-in; an unarmed session retains existing behavior.
+Arm a bounded task with `/shame task start /absolute/contract.json`, or set
+`SHAME_TASK_BUDGET=/absolute/contract.json` when launching Pi. `/shame task status`
+shows the phase and receipt. `/shame-task` remains a compatibility alias. This is opt-in; an unarmed session retains existing behavior.
 
 ```json
 {
@@ -130,6 +124,34 @@ skills/shame/scripts/write-continuation-guard.mjs \
   --next-command 'Finish the ticketed goal, verify retained evals and installed extension replay, then close the ticket with readback.' \
   --json
 ```
+
+## Failure history
+
+`/mnt/storage12tb/skills/shame/failures/events.jsonl` is append-only operational
+history, not the latest-candidate snapshot and not human-labeled training data.
+Override it with `LAZY_REPORT_SHAME_FAILURE_LOG`.
+
+It records report rejections, validated agent-reported failures, observed tool
+errors, provider errors, task-budget failures/violations, and continuation dispatch exceptions.
+Rows carry session identity, kind, fingerprint, reason codes where available,
+bounded excerpts, and receipt/candidate references. Reported failures are claims,
+not independently established causes. A planned retry is not a delivery receipt.
+
+```text
+/shame failures --limit 20
+/shame failures --all --limit 20
+```
+
+Agents use the read-only `shame_failures` tool, including during read-only diagnostic
+questions after a task stops. CLI callers use `skills/shame/run.sh failures --json`
+with `--session-id ID` or `--all`. Each view uses the same reader. It scans the last
+4 MiB and caps output at 32 KiB, exposing truncated scans/output and malformed rows.
+The raw file remains available for older history. New history starts when this
+runtime loads; old session transcripts are not automatically backfilled.
+
+Log-write failures produce visible warnings without starting another retry loop.
+Journal files are created owner-only. Retained proof lives in
+`skills/shame/fixtures/failure_history_eval.json`.
 
 ## Collaborative correction loop
 
@@ -246,6 +268,4 @@ LRSSS_STRICT_STATUS=1 node ~/.pi/agent/extensions/lazy-report-shame-shame-shame/
 
 This extension can prove only report-shape enforcement and human-labeled training capture. It cannot prove the underlying project is complete. Completion still requires the project’s own live/readback proof.
 
-The spoken “shame” is the joke. The rejection loop is not.
-
-If this makes another agentic engineer laugh after the fifth fake “done” report of the day, it is working as designed.
+A failure log helps diagnose the execution path. Neither the log nor the status indicator is a substitute for project acceptance evidence.
