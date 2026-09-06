@@ -21,16 +21,18 @@ At terminal assistant `message_end` (`stopReason="stop"`, no tool calls or queue
 7. ignores trailing prose after valid status JSON because pydantic data is authoritative and the renderer discards model prose;
 8. strips model-authored status JSON/prose from accepted output and renders the visible `Status Report` from the validated JSON;
 9. replaces rejected output with `REJECTED_BY_SLOTH_COURT` plus a correction packet;
-10. prepares up to three `UNLAZY_FORCED_RETRY` repairs per reporting episode and dispatches them only at `agent_end`; accepted status resets this repair budget, and valid continuations do not spend it;
+10. prepares at most one output-only `UNLAZY_FORCED_RETRY` correction per reporting episode, armed or unarmed, and dispatches it only at `agent_end`; correction turns cannot call tools or request another correction;
 11. tells the human how to label the raw rejected candidate with `/shame reject|allow|warn <reason> -- <note>` after automatic repair is exhausted.
 
-The default mode is `normal`; ordinary chat is not forced through the status contract. Use `LAZY_REPORT_SHAME_DEFAULT_MODE=strict` for project-agent panes that must status-report at every terminal stop, or `/shame normal|off|strict` to override a session. `$unlazy`, `/unlazy`, `unlazy`, and `acceptance ledger` prompts add one-turn enforcement without injecting system-prompt prose. `$shame` is stricter: it marks the next assistant answer as a self-correction turn and rejects any answer that does not carry valid `pi.agent_status.v1` JSON. The `/lazy-report-shame-shame-shame` command enables session-wide enforcement explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
+The default mode is `normal`; ordinary chat is not forced through the status contract. Use `LAZY_REPORT_SHAME_DEFAULT_MODE=strict` for project-agent panes that must status-report at every terminal stop, or `/shame normal|off|strict` to override a session. Leading `$unlazy`/`/unlazy`/`/skill:unlazy` invocations add one-turn enforcement. Leading `$shame`/`/shame`/`/skill:shame` invocations request self-correction. Mentioning these skills or the phrase `acceptance ledger` in an advisory question does not activate a gate. New human input clears stale correction and skill-read flags. Report corrections are output-only even without an armed task budget; they cannot launch checks or reopen accepted work. Read-only failure history remains available outside correction turns. The `/lazy-report-shame-shame-shame` command enables session-wide enforcement explicitly. A continuation ledger file also enables status enforcement for that session because the guard has machine-readable unfinished work to check.
 
 Intermediate responses cannot erase pending tool calls or exhaust report repairs. Cancellation, provider errors, length limits, and shutdown do not restart the model. Host-queued work takes precedence over reporting repair. The final message is validated/rendered before display; `agent_end` owns follow-up dispatch, not message replacement. Pi drains follow-ups queued by `agent_end` inside the current prompt; `agent_settled` is too late for reliable print-mode continuation and is reserved for idle observation.
 
 Repeated status text is not a duplicate event: legitimate polling continuations dispatch at each distinct stop, while replaying the same terminal event dispatches once. `skills/shame/fixtures/hardening_eval.json` retains this live case plus session ownership and evidence-resolution regressions.
 
 Retained proof: `skills/shame/fixtures/stop_boundary_eval.json` covers lifecycle replay plus a live Pi model with real file reads, writes, and independent result readback. This is not proof that every project is semantically complete.
+
+The real conversational seam is covered by `skills/shame/fixtures/conversation_guard_eval.json`: advisory mentions answer once without tools/rejections; a fault-injected report gets one live, tool-free correction. Strict mode and mutation enforcement are positive controls, not silently disabled.
 
 ## Operator-armed task budgets
 

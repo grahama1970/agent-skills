@@ -256,12 +256,13 @@ async function runRetryBudgetExhaustsAsFailure() {
   const c = ctx();
   await handlers.input[0]({ text: '$shame fix this bad status', source: 'user' });
   let lastNotice = '';
-  for (let i = 0; i < 4; i += 1) {
+  for (let i = 0; i < 2; i += 1) {
+    if (i === 1) await handlers.input[0]({ text: sent[0].text, source: 'extension' }, c);
     const result = await handlers.message_end[0]({ id: `assistant-bad-${i}`, message: { id: `assistant-bad-${i}`, role: 'assistant', content: [{ type: 'text', text: `Committed and pushed. Done ${i}.` }] } }, c);
     assert(Array.isArray(result?.message?.content), 'retry rejection notice content must remain a Pi content-block array', { iteration: i, content: result?.message?.content });
     lastNotice = result?.message?.content?.map?.((part) => part?.text || '').join('\n') || String(result?.message?.content || '');
   }
-  assert(sent.length === 3, 'retry budget should allow exactly three automatic rewrites', { sentCount: sent.length, sent, lastNotice });
+  assert(sent.length === 1, 'report repair must allow exactly one automatic rewrite', { sentCount: sent.length, sent, lastNotice });
   const lastPacket = fencedJsonPayload(lastNotice, 'REJECTED_BY_SLOTH_COURT');
   assert(lastPacket.next?.action === 'stop_retry', 'retry-exhausted notice must stop retrying', { lastPacket });
   assert(lastPacket.next?.reason === 'status_contract_retry_exhausted', 'retry-exhausted notice must name the failure', { lastPacket });
@@ -644,7 +645,7 @@ async function runForcedRetryRequiresStatusJson() {
   const noticePacket = fencedJsonPayload(notice, 'REJECTED_BY_SLOTH_COURT');
   assert(noticePacket.reason_codes?.includes('missing_agent_status_json'), 'forced retry without pi.agent_status.v1 JSON was not rejected', { noticePacket });
   assert(notice.includes('REJECTED_BY_SLOTH_COURT'), 'forced retry rejection did not show correction packet', { notice });
-  assert(sent.length === 1, 'forced retry rejection did not queue one retry', { sentCount: sent.length, sent });
+  assert(sent.length === 0, 'a failed correction must not queue another correction', { sentCount: sent.length, sent });
   const saved = JSON.parse(readFileSync(packet, 'utf8'));
   assert(saved.machine?.reason_codes?.includes('missing_agent_status_json'), 'pending packet omitted missing JSON reason', saved);
   console.log(JSON.stringify({ ok: true, mode: 'forced-retry-requires-status-json', retryMessages: sent.length, packet }));

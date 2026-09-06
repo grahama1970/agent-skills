@@ -3049,7 +3049,7 @@
       "command": [
         "bash",
         "-lc",
-        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh retry-budget-exhausts-as-failure | grep -q '\"retryMessages\":3'"
+        "cd /home/graham/workspace/experiments/agent-skills && LAZY_REPORT_SHAME_INDEX=/home/graham/workspace/experiments/agent-skills/extensions/pi/lazy-report-shame-shame-shame/index.ts LAZY_REPORT_SHAME_AUDIO_ENABLED=0 LAZY_REPORT_SHAME_MEMORY_ENABLED=0 skills/shame/scripts/probe-shame-extension.sh retry-budget-exhausts-as-failure | grep -q '\"retryMessages\":1'"
       ],
       "expected": {
         "exit_code": 0

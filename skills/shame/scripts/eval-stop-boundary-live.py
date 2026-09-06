@@ -48,7 +48,7 @@ For each of the SIX continuing stops, emit this EXACT same block without edits o
 '''
 repair_proof = '--proof-repair' in sys.argv
 if repair_proof:
-    prompt += f'\nA test transport will corrupt your first proof reference. If a correction arrives, read {ROOT}/skills/shame/SKILL.md, read back the real sum file, and report its actual local path. Never fabricate evidence.'
+    prompt += '\nA test transport will corrupt your first proof reference. If a correction arrives, use the already observed values and output path to correct the status only. Do not call any tools during report repair. Never fabricate evidence.'
     # Corrupt exactly one real terminal message rather than asking the model
     # to fabricate a completion claim. The recovery still uses the live model.
     fault = work / 'fault.ts'
@@ -112,6 +112,9 @@ last_text = '\n'.join(p.get('text', '') for p in assistant[-1].get('content', []
 assert 'State: done' in last_text, last_text
 rejections = sum(any('REJECTED_BY_SLOTH_COURT' in p.get('text', '') for p in m.get('content', [])) for m in assistant)
 assert rejections == (1 if repair_proof else 0), f'unexpected reporting repairs: {rejections}'
+if repair_proof:
+    rejected_at = next(i for i, m in enumerate(assistant) if any('REJECTED_BY_SLOTH_COURT' in p.get('text', '') for p in m.get('content', [])))
+    assert not any(p.get('type') == 'toolCall' for m in assistant[rejected_at + 1:] for p in m.get('content', [])), 'format correction reopened tool execution'
 history_verified = False
 if repair_proof:
     rows = [json.loads(line) for line in (work / 'failures.jsonl').read_text().splitlines()]

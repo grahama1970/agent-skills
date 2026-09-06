@@ -40,8 +40,8 @@ function tokenize(text: unknown): string[] {
   if (current) out.push(current);
   return out;
 }
-function hasAnyToken(text: unknown, tokens: Set<string>): boolean {
-  return tokenize(text).some((token) => tokens.has(token));
+function hasLeadingToken(text: unknown, tokens: Set<string>): boolean {
+  return tokens.has(tokenize(text)[0] || "");
 }
 function baseToolName(toolName: unknown): string {
   const raw = String(toolName || "").trim();
@@ -50,8 +50,8 @@ function baseToolName(toolName: unknown): string {
   const slashed = dotted.split("/").pop() || dotted;
   return slashed;
 }
-const SHAME_TOKENS = new Set(["$shame", "/shame"]);
-const GUARD_TOKENS = new Set(["$shame", "/shame", "$unlazy", "/unlazy"]);
+const SHAME_TOKENS = new Set(["$shame", "/shame", "/skill:shame"]);
+const GUARD_TOKENS = new Set([...SHAME_TOKENS, "$unlazy", "/unlazy", "/skill:unlazy"]);
 const CLOSED_TICKET_STATUSES = new Set(["closed", "done", "complete", "completed", "merged"]);
 const PASSING_GATE_STATUSES = new Set(["pass", "passed", "ok", "complete", "completed", "closed"]);
 function isMutatingShellCommand(command: string): boolean {
@@ -220,17 +220,18 @@ function appendText(content: unknown, text: string): unknown {
   return [...content, { type: "text", text: `\n\n${text}` }];
 }
 
+function controlLine(text: string): string {
+  return String(text ?? "").trimStart().split("\n", 1)[0].trim();
+}
+
 function activatesGuard(text: string): boolean {
-  const raw = String(text ?? "");
-  return hasAnyToken(raw, GUARD_TOKENS)
-    || raw.toLowerCase().includes("acceptance ledger")
-    || raw.includes("UNLAZY_FORCED_RETRY")
-    || raw.includes("CONTINUE_FROM_AGENT_STATUS");
+  return hasLeadingToken(text, GUARD_TOKENS)
+    || controlLine(text) === "UNLAZY_FORCED_RETRY"
+    || controlLine(text) === "CONTINUE_FROM_AGENT_STATUS";
 }
 
 function activatesShameSelfCorrection(text: string): boolean {
-  const raw = String(text ?? "");
-  return hasAnyToken(raw, SHAME_TOKENS) || raw.includes("UNLAZY_FORCED_RETRY");
+  return hasLeadingToken(text, SHAME_TOKENS) || controlLine(text) === "UNLAZY_FORCED_RETRY";
 }
 
 function sha256(value: string): string {
@@ -639,6 +640,9 @@ ${JSON.stringify({
 function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string, taskBudget?: object): string {
   const packet = {
     schema: "lazy_report_shame.retry_request.v1",
+    format_only: true,
+    allowed_tools: [],
+    max_corrections: 1,
     ...(taskBudget ? { task_budget: taskBudget } : {}),
     candidate_hash: candidate.response_sha256,
     checker: check.checker_version,
@@ -822,6 +826,7 @@ export default function lazyReportShameShameShame(pi: any) {
   let sessionGuardActive = false;
   let turnGuardActive = false;
   let shameSelfCorrectTurn = false;
+  let formatRepairTurn = false;
   let mutatingTurn = false;
   let shameSkillContractRequired = false;
   let shameSkillContractRead = false;
@@ -861,12 +866,13 @@ export default function lazyReportShameShameShame(pi: any) {
     currentUserText = text;
     pendingFollowUp = null;
     mutatingTurn = false;
-    if (activatesGuard(text)) turnGuardActive = true;
-    if (activatesShameSelfCorrection(text)) {
-      shameSelfCorrectTurn = true;
-      shameSkillContractRequired = true;
-      shameSkillContractRead = false;
-    }
+    // Derive turn state anew. A previous correction must not contaminate a
+    // fresh human question, and discussing a skill is not invoking its guard.
+    turnGuardActive = activatesGuard(text);
+    formatRepairTurn = controlLine(text) === "UNLAZY_FORCED_RETRY";
+    shameSelfCorrectTurn = activatesShameSelfCorrection(text);
+    shameSkillContractRequired = shameSelfCorrectTurn && !formatRepairTurn;
+    shameSkillContractRead = false;
     return { action: "continue" };
   });
 
@@ -885,7 +891,11 @@ export default function lazyReportShameShameShame(pi: any) {
     const tool = baseToolName(event.toolName);
     const input = event.input || {};
     const command = String(input.command || "");
-    if (shameSkillContractRequired && !shameSkillContractRead && tool !== "read") {
+    if (formatRepairTurn) return {
+      block: true, terminate: true,
+      reason: JSON.stringify({ code: "format_repair_tools_forbidden", allowed_tools: [], max_corrections: 1 }),
+    };
+    if (shameSkillContractRequired && !shameSkillContractRead && !["read", "shame_failures"].includes(tool)) {
       return {
         block: true,
         reason: JSON.stringify({
@@ -1008,7 +1018,6 @@ export default function lazyReportShameShameShame(pi: any) {
               assistantText: text,
               userText: currentUserText,
               reason: compiled.reason || `agent_status_${statusState}`,
-              maxRetries: 3,
               continuation: true,
               message: event.message,
             });
@@ -1020,14 +1029,14 @@ export default function lazyReportShameShameShame(pi: any) {
       }
 
       const turnId = lastCandidate.turn_id;
-      const formatAllowed = budget.current ? budget.current.requestFormatRepair() : true;
+      const formatAllowed = !formatRepairTurn && (!budget.current || budget.current.requestFormatRepair());
       const pipelineClaim = claimGuardFollowUp({
         guard: "shame",
         messageId: String(event.message.id || event.id || turnId),
         assistantText: text,
         userText: currentUserText,
         reason: [...check.reason_codes, ...check.footer_failures].join(","),
-        maxRetries: budget.current ? 1 : 3,
+        maxRetries: 1,
       });
       const alreadyRetried = !formatAllowed || !pipelineClaim.ok;
       if (alreadyRetried && budget.current) budget.current.save("task_format_repair_exhausted");

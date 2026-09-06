@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "The real advisory-question/report-repair conversation seam",
+  "claims": {
+    "proves": "Normal advisory mentions do not activate status enforcement; explicit invocations and mutations still do. Correction turns cannot call tools or queue another correction, and fresh human input clears stale flags. Live Pi answers an advisory question once and repairs one fault-injected report without tools.",
+    "does_not_prove": "All natural-language intent, strict-mode exemptions, universal instruction obedience, or deployment into every open pane. The event probe is synthetic; the conversation cases use a real provider, with explicit first-message corruption only in the repair case."
+  },
+  "cases": [
+    {
+      "name": "conversation-boundaries",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": ["node", "--experimental-strip-types", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/probe-conversation-guard.mjs"],
+      "timeout_seconds": 60,
+      "expected": {"exit_code": 0, "stdout_contains": ["CONVERSATION_GUARD_PASS"]}
+    },
+    {
+      "name": "live-advisory-no-report-loop",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": ["python3", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-conversation-guard-live.py", "advisory"],
+      "timeout_seconds": 150,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"assistant_responses\": 1", "\"rejections\": 0", "\"tool_calls\": 0"], "stdout_excludes": ["Traceback", "provider_error"]}
+    },
+    {
+      "name": "live-single-output-only-correction",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "command": ["python3", "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-conversation-guard-live.py", "repair"],
+      "timeout_seconds": 150,
+      "expected": {"exit_code": 0, "stdout_contains": ["\"assistant_responses\": 2", "\"rejections\": 1", "\"tool_calls\": 0"], "stdout_excludes": ["Traceback", "provider_error"]}
+    }
+  ]
+}

@@ -70,15 +70,19 @@ Agents can read the same journal with the read-only `shame_failures` tool
 - Preserve intermediate responses and tool calls. Validate only terminal
   assistant `stopReason="stop"` messages with no tool calls or queued work.
 - Mutating or guard-forced runs must include one fenced `json` block containing
-  `pi.agent_status.v1`. `$shame`/`UNLAZY_FORCED_RETRY` activates self-correction.
+  `pi.agent_status.v1`. A leading `$shame`, `/shame`, or `/skill:shame` invocation
+  activates self-correction; mentioning those names in an advisory question does
+  not. Strict mode remains an explicit opt-in. Actual mutations remain guarded.
 - Pydantic data decides status validity. Never classify status prose with regex
   or an LLM. Strip model status prose/raw JSON; render the visible `Status Report`
   from validated data. Trailing prose after valid JSON is ignored.
 - Compile actionable status data once and dispatch at `agent_end`. Identical
   status text at distinct stops is legitimate; replaying one event is not.
 - Aborts, errors, length limits, and shutdown do not start reporting retries.
-- Unarmed compatibility mode allows up to three report corrections. An armed
-  task allows one tool-free format correction; it cannot reopen accepted work.
+- Every report-repair episode allows one output-only correction, armed or unarmed.
+  `UNLAZY_FORCED_RETRY` identifies that correction: all tools are blocked and a
+  failed correction cannot queue another. Fresh human input clears correction
+  and skill-read flags. Formatting repair cannot reopen accepted work.
 - After two same-goal/triage failure fingerprints, require a plain human question,
   valid `debugger.proof.v1`, or `lazy_report_shame.debugger_failure_handoff.v1`
   with exact file:line and debugger error. Preserve the failure evidence.
@@ -181,8 +185,8 @@ skills/agentic-evals/run.sh run skills/shame/fixtures/agentic_eval.json --output
 skills/agentic-evals/run.sh run skills/shame/fixtures/failure_history_eval.json --output /tmp/shame-failure-history-eval.json
 ```
 
-Focused fixture families: `stop_boundary_eval.json`, `hardening_eval.json`, and
-`task_budget_eval.json`. They distinguish synthetic lifecycle/negative probes from
+Focused fixture families: `stop_boundary_eval.json`, `hardening_eval.json`,
+`task_budget_eval.json`, and `conversation_guard_eval.json`. They distinguish synthetic lifecycle/negative probes from
 live provider/tool paths. Never present a read skill, green fixture count, or
 reviewer opinion as proof of unchecked project outcomes.
 
