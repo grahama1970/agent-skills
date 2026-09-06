@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from jsonschema import Draft202012Validator
+from pydantic_step_gate import pydantic_error_messages
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -584,7 +585,9 @@ def build_packet(
 
 def validate_packet(packet: dict[str, Any]) -> list[str]:
     schema = read_object(SCHEMA_PATH)
-    return sorted(error.message for error in Draft202012Validator(schema).iter_errors(packet))
+    return pydantic_error_messages(schema, packet) + sorted(
+        error.message for error in Draft202012Validator(schema).iter_errors(packet)
+    )
 
 
 def main() -> int:

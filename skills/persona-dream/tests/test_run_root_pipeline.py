@@ -627,7 +627,7 @@ class TestRunRootPipeline(unittest.TestCase):
         self.assertEqual(result["first_blocker"]["phase"], "story_contract")
         self.assertEqual(
             result["first_blocker"]["reason"],
-            "schema_validation:'input_idea_contract' is a required property",
+            "schema_validation:pydantic missing at ['input_idea_contract']: Field required",
         )
 
 

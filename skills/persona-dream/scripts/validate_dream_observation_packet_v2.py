@@ -25,6 +25,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(HERE))
 from build_observation_packet_v2 import psychology_hit, sha256_file  # noqa: E402
+from pydantic_step_gate import pydantic_error_messages
 
 SCHEMA_PATH = ROOT / "schemas/dream_observation_packet.v2.schema.json"
 
@@ -37,6 +38,8 @@ def validate(packet_path: Path, run_root: Path, frames_root: Path | None = None)
     # the v1 packet). Callers may override with an explicit frames_root.
     frames_root = frames_root or packet_path.resolve().parent
 
+    for message in pydantic_error_messages(schema, packet):
+        errors.append(f"schema[pydantic]: {message}")
     validator = jsonschema.Draft202012Validator(schema)
     schema_errors = sorted(validator.iter_errors(packet), key=lambda e: e.path)
     for e in schema_errors:

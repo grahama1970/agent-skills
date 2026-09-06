@@ -67,8 +67,14 @@ def validate_journal_entry(entry: dict) -> list[str]:
         from jsonschema import Draft202012Validator
     except Exception:  # noqa: BLE001 - fail closed with the core check
         return _fallback_errors(entry)
-    validator = Draft202012Validator(load_schema())
+    schema = load_schema()
+    validator = Draft202012Validator(schema)
     errs = []
+    try:
+        from pydantic_step_gate import pydantic_error_messages
+        errs.extend(pydantic_error_messages(schema, entry))
+    except Exception:  # noqa: BLE001 - jsonschema path below still fails closed
+        pass
     for e in validator.iter_errors(entry):
         loc = "/".join(str(p) for p in e.absolute_path) or "<root>"
         errs.append(f"{loc}: {e.message}")

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import jsonschema
+from pydantic_step_gate import pydantic_first_check, pydantic_error_messages
 
 PIPELINE = "persona-dream-end-to-end-pipeline-P0"
 LEGACY_PAID_CALL_SCHEMA = "schemas/paid_call_approval_receipt.schema.json"
@@ -41,6 +42,7 @@ def _validate(schema_path: Path, instance_path: Path) -> Any:
     schema = _load_json(schema_path)
     instance = _load_json(instance_path)
     jsonschema.Draft202012Validator.check_schema(schema)
+    pydantic_first_check(schema, instance)
     jsonschema.Draft202012Validator(schema).validate(instance)
     return instance
 

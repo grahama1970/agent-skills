@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from pydantic_step_gate import pydantic_first_check, pydantic_error_messages
 
 try:
     import jsonschema
@@ -27,6 +28,7 @@ TOKEN_RE = re.compile(r"<<<(?:image_[0-9]+|element_[a-z0-9_]+)>>>")
 
 def validate_scene_packet(scene_packet: dict[str, Any]) -> str:
     if jsonschema is not None and SCHEMA_PATH.exists():
+        pydantic_first_check(read_json(SCHEMA_PATH), scene_packet)
         jsonschema.Draft202012Validator(read_json(SCHEMA_PATH)).validate(scene_packet)
         return "jsonschema"
     blockers: list[str] = []

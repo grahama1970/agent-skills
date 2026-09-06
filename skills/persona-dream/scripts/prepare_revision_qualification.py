@@ -22,6 +22,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Mapping, Sequence
 
 import httpx
+from pydantic_step_gate import pydantic_error_messages
 from jsonschema import Draft202012Validator
 
 from idea_lineage import (
@@ -1230,6 +1231,12 @@ def schema_path(name: str) -> Path:
 
 def validate_receipt(receipt: Mapping[str, Any], schema_name: str) -> None:
     schema = read_object(schema_path(schema_name))
+    pydantic_messages = pydantic_error_messages(schema, dict(receipt))
+    if pydantic_messages:
+        raise GateBlocked(
+            "BLOCKED_MEMORY_RECEIPT_SCHEMA",
+            details={"errors": pydantic_messages[:20]},
+        )
     errors = sorted(
         Draft202012Validator(schema).iter_errors(receipt),
         key=lambda error: list(error.path),

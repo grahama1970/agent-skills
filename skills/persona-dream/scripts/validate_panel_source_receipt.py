@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
+from pydantic_step_gate import pydantic_first_check, pydantic_error_messages
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -97,6 +98,7 @@ def validate_panel_source_receipt(receipt_path: Path, *, run_root: Path | None =
     base = run_root.resolve() if run_root else receipt_path.parent.parent
     schema = _read_json(SCHEMA)
     receipt = _read_json(receipt_path)
+    pydantic_first_check(schema, receipt)
     jsonschema.Draft202012Validator(schema).validate(receipt)
 
     result: dict[str, Any] = {

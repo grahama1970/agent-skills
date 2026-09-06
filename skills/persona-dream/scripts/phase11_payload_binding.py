@@ -15,6 +15,7 @@ from jsonschema import Draft202012Validator
 from prepare_revision_qualification import GateBlocked, read_object, safe_indexed_file, sha256_file
 
 from audio_strategy_gate import assess_and_block_kling_request
+from pydantic_step_gate import pydantic_error_messages
 
 ROOT = Path(__file__).resolve().parents[1]
 STANDARD_ENDPOINT = "fal-ai/kling-video/v3/standard/image-to-video"
@@ -165,7 +166,7 @@ def schema_errors(value: Mapping[str, Any]) -> list[str]:
             "BLOCKED_PHASE11_PAYLOAD_BINDING_SCHEMA_UNAVAILABLE",
             details={"path": str(schema_path), "error": str(exc)},
         ) from exc
-    return [
+    return pydantic_error_messages(schema, dict(value)) + [
         f"{'.'.join(str(part) for part in error.path) or '$'}: {error.message}"
         for error in sorted(Draft202012Validator(schema).iter_errors(dict(value)), key=lambda item: list(item.path))
     ]

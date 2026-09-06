@@ -18,6 +18,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 from jsonschema import Draft202012Validator
+from pydantic_step_gate import pydantic_error_messages
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_ROOT = SKILL_ROOT / "schemas"
@@ -119,12 +120,13 @@ def validate_schema(value: Mapping[str, Any], schema_name: str, *, phase_id: str
     if not path.is_file():
         raise IdeaLineageError("IDEA_SCHEMA_MISSING", phase_id=phase_id, details={"schema": schema_name})
     schema = json.loads(path.read_text(encoding="utf-8"))
+    pydantic_messages = pydantic_error_messages(schema, value)
     errors = sorted(Draft202012Validator(schema).iter_errors(value), key=lambda error: list(error.path))
-    if errors:
+    if pydantic_messages or errors:
         raise IdeaLineageError(
             "IDEA_SCHEMA_INVALID",
             phase_id=phase_id,
-            details={"schema": schema_name, "errors": [error.message for error in errors[:20]]},
+            details={"schema": schema_name, "errors": (pydantic_messages + [error.message for error in errors])[:20]},
         )
 
 

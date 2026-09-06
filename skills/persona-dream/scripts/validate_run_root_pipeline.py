@@ -24,6 +24,7 @@ from validate_provider_media_publication_work_order import validate_provider_med
 from validate_story_contract import validate_story_contract
 from validate_storyboard_panel_receipt import validate_storyboard_panel_receipt
 from validate_visual_review_receipt import validate_visual_review_receipt
+from pydantic_step_gate import pydantic_first_check, pydantic_error_messages
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -369,6 +370,7 @@ def _validate_local_provider_media_lock(run_root: Path) -> PhaseResult:
 
     schema = _read_json(PROVIDER_MEDIA_LOCK_SCHEMA)
     receipt = _read_json(path)
+    pydantic_first_check(schema, receipt)
     jsonschema.Draft202012Validator(schema).validate(receipt)
 
     if receipt.get("status") != "LOCAL_MEDIA_LOCK_READY":
@@ -545,6 +547,7 @@ def _validate_kling_scene_packet(run_root: Path) -> PhaseResult:
 
     schema = _read_json(KLING_SCENE_PACKET_SCHEMA)
     packet = _read_json(path)
+    pydantic_first_check(schema, packet)
     jsonschema.Draft202012Validator(schema).validate(packet)
 
     if packet.get("schema") != "kling.scene_packet.v1":

@@ -56,6 +56,7 @@ from idea_lineage import (
 from prepare_revision_qualification import GateBlocked, prepare, verify
 from validate_dream_packet import validate_dream_packet
 from write_revision_artifact_index import write_index
+from pydantic_step_gate import pydantic_error_messages
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_ROOT = SKILL_ROOT / "schemas"
@@ -624,7 +625,7 @@ def synthesize_look_lock_and_script_dna(
     }
 
     schema = json.loads((SCHEMA_ROOT / "cinematic_technique_selection.v1.schema.json").read_text(encoding="utf-8"))
-    errors = [error.message for error in Draft202012Validator(schema).iter_errors(technique_selection)]
+    errors = pydantic_error_messages(schema, technique_selection) + [error.message for error in Draft202012Validator(schema).iter_errors(technique_selection)]
     if errors:
         raise ReconstructionBlocked("BLOCKED_TECHNIQUE_SELECTION_SCHEMA", details={"errors": errors})
 
@@ -678,7 +679,7 @@ def synthesize_look_lock_and_script_dna(
         "claims": technique_selection["claims"],
     }
     dna_schema = json.loads((SCHEMA_ROOT / "cinematic_script_dna.v1.schema.json").read_text(encoding="utf-8"))
-    dna_errors = [error.message for error in Draft202012Validator(dna_schema).iter_errors(script_dna_value)]
+    dna_errors = pydantic_error_messages(dna_schema, script_dna_value) + [error.message for error in Draft202012Validator(dna_schema).iter_errors(script_dna_value)]
     if dna_errors:
         raise ReconstructionBlocked("BLOCKED_SCRIPT_DNA_SCHEMA", details={"errors": dna_errors})
     script_dna_path = crew_dir / "script_dna_selection.json"

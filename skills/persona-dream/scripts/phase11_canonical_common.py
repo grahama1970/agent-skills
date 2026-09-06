@@ -32,6 +32,7 @@ from activate_revision_qualification import (
     validate_prepare_verify_chain,
     validate_repair_queue,
 )
+from pydantic_step_gate import pydantic_error_messages
 from prepare_revision_qualification import (
     FORBIDDEN_VECTOR_FIELDS,
     SEMANTIC_REQUIRED_FIELDS,
@@ -208,7 +209,9 @@ def validate_schema(value: Mapping[str, Any], name: str) -> list[str]:
     if not path.is_file():
         return [f"schema missing: {path}"]
     schema = read_object(path)
-    return sorted(error.message for error in Draft202012Validator(schema).iter_errors(value))
+    return pydantic_error_messages(schema, value) + sorted(
+        error.message for error in Draft202012Validator(schema).iter_errors(value)
+    )
 
 
 def resolve_active_context(run_root: Path, revision_override: str | None = None) -> ActiveContext:

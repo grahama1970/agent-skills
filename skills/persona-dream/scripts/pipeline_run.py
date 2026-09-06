@@ -14,6 +14,7 @@ from typing import Any
 
 import jsonschema
 import yaml
+from pydantic_step_gate import pydantic_first_check, pydantic_error_messages
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SKILL_ROOT.parents[1]
@@ -363,6 +364,7 @@ def build_contract(
 
 def validate_contract(contract: dict[str, Any], contract_dir: Path) -> None:
     schema = json.loads(SCHEMA_PATH.read_text())
+    pydantic_first_check(schema, contract)
     jsonschema.Draft202012Validator(schema).validate(contract)
     receipt_path = Path(contract["node_receipt"]["path"])
     if not receipt_path.is_absolute():

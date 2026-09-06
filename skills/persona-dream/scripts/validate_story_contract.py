@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
+from pydantic_step_gate import pydantic_error_messages
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +58,9 @@ def validate_story_contract(contract_path: Path, *, run_root: Path | None = None
         "unverified": "live memory grounding, Look Lock/Script DNA execution, storyboard generation, panel visual review, provider/Kling execution",
     }
 
+    pydantic_messages = pydantic_error_messages(schema, contract)
+    if pydantic_messages:
+        return _block(result, "story_contract", f"schema_validation:{pydantic_messages[0]}", contract_path)
     validator = jsonschema.Draft202012Validator(schema)
     errors = sorted(validator.iter_errors(contract), key=lambda error: list(error.path))
     if errors:

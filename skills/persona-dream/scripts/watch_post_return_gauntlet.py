@@ -40,6 +40,7 @@ from typing import Any, Mapping, Sequence
 
 import httpx
 from jsonschema import Draft202012Validator
+from pydantic_step_gate import pydantic_error_messages
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = ROOT / "schemas" / "watch_gauntlet_observation_packet.v1.schema.json"
@@ -423,8 +424,9 @@ def validate_observation_packet(packet: Mapping[str, Any]) -> list[str]:
     """Return jsonschema errors (empty == valid). Pure."""
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     validator = Draft202012Validator(schema)
-    return [f"{'/'.join(str(p) for p in e.path)}: {e.message}"
-            for e in sorted(validator.iter_errors(dict(packet)), key=lambda e: list(e.path))]
+    return pydantic_error_messages(schema, dict(packet)) + [
+        f"{'/'.join(str(p) for p in e.path)}: {e.message}"
+        for e in sorted(validator.iter_errors(dict(packet)), key=lambda e: list(e.path))]
 
 
 # --------------------------------------------------------------------------- #

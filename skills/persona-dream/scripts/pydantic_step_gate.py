@@ -19,6 +19,7 @@ the full migration).
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any, Literal
 
@@ -53,6 +54,157 @@ REGISTRY: dict[str, type[ArtifactEnvelope]] = {
     "persona_dream.storyboard_packet.v1": StoryboardPacket,
     "tau.generic_dag_node_receipt.v1": NodeReceipt,
 }
+
+
+_GENERATED_DIR = Path(__file__).resolve().parent / "generated_models"
+_generated_registry: dict[str, type[BaseModel]] | None = None
+_generated_by_stem: dict[str, type[BaseModel]] = {}
+
+
+def _load_generated_registry() -> dict[str, type[BaseModel]]:
+    """Map schema-const values -> generated pydantic models (lazy, cached)."""
+    global _generated_registry
+    if _generated_registry is not None:
+        return _generated_registry
+    import importlib.util
+    from typing import get_args, get_type_hints
+
+    registry: dict[str, type[BaseModel]] = {}
+    for module_path in sorted(_GENERATED_DIR.glob("*.py")):
+        if module_path.name == "__init__.py":
+            continue
+        spec = importlib.util.spec_from_file_location(
+            f"persona_dream_generated.{module_path.stem}", module_path
+        )
+        if spec is None or spec.loader is None:
+            continue
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module  # required so get_type_hints resolves ForwardRefs
+        try:
+            spec.loader.exec_module(module)
+        except Exception:
+            sys.modules.pop(spec.name, None)
+            continue  # a broken generated module must not break the gate for others
+        last_model = None
+        for obj in vars(module).values():
+            if isinstance(obj, type) and issubclass(obj, BaseModel) and obj.__module__ == spec.name:
+                last_model = obj
+        if last_model is not None:
+            _generated_by_stem[module_path.stem] = last_model
+        for obj in vars(module).values():
+            if not (isinstance(obj, type) and issubclass(obj, BaseModel)):
+                continue
+            name = "schema" if "schema" in obj.model_fields else (
+                "schema_" if "schema_" in obj.model_fields else None
+            )
+            if name is None:
+                continue
+            field = obj.model_fields[name]
+            try:
+                hints = get_type_hints(obj)  # resolves ForwardRef from future annotations
+                annotation = hints.get(name, field.annotation)
+            except Exception:
+                annotation = field.annotation
+            const = get_args(annotation) or (
+                (field.default,) if isinstance(field.default, str) else ()
+            )
+            for value in const:
+                if isinstance(value, str) and value:
+                    registry.setdefault(value, obj)
+    _generated_registry = registry
+    return registry
+
+
+def _resolve_model(schema: dict[str, Any], value: Any) -> type[BaseModel] | None:
+    """Resolve the generated model for a loaded JSON Schema dict.
+
+    Order: schema-const discriminator -> $id filename stem -> envelope when the
+    schema itself declares a `schema` property. Returns None only when the
+    contract has no discriminator at all (jsonschema still enforces it).
+    """
+    registry = _load_generated_registry()
+    const = (schema.get("properties", {}).get("schema", {}) or {}).get("const", "")
+    if const and const in registry:
+        return registry[const]
+    schema_id = str(schema.get("$id", ""))
+    if schema_id:
+        stem = Path(schema_id).name.removesuffix(".json").replace(".", "_").replace("-", "_")
+        if stem in _generated_by_stem:
+            return _generated_by_stem[stem]
+    if "schema" in schema.get("properties", {}):
+        if isinstance(value, dict):
+            return REGISTRY.get(value.get("schema", ""), ArtifactEnvelope)
+        return ArtifactEnvelope
+    return None
+
+
+def validate_payload(schema: dict[str, Any], value: Any) -> list[dict[str, Any]]:
+    """Pydantic-first validation of a payload against a loaded JSON Schema dict.
+
+    Resolves the generated pydantic model via the schema's declared const
+    discriminator and validates with it FIRST. jsonschema then runs as a
+    secondary depth check for constraints codegen cannot express. Returns
+    pydantic-style error dicts; empty list means PASS.
+    """
+    errors: list[dict[str, Any]] = []
+    model = _resolve_model(schema, value)
+    if model is not None:
+        try:
+            model.model_validate(value)
+        except ValidationError as exc:
+            errors.extend(exc.errors(include_url=False, include_input=False))
+    import jsonschema  # pinned dependency; secondary depth check only
+
+    for err in jsonschema.Draft202012Validator(schema).iter_errors(value):
+        errors.append({
+            "type": "json_schema_constraint",
+            "loc": list(err.path),
+            "msg": err.message,
+        })
+    return errors
+
+
+def validate_payload_messages(schema: dict[str, Any], value: Any) -> list[str]:
+    """Drop-in for `sorted(e.message for e in Draft202012Validator(s).iter_errors(v))`."""
+    return sorted(
+        f"{e['type']} at {list(e['loc'])}: {e.get('msg', '')}" for e in validate_payload(schema, value)
+    )
+
+
+def validate_payload_or_raise(schema: dict[str, Any], value: Any) -> None:
+    """Drop-in for `Draft202012Validator(schema).validate(value)` (raises on failure)."""
+    errors = validate_payload(schema, value)
+    if errors:
+        raise ValueError("; ".join(validate_payload_messages(schema, value)))
+
+
+def pydantic_error_messages(schema: dict[str, Any], value: Any) -> list[str]:
+    """Pure-pydantic error messages (no jsonschema); [] means the model accepts."""
+    model = _resolve_model(schema, value)
+    if model is None:
+        return []
+    try:
+        model.model_validate(value)
+    except ValidationError as exc:
+        return [
+            f"pydantic {e['type']} at {list(e['loc'])}: {e['msg']}"
+            for e in exc.errors(include_url=False, include_input=False)
+        ]
+    return []
+
+
+def pydantic_first_check(schema: dict[str, Any], value: Any) -> None:
+    """Pydantic-first gate that raises jsonschema.ValidationError for drop-in use.
+
+    Call immediately before an existing `Draft202012Validator(schema).validate(x)`
+    so pydantic is the first deterministic test without changing the exception
+    type existing callers handle.
+    """
+    messages = pydantic_error_messages(schema, value)
+    if messages:
+        import jsonschema
+
+        raise jsonschema.exceptions.ValidationError("; ".join(messages))
 
 
 def validate_artifact(path: Path) -> list[dict[str, Any]]:

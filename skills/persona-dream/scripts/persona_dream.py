@@ -28,6 +28,7 @@ def _load_sibling(name: str):
     return module
 
 import typer
+from pydantic_step_gate import pydantic_first_check, pydantic_error_messages
 
 app = typer.Typer(help="Create receipt-backed persona dream packets.")
 
@@ -1500,6 +1501,7 @@ def _require_crew_casting(crew_dir: Path | None, out: Path) -> tuple[bool, dict[
             if schema_name is not None:
                 schema = json.loads((SCHEMA_DIR / schema_name).read_text())
                 try:
+                    pydantic_first_check(schema, doc)
                     jsonschema.Draft202012Validator(schema).validate(doc)
                 except jsonschema.ValidationError as exc:
                     invalid.append({"artifact": name, "error": exc.message})

@@ -42,6 +42,7 @@ from idea_lineage import (
 )
 from prepare_revision_qualification import GateBlocked, prepare, verify
 from write_revision_artifact_index import write_index
+from pydantic_step_gate import pydantic_error_messages
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPAIR_SCHEMA = SKILL_ROOT / "schemas" / "semantic_mix_repair_receipt.v1.schema.json"
@@ -542,9 +543,11 @@ def repair(args: argparse.Namespace) -> dict[str, Any]:
                 "live": not bool(args.test_fixture),
             }
             schema = json.loads(REPAIR_SCHEMA.read_text(encoding="utf-8"))
-            errors = list(Draft202012Validator(schema).iter_errors(receipt))
-            if errors:
-                raise RepairBlocked("BLOCKED_SEMANTIC_MIX_REPAIR_RECEIPT_SCHEMA", details={"errors": [error.message for error in errors]})
+            all_messages = pydantic_error_messages(schema, receipt) + [
+                error.message for error in Draft202012Validator(schema).iter_errors(receipt)
+            ]
+            if all_messages:
+                raise RepairBlocked("BLOCKED_SEMANTIC_MIX_REPAIR_RECEIPT_SCHEMA", details={"errors": all_messages})
             write_json(target_root / "semantic_mix_repair_receipt.json", receipt)
             return receipt
         except Exception:

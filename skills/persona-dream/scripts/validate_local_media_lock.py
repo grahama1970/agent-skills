@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
+from pydantic_step_gate import pydantic_first_check, pydantic_error_messages
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,6 +66,7 @@ def validate_local_media_lock(run_root: Path, *, serve: bool = False) -> dict[st
     receipt_path = run_root / "receipts/provider_media_lock_receipt.json"
     schema = _read_json(SCHEMA_PATH)
     receipt = _read_json(receipt_path)
+    pydantic_first_check(schema, receipt)
     jsonschema.Draft202012Validator(schema).validate(receipt)
 
     server: socketserver.TCPServer | None = None
