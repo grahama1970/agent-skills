@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "skill": "ask",
+  "trials": 2,
+  "proof_scope": "Ask #1220 native read-only plan integration slice",
+  "claims": {
+    "proves": "Strict native workstream fields, current Tau agent requirements, fail-closed undeclared tools, and two heterogeneous read-only native agents through the actual Ask and Tau CLIs with SQLite tool-effect readback",
+    "does_not_prove": "Source authoring, all team presets, classifier integration, every Ask route, Cursor availability, or watchdog canary closure"
+  },
+  "cases": [
+    {
+      "name": "native-plan-schema-boundary",
+      "type": "adversarial",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/native-plan-schema.XXXXXX); uv run --project .. python ../scripts/prove_native_plan_cli.py schema --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "\"live\": false"]},
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "native-plan-undeclared-tools-refused",
+      "type": "negative",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/native-plan-missing-tools.XXXXXX); uv run --project .. python ../scripts/prove_native_plan_cli.py missing-tools --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "before Tau/provider launch"]},
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "native-plan-existing-evidence-preserved",
+      "type": "negative",
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/native-plan-reuse.XXXXXX); uv run --project .. python ../scripts/prove_native_plan_cli.py reuse --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "preserves fixture-backed existing native evidence"]},
+      "evidence_class": "deterministic"
+    },
+    {
+      "name": "live-native-plan-two-independent-reads",
+      "type": "positive",
+      "real_world": true,
+      "timeout_seconds": 1320,
+      "command": ["bash", "-c", "d=$(mktemp -d /mnt/storage12tb/skills/ask/outputs/native-plan-live.XXXXXX); uv run --project .. python ../scripts/prove_native_plan_cli.py live --watch --out \"$d/proof\""],
+      "expected": {"exit_code": 0, "stdout_contains": ["\"status\": \"PASS\"", "claude-model-turn", "codex-model-turn", "\"nonce_in_tool_effect\": true", "\"viewer_state_observed_during_run\": true"], "stdout_excludes": ["Traceback"]},
+      "evidence_class": "live_e2e"
+    }
+  ]
+}

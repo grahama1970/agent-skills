@@ -129,6 +129,7 @@ def plan(
     team: str = typer.Option("fullstack-premium", "--team", help=f"Team preset: {sorted(TEAM_PRESETS)}"),
     repo: str = typer.Option("grahama1970/agent-skills", "--repo", "-R"),
     out: Optional[Path] = typer.Option(None, "--out", help="Directory to write plan + spec."),
+    plan_file: Optional[Path] = typer.Option(None, "--plan-file", help="Use an edited plan whose goal exactly matches the request."),
     as_json: bool = typer.Option(False, "--json"),
     execute: bool = typer.Option(False, "--execute", help="Submit the frozen spec to Tau for execution."),
     live: bool = typer.Option(False, "--live", help="Required with --execute: makes live provider calls."),
@@ -136,7 +137,16 @@ def plan(
 ) -> None:
     """Render the plan, compile the frozen Tau spec, and print a preview."""
     strength_mode = None
-    if team.startswith("strengths-"):
+    if plan_file is not None:
+        try:
+            plan_payload = json.loads(plan_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": [str(exc)]}))
+            raise typer.Exit(2) from exc
+        if not isinstance(plan_payload, dict) or plan_payload.get("goal") != request:
+            typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": ["edited plan goal must match the explicit request"]}))
+            raise typer.Exit(2)
+    elif team.startswith("strengths-"):
         strength_mode = team.removeprefix("strengths-")
         plan_payload = render_team_plan(request, repo=repo, team="fullstack-premium")
     else:
@@ -149,7 +159,7 @@ def plan(
         roles = [str(ws["role"]) for ws in plan_payload["workstreams"]]
         selected = select_role_profiles_by_strength(registry, mode=strength_mode, roles=roles)
         plan_payload["team"] = {"preset": "fullstack-premium", "role_profiles": selected, "strength_mode": strength_mode}
-    if plan_payload["unresolved"]:
+    if plan_payload.get("unresolved"):
         result = {
             "schema": "ask.team_plan_result.v1",
             "status": "NEEDS_INTERVIEW",
@@ -172,7 +182,14 @@ def plan(
         raise typer.Exit(2)
 
     run_dir = out or Path(tempfile.mkdtemp(prefix="ask-team-plan-"))
-    spec = compile_plan_to_tau_spec(plan_payload, run_id="team-plan-preview", run_dir=run_dir)
+    if (run_dir / "run").exists():
+        typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": ["native run directory already exists; resume through Tau without replacing its plan"]}))
+        raise typer.Exit(2)
+    try:
+        spec = compile_plan_to_tau_spec(plan_payload, run_id="team-plan-preview", run_dir=run_dir)
+    except ValueError as exc:
+        typer.echo(json.dumps({"status": "INVALID_PLAN", "errors": [str(exc)]}))
+        raise typer.Exit(2) from exc
     if out:
         out.mkdir(parents=True, exist_ok=True)
         (out / "project-plan.json").write_text(json.dumps(plan_payload, indent=2), encoding="utf-8")
@@ -221,13 +238,17 @@ def plan(
             raise typer.Exit(2)
         from ask.tau_harness import run_plan_spec
 
-        summary = run_plan_spec(
-            spec,
-            run_dir=run_dir,
-            watch=watch,
-            on_viewer_url=lambda url: typer.echo(f"LIVE DAG VIEWER: {url}", err=True),
-            progress=lambda line: typer.echo(line, err=True),
-        )
+        try:
+            summary = run_plan_spec(
+                spec,
+                run_dir=run_dir,
+                watch=watch,
+                on_viewer_url=lambda url: typer.echo(f"LIVE DAG VIEWER: {url}", err=True),
+                progress=lambda line: typer.echo(line, err=True),
+            )
+        except (OSError, ValueError) as exc:
+            typer.echo(json.dumps({**result, "status": "EXECUTION_BLOCKED", "errors": [str(exc)]}, indent=2))
+            raise typer.Exit(1) from exc
         result["execution"] = summary
         result["status"] = "EXECUTED_PASS" if summary["scheduler_status"] == "PASS" else "EXECUTED_" + str(summary["scheduler_status"])
         typer.echo(json.dumps(result, indent=2))

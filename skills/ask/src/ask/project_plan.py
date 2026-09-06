@@ -11,7 +11,9 @@ calls. It returns (ok, errors) so callers can render every violation at once.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 SCHEMA_ID = "ask.project_plan.v1"
 
@@ -28,6 +30,23 @@ HARNESS_MODES = frozenset({"tau_native_agent_loop", "opaque_agent_compat"})
 DEFAULT_HARNESS_MODE = "tau_native_agent_loop"
 
 _TOPOLOGIES = frozenset({"sequential", "concurrent", "hybrid"})
+
+
+class NativeWorkstream(BaseModel):
+    """Strict proposal fields before they become a native Tau node."""
+    model_config = ConfigDict(extra="forbid", strict=True)
+    id: str = Field(min_length=1)
+    role: Literal["coordinator", "backend", "frontend", "documentation", "testing", "independent_reviewer"]
+    prompt: str = ""
+    depends_on: list[str] = Field(default_factory=list)
+    allowed_paths: list[str] = Field(default_factory=list)
+    allowed_tools: list[str] | None = None
+    cwd: str | None = Field(default=None, min_length=1)
+    max_turns: int = Field(default=8, ge=1)
+    max_tool_calls: int = Field(default=16, ge=1)
+    timeout_seconds: int = Field(default=300, ge=1)
+    harness_mode: Literal["tau_native_agent_loop", "opaque_agent_compat"] = DEFAULT_HARNESS_MODE
+    compat_justification: str = ""
 
 
 def _err(errors: list[str], msg: str) -> None:
@@ -67,9 +86,18 @@ def validate_project_plan(plan: Any) -> tuple[bool, list[str]]:
     if not isinstance(workstreams, list) or not workstreams:
         _err(errors, "workstreams must be a non-empty list")
     else:
+        native_invalid = False
         for i, ws in enumerate(workstreams):
             if not isinstance(ws, dict):
                 _err(errors, f"workstreams[{i}] must be a mapping")
+                continue
+            try:
+                NativeWorkstream.model_validate(ws)
+            except ValidationError as exc:
+                for error in exc.errors(include_url=False, include_input=False):
+                    location = ".".join(str(p) for p in error["loc"])
+                    _err(errors, f"workstreams[{i}].{location}: {error['msg']}")
+                native_invalid = True
                 continue
             ws_id = str(ws.get("id", "")).strip()
             if not ws_id:
@@ -86,6 +114,8 @@ def validate_project_plan(plan: Any) -> tuple[bool, list[str]]:
                 _err(errors, f"workstreams[{i}].harness_mode {mode!r} not in {sorted(HARNESS_MODES)}")
             elif mode == "opaque_agent_compat" and not str(ws.get("compat_justification", "")).strip():
                 _err(errors, f"workstreams[{i}]: opaque_agent_compat requires compat_justification")
+        if native_invalid:
+            return False, errors
         for i, ws in enumerate(workstreams):
             if not isinstance(ws, dict):
                 continue
@@ -142,10 +172,10 @@ def validate_project_plan(plan: Any) -> tuple[bool, list[str]]:
         if topology not in _TOPOLOGIES:
             _err(errors, f"execution.topology {topology!r} not in {sorted(_TOPOLOGIES)}")
         concurrency = execution.get("max_concurrency", 1)
-        if not isinstance(concurrency, int) or concurrency < 1:
+        if type(concurrency) is not int or concurrency < 1:
             _err(errors, "execution.max_concurrency must be an integer >= 1")
         retries = execution.get("max_retries", 0)
-        if not isinstance(retries, int) or retries < 0:
+        if type(retries) is not int or retries < 0:
             _err(errors, "execution.max_retries must be an integer >= 0")
 
     unresolved = plan.get("unresolved", [])

@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import json
 import os
+import signal
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -289,6 +291,93 @@ def run_chat_via_tau(
     return text or None
 
 
+def _run_plan_cli(spec: dict[str, Any], *, run_dir: Path, goal_hash: str | None,
+                  watch: bool, on_viewer_url: Callable[[str], None] | None,
+                  progress: Callable[[str], None] | None) -> dict[str, Any]:
+    """Production plan execution uses the same native boundary as `tau run`."""
+    declared_goal = (spec.get("goal") or {}).get("goal_hash")
+    if not declared_goal or (goal_hash is not None and goal_hash != declared_goal):
+        raise ValueError("native plan requires its unchanged human-goal hash")
+    for node in spec["nodes"]:
+        config = node.get("tau_agent") or {}
+        if "tool_effect_receipt" in config.get("required_evidence", []) and not config.get("allowed_tools"):
+            raise ValueError(f"node {node['node_id']} requires explicit allowed_tools before native CLI execution")
+    native_dir = Path(spec["run_dir"]).resolve()
+    if native_dir.exists():
+        raise ValueError("native run directory already exists; resume it through Tau instead of overwriting it")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    path = run_dir / "dag-spec.json"
+    path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
+    command = ["uv", "run", "--project", str(DEFAULT_TAU_REPO), "tau", "run", str(path), "--no-resume"]
+    viewer: subprocess.Popen | None = None
+    viewer_info: dict[str, Any] = {}
+    last_state = None
+    with (run_dir / "tau-cli.stdout.json").open("w") as stdout, (run_dir / "tau-cli.stderr.log").open("w") as stderr:
+        proc = subprocess.Popen(command, stdout=stdout, stderr=stderr, start_new_session=True)
+        try:
+            while proc.poll() is None:
+                try:
+                    state = json.loads((native_dir / "current-state.json").read_text())
+                    selected = (state.get("status"), state.get("active_node_id"))
+                    if progress and selected != last_state:
+                        progress(f"Tau {selected[0]}: {selected[1] or 'scheduler'}; {native_dir}")
+                    last_state = selected
+                except (FileNotFoundError, json.JSONDecodeError):
+                    pass
+                if watch and viewer is None and (native_dir / "current-state.json").exists():
+                    viewer_command = ["uv", "run", "--project", str(DEFAULT_TAU_REPO), "tau", "dag-view", "--run-dir", str(native_dir)]
+                    with (run_dir / "viewer.stdout.json").open("w") as view_out, (run_dir / "viewer.stderr.log").open("w") as view_err:
+                        viewer = subprocess.Popen(viewer_command, stdout=view_out, stderr=view_err, start_new_session=True)
+                    viewer_info = {"source": "native Tau CLI", "command": viewer_command}
+                if viewer is not None and not viewer_info.get("url"):
+                    try:
+                        data = json.loads((run_dir / "viewer.stdout.json").read_text())
+                        if data.get("url"):
+                            viewer_info["url"] = data["url"]
+                            if on_viewer_url:
+                                on_viewer_url(data["url"])
+                    except (FileNotFoundError, json.JSONDecodeError):
+                        pass
+                    if viewer.poll() is not None:
+                        viewer_info["error"] = (run_dir / "viewer.stderr.log").read_text()[-1000:]
+                time.sleep(0.2)
+        finally:
+            if proc.poll() is None:
+                os.killpg(proc.pid, signal.SIGINT)
+                proc.wait(timeout=30)
+            if viewer is not None and viewer.poll() is None:
+                os.killpg(viewer.pid, signal.SIGINT)
+                viewer.wait(timeout=10)
+                viewer_info["closed_after_run"] = True
+    receipt_path = native_dir / "run-receipt.json"
+    if not receipt_path.is_file():
+        detail = (run_dir / "tau-cli.stderr.log").read_text(errors="replace")[-2000:]
+        raise ValueError(f"Tau CLI exited {proc.returncode} without a receipt: {detail}")
+    receipt = json.loads(receipt_path.read_text())
+    nodes = {}
+    for node in receipt["nodes"]:
+        accepted = node.get("accepted_output") or {}
+        nodes[node["node_id"]] = {
+            "profile": (node.get("transport_profile") or {}).get("profile_id"),
+            "status": node.get("status"), "verdict": node.get("verdict"),
+            "settlement": (accepted.get("settlement") or {}).get("state"),
+            "final_text": str(accepted.get("final_text", "")),
+            "receipt_path": node.get("receipt_path"),
+        }
+    if proc.returncode != 0 and receipt.get("status") == "PASS":
+        raise ValueError("Tau CLI exit disagrees with its success receipt")
+    summary = {"schema": "ask.tau_plan_execution_summary.v1", "run_id": spec["run_id"],
+               "goal_hash": declared_goal, "scheduler_status": receipt["status"],
+               "scheduler_verdict": receipt["verdict"],
+               "completed_node_ids": [n["node_id"] for n in receipt["nodes"] if n.get("status") == "PASS"],
+               "nodes": nodes, "run_dir": str(run_dir),
+               "native_run_dir": str(native_dir), "native_receipt": str(receipt_path),
+               "command": command, "exit_code": proc.returncode, "viewer": viewer_info or None,
+               "proof_boundary": "Native execution/settlement only; node completion is not project acceptance."}
+    (run_dir / "execution-summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    return summary
+
+
 def run_plan_spec(
     spec: dict[str, Any],
     *,
@@ -306,6 +395,9 @@ def run_plan_spec(
     ``execution-summary.json`` into ``run_dir``. Tau owns scheduling, joins,
     and settlement; /ask only submits and reads back.
     """
+    if execute_node is None:
+        return _run_plan_cli(spec, run_dir=run_dir, goal_hash=goal_hash, watch=watch,
+                             on_viewer_url=on_viewer_url, progress=progress)
     _tau_src()
     from tau_coding.dag_runtime.compiler import compile_generic_dag_plan
     from tau_coding.dag_runtime.model import canonical_sha256
@@ -323,17 +415,6 @@ def run_plan_spec(
         for n in spec["nodes"]
         if isinstance(n.get("tau_agent"), dict)
     }
-
-    if execute_node is None:
-        executors = {
-            node_id: _live_executor(
-                profile_id=profile, run_id=str(spec.get("run_id")), goal_hash=resolved_goal_hash
-            )
-            for node_id, profile in profile_by_node.items()
-        }
-
-        def execute_node(plan_node: Any, accepted_inputs: Any, execution: Any) -> dict[str, Any]:
-            return executors[plan_node.node_id](plan_node, accepted_inputs, execution)
 
     viewer_info: dict[str, Any] = {}
     node_started_at: dict[str, float] = {}

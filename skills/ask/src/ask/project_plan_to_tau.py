@@ -17,7 +17,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ask.project_plan import DEFAULT_HARNESS_MODE, validate_project_plan
+from ask.project_plan import DEFAULT_HARNESS_MODE, NativeWorkstream, validate_project_plan
 
 TAU_SPEC_SCHEMA = "tau.generic_dag_spec.v1"
 
@@ -163,7 +163,7 @@ def enforce_independent_review(profiles: dict[str, str], workstream_roles: list[
 
 def _canonical_sha256(payload: dict[str, Any]) -> str:
     return hashlib.sha256(
-        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     ).hexdigest()
 
 
@@ -199,11 +199,22 @@ def compile_plan_to_tau_spec(
         profiles, [str(ws["role"]) for ws in plan["workstreams"]]
     )
     goal = str(plan["goal"])
+    goal_payload = {
+        "goal_id": "ask-plan-" + _canonical_sha256({"goal": goal, "target": plan.get("target")})[:16],
+        "goal_version": 1,
+        "summary": goal,
+        "completion_criteria": [criterion for d in plan["deliverables"] for criterion in d["acceptance_criteria"]],
+    }
+    goal_hash = "sha256:" + _canonical_sha256(goal_payload)
+    goal_payload["goal_hash"] = goal_hash
     receipts_dir = run_dir / "receipts"
     nodes: list[dict[str, Any]] = []
     for ws in plan["workstreams"]:
-        role = str(ws["role"])
-        mode = str(ws.get("harness_mode", DEFAULT_HARNESS_MODE))
+        native_options = NativeWorkstream.model_validate(ws)
+        role = native_options.role
+        mode = native_options.harness_mode
+        if mode != DEFAULT_HARNESS_MODE:
+            raise ValueError("opaque_agent_compat requires an explicit compatibility adapter; it cannot become a native agent")
         deps = [str(d) for d in (ws.get("depends_on") or [])]
         profile = profiles[role]
         prompt = str(ws.get("prompt") or "").strip() or (
@@ -223,6 +234,20 @@ def compile_plan_to_tau_spec(
                     if ws.get("allowed_paths")
                     else [],
                     "harness_mode": mode,
+                    "cwd": native_options.cwd or str(plan["target"].get("workspace") or "."),
+                    "max_turns": native_options.max_turns,
+                    "max_tool_calls": native_options.max_tool_calls,
+                    **({"allowed_tools": native_options.allowed_tools} if native_options.allowed_tools is not None else {}),
+                    "agent_requirement": {
+                        "schema": "tau.agent_requirement.v1",
+                        "role": "review" if role == "independent_reviewer" else role,
+                        "harness": "tau_native_agent_loop",
+                        "profile_preferences": [profile],
+                        "required_transport_capabilities": ["structured_events"] + (["tool_calling"] if ws.get("allowed_paths") else []),
+                        "workspace": {"mode": "read_only", "allowed_paths": native_options.allowed_paths},
+                        "required_evidence": ["tool_effect_receipt"] if ws.get("allowed_paths") else [],
+                        "fallback_policy": {"allowed": False, "prohibit_capability_downgrade": True},
+                    },
                 },
                 "depends_on": deps,
                 "accepted_context_from": deps,
@@ -236,12 +261,14 @@ def compile_plan_to_tau_spec(
         "schema": TAU_SPEC_SCHEMA,
         "run_id": run_id,
         "run_dir": str(run_dir / "run"),
+        "goal": goal_payload,
+        "max_concurrency": plan.get("execution", {}).get("max_concurrency", 1),
         "nodes": nodes,
     }
     spec["extensions"] = {"source_plan": {
         "schema": plan.get("schema"),
         "goal": goal,
-        "goal_hash": _canonical_sha256({"goal": goal, "target": plan.get("target")}),
+        "goal_hash": goal_hash,
         "team_preset": str((plan.get("team") or {}).get("preset") or "fullstack-premium"),
         "role_profiles": {ws["id"]: profiles[str(ws["role"])] for ws in plan["workstreams"]},
     }}
@@ -251,6 +278,7 @@ def compile_plan_to_tau_spec(
     logical = {
         "schema": spec["schema"],
         "source_plan": spec["extensions"]["source_plan"],
+        "max_concurrency": spec["max_concurrency"],
         "nodes": [
             {
                 "node_id": n["node_id"],

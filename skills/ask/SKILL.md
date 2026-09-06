@@ -132,6 +132,43 @@ Runtime artifacts default under `.ask_artifacts/runs/<ask_id>` or the provided
 root such as `/mnt/storage12tb/skills/ask/outputs/...`. Do not commit generated
 ask artifacts.
 
+## Edited native plans: current CLI boundary
+
+`team-plan` also accepts an edited `ask.project_plan.v1` file. The positional
+request must exactly match its `goal`; execution never silently substitutes a
+new goal from the file.
+
+```bash
+./run.sh team-plan "The exact goal in plan.json" --plan-file plan.json --out /absolute/output
+./run.sh team-plan "The exact goal in plan.json" --plan-file plan.json --out /absolute/output --execute --live --watch
+```
+
+Native workstreams validate through strict Pydantic fields. For file-reading
+work, declare `allowed_tools` explicitly (currently `read`, `ls`, `grep`, `find`
+through Tau's native CLI), `allowed_paths`, and `cwd` or `target.workspace`.
+A scoped workstream that requires tool-effect evidence but declares no tools is
+refused before execution. Paths alone do not grant tools. Native write/edit/bash
+are not provided by this path; a backend role or successful text turn is not
+proof of source authoring.
+
+The compiler emits `tau.agent_requirement.v1`, a canonical generic-DAG goal,
+and explicit tool/cwd/budget fields. `independent_reviewer` requests the native
+profile capability role `review`. Presets are proposals; Tau's live profile
+selection decides eligibility and may reject an incompatible preset. No silent
+profile fallback is requested.
+
+Production `run_plan_spec` submits the frozen spec through `tau run`; execution
+and the viewer use Tau's own interpreter, not imports into Ask's Python runtime.
+It no longer substitutes a tool-less executor. Injected executors remain for explicit
+SDK tests, not CLI proof. Native `run-receipt.json`, SQLite tool events, and
+`execution-summary.json` are retained. `--watch` serves Tau's own read-only
+viewer during the run; its state API and the native current-state file provide
+progress. Open an existing native run with Tau's viewer after execution.
+
+Retained slice proof: `fixtures/agentic_eval_native_plan_cli.json`. It proves
+read-only native execution, not all #1220 routes, source authoring, a classifier
+stage, or watchdog canary closure.
+
 ## One Status Shape For Every Run
 
 ```bash
