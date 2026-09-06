@@ -7,6 +7,8 @@ an active revision pointer, repair queue, provider state, or Persona Dream media
 
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -254,7 +256,7 @@ class MemoryClient:
 
         response_text = response.text
         try:
-            body = response.json() if response_text else {}
+            body = validate_http_json("memory_generic", response.json()) if response_text else {}
         except ValueError:
             body = {"raw_text": response_text}
         if not isinstance(body, dict):

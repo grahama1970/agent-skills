@@ -68,7 +68,7 @@ def main() -> int:
         write.raise_for_status()
         first = client.post("/list", json={"collection": collection, "limit": 100, "filters": filters})
         first.raise_for_status()
-        first_docs = response_documents(first.json())
+        first_docs = response_documents(validate_http_json("memory_list", first.json()))
         by_key = {document.get("_key"): document for document in first_docs}
         if set(by_key) != expected_keys:
             raise SystemExit(
@@ -82,7 +82,7 @@ def main() -> int:
         refresh.raise_for_status()
         final = client.post("/list", json={"collection": collection, "limit": 100, "filters": filters})
         final.raise_for_status()
-        final_docs = response_documents(final.json())
+        final_docs = response_documents(validate_http_json("memory_list", final.json()))
 
     final_keys = {document.get("_key") for document in final_docs}
     if final_keys != expected_keys or len(final_docs) != expected_count:
@@ -101,8 +101,8 @@ def main() -> int:
         "run_id": run_id,
         "revision_id": args.revision_id,
         "bundle_path": str(bundle_path),
-        "upsert_response": write.json(),
-        "semantic_refresh_response": refresh.json(),
+        "upsert_response": validate_http_json("memory_store", write.json()),
+        "semantic_refresh_response": validate_http_json("memory_store", refresh.json()),
         "exact_reread_count": len(final_docs),
         "expected_count": expected_count,
         "exact_reread_keys": sorted(final_keys),

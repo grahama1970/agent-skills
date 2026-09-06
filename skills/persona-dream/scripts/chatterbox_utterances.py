@@ -139,6 +139,7 @@ _COLLECT_RE = re.compile(r"\[sniff\]\s*\[sniff\]|give me a second|collect myself
 _GIVE_ME_SECOND_RE = re.compile(r"\[sniff\]\s*\[sniff\](?:\.\.\.)?\s*(give me a second[.!?]?)", re.I)
 _UNFINISHED_TAIL_RE = re.compile(r"(?:\.{3}|--|—)\s*$")
 _BROKEN_ELLIPSIS_RE = re.compile(r"\b(would|could|should|can|cannot|can't|is|are|was|were|be|been|being|to|the|a|an|and|or|but|of|for|with)\.\.\.\s*(?:\[|$)", re.I)
+_ELLIPSIS_PAUSE_MARKER = "<PD_EXACT_ELLIPSIS_PAUSE>"
 
 
 def has_delay_markup(text: str) -> bool:
@@ -277,8 +278,8 @@ def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 180,
     clean = normalize_collect_cues(str(text or ""))
     if not clean:
         return []
-    split_clean = re.sub(r"(\[sniff\]\s*\[sniff\]\s*\.\.\.)\s*(give me a second[.!?]?)", r"\1\n\2", clean, flags=re.I)
-    split_clean = re.sub(r"\s+\.\.\.\s+", " ...\n", split_clean)
+    split_clean = re.sub(r"(\[sniff\]\s*\[sniff\]\s*\.\.\.)\s*(give me a second[.!?]?)", rf"\1 {_ELLIPSIS_PAUSE_MARKER}\n\2", clean, flags=re.I)
+    split_clean = re.sub(r"\s+\.\.\.\s+", f" {_ELLIPSIS_PAUSE_MARKER}\n", split_clean)
     hard_parts = [part.strip() for part in split_clean.splitlines() if part.strip()] or [clean]
     chunks: list[str] = []
     for part in hard_parts:
@@ -298,6 +299,7 @@ def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 180,
         len(chunks) > 1
         and len(chunks[-1]) < min_final_chars
         and not _COLLECT_RE.search(chunks[-2])
+        and _ELLIPSIS_PAUSE_MARKER not in chunks[-2]
         and not chunks[-2].rstrip().endswith("...")
     ):
         chunks[-2] = f"{chunks[-2]} {chunks[-1]}"
@@ -306,10 +308,15 @@ def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 180,
         chunks = [clean]
     planned: list[dict[str, object]] = []
     for idx, chunk in enumerate(chunks):
+        had_ellipsis_pause = _ELLIPSIS_PAUSE_MARKER in chunk
+        speakable_chunk = " ".join(chunk.replace(_ELLIPSIS_PAUSE_MARKER, "").replace("...", "").split())
+        if not speakable_chunk:
+            continue
+        pause_after_ms = 900 if had_ellipsis_pause and idx != len(chunks) - 1 else pause_ms_for_chunk(speakable_chunk, final=idx == len(chunks) - 1)
         planned.append({
-            "text": chunk,
+            "text": speakable_chunk,
             "tone": tone,
-            "pause_after_ms": pause_ms_for_chunk(chunk, final=idx == len(chunks) - 1),
+            "pause_after_ms": pause_after_ms,
             "role": "persona_affect_beat",
             "interruptible": True,
         })

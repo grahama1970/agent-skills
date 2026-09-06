@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import hashlib
 import json
 import os
@@ -430,7 +432,7 @@ def _recall_memory(query: str, scope: str, k: int, collections: list[str] | None
             body["threshold"] = 0.0
         resp = client.post("/recall", json=body)
         resp.raise_for_status()
-        return resp.json()
+        return validate_http_json("memory_recall", resp.json())
 
 
 def _persona_id_candidates(persona_id: str) -> set[str]:
@@ -564,7 +566,7 @@ def _fetch_day_memories(persona: Persona, day: str, want: int) -> tuple[list[dic
                 "bind_vars": {"day": day, "p": persona.id},
             })
             resp.raise_for_status()
-            body = resp.json() or {}
+            body = validate_http_json("memory_query", resp.json() or {})
         raw_items = body.get("documents") or body.get("result") or []
     except Exception as exc:  # noqa: BLE001 - reported in the receipt, never raised
         receipt.update({"status": "error", "error": str(exc), "available": 0, "taken": 0})
@@ -1430,7 +1432,7 @@ def _store_reflection(persona: Persona, reflection: str, packet: dict[str, Any],
                 json={"document": document, "collection": CENTRAL_PERSONA_MEMORY_COLLECTION},
             )
             http_status, err = resp.status_code, None
-            body = resp.json() if resp.content else None
+            body = validate_http_json("memory_store", resp.json()) if resp.content else None
         except Exception as exc:  # noqa: BLE001
             http_status, err, body = 0, str(exc), None
 
@@ -1443,7 +1445,7 @@ def _store_reflection(persona: Persona, reflection: str, packet: dict[str, Any],
                 "bind_vars": {"@col": CENTRAL_PERSONA_MEMORY_COLLECTION,
                               "k": document["_key"]},
             })
-            found = (check.json() or {}).get("documents") or []
+            found = (validate_http_json("memory_query", check.json() or {})).get("documents") or []
             read_back = bool(found)
         except Exception:  # noqa: BLE001
             read_back = False

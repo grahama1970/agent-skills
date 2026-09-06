@@ -22,6 +22,8 @@ produces fresh media-transition, packet, and provider-gate evidence.
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -269,7 +271,7 @@ def main() -> int:
     with httpx.Client(base_url=args.memory_base_url, timeout=timeout) as client:
         listing = client.post("/list", json={"collection": STEP_COLLECTION, "limit": 100, "filters": filters})
         listing.raise_for_status()
-        documents = listing.json().get("documents") or listing.json().get("items") or []
+        documents = validate_http_json("memory_list", listing.json()).get("documents") or listing.json().get("items") or []
         by_step = {int(document["step_no"]): document for document in documents if "step_no" in document}
         updates = []
         receipt_relative = str(receipt_path.relative_to(run_root))
@@ -299,7 +301,7 @@ def main() -> int:
         write.raise_for_status()
         recheck = client.post("/list", json={"collection": STEP_COLLECTION, "limit": 100, "filters": filters})
         recheck.raise_for_status()
-        rechecked = recheck.json().get("documents") or recheck.json().get("items") or []
+        rechecked = validate_http_json("memory_list", recheck.json()).get("documents") or recheck.json().get("items") or []
 
     reread_by_step = {int(document["step_no"]): document for document in rechecked if "step_no" in document}
     if len(rechecked) != 42:

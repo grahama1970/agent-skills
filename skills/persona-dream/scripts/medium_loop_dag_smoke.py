@@ -63,6 +63,8 @@ readiness, voice cloning, paid-call isolation, external-network isolation, or
 
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import asyncio
 from collections import deque
@@ -722,7 +724,7 @@ async def execute_scillm_batch(
             http_version = response.http_version
             request_id = response.headers.get("x-request-id") or response.headers.get("openai-request-id")
             response.raise_for_status()
-            parsed = response.json()
+            parsed = validate_http_json("chat_completion", response.json())
             if not isinstance(parsed, dict):
                 raise ValueError("top-level response is not a JSON object")
             response_json = parsed

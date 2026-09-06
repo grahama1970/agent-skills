@@ -19,6 +19,8 @@ happened.
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -262,7 +264,7 @@ def store(docs: list[dict[str, Any]], persona: str, day: str) -> tuple[list[dict
                         "AND d.persona_id == @p RETURN d._key"),
                 "bind_vars": {"@col": COLLECTION, "day": day, "p": persona},
             })
-            for raw in ((resp.json() or {}).get("documents") or []):
+            for raw in (validate_http_json("memory_query", resp.json() or {}).get("documents") or []):
                 key = raw if isinstance(raw, str) else str(raw.get("_key", ""))
                 if key in keys:
                     seen.add(key)

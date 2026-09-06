@@ -200,7 +200,7 @@ def main() -> int:
     with httpx.Client(base_url=args.memory_base_url, timeout=timeout) as client:
         before_response = client.post("/list", json={"collection": COLLECTION, "limit": 100, "filters": filters})
         before_response.raise_for_status()
-        before = response_documents(before_response.json())
+        before = response_documents(validate_http_json("memory_list", before_response.json()))
         by_step = {int(item["step_no"]): item for item in before if "step_no" in item}
         if len(before) != 42 or 37 not in by_step or 38 not in by_step:
             raise SystemExit(f"expected 42 records including steps 37/38, found {len(before)}")

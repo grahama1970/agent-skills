@@ -7,6 +7,8 @@ Fail-closed: exact reread mismatch aborts. No paid or live provider calls.
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -103,7 +105,7 @@ def _write_and_reread(client: httpx.Client, collection: str, key: str, document:
     client.post("/upsert", json={"collection": collection, "documents": [document]}).raise_for_status()
     reread = client.post("/list", json={"collection": collection, "limit": 2, "filters": {"_key": key}})
     reread.raise_for_status()
-    docs = reread.json().get("documents") or []
+    docs = validate_http_json("memory_list", reread.json()).get("documents") or []
     if len(docs) != 1:
         raise SystemExit(f"exact reread count mismatch for {key}: {len(docs)}")
     got = docs[0]

@@ -856,6 +856,8 @@ def _error_response_payload(exc: BaseException) -> tuple[int | None, Any]:
     payload: Any = None
     if response is not None:
         try:
+            # Intentionally NOT pydantic-gated: best-effort introspection of an
+            # ERROR response body for diagnostics; any shape is acceptable here.
             payload = response.json()
         except Exception:
             payload = None

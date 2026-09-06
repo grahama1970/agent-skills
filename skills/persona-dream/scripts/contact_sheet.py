@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import base64
 import hashlib
 import html
@@ -359,8 +361,8 @@ def qdrant_index(assets: list[dict[str, Any]]) -> dict[str, Any]:
             image_b64 = base64.b64encode(Path(asset["image_path"]).read_bytes()).decode("ascii")
             image_resp = client.post(EMBED_URL, json={"text": doc, "image_b64": image_b64}, timeout=120)
             image_resp.raise_for_status()
-            text_vec = text_resp.json()["embedding"]
-            image_vec = image_resp.json()["embedding"]
+            text_vec = validate_http_json("embedding", text_resp.json())["embedding"]
+            image_vec = validate_http_json("embedding", image_resp.json())["embedding"]
             if len(text_vec) != VECTOR_SIZE or len(image_vec) != VECTOR_SIZE:
                 raise RuntimeError("Embedding dimension mismatch")
             asset.update(
@@ -375,7 +377,7 @@ def qdrant_index(assets: list[dict[str, Any]]) -> dict[str, Any]:
             points.append({"id": asset["visual_qdrant_point_id"], "vector": {"text_mm": text_vec, "image_mm": image_vec}, "payload": asset})
         upsert = client.put(f"{QDRANT_URL}/collections/{QDRANT_COLLECTION}/points?wait=true", json={"points": points}, timeout=120)
         upsert.raise_for_status()
-        return {"collection_created": created, "collection": QDRANT_COLLECTION, "upserted": len(points), "upsert_response": upsert.json()}
+        return {"collection_created": created, "collection": QDRANT_COLLECTION, "upserted": len(points), "upsert_response": validate_http_json("memory_generic", upsert.json())}
 
 
 def memory_upsert(assets: list[dict[str, Any]]) -> dict[str, Any]:
@@ -389,7 +391,7 @@ def memory_upsert(assets: list[dict[str, Any]]) -> dict[str, Any]:
     with httpx.Client(base_url=MEMORY_URL, timeout=30) as client:
         response = client.post("/upsert", json={"collection": MEMORY_COLLECTION, "documents": docs})
         response.raise_for_status()
-        return response.json()
+        return validate_http_json("memory_store", response.json())
 
 
 def sha256_file(path: Path) -> str:
@@ -1007,12 +1009,12 @@ def retrieve(
     with httpx.Client(base_url=MEMORY_URL, timeout=10) as client:
         response = client.post("/recall", json={"q": query, "k": limit, "collections": [MEMORY_COLLECTION]})
         response.raise_for_status()
-        data = response.json()
+        data = validate_http_json("memory_recall", response.json())
         if not data.get("found") or not data.get("items"):
             listed = client.post("/list", json={"collection": MEMORY_COLLECTION, "limit": 500})
             listed.raise_for_status()
             terms = [term.lower() for term in query.split() if len(term) > 2]
-            docs = listed.json().get("documents", [])
+            docs = validate_http_json("memory_list", listed.json()).get("documents", [])
             scored = []
             for doc in docs:
                 haystack = " ".join(

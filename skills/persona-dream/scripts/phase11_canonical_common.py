@@ -250,33 +250,7 @@ def resolve_active_context(run_root: Path, revision_override: str | None = None)
     try:
         snapshot = load_snapshot(resolved_run_root, revision_id, source_commit)
         chain = validate_prepare_verify_chain(snapshot, args)
-        try:
-            local_pointer = validate_local_pointer(snapshot)
-        except GateBlocked as pointer_exc:
-            if pointer_exc.code != "BLOCKED_ACTIVATION_REVISION_ROOT_OUTSIDE_REPOSITORY":
-                raise
-            # Historical active revisions may carry an absolute revisionRoot from
-            # the checkout where qualification originally ran.  Phase 11 reads a
-            # qualified revision through the caller's explicit --run-root, so a
-            # stale-but-existing absolute pointer is acceptable evidence when it
-            # names the same run/revision/manifest/idea and its original bytes
-            # still match the Memory activation transaction.  Do not rewrite the
-            # pointer here; preserve its hash so activation validation remains
-            # bound to the existing Memory record.
-            pointer_path = resolved_run_root / ".persona-dream" / "state" / "active_revision.json"
-            pointer = read_object(pointer_path)
-            stale_root = Path(str(pointer.get("revisionRoot") or "")).expanduser().resolve(strict=True)
-            require(stale_root.name == snapshot.revision_id, "BLOCKED_LOCAL_ACTIVE_POINTER_REVISION_ROOT_MISMATCH")
-            expected_pointer_fields = {
-                "runId": snapshot.run_id,
-                "revisionId": snapshot.revision_id,
-                "revisionManifestSha256": snapshot.manifest_sha256,
-                "ideaId": snapshot.idea_lineage.idea_id,
-                "ideaSha256": snapshot.idea_lineage.idea_sha256,
-            }
-            for field, expected_value in expected_pointer_fields.items():
-                require(pointer.get(field) == expected_value, "BLOCKED_LOCAL_ACTIVE_POINTER_MISMATCH", field=field)
-            local_pointer = {"path": pointer_path, "value": pointer, "sha256": sha256_file(pointer_path)}
+        local_pointer = validate_local_pointer(snapshot)
         queue = validate_repair_queue(snapshot)
         transaction_id = activation_transaction_id(snapshot, chain, local_pointer, queue)
         require(

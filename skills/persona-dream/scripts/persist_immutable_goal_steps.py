@@ -277,7 +277,7 @@ def main() -> int:
         write.raise_for_status()
         first = client.post("/list", json={"collection": COLLECTION, "limit": 100, "filters": {"run_id": RUN_ID, "revision_id": REVISION_ID}})
         first.raise_for_status()
-        first_docs = response_documents(first.json())
+        first_docs = response_documents(validate_http_json("memory_list", first.json()))
         by_key = {doc["_key"]: doc for doc in first_docs}
         expected_keys = {doc["_key"] for doc in documents}
         if set(by_key) != expected_keys:
@@ -291,7 +291,7 @@ def main() -> int:
         second_write.raise_for_status()
         final = client.post("/list", json={"collection": COLLECTION, "limit": 100, "filters": {"run_id": RUN_ID, "revision_id": REVISION_ID}})
         final.raise_for_status()
-        final_docs = response_documents(final.json())
+        final_docs = response_documents(validate_http_json("memory_list", final.json()))
     final_keys = {doc.get("_key") for doc in final_docs}
     if final_keys != expected_keys or len(final_docs) != 42:
         raise SystemExit(f"final exact reread mismatch: expected 42, got {len(final_docs)}")
@@ -308,7 +308,7 @@ def main() -> int:
         hash_refresh.raise_for_status()
         refreshed = client.post("/list", json={"collection": COLLECTION, "limit": 100, "filters": {"run_id": RUN_ID, "revision_id": REVISION_ID}})
         refreshed.raise_for_status()
-        refreshed_docs = response_documents(refreshed.json())
+        refreshed_docs = response_documents(validate_http_json("memory_list", refreshed.json()))
     refreshed_keys = {doc.get("_key") for doc in refreshed_docs}
     if refreshed_keys != expected_keys or len(refreshed_docs) != 42:
         raise SystemExit(f"hash-refresh exact reread mismatch: expected 42, got {len(refreshed_docs)}")
@@ -322,9 +322,9 @@ def main() -> int:
         "run_id": RUN_ID,
         "revision_id": REVISION_ID,
         "request_body_sha256": REQUEST_SHA,
-        "upsert_response": write.json(),
-        "second_upsert_response": second_write.json(),
-        "hash_refresh_upsert_response": hash_refresh.json(),
+        "upsert_response": validate_http_json("memory_store", write.json()),
+        "second_upsert_response": validate_http_json("memory_store", second_write.json()),
+        "hash_refresh_upsert_response": validate_http_json("memory_store", hash_refresh.json()),
         "exact_reread_count": 42,
         "exact_reread_keys": sorted(final_keys),
         "semantic_synced_count": sum(doc.get("semantic_sync_state") == "synced" for doc in final_docs),

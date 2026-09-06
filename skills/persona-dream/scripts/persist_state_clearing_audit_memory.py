@@ -9,6 +9,8 @@ the other persona-dream memory writers. No provider or paid work.
 
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -142,7 +144,7 @@ def main() -> int:
             json={"collection": COLLECTION, "limit": 2, "filters": {"_key": MEMORY_KEY}},
         )
         reread.raise_for_status()
-        observed = reread.json().get("documents") or []
+        observed = validate_http_json("memory_query", reread.json()).get("documents") or []
         if len(observed) != 1:
             raise SystemExit(f"exact reread count mismatch for {MEMORY_KEY}: {len(observed)}")
         got = observed[0]

@@ -27,6 +27,8 @@ The pure functions (``build_observation_packet``, ``validate_observation_packet`
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -555,7 +557,7 @@ def persist_memory_live(
             "collection": MEMORY_COLLECTION, "limit": 2, "filters": {"_key": record_key},
         })
         reread.raise_for_status()
-        items = reread.json().get("documents") or reread.json().get("items") or []
+        items = validate_http_json("memory_list", reread.json()).get("documents") or reread.json().get("items") or []
         if len(items) != 1:
             raise RuntimeError(f"exact reread count mismatch for {record_key}: {len(items)}")
         observed = items[0]

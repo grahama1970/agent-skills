@@ -10,6 +10,8 @@ No provider or paid work; the Lane C evidence came from live GPT Image 2
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -122,7 +124,7 @@ def write_and_reread(client: httpx.Client, key: str, document: dict[str, Any]) -
     client.post("/upsert", json={"collection": COLLECTION, "documents": [document]}).raise_for_status()
     reread = client.post("/list", json={"collection": COLLECTION, "limit": 2, "filters": {"_key": key}})
     reread.raise_for_status()
-    docs = reread.json().get("documents") or []
+    docs = validate_http_json("memory_list", reread.json()).get("documents") or []
     if len(docs) != 1:
         raise SystemExit(f"exact reread count mismatch for {key}: {len(docs)}")
     got = docs[0]

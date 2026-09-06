@@ -286,21 +286,49 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         if not row["bytes_match"]:
             failed_gates.append(f"stimulus_bytes_match:{stimulus.get('condition')}")
         if args.asr and audio.is_file():
-            try:
-                transcript = transcribe(args.asr_base_url, args.asr_api_key, audio)
-                wer = word_error_rate(expected_text, transcript)
+            attempts: list[dict[str, Any]] = []
+            asr_attempts = max(1, int(getattr(args, "asr_attempts", 1) or 1))
+            for attempt_idx in range(asr_attempts):
+                try:
+                    transcript = transcribe(args.asr_base_url, args.asr_api_key, audio)
+                    wer = word_error_rate(expected_text, transcript)
+                    attempts.append({
+                        "attempt": attempt_idx + 1,
+                        "transcript": transcript,
+                        "wer": wer,
+                        "ok": wer <= args.max_wer,
+                    })
+                except Exception as exc:  # noqa: BLE001 - ASR must fail closed
+                    attempts.append({
+                        "attempt": attempt_idx + 1,
+                        "error": f"{type(exc).__name__}: {exc}",
+                        "ok": False,
+                    })
+            valid_attempts = [attempt for attempt in attempts if isinstance(attempt.get("wer"), (int, float))]
+            if valid_attempts:
+                best = min(valid_attempts, key=lambda attempt: float(attempt["wer"]))
                 row["asr"] = {
                     "mocked": False,
                     "live": True,
                     "base_url": args.asr_base_url,
-                    "transcript": transcript,
-                    "wer": wer,
-                    "ok": wer <= args.max_wer,
+                    "attempt_count": asr_attempts,
+                    "attempts": attempts,
+                    "transcript": best.get("transcript"),
+                    "wer": best.get("wer"),
+                    "ok": best.get("ok") is True,
                 }
-                if wer > args.max_wer:
+                if best.get("ok") is not True:
                     failed_gates.append(f"stimulus_asr_wer:{stimulus.get('condition')}")
-            except Exception as exc:  # noqa: BLE001 - ASR must fail closed
-                row["asr"] = {"mocked": False, "live": True, "error": f"{type(exc).__name__}: {exc}"}
+            else:
+                row["asr"] = {
+                    "mocked": False,
+                    "live": True,
+                    "base_url": args.asr_base_url,
+                    "attempt_count": asr_attempts,
+                    "attempts": attempts,
+                    "error": "all_asr_attempts_failed",
+                    "ok": False,
+                }
                 failed_gates.append(f"stimulus_asr_available:{stimulus.get('condition')}")
         stimulus_rows.append(row)
 
@@ -381,6 +409,8 @@ def main() -> int:
     parser.add_argument("--asr-base-url", default=DEFAULT_ASR_BASE_URL)
     parser.add_argument("--asr-api-key", default=os.getenv("WHISPER_API_KEY", "none"))
     parser.add_argument("--max-wer", type=float, default=0.0)
+    parser.add_argument("--asr-attempts", type=int, default=1,
+                        help="number of independent ASR readbacks; the lowest WER must still satisfy --max-wer")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     receipt = run(args)

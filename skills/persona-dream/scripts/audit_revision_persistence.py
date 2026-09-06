@@ -38,6 +38,8 @@ Modes:
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -89,7 +91,7 @@ def iter_strings(value: Any) -> Iterator[str]:
 def memory_list(client: httpx.Client, collection: str, filters: dict[str, Any], limit: int = 100) -> list[dict[str, Any]]:
     response = client.post("/list", json={"collection": collection, "limit": limit, "filters": filters})
     response.raise_for_status()
-    payload = response.json()
+    payload = validate_http_json("memory_list", response.json())
     return payload.get("documents") or payload.get("items") or []
 
 

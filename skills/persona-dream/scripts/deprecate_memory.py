@@ -18,6 +18,8 @@ grounds it stopped counting.
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import json
 from datetime import datetime, timezone
@@ -44,7 +46,7 @@ def fetch(client, key: str, collection: str) -> dict[str, Any] | None:
         "aql": "FOR d IN @@col FILTER d._key == @k RETURN d",
         "bind_vars": {"@col": collection, "k": key},
     })
-    docs = (resp.json() or {}).get("documents") or []
+    docs = (validate_http_json("memory_query", resp.json() or {})).get("documents") or []
     return docs[0] if docs else None
 
 

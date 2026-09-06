@@ -211,7 +211,30 @@ class MemoryStoreResponse(BaseModel):
     stored: bool | None = None
 
 
+class GenericJsonObject(BaseModel):
+    """Any JSON-object response; rejects non-object roots."""
+
+    model_config = ConfigDict(extra="allow")
+
+
+class EmbeddingResponse(BaseModel):
+    """Embedding service response."""
+
+    model_config = ConfigDict(extra="allow")
+    embedding: list[float]
+
+
+class ChatCompletionResponse(BaseModel):
+    """OpenAI-style chat completion response."""
+
+    model_config = ConfigDict(extra="allow")
+    choices: list[Any]
+
+
 HTTP_RESPONSE_MODELS: dict[str, type[BaseModel]] = {
+    "memory_generic": GenericJsonObject,
+    "embedding": EmbeddingResponse,
+    "chat_completion": ChatCompletionResponse,
     "memory_query": MemoryQueryResponse,
     "memory_recall": MemoryRecallResponse,
     "memory_list": MemoryListResponse,

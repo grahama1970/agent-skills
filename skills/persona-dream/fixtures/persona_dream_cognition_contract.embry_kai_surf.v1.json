@@ -78,7 +78,7 @@
       "positive_queries": {
         "A1_correction_autonomy": "What does Embry believe about accepting a friend's correction on surf etiquette without feeling her independence is threatened?",
         "A2_skip_obligations_safer": "Is there a memory where skipping obligations to go surfing feels emotionally safer because a trusted friend gives a warning and shares the risk?",
-        "A3_uncertain_anchor": "What captures Embry's uncertainty about Kai as a stable anchor when he warns her about surf-lineup etiquette and whether she should paddle now?"
+        "A3_uncertain_anchor": "What captures Embry's uncertainty about whether Kai is a dependable, stable person she can rely on as an anchor?"
       },
       "negative_query": {
         "NEG_orbital_telemetry": "What telemetry explains orbital satellite station-keeping thruster burns and downlink scheduling windows?"

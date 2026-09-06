@@ -13,6 +13,8 @@ present. Existing records alone are not treated as proof of future automation.
 
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import json
 import os
 import re
@@ -96,14 +98,14 @@ def memory_get(path: str) -> dict[str, Any]:
     with httpx.Client(timeout=20.0) as client:
         response = client.get(f"{MEMORY_URL}{path}")
         response.raise_for_status()
-        return response.json()
+        return validate_http_json("memory_generic", response.json())
 
 
 def memory_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
     with httpx.Client(timeout=30.0) as client:
         response = client.post(f"{MEMORY_URL}{path}", json=payload)
         response.raise_for_status()
-        return response.json()
+        return validate_http_json("memory_generic", response.json())
 
 
 def recall(query: str, collections: list[str] | None = None, tags: list[str] | None = None) -> dict[str, Any]:

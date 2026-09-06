@@ -28,6 +28,8 @@ evidence; a subsequent ``/recall`` that finds the key is.
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -276,7 +278,7 @@ def store_and_read_back(events: list[dict[str, Any]], persona: str, date: str) -
                 "aql": "FOR d IN @@col FILTER d.day == @day AND d.persona_id == @p RETURN d._key",
                 "bind_vars": {"@col": COLLECTION, "day": date, "p": persona},
             })
-            body = resp.json() or {}
+            body = validate_http_json("memory_query", resp.json() or {})
             found = body.get("documents") or body.get("result") or []
             for raw in found:
                 key = raw if isinstance(raw, str) else str(raw.get("_key", ""))

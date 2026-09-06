@@ -15,6 +15,8 @@ No provider or paid work.
 """
 from __future__ import annotations
 
+from pydantic_step_gate import validate_http_json
+
 import argparse
 import hashlib
 import json
@@ -45,7 +47,7 @@ def _upsert_and_reread(client: httpx.Client, document: dict[str, Any], check_fie
     w.raise_for_status()
     r = client.post("/list", json={"collection": COLLECTION, "limit": 2, "filters": {"_key": key}})
     r.raise_for_status()
-    docs = r.json().get("documents") or []
+    docs = validate_http_json("memory_list", r.json()).get("documents") or []
     if len(docs) != 1:
         raise SystemExit(f"exact reread count mismatch for {key}: {len(docs)}")
     got = docs[0]

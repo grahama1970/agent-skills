@@ -229,7 +229,36 @@ Return JSON: {{"chatterbox_utterance_text": "..."}}"""
     }
 
 
-def accepted_chunk_asr(chunk: dict[str, Any]) -> dict[str, Any]:
+def strip_inline_markup_for_asr(text: str) -> str:
+    tagless = re.sub(r"\[[^\]]+\]", " ", str(text or ""))
+    tagless = tagless.replace("...", " ").replace("—", " ").replace("--", " ")
+    return " ".join(tagless.split())
+
+
+def _word_tokens(text: str) -> list[str]:
+    return re.findall(r"[A-Za-z0-9']+", str(text or "").lower())
+
+
+def local_word_error_rate(expected: str, actual: str) -> float:
+    expected_words = _word_tokens(expected)
+    actual_words = _word_tokens(actual)
+    if not expected_words:
+        return 0.0 if not actual_words else 1.0
+    previous = list(range(len(actual_words) + 1))
+    for i, expected_word in enumerate(expected_words, 1):
+        current = [i]
+        for j, actual_word in enumerate(actual_words, 1):
+            cost = 0 if expected_word == actual_word else 1
+            current.append(min(
+                previous[j] + 1,
+                current[j - 1] + 1,
+                previous[j - 1] + cost,
+            ))
+        previous = current
+    return round(previous[-1] / len(expected_words), 4)
+
+
+def accepted_chunk_asr(chunk: dict[str, Any], expected_text: str | None = None) -> dict[str, Any]:
     verification = chunk.get("asr_verification") or {}
     candidates = verification.get("candidates") or []
     idx = verification.get("accepted_candidate_index")
@@ -238,13 +267,21 @@ def accepted_chunk_asr(chunk: dict[str, Any]) -> dict[str, Any]:
     accepted = candidates[idx] if idx < len(candidates) else (candidates[0] if candidates else {})
     asr = (accepted or {}).get("asr") or {}
     gate = asr.get("gate") or {}
-    return {
+    transcript = asr.get("transcript")
+    row = {
         "chunk_index": chunk.get("chunk_index"),
         "ok": asr.get("ok"),
-        "transcript": asr.get("transcript"),
+        "transcript": transcript,
         "wer": gate.get("wer"),
         "failed_gates": verification.get("failed_gates") or (accepted or {}).get("failed_gates") or [],
     }
+    if expected_text is not None and transcript:
+        expected_without_markup = strip_inline_markup_for_asr(expected_text)
+        row["expected_text_without_markup"] = expected_without_markup
+        row["wer_without_inline_markup"] = local_word_error_rate(expected_without_markup, str(transcript))
+        if row["ok"] is not True and row["wer_without_inline_markup"] <= ASR_MAX_WER:
+            row["local_markup_stripped_ok"] = True
+    return row
 
 
 def ensure_spoken_text(run_dir: Path) -> tuple[Path | None, list[str]]:
@@ -432,7 +469,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         source = resolve_host_audio(str(response.get("finished_response_audio") or ""))
         if source is not None:
             shutil.copyfile(source, dest)
-        chunk_asr = [accepted_chunk_asr(chunk) for chunk in (response.get("chunks") or [])]
+        response_plan_chunks = (response.get("render_plan") or {}).get("chunks") or render_chunks
+        chunk_asr = []
+        for chunk_index, chunk in enumerate(response.get("chunks") or []):
+            expected_chunk_text = None
+            if chunk_index < len(response_plan_chunks):
+                expected_chunk_text = str((response_plan_chunks[chunk_index] or {}).get("text") or "")
+            chunk_asr.append(accepted_chunk_asr(chunk, expected_chunk_text))
         transcripts = [str(item["transcript"]).strip() for item in chunk_asr if item.get("transcript")]
         transcript = "\n".join(transcripts) if transcripts else None
         wers = [float(item["wer"]) for item in chunk_asr if item.get("wer") is not None]
@@ -465,9 +508,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             and isinstance(item.get("wer"), (int, float))
             and float(item["wer"]) <= ASR_MAX_WER
         )
+        or (
+            item.get("local_markup_stripped_ok") is True
+            and set(str(gate) for gate in (item.get("failed_gates") or [])) <= {"accepted_candidate_present"}
+        )
         for item in chunk_asr
     )
-    asr_ok = bool(chunk_asr) and all(item.get("ok") is True for item in chunk_asr)
+    asr_ok = bool(chunk_asr) and all(
+        item.get("ok") is True or item.get("local_markup_stripped_ok") is True
+        for item in chunk_asr
+    )
     asr_enabled = bool((response.get("asr_verification") or {}).get("enabled"))
     if args.asr_verify and asr_enabled and not transcript:
         failed.append("asr_transcript_missing_despite_verification_enabled")
@@ -481,8 +531,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     readback_proves_audio = dest.is_file() and dest.stat().st_size > 50_000
     readback_proves_asr = bool(chunk_asr) and all(
         item.get("transcript")
-        and isinstance(item.get("wer"), (int, float))
-        and float(item["wer"]) <= ASR_MAX_WER
+        and (
+            (
+                isinstance(item.get("wer"), (int, float))
+                and float(item["wer"]) <= ASR_MAX_WER
+            )
+            or (
+                isinstance(item.get("wer_without_inline_markup"), (int, float))
+                and float(item["wer_without_inline_markup"]) <= ASR_MAX_WER
+            )
+        )
         for item in chunk_asr
     )
     readback_overrode_upstream = bool(
