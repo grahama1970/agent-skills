@@ -368,7 +368,7 @@
       }
     },
     {
-      "name": "ticket-repair-uses-gpt55-high-creator-through-tau-workspace",
+      "name": "ticket-repair-uses-codex-author-with-remote-reviewer",
       "type": "adversarial",
       "evidence_class": "fault_injected_deterministic",
       "mocked": true,
@@ -379,13 +379,14 @@
         "--project",
         "..",
         "pytest",
-        "../tests/test_project_watchdog.py::test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace",
+        "../tests/test_project_watchdog.py::test_repair_execution_handlers_keep_reviewer_remote",
+        "../tests/test_project_watchdog.py::test_remote_reviewer_prompt_defers_local_readback_to_watchdog",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "1 passed"
+          "2 passed"
         ]
       }
     },
@@ -592,7 +593,7 @@
         "..",
         "pytest",
         "../tests/test_project_watchdog.py::test_oc_chat_creator_is_refused_before_ask_dispatch",
-        "../tests/test_project_watchdog.py::test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace",
+        "../tests/test_project_watchdog.py::test_repair_execution_handlers_keep_reviewer_remote",
         "-q"
       ],
       "expected": {

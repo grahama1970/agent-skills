@@ -523,6 +523,17 @@ def test_ticket_repair_serves_a_project_that_is_not_tau(tmp_path) -> None:
     assert not comment.called
 
 
+def _fake_native_acquire(record, result, checkpoint) -> None:  # noqa: ANN001
+    checkpoint(
+        "leased",
+        lease_actor="test",
+        lease_before_event=None,
+        lease_event={"id": 1, "event": "labeled", "actor": "test", "created_at": "2026-01-01T00:00:00Z"},
+        lease_agent="project-watchdog-test",
+        lease_released=False,
+    )
+
+
 def _clean_worktree(tmp_path: Path) -> Path:
     """A real git worktree on a clean ``main``.
 
@@ -540,6 +551,10 @@ def _clean_worktree(tmp_path: Path) -> Path:
     for args in (("init", "-q", "-b", "main", "."), ("add", "-A"), ("commit", "-q", "-m", "init")):
         subprocess.run(["git", "-C", str(tmp_path), *args], check=True,
                        capture_output=True, env=env)
+    origin = tmp_path.parent / f"{tmp_path.name}-origin.git"
+    subprocess.run(["git", "init", "--bare", "-q", str(origin)], check=True, capture_output=True, env=env)
+    subprocess.run(["git", "-C", str(tmp_path), "remote", "add", "origin", str(origin)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "push", "-q", "origin", "main"], check=True, capture_output=True, env=env)
     return tmp_path
 
 
@@ -568,11 +583,15 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
         "repair_reviewer": "claude-fable-low",
         "ticket_repair_timeout_s": 10800,
     }
-    issue = _issue(9, labels=["agent-work"])
+    issue = _issue(9, labels=["agent-work"], body="target: skills/tau\n")
     issue["watchdog_action"] = "ticket_repair"
     with (
         mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
         mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch("watchdog.primary.assert_repository", return_value=None),
+        mock.patch.object(handlers.github, "get_issue", return_value={**issue, "state": "OPEN"}),
+        mock.patch("watchdog.native_ticket.acquire", side_effect=_fake_native_acquire),
+        mock.patch("watchdog.native_ticket.assert_mutable", return_value={**issue, "state": "OPEN"}),
         mock.patch.object(
             handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag
         ) as bounded,
@@ -595,13 +614,10 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
             if str(c.args[0][0]).endswith("ask/run.sh")]
     assert len(asks) == 1, "repair must go through $ask, exactly once"
     argv = asks[0]
-    # Authored in a worktree of the lane's own making, never the registered
-    # checkout: that one is a human's working tree.
     workspace = argv[argv.index("--handler-workspace") + 1]
-    assert workspace.startswith("gpt-5.5-high=")
-    assert str(tmp_path) != workspace.split("=", 1)[1]
-    assert "repair-worktrees" in workspace
+    assert workspace == f"codex={project['worktree']}"
     assert argv[1] == "tau-dag"
+    assert argv[argv.index("--handler") + 1] == "codex"
     assert "--dag-template" in argv and argv[argv.index("--dag-template") + 1] == "creator-reviewer"
     assert "--topology" in argv and argv[argv.index("--topology") + 1] == "sequential"
     assert "--execute" in argv and "--allow-provider-calls" in argv
@@ -609,14 +625,17 @@ def test_ticket_repair_dispatches_through_ask_tau_dag(tmp_path) -> None:
     assert "--scillm-base-url" not in argv
     assert not any("localhost:4001" in str(item) or "/v1/scillm/" in str(item) for item in argv)
     assert argv[argv.index("--execution-timeout-seconds") + 1] == "3600"
-    # The creator seat mutates and needs a workspace; the reviewer seat does not.
+    # The explicit codex authoring handler mutates and needs a workspace; the reviewer seat does not.
     assert "claude-fable-low" in argv
+    assert f"claude-fable-low={workspace.split('=', 1)[1]}" not in argv
     # $ask fails preflight without an immutable goal, before any handler runs.
     goal = argv[argv.index("--immutable-goal") + 1]
     assert "#9" in goal and "Do not weaken or delete a test" in goal
 
     task = (tmp_path / "repair-task.md").read_text(encoding="utf-8")
     assert "VERDICT: PASS" in task, "the reviewer seat must be asked for a verdict"
+    assert "remote provider without local filesystem access" in task
+    assert "watchdog independently" in task
 
 
 def test_ticket_repair_documents_tau_owned_scillm_boundary() -> None:
@@ -634,7 +653,7 @@ def test_ticket_repair_documents_tau_owned_scillm_boundary() -> None:
     assert "creating focused `$ticket` items" in compact
 
 
-def test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace(tmp_path) -> None:
+def test_ticket_repair_uses_explicit_codex_workspace_for_gpt55_high_creator(tmp_path) -> None:
     project = {
         "project_id": "pdf_oxide",
         "repo": "grahama1970/pdf_oxide",
@@ -642,11 +661,15 @@ def test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace(tmp_path)
         "repair_creator": "gpt-5.5-high",
         "repair_reviewer": "claude-fable-low",
     }
-    issue = _issue(32, labels=["agent-work"])
+    issue = _issue(32, labels=["agent-work"], body="target: src/pdf_oxide\n")
     issue["watchdog_action"] = "ticket_repair"
     with (
         mock.patch.object(handlers.github, "issue_comment", return_value={"exit_code": 0}),
         mock.patch.object(handlers.github, "issue_edit", return_value={"exit_code": 0}),
+        mock.patch("watchdog.primary.assert_repository", return_value=None),
+        mock.patch.object(handlers.github, "get_issue", return_value={**issue, "state": "OPEN"}),
+        mock.patch("watchdog.native_ticket.acquire", side_effect=_fake_native_acquire),
+        mock.patch("watchdog.native_ticket.assert_mutable", return_value={**issue, "state": "OPEN"}),
         mock.patch.object(
             handlers, "run_ask_tau_dag_with_stream_monitor", side_effect=_passing_ask_tau_dag
         ) as dispatched,
@@ -665,9 +688,10 @@ def test_ticket_repair_allows_gpt55_high_creator_through_tau_workspace(tmp_path)
     assert len(asks) == 1
     argv = asks[0]
     workspace = argv[argv.index("--handler-workspace") + 1]
-    assert workspace.startswith("gpt-5.5-high=")
-    assert "repair-worktrees" in workspace
+    assert workspace == f"codex={project['worktree']}"
     assert argv[1] == "tau-dag"
+    assert argv[argv.index("--handler") + 1] == "codex"
+    assert "--handler-workspace" in argv and not any(str(item).startswith("claude-fable-low=") for item in argv)
     assert "--scillm-api-key" not in argv
     assert "--scillm-base-url" not in argv
 
@@ -853,6 +877,16 @@ def _seed_passing_repair_evidence(receipt_dir: Path) -> None:
         node = ask_dir / handlers.repair_node_id(handler)
         node.mkdir(parents=True, exist_ok=True)
         (node / "response.md").write_text("VERDICT: PASS\n", encoding="utf-8")
+
+
+def test_repair_execution_handlers_keep_reviewer_remote() -> None:
+    assert handlers.repair_execution_handlers("gpt-5.5-high", "claude-fable-low") == ("codex", "claude-fable-low")
+
+
+def test_remote_reviewer_prompt_defers_local_readback_to_watchdog() -> None:
+    assert "remote provider without local filesystem access" in handlers.REMOTE_REVIEWER_PROMPT
+    assert "watchdog independently checks" in handlers.REMOTE_REVIEWER_PROMPT
+    assert "truncated" in handlers.REMOTE_REVIEWER_PROMPT
 
 
 def _passing_repair_run_cmd(command, **_kwargs):  # noqa: ANN001, ANN003

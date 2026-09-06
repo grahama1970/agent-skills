@@ -201,6 +201,18 @@ def tau_coder_start_handoff(
 REPAIR_REVIEWER_HANDLER = config.DEFAULT_REPAIR_REVIEWER
 
 
+def repair_execution_handlers(creator: str, reviewer: str) -> tuple[str, str]:
+    """Map the authoring seat to Ask's local codex handler.
+
+    Reviewers stay on their declared provider. The watchdog does the final
+    local read-back and native verification after review, so a remote reviewer
+    does not need filesystem access.
+    """
+    lowered = creator.strip().lower()
+    creator_handler = "codex" if lowered.startswith(("gpt-", "codex-", "claude-")) else creator
+    return creator_handler, reviewer
+
+
 def repair_immutable_goal(repo: str, issue_number: int) -> str:
     return (f"Repair {repo}#{issue_number} only in the registered PRIMARY checkout on main. "
             "Preserve existing work. No worktree or branch creation/removal, reset, stash, rebase, "
@@ -219,6 +231,16 @@ def _ticket_repair_execution_timeout(project: dict[str, Any]) -> int:
     if configured <= 0:
         configured = min(int(project.get("ticket_repair_timeout_s", 1800)), 3600)
     return max(300, min(configured, 3600))
+
+
+REMOTE_REVIEWER_PROMPT = (
+    "Reviewer may be a remote provider without local filesystem access: review the creator's diff, "
+    "receipt excerpts, and proof claims, then emit a verification plan. Do not fail solely because "
+    "the workspace diff/status is truncated, contains unrelated cron noise, or local artifact bytes "
+    "are not readable from your seat; the watchdog independently checks scope, the reviewed commit, "
+    "on-disk target bytes, and reruns the plan before any closure. Fail only when the creator's "
+    "reported change/proof does not cover the ticket or is internally inconsistent."
+)
 
 
 def build_repair_task(
@@ -386,6 +408,26 @@ def _settled_semantic_refusal(plan_path: Path, expected: set[str]) -> dict[str, 
             "dag_error": native.get("dag_error")}
 
 
+def _blocked_native_dag_receipt(plan_path: Path) -> dict[str, Any] | None:
+    """Recognize a Tau pre-execution semantic block as a settled run."""
+    root = plan_path.parent
+    native = _json_from_file(root / "tau-receipts/dag-receipt.json") or {}
+    execution = _json_from_file(root / "execution-status.json") or {}
+    error = native.get("dag_error") if isinstance(native.get("dag_error"), dict) else {}
+    if not (
+        plan_path.is_file()
+        and native.get("schema") == "tau.dag_receipt.v1"
+        and native.get("status") == "BLOCKED"
+        and native.get("command_executed") is False
+        and isinstance(error, dict)
+        and error.get("failure_code")
+        and execution.get("dag_run_returncode") not in {None, 0}
+    ):
+        return None
+    return {"path": str(root / "tau-receipts/dag-receipt.json"),
+            "failure_code": str(error.get("failure_code")), "dag_error": error}
+
+
 class _CompileStopObservation(BaseModel):
     """Strict watchdog observation of an Ask rejection before DAG emission."""
     model_config = ConfigDict(extra="forbid", strict=True)
@@ -544,6 +586,9 @@ def inspect_tau_stream(ask_run_dir: Path) -> dict[str, Any]:
     elif len(plans) == 1 and (refusal := _settled_semantic_refusal(plans[0], expected)):
         record.update(terminal=True, terminal_status="BLOCKED", current_status="BLOCKED",
                       terminal_source=refusal["path"], semantic_refusal=refusal)
+    elif len(plans) == 1 and (refusal := _blocked_native_dag_receipt(plans[0])):
+        record.update(terminal=True, terminal_status="BLOCKED", current_status="BLOCKED",
+                      terminal_source=refusal["path"], semantic_refusal=refusal)
     # Node receipts remain progress evidence only; they cannot settle a DAG.
     record["stream_readable"] = bool(
         record["event_count"] or any(p.get("readable") for p in record["progress_files"] + record["node_receipts"])
@@ -695,9 +740,10 @@ _PROOF_PATH = re.compile(
 )
 
 
-def repair_node_id(handler: str) -> str:
+def repair_node_id(handler: str, occurrence: int = 1) -> str:
     """The ``node-artifacts`` directory ``$ask`` writes for one handler seat."""
-    return "handler-" + re.sub(r"[^a-z0-9]+", "-", handler.lower()).strip("-")
+    base = "handler-" + re.sub(r"[^a-z0-9]+", "-", handler.lower()).strip("-")
+    return base if occurrence <= 1 else f"{base}-{occurrence}"
 
 
 def declared_verdict(text: str) -> str | None:
@@ -711,9 +757,9 @@ def declared_verdict(text: str) -> str | None:
     return declarations[0]
 
 
-def seat_response_text(ask_run_dir: Path, handler: str) -> str | None:
+def seat_response_text(ask_run_dir: Path, handler: str, occurrence: int = 1) -> str | None:
     """Require one unambiguous response for this run/seat, not first-PASS wins."""
-    node_id = repair_node_id(handler)
+    node_id = repair_node_id(handler, occurrence)
     candidates = list(ask_run_dir.glob(f"*/node-artifacts/{node_id}/response.md"))
     if len(candidates) != 1:
         return None
@@ -872,7 +918,7 @@ def evaluate_repair_proof(
     - the reviewer seat declares ``VERDICT: PASS`` in its response;
     - no seat declares FAIL, BLOCKED, or NEEDS_ATTENTION;
     - every required output and reviewer-declared JSON result is a fresh pass;
-    - independently reviewed target bytes bind to an attributable content commit;
+    - watchdog-verified target bytes bind to an attributable content commit;
       local HEAD advancement and abandoned branch work are not attribution.
     """
     gate: dict[str, Any] = {
@@ -887,12 +933,16 @@ def evaluate_repair_proof(
     }
     reasons: list[str] = []
 
-    for role, handler in (("creator", creator), ("reviewer", reviewer)):
-        response = seat_response_text(ask_run_dir, handler)
+    seat_specs = [
+        ("creator", creator, 1),
+        ("reviewer", reviewer, 2 if reviewer == creator else 1),
+    ]
+    for role, handler, occurrence in seat_specs:
+        response = seat_response_text(ask_run_dir, handler, occurrence)
         verdict = declared_verdict(response) if response is not None else None
         gate["seat_verdicts"][role] = {
             "handler": handler,
-            "node_id": repair_node_id(handler),
+            "node_id": repair_node_id(handler, occurrence),
             "responded": response is not None,
             "verdict": verdict,
         }
@@ -909,7 +959,7 @@ def evaluate_repair_proof(
         elif verdict != "PASS" and role == "reviewer":
             reasons.append(f"reviewer seat {handler} declared {verdict}, not PASS")
 
-    review_text = seat_response_text(ask_run_dir, reviewer) or ""
+    review_text = seat_response_text(ask_run_dir, reviewer, 2 if reviewer == creator else 1) or ""
     declared = [line.split(":", 1)[1].strip() for line in review_text.splitlines()
                 if line.startswith("PROOF_ARTIFACT:")]
     # Ticket output operands remain mandatory; fixture/input JSON paths are not output proof.
@@ -996,7 +1046,13 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
         raise primary.Refusal("remote target changed while acquiring native lease")
     content.require_unchanged(before, content.snapshot(root, targets, current_pin))
     creator, reviewer = config.repair_seats(project)
-    result["seats"] = {"creator": creator, "reviewer": reviewer}
+    creator_handler, reviewer_handler = repair_execution_handlers(creator, reviewer)
+    result["seats"] = {
+        "creator": creator,
+        "reviewer": reviewer,
+        "creator_handler": creator_handler,
+        "reviewer_handler": reviewer_handler,
+    }
     task = build_repair_task(repo=repo, issue_number=number, issue_title=str(issue.get("title", "")),
                              issue_body=str(issue.get("body") or ""), targets=targets)
     import shlex
@@ -1005,7 +1061,7 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
         "python", str(commit_tool), "--root", str(root), "--journal", primary.current().journal,
         "--before", str(receipt_dir / "primary-before.json"), "--output", str(receipt_dir / "authored-commit.json")])
     clauses = required_proof_clauses(str(issue.get("body") or "")) or ["legacy_native_route"]
-    task += (f"\nPrimary checkout on MAIN only: {root}. Both seats use that exact path.\n"
+    task += (f"\nPrimary checkout on MAIN only: {root}. Creator uses that exact path.\n"
              "Do not create/switch/remove branches or worktrees. No reset, stash, clean, rebase, merge, "
              "shared-index staging, local HEAD commit, amend, direct push, lease mutation or issue closure. "
              "Unrelated cron work is normal: do not inspect/hash/change all repository files. "
@@ -1014,7 +1070,7 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
              "After each meaningful scoped edit and before final review, creator MUST checkpoint with this private-index helper:\n"
              f"{commit_command}\n"
              "The helper creates an unreferenced content commit, never a branch or worktree. "
-             "Reviewer must verify that exact commit and the on-disk target bytes, not an unrelated HEAD.\n"
+             f"{REMOTE_REVIEWER_PROMPT}\n"
              "Reviewer output must include one REVIEW_COMMIT: <full SHA> line, one VERDICT: PASS|FAIL|NEEDS_ATTENTION line, "
              "each PROOF_ARTIFACT: <absolute JSON RESULT path>, and one VERIFY_PLAN: <single-line JSON> line. "
              "VERIFY_PLAN has schema agent_skills.project_watchdog.verification_plan.v1, commands (nonempty list of "
@@ -1029,11 +1085,17 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
     ask_dir = receipt_dir / "ask"
     command = [str(config.ask_run_sh()), "tau-dag", task, "--repo", repo, "--target", ",".join(targets),
                "--immutable-goal", repair_immutable_goal(repo, number), "--dag-template", "creator-reviewer",
-               "--handler", creator, "--handler-workspace", f"{creator}={root}",
-               "--handler", reviewer, "--handler-workspace", f"{reviewer}={root}",
-               "--topology", "sequential", "--run-output-root", str(ask_dir), "--execute",
+               "--handler", creator_handler]
+    if creator_handler == reviewer_handler:
+        raise primary.Refusal("repair creator and reviewer resolve to the same Ask handler; choose distinct seats")
+    if creator_handler == "codex":
+        command.extend(["--handler-workspace", f"codex={root}"])
+    command.extend(["--handler", reviewer_handler])
+    if reviewer_handler == "codex" and creator_handler != "codex":
+        command.extend(["--handler-workspace", f"codex={root}"])
+    command.extend(["--topology", "sequential", "--run-output-root", str(ask_dir), "--execute",
                "--execution-timeout-seconds", str(_ticket_repair_execution_timeout(project)),
-               "--allow-provider-calls", "--json"]
+               "--allow-provider-calls", "--json"])
     primary.checkpoint("launching", ask_run_dir=str(ask_dir), dispatched_at=time.time())
     execution = run_ask_tau_dag_with_stream_monitor(command, cwd=config.ask_run_sh().parent,
         timeout_s=int(project.get("ticket_repair_timeout_s", 1800)), ask_run_dir=ask_dir,
@@ -1960,7 +2022,8 @@ def finish_primary_operation(record) -> dict[str, Any]:
     if monitor.get("timed_out") or monitor.get("process_exit_code") not in {None, 0}:
         raise primary.Refusal("retained Ask invocation failed/timed out; no automatic closure")
     creator, reviewer = config.repair_seats(project)
-    text = seat_response_text(Path(record.ask_run_dir), reviewer) or ""
+    creator_handler, reviewer_handler = repair_execution_handlers(creator, reviewer)
+    text = seat_response_text(Path(record.ask_run_dir), reviewer_handler) or ""
     declared = [line.partition(":")[2].strip() for line in text.splitlines() if line.startswith("REVIEW_COMMIT:")]
     if len(declared) != 1 or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", declared[0]):
         raise primary.Refusal("review must bind exactly one full content-commit SHA")
@@ -1993,7 +2056,7 @@ def finish_primary_operation(record) -> dict[str, Any]:
     write_json(primary._area(root) / "owned" / f"{record.issue_number}.json", encoded(owned))
     write_json(receipt_dir / "primary-after.json", encoded(after))
     initial_gate = evaluate_repair_proof(ask_run_dir=Path(record.ask_run_dir), issue_body=str(issue.get("body") or ""),
-        creator=creator, reviewer=reviewer, repair_worktree=root, not_before=record.dispatched_at,
+        creator=creator_handler, reviewer=reviewer_handler, repair_worktree=root, not_before=record.dispatched_at,
         reviewed_commit=review_commit)
     if not initial_gate["ok"]:
         raise primary.Refusal("independent proof gate failed: " + "; ".join(initial_gate["reasons"]))
