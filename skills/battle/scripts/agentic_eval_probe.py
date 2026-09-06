@@ -1732,17 +1732,36 @@ def probe_small_medium_production_battle(summary_path: Path) -> int:
     scorekeeper_path = out_root / "scorekeeper-receipt.json"
     report_path = out_root / "REPORT.md"
     auth_path = out_root / "authorization-validation.json"
+    event_log_path = out_root / "event-ledger.jsonl"
+    arena_path = out_root / "arena-contract.json"
     receipt = _read_json(receipt_path)
     scorekeeper = _read_json(scorekeeper_path)
     auth = _read_json(auth_path)
     rounds = receipt.get("rounds") or []
     docker_attempts = [attempt for item in rounds for attempt in item.get("docker_attempts", [])]
+    report_text = report_path.read_text(encoding="utf-8") if report_path.is_file() else ""
+    commentary_keys = {"red_scanned", "red_attempts", "blue_scanned", "blue_attempts", "adaptive_lineage_created"}
+    commentary_present = all(commentary_keys <= set(item) and all(item[key] for key in commentary_keys) for item in rounds)
+    spawn_receipts = [item.get("spawn_receipt") for item in rounds if item.get("spawn_receipt")]
+    spawn_children = [child for spawn in spawn_receipts for child in spawn.get("children", [])]
+    spawn_preflight_present = bool(spawn_children) and all(child.get("preflight", {}).get("path") for child in spawn_children)
+    high_novelty_death = any(child.get("novelty") == "high" and child.get("lineage_decision") == "reject_dead_preflight" for child in spawn_children)
+    promoted_child = any(child.get("lineage_decision") == "promote_to_rematch_seed" for child in spawn_children)
+    event_log_text = event_log_path.read_text(encoding="utf-8") if event_log_path.is_file() else ""
     checks = [
         {"name": "authorization_passed_before_execution", "status": "PASS" if auth.get("status") == "PASS" else "FAIL", "authorization": str(auth_path)},
         {"name": "six_round_medium_arena", "status": "PASS" if len(rounds) == 6 else "FAIL", "round_count": len(rounds)},
         {"name": "round_wins_even", "status": "PASS" if scorekeeper.get("red_round_wins") == scorekeeper.get("blue_round_wins") == 3 else "FAIL", "red_round_wins": scorekeeper.get("red_round_wins"), "blue_round_wins": scorekeeper.get("blue_round_wins")},
         {"name": "docker_attempts_present", "status": "PASS" if len(docker_attempts) == 12 else "FAIL", "docker_attempt_count": len(docker_attempts)},
-        {"name": "plain_report_written", "status": "PASS" if report_path.is_file() and "## Human summary" in report_path.read_text(encoding="utf-8") else "FAIL", "report": str(report_path)},
+        {"name": "arena_contract_written", "status": "PASS" if arena_path.is_file() and receipt.get("arena_contract") == str(arena_path) else "FAIL", "arena_contract": str(arena_path)},
+        {"name": "plain_report_written", "status": "PASS" if "## Human summary" in report_text else "FAIL", "report": str(report_path)},
+        {"name": "arena_first_report_written", "status": "PASS" if report_text.startswith("# Small/Medium Production-Scale Battle Report\n\n## Arena prologue") and "### Expected exploit families" in report_text else "FAIL", "report": str(report_path)},
+        {"name": "sports_commentary_written", "status": "PASS" if "## Sports commentary" in report_text and "**Red scan.**" in report_text and "**Warm pond spawn.**" in report_text else "FAIL", "report": str(report_path)},
+        {"name": "round_receipts_carry_commentary", "status": "PASS" if commentary_present else "FAIL", "required_keys": sorted(commentary_keys)},
+        {"name": "spawn_preflight_receipts_present", "status": "PASS" if spawn_preflight_present else "FAIL", "spawn_child_count": len(spawn_children)},
+        {"name": "high_novelty_children_can_die", "status": "PASS" if high_novelty_death else "FAIL"},
+        {"name": "lineage_promotes_rematch_seed", "status": "PASS" if promoted_child else "FAIL"},
+        {"name": "event_ledger_jsonl_written", "status": "PASS" if "spawn_preflight" in event_log_text and "scorekeeper_final" in event_log_text else "FAIL", "event_ledger": str(event_log_path)},
     ]
     failed = [item for item in checks if item["status"] != "PASS"]
     if failed:

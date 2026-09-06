@@ -1,6 +1,6 @@
 # Project Knowledge: battle
 
-**Last updated:** 2026-08-23 by agent
+**Last updated:** 2026-09-06 08:02 by agent
 **Status:** Active development
 
 ## Current Status Addendum (2026-08-23)
@@ -219,6 +219,7 @@ are #1063, #1065, #1066, and parent epic #46.
 - Backend owns actor_visual.variant_id per lane (complexity/strength/durability roster choice) plus sprite_theme; spectator resolves variant_id to Pixi sheets. Sprite look is cosmetic only (proof_scope.cosmetic_identity_only) — block/kill/promote outcomes remain receipt-gated. Block/kill = vintage points burst; Blue miss + exploit survive = evade animation (hit/duck/jump).
 - Playhead authority: timeline_elapsed_axis_model.playhead.current_elapsed_seconds. Child visibility: lineage.spawns[].visible_from_elapsed_seconds (spawn time). Phase 1 PASS = prove-spectator on BATTLE_HOST=http://127.0.0.1:3002 (6 receipt-replay checks + sparse negative + typecheck/vitest).
 - 2026-07-11 Music M1 is on agent-skills@main. Backend commit 7b6823bd4 publishes frozen battle.music_context_packet.v1, battle.music_promotion_receipt.v1, battle.music_schedule_entry.v1, battle.music_schedule.v1, and battle.normalized_music_fixture.v1 contracts; valid/invalid examples; a BATTLE-004 public fixture; and versioned promoted MIDI/OGG assets. The schedule authorizes live_arena_loop from the lifecycle-start receipt and motif:plague_nurgling from a materialized-spawn receipt. Death, victory, and next-arena remain events_not_emitted. create-midi validation, promotion, schedule, receipt, score-packet, and asset hashes are bound. M1 is mocked:no, live:local_deterministic_music_promotion_schedule, composer_live:false. It does not prove live composition, rendering, browser playback, speaker output, musical quality, or Battle outcomes. Frontend consumption is on main in commit 2c94d8e97. Music M2 remains deferred behind the adaptive-lineage and durable-memory rungs.
+- 2026-09-06 human clarification: Adaptive lineage is a warm-pond evolutionary exploit/defense engine, not a simple rematch label. A parent exploit that made progress but has not won should spawn child candidates by combining parent genome traits, prior Battle memory, Dogpile design-input research, Blue defense context, logical mutations, and randomized novelty/lighting-strike combinations. Most high-novelty children are expected to die. Battle must materialize each child as code/artifacts, run Docker preflight first to prove the specimen compiles/runs/obeys safety and target bounds, then run Judge replay to decide win/progress/death. Human reports must read as exciting sports/monster-boss commentary derived from JSONL/event receipts: arena setup, equalizers, expected exploit families, scans, spawns, blocks, kills, Judge calls, promotions/rejections, and running scoreboard. Receipts are official stats; commentary is the broadcast, and hype is only valid when receipt-backed.
 
 ## Recent Decisions
 
@@ -259,6 +260,7 @@ are #1063, #1065, #1066, and parent epic #46.
 | 2026-07-09 | Add exploit combiner proof before full genetic Battle engine. | The next backend rung should prove generated exploit specimens, bad-code capture, Docker run receipts, target-contact observations, and runnable-unproven scoring before live Tau generation, child materialization, packet capture, or exploit-success claims. |
 | 2026-07-09 | Add fixture-backed Spawn Architect proof before live Tau child execution. | PR2 should prove only the DAG birth contract: spawn-policy decision, child knowledge packet, `tau.dag_contract.v1` child exploit-synthesis DAG, private-artifact exclusions, conservative normalized events, and explicit `tau_execution=deferred_to_pr3`. It must not claim child execution, live exploit generation, compilation, target contact, Blue detection, or exploit success. |
 | 2026-07-11 | Separate music asset promotion from playback authorization | Promotion proves validated hash-bound asset eligibility; only a Battle schedule entry bound to an authoritative receipt grants playback permission and timing. Music and animation never become Battle outcome authority. |
+| 2026-09-06 | Battle reports must narrate adaptive lineage from receipts, not totals | The human clarified that Battle's immutable goal is an evolutionary Red/Blue competition: random and logical exploit/defense combinations spawn from partial successes, Dogpile/memory seed the genome, Docker preflight kills non-runnable specimens, Judge replay crowns or kills children, and the report should read like sports commentary while staying receipt-bound. |
 
 ## Open Questions
 
@@ -466,6 +468,8 @@ non_claim=Only the first private ledger vulnerability was replayed; the second s
 - Phase 1 spectator: BATTLE_HOST=http://127.0.0.1:3002 ./run.sh prove-spectator → BATTLE_PROVE_SPECTATOR_PASS (mocked: no, live: yes). Fixture: battle-004-parent-spawn-pixi-replay. actor_visual + sprite_theme on lanes (commit 2a287f2f+).
 
 ## Non-Claims
+
+
 
 ## Adaptive Red/Blue Lineage Canary (2026-07-11)
 

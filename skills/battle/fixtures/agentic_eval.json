@@ -204,6 +204,14 @@
       "evidence_required": {
         "adversarial_live_e2e": true
       }
+    },
+    {
+      "id": "battle.production.small_medium_local",
+      "description": "A small/medium local Battle produces Docker Judge-backed mixed Red/Blue outcomes plus per-round scan, attempt, and adaptive-lineage commentary in retained receipts",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
     }
   ],
   "seams": [
@@ -520,6 +528,20 @@
       "failure_modes": [
         "production readiness has only fail-closed negative evidence",
         "route/auth/rollback/teardown/WebSocket fanout receipts are absent"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "production.small_medium_local_battle",
+      "claim_id": "battle.production.small_medium_local",
+      "seam_type": "local Docker Battle/Judge/reporting",
+      "criticality": "critical",
+      "failure_modes": [
+        "scorekeeper proves only totals without explaining team scans and attempts",
+        "adaptive lineage is claimed in prose but absent from round receipts",
+        "human report reads like receipt laundering instead of match commentary"
       ],
       "required_evidence": [
         "adversarial_live_e2e"

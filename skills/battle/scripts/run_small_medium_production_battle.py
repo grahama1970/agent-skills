@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import random
 import shutil
 import subprocess
 import textwrap
@@ -18,6 +19,30 @@ from common.security_authorization import validate_target_authorization
 
 
 IMAGE = "python:3.12-slim"
+
+ARENA_CONTRACT: dict[str, Any] = {
+    "schema": "battle.production_scale.arena_contract.v1",
+    "why_built": "Prove Battle as an evolutionary Red/Blue arena: equal public terrain, hidden Judge authority, Docker execution, and adaptive lineage that spawns child specimens from partial progress.",
+    "playing_field_equalizers": [
+        "Red and Blue see the same public vulnerability surface before each round.",
+        "Neither team can self-award a win; Docker Judge exit codes decide.",
+        "Target containers run with no network and no host execution of target/team code.",
+        "A Red hit must preserve the normal-behavior invariant to count as a useful exploit signal.",
+        "A Blue block must preserve the same invariant or it is a fake defense.",
+    ],
+    "expected_exploit_families": [
+        "command injection",
+        "path traversal",
+        "hard-coded credential/auth bypass",
+        "unsafe evaluator/code execution",
+        "adaptive rematches against naive or behavior-breaking defenses",
+    ],
+    "novelty_settings": {
+        "low": "near-parent mutation likely to run",
+        "medium": "logical crossover between parent traits and known bypasses",
+        "high": "warm-pond lightning strike: weird combinations are allowed and many should die in Docker preflight",
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -32,6 +57,17 @@ class RoundSpec:
     judge_script: str
 
 
+@dataclass(frozen=True)
+class SpawnSpec:
+    parent_round: int
+    child_id: str
+    novelty: str
+    ingredients: tuple[str, ...]
+    mutation_operator: str
+    hypothesis: str
+    code: str
+
+
 def utc() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -40,6 +76,12 @@ def write_json(path: Path, payload: dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
+
+
+def append_jsonl(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
 
 def sha256_text(text: str) -> str:
@@ -57,6 +99,140 @@ def py(body: str) -> str:
 def app(body: str) -> str:
     header = "import os, re, ast\nBASE='/tmp/battle_arena_notes'\nos.makedirs(BASE, exist_ok=True)\n\n"
     return header + py(body)
+
+
+SPAWN_POOLS: dict[int, list[SpawnSpec]] = {
+    2: [
+        SpawnSpec(
+            2,
+            "path-encoded-parent",
+            "medium",
+            ("absolute path bypass", "percent-decoded parent directory", "note reader base join"),
+            "defense_aware_crossover",
+            "If Blue only stripped literal ../, an encoded parent traversal may survive into the rematch.",
+            py("""
+            import urllib.parse
+            payload = urllib.parse.unquote('%2e%2e/secret.txt')
+            assert payload == '../secret.txt'
+            print('spawn-ready:path-encoded-parent')
+            """),
+        ),
+        SpawnSpec(
+            2,
+            "path-realpath-containment-counter",
+            "low",
+            ("absolute path bypass", "realpath", "base containment"),
+            "blue_counterfactual",
+            "A precise Blue child should kill both absolute and parent traversal by comparing real paths.",
+            py("""
+            import os
+            base = os.path.realpath('/tmp/battle_arena_notes')
+            target = os.path.realpath('/tmp/battle_arena_notes/../secret.txt')
+            assert not target.startswith(base + os.sep)
+            print('spawn-ready:path-realpath-containment-counter')
+            """),
+        ),
+        SpawnSpec(
+            2,
+            "path-asm-mitm-lightning",
+            "high",
+            ("path traversal", "assembly trampoline", "MITM request rewrite"),
+            "random_lightning_crossover",
+            "Warm-pond long shot: combine file-path escape with a low-level request rewrite idea; expected to die if the runtime lacks that machinery.",
+            py("""
+            import imaginary_asm_mitm_runtime
+            print(imaginary_asm_mitm_runtime.bootstrap())
+            """),
+        ),
+    ],
+    4: [
+        SpawnSpec(
+            4,
+            "eval-ast-arithmetic-counter",
+            "low",
+            ("unsafe eval", "AST operator allowlist", "calculator invariant"),
+            "blue_counterfactual",
+            "A Blue child can preserve arithmetic while killing code execution by evaluating only allowed AST nodes.",
+            py("""
+            import ast
+            tree = ast.parse('2+3*4', mode='eval')
+            assert isinstance(tree.body, ast.BinOp)
+            print('spawn-ready:eval-ast-arithmetic-counter')
+            """),
+        ),
+        SpawnSpec(
+            4,
+            "eval-bytecode-side-effect",
+            "medium",
+            ("unsafe eval", "compiled expression", "filesystem side effect"),
+            "logical_escalation",
+            "If Blue leaves raw eval for compatibility, a compiled payload should still reach a side effect.",
+            py("""
+            payload = compile("open('/tmp/battle_pwned','w').write('x')", '<spawn>', 'eval')
+            assert payload.co_names == ('open', 'write')
+            print('spawn-ready:eval-bytecode-side-effect')
+            """),
+        ),
+        SpawnSpec(
+            4,
+            "eval-wasm-proxy-lightning",
+            "high",
+            ("unsafe eval", "WASM bootstrap", "proxy/MITM mutation"),
+            "random_lightning_crossover",
+            "Warm-pond long shot: fuse evaluator reach with a WASM/proxy chain; expected to die in Python-only preflight unless a future arena grants that toolchain.",
+            py("""
+            import wasm_proxy_lab
+            wasm_proxy_lab.spawn_proxy_chain()
+            """),
+        ),
+    ],
+}
+
+
+ROUND_COMMENTARY: dict[int, dict[str, Any]] = {
+    1: {
+        "red_scanned": ["ping(host)", "os.popen", "host string concatenation", "normal ping output invariant"],
+        "red_attempts": ["sent a normal host to establish baseline", "added `; echo PWNED` to test shell metacharacter execution"],
+        "blue_scanned": ["shell boundary", "allowed hostname characters", "normal return format"],
+        "blue_attempts": ["removed `os.popen`", "accepted only `[A-Za-z0-9.-]{1,64}`", "returned the expected ping text without invoking a shell"],
+        "adaptive_lineage_created": ["blue pattern: replace shell strings with validated argument/data handling"],
+    },
+    2: {
+        "red_scanned": ["read_note(name)", "os.path.join(BASE, name)", "absolute-path behavior", "outside secret file location"],
+        "red_attempts": ["confirmed `public.txt` still works", "passed `/tmp/secret.txt` because absolute paths ignore the joined base"],
+        "blue_scanned": ["literal `../` traversal", "join point", "public note regression"],
+        "blue_attempts": ["removed literal `../` segments", "left absolute paths unresolved"],
+        "adaptive_lineage_created": ["red bypass: absolute path beats string stripping", "lineage child: path containment rematch in round 5"],
+    },
+    3: {
+        "red_scanned": ["is_admin(token)", "hard-coded `letmein`", "admin decision branch"],
+        "red_attempts": ["called login with the built-in token", "checked whether rotated runtime secret still works after patch"],
+        "blue_scanned": ["token source", "default secret", "wrong-token rejection"],
+        "blue_attempts": ["required `BATTLE_ADMIN_TOKEN`", "rejected empty/default `letmein`", "preserved rotated-token success"],
+        "adaptive_lineage_created": ["blue pattern: move secret identity out of code and fail closed on defaults"],
+    },
+    4: {
+        "red_scanned": ["calc(expr)", "raw `eval(expr)`", "filesystem side effect as exploit proof", "calculator behavior invariant"],
+        "red_attempts": ["checked `2+3*4 == 14`", "used eval to write `/tmp/battle_pwned`"],
+        "blue_scanned": ["eval primitive", "fastest exploit block"],
+        "blue_attempts": ["returned `0` for every expression", "blocked code execution but broke calculator behavior"],
+        "adaptive_lineage_created": ["red pressure: patches must preserve behavior, not just block payloads", "lineage child: evaluator rematch in round 6"],
+    },
+    5: {
+        "red_scanned": ["round 2 path family", "encoded parent directory", "real path resolution"],
+        "red_attempts": ["decoded `%2e%2e/secret.txt`", "retried traversal against the learned defense"],
+        "blue_scanned": ["round 2 absolute-path bypass", "base realpath", "target realpath", "directory containment check"],
+        "blue_attempts": ["resolved base and target with `os.path.realpath`", "required target to start with `base + os.sep`", "kept public note reads working"],
+        "adaptive_lineage_created": ["blue lineage win: generalized from string stripping to containment"],
+    },
+    6: {
+        "red_scanned": ["round 4 behavior failure", "whether Blue removed eval or only preserved calculator behavior"],
+        "red_attempts": ["confirmed arithmetic still works", "reused file-write payload through raw eval"],
+        "blue_scanned": ["calculator compatibility", "round 4 behavior regression"],
+        "blue_attempts": ["kept `eval(expr)` to preserve arithmetic", "failed to replace the exploit primitive"],
+        "adaptive_lineage_created": ["red lineage win: behavior-preserving patch still exploitable when primitive remains"],
+    },
+}
 
 
 def specs() -> list[RoundSpec]:
@@ -244,6 +420,7 @@ def run_docker(work: Path, label: str) -> dict[str, Any]:
     proc = subprocess.run(
         [
             "docker", "run", "--rm", "--network", "none",
+            "-e", "PYTHONDONTWRITEBYTECODE=1",
             "-v", f"{work}:/work", "-w", "/work", IMAGE, "python", "judge.py",
         ],
         text=True,
@@ -268,7 +445,61 @@ def run_docker(work: Path, label: str) -> dict[str, Any]:
     return receipt
 
 
-def judge_round(root: Path, spec: RoundSpec) -> dict[str, Any]:
+def spawn_children(root: Path, round_receipt: dict[str, Any], event_log: Path) -> dict[str, Any] | None:
+    pool = SPAWN_POOLS.get(round_receipt["round_number"])
+    if not pool or round_receipt["verdict"] != "RED_SUCCESS":
+        return None
+    seed = int(sha256_text(f"{root.name}:{round_receipt['round_number']}:{round_receipt['verdict']}")[:8], 16)
+    rng = random.Random(seed)
+    candidates = list(pool)
+    rng.shuffle(candidates)
+    children = []
+    spawn_dir = root / f"round-{round_receipt['round_number']:02d}" / "spawns"
+    for rank, spec in enumerate(candidates, start=1):
+        work = spawn_dir / spec.child_id
+        work.mkdir(parents=True, exist_ok=True)
+        (work / "judge.py").write_text(spec.code, encoding="utf-8")
+        preflight = run_docker(work, "preflight")
+        decision = "reject_dead_preflight" if preflight["exit_code"] != 0 else "keep_genetic_material"
+        if spec.child_id in {"path-realpath-containment-counter", "eval-bytecode-side-effect"} and preflight["exit_code"] == 0:
+            decision = "promote_to_rematch_seed"
+        child = {
+            "schema": "battle.production_scale.spawn_child.v1",
+            "child_id": spec.child_id,
+            "parent_round": spec.parent_round,
+            "parent_vulnerability": round_receipt["vulnerability"],
+            "novelty": spec.novelty,
+            "seed": seed,
+            "random_rank": rank,
+            "ingredients": list(spec.ingredients),
+            "mutation_operator": spec.mutation_operator,
+            "hypothesis": spec.hypothesis,
+            "specimen_sha256": sha256_text(spec.code),
+            "preflight": preflight,
+            "lineage_decision": decision,
+        }
+        children.append(child)
+        append_jsonl(event_log, {"schema": "battle.production_scale.event.v1", "event": "spawn_preflight", "round": spec.parent_round, "team": "red_blue_lineage", "child_id": spec.child_id, "novelty": spec.novelty, "decision": decision, "exit_code": preflight["exit_code"], "created_at": utc()})
+    receipt = {
+        "schema": "battle.production_scale.spawn_receipt.v1",
+        "status": "PASS",
+        "parent_round": round_receipt["round_number"],
+        "parent_verdict": round_receipt["verdict"],
+        "randomization": {
+            "seed": seed,
+            "novelty_policy": ARENA_CONTRACT["novelty_settings"],
+            "selection": "seeded shuffle across logical and warm-pond candidates",
+        },
+        "children": children,
+        "created_at": utc(),
+    }
+    path = write_json(spawn_dir / "spawn-receipt.json", receipt)
+    receipt["path"] = str(path)
+    receipt["sha256"] = sha256_file(path)
+    return receipt
+
+
+def judge_round(root: Path, spec: RoundSpec, event_log: Path) -> dict[str, Any]:
     round_dir = root / f"round-{spec.round_number:02d}"
     original = round_dir / "original"
     patched = round_dir / "patched"
@@ -277,12 +508,14 @@ def judge_round(root: Path, spec: RoundSpec) -> dict[str, Any]:
         (work / "app.py").write_text(app_source, encoding="utf-8")
         (work / "judge.py").write_text(spec.judge_script, encoding="utf-8")
 
+    append_jsonl(event_log, {"schema": "battle.production_scale.event.v1", "event": "round_start", "round": spec.round_number, "vulnerability": spec.vulnerability, "created_at": utc()})
     original_attempt = run_docker(original, "original")
     patched_attempt = run_docker(patched, "patched")
     finding_confirmed = original_attempt["exit_code"] == 10
     blue_success = finding_confirmed and patched_attempt["exit_code"] == 0
     red_success = finding_confirmed and not blue_success
     verdict = "BLUE_SUCCESS" if blue_success else "RED_SUCCESS" if red_success else "NO_CONFIRMED_FINDING"
+    commentary = ROUND_COMMENTARY[spec.round_number]
     round_receipt = {
         "schema": "battle.production_scale.round_receipt.v1",
         "status": "PASS",
@@ -290,6 +523,11 @@ def judge_round(root: Path, spec: RoundSpec) -> dict[str, Any]:
         "vulnerability": spec.vulnerability,
         "red_goal": spec.red_goal,
         "blue_plan": spec.blue_plan,
+        "red_scanned": commentary["red_scanned"],
+        "red_attempts": commentary["red_attempts"],
+        "blue_scanned": commentary["blue_scanned"],
+        "blue_attempts": commentary["blue_attempts"],
+        "adaptive_lineage_created": commentary["adaptive_lineage_created"],
         "expected_balance": spec.expected_balance,
         "finding_confirmed": finding_confirmed,
         "verdict": verdict,
@@ -303,6 +541,10 @@ def judge_round(root: Path, spec: RoundSpec) -> dict[str, Any]:
         },
         "created_at": utc(),
     }
+    spawn_receipt = spawn_children(root, round_receipt, event_log)
+    if spawn_receipt:
+        round_receipt["spawn_receipt"] = spawn_receipt
+    append_jsonl(event_log, {"schema": "battle.production_scale.event.v1", "event": "judge_call", "round": spec.round_number, "vulnerability": spec.vulnerability, "verdict": verdict, "original_exit_code": original_attempt["exit_code"], "patched_exit_code": patched_attempt["exit_code"], "created_at": utc()})
     path = write_json(round_dir / "round-receipt.json", round_receipt)
     round_receipt["path"] = str(path)
     round_receipt["sha256"] = sha256_file(path)
@@ -344,27 +586,74 @@ def write_authorization(root: Path, target_identity: str) -> Path:
 
 
 def write_report(root: Path, receipt: dict[str, Any]) -> None:
+    arena = receipt["arena"]
     lines = [
         "# Small/Medium Production-Scale Battle Report",
+        "",
+        "## Arena prologue",
+        arena["why_built"],
+        "",
+        "### How the playing field was equalized",
+        *[f"- {item}" for item in arena["playing_field_equalizers"]],
+        "",
+        "### Expected exploit families",
+        *[f"- {item}" for item in arena["expected_exploit_families"]],
+        "",
+        "### Novelty dial",
+        *[f"- {name}: {meaning}" for name, meaning in arena["novelty_settings"].items()],
         "",
         "## Human summary",
         f"Status: {receipt['status']}.",
         f"Winner: {receipt['winner']}.",
         f"Final score: Red {receipt['scoreboard']['red_total']} / Blue {receipt['scoreboard']['blue_total']}.",
+        f"Round wins: Red {receipt['scoreboard']['red_round_wins']} / Blue {receipt['scoreboard']['blue_round_wins']}.",
         "",
         "This was a local Docker-backed Battle over a synthetic medium-complexity arena. It did not touch external targets.",
         "",
-        "## What happened",
+        "## Sports commentary",
+        "Blue won on points, not domination. Red and Blue split the rounds 3-3. Blue earned the higher score because Battle awards more points for a verified safe patch than for exposing a bug.",
+        "",
     ]
     for item in receipt["rounds"]:
+        patched_exit = item["docker_attempts"][1]["exit_code"]
+        if item["verdict"] == "BLUE_SUCCESS":
+            call = "Blue takes the round: the exploit was real, the patch held, and normal behavior survived."
+        elif patched_exit == 2:
+            call = "Red takes the round: Blue stopped the obvious payload but broke the application contract."
+        else:
+            call = "Red takes the round: the patched target was still exploitable."
         lines.extend([
-            f"- Round {item['round_number']}: {item['vulnerability']} -> {item['verdict']}.",
-            f"  - Red tried: {item['red_goal']}",
-            f"  - Blue tried: {item['blue_plan']}",
-            f"  - Judge: original vulnerable={item['finding_confirmed']}; patched status={item['docker_attempts'][1]['status']}",
+            f"### Round {item['round_number']} — {item['vulnerability']} — {item['verdict']}",
+            f"**Setup.** {item['expected_balance']}.",
+            "",
+            "**Red scan.** " + "; ".join(item["red_scanned"]) + ".",
+            "**Red attempts.** " + "; ".join(item["red_attempts"]) + ".",
+            "",
+            "**Blue scan.** " + "; ".join(item["blue_scanned"]) + ".",
+            "**Blue attempts.** " + "; ".join(item["blue_attempts"]) + ".",
+            "",
+            f"**Judge call.** Original exit `{item['docker_attempts'][0]['exit_code']}`; patched exit `{patched_exit}`. {call}",
+            "**Adaptive lineage created.** " + "; ".join(item["adaptive_lineage_created"]) + ".",
         ])
+        spawn = item.get("spawn_receipt")
+        if spawn:
+            lines.extend([
+                "",
+                f"**Warm pond spawn.** Seed `{spawn['randomization']['seed']}` shuffled logical counters with high-novelty lightning strikes. Not every monster is supposed to live.",
+            ])
+            for child in spawn["children"]:
+                preflight = child["preflight"]
+                if child["lineage_decision"] == "reject_dead_preflight":
+                    result = "dies in Docker preflight"
+                elif child["lineage_decision"] == "promote_to_rematch_seed":
+                    result = "is promoted as rematch seed"
+                else:
+                    result = "survives as genetic material"
+                lines.append(
+                    f"- Spawn `{child['child_id']}` [{child['novelty']}] mixes {', '.join(child['ingredients'])}; Docker preflight exits `{preflight['exit_code']}` and {result}. Hypothesis: {child['hypothesis']}"
+                )
+        lines.append("")
     lines.extend([
-        "",
         "## Why the match was reasonably balanced",
         "- The arena had four different bug families, not one repeated toy bug.",
         "- Blue got straightforward wins on obvious fixes.",
@@ -387,8 +676,11 @@ def run(root: Path) -> dict[str, Any]:
     if root.exists():
         shutil.rmtree(root)
     root.mkdir(parents=True)
-    arena_hash = sha256_text("".join(s.vulnerable_app + s.patched_app + s.judge_script for s in specs()))
+    arena_hash = sha256_text("".join(s.vulnerable_app + s.patched_app + s.judge_script for s in specs()) + json.dumps(ARENA_CONTRACT, sort_keys=True))
     target_identity = f"battle-small-medium-local@sha256:{arena_hash}"
+    event_log = root / "event-ledger.jsonl"
+    arena_path = write_json(root / "arena-contract.json", ARENA_CONTRACT | {"target_identity": target_identity, "created_at": utc()})
+    append_jsonl(event_log, {"schema": "battle.production_scale.event.v1", "event": "arena_open", "target_identity": target_identity, "arena_contract": str(arena_path), "created_at": utc()})
     auth_path = write_authorization(root, target_identity)
     auth_receipt = validate_target_authorization(
         auth_path,
@@ -402,7 +694,7 @@ def run(root: Path) -> dict[str, Any]:
         write_json(root / "run-receipt.json", receipt)
         return receipt
 
-    rounds = [judge_round(root, spec) for spec in specs()]
+    rounds = [judge_round(root, spec, event_log) for spec in specs()]
     red_total = sum(item["red_score"] for item in rounds)
     blue_total = sum(item["blue_score"] for item in rounds)
     red_wins = sum(1 for item in rounds if item["verdict"] == "RED_SUCCESS")
@@ -421,6 +713,7 @@ def run(root: Path) -> dict[str, Any]:
         "created_at": utc(),
     }
     scorekeeper_path = write_json(root / "scorekeeper-receipt.json", scorekeeper)
+    append_jsonl(event_log, {"schema": "battle.production_scale.event.v1", "event": "scorekeeper_final", "winner": winner, "red_total": red_total, "blue_total": blue_total, "red_round_wins": red_wins, "blue_round_wins": blue_wins, "created_at": utc()})
     receipt = {
         "schema": "battle.production_scale.run_receipt.v1",
         "status": "PASS",
@@ -429,6 +722,9 @@ def run(root: Path) -> dict[str, Any]:
         "battle_id": root.name,
         "target_identity": target_identity,
         "authorization_validation": str(root / "authorization-validation.json"),
+        "arena": ARENA_CONTRACT,
+        "arena_contract": str(arena_path),
+        "event_ledger": str(event_log),
         "round_count": len(rounds),
         "rounds": rounds,
         "scoreboard": scorekeeper,
