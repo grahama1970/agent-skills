@@ -1821,6 +1821,257 @@ def probe_provider_tau_seeded_lineage_spawn(summary_path: Path, *, proof_root: s
     )
 
 
+def _selection_reporting_campaign(
+    path: Path,
+    *,
+    run_id: str,
+    teams: dict[str, dict[str, Any]],
+) -> None:
+    def artifact(team: str, generation: int) -> dict[str, Any]:
+        return {
+            "compile_receipt_sha256": f"{team}-g{generation}-compile-sha256",
+            "handoff_sha256": f"{team}-g{generation}-handoff-sha256",
+            "selected_artifact_path": str(path.parent / f"generation-{generation}" / team / "artifact.py"),
+            "selected_artifact_sha256": f"{team}-g{generation}-artifact-sha256",
+            "status": "PASS",
+        }
+
+    payload = {
+        "schema": "battle.adaptive_red_blue_lineage_canary.v1",
+        "status": "PASS",
+        "mocked": False,
+        "live": True,
+        "live_mode": "tau_scillm_fixtureless_selection_reporting",
+        "battle_id": "battle-004",
+        "run_id": run_id,
+        "arena": {
+            "scenario_id": f"arena-selection-reporting-{run_id}",
+            "generation_1_target_sha256": "g1-target-sha256",
+            "generation_2_target_sha256": "g1-target-sha256",
+        },
+        "authorization": {"status": "PASS"},
+        "research": {"red": {"source_count": 1}, "blue": {"source_count": 1}},
+        "mutation_seed_receipts": {
+            "status": "PASS",
+            "receipts": [
+                {"kind": "dogpile", "path": str(path.parent / "dogpile-seed.json"), "sha256": "dogpile-seed-sha256"},
+                {"kind": "memory", "path": str(path.parent / "memory-seed.txt"), "sha256": "memory-seed-sha256"},
+            ],
+        },
+        "inheritance": {
+            team: {
+                "packet_cited_in_provider_response": True,
+                "inherited_genome_cited": True,
+                "inherited_observation_cited": True,
+                "external_research_cited_in_provider_response": True,
+                "mutation_seed_receipts_cited_in_provider_response": True,
+                "mutation_seed_citations": [
+                    {"kind": "dogpile", "sha256": "dogpile-seed-sha256", "cited_in_provider_response": True},
+                    {"kind": "memory", "sha256": "memory-seed-sha256", "cited_in_provider_response": True},
+                ],
+            }
+            for team in ("red", "blue")
+        },
+        "genome_deltas": {
+            "red": {"semantic_change_count": 1, "sha256": "red-genome-delta-sha256"},
+            "blue": {"semantic_change_count": 1, "sha256": "blue-genome-delta-sha256"},
+        },
+        "spawn": {
+            "red": {"decision": "SPAWN_CHILD", "judge_verdict": "BLUE_SUCCESS"},
+            "blue": {"decision": "SPAWN_CHILD", "judge_verdict": "BLUE_SUCCESS"},
+        },
+        "generations": [
+            {
+                "generation": 1,
+                "judge_verdict": "BLUE_SUCCESS",
+                "artifact_pipelines": {"red": artifact("red", 1), "blue": artifact("blue", 1)},
+            },
+            {
+                "generation": 2,
+                "judge_verdict": "BLUE_SUCCESS",
+                "artifact_pipelines": {"red": artifact("red", 2), "blue": artifact("blue", 2)},
+            },
+        ],
+        "artifact_integrity": {
+            "matched_replay_count": 2,
+            "required_replay_count": 2,
+            "matched_slot_count": 4,
+            "required_slot_count": 4,
+        },
+        "selection": {
+            "schema": "battle.adaptive_selection_receipt.v1",
+            "status": "PASS",
+            "battle_id": "battle-004",
+            "run_id": run_id,
+            "teams": teams,
+        },
+    }
+    _write_json(path, payload)
+
+
+def _render_selection_reporting_variant(
+    root: Path,
+    *,
+    variant: str,
+    teams: dict[str, dict[str, Any]],
+    expected_outcomes: dict[str, str],
+    expected_both_generation_2_selected: bool,
+    expected_phrases: list[str],
+    forbidden_phrases: list[str],
+) -> dict[str, Any]:
+    variant_root = root / variant
+    campaign = variant_root / "campaign-receipt.json"
+    broadcast = variant_root / "broadcast"
+    _selection_reporting_campaign(campaign, run_id=variant, teams=teams)
+    proc = _run(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "render_provider_tau_lineage_report.py"),
+            "--campaign-receipt",
+            str(campaign),
+            "--out",
+            str(broadcast),
+        ],
+        timeout=120,
+    )
+    (variant_root / "renderer.stdout.txt").write_text(proc.stdout, encoding="utf-8")
+    (variant_root / "renderer.stderr.txt").write_text(proc.stderr, encoding="utf-8")
+    if proc.returncode != 0:
+        raise AssertionError(f"selection reporting renderer failed for {variant}: {proc.stdout}{proc.stderr}")
+    receipt_path = broadcast / "provider-tau-lineage-broadcast-receipt.json"
+    receipt = _read_json(receipt_path)
+    commentary_path = Path(str(receipt["sports_play_by_play_commentary_receipt"]))
+    commentary = _read_json(commentary_path)
+    selection_lines = [
+        line.get("speaker_line", "")
+        for line in commentary.get("commentary_lines", [])
+        if line.get("period") == "selection"
+    ]
+    joined = "\n".join(selection_lines)
+    missing = [phrase for phrase in expected_phrases if phrase not in joined]
+    forbidden = [phrase for phrase in forbidden_phrases if phrase in joined]
+    selection_check = next((item for item in receipt.get("checks", []) if item.get("name") == "selection_decisions_valid"), {})
+    if receipt.get("status") != "PASS":
+        raise AssertionError(f"broadcast receipt did not pass for {variant}: {receipt}")
+    if selection_check.get("status") != "PASS":
+        raise AssertionError(f"selection validity failed for {variant}: {selection_check}")
+    canary = selection_check.get("child_promotion_canary") or {}
+    if canary.get("gates_broadcast_validity") is not False:
+        raise AssertionError(f"child-promotion canary gates broadcast validity for {variant}: {canary}")
+    if canary.get("both_generation_2_selected") is not expected_both_generation_2_selected:
+        raise AssertionError(f"child-promotion canary mismatch for {variant}: {canary}")
+    outcomes = selection_check.get("outcomes") or {}
+    for team, expected_outcome in expected_outcomes.items():
+        observed = (outcomes.get(team) or {}).get("outcome")
+        if observed != expected_outcome:
+            raise AssertionError(
+                f"selection outcome mismatch for {variant} {team}: expected={expected_outcome} observed={observed}"
+            )
+    if missing or forbidden:
+        raise AssertionError(
+            f"selection commentary mismatch for {variant}: missing={missing} forbidden={forbidden} lines={selection_lines}"
+        )
+    return {
+        "name": variant,
+        "status": "PASS",
+        "broadcast_receipt": str(receipt_path),
+        "commentary_receipt": str(commentary_path),
+        "selection_outcomes": selection_check.get("outcomes"),
+        "child_promotion_canary": selection_check.get("child_promotion_canary"),
+        "selection_lines": selection_lines,
+    }
+
+
+def probe_review_selection_reporting(summary_path: Path) -> int:
+    suite = "review-selection-reporting"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    child_team = {
+        "generation_1_fitness_receipt_sha256": "g1-fitness",
+        "generation_2_fitness_receipt_sha256": "g2-fitness",
+        "retention_decision": "GENERATION_2_SELECTED",
+        "selected_generation": 2,
+        "tie_break_reason": None,
+    }
+    parent_team = {
+        "generation_1_fitness_receipt_sha256": "g1-fitness",
+        "generation_2_fitness_receipt_sha256": "g2-fitness",
+        "retention_decision": "PARENT_RETAINED",
+        "selected_generation": 1,
+        "tie_break_reason": "parent_fitness_key_wins",
+    }
+    no_eligible_team = {
+        "generation_1_fitness_receipt_sha256": "g1-fitness",
+        "generation_2_fitness_receipt_sha256": "g2-fitness",
+        "retention_decision": "NO_ELIGIBLE_PROMOTION",
+        "selected_generation": None,
+        "tie_break_reason": "child_disqualified",
+    }
+    variants = [
+        _render_selection_reporting_variant(
+            out_root,
+            variant="child-selected",
+            teams={"red": child_team, "blue": child_team},
+            expected_outcomes={"red": "child_promoted", "blue": "child_promoted"},
+            expected_both_generation_2_selected=True,
+            expected_phrases=[
+                "RED selection whistle: GENERATION_2_SELECTED; generation 2 child promoted by receipt.",
+                "BLUE selection whistle: GENERATION_2_SELECTED; generation 2 child promoted by receipt.",
+            ],
+            forbidden_phrases=[],
+        ),
+        _render_selection_reporting_variant(
+            out_root,
+            variant="parent-retained",
+            teams={"red": parent_team, "blue": parent_team},
+            expected_outcomes={"red": "parent_retained", "blue": "parent_retained"},
+            expected_both_generation_2_selected=False,
+            expected_phrases=[
+                "RED selection whistle: PARENT_RETAINED; generation 1 parent retained by receipt.",
+                "BLUE selection whistle: PARENT_RETAINED; generation 1 parent retained by receipt.",
+            ],
+            forbidden_phrases=["PARENT_RETAINED; generation 1 promoted by receipt"],
+        ),
+        _render_selection_reporting_variant(
+            out_root,
+            variant="no-eligible-promotion",
+            teams={"red": no_eligible_team, "blue": no_eligible_team},
+            expected_outcomes={"red": "no_eligible_promotion", "blue": "no_eligible_promotion"},
+            expected_both_generation_2_selected=False,
+            expected_phrases=[
+                "RED selection whistle: NO_ELIGIBLE_PROMOTION; no eligible child promotion was recorded by receipt.",
+                "BLUE selection whistle: NO_ELIGIBLE_PROMOTION; no eligible child promotion was recorded by receipt.",
+            ],
+            forbidden_phrases=["NO_ELIGIBLE_PROMOTION; generation None promoted by receipt"],
+        ),
+    ]
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="provider_tau_broadcast_renderer_selection_receipt_readback",
+            checks=variants,
+            artifacts={
+                "selection_reporting_root": str(out_root),
+                "child_selected_broadcast": variants[0]["broadcast_receipt"],
+                "parent_retained_broadcast": variants[1]["broadcast_receipt"],
+                "no_eligible_promotion_broadcast": variants[2]["broadcast_receipt"],
+            },
+            claims_proves=[
+                "Selection receipt validity is checked without requiring both teams to promote generation 2.",
+                "Broadcast commentary truthfully renders child promotion, parent retention, and no eligible promotion.",
+            ],
+            claims_does_not_prove=[
+                "fresh paid-provider campaign regeneration",
+                "durable memory write promotion",
+                "arbitrary target exploitability",
+            ],
+        ),
+    )
+
+
 def probe_provider_tau_memory_promotion(summary_path: Path, *, proof_root: str | None) -> int:
     suite = "provider-tau-memory-promotion"
     out_root = Path(proof_root) if proof_root else Path(
@@ -2109,6 +2360,8 @@ def main() -> int:
             return probe_adaptive_lineage_live_exact_chain(args.summary, proof_root=args.proof_root)
         if args.suite == "provider-tau-seeded-lineage-spawn":
             return probe_provider_tau_seeded_lineage_spawn(args.summary, proof_root=args.proof_root)
+        if args.suite == "review-selection-reporting":
+            return probe_review_selection_reporting(args.summary)
         if args.suite == "provider-tau-memory-promotion":
             return probe_provider_tau_memory_promotion(args.summary, proof_root=args.proof_root)
         if args.suite == "current-status-adaptive-lineage-receipt":

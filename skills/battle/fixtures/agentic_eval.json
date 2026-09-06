@@ -77,6 +77,14 @@
       }
     },
     {
+      "id": "battle.adaptive_lineage.selection_reporting",
+      "description": "Provider/Tau broadcast selection reporting validates selection receipt shape separately from child-promotion canary observations and truthfully narrates child promotion, parent retention, and no eligible promotion.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.memory.provider_tau_promotion",
       "description": "Selected provider/Tau Red and Blue lineage children are durably written through the Memory skill and independently recalled by marker-bearing item text.",
       "criticality": "critical",
@@ -330,6 +338,20 @@
         "Dogpile or memory seed is not bound into the provider prompt",
         "provider-generated child ignores seed receipt hashes",
         "broadcast report invents lineage instead of reading campaign receipts"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.selection_reporting",
+      "claim_id": "battle.adaptive_lineage.selection_reporting",
+      "seam_type": "receipt/status projection",
+      "criticality": "critical",
+      "failure_modes": [
+        "broadcast validity is coupled to both teams selecting generation 2",
+        "commentary claims child promotion when a parent was retained",
+        "commentary claims child promotion when no eligible promotion exists"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -792,6 +814,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/provider-tau-seeded-lineage-spawn.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "review-selection-reporting",
+      "category": "review-selection-reporting",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.adaptive_lineage.selection_reporting"
+      ],
+      "seams": [
+        "adaptive_lineage.selection_reporting"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py review-selection-reporting --summary /tmp/battle-agentic-evals/review-selection-reporting.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=review-selection-reporting"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/review-selection-reporting.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

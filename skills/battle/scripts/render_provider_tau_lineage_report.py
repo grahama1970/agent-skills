@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 
 SCHEMA = "battle.provider_tau_lineage_broadcast.v1"
@@ -44,6 +44,24 @@ class TeamActivity(BaseModel):
     semantic_change_count: int | None = None
     selected_generation: int | None = None
     retention_decision: str | None = None
+
+
+class SelectionTeamRecord(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    retention_decision: str = Field(min_length=1)
+    selected_generation: int | None = None
+    generation_1_fitness_receipt_sha256: str | None = None
+    generation_2_fitness_receipt_sha256: str | None = None
+    tie_break_reason: str | None = None
+
+
+class SelectionReceipt(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    schema_: Literal["battle.adaptive_selection_receipt.v1"] = Field(alias="schema")
+    status: Literal["PASS"]
+    teams: dict[Literal["red", "blue"], SelectionTeamRecord]
 
 
 class TeamActivityReceipt(BaseModel):
@@ -161,6 +179,137 @@ def collect_events(receipt: dict[str, Any]) -> list[dict[str, Any]]:
 
 def write_model(path: Path, model: BaseModel) -> Path:
     return write_json(path, model.model_dump(mode="json", by_alias=True))
+
+
+def _known_generations(receipt: dict[str, Any]) -> set[int]:
+    generations: set[int] = set()
+    for generation in receipt.get("generations") or []:
+        try:
+            generations.add(int(generation.get("generation")))
+        except (TypeError, ValueError):
+            continue
+    return generations
+
+
+def _selection_outcome(decision: str | None, selected_generation: int | None) -> str:
+    normalized = (decision or "").upper()
+    if selected_generation == 2:
+        return "child_promoted"
+    if selected_generation == 1 or "PARENT" in normalized or "GENERATION_1" in normalized:
+        return "parent_retained"
+    if selected_generation is None and (
+        "NO_ELIGIBLE" in normalized
+        or "NO_PROMOTION" in normalized
+        or "INELIGIBLE" in normalized
+    ):
+        return "no_eligible_promotion"
+    return "selection_recorded"
+
+
+def _decision_expected_outcome(decision: str | None) -> str | None:
+    normalized = (decision or "").upper()
+    if "NO_ELIGIBLE" in normalized or "NO_PROMOTION" in normalized or "INELIGIBLE" in normalized:
+        return "no_eligible_promotion"
+    if "PARENT" in normalized or "GENERATION_1" in normalized:
+        return "parent_retained"
+    if "CHILD" in normalized or "GENERATION_2" in normalized:
+        return "child_promoted"
+    return None
+
+
+def _selection_commentary(team: str, activity: TeamActivity) -> str:
+    outcome = _selection_outcome(activity.retention_decision, activity.selected_generation)
+    decision = activity.retention_decision or "selection_recorded"
+    if outcome == "child_promoted":
+        return (
+            f"{team.upper()} selection whistle: {decision}; "
+            f"generation {activity.selected_generation} child promoted by receipt."
+        )
+    if outcome == "parent_retained":
+        generation = activity.selected_generation if activity.selected_generation is not None else 1
+        return (
+            f"{team.upper()} selection whistle: {decision}; "
+            f"generation {generation} parent retained by receipt."
+        )
+    if outcome == "no_eligible_promotion":
+        return (
+            f"{team.upper()} selection whistle: {decision}; "
+            "no eligible child promotion was recorded by receipt."
+        )
+    return (
+        f"{team.upper()} selection whistle: {decision}; "
+        f"selection recorded generation {activity.selected_generation}."
+    )
+
+
+def selection_report_status(receipt: dict[str, Any]) -> dict[str, Any]:
+    raw_selection = receipt.get("selection")
+    known_generations = _known_generations(receipt)
+    errors: list[str] = []
+    outcomes: dict[str, dict[str, Any]] = {}
+    if not isinstance(raw_selection, dict):
+        errors.append("selection: missing selection receipt")
+        teams = {}
+    else:
+        try:
+            selection = SelectionReceipt.model_validate(raw_selection)
+        except ValidationError as exc:
+            errors.extend(
+                f"selection: validation_error type={err['type']} loc={'.'.join(str(part) for part in err['loc'])}"
+                for err in exc.errors()
+            )
+            raw_teams = raw_selection.get("teams") if isinstance(raw_selection.get("teams"), dict) else {}
+            teams = raw_teams
+        else:
+            teams = selection.teams
+    for team in ("red", "blue"):
+        item = teams.get(team)
+        if isinstance(item, SelectionTeamRecord):
+            decision = item.retention_decision
+            raw_generation = item.selected_generation
+        elif isinstance(item, dict):
+            decision = item.get("retention_decision")
+            raw_generation = item.get("selected_generation")
+        else:
+            errors.append(f"{team}: missing selection team record")
+            continue
+        if not isinstance(decision, str) or not decision.strip():
+            errors.append(f"{team}: missing retention_decision")
+        selected_generation: int | None = None
+        if raw_generation is None:
+            if _selection_outcome(decision, None) != "no_eligible_promotion":
+                errors.append(f"{team}: selected_generation is missing without a no-promotion decision")
+        else:
+            try:
+                selected_generation = int(raw_generation)
+            except (TypeError, ValueError):
+                errors.append(f"{team}: selected_generation is not an integer")
+            else:
+                if known_generations and selected_generation not in known_generations:
+                    errors.append(f"{team}: selected_generation {selected_generation} has no generation receipt")
+        outcome = _selection_outcome(decision, selected_generation)
+        expected_outcome = _decision_expected_outcome(decision)
+        if expected_outcome is not None and outcome != expected_outcome:
+            errors.append(
+                f"{team}: retention_decision {decision!r} conflicts with selected_generation {selected_generation!r}"
+            )
+        outcomes[team] = {
+            "retention_decision": decision,
+            "selected_generation": selected_generation,
+            "outcome": outcome,
+        }
+    return {
+        "name": "selection_decisions_valid",
+        "status": "PASS" if not errors else "FAIL",
+        "errors": errors,
+        "outcomes": outcomes,
+        "child_promotion_canary": {
+            "both_generation_2_selected": all(
+                outcomes.get(team, {}).get("selected_generation") == 2 for team in ("red", "blue")
+            ),
+            "gates_broadcast_validity": False,
+        },
+    }
 
 
 def build_arena_receipt(campaign_receipt: Path, receipt: dict[str, Any]) -> ArenaReceipt:
@@ -293,10 +442,7 @@ def build_commentary_receipt(
                 lines.append(
                     CommentaryLine(
                         period="selection",
-                        speaker_line=(
-                            f"{team.upper()} selection whistle: {activity.retention_decision}, "
-                            f"generation {activity.selected_generation} promoted by receipt."
-                        ),
+                        speaker_line=_selection_commentary(team, activity),
                         source_receipts=[str(path)],
                         source_activity_indices={team: [idx]},
                     )
@@ -340,7 +486,7 @@ def status_checks(receipt: dict[str, Any], seed_items: list[dict[str, Any]]) -> 
         {"name": "seed_hashes_cited_by_provider", "status": "PASS" if not seed_bundle.get("receipts") or all(c.get("cited_in_provider_response") for c in provider_seed_citations) else "FAIL", "citations": provider_seed_citations},
         {"name": "children_materialized", "status": "PASS" if len(generations) >= 2 and all(((generations[1].get("artifact_pipelines") or {}).get(t) or {}).get("selected_artifact_path") for t in ("red", "blue")) else "FAIL"},
         {"name": "docker_judge_replays_bound", "status": "PASS" if integrity.get("matched_replay_count") == integrity.get("required_replay_count") and integrity.get("matched_slot_count") == integrity.get("required_slot_count") else "FAIL", "artifact_integrity": integrity.get("path")},
-        {"name": "selection_promoted_children", "status": "PASS" if all((receipt.get("selection") or {}).get("teams", {}).get(t, {}).get("selected_generation") == 2 for t in ("red", "blue")) else "FAIL"},
+        selection_report_status(receipt),
     ]
 
 
@@ -381,9 +527,11 @@ def render_report(
     for team, spawn in (receipt.get("spawn") or {}).items():
         ack = (receipt.get("inheritance") or {}).get(team) or {}
         delta = (receipt.get("genome_deltas") or {}).get(team) or {}
-        selected = (receipt.get("selection") or {}).get("teams", {}).get(team, {}).get("selected_generation")
+        selected = (receipt.get("selection") or {}).get("teams", {}).get(team, {})
+        selected_generation = selected.get("selected_generation")
+        selection_outcome = _selection_outcome(selected.get("retention_decision"), selected_generation)
         lines.append(
-            f"- {team.upper()}: spawn `{spawn.get('decision')}` after parent `{spawn.get('judge_verdict')}`; provider cited inherited packet={ack.get('packet_cited_in_provider_response')}, genome={ack.get('inherited_genome_cited')}, observation={ack.get('inherited_observation_cited')}, external research={ack.get('external_research_cited_in_provider_response')}; semantic mutations `{delta.get('semantic_change_count')}`; selection kept generation `{selected}`."
+            f"- {team.upper()}: spawn `{spawn.get('decision')}` after parent `{spawn.get('judge_verdict')}`; provider cited inherited packet={ack.get('packet_cited_in_provider_response')}, genome={ack.get('inherited_genome_cited')}, observation={ack.get('inherited_observation_cited')}, external research={ack.get('external_research_cited_in_provider_response')}; semantic mutations `{delta.get('semantic_change_count')}`; selection outcome `{selection_outcome}` with generation `{selected_generation}`."
         )
         for cite in ack.get("mutation_seed_citations", []):
             lines.append(f"  - seed citation `{cite.get('kind')}` `{cite.get('sha256')}` cited={cite.get('cited_in_provider_response')}.")
