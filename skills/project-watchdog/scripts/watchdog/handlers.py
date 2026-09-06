@@ -996,14 +996,19 @@ def evaluate_repair_proof(
     artifacts = sorted(set(section_outputs + declared))
     if not artifacts:
         reasons.append("no explicit result artifacts: reviewer must emit PROOF_ARTIFACT lines")
-    artifacts = [str((repair_worktree / a).resolve()) if not Path(a).expanduser().is_absolute()
-                 else str(Path(a).expanduser().resolve()) for a in artifacts]
+    def normalize(path_value: str) -> str:
+        p = Path(path_value).expanduser()
+        return str((repair_worktree / p).resolve()) if not p.is_absolute() else str(p.resolve())
+
+    artifacts = [normalize(a) for a in artifacts]
     gate["required_proof_artifacts"] = artifacts
     if artifacts:
         results = [inspect_proof_artifact(a, not_before=not_before) for a in artifacts]
         gate["artifact_results"] = results
-        if not all(r["passed"] for r in results):
-            detail = "; ".join(f"{r['path']}: {r['reason']}" for r in results)
+        mandatory = {normalize(a) for a in section_outputs} or set(artifacts)
+        failed = [r for r in results if r["path"] in mandatory and not r["passed"]]
+        if failed:
+            detail = "; ".join(f"{r['path']}: {r['reason']}" for r in failed)
             reasons.append(f"not every required proof artifact is a completed pass ({detail})")
 
     gate["reviewed_commit"] = reviewed_commit
@@ -2104,14 +2109,14 @@ def finish_primary_operation(record) -> dict[str, Any]:
     if not needed <= provided:
         raise primary.Refusal("native verification plan omits a mandatory result artifact")
     prior_stamps = {p: (Path(p).stat().st_mtime_ns, Path(p).stat().st_size) if Path(p).exists() else None
-                    for p in provided}
+                    for p in needed}
     verify_started = time.time()
     commands = native_ticket.verify(root, record.issue_number, plan,
         timeout_s=int(project.get("ticket_repair_timeout_s", 1800)))
     write_json(receipt_dir / "native-verification-commands.json", {"commands": commands})
     content.require_unchanged(after, content.snapshot(root, record.targets, before.remote_sha))
-    artifacts = [inspect_proof_artifact(p, not_before=verify_started) for p in sorted(provided)]
-    unchanged_results = [p for p in provided if Path(p).exists() and
+    artifacts = [inspect_proof_artifact(p, not_before=verify_started) for p in sorted(needed)]
+    unchanged_results = [p for p in needed if Path(p).exists() and
                          prior_stamps[p] == (Path(p).stat().st_mtime_ns, Path(p).stat().st_size)]
     if unchanged_results:
         raise primary.Refusal("native verify did not rewrite required result files: " + str(unchanged_results))

@@ -761,6 +761,32 @@ def test_review_commit_lines_keep_invalid_sha_out_of_valid_set() -> None:
     assert handlers.valid_review_commits(text) == []
 
 
+def test_repair_proof_gate_allows_stale_declared_artifacts_before_native_verify(tmp_path) -> None:
+    fresh = tmp_path / "fresh.json"
+    stale = tmp_path / "stale.json"
+    fresh.write_text(json.dumps({"status": "PASS"}), encoding="utf-8")
+    stale.write_text(json.dumps({"status": "PASS"}), encoding="utf-8")
+    not_before = fresh.stat().st_mtime - 0.1
+    os.utime(stale, (not_before - 10, not_before - 10))
+    ask_nodes = tmp_path / "ask" / "run" / "node-artifacts"
+    (ask_nodes / "handler-codex").mkdir(parents=True)
+    (ask_nodes / "handler-claude-fable-low").mkdir(parents=True)
+    (ask_nodes / "handler-codex" / "response.md").write_text("VERDICT: PASS\n", encoding="utf-8")
+    (ask_nodes / "handler-claude-fable-low" / "response.md").write_text(
+        f"VERDICT: PASS\nPROOF_ARTIFACT: {fresh}\nPROOF_ARTIFACT: {stale}\n", encoding="utf-8"
+    )
+    gate = handlers.evaluate_repair_proof(
+        ask_run_dir=tmp_path / "ask",
+        issue_body=f"## Required proof\n\nrun --output {fresh}\n",
+        creator="codex",
+        reviewer="claude-fable-low",
+        repair_worktree=tmp_path,
+        not_before=not_before,
+        reviewed_commit="a" * 40,
+    )
+    assert gate["ok"] is True
+
+
 def test_a_proof_artifact_from_a_previous_run_does_not_count(tmp_path) -> None:
     """#1499 had a July receipt on disk; accepting it would close on a stale pass."""
     artifact = tmp_path / "proof.json"
