@@ -50,14 +50,23 @@ def read_proof_text(path: Path) -> str:
     return path.read_text(errors="ignore")[:200_000]
 
 
-def import_receipt_envelope() -> Any:
-    module_path = Path(__file__).resolve().parents[2] / "agent-ecosystem/scripts/receipt_envelope.py"
-    spec = importlib.util.spec_from_file_location("receipt_envelope", module_path)
+def import_module(path: Path, name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise ValueError("could not load receipt_envelope validator")
+        raise ValueError(f"could not load {name} validator")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def import_receipt_envelope() -> Any:
+    module_path = Path(__file__).resolve().parents[2] / "agent-ecosystem/scripts/receipt_envelope.py"
+    return import_module(module_path, "receipt_envelope")
+
+
+def import_collab_acceptance() -> Any:
+    return import_module(Path(__file__).with_name("collab_acceptance_schema.py"), "collab_acceptance_schema")
 
 
 def validate_known_receipt(path: Path, text: str) -> None:
@@ -83,6 +92,8 @@ def validate_known_receipt(path: Path, text: str) -> None:
                 "status-check proof decision is not pass",
                 {"proof": str(path)},
             )
+    elif schema == "lazy_report_shame.collab_acceptance.v1":
+        import_collab_acceptance().CollabAcceptance.model_validate(data)
     elif schema == "pi.receipt_envelope.v1":
         import_receipt_envelope().ReceiptEnvelope.model_validate(data)
     elif schema == "debugger.proof.v1":

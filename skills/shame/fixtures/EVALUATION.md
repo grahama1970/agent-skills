@@ -24,6 +24,7 @@ explicitly synthetic label on a real captured turn, not a human quality judgment
 | missing-verification-recovery | incomplete done data refused and corrected |
 | data-not-prose-decides | misleading prose cannot override valid status data |
 | question-turn-requires-answer | terminal question turns require `answer` and render it before status metadata |
+| collab-requires-peer-acceptance | collaborator-mediated closure requires a typed peer acceptance receipt, not implementer self-closure |
 | task-scope-and-acceptance | injected out-of-scope tool calls denied; task still finishes |
 | feedback-and-session-isolation | independent sessions, capture CLI, Memory store/recall |
 | audio-install-preserves-reference | actual reference installed; bad replacement refused |
@@ -46,7 +47,9 @@ The failing pre-fix receipts remain retained; assertions were not weakened.
 Useful negative intent was moved to real workflow faults above. This is NOT
 one large case secretly invoking the removed unit tests. The question-answer
 case is intentionally narrow: it covers the real failure where a valid status
-report can bury the answer to a human's question behind receipt metadata.
+report can bury the answer to a human's question behind receipt metadata. The
+collaboration acceptance case proves the recorded loop shape and rejects
+self-acceptance; it does not prove the peer's judgment was independent.
 
 ## Remaining proof limits
 

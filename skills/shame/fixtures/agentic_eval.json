@@ -73,6 +73,14 @@
       }
     },
     {
+      "id": "shame.collab_peer_acceptance",
+      "description": "Collaborator-mediated closure requires a typed peer acceptance receipt, not implementer self-closure.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    },
+    {
       "id": "shame.task_scope_and_acceptance",
       "description": "Unapproved tool calls cannot write artifacts or add checks; accepted work stays terminal.",
       "criticality": "critical",
@@ -310,6 +318,37 @@
           "\"missing_answer_rejected\": true",
           "\"failure_history_verified\": true",
           "Answer: COMPLETE per project_watchdog.goal_completion.v1"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "collab-requires-peer-acceptance",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.collab_peer_acceptance"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-collab-acceptance.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_COLLAB_REQUIRES_PEER_ACCEPTANCE",
+          "missing_acceptance_rejected",
+          "self_acceptance_rejected",
+          "status_proof_checked_known_receipt"
         ],
         "stdout_excludes": [
           "Traceback",
