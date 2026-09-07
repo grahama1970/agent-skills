@@ -1,5 +1,5 @@
 ---
-name: land
+name: git-land
 description: >
   Commit and push ONLY the named files onto origin/main, from any dirty
   checkout, branch, or worktree. Use when asked to commit and push, land
@@ -30,12 +30,12 @@ disciplines:
   - developer-tooling
 ---
 
-# land
+# git-land
 
 One command. Land exactly the named paths onto `origin/main`:
 
 ```bash
-skills/land/run.sh -m "message" <path>...
+skills/git-land/run.sh -m "message" <path>...
 ```
 
 Delegates to `skills/ops-worktrees/run.sh land` (plumbing:
