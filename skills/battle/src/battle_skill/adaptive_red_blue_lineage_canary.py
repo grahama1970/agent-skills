@@ -1124,7 +1124,7 @@ def _knowledge_acknowledgement(
     packet_id = packet["packet_id"]
     parent_sha = packet["parent_artifact_sha256"]
     cited = packet_id in response_text or parent_sha in response_text
-    genome_cited = packet["parent_semantic_genome_sha256"] in response_text
+    genome_cited = _cites_sha(response_text, packet["parent_semantic_genome_sha256"])
     inherited_observation_cited = any(
         str(value) in response_text
         for observation in packet.get("observations", [])
@@ -1162,6 +1162,8 @@ def _knowledge_acknowledgement(
         "child_artifact_sha256": child_sha,
         "artifact_changed": changed,
         "inherited_genome_cited": genome_cited,
+        "inherited_genome_sha256": packet["parent_semantic_genome_sha256"],
+        "inherited_genome_citation_policy": "exact_or_56_char_prefix",
         "inherited_observation_cited": inherited_observation_cited,
         "first_plan_action_declared": first_plan_action,
         "external_research_receipt_sha256": research["source_receipt_sha256"],
@@ -1178,6 +1180,10 @@ def _knowledge_acknowledgement(
             "does_not_prove": ["The child improved."],
         },
     }
+
+
+def _cites_sha(text: str, sha256: str) -> bool:
+    return sha256 in text or sha256[:56] in text
 
 
 def _run_tau_research(
