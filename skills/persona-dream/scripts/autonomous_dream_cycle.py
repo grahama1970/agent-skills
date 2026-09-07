@@ -530,6 +530,7 @@ def compose_and_render(adapter, phase_c, subgate, profile, sel: dict, out: Path)
         output_contract={"dream_synopsis": "string", "panels": ["4 panel objects"]})
     if parsed is None or len(parsed.get("panels", [])) != PANEL_COUNT:
         raise SystemExit(f"BLOCKED_CYCLE_STORYBOARD: {json.dumps(receipt)[:200]}")
+    parsed = {"schema": "persona_dream.cycle_storyboard_plan.v1", **parsed}
     (out / "storyboard_plan.json").write_text(json.dumps(parsed, indent=2) + "\n")
 
     # Identity gate is per-persona: with a discovered face reference sheet the

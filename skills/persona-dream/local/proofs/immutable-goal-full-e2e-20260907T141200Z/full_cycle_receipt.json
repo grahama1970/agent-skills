@@ -1,0 +1,119 @@
+{
+  "checks": [
+    "day_ingested",
+    "transcript_context_curated:8",
+    "dream_spine_pass:cycle_20260907T135308Z",
+    "cycle_context_materialized",
+    "journal_spoken:1037358b",
+    "memory_written_and_artifacts_stored",
+    "conversation:3_pairs_all_voiced_grounded",
+    "carried:6"
+  ],
+  "live": true,
+  "mocked": false,
+  "run_dir": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z",
+  "schema": "persona_dream.full_cycle_eval_receipt.v1",
+  "spine_dir": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z-spine",
+  "stage_count": 8,
+  "stages": {
+    "carried": {
+      "carried": 6,
+      "status": "PASS_CONVERSATION_CARRIED"
+    },
+    "conversation": {
+      "anchor_terms": [
+        "glowing",
+        "They",
+        "accused",
+        "That",
+        "unsettled",
+        "half-labeled",
+        "cartons",
+        "reaching",
+        "toward",
+        "memories",
+        "almost",
+        "ordinary",
+        "unpacking",
+        "belonging",
+        "instead",
+        "surrender",
+        "wanted",
+        "surfboard",
+        "Ninole",
+        "shallow",
+        "secret",
+        "Hawaiian",
+        "practice",
+        "whispered"
+      ],
+      "anchored_turns": 6,
+      "day_anchor_terms": [
+        "requires",
+        "receipts",
+        "full-cycle",
+        "T135011Z",
+        "complete",
+        "proven",
+        "records",
+        "bounded",
+        "day-ingest",
+        "self-contained",
+        "today's",
+        "commit"
+      ],
+      "day_anchored_turns": 4,
+      "pairs": 3,
+      "receipt": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/dynamic_conversation_receipt.v1.json",
+      "status": "PASS_DYNAMIC_CONVERSATION"
+    },
+    "cycle_context_materialized": {
+      "copied": [
+        "dream_journal.v1.json",
+        "dream_journal.md",
+        "journal.md",
+        "journal_spoken.txt",
+        "residue_links.json",
+        "storyboard_plan.json",
+        "observation_packet.json",
+        "phase14_tom.json",
+        "storyboard_contact_sheet.png",
+        "contact_sheet.png",
+        "dream_packet.json"
+      ],
+      "cycle": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/goal_v3/cycles/cycle_20260907T135308Z",
+      "day_context_count": 7,
+      "day_context_status": "ok",
+      "has_dream_journal": true,
+      "has_session_mood": true,
+      "missing": [],
+      "run_dir": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z",
+      "schema": "persona_dream.full_cycle_context_materialization.v1",
+      "source_memory_count": 3,
+      "status": "PASS_CYCLE_CONTEXT_MATERIALIZED"
+    },
+    "day_ingested": {
+      "status": "PASS_DAY_INGESTED"
+    },
+    "dream_spine": {
+      "cycle": "cycle_20260907T135308Z",
+      "receipt": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z-spine/dag_run/run-receipt.json",
+      "status": "PASS"
+    },
+    "journal_spoken": {
+      "asr_ok": true,
+      "audio": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/journal.wav",
+      "audio_sha256": "sha256:32f1e7ed57671d4667f8a66126bfe421e415a56c2a7cc7bdf785daf22744f107",
+      "status": "PASS_JOURNAL_SPOKEN"
+    },
+    "memory_written_and_artifacts_stored": {
+      "status": "PASS_DREAM_ARTIFACTS_STORED"
+    },
+    "transcript_context_curated": {
+      "items": 8,
+      "memory_found": false,
+      "status": "PASS_TRANSCRIPT_CONTEXT_CURATED"
+    }
+  },
+  "status": "FULL_CYCLE_OK"
+}

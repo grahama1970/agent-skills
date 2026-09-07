@@ -393,16 +393,13 @@
       "status": "PASS_RETURN_ARC_CLOSED"
     }
   },
-  "current_phase": "IMMUTABLE_GOAL_DISPOSITION_CLOSURE",
+  "current_phase": "IMMUTABLE_GOAL_FULL_E2E_CLOSURE",
   "immutable_goal_completion": {
-    "acceptance_ledger": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/goal_acceptance_ledger.json",
-    "acceptance_ledger_sha256": "sha256:a639e75ba9f9d3586fb7370e6f7d5b5e6b2a70effa33f2a2e5accee4dee43b0d",
-    "boundary": "Completes GOAL.md disposition closure: major hypotheses have terminal scoped dispositions; live corrected-goal, full-cycle, and audible conversation retained eval gates pass. Human listener perception, production reliability, deployed SPARTA production operation, and Kling/provider execution remain non-claims, not immutable-goal blockers under GOAL.md.",
-    "receipt": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/project_watchdog_goal_completion.json",
-    "receipt_sha256": "sha256:0a927008a4f86cf629322350214638ee6e743b2867123c5cc9b55df278e0f2b8",
-    "status": "PASS_IMMUTABLE_GOAL_DISPOSITION_CLOSURE",
-    "unlazy_receipt_check": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/unlazy-receipt-check.json",
-    "unlazy_receipt_check_sha256": "sha256:6e36b9c50080e5ddaa4b8ad97ea9340d9bbf99399f140e7bcc4a1131711799ce"
+    "boundary": "Fresh live full-cycle run plus fresh sealed paired C0/C1 evaluator run satisfy GOAL.md goal-helper primary proof; production reliability and human preference remain non-claims.",
+    "headline": "IMMUTABLE_GOAL: COMPLETE",
+    "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/proof.json",
+    "receipt_sha256": "sha256:cf1f76b510f7d608350e3a2107486559d9dabdd12711f051db13ea63b8bbb39b",
+    "status": "PASS_IMMUTABLE_GOAL_FULL_E2E"
   },
   "latest_accepted_dream_cycle": {
     "evidence_boundary": "One accepted canonical dream persistence path is meaningful history, not repeated pipeline reliability.",
@@ -431,38 +428,27 @@
     "trial_count": 3
   },
   "latest_corrected_goal_live_pair_eval": {
-    "agentic_eval_receipt": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/corrected-goal-live-pair-agentic-report.json",
-    "agentic_eval_receipt_sha256": "sha256:44a24dc90cae279b3cee33273289535a9d0ddf02fab4ebcb95cbf19a5ccd94fa",
+    "failures": [],
+    "gate_statuses": {
+      "answer_invariance": "PASS_ANSWER_INVARIANCE",
+      "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
+      "emotional_carryover": "PASS_EMOTION_LINEAGE"
+    },
     "live": true,
     "mocked": false,
-    "outcome_counts": {
-      "BLOCKED": 0,
-      "FAIL": 0,
-      "NOT_TESTED": 0,
-      "PASS": 1
-    },
-    "passed_trials": 3,
-    "readiness": "READY",
-    "status": "PASS_CORRECTED_GOAL_LIVE_PAIR_READBACK_3_TRIALS",
-    "trial_count": 3
+    "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/corrected_goal_receipt.json",
+    "run_root": "/tmp/persona-dream-corrected-goal-live-pair-final",
+    "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
   },
   "latest_full_cycle_live_eval": {
-    "agentic_eval_receipt": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/full-cycle-live-agentic-report.json",
-    "agentic_eval_receipt_sha256": "sha256:b39658860af2638614d8cbd03e1ef8938d6b5ff6a2488c2c6c877ecc85e91a1c",
-    "boundary": "Three retained live trials through idea/day ingest, Tau dream spine, journal, Chatterbox spoken journal, memory/artifact store, dynamic Horus/Embry voiced conversation, and carry-back.",
-    "case_count": 1,
     "live": true,
     "mocked": false,
-    "outcome_counts": {
-      "BLOCKED": 0,
-      "FAIL": 0,
-      "NOT_TESTED": 0,
-      "PASS": 1
-    },
-    "passed_trials": 3,
-    "readiness": "READY",
-    "status": "PASS_FULL_CYCLE_LIVE_3_TRIALS",
-    "trial_count": 3
+    "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/full_cycle_receipt.json",
+    "receipt_sha256": "sha256:ef668c99c5e1e4ecb89230f069156dd9458ea2132f108ae1f5cc4f40b80ee690",
+    "result": "FULL_CYCLE_OK stages=8 run=eval-full-cycle-20260907T135011Z day_ingested transcript_context_curated:8 dream_spine_pass:cycle_20260907T135308Z cycle_context_materialized journal_spoken:1037358b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced_grounded carried:6",
+    "run_dir": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z",
+    "spine_dir": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z-spine",
+    "status": "FULL_CYCLE_OK"
   },
   "latest_voice_proof": {
     "audio_snapshots": [
@@ -509,13 +495,13 @@
     ]
   },
   "next_step": {
-    "default": "Post-closure: collect #1058 human listener rows only if human-perceived emotion wording is needed; otherwise transfer constrained/retired mechanisms per the disposition ledger.",
+    "default": "Post-closure: keep production reliability, human listener preference, and provider video work as separately scoped future goals.",
     "ordered_steps": [
-      "If human-perception wording is desired, collect 20 valid blinded listener rows and SIGNED_INTERPRETATION.json, then run analyze-blinded-listener-study --json.",
-      "If production readiness is desired, open a new goal with production reliability/deployment acceptance criteria.",
-      "Do not reopen Kling/provider work without explicit paid-call authorization and provider readiness gates."
+      "Do not claim production reliability from this proof.",
+      "Do not claim human preference/perception without a signed listener study.",
+      "Commit/push only scoped Persona Dream closure artifacts and code."
     ],
-    "receipt_target": "skills/persona-dream/local/proofs/immutable-goal-closure-20260907T000000Z/project_watchdog_goal_completion.json"
+    "receipt_target": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/proof.json"
   },
   "pctom_r_workstream": {
     "latest_goal_coverage_receipt": "reports/goal_v5/closure/pctom_final/20260902T165849Z/PCTOM_GOAL_COVERAGE_RECEIPT.json",
@@ -721,5 +707,5 @@
   },
   "schema": "persona_dream.current_status.v1",
   "transfer_ledger": "skills/persona-dream/TRANSFER_LEDGER.md",
-  "updated_at": "2026-09-02T17:01:20Z"
+  "updated_at": "2026-09-07T14:12:00Z"
 }

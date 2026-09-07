@@ -1,0 +1,66 @@
+{
+  "commands": [
+    {
+      "command": "PD_FULL_CYCLE_EVAL_RECEIPT=/tmp/persona-dream-live-full-cycle-final-receipt.json uv run --project skills/persona-dream python skills/persona-dream/scripts/eval_full_cycle.py",
+      "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/full_cycle_receipt.json",
+      "receipt_sha256": "sha256:ef668c99c5e1e4ecb89230f069156dd9458ea2132f108ae1f5cc4f40b80ee690",
+      "result": "FULL_CYCLE_OK stages=8 run=eval-full-cycle-20260907T135011Z day_ingested transcript_context_curated:8 dream_spine_pass:cycle_20260907T135308Z cycle_context_materialized journal_spoken:1037358b memory_written_and_artifacts_stored conversation:3_pairs_all_voiced_grounded carried:6"
+    },
+    {
+      "command": "./skills/persona-dream/run.sh corrected-goal-live-pair --manifest skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json --source-run /mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z --out /tmp/persona-dream-corrected-goal-live-pair-final",
+      "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/corrected_goal_receipt.json",
+      "receipt_sha256": "sha256:938f3ef48e4efa06c754e047dc817002a9e743256cea71992b56e55e425802b5",
+      "result": "PASS_CORRECTED_GOAL_PAIRED_PROOF; gate_statuses answer_invariance=PASS_ANSWER_INVARIANCE emotional_carryover=PASS_EMOTION_LINEAGE chatterbox_delivery=PASS_CHATTERBOX_DELIVERY; failures=[]; live=true; mocked=false"
+    },
+    {
+      "command": "skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.pydantic_triage.json --output /tmp/persona-dream-pydantic-after-full-cycle-fix.json",
+      "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/pydantic_eval.json",
+      "receipt_sha256": "sha256:fafa3cd031de1fe8d340618b1ef328be01d38ba2aa72ac2bd4a0ae1414f5fec5",
+      "result": "readiness READY; PASS=7 FAIL=0 BLOCKED=0 NOT_TESTED=0; persona_dream.pydantic_triage_step_boundary PROVEN"
+    },
+    {
+      "command": "./skills/persona-dream/run.sh check-current-state-consistency --strict --json > /tmp/persona-dream-current-state-final.json",
+      "receipt": "skills/persona-dream/local/proofs/immutable-goal-full-e2e-20260907T141200Z/current_state_consistency.json",
+      "receipt_sha256": "sha256:cf72b4c93583e3255e7ba8e6710bb06f91e174d84459dd3fe21967d06de20648",
+      "result": "PASS_CURRENT_STATE_CONSISTENT; mismatch_count 0"
+    }
+  ],
+  "corrected_goal_gate_statuses": {
+    "answer_invariance": "PASS_ANSWER_INVARIANCE",
+    "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
+    "emotional_carryover": "PASS_EMOTION_LINEAGE"
+  },
+  "full_cycle_checks": [
+    "day_ingested",
+    "transcript_context_curated:8",
+    "dream_spine_pass:cycle_20260907T135308Z",
+    "cycle_context_materialized",
+    "journal_spoken:1037358b",
+    "memory_written_and_artifacts_stored",
+    "conversation:3_pairs_all_voiced_grounded",
+    "carried:6"
+  ],
+  "immutable_goal_headline": "IMMUTABLE_GOAL: COMPLETE",
+  "live": true,
+  "mocked": false,
+  "primary_proof_coverage": {
+    "chatterbox_journal_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/JOURNAL_AUDIO_RECEIPT.json",
+    "dream_packet": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/dream_packet.json",
+    "dynamic_conversation_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/dynamic_conversation_receipt.v1.json",
+    "dynamic_conversation_transcript": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/conversation.jsonl",
+    "embry_journal_reflection": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/dream_journal.v1.json",
+    "emotional_variation_quality_evaluation": "/tmp/persona-dream-corrected-goal-live-pair-final/corrected_goal_receipt.json",
+    "human_idea_lineage": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/DAY_INGEST_2026-09-07.json",
+    "journal_audio": "/mnt/storage12tb/skills/persona-dream/outputs/eval-full-cycle-20260907T135011Z/journal.wav",
+    "paired_evaluator_run_root": "/tmp/persona-dream-corrected-goal-live-pair-final"
+  },
+  "proof_boundary": "One fresh full end-to-end live run plus one fresh sealed C0/C1 paired evaluator run; does not prove production reliability or human preference.",
+  "pydantic_eval_outcome_counts": {
+    "BLOCKED": 0,
+    "FAIL": 0,
+    "NOT_TESTED": 0,
+    "PASS": 7
+  },
+  "schema": "persona_dream.immutable_goal_full_e2e_proof.v1",
+  "status": "PASS_IMMUTABLE_GOAL_FULL_E2E"
+}

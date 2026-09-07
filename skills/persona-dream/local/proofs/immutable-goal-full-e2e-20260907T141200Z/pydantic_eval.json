@@ -1,0 +1,514 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/persona-dream/fixtures/agentic_eval.pydantic_triage.json",
+  "run_id": "9a88ec23d650",
+  "fixture_sha256": "sha256:67c635b81d194d61e446fec854ce943c6ff05e7b6c5b620b09fc0fa2e8181c88",
+  "repo": {
+    "sha": "bc58f91f990fec2cf1a554ef65aad35656b068a2",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "fault-injected deterministic step-boundary validation only; not live dream quality or human perception proof",
+  "claims": {
+    "proves": "corrupt input cannot execute, corrupt output is blocked with pydantic_errors[] and triage_errors[], prose-only BLOCKED receipts are rejected, and valid schema envelopes pass with no triage errors",
+    "does_not_prove": "full pipeline readiness, semantic dream quality, Chatterbox perceptual quality, or human-audible acceptance"
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "READY",
+  "case_readiness": "READY",
+  "capability_readiness": {
+    "aggregate_readiness": "READY",
+    "critical_claim_count": 1,
+    "critical_claims_proven": 1,
+    "claims": [
+      {
+        "id": "persona_dream.pydantic_triage_step_boundary",
+        "description": "Every Persona Dream DAG step failure carries Pydantic error data plus triage-error {code,cause,next_command} classification and the immutable goal records the Brave Search -> Ask gpt/fable -> Ask WebGPT self-heal ladder instead of prose-only BLOCKED output.",
+        "criticality": "critical",
+        "required_evidence": [
+          "fault_injected_deterministic"
+        ],
+        "verdict": "PROVEN",
+        "per_class": {
+          "fault_injected_deterministic": {
+            "status": "PROVEN",
+            "cases": [
+              "pydantic-step-gate-triages-corrupt-input",
+              "pydantic-step-gate-passes-valid-envelope",
+              "triage-catalog-classifies-pydantic-step-error",
+              "goal-records-self-heal-ladder",
+              "pydantic-input-gate-does-not-execute-step",
+              "pydantic-output-gate-triages-corrupt-produced-artifact",
+              "node-receipt-rejects-prose-only-blocked"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "pydantic-step-gate-triages-corrupt-input",
+          "pydantic-step-gate-passes-valid-envelope",
+          "triage-catalog-classifies-pydantic-step-error",
+          "goal-records-self-heal-ladder",
+          "pydantic-input-gate-does-not-execute-step",
+          "pydantic-output-gate-triages-corrupt-produced-artifact",
+          "node-receipt-rejects-prose-only-blocked"
+        ]
+      }
+    ]
+  },
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-09-07T14:11:09.299002+00:00",
+  "case_count": 7,
+  "required_case_count": 7,
+  "outcome_counts": {
+    "PASS": 7,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 21,
+  "cases": [
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "pydantic-step-gate-triages-corrupt-input",
+      "type": "adversarial",
+      "case_id": "9a88ec23d650-c000",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate --command noop --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces ''; ec=$?; cat \"$T/receipt.json\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 287.497,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "BLOCKED eval-gate (0/0 artifacts)\n  pydantic_gate_input missing at ['/tmp/tmp.g8jkoqdytE/input.json', 'schema']: Field required\n{\n  \"artifacts\": [],\n  \"commands_run\": [\n    {\n      \"argv\": [\n        \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh\",\n        \"noop\"\n      ],\n      \"elapsed_seconds\": 0.114,\n      \"exit_code\": null\n    }\n  ],\n  \"does_not_prove\": \"\",\n  \"errors\": [\n    \"pydantic_gate_input missing at ['/tmp/tmp.g8jkoqdytE/input.json', 'schema']: Field required\"\n  ],\n  \"goal_hash\": \"\",\n  \"handoff_summary\": \"eval-gate: produced 0/0 declared artifacts. BLOCKED \\u2014 pydantic_gate_input missing at ['/tmp/tmp.g8jkoqdytE/input.json', 'schema']: Field required\",\n  \"live\": true,\n  \"mocked\": false,\n  \"node_id\": \"eval-gate\",\n  \"policy_exceptions\": [],\n  \"proves\": \"\",\n  \"pydantic_errors\": [\n    {\n      \"loc\": [\n        \"/tmp/tmp.g8jkoqdytE/input.json\",\n        \"schema\"\n      ],\n      \"msg\": \"Field required\",\n      \"type\": \"missing\"\n    }\n  ],\n  \"schema\": \"tau.generic_dag_node_receipt.v1\",\n  \"status\": \"BLOCKED\",\n  \"stderr_tail\": \"\",\n  \"triage_errors\": [\n    {\n      \"ambiguous\": false,\n      \"cause\": \"A Persona Dream pipeline step consumed or produced JSON that failed the pydantic-first step boundary contract, so the step cannot safely advance.\",\n      \"code\": \"persona_dream_pydantic_step_gate_failed\",\n      \"layer\": \"persona-dream\",\n      \"matched_tokens\": [\n        \"pydantic_gate_input\"\n      ],\n      \"next_command\": \"Read the node receipt triage_errors[] and pydantic_errors[], repair the named consumed or produced artifact/schema, then rerun the same dag_step command.\",\n      \"not_this\": [\n        \"human listener collection blocker\",\n        \"provider authentication failure\",\n        \"semantic reviewer disagreement\"\n      ],\n      \"recoverable\": true\n    }\n  ],\n  \"verdict\": \"BLOCKED\"\n}",
+          "stderr": "",
+          "duration_ms": 283.74,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c000-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "BLOCKED eval-gate (0/0 artifacts)\n  pydantic_gate_input missing at ['/tmp/tmp.Nei3iz5niI/input.json', 'schema']: Field required\n{\n  \"artifacts\": [],\n  \"commands_run\": [\n    {\n      \"argv\": [\n        \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh\",\n        \"noop\"\n      ],\n      \"elapsed_seconds\": 0.109,\n      \"exit_code\": null\n    }\n  ],\n  \"does_not_prove\": \"\",\n  \"errors\": [\n    \"pydantic_gate_input missing at ['/tmp/tmp.Nei3iz5niI/input.json', 'schema']: Field required\"\n  ],\n  \"goal_hash\": \"\",\n  \"handoff_summary\": \"eval-gate: produced 0/0 declared artifacts. BLOCKED \\u2014 pydantic_gate_input missing at ['/tmp/tmp.Nei3iz5niI/input.json', 'schema']: Field required\",\n  \"live\": true,\n  \"mocked\": false,\n  \"node_id\": \"eval-gate\",\n  \"policy_exceptions\": [],\n  \"proves\": \"\",\n  \"pydantic_errors\": [\n    {\n      \"loc\": [\n        \"/tmp/tmp.Nei3iz5niI/input.json\",\n        \"schema\"\n      ],\n      \"msg\": \"Field required\",\n      \"type\": \"missing\"\n    }\n  ],\n  \"schema\": \"tau.generic_dag_node_receipt.v1\",\n  \"status\": \"BLOCKED\",\n  \"stderr_tail\": \"\",\n  \"triage_errors\": [\n    {\n      \"ambiguous\": false,\n      \"cause\": \"A Persona Dream pipeline step consumed or produced JSON that failed the pydantic-first step boundary contract, so the step cannot safely advance.\",\n      \"code\": \"persona_dream_pydantic_step_gate_failed\",\n      \"layer\": \"persona-dream\",\n      \"matched_tokens\": [\n        \"pydantic_gate_input\"\n      ],\n      \"next_command\": \"Read the node receipt triage_errors[] and pydantic_errors[], repair the named consumed or produced artifact/schema, then rerun the same dag_step command.\",\n      \"not_this\": [\n        \"human listener collection blocker\",\n        \"provider authentication failure\",\n        \"semantic reviewer disagreement\"\n      ],\n      \"recoverable\": true\n    }\n  ],\n  \"verdict\": \"BLOCKED\"\n}",
+          "stderr": "",
+          "duration_ms": 298.093,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c000-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "BLOCKED eval-gate (0/0 artifacts)\n  pydantic_gate_input missing at ['/tmp/tmp.VCxItmV6tR/input.json', 'schema']: Field required\n{\n  \"artifacts\": [],\n  \"commands_run\": [\n    {\n      \"argv\": [\n        \"/home/graham/workspace/experiments/agent-skills/skills/persona-dream/run.sh\",\n        \"noop\"\n      ],\n      \"elapsed_seconds\": 0.116,\n      \"exit_code\": null\n    }\n  ],\n  \"does_not_prove\": \"\",\n  \"errors\": [\n    \"pydantic_gate_input missing at ['/tmp/tmp.VCxItmV6tR/input.json', 'schema']: Field required\"\n  ],\n  \"goal_hash\": \"\",\n  \"handoff_summary\": \"eval-gate: produced 0/0 declared artifacts. BLOCKED \\u2014 pydantic_gate_input missing at ['/tmp/tmp.VCxItmV6tR/input.json', 'schema']: Field required\",\n  \"live\": true,\n  \"mocked\": false,\n  \"node_id\": \"eval-gate\",\n  \"policy_exceptions\": [],\n  \"proves\": \"\",\n  \"pydantic_errors\": [\n    {\n      \"loc\": [\n        \"/tmp/tmp.VCxItmV6tR/input.json\",\n        \"schema\"\n      ],\n      \"msg\": \"Field required\",\n      \"type\": \"missing\"\n    }\n  ],\n  \"schema\": \"tau.generic_dag_node_receipt.v1\",\n  \"status\": \"BLOCKED\",\n  \"stderr_tail\": \"\",\n  \"triage_errors\": [\n    {\n      \"ambiguous\": false,\n      \"cause\": \"A Persona Dream pipeline step consumed or produced JSON that failed the pydantic-first step boundary contract, so the step cannot safely advance.\",\n      \"code\": \"persona_dream_pydantic_step_gate_failed\",\n      \"layer\": \"persona-dream\",\n      \"matched_tokens\": [\n        \"pydantic_gate_input\"\n      ],\n      \"next_command\": \"Read the node receipt triage_errors[] and pydantic_errors[], repair the named consumed or produced artifact/schema, then rerun the same dag_step command.\",\n      \"not_this\": [\n        \"human listener collection blocker\",\n        \"provider authentication failure\",\n        \"semantic reviewer disagreement\"\n      ],\n      \"recoverable\": true\n    }\n  ],\n  \"verdict\": \"BLOCKED\"\n}",
+          "stderr": "",
+          "duration_ms": 280.657,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c000-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "pydantic-step-gate-passes-valid-envelope",
+      "type": "positive",
+      "case_id": "9a88ec23d650-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"schema\":\"some.thing.v1\"}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id eval-gate2 --command help --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces '' >/dev/null; python3 -c \"import json;r=json.load(open('$T/receipt.json'));print('status',r['status']);print('gate_errors',len(r['pydantic_errors']));print('triage_errors',len(r['triage_errors']))\""
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 379.294,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "status PASS\ngate_errors 0\ntriage_errors 0\n",
+          "stderr": "",
+          "duration_ms": 358.454,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c001-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "status PASS\ngate_errors 0\ntriage_errors 0\n",
+          "stderr": "",
+          "duration_ms": 365.986,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c001-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "status PASS\ngate_errors 0\ntriage_errors 0\n",
+          "stderr": "",
+          "duration_ms": 413.441,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c001-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "triage-catalog-classifies-pydantic-step-error",
+      "type": "positive",
+      "case_id": "9a88ec23d650-c002",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "../../triage-error/run.sh classify --text \"pydantic_gate_input missing at ['input.json','schema']: Field required\" --layer persona-dream | python3 -c \"import json,sys;d=json.load(sys.stdin);print(d['code'], d['ambiguous'], bool(d['next_command']))\""
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 117.113,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "persona_dream_pydantic_step_gate_failed False True\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 119.312,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c002-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "persona_dream_pydantic_step_gate_failed False True\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 120.324,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c002-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "persona_dream_pydantic_step_gate_failed False True\n",
+          "stderr": "warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead\n",
+          "duration_ms": 111.704,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c002-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "goal-records-self-heal-ladder",
+      "type": "positive",
+      "case_id": "9a88ec23d650-c003",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "python3 - <<'PY2'\nfrom pathlib import Path\ns=Path('../GOAL.md').read_text()\nrequired=['Goal-helper closure contract','Primary proof:','human idea lineage','dynamic conversation transcript','Chatterbox render receipts','human-audible','project-agent emotional variation/quality evaluation','Forbidden drift:','Retry/stop rule:','Executable step boundary and self-heal ladder','brave-search','gpt/fable','webgpt','Pipeline step failures are expected states','Pydantic error data first','triage-error code/cause/next']\nmissing=[x for x in required if x not in s]\nprint('missing', missing)\nraise SystemExit(1 if missing else 0)\nPY2"
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 25.887,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "missing []\n",
+          "stderr": "",
+          "duration_ms": 26.233,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c003-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "missing []\n",
+          "stderr": "",
+          "duration_ms": 26.163,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c003-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "missing []\n",
+          "stderr": "",
+          "duration_ms": 25.265,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c003-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "pydantic-input-gate-does-not-execute-step",
+      "type": "adversarial",
+      "case_id": "9a88ec23d650-c004",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id no-execute --command help --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces '' >/dev/null; ec=$?; python3 -c \"import json; r=json.load(open('$T/receipt.json')); print('dag_exit', $ec); print('command_exit', r['commands_run'][0]['exit_code']); print('triage', r['triage_errors'][0]['code'])\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 306.271,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "dag_exit 1\ncommand_exit None\ntriage persona_dream_pydantic_step_gate_failed\n",
+          "stderr": "",
+          "duration_ms": 304.884,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c004-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "dag_exit 1\ncommand_exit None\ntriage persona_dream_pydantic_step_gate_failed\n",
+          "stderr": "",
+          "duration_ms": 310.696,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c004-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "dag_exit 1\ncommand_exit None\ntriage persona_dream_pydantic_step_gate_failed\n",
+          "stderr": "",
+          "duration_ms": 303.233,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c004-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "pydantic-output-gate-triages-corrupt-produced-artifact",
+      "type": "adversarial",
+      "case_id": "9a88ec23d650-c005",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/output.json\"; uv run --project .. python ../scripts/dag_step.py --node-id bad-output --command help --receipt \"$T/receipt.json\" --run-dir \"$T\" --produces output.json >/dev/null; ec=$?; python3 -c \"import json; r=json.load(open('$T/receipt.json')); print('dag_exit', $ec); print('status', r['status']); print('pydantic_types', [e['type'] for e in r['pydantic_errors']]); print('triage', r['triage_errors'][0]['code'])\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 307.997,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "dag_exit 1\nstatus BLOCKED\npydantic_types ['missing']\ntriage persona_dream_pydantic_step_gate_failed\n",
+          "stderr": "",
+          "duration_ms": 309.805,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c005-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "dag_exit 1\nstatus BLOCKED\npydantic_types ['missing']\ntriage persona_dream_pydantic_step_gate_failed\n",
+          "stderr": "",
+          "duration_ms": 311.293,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c005-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "dag_exit 1\nstatus BLOCKED\npydantic_types ['missing']\ntriage persona_dream_pydantic_step_gate_failed\n",
+          "stderr": "",
+          "duration_ms": 302.893,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c005-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "node-receipt-rejects-prose-only-blocked",
+      "type": "adversarial",
+      "case_id": "9a88ec23d650-c006",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); cat > \"$T/receipt.json\" <<'JSON'\n{\"schema\":\"tau.generic_dag_node_receipt.v1\",\"node_id\":\"bad\",\"status\":\"BLOCKED\",\"verdict\":\"BLOCKED\",\"errors\":[\"something went wrong\"],\"pydantic_errors\":[],\"triage_errors\":[]}\nJSON\nPYTHONPATH=../scripts uv run --project .. python - <<PY2\nfrom pathlib import Path\nfrom pydantic_step_gate import validate_artifact\nerrs=validate_artifact(Path('$T/receipt.json'), require_schema=True)\nprint('error_count', len(errs))\nprint('messages', [e.get('msg','') for e in errs])\nraise SystemExit(0 if errs else 1)\nPY2"
+      ],
+      "declared_evidence_class": "fault_injected_deterministic",
+      "effective_evidence_class": "fault_injected_deterministic",
+      "live_qualified": false,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "seams": [],
+      "passed_trials": 3,
+      "total_trials": 3,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 322.595,
+      "trials": [
+        {
+          "exit_code": 0,
+          "stdout": "error_count 1\nmessages ['Value error, BLOCKED receipt requires pydantic_errors[] or triage_errors[]']\n",
+          "stderr": "",
+          "duration_ms": 319.579,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c006-t00",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "error_count 1\nmessages ['Value error, BLOCKED receipt requires pydantic_errors[] or triage_errors[]']\n",
+          "stderr": "",
+          "duration_ms": 326.473,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c006-t01",
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 0,
+          "stdout": "error_count 1\nmessages ['Value error, BLOCKED receipt requires pydantic_errors[] or triage_errors[]']\n",
+          "stderr": "",
+          "duration_ms": 321.734,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "9a88ec23d650-c006-t02",
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

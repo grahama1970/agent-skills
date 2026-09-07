@@ -30,6 +30,7 @@ service (chatterbox, memory, scillm via doctor) is down.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -58,6 +59,10 @@ def fail(code: str, proc: subprocess.CompletedProcess | None = None) -> None:
     if proc is not None:
         detail = f" rc={proc.returncode} out={proc.stdout[-300:]} err={proc.stderr[-300:]}"
     raise SystemExit(f"FAIL_{code}{detail}")
+
+
+def _sha_file(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _load_grounding():
@@ -141,12 +146,23 @@ def materialize_cycle_context(cycle: Path, run_dir: Path, *, day: str | None = N
     sources = [str(s) for s in entry.get("source_memory_ids") or []]
     day_context = _fetch_day_context(persona, day, run_dir) if day else {"status": "skipped", "items": []}
     (run_dir / "day_context.json").write_text(json.dumps(day_context, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    dream_packet = {
+        "schema": "persona_dream.synthetic_dream_packet.v1",
+        "source_cycle": str(cycle),
+        "human_idea_lineage": day_context,
+        "residue_links": json.loads((run_dir / "residue_links.json").read_text(encoding="utf-8")),
+        "storyboard_plan": json.loads((run_dir / "storyboard_plan.json").read_text(encoding="utf-8")),
+        "dream_journal_sha256": _sha_file(run_dir / "dream_journal.v1.json"),
+        "synthetic_boundary": "synthetic dream packet; never literal event fact",
+    }
+    (run_dir / "dream_packet.json").write_text(json.dumps(dream_packet, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
     context_receipt = {
         "schema": "persona_dream.full_cycle_context_materialization.v1",
         "status": "PASS_CYCLE_CONTEXT_MATERIALIZED" if not missing else "BLOCKED_CYCLE_CONTEXT_MISSING",
         "cycle": str(cycle),
         "run_dir": str(run_dir),
-        "copied": copied,
+        "copied": copied + ["dream_packet.json"],
         "missing": missing,
         "source_memory_count": len(sources),
         "day_context_status": day_context.get("status"),

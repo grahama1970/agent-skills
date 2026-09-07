@@ -1,0 +1,26 @@
+{
+  "artifacts": {
+    "answer_invariance.json": "sha256:c680b123d6cb0078077c94d3ea135f11a6779c57b6490c7989cc1de7b5391e3a",
+    "chatterbox_delivery.json": "sha256:ec308cd7c7f636aa01f3805f2c7640cc182343299ce53401e2f67f98a02da8f1",
+    "emotional_carryover.json": "sha256:146448ef6f91c2eb08e750afb463b7834bf1cdb6296493a79b6f71d3baaadf6f",
+    "manifest.json": "sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44"
+  },
+  "claims": {
+    "does_not_prove": "reliability, human-perceived emotional value, human listener identity, production readiness, or separate mediation by dream versus journal",
+    "one_passing_pair_proves": "one local technical mechanism instance where dream+journal carryover changes bounded emotional framing and Chatterbox delivery without changing the answer body"
+  },
+  "failures": [],
+  "gate_statuses": {
+    "answer_invariance": "PASS_ANSWER_INVARIANCE",
+    "chatterbox_delivery": "PASS_CHATTERBOX_DELIVERY",
+    "emotional_carryover": "PASS_EMOTION_LINEAGE"
+  },
+  "live": true,
+  "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/evals/fixtures/pd_corrected_goal_v1.json",
+  "manifest_sha256": "sha256:4d7538bc3c0fed72e4ff5756f34c9f47081fee09d5b8191bf71a8e4a7eef7e44",
+  "mocked": false,
+  "proof_id": "PD-CORRECTED-GOAL-V1",
+  "run_root": "/tmp/persona-dream-corrected-goal-live-pair-final",
+  "schema": "persona_dream.corrected_goal_receipt.v1",
+  "status": "PASS_CORRECTED_GOAL_PAIRED_PROOF"
+}
