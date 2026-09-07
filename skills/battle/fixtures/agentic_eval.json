@@ -77,6 +77,14 @@
       }
     },
     {
+      "id": "battle.adaptive_lineage.broadcast_required_evidence",
+      "description": "Provider/Tau seeded-lineage broadcast checks reject absent replay counters and empty provider seed-citation collections instead of passing vacuous evidence.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.adaptive_lineage.selection_reporting",
       "description": "Provider/Tau broadcast selection reporting validates selection receipt shape separately from child-promotion canary observations and truthfully narrates child promotion, parent retention, and no eligible promotion.",
       "criticality": "critical",
@@ -338,6 +346,20 @@
         "Dogpile or memory seed is not bound into the provider prompt",
         "provider-generated child ignores seed receipt hashes",
         "broadcast report invents lineage instead of reading campaign receipts"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.broadcast_required_evidence",
+      "claim_id": "battle.adaptive_lineage.broadcast_required_evidence",
+      "seam_type": "receipt/status projection",
+      "criticality": "critical",
+      "failure_modes": [
+        "broadcast status passes when matched and required replay counters are both null",
+        "broadcast status passes empty provider seed-citation collections through all([])",
+        "seeded-lineage report advertises replay or seed evidence that was not explicitly bound"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -814,6 +836,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/provider-tau-seeded-lineage-spawn.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "review-broadcast-required-evidence",
+      "category": "review-broadcast-required-evidence",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.adaptive_lineage.broadcast_required_evidence"
+      ],
+      "seams": [
+        "adaptive_lineage.broadcast_required_evidence"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py review-broadcast-required-evidence --summary /tmp/battle-agentic-evals/review-broadcast-required-evidence.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=review-broadcast-required-evidence"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/review-broadcast-required-evidence.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

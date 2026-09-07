@@ -1893,10 +1893,31 @@ def _selection_reporting_campaign(
             },
         ],
         "artifact_integrity": {
+            "schema": "battle.adaptive_artifact_integrity.v1",
+            "status": "PASS",
+            "path": str(path.parent / "artifact-integrity-receipt.json"),
             "matched_replay_count": 2,
             "required_replay_count": 2,
             "matched_slot_count": 4,
             "required_slot_count": 4,
+            "judge_replays": [
+                {
+                    "generation": 1,
+                    "expected_generation": 1,
+                    "status": "PASS",
+                    "matched": True,
+                    "path": str(path.parent / "generation-1" / "judge-exact-replay" / "exact-replay-receipt.json"),
+                    "expected_sha256": "generation-1-replay-sha256",
+                },
+                {
+                    "generation": 2,
+                    "expected_generation": 2,
+                    "status": "PASS",
+                    "matched": True,
+                    "path": str(path.parent / "generation-2" / "judge-exact-replay" / "exact-replay-receipt.json"),
+                    "expected_sha256": "generation-2-replay-sha256",
+                },
+            ],
         },
         "selection": {
             "schema": "battle.adaptive_selection_receipt.v1",
@@ -2062,6 +2083,164 @@ def probe_review_selection_reporting(summary_path: Path) -> int:
             claims_proves=[
                 "Selection receipt validity is checked without requiring both teams to promote generation 2.",
                 "Broadcast commentary truthfully renders child promotion, parent retention, and no eligible promotion.",
+            ],
+            claims_does_not_prove=[
+                "fresh paid-provider campaign regeneration",
+                "durable memory write promotion",
+                "arbitrary target exploitability",
+            ],
+        ),
+    )
+
+
+def _write_broadcast_required_evidence_campaign(
+    path: Path,
+    *,
+    variant: str,
+    mutation: str,
+) -> None:
+    selected = {
+        "generation_1_fitness_receipt_sha256": "g1-fitness",
+        "generation_2_fitness_receipt_sha256": "g2-fitness",
+        "retention_decision": "GENERATION_2_SELECTED",
+        "selected_generation": 2,
+        "tie_break_reason": None,
+    }
+    _selection_reporting_campaign(path, run_id=variant, teams={"red": selected, "blue": selected})
+    payload = _read_json(path)
+    if mutation == "null-replay-counters":
+        payload["artifact_integrity"].update(
+            {
+                "matched_replay_count": None,
+                "required_replay_count": None,
+                "judge_replays": [],
+            }
+        )
+    elif mutation == "empty-seed-citations":
+        for ack in (payload.get("inheritance") or {}).values():
+            ack["mutation_seed_receipts_cited_in_provider_response"] = True
+            ack["mutation_seed_citations"] = []
+    elif mutation == "blue-empty-seed-citations":
+        blue_ack = (payload.get("inheritance") or {}).get("blue")
+        if not isinstance(blue_ack, dict):
+            raise AssertionError("blue inheritance acknowledgement missing")
+        blue_ack["mutation_seed_receipts_cited_in_provider_response"] = True
+        blue_ack["mutation_seed_citations"] = []
+    elif mutation != "valid":
+        raise ValueError(f"unknown required-evidence mutation: {mutation}")
+    _write_json(path, payload)
+
+
+def _render_required_evidence_variant(
+    root: Path,
+    *,
+    variant: str,
+    mutation: str,
+    expected_status: str,
+    expected_failed_checks: set[str],
+) -> dict[str, Any]:
+    variant_root = root / variant
+    campaign = variant_root / "campaign-receipt.json"
+    broadcast = variant_root / "broadcast"
+    _write_broadcast_required_evidence_campaign(campaign, variant=variant, mutation=mutation)
+    proc = _run(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "render_provider_tau_lineage_report.py"),
+            "--campaign-receipt",
+            str(campaign),
+            "--out",
+            str(broadcast),
+        ],
+        timeout=120,
+    )
+    (variant_root / "renderer.stdout.txt").write_text(proc.stdout, encoding="utf-8")
+    (variant_root / "renderer.stderr.txt").write_text(proc.stderr, encoding="utf-8")
+    receipt_path = broadcast / "provider-tau-lineage-broadcast-receipt.json"
+    if not receipt_path.is_file():
+        raise AssertionError(f"broadcast receipt missing for {variant}: {proc.stdout}{proc.stderr}")
+    receipt = _read_json(receipt_path)
+    if receipt.get("status") != expected_status:
+        raise AssertionError(f"unexpected broadcast status for {variant}: {receipt.get('status')} != {expected_status}")
+    if expected_status == "PASS" and proc.returncode != 0:
+        raise AssertionError(f"renderer exited nonzero for passing {variant}: {proc.stdout}{proc.stderr}")
+    if expected_status == "FAIL" and proc.returncode == 0:
+        raise AssertionError(f"renderer exited zero for failing {variant}")
+    checks = {item.get("name"): item for item in receipt.get("checks", [])}
+    failed_checks = {name for name, item in checks.items() if item.get("status") != "PASS"}
+    missing_failures = expected_failed_checks - failed_checks
+    if missing_failures:
+        raise AssertionError(f"{variant} did not fail required checks: {sorted(missing_failures)}; failed={sorted(failed_checks)}")
+    unexpected_failures = failed_checks - expected_failed_checks
+    if unexpected_failures:
+        raise AssertionError(f"{variant} had unexpected failed checks: {sorted(unexpected_failures)}")
+    return {
+        "name": variant,
+        "status": "PASS",
+        "expected_broadcast_status": expected_status,
+        "renderer_exit_code": proc.returncode,
+        "broadcast_receipt": str(receipt_path),
+        "failed_checks": sorted(failed_checks),
+        "check_errors": {
+            name: checks.get(name, {}).get("errors", [])
+            for name in sorted(expected_failed_checks)
+        },
+    }
+
+
+def probe_review_broadcast_required_evidence(summary_path: Path) -> int:
+    suite = "review-broadcast-required-evidence"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    checks = [
+        _render_required_evidence_variant(
+            out_root,
+            variant="valid-explicit-evidence",
+            mutation="valid",
+            expected_status="PASS",
+            expected_failed_checks=set(),
+        ),
+        _render_required_evidence_variant(
+            out_root,
+            variant="null-replay-counters",
+            mutation="null-replay-counters",
+            expected_status="FAIL",
+            expected_failed_checks={"docker_judge_replays_bound"},
+        ),
+        _render_required_evidence_variant(
+            out_root,
+            variant="empty-seed-citations",
+            mutation="empty-seed-citations",
+            expected_status="FAIL",
+            expected_failed_checks={"seed_hashes_cited_by_provider"},
+        ),
+        _render_required_evidence_variant(
+            out_root,
+            variant="blue-empty-seed-citations",
+            mutation="blue-empty-seed-citations",
+            expected_status="FAIL",
+            expected_failed_checks={"seed_hashes_cited_by_provider"},
+        ),
+    ]
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="provider_tau_broadcast_renderer_adversarial_receipt_readback",
+            checks=checks,
+            artifacts={
+                "required_evidence_root": str(out_root),
+                "valid_broadcast": checks[0]["broadcast_receipt"],
+                "null_replay_counters_broadcast": checks[1]["broadcast_receipt"],
+                "empty_seed_citations_broadcast": checks[2]["broadcast_receipt"],
+                "blue_empty_seed_citations_broadcast": checks[3]["broadcast_receipt"],
+            },
+            claims_proves=[
+                "Provider/Tau broadcast rendering requires explicit nonempty Judge replay evidence.",
+                "Provider/Tau broadcast rendering requires nonempty provider seed citations matching bound seed receipts.",
+                "Null replay counters and empty seed-citation collections fail closed instead of passing vacuous checks.",
             ],
             claims_does_not_prove=[
                 "fresh paid-provider campaign regeneration",
@@ -2362,6 +2541,8 @@ def main() -> int:
             return probe_provider_tau_seeded_lineage_spawn(args.summary, proof_root=args.proof_root)
         if args.suite == "review-selection-reporting":
             return probe_review_selection_reporting(args.summary)
+        if args.suite == "review-broadcast-required-evidence":
+            return probe_review_broadcast_required_evidence(args.summary)
         if args.suite == "provider-tau-memory-promotion":
             return probe_provider_tau_memory_promotion(args.summary, proof_root=args.proof_root)
         if args.suite == "current-status-adaptive-lineage-receipt":

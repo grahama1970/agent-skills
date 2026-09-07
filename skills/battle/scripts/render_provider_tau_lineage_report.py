@@ -467,25 +467,127 @@ def commentary_is_grounded(commentary: PlayByPlayCommentaryReceipt, red: TeamAct
     return True
 
 
+def _positive_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _docker_replay_status(integrity: dict[str, Any]) -> dict[str, Any]:
+    errors: list[str] = []
+    matched_replay_count = integrity.get("matched_replay_count")
+    required_replay_count = integrity.get("required_replay_count")
+    matched_slot_count = integrity.get("matched_slot_count")
+    required_slot_count = integrity.get("required_slot_count")
+    if not _positive_int(required_replay_count):
+        errors.append("required_replay_count must be a positive integer")
+    if not _positive_int(matched_replay_count):
+        errors.append("matched_replay_count must be a positive integer")
+    if not _positive_int(required_slot_count):
+        errors.append("required_slot_count must be a positive integer")
+    if not _positive_int(matched_slot_count):
+        errors.append("matched_slot_count must be a positive integer")
+    if not errors:
+        if matched_replay_count != required_replay_count:
+            errors.append("matched_replay_count must equal required_replay_count")
+        if matched_slot_count != required_slot_count:
+            errors.append("matched_slot_count must equal required_slot_count")
+
+    judge_replays = integrity.get("judge_replays")
+    if not isinstance(judge_replays, list) or not judge_replays:
+        errors.append("judge_replays must be a nonempty list")
+    elif _positive_int(required_replay_count) and len(judge_replays) != required_replay_count:
+        errors.append("judge_replays length must equal required_replay_count")
+    if isinstance(judge_replays, list):
+        for index, replay in enumerate(judge_replays):
+            if not isinstance(replay, dict):
+                errors.append(f"judge_replays[{index}] must be an object")
+                continue
+            if replay.get("status") != "PASS" or replay.get("matched") is not True:
+                errors.append(f"judge_replays[{index}] must be PASS and matched")
+            if not replay.get("path") or not replay.get("expected_sha256"):
+                errors.append(f"judge_replays[{index}] must bind path and expected_sha256")
+
+    return {
+        "name": "docker_judge_replays_bound",
+        "status": "PASS" if not errors else "FAIL",
+        "errors": errors,
+        "artifact_integrity": integrity.get("path"),
+        "matched_replay_count": matched_replay_count,
+        "required_replay_count": required_replay_count,
+        "matched_slot_count": matched_slot_count,
+        "required_slot_count": required_slot_count,
+        "judge_replay_count": len(judge_replays) if isinstance(judge_replays, list) else 0,
+    }
+
+
+def _seed_citation_status(
+    *,
+    seed_items: list[dict[str, Any]],
+    seed_bundle: dict[str, Any],
+    inheritance: dict[str, Any],
+) -> dict[str, Any]:
+    campaign_seeds = seed_bundle.get("receipts", [])
+    required_seeds = campaign_seeds if isinstance(campaign_seeds, list) and campaign_seeds else seed_items
+    errors: list[str] = []
+    if not required_seeds:
+        errors.append("seed receipts must be explicitly bound")
+    all_citations: list[Any] = []
+    citations_by_team: dict[str, list[dict[str, Any]]] = {}
+    for team in ("red", "blue"):
+        ack = inheritance.get(team) if isinstance(inheritance, dict) else None
+        raw_citations = ack.get("mutation_seed_citations", []) if isinstance(ack, dict) else []
+        team_citations = [cite for cite in raw_citations if isinstance(cite, dict)]
+        all_citations.extend(raw_citations if isinstance(raw_citations, list) else [])
+        citations_by_team[team] = team_citations
+        if not team_citations:
+            errors.append(f"{team}: provider seed citations must be nonempty")
+        for seed in required_seeds:
+            if not isinstance(seed, dict):
+                errors.append("seed receipt entries must be objects")
+                continue
+            kind = seed.get("kind")
+            sha256 = seed.get("sha256")
+            if not kind or not sha256:
+                errors.append("seed receipt must include kind and sha256")
+                continue
+            matches = [
+                citation
+                for citation in team_citations
+                if citation.get("kind") == kind and citation.get("sha256") == sha256
+            ]
+            if not matches:
+                errors.append(f"{team}: missing provider citation for seed {kind}:{sha256}")
+            elif not any(citation.get("cited_in_provider_response") is True for citation in matches):
+                errors.append(f"{team}: seed citation for {kind}:{sha256} is not marked cited")
+    if not all_citations:
+        errors.append("provider seed citations must be nonempty")
+
+    return {
+        "name": "seed_hashes_cited_by_provider",
+        "status": "PASS" if not errors else "FAIL",
+        "errors": errors,
+        "required_seed_count": len(required_seeds),
+        "provider_seed_citation_count": len([cite for cite in all_citations if isinstance(cite, dict)]),
+        "provider_seed_citation_count_by_team": {
+            team: len(citations) for team, citations in citations_by_team.items()
+        },
+        "citations": all_citations,
+    }
+
+
 def status_checks(receipt: dict[str, Any], seed_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     research = receipt.get("research") or {}
     inheritance = receipt.get("inheritance") or {}
     integrity = receipt.get("artifact_integrity") or {}
     generations = receipt.get("generations") or []
     seed_bundle = receipt.get("mutation_seed_receipts") or {}
-    provider_seed_citations = [
-        cite
-        for ack in inheritance.values()
-        for cite in ack.get("mutation_seed_citations", [])
-    ]
     return [
         {"name": "campaign_live_provider_tau", "status": "PASS" if receipt.get("status") == "PASS" and receipt.get("live") is True and receipt.get("mocked") is False and "tau_scillm" in str(receipt.get("live_mode")) else "FAIL"},
         {"name": "authorization_passed", "status": "PASS" if (receipt.get("authorization") or {}).get("status") == "PASS" else "FAIL"},
         {"name": "research_receipts_bound", "status": "PASS" if set(research) >= {"red", "blue"} and all((r or {}).get("source_count", 0) > 0 for r in research.values()) else "FAIL"},
         {"name": "seed_receipts_bound", "status": "PASS" if seed_items or seed_bundle.get("receipts") else "FAIL", "external_seed_count": len(seed_items), "campaign_seed_count": len(seed_bundle.get("receipts", []))},
-        {"name": "seed_hashes_cited_by_provider", "status": "PASS" if not seed_bundle.get("receipts") or all(c.get("cited_in_provider_response") for c in provider_seed_citations) else "FAIL", "citations": provider_seed_citations},
+        _seed_citation_status(seed_items=seed_items, seed_bundle=seed_bundle, inheritance=inheritance),
         {"name": "children_materialized", "status": "PASS" if len(generations) >= 2 and all(((generations[1].get("artifact_pipelines") or {}).get(t) or {}).get("selected_artifact_path") for t in ("red", "blue")) else "FAIL"},
-        {"name": "docker_judge_replays_bound", "status": "PASS" if integrity.get("matched_replay_count") == integrity.get("required_replay_count") and integrity.get("matched_slot_count") == integrity.get("required_slot_count") else "FAIL", "artifact_integrity": integrity.get("path")},
+        _docker_replay_status(integrity),
         selection_report_status(receipt),
     ]
 
