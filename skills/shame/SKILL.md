@@ -82,6 +82,11 @@ completion, because the final stop revalidates current proof bytes.
 - Immutable-goal turns must lead with a decisive answer headline: `IMMUTABLE_GOAL:
   COMPLETE`, `IMMUTABLE_GOAL: NOT_COMPLETE`, or `IMMUTABLE_GOAL: NEEDS_HUMAN`.
   Do not bury the goal state under proof, commits, or status metadata.
+- Any validated `state=needs_human` classification must be sent through
+  `$ops-discord` before the turn is accepted. No exceptions: if Discord delivery
+  cannot return `ops_discord.notification_receipt.v1` with `status=SENT`,
+  `message_id`, and `message_url`, the report is rejected rather than silently
+  relying on chat visibility.
 - Compile actionable status data once and dispatch at `agent_end`. Identical
   status text at distinct stops is legitimate; replaying one event is not.
 - Aborts, errors, length limits, and shutdown do not start reporting retries.

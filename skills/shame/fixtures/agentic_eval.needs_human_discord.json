@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "skill": "shame",
+  "trials": 2,
+  "proof_scope": "retained guard that needs_human status reports are routed through ops-discord and fail closed when delivery proof is absent",
+  "claims": {
+    "proves": "The Shame extension contains the needs_human -> ops-discord delivery hook, rejects absent delivery proof, documents the no-exceptions policy, and the configured Discord bot transport resolves in dry-run.",
+    "does_not_prove": "A live post was sent during this eval or that Discord will be reachable in every future session."
+  },
+  "cases": [
+    {
+      "name": "needs-human-discord-hook-present",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../.. && python3 - <<'PY'\nfrom pathlib import Path\nidx=Path('extensions/pi/lazy-report-shame-shame-shame/index.ts').read_text()\nskill=Path('skills/shame/SKILL.md').read_text()\nrequired=['notifyNeedsHumanViaDiscord(status)','statusState === \"needs_human\"','needs_human_discord_delivery_failed','ops_discord.notification_receipt.v1','receipt?.status !== \"SENT\"','!receipt?.message_id','!receipt?.message_url']\nmissing=[s for s in required if s not in idx]\nmissing += [s for s in ['Any validated `state=needs_human` classification must be sent through','$ops-discord','No exceptions'] if s not in skill]\nprint('missing', missing)\nraise SystemExit(1 if missing else 0)\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["missing []"]
+      }
+    },
+    {
+      "name": "ops-discord-bot-transport-dry-run-resolves",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "live_e2e",
+      "command": [
+        "bash",
+        "-c",
+        "cd ../../.. && ./skills/ops-discord/run.sh notify --discord-bot --channel-name horus --content 'needs-human discord guard dry-run probe' --dry-run --json | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d['schema'], d['status'], d['ok'], d['transport'], d['channel_name'], d['external_effects'])\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ops_discord.notification_receipt.v1 DRY_RUN True discord_bot horus False"]
+      }
+    }
+  ]
+}

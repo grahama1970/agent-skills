@@ -68,6 +68,9 @@ function isMutatingShellCommand(command: string): boolean {
 const MEMORY_ENABLED = !flagDisabled(process.env.LAZY_REPORT_SHAME_MEMORY_ENABLED || "1");
 const AUDIO_COOLDOWN_MS = 10_000;
 const CONTINUATION_GUARD_FILE = process.env.LAZY_REPORT_SHAME_CONTINUATION_GUARD_FILE || "/mnt/storage12tb/skills/shame/continuation-guard/current.json";
+const OPS_DISCORD_RUN = process.env.LAZY_REPORT_SHAME_OPS_DISCORD_RUN || "/home/graham/workspace/experiments/agent-skills/skills/ops-discord/run.sh";
+const OPS_DISCORD_NEEDS_HUMAN_CHANNEL = process.env.LAZY_REPORT_SHAME_OPS_DISCORD_NEEDS_HUMAN_CHANNEL || "horus";
+const NEEDS_HUMAN_DISCORD_RECEIPT_DIR = process.env.LAZY_REPORT_SHAME_NEEDS_HUMAN_DISCORD_RECEIPT_DIR || "/mnt/storage12tb/skills/shame/needs-human-discord";
 
 const HOLD_LABELS = new Set([
   "agent-active",
@@ -533,6 +536,32 @@ function evaluateRepeatedFailureGuard(status: any, failureCounts: Map<string, nu
     footer_failures: ["repeated_same_fingerprint_failure_without_debugger_or_human_question"],
     diagnostics: "",
   };
+}
+
+function notifyNeedsHumanViaDiscord(status: any): { ok: true; receiptPath: string; messageUrl?: string } | { ok: false; reason: string; receiptPath?: string } {
+  if (status?.state !== "needs_human") return { ok: true, receiptPath: "" };
+  const content = [
+    `Needs human: ${String(status?.goal || "agent task")}`,
+    `Action: ${String(status?.needs_human?.action || "unspecified")}`,
+    `Reason: ${String(status?.needs_human?.reason || "unspecified")}`,
+  ].join("\n").slice(0, 1800);
+  const proc = spawnSync(OPS_DISCORD_RUN, [
+    "notify", "--discord-bot", "--channel-name", OPS_DISCORD_NEEDS_HUMAN_CHANNEL,
+    "--content", content, "--json",
+  ], { encoding: "utf8", timeout: 60_000 });
+  const receiptPath = join(
+    NEEDS_HUMAN_DISCORD_RECEIPT_DIR,
+    `${Date.now()}-${createHash("sha256").update(JSON.stringify(status)).digest("hex").slice(0, 12)}.json`,
+  );
+  mkdirSync(dirname(receiptPath), { recursive: true });
+  const raw = String(proc.stdout || "").trim();
+  let receipt: any = null;
+  try { receipt = JSON.parse(raw); } catch { /* checked below */ }
+  writeFileSync(receiptPath, raw || JSON.stringify({ stderr: proc.stderr, status: proc.status }, null, 2));
+  if (proc.status !== 0 || receipt?.schema !== "ops_discord.notification_receipt.v1" || receipt?.status !== "SENT" || !receipt?.message_id || !receipt?.message_url) {
+    return { ok: false, reason: String(proc.stderr || proc.stdout || `ops-discord exited ${proc.status}`).slice(0, 500), receiptPath };
+  }
+  return { ok: true, receiptPath, messageUrl: String(receipt.message_url) };
 }
 
 function playShameAudio(lastPlayedAt: { value: number }): void {
@@ -1055,6 +1084,29 @@ export default function lazyReportShameShameShame(pi: any) {
       ? evaluateRepeatedFailureGuard(status, failureCounts, repeatedFailure)
       : null;
     if (repeatedFailureCheck) check = repeatedFailureCheck;
+    if (status && check.decision !== "reject" && statusState === "needs_human") {
+      const delivery = notifyNeedsHumanViaDiscord(status);
+      if (delivery.ok === false) {
+        check = {
+          schema: "lazy_report_shame.report_check.v2",
+          checker_version: "needs-human-discord-v1",
+          decision: "reject",
+          reason_codes: ["needs_human_discord_delivery_failed"],
+          footer_failures: [],
+          diagnostics: delivery.reason,
+          features: {
+            state: statusState,
+            status,
+            validation_result: {
+              schema: "pi.agent_status.validation_result.v1",
+              valid: false,
+              errors: [{ type: "needs_human_discord_delivery_failed", loc: ["needs_human"], msg: "state=needs_human must be delivered through ops-discord", ctx: { receipt: delivery.receiptPath || null } }],
+              steering: [{ code: "needs_human_discord_delivery_failed", loc: ["needs_human"], action: "send_ops_discord_notification", receipt: delivery.receiptPath || null }],
+            },
+          },
+        };
+      }
+    }
     if (status && check.decision !== "reject" && budget.current) {
       const reason = budget.current.validReport(statusState!);
       if (reason) check = {
