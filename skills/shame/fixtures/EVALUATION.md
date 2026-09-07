@@ -53,8 +53,10 @@ boundary traffic, validates collab question/answer packets, rejects self-accepta
 and checks `pi.receipt_envelope.v1` compatibility for the authority-changing closure;
 it does not prove the peer's judgment was independent or that every transport adapter
 enforces the schema yet. `CollabAnswer` validates against the `allowed_answers` list
-inside the packet; consumers must compare it to the originating `CollabQuestion` when
-resolving cross-packet trust.
+inside the packet, and `validate-exchange` compares it to the originating
+`CollabQuestion` before the exchange can be accepted. Transport adapters still
+carry strings; accepted collaboration traffic is the JSON payload that passes this
+exchange validator.
 
 ## Remaining proof limits
 

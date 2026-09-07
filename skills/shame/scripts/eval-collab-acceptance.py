@@ -63,10 +63,17 @@ acceptance = {
     "verified_result": "ACCEPTED AS SOLVED; no next gap",
 }
 
+question_path = write("question.json", question)
+answer_path = write("answer.json", answer)
 prose_result = run(sys.executable, str(SCHEMA), "validate", "-", input_text="looks good")
 q_result = run(sys.executable, str(SCHEMA), "validate", "-", input_text=json.dumps(question))
 bad_answer = dict(answer, answer="MAYBE")
 bad_answer_result = run(sys.executable, str(SCHEMA), "validate", "-", input_text=json.dumps(bad_answer))
+mismatched_id_path = write("answer-mismatched-id.json", dict(answer, question_id="other"))
+mismatched_allowed_path = write("answer-mismatched-allowed.json", dict(answer, allowed_answers=["NEEDS_FIX", "BOGUS"]))
+exchange_result = run(sys.executable, str(SCHEMA), "validate-exchange", str(question_path), str(answer_path))
+id_mismatch_result = run(sys.executable, str(SCHEMA), "validate-exchange", str(question_path), str(mismatched_id_path))
+allowed_mismatch_result = run(sys.executable, str(SCHEMA), "validate-exchange", str(question_path), str(mismatched_allowed_path))
 mismatch_acceptance = dict(acceptance, exchange_refs=[{"question_id": "other", "question_valid": True, "answer_valid": False}])
 mismatch_result = run(sys.executable, str(SCHEMA), "validate", "-", input_text=json.dumps(mismatch_acceptance))
 a_result = run(sys.executable, str(SCHEMA), "validate", "-", input_text=json.dumps(answer))
@@ -75,6 +82,9 @@ accept_result = run(sys.executable, str(SCHEMA), "validate", str(accept_path))
 assert prose_result.returncode == 1 and "invalid_json" in prose_result.stdout, prose_result.stdout
 assert q_result.returncode == 0, q_result.stdout + q_result.stderr
 assert bad_answer_result.returncode == 1 and "collab_answer_not_allowed" in bad_answer_result.stdout, bad_answer_result.stdout
+assert exchange_result.returncode == 0 and "exchange_valid" in exchange_result.stdout, exchange_result.stdout
+assert id_mismatch_result.returncode == 1 and "collab_question_id_mismatch" in id_mismatch_result.stdout, id_mismatch_result.stdout
+assert allowed_mismatch_result.returncode == 1 and "collab_allowed_answers_mismatch" in allowed_mismatch_result.stdout, allowed_mismatch_result.stdout
 assert mismatch_result.returncode == 1 and "collab_exchange_not_validated" in mismatch_result.stdout, mismatch_result.stdout
 assert a_result.returncode == 0, a_result.stdout + a_result.stderr
 assert accept_result.returncode == 0, accept_result.stdout + accept_result.stderr
@@ -118,6 +128,9 @@ report = {
     "prose_rejected": True,
     "question_validated": True,
     "answer_not_allowed_rejected": True,
+    "exchange_validated": True,
+    "question_id_mismatch_rejected": True,
+    "allowed_answers_mismatch_rejected": True,
     "exchange_mismatch_rejected": True,
     "missing_acceptance_rejected": True,
     "self_acceptance_rejected": True,

@@ -128,22 +128,46 @@ def validate_json(raw: str) -> BaseModel:
     return model.model_validate(data)
 
 
+def validate_exchange(question_raw: str, answer_raw: str) -> tuple[CollabQuestion, CollabAnswer]:
+    question = CollabQuestion.model_validate(json.loads(question_raw))
+    answer = CollabAnswer.model_validate(json.loads(answer_raw))
+    if answer.question_id != question.question_id:
+        raise PydanticCustomError("collab_question_id_mismatch", "answer.question_id must match question.question_id", {"field": "question_id"})
+    if answer.allowed_answers != question.allowed_answers:
+        raise PydanticCustomError("collab_allowed_answers_mismatch", "answer.allowed_answers must match question.allowed_answers", {"field": "allowed_answers"})
+    if answer.schema_ != question.required_response_schema:
+        raise PydanticCustomError("collab_response_schema_mismatch", "answer schema must match question.required_response_schema", {"field": "schema"})
+    return question, answer
+
+
 def main() -> int:
-    if len(sys.argv) != 3 or sys.argv[1] != "validate":
-        print(__doc__, file=sys.stderr)
-        return 2
-    raw = sys.stdin.read() if sys.argv[2] == "-" else Path(sys.argv[2]).read_text()
-    try:
-        validate_json(raw)
-    except ValidationError as exc:
-        print(json.dumps(invalid(exc.errors(include_url=False))))
-        return 1
-    except Exception as exc:
-        error_type = getattr(exc, "type", "invalid_json")
-        print(json.dumps(invalid([{"type": error_type, "loc": [], "msg": str(exc), "ctx": {}}])))
-        return 1
-    print(json.dumps({"schema": "lazy_report_shame.collab_acceptance.validation_result.v1", "valid": True}))
-    return 0
+    if len(sys.argv) == 3 and sys.argv[1] == "validate":
+        raw = sys.stdin.read() if sys.argv[2] == "-" else Path(sys.argv[2]).read_text()
+        try:
+            validate_json(raw)
+        except ValidationError as exc:
+            print(json.dumps(invalid(exc.errors(include_url=False))))
+            return 1
+        except Exception as exc:
+            error_type = getattr(exc, "type", "invalid_json")
+            print(json.dumps(invalid([{"type": error_type, "loc": [], "msg": str(exc), "ctx": {}}])))
+            return 1
+        print(json.dumps({"schema": "lazy_report_shame.collab_acceptance.validation_result.v1", "valid": True}))
+        return 0
+    if len(sys.argv) == 4 and sys.argv[1] == "validate-exchange":
+        try:
+            validate_exchange(Path(sys.argv[2]).read_text(), Path(sys.argv[3]).read_text())
+        except ValidationError as exc:
+            print(json.dumps(invalid(exc.errors(include_url=False))))
+            return 1
+        except Exception as exc:
+            error_type = getattr(exc, "type", "invalid_json")
+            print(json.dumps(invalid([{"type": error_type, "loc": [], "msg": str(exc), "ctx": {}}])))
+            return 1
+        print(json.dumps({"schema": "lazy_report_shame.collab_acceptance.validation_result.v1", "valid": True, "exchange_valid": True}))
+        return 0
+    print(__doc__, file=sys.stderr)
+    return 2
 
 
 if __name__ == "__main__":
