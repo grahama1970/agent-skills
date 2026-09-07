@@ -169,7 +169,9 @@ function stripStatusJson(content: unknown): unknown {
 }
 
 function renderStatusLine(status: any): string {
-  const lines = ["Status Report"];
+  const lines = [];
+  if (status?.answer) lines.push(`Answer: ${String(status.answer)}`);
+  lines.push("Status Report");
   lines.push(`- Goal: ${String(status?.goal || "unknown")}`);
   lines.push(`- State: ${String(status?.state || "unknown")}`);
   const changed = Array.isArray(status?.changed) ? status.changed : [];

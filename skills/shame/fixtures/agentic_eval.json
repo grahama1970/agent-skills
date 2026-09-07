@@ -65,6 +65,14 @@
       }
     },
     {
+      "id": "shame.question_turn_answer",
+      "description": "A terminal status report for a human question must carry a first-class answer and render it before status metadata.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "shame.task_scope_and_acceptance",
       "description": "Unapproved tool calls cannot write artifacts or add checks; accepted work stays terminal.",
       "criticality": "critical",
@@ -274,6 +282,34 @@
           "\"report_retries\": 0",
           "\"sum_readback_correct\": true",
           "\"done_rendered\": true"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "provider_error"
+        ]
+      }
+    },
+    {
+      "name": "question-turn-requires-answer",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "shame.question_turn_answer"
+      ],
+      "command": [
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-question-answer-live.py"
+      ],
+      "timeout_seconds": 210,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_LIVE_QUESTION_TURN_REQUIRES_ANSWER",
+          "\"report_retries\": 1",
+          "\"missing_answer_rejected\": true",
+          "\"failure_history_verified\": true",
+          "Answer: COMPLETE per project_watchdog.goal_completion.v1"
         ],
         "stdout_excludes": [
           "Traceback",

@@ -197,6 +197,7 @@ class AgentStatus(BaseModel):
     model_config = ConfigDict(extra="forbid")
     schema_: Literal["pi.agent_status.v1"] = Field(alias="schema")
     goal: str = Field(min_length=1)
+    answer: str | None = Field(default=None, min_length=1, max_length=300)
     goal_id: str | None = None
     goal_hash: str | None = Field(
         default=None,

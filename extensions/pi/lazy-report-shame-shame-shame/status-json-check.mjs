@@ -15,6 +15,7 @@ const flagEnabled = (value) => TRUTHY_FLAG_VALUES.has(String(value || '').trim()
 const MUTATING_TURN = flagEnabled(process.env.LRSSS_MUTATING_TURN);
 const FORCE_STATUS = flagEnabled(process.env.LRSSS_FORCE_STATUS);
 const STRICT_STATUS = flagEnabled(process.env.LRSSS_STRICT_STATUS);
+const USER_TEXT = String(process.env.LRSSS_USER_TEXT || '');
 
 const VALIDATOR = process.env.LRSSS_VALIDATOR || join(
   homedir(),
@@ -183,6 +184,19 @@ if (verdict.valid !== true) {
 }
 
 const parsedStatus = JSON.parse(statusJson);
+const terminalStates = new Set(['done', 'failed', 'needs_human']);
+if (USER_TEXT.includes('?') && terminalStates.has(String(verdict.state || '')) && !String(parsedStatus.answer || '').trim()) {
+  emit('reject', ['missing_answer_to_question'], {
+    state: verdict.state,
+    status: parsedStatus,
+    validation_result: {
+      schema: 'pi.agent_status.validation_result.v1',
+      valid: false,
+      errors: [{ type: 'missing_answer_to_question', loc: ['answer'], msg: 'question turns require status.answer', ctx: { field: 'answer' } }],
+      steering: [{ code: 'missing_answer_to_question', loc: ['answer'], field: 'answer', action: 'add_required_field' }],
+    },
+  });
+}
 emit('pass', ['valid_agent_status_json'], {
   state: verdict.state,
   status: parsedStatus,
