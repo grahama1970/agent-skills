@@ -705,6 +705,24 @@ def main() -> int:
     write_json(paths["provider_final_gate"], final_gate)
     write_ksml(paths["ksml"], scene_packet, reference_audit)
 
+    # Collapse the internal scene packet into a submittable fal reference-to-video
+    # request via the persona-agnostic best-practices-kling-video gate. Fail-closed:
+    # when a character element pack is missing, record the blocker instead of a request.
+    from scene_packet_to_fal_request import build_fal_request
+    fal_path = output_root / "kling_fal_request.json"
+    try:
+        fal_request = build_fal_request(scene_packet)
+        write_json(fal_path, fal_request)
+        fal_status = {"status": "PASS_FAL_REQUEST_COMPILED", "path": str(fal_path),
+                      "model_id": fal_request["model_id"], "submitted": False}
+    except FileNotFoundError as exc:
+        fal_status = {"status": "BLOCKED_ELEMENT_PACK_MISSING", "reason": str(exc),
+                      "model_id": None, "submitted": False}
+    write_json(output_root / "kling_fal_request_receipt.json", fal_status)
+    paths["fal_request_receipt"] = output_root / "kling_fal_request_receipt.json"
+    if fal_status["status"].startswith("PASS"):
+        paths["fal_request"] = fal_path
+
     status = "GENERATED_UNREVIEWED" if (
         media_lock["status"] == "PASS_MEDIA_LOCK" and token_receipt["status"] == "PASS"
     ) else "BLOCKED"

@@ -61,18 +61,17 @@ def _condense(scene: dict, env_element: str) -> str:
     return prompt
 
 
-@app.command()
-def build(
-    scene_packet: Path = typer.Argument(...),
-    out: Path = typer.Option(...),
-    env_element: str = typer.Option("tyranid_environment", help="element pack id used as environment @Image1"),
-    duration: str = typer.Option("7"),
-):
-    scene = json.loads(scene_packet.read_text())
+def build_fal_request(scene: dict, env_element: str = "tyranid_environment",
+                      duration: str = "7") -> dict:
+    """Collapse a kling.scene_packet.v1 dict into a validated fal request dict.
+
+    Raises FileNotFoundError (fail-closed) when a character element pack is
+    missing. Local file:// URLs are rewritten to public URLs by submit.
+    """
     elements = []
     for e in scene.get("element_list", []):
         cid = e["token"].strip("<>").replace("element_", "")
-        if cid == env_element:
+        if cid == env_element or e.get("type") == "environment":
             continue
         frontal, refs = _element_pack(cid)
         elements.append({
@@ -109,8 +108,21 @@ def build(
     check = json.loads(json.dumps(packet).replace("file:///", "https://pending.upload/"))
     KlingRequestPacket.model_validate(check)
     packet["seam_validation"] = {"kind": "kling_video.request.v1", "status": "PASS"}
+    return packet
+
+
+@app.command()
+def build(
+    scene_packet: Path = typer.Argument(...),
+    out: Path = typer.Option(...),
+    env_element: str = typer.Option("tyranid_environment", help="element pack id used as environment @Image1"),
+    duration: str = typer.Option("7"),
+):
+    scene = json.loads(scene_packet.read_text())
+    packet = build_fal_request(scene, env_element, duration)
     out.write_text(json.dumps(packet, indent=2))
-    typer.echo(json.dumps({"status": "PASS", "out": str(out), "elements": len(elements),
+    typer.echo(json.dumps({"status": "PASS", "out": str(out),
+                           "elements": len(packet["request"].get("elements", [])),
                            "prompt_chars": len(packet["request"]["prompt"])}))
 
 
