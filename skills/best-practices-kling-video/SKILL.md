@@ -16,6 +16,8 @@ triggers:
   - condense prompt for kling
   - compile kling request
   - which kling endpoint
+  - kling scene not matching script or contact sheet
+  - character facing away from camera in kling
 provides:
   - kling-request-compilation
   - kling-endpoint-routing
@@ -116,13 +118,28 @@ Kling consumes references literally. Shape them for the model, not the human:
   purple corona" rendered faithfully. Describe what the camera sees, never
   the lore name alone.
 
-## Rule 5: One clip, one action
+## Rule 5: Control face visibility and blocking in the prompt
+
+Element refs lock *who*; they do NOT control *how they are framed*. Kling will
+put a character back-to-camera unless told otherwise. To keep a face readable
+(required for identity review):
+
+- Positive: name the framing per character — "@Element1's face clearly visible
+  in three-quarter view toward camera".
+- Negative: `back of head only, face hidden`.
+
+Observed 2026-09-07: Embry rendered mostly back/side-facing until the 3/4-toward
+camera instruction + face-hidden negative were added (run T152608), after which
+her face was readable. This is a prompt-slot concern (camera/look slot), not a
+reference-image concern.
+
+## Rule 6: One clip, one action
 
 5s clips fit ONE action beat. A prompt listing three sequential actions gets
 a mushy average. For sequences use `multi_prompt` (one beat per entry, each
 ≤512 chars) or separate keyframe→I2V clips per shot.
 
-## Rule 6: No silent retry
+## Rule 7: No silent retry
 
 A consumed paid attempt is history. A repair means a new request hash, new
 validation, new authorization. Never loop resubmits hoping for a better draw —

@@ -18,6 +18,13 @@ negative prompt "extra person, third person, crowd") removed the extra
 character and rendered both leads faithfully (pipeline run T153728, built by
 `persona-dream/scripts/scene_packet_to_fal_request.py`, not by hand).
 
+## 2026-09-07: face visibility is a prompt/camera concern, not a ref concern
+Embry rendered back/side-facing even with a correct element reference, because
+reference images lock identity, not framing. Adding "@Element1's face clearly
+visible in three-quarter view toward camera" + negative prompt "back of head
+only, face hidden" (run T152608) made her face readable. Framing lives in the
+camera/look prompt slot.
+
 ## 2026-09-07: element schema 422
 `{"frontal_image_url": ...}` alone → 422
 "Either frontal_image_url and reference_image_urls or video_url must be
