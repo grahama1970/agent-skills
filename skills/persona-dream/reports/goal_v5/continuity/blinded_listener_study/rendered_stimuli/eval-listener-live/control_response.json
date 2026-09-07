@@ -261,7 +261,7 @@
                 "top_k": 1000,
                 "top_p": 0.96
               },
-              "generation_seconds": 3.128,
+              "generation_seconds": 3.367,
               "ignored_turbo_params": [
                 "cfg_weight",
                 "exaggeration",
@@ -269,30 +269,30 @@
               ],
               "latency_events": [
                 {
-                  "elapsed_ms": 0.0,
+                  "elapsed_ms": 0.001,
                   "name": "request_received"
                 },
                 {
-                  "elapsed_ms": 0.166,
+                  "elapsed_ms": 0.33,
                   "name": "generation_params_ready"
                 },
                 {
-                  "elapsed_ms": 3128.066,
+                  "elapsed_ms": 3367.793,
                   "engine": "chatterbox_base",
                   "name": "voice_conditioning_ready",
                   "render_lock": "held"
                 },
                 {
-                  "elapsed_ms": 3128.075,
-                  "generation_seconds": 3.128,
+                  "elapsed_ms": 3367.802,
+                  "generation_seconds": 3.367,
                   "name": "first_audio_ready"
                 },
                 {
-                  "elapsed_ms": 3131.816,
+                  "elapsed_ms": 3372.002,
                   "name": "audio_saved"
                 },
                 {
-                  "elapsed_ms": 3180.762,
+                  "elapsed_ms": 3422.014,
                   "name": "audio_metrics_ready"
                 }
               ],
@@ -346,7 +346,7 @@
                 "tempo_factor": null,
                 "tempo_source": null
               },
-              "realtime_factor": 0.626,
+              "realtime_factor": 0.673,
               "reference_audio": "/data/embry_ref.wav",
               "requested_delivery_stage": "satisfied",
               "requested_device": "cuda",
@@ -389,7 +389,7 @@
               "text": "I need you to wait before you commit to that plan, because the constraint changed this morning.",
               "text_sha256": "59824392ddd4638e5dfa90fb77004a502cd107e53e5eeb145939ed6533b6bb1c",
               "tone": "neutral_warm",
-              "total_elapsed_ms": 3180.787,
+              "total_elapsed_ms": 3422.036,
               "voice_conditioning": {
                 "emotion_knobs": {
                   "cfg_weight": 0.5,
@@ -576,7 +576,7 @@
         "top_k": 1000,
         "top_p": 0.96
       },
-      "generation_seconds": 3.128,
+      "generation_seconds": 3.367,
       "ignored_turbo_params": [
         "cfg_weight",
         "exaggeration",
@@ -584,30 +584,30 @@
       ],
       "latency_events": [
         {
-          "elapsed_ms": 0.0,
+          "elapsed_ms": 0.001,
           "name": "request_received"
         },
         {
-          "elapsed_ms": 0.166,
+          "elapsed_ms": 0.33,
           "name": "generation_params_ready"
         },
         {
-          "elapsed_ms": 3128.066,
+          "elapsed_ms": 3367.793,
           "engine": "chatterbox_base",
           "name": "voice_conditioning_ready",
           "render_lock": "held"
         },
         {
-          "elapsed_ms": 3128.075,
-          "generation_seconds": 3.128,
+          "elapsed_ms": 3367.802,
+          "generation_seconds": 3.367,
           "name": "first_audio_ready"
         },
         {
-          "elapsed_ms": 3131.816,
+          "elapsed_ms": 3372.002,
           "name": "audio_saved"
         },
         {
-          "elapsed_ms": 3180.762,
+          "elapsed_ms": 3422.014,
           "name": "audio_metrics_ready"
         }
       ],
@@ -663,7 +663,7 @@
       },
       "pause_after_ms": 0,
       "phase": "answer_chunk",
-      "realtime_factor": 0.626,
+      "realtime_factor": 0.673,
       "reference_audio": "/data/embry_ref.wav",
       "requested_delivery_stage": "satisfied",
       "requested_device": "cuda",
@@ -706,7 +706,7 @@
       "text": "I need you to wait before you commit to that plan, because the constraint changed this morning.",
       "text_sha256": "59824392ddd4638e5dfa90fb77004a502cd107e53e5eeb145939ed6533b6bb1c",
       "tone": "neutral_warm",
-      "total_elapsed_ms": 3180.787,
+      "total_elapsed_ms": 3422.036,
       "voice_conditioning": {
         "emotion_knobs": {
           "cfg_weight": 0.5,
@@ -902,15 +902,15 @@
   ],
   "latency_events": [
     {
-      "elapsed_ms": 0.001,
+      "elapsed_ms": 0.002,
       "name": "batch_received"
     },
     {
-      "elapsed_ms": 0.218,
+      "elapsed_ms": 0.302,
       "name": "batch_dir_ready"
     },
     {
-      "elapsed_ms": 0.222,
+      "elapsed_ms": 0.31,
       "enabled": false,
       "hit": false,
       "name": "blessed_qra_lookup_done",
@@ -918,19 +918,19 @@
     },
     {
       "chunk_count": 1,
-      "elapsed_ms": 0.583,
+      "elapsed_ms": 0.824,
       "name": "render_plan_ready"
     },
     {
       "asr_verified": true,
       "chunk_index": 1,
-      "elapsed_ms": 3328.473,
+      "elapsed_ms": 3558.455,
       "name": "chunk_done",
       "ok": true
     },
     {
       "bytes": 240078,
-      "elapsed_ms": 3389.254,
+      "elapsed_ms": 3618.551,
       "name": "finished_audio_ready"
     }
   ],
@@ -1039,7 +1039,7 @@
     "unknown_tag_behavior": "synthesized_as_literal_text"
   },
   "tone": "neutral_warm",
-  "total_elapsed_ms": 3389.288,
+  "total_elapsed_ms": 3618.59,
   "voice_delivery": {
     "confidence": null,
     "delivery_stage": "neutral",

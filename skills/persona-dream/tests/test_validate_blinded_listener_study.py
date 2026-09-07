@@ -93,6 +93,36 @@ def test_matching_stimulus_hashes_are_ready_for_human_raters(tmp_path):
     assert "human_responses_complete" in receipt["failed_gates"]
 
 
+def test_asr_attempts_keep_exact_gate_but_accept_best_readback(tmp_path, monkeypatch):
+    study = _write_study(tmp_path)
+    transcripts = iter([
+        "The answer is changed.",
+        "The answer is unchanged.",
+    ])
+    monkeypatch.setattr(validator, "transcribe", lambda *_args: next(transcripts))
+    args = type(
+        "Args",
+        (),
+        {
+            "study_dir": study,
+            "out": None,
+            "required_raters": 20,
+            "asr": True,
+            "asr_base_url": "http://127.0.0.1:9000",
+            "asr_api_key": "none",
+            "max_wer": 0.0,
+            "asr_attempts": 2,
+        },
+    )()
+
+    receipt = validator.run(args)
+
+    assert receipt["status"] == "PASS_BLINDED_LISTENER_STUDY_READY_FOR_HUMAN_RATERS"
+    assert receipt["stimuli"][0]["asr"]["wer"] == 0.0
+    assert receipt["stimuli"][0]["asr"]["attempt_count"] == 2
+    assert len(receipt["stimuli"][0]["asr"]["attempts"]) == 2
+
+
 def test_missing_stimulus_blocks(tmp_path):
     study = _write_study(tmp_path)
     (study / "stimuli" / "control.wav").unlink()

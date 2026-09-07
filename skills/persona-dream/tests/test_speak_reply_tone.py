@@ -177,3 +177,12 @@ def test_collect_herself_cue_becomes_exact_programmatic_pause():
     assert "[sniff] [sniff] ... give me a second" in text
     assert len(chunks) >= 2
     assert any(int(chunk["pause_after_ms"]) >= 900 for chunk in chunks[:-1])
+
+
+def test_render_chunks_strip_ellipsis_from_speakable_text_but_keep_exact_pause():
+    text = "A threat would have let me keep my boundary clean ... An invitation asked more of me."
+    chunks = chatterbox_utterances.compile_render_chunks(text, "neutral_warm")
+
+    assert chunks[0]["text"] == "A threat would have let me keep my boundary clean"
+    assert "..." not in " ".join(str(chunk["text"]) for chunk in chunks)
+    assert int(chunks[0]["pause_after_ms"]) == 900
