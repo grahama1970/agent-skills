@@ -26,7 +26,9 @@ export interface UiDiagram {
 
 export interface UiElement {
   children?: UiElement[]
-  shape?: { preset: string; fill_role?: string; stroke?: { width_pt: number } }
+  icon?: { library_id: string; tint_role: string }
+  icon_svg?: string
+  shape?: { preset: string; fill_role?: string; stroke?: { width_pt: number; role?: string; dash?: string } }
   rotation_deg?: number
   fragment_index?: number | null
   kind?: string

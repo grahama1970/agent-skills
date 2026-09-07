@@ -711,10 +711,12 @@ def emit_document_pptx(
             _emit_element(slide.shapes, element, root, palette=palette, scale=scale, assets=assets, asset_base=asset_base, receipt=receipt)
         receipt["slides"].append({"id": slide_doc.id, "elements": sum(1 for _ in __import__("pitchdeck.document", fromlist=["iter_tree"]).iter_tree(slide_doc.elements))})
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    from .pptx_timing import apply_slide_timing, spid_resolver
+    from .pptx_timing import apply_slide_timing, apply_slide_transition, spid_resolver
 
     timing_receipts = []
     for slide_obj, slide_doc in slide_pairs:
+        supported = apply_slide_transition(slide_obj, slide_doc.transition, slide_doc.transition_duration_ms)
+        receipt.setdefault('transitions', []).append({'id': slide_doc.id, 'emitted': supported, 'duration_ms': slide_doc.transition_duration_ms, 'style': slide_doc.transition.value})
         if not slide_doc.animations:
             continue
         timing_receipt = apply_slide_timing(slide_obj, slide_doc.animations, spid_resolver(slide_obj))

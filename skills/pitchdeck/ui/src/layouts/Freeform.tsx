@@ -115,8 +115,10 @@ async function postFrame(slideId: string, elementId: string, frame: { x: number;
 }
 
 function ElementContent({ element, responsive = false }: { element: UiElement; responsive?: boolean }) {
-  if (element.children) return <div className="relative h-full w-full">{element.children.map(child => <div key={child.id} data-animation-target={child.id} className="absolute" style={{ left: `${child.x * 100}%`, top: `${child.y * 100}%`, width: `${child.w * 100}%`, height: `${child.h * 100}%`, transform: child.rotation_deg ? `rotate(${child.rotation_deg}deg)` : undefined }}><ElementContent element={child} responsive={responsive} /></div>)}</div>
-  if (element.shape) return <div className="h-full w-full" style={{ background: 'var(--deck-accent)', border: '2px solid var(--deck-diagram-accent)', borderRadius: element.shape.preset === 'ellipse' ? '50%' : element.shape.preset === 'round_rect' ? 20 : 0, clipPath: element.shape.preset === 'triangle' ? 'polygon(50% 0%,100% 100%,0% 100%)' : element.shape.preset === 'diamond' ? 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' : undefined }} />
+  if (element.icon_svg) return <span aria-hidden data-icon-id={element.icon?.library_id} className="block h-full w-full [&_svg]:h-full [&_svg]:w-full" style={{ color: 'var(--deck-header-text, #f2eadc)' }} dangerouslySetInnerHTML={{ __html: element.icon_svg }} />
+  const colors: Record<string, string> = { primary: 'var(--deck-accent, #e2ac62)', secondary: 'var(--deck-header-background, #211917)', canvas: 'var(--deck-background, #0c0908)', ink: 'var(--deck-element-text, #ece2d3)', muted: '#a99787', highlight_warm: '#e2ac62', highlight_green: '#93a289', alert: '#d1703c', program: '#e2ac62' }
+  if (element.children) return <div className="relative h-full w-full">{element.children.map(child => <div key={child.id} data-element-id={child.id} data-animation-target={child.id} className="absolute" style={{ left: `${child.x * 100}%`, top: `${child.y * 100}%`, width: `${child.w * 100}%`, height: `${child.h * 100}%`, transform: child.rotation_deg ? `rotate(${child.rotation_deg}deg)` : undefined }}><ElementContent element={child} responsive={responsive} /></div>)}</div>
+  if (element.shape) return <div className="h-full w-full" style={{ background: element.shape.fill_role ? colors[element.shape.fill_role] : 'transparent', border: element.shape.stroke ? `${element.shape.stroke.width_pt}px ${element.shape.stroke.dash === 'dashed' ? 'dashed' : 'solid'} ${colors[element.shape.stroke.role || 'primary']}` : 'none', borderRadius: element.shape.preset === 'ellipse' ? '50%' : ['round_rect', 'rounded_rect'].includes(element.shape.preset) ? 20 : 0, clipPath: element.shape.preset === 'triangle' ? 'polygon(50% 0%,100% 100%,0% 100%)' : element.shape.preset === 'diamond' ? 'polygon(50% 0%,100% 50%,50% 100%,0% 50%)' : undefined }} />
   if (element.diagram) return <CanonicalDiagram elementId={element.id} diagram={element.diagram} responsive={responsive} />
   if (element.type === 'asset' && element.asset) {
     if (element.asset.missing || !element.asset.file) {
@@ -154,7 +156,7 @@ function ElementContent({ element, responsive = false }: { element: UiElement; r
       style={{
         fontSize: responsive ? `${Math.max(18, Math.min(element.size_pt, element.role === 'title' ? 40 : 28))}px` : `${(element.size_pt / 72) * (CANVAS_HEIGHT / 7.5)}px`, // pt → 144dpi canvas px (WebGPT review P1-11)
         fontWeight: element.bold ? 700 : 400,
-        color: 'var(--deck-element-text, ' + (element.color ?? '#3a4550') + ')',  // dark ink on the house white canvas
+        color: (element.role === 'title' || element.id === 'title') && element.y + element.h <= .12 ? 'var(--deck-header-text, #f2eadc)' : element.role === 'delivery-status' ? (element.color || '#93a289') : 'var(--deck-element-text, ' + (element.color ?? '#3a4550') + ')',  // dark ink on the house white canvas
         fontFamily: element.role === 'title' ? 'var(--deck-heading-font, Arial)' : 'var(--deck-body-font, Arial)',
         textAlign: element.align as 'left' | 'center' | 'right',
       }}
@@ -213,6 +215,7 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
       <SnapGuideOverlay guides={guides} />
       {slide.elements.map((element) => {
         if (element === reflowHeader) return null
+        const headerIcon = element.id === 'header-topic-icon'
         const proposed = editing && previewElement?.id === element.id ? previewElement : undefined
         const frame = proposed ?? frames[element.id] ?? { x: element.x, y: element.y, w: element.w, h: element.h }
         if (!editing) {
@@ -221,13 +224,16 @@ export function Freeform({ slide, responsive = false }: { slide: UiSlide; respon
               key={element.id}
               data-element-id={element.id}
               data-animation-target={element.id}
-              className={`freeform-element ${responsive ? '' : 'absolute'} ${Number.isFinite(build) && slide.reveal !== 'step' && !slide.animations?.length && element.entrance && element.entrance !== 'none' ? `entrance-${element.entrance}` : ''}`}
+              className={`freeform-element ${responsive && !headerIcon ? '' : 'absolute'} ${Number.isFinite(build) && slide.reveal !== 'step' && !slide.animations?.length && element.entrance && element.entrance !== 'none' ? `entrance-${element.entrance}` : ''}`}
               style={{
                 transform: element.rotation_deg ? `rotate(${element.rotation_deg}deg)` : undefined,
                 left: responsive ? undefined : frame.x * CANVAS_WIDTH,
-                top: responsive ? undefined : frame.y * CANVAS_HEIGHT,
-                width: responsive ? undefined : frame.w * CANVAS_WIDTH,
-                height: responsive ? undefined : frame.h * CANVAS_HEIGHT,
+                right: responsive && headerIcon ? 24 : undefined,
+                top: responsive ? headerIcon ? 20 : undefined : frame.y * CANVAS_HEIGHT,
+                width: responsive ? headerIcon ? 40 : undefined : frame.w * CANVAS_WIDTH,
+                height: responsive ? headerIcon ? 40 : undefined : frame.h * CANVAS_HEIGHT,
+                zIndex: headerIcon ? 100 : undefined,
+                aspectRatio: responsive && element.children ? `${frame.w * CANVAS_WIDTH}/${frame.h * CANVAS_HEIGHT}` : undefined,
                 // Reflow must not enlarge small marks into full-width artwork.
                 maxWidth: responsive && element.type === 'asset' ? frame.w * CANVAS_WIDTH : undefined,
                 animationDelay: element.entrance_delay_ms ? `${element.entrance_delay_ms}ms` : undefined,

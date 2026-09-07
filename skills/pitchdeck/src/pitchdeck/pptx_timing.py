@@ -38,6 +38,22 @@ _DIR_SUB = {"left": "8", "right": "2", "up": "1", "down": "4", "in": "16", "out"
             "horizontal": "10", "vertical": "5"}
 
 
+def apply_slide_transition(slide, transition, duration_ms: int) -> bool:
+    """Emit the supported fade transition; other styles remain caller-visible limits."""
+    name = transition.value if hasattr(transition, 'value') else transition
+    if name == 'none':
+        return True
+    if name != 'fade':
+        return False
+    p_ns = 'http://schemas.openxmlformats.org/presentationml/2006/main'
+    p14_ns = 'http://schemas.microsoft.com/office/powerpoint/2010/main'
+    element = etree.Element(f'{{{p_ns}}}transition', nsmap={'p14': p14_ns}, spd='fast')
+    element.set(f'{{{p14_ns}}}dur', str(duration_ms))
+    etree.SubElement(element, f'{{{p_ns}}}fade')
+    slide._element.insert_element_before(element, 'p:timing', 'p:extLst')
+    return True
+
+
 def _subtype(a) -> str:
     """Directional bitfield only where the pane uses one (grounded: fly 8=left)."""
     if a.phase in ("emphasis", "motion") or a.effect in ("appear", "fade", "expand", "rise", "grow-turn"):

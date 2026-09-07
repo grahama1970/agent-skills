@@ -2,11 +2,13 @@ import { readFileSync, realpathSync, readdirSync, existsSync } from 'node:fs'
 import { dirname, join, relative, isAbsolute, sep } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+export interface DeckElement { id: string; text?: string; children?: DeckElement[] }
+
 export interface DeckContext {
   directory: string
   url: string
   receipt: { operation: string; outputs: { document_path?: string; asset_base?: string; bundle_dir?: string; output_dir?: string; deck_data?: string } }
-  deck: { deck_id: string; title: string; revision: number; slides: { id: string; hidden?: boolean }[] }
+  deck: { deck_id: string; title: string; revision: number; slides: { id: string; hidden?: boolean; elements?: DeckElement[] }[] }
 }
 
 function contained(root: string, path: string) {

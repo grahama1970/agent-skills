@@ -62,6 +62,9 @@ def apply_presentation_theme(presentation, tokens, heading_texts=()):
             for shape in shapes:
                 if shape.name == 'chrome:band-texture':
                     continue
+                if shape.name == 'el:header-topic-icon':
+                    for node in shape._element.findall('.//{http://schemas.openxmlformats.org/drawingml/2006/main}srgbClr'):
+                        node.set('val', tokens.header_text.lstrip('#'))
                 if hasattr(shape, 'shapes'): walk(shape.shapes)
                 if not shape.has_text_frame: continue
                 heading = shape.name in {'el:title', 'chrome:band-title'} or shape.text.strip().casefold() in headings
@@ -73,5 +76,6 @@ def apply_presentation_theme(presentation, tokens, heading_texts=()):
                         color = tokens.muted if original == tokens.muted.lstrip('#').lower() or shape.name == 'chrome:page-number' else tokens.text
                         if shape.name == 'chrome:identity-wordmark': color = tokens.accent
                         if heading and shape.top < presentation.slide_height * .12: color = tokens.header_text
-                        run.font.color.rgb = rgb(color)
+                        if shape.text.strip() not in {'✓', '✔'}:
+                            run.font.color.rgb = rgb(color)
         walk(slide.shapes)

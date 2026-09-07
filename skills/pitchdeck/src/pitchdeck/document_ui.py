@@ -25,7 +25,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .document import DeckDocument, DocElementKind
+from .document import DeckDocument, DocElementKind, iter_tree
+
+UI_KINDS = {DocElementKind.TEXT, DocElementKind.IMAGE, DocElementKind.ICON, DocElementKind.DIAGRAM, DocElementKind.GROUP, DocElementKind.SHAPE}
 
 UI_SCHEMA = "pitchdeck.ui_deck_bundle.v1"
 
@@ -67,7 +69,15 @@ def _element_payload(element, assets=None, asset_dir: str = "assets") -> dict[st
             "missing": asset is None,
         }
     if element.kind is DocElementKind.ICON and element.icon:
+        from .icons import resolve_icon
         payload["icon"] = {"library_id": element.icon.library_id, "tint_role": element.icon.tint_role}
+        from lxml import etree
+        icon_root = etree.fromstring(resolve_icon(element.icon.library_id, require_editable=True)["svg"].encode())
+        for part in icon_root.iter():
+            for attribute in ("stroke", "fill"):
+                if part.get(attribute, "none") != "none":
+                    part.set(attribute, "currentColor")
+        payload["icon_svg"] = etree.tostring(icon_root, encoding="unicode")
     if element.kind is DocElementKind.DIAGRAM and element.diagram:
         payload["diagram"] = {
             "recipe": element.diagram.recipe,
@@ -133,13 +143,8 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
                 "items": [],
                 "callouts": [],
             }
-        for element in slide.elements:
-            if element.kind not in {
-                DocElementKind.TEXT, DocElementKind.IMAGE, DocElementKind.ICON,
-                DocElementKind.DIAGRAM, DocElementKind.GROUP, DocElementKind.SVG,
-                DocElementKind.FIGURE, DocElementKind.SHAPE, DocElementKind.LINE,
-                DocElementKind.RICH_TEXT,
-            }:
+        for element in iter_tree(slide.elements):
+            if element.kind not in UI_KINDS:
                 unsupported.append(f"{slide.id}/{element.id}:{element.kind.value}")
         slides.append({
             "id": slide.id,
@@ -155,10 +160,8 @@ def project_document_to_ui(document: DeckDocument, *, asset_dir: str = "assets")
             # re-deriving a layout the document already decided
             "elements": [_element_payload(e, assets=assets, asset_dir=asset_dir)
                           for e in sorted(slide.elements, key=lambda e: e.z)
-                          if e.kind in {DocElementKind.TEXT, DocElementKind.IMAGE, DocElementKind.DIAGRAM, DocElementKind.GROUP, DocElementKind.SHAPE}
-                          # band-duty titles are absorbed by the chrome band,
-                          # exactly as the PPTX emitter absorbs them (skip_title)
-                          and not (e.role == "title" and e.bbox.y < 0.15)],
+                          # Freeform owns title deduplication; retain its element ID for source sync.
+                          if e.kind in UI_KINDS],
             # carry the document's OWN transition/reveal decisions: reveal order
             # follows the argument, so re-deciding it here would change rhetoric
             "transition": slide.transition.value if hasattr(slide.transition, "value") else str(slide.transition),

@@ -3,30 +3,44 @@ import { promisify } from 'node:util'
 import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { join, relative, isAbsolute, sep } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { deckContext, type DeckContext } from './deck-context'
+import { deckContext, type DeckContext, type DeckElement } from './deck-context'
+
+function allElements(elements: DeckElement[] = []): DeckElement[] {
+  return elements.flatMap(e => [e, ...allElements(e.children)])
+}
 
 const exec = promisify(execFile)
-interface Mapping { file: string; line: number; launch?: string; locals?: string[] }
+interface Mapping { file: string; line: number; endLine?: number; endColumn?: number; breakLine?: number; launch?: string; locals?: string[]; concepts?: Record<string, Mapping> }
 interface Session { vscodeSessionId: string; stopSequence: number; selectedThreadId?: number }
 interface BridgeStatus { id?: string; status: string; proofValid?: boolean; sessionState?: Session; [key: string]: unknown }
 const states = new Map<string, { path?: string; session?: Session; busy: boolean }>()
 let workspaceBusy = false
 
-function mapping(context: DeckContext, workspace: string, slide: string): Mapping | null {
-  if (!context.deck.slides.some(s => s.id === slide && !s.hidden)) throw new Error('Slide not in active deck')
+function mapping(context: DeckContext, workspace: string, slide: string, concept = ''): Mapping | null {
+  const selected = context.deck.slides.find(s => s.id === slide && !s.hidden)
+  if (!selected) throw new Error('Slide not in active deck')
   const path = join(context.directory, 'debugger.json')
   if (!existsSync(path)) return null
   const config = JSON.parse(readFileSync(path, 'utf8'))
   if (config.schema !== 'pitchdeck.debugger_map.v1') throw new Error('Invalid debugger map schema')
-  const item: Mapping = config.slides?.[slide]
-  if (!item) return null
+  const base: Mapping = config.slides?.[slide]
+  if (!base) return null
+  if (concept && !allElements(selected.elements).some(e => e.id === concept)) throw new Error('Concept not in active slide')
+  const item = concept ? base.concepts?.[concept] : base
+  if (!item) throw new Error('Concept has no source mapping')
   if (typeof item.file !== 'string' || isAbsolute(item.file)) throw new Error('Mapped file must be workspace-relative')
   const file = realpathSync(join(workspace, item.file))
   const rel = relative(workspace, file)
   if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new Error('Mapped file escapes approved workspace')
-  if (!Number.isSafeInteger(item.line) || item.line < 1 || item.line > readFileSync(file, 'utf8').split('\n').length) throw new Error('Invalid mapped line')
+  const lines = readFileSync(file, 'utf8').split('\n')
+  const endLine = item.endLine ?? item.line
+  if (!Number.isSafeInteger(item.line) || item.line < 1 || !Number.isSafeInteger(endLine) || endLine < item.line || endLine > lines.length) throw new Error('Invalid mapped range')
+  const endColumn = item.endColumn ?? lines[endLine - 1].length + 1
+  if (!Number.isSafeInteger(endColumn) || endColumn < 1 || endColumn > lines[endLine - 1].length + 1 || (endLine === item.line && endColumn === 1)) throw new Error('Mapped selection must be nonempty and contained')
   if (item.locals && (!Array.isArray(item.locals) || item.locals.length > 20 || item.locals.some(n => typeof n !== 'string' || !/^[\w]+$/.test(n)))) throw new Error('Invalid local variable names')
-  return { ...item, file }
+  if (item.breakLine !== undefined && (!Number.isSafeInteger(item.breakLine) || item.breakLine < item.line || item.breakLine > endLine)) throw new Error('Breakpoint must be within mapped source range')
+  const { concepts: _concepts, ...target } = item
+  return { ...target, file, endLine, endColumn }
 }
 
 /** Local trusted-workspace adapter; browser supplies action/slide IDs, never commands,
@@ -42,10 +56,14 @@ export function debuggerApi(skillRoot: string) {
     try {
       if (req.method === 'GET') {
         const slide = new URL(req.url || '/', 'http://localhost').searchParams.get('slide') || context.deck.slides[0]?.id
-        const target = mapping(context, workspace, slide)
+        const query = new URL(req.url || '/', 'http://localhost').searchParams
+        const target = mapping(context, workspace, slide, query.get('concept') || '')
+        const configPath = join(context.directory, 'debugger.json')
+        const configured = existsSync(configPath) ? JSON.parse(readFileSync(configPath, 'utf8')).slides?.[slide]?.concepts || {} : {}
+        const concepts = allElements(context.deck.slides.find(s => s.id === slide)?.elements).filter(e => Object.hasOwn(configured, e.id)).map(e => ({ id: e.id, label: e.text || e.id }))
         const receipt: BridgeStatus | null = state.path && existsSync(state.path) ? JSON.parse(readFileSync(state.path, 'utf8')) : null
         if (receipt?.sessionState) state.session = receipt.sessionState
-        res.end(JSON.stringify({ mapping: target && { ...target, file: relative(workspace, target.file) }, workspace, receipt, session: state.session, busy: state.busy, status: !target ? 'unmapped' : receipt?.status || 'not-connected' }))
+        res.end(JSON.stringify({ mapping: target && { ...target, file: relative(workspace, target.file) }, concepts, workspace, receipt, session: state.session, busy: state.busy, status: !target ? 'unmapped' : receipt?.status || 'not-connected' }))
         return
       }
       if (req.method !== 'POST' || req.headers['x-pitchdeck-control'] !== '1') throw new Error('Explicit debugger control header required')
@@ -57,13 +75,17 @@ export function debuggerApi(skillRoot: string) {
       const request = JSON.parse(body)
       const allowed = ['reveal', 'start', 'inspect', 'continue', 'stepOver', 'terminate']
       if (!allowed.includes(request.action)) throw new Error('Unsupported debugger action')
-      const target = mapping(context, workspace, request.slide_id)
-      if (!target) throw new Error('No debugger mapping for this slide; configure debugger.json beside the emitted deck')
+      if (request.concept_id !== undefined && typeof request.concept_id !== 'string') throw new Error('Invalid concept ID')
+      const target = mapping(context, workspace, request.slide_id, request.concept_id || '')
+      if (!target) {
+        if (request.action === 'reveal') { res.end(JSON.stringify({ status: 'unmapped', mapping: null })); return }
+        throw new Error('No debugger mapping for this slide; configure debugger.json beside the emitted deck')
+      }
       const args = ['--workspace', workspace, '--workspace-artifacts', '--expect-extension-host-kind', process.env.PITCHDECK_DEBUG_HOST_KIND || 'ui', '--action', request.action, '--no-save-before-start']
-      if (request.action === 'reveal') args.push('--reveal', `${target.file}:${target.line}:1:${target.line}:1`)
+      if (request.action === 'reveal') args.push('--reveal', `${target.file}:${target.line}:1:${target.endLine}:${target.endColumn}`)
       else if (request.action === 'start') {
         if (!target.launch || typeof target.launch !== 'string') throw new Error('Slide has no launch configuration')
-        args.push('--launch-config-name', target.launch, '--break', `${target.file}:${target.line}`)
+        args.push('--launch-config-name', target.launch, '--break', `${target.file}:${target.breakLine ?? target.line}`)
       } else {
         const session = state.session
         if (!session || request.session_id !== session.vscodeSessionId || request.stop_sequence !== session.stopSequence) throw new Error('Stale or missing debugger session; inspect current state first')

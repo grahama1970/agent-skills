@@ -432,6 +432,18 @@ falling back to another deck. Canonical documents export PPTX/PDF through
 delivery still requires `verify-publish`. Slides have stable `#/slide/<id>`
 links, per-deck resume, title/ID search, and Back/Forward history.
 
+`debugger.json` mappings accept optional `endLine`/`endColumn` for nonempty
+source selections and `breakLine` for a separate executable stop inside that
+range. Existing line-only mappings select the complete line. Optional `concepts`
+use existing slide element IDs as keys, each with its own mapping. With Sync
+on, clicking a mapped presentation element or choosing the accessible **Code for**
+selector reveals that range. Neither action starts a debuggee; Run requires an
+explicit launch mapping. Unknown concepts and out-of-range selections refuse.
+`configure_debugger.py` accepts `--end-line`, `--end-column`, `--break-line`,
+`--concept-id`, and `--reveal-only`. Source-only evidence does not need a launch.
+The OAI consumer retains live coverage in `fixtures/presentation_sync_eval.json`
+in the oai-trial repository, including independent bridge readback and refusal.
+
 `Rehearse` hides editing chrome and private notes and offers a browser
 `getDisplayMedia` recorder — the human chooses the capture source and mic;
 nothing is recorded without that permission. `Sync VS Code` (Lucide `CodeXml`)

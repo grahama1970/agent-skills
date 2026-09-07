@@ -602,6 +602,7 @@ def _render_appendix(slide, spec) -> None:
 def _render_freeform(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path) -> None:
     """Absolutely positioned elements; fractions of the canvas map to inches."""
     for element in spec.elements:
+        first_shape = len(slide.shapes)
         x = element.x * SLIDE_W
         y = element.y * SLIDE_H
         w = element.w * SLIDE_W
@@ -634,6 +635,8 @@ def _render_freeform(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Pat
                 asset_base_dir=asset_base_dir,
                 temp_dir=temp_dir,
             )
+        for index in range(first_shape, len(slide.shapes)):
+            slide.shapes[index].name = f"sem:{element.id}"
 
 
 def _render_slide(slide, spec, asset_map, asset_base_dir: Path, temp_dir: Path, *, deck_kicker: str = "", deck_tagline: str | None = None) -> None:
@@ -765,6 +768,8 @@ def _build_pptx_inner(
                 deck_tagline=deck.deck.subtitle,
             )
             _add_footer(slide, deck.deck.title, spec.order, spec.visibility)
+            from .pptx_timing import apply_slide_transition
+            apply_slide_transition(slide, spec.transition, spec.transition_duration_ms)
             if spec.animations:
                 from .pptx_timing import apply_slide_timing, spid_resolver
 
