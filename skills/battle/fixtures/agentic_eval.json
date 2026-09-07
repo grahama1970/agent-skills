@@ -85,6 +85,14 @@
       }
     },
     {
+      "id": "battle.receipts.hash_finalization",
+      "description": "Verified primitive Docker Judge receipt digests are computed from the finalized receipt file bytes or retained in a separate descriptor that matches those final bytes.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.adaptive_lineage.broadcast_required_evidence",
       "description": "Provider/Tau seeded-lineage broadcast checks reject absent replay counters and empty provider seed-citation collections instead of passing vacuous evidence.",
       "criticality": "critical",
@@ -384,6 +392,20 @@
         "Dogpile or memory seed is not bound into the provider prompt",
         "provider-generated child ignores seed receipt hashes",
         "broadcast report invents lineage instead of reading campaign receipts"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "receipts.hash_finalization",
+      "claim_id": "battle.receipts.hash_finalization",
+      "seam_type": "receipt/hash-readback",
+      "criticality": "critical",
+      "failure_modes": [
+        "Judge receipt hashes earlier bytes and then rewrites the same file with the embedded digest",
+        "parent receipts trust an in-memory digest that no longer matches final on-disk receipt bytes",
+        "digest descriptors point at stale or non-final receipt bytes"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -935,6 +957,39 @@
         "artifacts": [
           {
             "path": "/tmp/battle-agentic-evals/provider-tau-seeded-lineage-spawn.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "review-receipt-hash-finalization",
+      "category": "review-receipt-hash-finalization",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.receipts.hash_finalization"
+      ],
+      "seams": [
+        "receipts.hash_finalization"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py review-receipt-hash-finalization --summary /tmp/battle-agentic-evals/review-receipt-hash-finalization.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=review-receipt-hash-finalization"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/review-receipt-hash-finalization.json",
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800

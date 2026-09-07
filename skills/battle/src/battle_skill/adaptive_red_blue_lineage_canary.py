@@ -2484,6 +2484,7 @@ def _run_verified_primitive_docker_judge(
     stdout_path.write_text(proc.stdout, encoding="utf-8")
     stderr_path.write_text(proc.stderr, encoding="utf-8")
     status = "PASS" if proc.returncode == 0 and verdict != "INSUFFICIENT_EVIDENCE" else "INSUFFICIENT_EVIDENCE"
+    receipt_path = judge_dir / "judge-receipt.json"
     receipt = {
         "schema": "battle.verified_primitive_docker_judge_receipt.v1",
         "status": status,
@@ -2497,11 +2498,23 @@ def _run_verified_primitive_docker_judge(
         "stdout_path": str(stdout_path),
         "stderr_path": str(stderr_path),
         "elapsed_seconds": round(time.perf_counter() - started, 6),
+        "path": str(receipt_path),
     }
-    receipt_path = _write_json(judge_dir / "judge-receipt.json", receipt)
-    receipt["path"] = str(receipt_path)
-    receipt["sha256"] = _sha(receipt_path)
+    _write_json(receipt_path, receipt)
+    receipt_sha256 = _sha(receipt_path)
+    descriptor = {
+        "schema": "battle.finalized_receipt_digest_descriptor.v1",
+        "status": status,
+        "receipt_path": str(receipt_path),
+        "receipt_sha256": receipt_sha256,
+        "receipt_bytes": receipt_path.stat().st_size,
+        "digest_scope": "finalized_receipt_file_bytes",
+        "receipt_contains_embedded_sha256": False,
+    }
+    descriptor_path = _write_json(judge_dir / "judge-receipt.digest.json", descriptor)
+    receipt["sha256"] = receipt_sha256
+    receipt["sha256_descriptor_path"] = str(descriptor_path)
+    receipt["sha256_descriptor_sha256"] = _sha(descriptor_path)
     if proc.returncode != 0:
         raise RuntimeError(f"Docker Judge failed for {candidate_id}: {receipt}")
-    _write_json(receipt_path, receipt)
     return receipt

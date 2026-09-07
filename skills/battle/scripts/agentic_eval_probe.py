@@ -777,6 +777,88 @@ def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
         )
 
 
+def probe_review_receipt_hash_finalization(summary_path: Path) -> int:
+    suite = "review-receipt-hash-finalization"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    from battle_skill import adaptive_red_blue_lineage_canary as canary
+
+    receipt = canary._run_verified_primitive_docker_judge(
+        docker_image=os.environ.get("BATTLE_REVIEW_HASH_DOCKER_IMAGE", "python:3.12-slim"),
+        judge_dir=out_root / "red-success",
+        role="red",
+        generation=4,
+        candidate_id="receipt-hash-finalization",
+        verdict="RED_SUCCESS",
+    )
+    receipt_path = Path(str(receipt["path"]))
+    descriptor_path = Path(str(receipt["sha256_descriptor_path"]))
+    final_receipt = _read_json(receipt_path)
+    descriptor = _read_json(descriptor_path)
+    final_sha256 = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+    descriptor_sha256 = hashlib.sha256(descriptor_path.read_bytes()).hexdigest()
+    checks = [
+        {
+            "name": "returned_digest_matches_final_receipt_bytes",
+            "status": "PASS" if receipt.get("sha256") == final_sha256 else "FAIL",
+            "returned_sha256": receipt.get("sha256"),
+            "final_sha256": final_sha256,
+        },
+        {
+            "name": "descriptor_digest_matches_final_receipt_bytes",
+            "status": "PASS" if descriptor.get("receipt_sha256") == final_sha256 else "FAIL",
+            "descriptor_receipt_sha256": descriptor.get("receipt_sha256"),
+            "final_sha256": final_sha256,
+        },
+        {
+            "name": "receipt_file_is_not_rewritten_with_self_digest",
+            "status": "PASS"
+            if final_receipt.get("path") == str(receipt_path)
+            and "sha256" not in final_receipt
+            and descriptor.get("receipt_contains_embedded_sha256") is False
+            else "FAIL",
+            "receipt_path_field": final_receipt.get("path"),
+            "receipt_has_sha256_field": "sha256" in final_receipt,
+        },
+        {
+            "name": "descriptor_is_separate_finalized_artifact",
+            "status": "PASS"
+            if descriptor.get("digest_scope") == "finalized_receipt_file_bytes"
+            and descriptor.get("receipt_path") == str(receipt_path)
+            and receipt.get("sha256_descriptor_sha256") == descriptor_sha256
+            else "FAIL",
+            "descriptor": str(descriptor_path),
+            "descriptor_sha256": descriptor_sha256,
+        },
+    ]
+    failed = [item for item in checks if item["status"] != "PASS"]
+    if failed:
+        raise AssertionError(f"receipt hash finalization checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="local_docker_primitive_judge_receipt_readback",
+            checks=checks,
+            artifacts={
+                "judge_receipt": str(receipt_path),
+                "digest_descriptor": str(descriptor_path),
+            },
+            claims_proves=[
+                "Verified primitive Docker Judge receipt hashes are computed from the finalized judge-receipt.json bytes.",
+                "The digest is retained in a separate descriptor and in the parent return value instead of being embedded by rewriting the hashed receipt.",
+            ],
+            claims_does_not_prove=[
+                "full provider/Tau campaign quality",
+                "arbitrary target exploitability",
+            ],
+        ),
+    )
+
+
 def probe_scorekeeper_adversarial(summary_path: Path) -> int:
     with tempfile.TemporaryDirectory(prefix="battle-agentic-score-") as raw:
         root = Path(raw)
@@ -3248,6 +3330,8 @@ def main() -> int:
             return probe_authorization_sampling(args.summary, samples=args.samples, seed=args.seed)
         if args.suite == "review-cli-authorization-target-binding":
             return probe_review_cli_authorization_target_binding(args.summary)
+        if args.suite == "review-receipt-hash-finalization":
+            return probe_review_receipt_hash_finalization(args.summary)
         if args.suite == "scorekeeper-adversarial":
             return probe_scorekeeper_adversarial(args.summary)
         if args.suite == "adaptive-lineage-contracts":
