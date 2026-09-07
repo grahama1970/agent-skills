@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "skill": "surf",
+  "trials": 2,
+  "proof_scope": "Live X11 desktop index consistency; no focus or desktop changes",
+  "cases": [{
+    "name": "kde-index-matches-x11-root",
+    "type": "positive",
+    "real_world": true,
+    "command": ["python3", "../scripts/eval_kde_desktop_index.py"],
+    "timeout_seconds": 90,
+    "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/surf-kde-desktop-index.json", "json_pointer": "/status", "equals": "PASS"}]}
+  }, {
+    "name": "missing-display-does-not-invent-x11-index",
+    "type": "adversarial",
+    "real_world": true,
+    "command": ["python3", "../scripts/eval_kde_desktop_index.py", "--without-display"],
+    "timeout_seconds": 90,
+    "expected": {"exit_code": 0, "artifacts": [{"path": "/tmp/surf-kde-desktop-index.json", "json_pointer": "/status", "equals": "PASS"}]}
+  }]
+}

@@ -104,9 +104,13 @@ def kde_inventory(*, use_helper: bool = True) -> dict[str, Any]:
             return helper_inventory
 
     issues: list[str] = []
-    current_index_raw = _qdbus("org.kde.KWin", "/KWin", "currentDesktop")
+    # Match wmctrl -lx's zero-based X11 indices. KWin currentDesktop uses
+    # desktop numbers, not that index; mixing them moves windows off-screen.
+    desktop_code, desktop_output, _ = _run(["wmctrl", "-d"])
+    desktop_rows = [line.split() for line in desktop_output.splitlines()] if desktop_code == 0 else []
+    current_index_raw = next((row[0] for row in desktop_rows if len(row) > 1 and row[1] == "*"), None)
     current_id = _qdbus("org.kde.KWin", "/VirtualDesktopManager", "current")
-    count_raw = _qdbus("org.kde.KWin", "/VirtualDesktopManager", "count")
+    count_raw = str(len(desktop_rows)) if desktop_rows else _qdbus("org.kde.KWin", "/VirtualDesktopManager", "count")
     activity_id = _qdbus("org.kde.ActivityManager", "/ActivityManager/Activities", "CurrentActivity")
 
     def parse_int(value: str | None) -> int | None:
