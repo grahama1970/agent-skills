@@ -1,0 +1,72 @@
+schema_version: 1
+theme: fixing-opus-neon-v1
+template: fanout-anatomy
+metadata:
+  title: Project Watchdog architecture
+  description: Cron turns GitHub agent-work tickets into one bounded Ask/Tau repair, validates receipts with Pydantic, routes failure codes through triage-error, and verifies the SVG through agentic-evals.
+source:
+  title: Cron tick + GitHub queue
+  subtitle: one bounded project-watchdog invocation
+targets:
+  - number: 1
+    heading: GUARD + SCAN
+    detail: Pydantic checks state, registry, issues; target locks avoid races
+    accent: cyan
+  - number: 2
+    heading: REPAIR LANE
+    detail: Ask compiles DAG; Tau runs creator and independent reviewer
+    accent: green
+  - number: 3
+    heading: PROOF + CLOSE
+    detail: Pydantic validates plans and receipts; ticket reruns proof
+    accent: amber
+  - number: 4
+    heading: AUDIT + TRIAGE
+    detail: closure audit reopens gaps; triage-error owns failure codes
+    accent: red
+caption: EMPTY QUEUE IS NOT PROOF; RECEIPTS, Pydantic, ticket proof, and agentic-evals close the loop
+timeline:
+  cycle_ms: 12000
+  events:
+    - target: source-node
+      recipe: fade-slide-y
+      start_ms: 150
+      end_ms: 900
+      from_y: -24
+    - target: connector-0
+      recipe: draw-stroke
+      start_ms: 900
+      end_ms: 1350
+    - target: target-card-0
+      recipe: fade
+      start_ms: 1350
+      end_ms: 1800
+    - target: connector-1
+      recipe: draw-stroke
+      start_ms: 1100
+      end_ms: 1550
+    - target: target-card-1
+      recipe: fade
+      start_ms: 1550
+      end_ms: 2000
+    - target: connector-2
+      recipe: draw-stroke
+      start_ms: 1300
+      end_ms: 1750
+    - target: target-card-2
+      recipe: fade
+      start_ms: 1750
+      end_ms: 2200
+    - target: connector-3
+      recipe: draw-stroke
+      start_ms: 1500
+      end_ms: 1950
+    - target: target-card-3
+      recipe: fade
+      start_ms: 1950
+      end_ms: 2400
+    - target: source-glow
+      recipe: halo-pulse
+      start_ms: 7800
+      end_ms: 11600
+      peak_opacity: 0.35

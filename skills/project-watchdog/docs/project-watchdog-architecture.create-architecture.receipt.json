@@ -1,0 +1,112 @@
+{
+  "schema_version": "create_architecture.delivery.v1",
+  "status": "DRAFT",
+  "route": {
+    "skill": "create-svg",
+    "mode": "executable",
+    "view": "lifecycle",
+    "surface": "svg",
+    "reason": "Use a bounded native SVG scene; unsupported layouts need another surface.",
+    "instructions": "/home/graham/workspace/experiments/agent-skills/skills/create-svg/SKILL.md"
+  },
+  "request": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/bundle/request.json",
+    "sha256": "d4413c18c0e600efa2ac50ef908dedbca38892fa09d402ad6c6411578915255f",
+    "bytes": 2778
+  },
+  "native_input": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/bundle/input.yml",
+    "sha256": "4273db541c2362a9fbfb7f5e89f0287f5428bd21b75bc9c59fd48e36cc4d4278",
+    "bytes": 2033
+  },
+  "artifact": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/bundle/diagram.svg",
+    "sha256": "7486a9a37e74b31d138bdf7e1042e01b20836f6f49a69616f21bd391046e58c8",
+    "bytes": 9226
+  },
+  "preview": {
+    "path": "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/bundle/preview.html",
+    "sha256": "43afef6ee74aa5607af397e2187a45f51dacdb8ce0adfa6efab92cf52e8b10cb",
+    "bytes": 555
+  },
+  "sources": [
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/project-watchdog/scripts/project_watchdog.py",
+      "sha256": "e68ce61a52a5c4317ebece1c369bb3e260c8e6cb45a1aac01f72b2815b265516",
+      "start_line": 59,
+      "end_line": 74
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/project-watchdog/scripts/watchdog/commands.py",
+      "sha256": "68f1ec26b73cad80fc4bd418a796ada6791e4f8a7eee7bf4184803b1947bef35",
+      "start_line": 444,
+      "end_line": 921
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/project-watchdog/scripts/watchdog/registry.py",
+      "sha256": "88a9375499735e15c65e601a3df6ba9d719060c77a2d8c1cee6623b52a8eeb48",
+      "start_line": 153,
+      "end_line": 210
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/project-watchdog/scripts/watchdog/handlers.py",
+      "sha256": "4db5a4bb3d0c0310feace6e0571120471b111d2675eb5971ee422f07999a02f1",
+      "start_line": 1027,
+      "end_line": 2160
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/project-watchdog/scripts/watchdog/core.py",
+      "sha256": "cea61af0b93cb77cee05e0bae204f1c632314217c51022cac0107015f1b56d71",
+      "start_line": 427,
+      "end_line": 470
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/project-watchdog/scripts/watchdog/models.py",
+      "sha256": "49dfb52066a6119caba4b967987310d4b693ecbbea7b58641c01edca8cc2e943",
+      "start_line": 1,
+      "end_line": 151
+    },
+    {
+      "path": "/home/graham/workspace/experiments/agent-skills/skills/project-watchdog/scripts/watchdog/receipt_schema.py",
+      "sha256": "ef279a39e203d29829c899e607932ef58f32727971e4858fae968e5c276e352a",
+      "start_line": 1,
+      "end_line": 229
+    }
+  ],
+  "commands": [
+    [
+      "/home/graham/workspace/experiments/agent-skills/skills/create-svg/run.sh",
+      "render",
+      "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/.architecture-j299np_d/input.yml",
+      "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/.architecture-j299np_d/diagram.svg"
+    ],
+    [
+      "/home/graham/workspace/experiments/agent-skills/skills/create-svg/run.sh",
+      "validate",
+      "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/.architecture-j299np_d/diagram.svg",
+      "--receipt",
+      "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/.architecture-j299np_d/backend.receipt.json"
+    ],
+    [
+      "/home/graham/workspace/experiments/agent-skills/skills/create-svg/run.sh",
+      "preview",
+      "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/.architecture-j299np_d/diagram.svg",
+      "/mnt/storage12tb/skills/create-architecture/outputs/project-watchdog-architecture-md-20260907T131143Z/.architecture-j299np_d/preview.html"
+    ]
+  ],
+  "created_at": "2026-09-07T13:11:44.721347Z",
+  "mocked": false,
+  "live": true,
+  "visual_review": "NOT_RUN",
+  "semantic_review": "NOT_ESTABLISHED",
+  "proof_scope": "Real renderer invocation, input/artifact hashes, current source fingerprints, and structural validation. Not semantic accuracy or visual acceptance.",
+  "limitations": [
+    "The SVG is a four-card lifecycle overview, not a complete call graph.",
+    "Human visual approval is not claimed; create-svg structural validation and agentic-evals contract checks are separate.",
+    "Draft only: complete the selected skill's human and visual gates before publication."
+  ],
+  "seam_validation": {
+    "kind": "source-to-diagram-draft",
+    "status": "PASS"
+  }
+}

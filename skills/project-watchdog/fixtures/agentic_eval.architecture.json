@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "skill": "project-watchdog",
+  "trials": 2,
+  "proof_scope": "Retained architecture-documentation contract for ARCHITECTURE.md and the checked-in create-svg chart.",
+  "claims": {
+    "proves": "ARCHITECTURE.md embeds the checked-in create-svg chart, names the control-plane seams a project agent needs, and the SVG is a deterministic render of the checked-in scene validated by create-svg.",
+    "does_not_prove": "Human visual approval, live cron dispatch, live Ask/Tau provider execution, or ticket closure. Those require their own live receipts."
+  },
+  "cases": [
+    {
+      "name": "architecture-doc-svg-contract",
+      "type": "positive",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "timeout_seconds": 240,
+      "command": [
+        "python3",
+        "../evals/architecture_contract.py",
+        "validate",
+        "--root",
+        "..",
+        "--report",
+        "/mnt/storage12tb/skills/project-watchdog/outputs/architecture-contract-eval.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["ARCHITECTURE_CONTRACT_PASS"],
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/architecture-contract-eval.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          }
+        ]
+      }
+    },
+    {
+      "name": "architecture-contract-fails-on-missing-required-label",
+      "type": "adversarial",
+      "evidence_class": "deterministic",
+      "timeout_seconds": 60,
+      "command": [
+        "python3",
+        "../evals/architecture_contract.py",
+        "assert-label",
+        "--root",
+        "..",
+        "--label",
+        "NOT_A_PROJECT_WATCHDOG_ARCHITECTURE_LABEL"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stdout_contains": ["ARCHITECTURE_CONTRACT_LABEL_MISSING"]
+      }
+    }
+  ]
+}
