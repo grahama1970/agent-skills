@@ -125,14 +125,22 @@ def submit(packet_path: Path, out_dir: Path = typer.Option(...)):
 
     packet = json.loads(packet_path.read_text())
     req = packet["request"]
+
+    def _up(u: str) -> str:
+        return fal_client.upload_file(u[len("file://"):]) if u.startswith("file://") else u
+
     for el in req.get("elements", []):
-        for key in ("frontal_image_url",):
-            if el[key].startswith("file://"):
-                url = fal_client.upload_file(el[key][len("file://"):])
-                el[key] = url
-                el["reference_image_urls"] = [url]
-    KlingRequestPacket.model_validate(packet if "seam_validation" not in packet
-                                      else {k: v for k, v in packet.items()})
+        if el.get("frontal_image_url", "").startswith("file://"):
+            el["frontal_image_url"] = _up(el["frontal_image_url"])
+        if el.get("reference_image_urls"):
+            el["reference_image_urls"] = [_up(u) for u in el["reference_image_urls"]]
+    for key in ("image_urls",):
+        if req.get(key):
+            req[key] = [_up(u) for u in req[key]]
+    for key in ("start_image_url", "end_image_url"):
+        if req.get(key):
+            req[key] = _up(req[key])
+    KlingRequestPacket.model_validate(packet)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "kling_request.json").write_text(json.dumps(packet, indent=2))
     result = fal_client.subscribe(packet["model_id"], arguments=req, with_logs=True)
