@@ -61,6 +61,14 @@
       }
     },
     {
+      "id": "battle.adaptive_lineage.judge_authority",
+      "description": "Adaptive lineage primitive Judge probes cannot assign live Red or Blue success without target execution and quarantine synthetic process probes as non-security proof.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.adaptive_lineage.contracts",
       "description": "Adaptive lineage contract tests reject slot mutation, replay mismatch, invalid parent/child lineage, and reducer drift",
       "criticality": "critical",
@@ -344,6 +352,20 @@
       "criticality": "critical",
       "failure_modes": [
         "Blue advisory fields become score authority"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "adaptive_lineage.judge_authority",
+      "claim_id": "battle.adaptive_lineage.judge_authority",
+      "seam_type": "adaptive-lineage/judge-authority",
+      "criticality": "critical",
+      "failure_modes": [
+        "_judge_population assigns RED_SUCCESS or BLUE_SUCCESS from candidate index",
+        "_run_verified_primitive_docker_judge echoes a host-supplied verdict inside Docker without executing the candidate against the target",
+        "synthetic primitive process probes are promoted as security proof or Memory eligibility"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -869,6 +891,39 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 800
+          }
+        ]
+      }
+    },
+    {
+      "name": "review-judge-authority",
+      "category": "review-judge-authority",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.adaptive_lineage.judge_authority"
+      ],
+      "seams": [
+        "adaptive_lineage.judge_authority"
+      ],
+      "timeout_seconds": 240,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py review-judge-authority --summary /tmp/battle-agentic-evals/review-judge-authority.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=review-judge-authority"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/review-judge-authority.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 1000
           }
         ]
       }

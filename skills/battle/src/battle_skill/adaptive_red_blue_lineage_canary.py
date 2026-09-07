@@ -73,6 +73,7 @@ def run_adaptive_red_blue_lineage_canary(
     )
     if authorization["status"] != "PASS":
         blocked = {"schema": SCHEMA, "status": "BLOCKED", "reason": "target_authorization_failed",
+                   "campaign_status": "BLOCKED",
                    "battle_id": battle_id, "run_id": run_id, "authorization": authorization,
                    "execution_started": False, "fixture_fallback_used": False}
         _write_json(out_dir / "campaign-receipt.json", blocked)
@@ -553,6 +554,7 @@ def run_adaptive_red_blue_lineage_canary(
     receipt = {
         "schema": SCHEMA,
         "status": status,
+        "campaign_status": status,
         "reason": reason,
         "battle_id": battle_id,
         "run_id": run_id,
@@ -586,6 +588,14 @@ def run_adaptive_red_blue_lineage_canary(
         "research": {"red": red_research, "blue": blue_research},
         "mutation_seed_receipts": seed_bundle,
         "mutation_seed_bundle_path": str(seed_bundle_path),
+        "judge_authority": {
+            "synthetic_verdicts_allowed": False,
+            "primitive_process_probe_security_authority": False,
+            "live_judge_authority": "docker_target_execution_and_exact_replay",
+            "selection_source": "judge_derived_fitness_receipts",
+            "generation_judge_receipts": [str(g1_judge_path), str(g2_judge_path)],
+            "exact_replay_required": True,
+        },
         "selection": selection,
         "observations": {
             "generation_1": g1_observations,
@@ -2316,44 +2326,45 @@ def _judge_population(**kwargs: Any) -> dict[str, Any]:
     judge_dir = generation_dir / "verified-primitives" / "docker-judge"
     judged: list[dict[str, Any]] = []
     bad: list[dict[str, Any]] = []
-    for index, item in enumerate(reviewed):
+    for item in reviewed:
         candidate = dict(item)
         candidate_id = str(candidate.get("candidate_id") or candidate.get("specimen_id"))
-        verdict = (
-            "RED_SUCCESS"
-            if role == "red" and index == 0
-            else "BLUE_SUCCESS"
-            if role == "blue" and index == 0
-            else "INSUFFICIENT_EVIDENCE"
-        )
         receipt = _run_verified_primitive_docker_judge(
             docker_image=docker_image,
             judge_dir=judge_dir / candidate_id,
             role=role,
             generation=generation,
             candidate_id=candidate_id,
-            verdict=verdict,
         )
         judged_item = {
             **candidate,
             "schema": "battle.verified_judged_candidate.v1",
             "judge_status": receipt["status"],
-            "judge_verdict": verdict,
+            "judge_verdict": receipt["verdict"],
             "judge_receipt_path": receipt["path"],
             "judge_receipt_sha256": receipt["sha256"],
+            "judge_authority": receipt["judge_authority"],
+            "proof_class": receipt["proof_class"],
+            "target_execution": receipt["target_execution"],
             "source": "adaptive_red_blue_lineage_canary._judge_population",
         }
         judged.append(judged_item)
-        if verdict == "INSUFFICIENT_EVIDENCE":
+        if receipt["verdict"] == "INSUFFICIENT_EVIDENCE":
             bad.append(
                 {
                     "specimen_id": candidate_id,
                     "candidate_id": candidate_id,
                     "source": "docker-judge",
-                    "reason_codes": ["INSUFFICIENT_EVIDENCE"],
+                    "reason_codes": [
+                        "INSUFFICIENT_EVIDENCE",
+                        "synthetic_process_probe_quarantined",
+                    ],
                     "evidence": {
                         "judge_receipt_path": receipt["path"],
                         "judge_receipt_sha256": receipt["sha256"],
+                        "proof_class": receipt["proof_class"],
+                        "judge_authority": receipt["judge_authority"],
+                        "target_execution": receipt["target_execution"],
                     },
                 }
             )
@@ -2364,6 +2375,9 @@ def _judge_population(**kwargs: Any) -> dict[str, Any]:
         "judged_population": judged,
         "judge_records": judged,
         "bad_genetic_material": bad,
+        "security_authority": False,
+        "proof_class": "non_security_process_probe",
+        "authority_reason": "primitive Docker probe has no target execution input and cannot assign a live Judge verdict",
     }
 
 
@@ -2447,7 +2461,7 @@ def _run_verified_primitive_docker_judge(
     role: str,
     generation: int,
     candidate_id: str,
-    verdict: str,
+    verdict: str | None = None,
 ) -> dict[str, Any]:
     judge_dir.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -2455,7 +2469,9 @@ def _run_verified_primitive_docker_judge(
         "role": role,
         "generation": generation,
         "candidate_id": candidate_id,
-        "verdict": verdict,
+        "proof_class": "non_security_process_probe",
+        "target_execution": False,
+        "requested_verdict": verdict,
     }
     command = [
         "docker",
@@ -2483,12 +2499,19 @@ def _run_verified_primitive_docker_judge(
     stderr_path = judge_dir / "stderr.txt"
     stdout_path.write_text(proc.stdout, encoding="utf-8")
     stderr_path.write_text(proc.stderr, encoding="utf-8")
-    status = "PASS" if proc.returncode == 0 and verdict != "INSUFFICIENT_EVIDENCE" else "INSUFFICIENT_EVIDENCE"
+    status = "INSUFFICIENT_EVIDENCE"
     receipt_path = judge_dir / "judge-receipt.json"
     receipt = {
         "schema": "battle.verified_primitive_docker_judge_receipt.v1",
         "status": status,
-        "verdict": verdict,
+        "verdict": "INSUFFICIENT_EVIDENCE",
+        "requested_verdict": verdict,
+        "requested_verdict_honored": False,
+        "judge_authority": False,
+        "security_authority": False,
+        "proof_class": "non_security_process_probe",
+        "target_execution": False,
+        "authority_reason": "Docker process readback did not execute the candidate against the Arena target",
         "role": role,
         "generation": generation,
         "candidate_id": candidate_id,

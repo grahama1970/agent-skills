@@ -859,6 +859,147 @@ def probe_review_receipt_hash_finalization(summary_path: Path) -> int:
     )
 
 
+def probe_review_judge_authority(summary_path: Path) -> int:
+    suite = "review-judge-authority"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+
+    from battle_skill import adaptive_red_blue_lineage_canary as canary
+
+    def judge_order(label: str, ids: list[str]) -> tuple[dict[str, Any], dict[str, Any], Path]:
+        reviewed = [
+            {
+                "schema": "battle.verified_population_review.v1",
+                "review_status": "PASS",
+                "role": "red",
+                "team": "red",
+                "candidate_id": candidate_id,
+                "specimen_id": candidate_id,
+            }
+            for candidate_id in ids
+        ]
+        result = canary._judge_population(
+            role="red",
+            generation=6,
+            docker_image="python:3.12-slim",
+            generation_dir=out_root / label,
+            reviewed_population=reviewed,
+        )
+        selection = canary._select_survivor(
+            role="red",
+            judged_population=result["judged_population"],
+        )
+        result_path = out_root / f"{label}-judge-output.json"
+        selection_path = out_root / f"{label}-selection-output.json"
+        _write_json(result_path, result)
+        _write_json(selection_path, selection)
+        return result, selection, result_path
+
+    forward, forward_selection, forward_path = judge_order(
+        "forward-order", ["candidate-a", "candidate-b"]
+    )
+    reverse, reverse_selection, reverse_path = judge_order(
+        "reverse-order", ["candidate-b", "candidate-a"]
+    )
+    legacy_receipt = canary._run_verified_primitive_docker_judge(
+        docker_image="python:3.12-slim",
+        judge_dir=out_root / "legacy-host-verdict-request",
+        role="red",
+        generation=6,
+        candidate_id="candidate-host-requested-red-success",
+        verdict="RED_SUCCESS",
+    )
+    legacy_path = Path(str(legacy_receipt["path"]))
+
+    def verdicts_by_candidate(result: dict[str, Any]) -> dict[str, str]:
+        return {
+            str(item["candidate_id"]): str(item.get("judge_verdict"))
+            for item in result.get("judged_population", [])
+        }
+
+    all_items = [
+        *forward.get("judged_population", []),
+        *reverse.get("judged_population", []),
+    ]
+    checks = [
+        {
+            "name": "forward_order_has_no_synthetic_winner",
+            "status": "PASS"
+            if set(verdicts_by_candidate(forward).values()) == {"INSUFFICIENT_EVIDENCE"}
+            else "FAIL",
+            "verdicts": verdicts_by_candidate(forward),
+        },
+        {
+            "name": "reverse_order_has_no_synthetic_winner",
+            "status": "PASS"
+            if set(verdicts_by_candidate(reverse).values()) == {"INSUFFICIENT_EVIDENCE"}
+            else "FAIL",
+            "verdicts": verdicts_by_candidate(reverse),
+        },
+        {
+            "name": "candidate_order_does_not_change_winner",
+            "status": "PASS"
+            if verdicts_by_candidate(forward) == verdicts_by_candidate(reverse)
+            and forward_selection.get("survivor") is None
+            and reverse_selection.get("survivor") is None
+            else "FAIL",
+            "forward_survivor": forward_selection.get("survivor"),
+            "reverse_survivor": reverse_selection.get("survivor"),
+        },
+        {
+            "name": "primitive_probe_receipts_are_quarantined_non_security_proof",
+            "status": "PASS"
+            if all(
+                item.get("judge_authority") is False
+                and item.get("target_execution") is False
+                and item.get("proof_class") == "non_security_process_probe"
+                for item in all_items
+            )
+            else "FAIL",
+        },
+        {
+            "name": "legacy_host_requested_verdict_is_not_authority",
+            "status": "PASS"
+            if legacy_receipt.get("status") == "INSUFFICIENT_EVIDENCE"
+            and legacy_receipt.get("verdict") == "INSUFFICIENT_EVIDENCE"
+            and legacy_receipt.get("requested_verdict") == "RED_SUCCESS"
+            and legacy_receipt.get("requested_verdict_honored") is False
+            and legacy_receipt.get("judge_authority") is False
+            and legacy_receipt.get("target_execution") is False
+            else "FAIL",
+            "legacy_receipt": str(legacy_path),
+        },
+    ]
+    failed = [item for item in checks if item["status"] != "PASS"]
+    if failed:
+        raise AssertionError(f"Judge authority checks failed: {failed}")
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="local_docker_process_probe_with_adversarial_order_reversal",
+            checks=checks,
+            artifacts={
+                "forward_judge_output": str(forward_path),
+                "reverse_judge_output": str(reverse_path),
+                "legacy_host_requested_verdict_receipt": str(legacy_path),
+            },
+            claims_proves=[
+                "Primitive Docker process probes cannot assign Red or Blue success by candidate order.",
+                "Host-requested verdicts are retained only as ignored inputs and are not live Judge authority.",
+                "Synthetic primitive probes are quarantined as non-security proof with no target execution.",
+            ],
+            claims_does_not_prove=[
+                "arbitrary target exploitability",
+                "provider/Tau campaign quality",
+                "that primitive process probes are security evidence",
+            ],
+        ),
+    )
+
+
 def probe_scorekeeper_adversarial(summary_path: Path) -> int:
     with tempfile.TemporaryDirectory(prefix="battle-agentic-score-") as raw:
         root = Path(raw)
@@ -3516,6 +3657,8 @@ def main() -> int:
             return probe_review_cli_authorization_target_binding(args.summary)
         if args.suite == "review-receipt-hash-finalization":
             return probe_review_receipt_hash_finalization(args.summary)
+        if args.suite == "review-judge-authority":
+            return probe_review_judge_authority(args.summary)
         if args.suite == "scorekeeper-adversarial":
             return probe_scorekeeper_adversarial(args.summary)
         if args.suite == "adaptive-lineage-contracts":
