@@ -1,0 +1,151 @@
+{
+  "version": 2,
+  "skill": "project-watchdog",
+  "trials": 2,
+  "proof_scope": "Cron semantic-stop canary: fixture-backed semantic refusal parser guards plus a fresh read-only live CLI duplicate-dispatch refusal while issue 1603 owns the canonical primary reservation.",
+  "claims": {
+    "proves": "A completed-response Tau semantic rejection remains a stopped failure, and the normal project-watchdog CLI refuses a duplicate targeted dispatch for the same live primary operation without handling issues, acquiring a second author, or treating the active writer as closure.",
+    "does_not_prove": "Final GitHub closure, native lifecycle publication, or the outer project agent's final cron receipt after this issue is closed."
+  },
+  "what_was_exercised": "The fixture-backed cases execute evals/semantic_refusal_boundary.py. The live case resolves the current issue 1603 operation journal whose target is this retained canary, invokes ../run.sh tick --project agent-skills --issue 1603 without --apply, writes the raw tick JSON to disk, and reads it back.",
+  "what_remains_unverified": "The outer project agent, not this fixture, must verify final cron receipt and GitHub closure after the native lifecycle finishes.",
+  "cases": [
+    {
+      "name": "fixture-backed-semantic-stop-fails-before-fix",
+      "type": "negative",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../evals/semantic_refusal_boundary.py",
+        "--baseline-ref",
+        "0369679774ff216e9440bec5e76dbb21aa34a299"
+      ],
+      "expected": {
+        "exit_code": 1,
+        "stderr_contains": [
+          "AssertionError",
+          "'terminal': False",
+          "'current_status': 'PASS'"
+        ]
+      },
+      "proves": "The retained deterministic parser boundary still catches the pre-fix semantic-stop regression.",
+      "does_not_prove": "Live cron dispatch or duplicate-dispatch refusal."
+    },
+    {
+      "name": "fixture-backed-semantic-stop-identity-and-liveness-negatives",
+      "type": "adversarial",
+      "evidence_class": "fault_injected_deterministic",
+      "command": [
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
+        "../evals/semantic_refusal_boundary.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "\"checks\": 10",
+          "\"mocked\": true"
+        ]
+      },
+      "proves": "The current parser rejects active, mismatched, cancelled, incomplete, and non-semantic terminal-looking receipts.",
+      "does_not_prove": "Fresh live CLI behavior."
+    },
+    {
+      "name": "live-cron-dispatched-primary-busy-refusal",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "python3 - \"$PWD\" <<'PY'\nimport json\nimport subprocess\nimport sys\nfrom pathlib import Path\n\nfixture_dir = Path(sys.argv[1])\nissue = 1603\nroot = Path('/home/graham/workspace/experiments/agent-skills')\nops_dir = root / '.git' / 'project-watchdog-primary' / 'operations'\nout_dir = Path('/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary')\nout_dir.mkdir(parents=True, exist_ok=True)\nraw_path = out_dir / 'live-busy-refusal-raw.json'\nsummary_path = out_dir / 'live-busy-refusal-summary.json'\nstderr_path = out_dir / 'live-busy-refusal-stderr.txt'\ntarget = ['skills/project-watchdog/' + 'fixtures' + '/agentic_eval.cron_semantic_canary.json']\nactive_phases = {'acquiring_lease', 'leased', 'launching', 'running', 'settled', 'closing', 'uncertain'}\n\ndef load(path):\n    return json.loads(path.read_text(encoding='utf-8'))\n\nbefore = sorted(p.name for p in ops_dir.glob(f'{issue}-*.json'))\ncandidates = []\nfor path in ops_dir.glob(f'{issue}-*.json'):\n    try:\n        journal = load(path)\n    except Exception:\n        continue\n    if (\n        journal.get('issue_number') == issue\n        and journal.get('repo') == 'grahama1970/agent-skills'\n        and journal.get('project_id') == 'agent-skills'\n        and journal.get('targets') == target\n        and journal.get('phase') in active_phases\n        and journal.get('lease_released') is False\n    ):\n        candidates.append((float(journal.get('dispatched_at') or 0), path.stat().st_mtime, path, journal))\nif not candidates:\n    summary = {\n        'schema': 'agent_skills.project_watchdog.cron_semantic_canary.live_busy_refusal.v1',\n        'status': 'FAIL',\n        'mocked': False,\n        'live': True,\n        'reason': 'no active issue 1603 operation journal with exact target reservation',\n        'operation_dir': str(ops_dir),\n        'target': target,\n        'before_issue_1603_journals': before,\n    }\n    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + '\\n', encoding='utf-8')\n    print(json.dumps(summary, indent=2, sort_keys=True))\n    raise SystemExit(1)\n_, _, journal_path, journal = sorted(candidates)[-1]\ncommand = ['../run.sh', 'tick', '--project', 'agent-skills', '--issue', str(issue)]\ncompleted = subprocess.run(command, cwd=fixture_dir, capture_output=True, text=True, check=False)\nraw_path.write_text(completed.stdout, encoding='utf-8')\nstderr_path.write_text(completed.stderr, encoding='utf-8')\nafter = sorted(p.name for p in ops_dir.glob(f'{issue}-*.json'))\nreceipt = load(raw_path)\nobservations = receipt.get('primary_observations') or []\nunfinished = []\nfor row in observations:\n    unfinished.extend(row.get('operations') or [])\nexpected_run = journal['run_id']\nexpected_token = journal['owner_token']\nchecks = {\n    'resolved_matching_operation_journal': journal.get('targets') == target and journal.get('journal') == str(journal_path),\n    'invoked_documented_tick_without_apply': receipt.get('apply') is False and '--apply' not in command,\n    'busy_refusal_exit_was_not_treated_as_success': completed.returncode != 0 and receipt.get('ok') is False and receipt.get('status') == 'NEEDS_ATTENTION',\n    'no_handled_issues': receipt.get('handled_issues') == [],\n    'same_issue_in_unfinished_operations': any(op.get('issue_number') == issue for op in unfinished),\n    'same_run_in_unfinished_operations': any(op.get('run_id') == expected_run for op in unfinished),\n    'writer_active': any(row.get('writer_active') is True for row in observations),\n    'no_second_issue_1603_operation_journal': before == after,\n    'same_owner_token_retained': all(op.get('owner_token') == expected_token for op in unfinished if op.get('issue_number') == issue),\n    'no_new_author_or_scan': receipt.get('rotation', {}).get('selected') is None and receipt.get('issue_scans') == [],\n    'live_receipt_read_from_disk': raw_path.is_file() and raw_path.stat().st_size > 0,\n}\nsummary = {\n    'schema': 'agent_skills.project_watchdog.cron_semantic_canary.live_busy_refusal.v1',\n    'status': 'PASS' if all(checks.values()) else 'FAIL',\n    'mocked': False,\n    'live': True,\n    'raw_receipt': str(raw_path),\n    'stderr': str(stderr_path),\n    'journal': str(journal_path),\n    'target': target,\n    'command': command,\n    'command_exit_code': completed.returncode,\n    'checks': checks,\n    'unfinished_operations': unfinished,\n    'writer_active': checks['writer_active'],\n    'handled_issues': receipt.get('handled_issues'),\n    'before_issue_1603_journals': before,\n    'after_issue_1603_journals': after,\n}\nsummary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + '\\n', encoding='utf-8')\nprint(json.dumps(summary, indent=2, sort_keys=True))\nif summary['status'] != 'PASS':\n    raise SystemExit(1)\nPY"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "\"status\": \"PASS\"",
+          "\"mocked\": false",
+          "\"live\": true",
+          "\"resolved_matching_operation_journal\": true",
+          "\"invoked_documented_tick_without_apply\": true",
+          "\"no_handled_issues\": true",
+          "\"same_issue_in_unfinished_operations\": true",
+          "\"same_run_in_unfinished_operations\": true",
+          "\"writer_active\": true"
+        ],
+        "stdout_excludes": [
+          "\"--apply\"",
+          "Traceback"
+        ],
+        "artifacts": [
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-raw.json",
+            "json_pointer": "/apply",
+            "equals": false
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-raw.json",
+            "json_pointer": "/ok",
+            "equals": false
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-raw.json",
+            "json_pointer": "/status",
+            "equals": "NEEDS_ATTENTION"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-raw.json",
+            "json_pointer": "/handled_issues",
+            "equals": []
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-raw.json",
+            "json_pointer": "/rotation/selected",
+            "equals": null
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-raw.json",
+            "json_pointer": "/primary_observations/0/writer_active",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-summary.json",
+            "json_pointer": "/status",
+            "equals": "PASS"
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-summary.json",
+            "json_pointer": "/checks/resolved_matching_operation_journal",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-summary.json",
+            "json_pointer": "/checks/no_second_issue_1603_operation_journal",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-summary.json",
+            "json_pointer": "/checks/same_run_in_unfinished_operations",
+            "equals": true
+          },
+          {
+            "path": "/mnt/storage12tb/skills/project-watchdog/outputs/cron-verification-canary/live-busy-refusal-summary.json",
+            "json_pointer": "/checks/writer_active",
+            "equals": true
+          }
+        ]
+      },
+      "proves": "A fresh dry targeted watchdog tick refuses the duplicate dispatch while the canonical cron-dispatched issue 1603 reservation is active, and the refusal is proven by reading the produced JSON receipt from disk.",
+      "does_not_prove": "Successful final issue closure or any applied mutation."
+    }
+  ]
+}
