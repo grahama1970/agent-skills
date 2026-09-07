@@ -11,6 +11,8 @@ usage() {
     cat <<'USAGE'
 ops-worktrees - worktree leases, unmerged-work detection, recoverable archive
 
+  run.sh land -m "msg" <path>...          land ONLY named paths onto origin/main (plumbing;
+                                           works from any dirty tree/branch/worktree)
   run.sh unmerged [--repo PATH] [--json]     work that never reached origin/main
   run.sh reap [--repo PATH] [--apply]        remove / archive / keep
   run.sh archive <worktree> [--apply]        archive one worktree
@@ -26,6 +28,7 @@ cmd="${1:-help}"
 shift || true
 
 case "$cmd" in
+    land)     exec bash "$SCRIPT_DIR/scripts/land.sh" "$@" ;;
     unmerged) exec uv run --project "$SCRIPT_DIR" python "$LEASE" --unmerged --repo "$REPO_DEFAULT" "$@" ;;
     reap)     exec uv run --project "$SCRIPT_DIR" python "$LEASE" --repo "$REPO_DEFAULT" "$@" ;;
     backlog)  exec uv run --project "$SCRIPT_DIR" python "$LEASE" --assess-backlog --repo "$REPO_DEFAULT" "$@" ;;
