@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlparse
 
 SCHEMA = "security.target_authorization.v1"
 RECEIPT_SCHEMA = "security.target_authorization_validation_receipt.v1"
@@ -145,10 +146,47 @@ def _validate_permissions(payload: dict[str, Any], errors: list[str]) -> None:
             errors.append(f"permissions.{field} must be a JSON boolean")
 
 
+def _file_url_matches_path(raw_url: Any, expected_path: Path) -> bool:
+    if not isinstance(raw_url, str) or not raw_url.strip():
+        return False
+    parsed = urlparse(raw_url)
+    if parsed.scheme != "file":
+        return False
+    candidate = Path(unquote(parsed.path)).expanduser()
+    try:
+        return candidate.resolve() == expected_path.resolve()
+    except OSError:
+        return False
+
+
+def _target_alias_matches_execution_target(
+    target: Any,
+    expected_execution_target: str,
+) -> bool:
+    if not isinstance(target, dict):
+        return False
+    expected = expected_execution_target.strip()
+    if not expected:
+        return False
+
+    for field in ("canonical_id", "image", "digest"):
+        value = target.get(field)
+        if isinstance(value, str) and value.strip() == expected:
+            return True
+
+    if expected.startswith("/"):
+        expected_path = Path(expected).expanduser()
+        if _file_url_matches_path(target.get("repository_url"), expected_path):
+            return True
+
+    return False
+
+
 def validate_target_authorization(
     manifest_path: Path | None,
     *,
     expected_target: str,
+    expected_execution_target: str | None = None,
     requested_action: str,
     requested_port: int | None = None,
     requested_target_url: str | None = None,
@@ -193,8 +231,24 @@ def validate_target_authorization(
             errors.append("legal_non_opinion_ack must be true")
 
         identity = _validate_target(payload, errors)
-        if identity != expected_target:
+        target = payload.get("target")
+        alias_bound_to_execution_target = (
+            expected_execution_target is not None
+            and identity != expected_execution_target
+            and _target_alias_matches_execution_target(
+                target,
+                expected_execution_target,
+            )
+        )
+        if identity != expected_target and not alias_bound_to_execution_target:
             errors.append("target identity does not match requested target")
+        if (
+            identity == expected_target
+            and expected_execution_target is not None
+            and expected_target != expected_execution_target
+            and not alias_bound_to_execution_target
+        ):
+            errors.append("authorization target alias is not bound to executed target")
 
         allowed_actions = _validate_string_list(payload, "allowed_actions", errors)
         if requested_action not in allowed_actions:
@@ -239,6 +293,10 @@ def validate_target_authorization(
         "manifest_sha256": manifest_hash,
         "target_identity": identity,
         "expected_target": expected_target,
+        "expected_execution_target": expected_execution_target,
+        "target_alias_bound_to_execution_target": alias_bound_to_execution_target
+        if isinstance(payload, dict)
+        else False,
         "requested_action": requested_action,
         "requested_port": requested_port,
         "requested_target_url": requested_target_url,

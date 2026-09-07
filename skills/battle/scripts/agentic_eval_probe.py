@@ -24,6 +24,7 @@ import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 
@@ -532,6 +533,245 @@ def probe_authorization_sampling(summary_path: Path, *, samples: int, seed: int 
                 claims_does_not_prove=[
                     "operator policy sufficiency for a real customer target",
                     "production credential availability",
+                ],
+            ),
+        )
+
+
+def _invoke_battle_cli_with_recording_orchestrator(args: list[str], root: Path) -> tuple[Any, list[dict[str, Any]]]:
+    from unittest.mock import patch
+
+    from typer.testing import CliRunner
+
+    import battle_skill.cli as cli_module
+    import battle_skill.orchestrator as orchestrator_module
+    import battle_skill.report as report_module
+
+    calls: list[dict[str, Any]] = []
+
+    class RecordingOrchestrator:
+        def __init__(self, target_path: str, rounds: int, **kwargs: Any) -> None:
+            calls.append(
+                {
+                    "target_path": target_path,
+                    "rounds": rounds,
+                    "docker_image": kwargs.get("docker_image"),
+                    "twin_mode": getattr(kwargs.get("twin_mode"), "value", kwargs.get("twin_mode")),
+                }
+            )
+
+        def run(self, checkpoint_interval: int) -> SimpleNamespace:
+            return SimpleNamespace(
+                battle_id="recording-battle",
+                all_findings=[],
+                all_patches=[],
+                red_total_score=0,
+                blue_total_score=1,
+                current_round=1,
+                tdsr=0.0,
+            )
+
+    with (
+        patch.object(cli_module, "_HAS_MEMORY_INTEGRATION", False),
+        patch.object(cli_module, "REPORTS_DIR", root / "reports"),
+        patch.object(orchestrator_module, "BattleOrchestrator", RecordingOrchestrator),
+        patch.object(report_module, "generate_report", lambda state: "recording report\n"),
+    ):
+        result = CliRunner().invoke(cli_module.app, args)
+    return result, calls
+
+
+def probe_review_cli_authorization_target_binding(summary_path: Path) -> int:
+    suite = "review-cli-authorization-target-binding"
+    with tempfile.TemporaryDirectory(prefix="battle-agentic-cli-auth-binding-") as raw:
+        root = Path(raw)
+        target_a = root / "target-a"
+        target_b = root / "target-b"
+        target_a.mkdir()
+        target_b.mkdir()
+        (target_a / "app.py").write_text("print('a')\n", encoding="utf-8")
+        (target_b / "app.py").write_text("print('b')\n", encoding="utf-8")
+
+        alias_identity = "review-cli-alias@sha256:alias"
+        path_bad_manifest = root / "path-bad-authorization.json"
+        path_bad = _fresh_authorization(
+            path_bad_manifest,
+            target_identity=alias_identity,
+            runtime_modes=["copy"],
+        )
+        path_bad["target"]["repository_url"] = target_a.as_uri()
+        _write_json(path_bad_manifest, path_bad)
+
+        bad_result, bad_calls = _invoke_battle_cli_with_recording_orchestrator(
+            [
+                "battle",
+                str(target_b),
+                "--mode",
+                "copy",
+                "--rounds",
+                "1",
+                "--authorization-manifest",
+                str(path_bad_manifest),
+                "--authorization-target",
+                alias_identity,
+            ],
+            root,
+        )
+
+        path_good_manifest = root / "path-good-authorization.json"
+        path_good = _fresh_authorization(
+            path_good_manifest,
+            target_identity=alias_identity,
+            runtime_modes=["copy"],
+        )
+        path_good["target"]["repository_url"] = target_b.as_uri()
+        _write_json(path_good_manifest, path_good)
+
+        good_result, good_calls = _invoke_battle_cli_with_recording_orchestrator(
+            [
+                "battle",
+                str(target_b),
+                "--mode",
+                "copy",
+                "--rounds",
+                "1",
+                "--authorization-manifest",
+                str(path_good_manifest),
+                "--authorization-target",
+                alias_identity,
+            ],
+            root,
+        )
+
+        docker_bad_manifest = root / "docker-bad-authorization.json"
+        docker_bad = _fresh_authorization(
+            docker_bad_manifest,
+            target_identity=alias_identity,
+            runtime_modes=["docker"],
+        )
+        docker_bad["target"]["image"] = "registry.example.invalid/target-a:latest"
+        _write_json(docker_bad_manifest, docker_bad)
+
+        docker_result, docker_calls = _invoke_battle_cli_with_recording_orchestrator(
+            [
+                "battle",
+                ".",
+                "--rounds",
+                "1",
+                "--docker-image",
+                "registry.example.invalid/target-b:latest",
+                "--authorization-manifest",
+                str(docker_bad_manifest),
+                "--authorization-target",
+                alias_identity,
+            ],
+            root,
+        )
+
+        docker_good_manifest = root / "docker-good-authorization.json"
+        docker_good = _fresh_authorization(
+            docker_good_manifest,
+            target_identity=alias_identity,
+            runtime_modes=["docker"],
+        )
+        docker_good["target"]["image"] = "registry.example.invalid/target-b:latest"
+        _write_json(docker_good_manifest, docker_good)
+
+        docker_good_result, docker_good_calls = _invoke_battle_cli_with_recording_orchestrator(
+            [
+                "battle",
+                ".",
+                "--rounds",
+                "1",
+                "--docker-image",
+                "registry.example.invalid/target-b:latest",
+                "--authorization-manifest",
+                str(docker_good_manifest),
+                "--authorization-target",
+                alias_identity,
+            ],
+            root,
+        )
+
+        checks = [
+            {
+                "name": "path_alias_for_other_target_fails_before_orchestrator",
+                "status": "PASS"
+                if bad_result.exit_code == 2
+                and not bad_calls
+                and "authorization target alias is not bound to executed target" in bad_result.output
+                else "FAIL",
+                "exit_code": bad_result.exit_code,
+                "orchestrator_calls": bad_calls,
+            },
+            {
+                "name": "path_alias_with_verified_file_url_mapping_reaches_recording_orchestrator",
+                "status": "PASS"
+                if good_result.exit_code == 0
+                and len(good_calls) == 1
+                and good_calls[0]["target_path"] == str(target_b.resolve())
+                else "FAIL",
+                "exit_code": good_result.exit_code,
+                "orchestrator_calls": good_calls,
+            },
+            {
+                "name": "docker_alias_for_other_image_fails_before_orchestrator",
+                "status": "PASS"
+                if docker_result.exit_code == 2
+                and not docker_calls
+                and "authorization target alias is not bound to executed target" in docker_result.output
+                else "FAIL",
+                "exit_code": docker_result.exit_code,
+                "orchestrator_calls": docker_calls,
+            },
+            {
+                "name": "docker_alias_with_verified_image_mapping_reaches_recording_orchestrator",
+                "status": "PASS"
+                if docker_good_result.exit_code == 0
+                and len(docker_good_calls) == 1
+                and docker_good_calls[0]["docker_image"] == "registry.example.invalid/target-b:latest"
+                else "FAIL",
+                "exit_code": docker_good_result.exit_code,
+                "orchestrator_calls": docker_good_calls,
+            },
+        ]
+        failed = [check for check in checks if check["status"] != "PASS"]
+        if failed:
+            raise AssertionError(f"CLI authorization target binding checks failed: {failed}")
+
+        artifact_root = summary_path.parent / suite
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+        artifact_root.mkdir(parents=True)
+        for name, result in {
+            "path-bad": bad_result,
+            "path-good": good_result,
+            "docker-bad": docker_result,
+            "docker-good": docker_good_result,
+        }.items():
+            (artifact_root / f"{name}.stdout.txt").write_text(result.output, encoding="utf-8")
+
+        return _emit(
+            summary_path,
+            _summary(
+                suite=suite,
+                live="typer_cli_recording_orchestrator_authorization_boundary",
+                checks=checks,
+                artifacts={
+                    "path_bad_stdout": str(artifact_root / "path-bad.stdout.txt"),
+                    "path_good_stdout": str(artifact_root / "path-good.stdout.txt"),
+                    "docker_bad_stdout": str(artifact_root / "docker-bad.stdout.txt"),
+                    "docker_good_stdout": str(artifact_root / "docker-good.stdout.txt"),
+                },
+                claims_proves=[
+                    "Battle CLI authorization is bound to the target path or Docker image passed to the orchestrator.",
+                    "A caller-supplied authorization alias is accepted only when the manifest target maps to the same executed local path.",
+                    "A Docker alias is accepted only when the manifest image maps to the same executed Docker image.",
+                ],
+                claims_does_not_prove=[
+                    "full Docker target launch",
+                    "paid-provider battle quality",
+                    "operator policy sufficiency for arbitrary aliases",
                 ],
             ),
         )
@@ -3006,6 +3246,8 @@ def main() -> int:
             return probe_reactive_round(args.summary)
         if args.suite == "authorization-sampling":
             return probe_authorization_sampling(args.summary, samples=args.samples, seed=args.seed)
+        if args.suite == "review-cli-authorization-target-binding":
+            return probe_review_cli_authorization_target_binding(args.summary)
         if args.suite == "scorekeeper-adversarial":
             return probe_scorekeeper_adversarial(args.summary)
         if args.suite == "adaptive-lineage-contracts":

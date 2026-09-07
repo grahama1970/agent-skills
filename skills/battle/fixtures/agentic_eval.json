@@ -21,6 +21,14 @@
       }
     },
     {
+      "id": "battle.authorization.cli_target_binding",
+      "description": "Battle CLI authorization is bound to the actual target path or Docker image passed to the orchestrator, and caller aliases are accepted only through an explicit same-target mapping.",
+      "criticality": "critical",
+      "evidence_required": {
+        "adversarial_live_e2e": true
+      }
+    },
+    {
       "id": "battle.local_docker.reactive_round",
       "description": "A clean local Battle repair round runs through the isolated Docker target and emits complete Red/Judge/Blue/scorekeeper receipts",
       "criticality": "critical",
@@ -320,6 +328,20 @@
       "criticality": "critical",
       "failure_modes": [
         "Blue advisory fields become score authority"
+      ],
+      "required_evidence": [
+        "adversarial_live_e2e"
+      ]
+    },
+    {
+      "seam_id": "authorization.cli_target_binding",
+      "claim_id": "battle.authorization.cli_target_binding",
+      "seam_type": "cli/security-authorization",
+      "criticality": "critical",
+      "failure_modes": [
+        "CLI validates authorization identity A while executing target path B",
+        "CLI validates authorization identity A while constructing a Docker battle for image B",
+        "caller-supplied authorization aliases bypass the actual target mapping check"
       ],
       "required_evidence": [
         "adversarial_live_e2e"
@@ -750,6 +772,39 @@
             "json_pointer": "/status",
             "equals": "PASS",
             "min_bytes": 1000
+          }
+        ]
+      }
+    },
+    {
+      "name": "review-cli-authorization-target-binding",
+      "category": "review-cli-authorization-target-binding",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "adversarial_live_e2e",
+      "supports_claims": [
+        "battle.authorization.cli_target_binding"
+      ],
+      "seams": [
+        "authorization.cli_target_binding"
+      ],
+      "timeout_seconds": 180,
+      "command": [
+        "bash",
+        "-c",
+        "mkdir -p /tmp/battle-agentic-evals && uv run --project /home/graham/workspace/experiments/agent-skills/skills/battle python /home/graham/workspace/experiments/agent-skills/skills/battle/scripts/agentic_eval_probe.py review-cli-authorization-target-binding --summary /tmp/battle-agentic-evals/review-cli-authorization-target-binding.json"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "BATTLE_AGENTIC_EVAL_PASS suite=review-cli-authorization-target-binding"
+        ],
+        "artifacts": [
+          {
+            "path": "/tmp/battle-agentic-evals/review-cli-authorization-target-binding.json",
+            "json_pointer": "/status",
+            "equals": "PASS",
+            "min_bytes": 800
           }
         ]
       }

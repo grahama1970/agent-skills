@@ -158,18 +158,19 @@ def battle(
     # Handle Docker image as target
     if docker_image and target == ".":
         target_path = Path.cwd()
-        requested_identity = authorization_target or docker_image
     else:
         target_path = Path(target).resolve()
-        requested_identity = authorization_target or str(target_path)
         if not target_path.exists():
             console.print(f"[red]Target not found: {target}[/red]")
             raise typer.Exit(1)
 
+    executed_target_identity = docker_image or str(target_path)
+    requested_identity = authorization_target or executed_target_identity
     requested_runtime_mode = mode or ("docker" if docker_image else "git_worktree")
     authorization_receipt = validate_target_authorization(
         authorization_manifest,
         expected_target=requested_identity,
+        expected_execution_target=executed_target_identity,
         requested_action="battle",
         requested_runtime_mode=requested_runtime_mode,
         expected_manifest_sha256=expected_manifest_sha256,
