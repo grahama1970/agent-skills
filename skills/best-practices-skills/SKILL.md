@@ -129,6 +129,37 @@ ln -s /mnt/storage12tb/skills/<skill-name>/models /path/to/skill/models
 - `/ops-workstation slim` reports storage policy violations
 - `.gitignore` in every skill should exclude heavy artifact patterns
 
+## Typed Boundary Validation Policy (NON-NEGOTIABLE)
+
+Every skill boundary that consumes or emits structured data MUST validate with a
+strict typed schema before prose or regex is allowed to interpret it. Prefer
+Pydantic models in Python (`extra="forbid"` at trust boundaries) and equivalent
+schema validators in other runtimes. The validation result must be machine data:
+`errors[]` with `type`, `loc`, `msg`, and `ctx` when available.
+
+Regex and prose checks are not boundary validation. They are allowed only as
+secondary extraction hints after typed validation has accepted the envelope.
+Violations:
+
+- using regex over model/tool output to decide PASS/BLOCKED;
+- accepting a paragraph because it "looks like" a receipt;
+- emitting `NEEDS_ATTENTION`, `timeout`, or a bare non-zero without typed
+  validation errors and a recovery code;
+- letting an LLM repair, classify, or summarize malformed data before the schema
+  error is recorded.
+
+A long pipeline step must use this order:
+
+```text
+validate consumed JSON with Pydantic/typed schema
+-> execute the step
+-> validate produced JSON with Pydantic/typed schema
+-> classify every failure through triage-error as {code, cause, next_command}
+-> write validation_errors[] and triage_errors[] into the step receipt
+```
+
+A prose-only step contract is not an executable contract.
+
 ## Error Classification Policy (adopt incrementally)
 
 A skill MUST NOT surface a generic, ambiguous failure (`timeout`,
@@ -138,7 +169,8 @@ raw signal through **`/triage-error`** so every layer of the pipeline
 `{code, cause, next_command}` from the shared catalog
 (`skills/triage-error/failure_codes.json`).
 
-- **How:** `skills/triage-error/run.sh classify --text "<err>" --layer <l>` (or
+- **How:** run typed validation first, then classify the raw validation/tool
+  signal: `skills/triage-error/run.sh classify --text "<err>" --layer <l>` (or
   import `triage_error.classify` in Python). It is language-agnostic — non-Python
   skills shell out to `run.sh classify`.
 - **Ambiguous signals:** `run.sh triage` mints a deterministic code and can

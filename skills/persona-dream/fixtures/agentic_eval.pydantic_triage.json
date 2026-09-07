@@ -10,7 +10,7 @@
   "capability_claims": [
     {
       "id": "persona_dream.pydantic_triage_step_boundary",
-      "description": "Every Persona Dream DAG step failure carries Pydantic error data plus triage-error {code,cause,next_command} classification instead of prose-only BLOCKED output.",
+      "description": "Every Persona Dream DAG step failure carries Pydantic error data plus triage-error {code,cause,next_command} classification and the immutable goal records the Brave Search -> Ask gpt/fable -> Ask WebGPT self-heal ladder instead of prose-only BLOCKED output.",
       "criticality": "critical",
       "evidence_required": {
         "fault_injected_deterministic": true
@@ -87,6 +87,27 @@
         ]
       },
       "evidence_class": "fault_injected_deterministic"
+    },
+    {
+      "name": "goal-records-self-heal-ladder",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "python3 - <<'PY2'\nfrom pathlib import Path\ns=Path('../GOAL.md').read_text()\nrequired=['Executable step boundary and self-heal ladder','brave-search','gpt/fable','webgpt','Pipeline step failures are expected states','Pydantic error data first','triage-error code/cause/next']\nmissing=[x for x in required if x not in s]\nprint('missing', missing)\nraise SystemExit(1 if missing else 0)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "missing []"
+        ]
+      }
     }
   ]
 }

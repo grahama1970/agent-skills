@@ -66,7 +66,7 @@ C0_STRUCTURED_REFLECTION: same memory, same answer capsule, no active conflict
 C1_DREAM_JOURNAL: same memory and answer capsule, one journaled conflict
 ```
 
-Executable step boundary:
+Executable step boundary and self-heal ladder:
 
 ```text
 every pipeline step
@@ -75,11 +75,19 @@ every pipeline step
 -> validate produced JSON with Pydantic before downstream use
 -> classify every step failure through triage-error into {code, cause, next_command}
 -> write those pydantic_errors[] and triage_errors[] into the step receipt
+-> when local receipts do not explain the repair, run brave-search for the missing external fact
+-> ask a local Tau model lane (gpt/fable) for one bounded repair from the typed packet
+-> ask webgpt only when browser/web judgment or external review is needed
+-> rerun the exact failed step and accept only receipt-backed success
 ```
 
-A prose-only step instruction, prose failure, or generic BLOCKED/NEEDS_ATTENTION
-without typed Pydantic error data and triage-error classification is not valid
-pipeline evidence for this goal.
+Pipeline step failures are expected states in this project, not exceptional
+project failure. A failure is acceptable evidence only when it is typed,
+repairable, and bounded: Pydantic error data first, triage-error code/cause/next
+command second, optional Brave/Search/Ask escalation as receipts, then the exact
+failed step rerun. A prose-only step instruction, prose failure, or generic
+BLOCKED/NEEDS_ATTENTION without typed Pydantic error data and triage-error
+classification is not valid pipeline evidence for this goal.
 
 `#1179` listener-study rerendering is no longer the active next step. It is a
 supporting perceptual lane that remains blocked/deferred until this paired

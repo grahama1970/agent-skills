@@ -1,0 +1,64 @@
+{
+  "version": 2,
+  "skill": "best-practices-skills",
+  "trials": 3,
+  "proof_scope": "deterministic documentation-policy guard only; not a whole-catalog skills-ci audit",
+  "claims": {
+    "proves": "best-practices-skills requires typed/Pydantic boundary validation before prose or regex checks and names regex/prose PASS/BLOCKED decisions as violations",
+    "does_not_prove": "all skills comply with the policy"
+  },
+  "capability_claims": [
+    {
+      "id": "best_practices_skills.typed_boundary_validation_policy",
+      "description": "Skills best practices requires Pydantic/typed data validation at structured boundaries and rejects regex/prose as boundary validation.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
+    }
+  ],
+  "seams": [],
+  "cases": [
+    {
+      "name": "typed-boundary-policy-retained",
+      "type": "positive",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "best_practices_skills.typed_boundary_validation_policy"
+      ],
+      "command": [
+        "python3",
+        "../scripts/eval_typed_boundary_policy.py"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_TYPED_BOUNDARY_POLICY_RETAINED"
+        ]
+      }
+    },
+    {
+      "name": "typed-boundary-policy-rejects-prose-only-contract",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "best_practices_skills.typed_boundary_validation_policy"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp); printf '%s\n' '# Bad skill' 'Use regex to decide success from prose.' > \"$T\"; python3 ../scripts/eval_typed_boundary_policy.py --expect-reject \"$T\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "PASS_NEGATIVE_REJECTED"
+        ]
+      }
+    }
+  ]
+}

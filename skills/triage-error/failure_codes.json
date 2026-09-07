@@ -431,26 +431,6 @@
       ]
     },
     {
-      "code": "project_watchdog_closure_audit_unverified_closed",
-      "layer": "project-watchdog",
-      "match": [
-        "project_watchdog_closure_audit_unverified_closed",
-        "left_closed_unverified",
-        "closure audit: NEEDS_ATTENTION",
-        "Closure audit: NEEDS_ATTENTION",
-        "left closed and unverified",
-        "could not be verified from the ticket thread"
-      ],
-      "cause": "A project-watchdog closure audit could not verify the ticket proof but left the issue closed as completed. Unverified closure must reopen or block the ticket; closure is a proof claim, not a default state.",
-      "next_command": "Reopen the issue, add agent-work plus needs-human, remove closure-verified/closure-unverified, then rerun the project-watchdog closure-audit regression eval and verify the tick receipt with pydantic.",
-      "recoverable": true,
-      "not_this": [
-        "closure PASS",
-        "closure FAIL already reopened the ticket",
-        "provider did not answer any verdict"
-      ]
-    },
-    {
       "code": "create_svg_variant_count_invalid",
       "layer": "create-svg",
       "match": [
