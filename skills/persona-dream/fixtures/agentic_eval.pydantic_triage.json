@@ -100,7 +100,7 @@
       "command": [
         "bash",
         "-c",
-        "python3 - <<'PY2'\nfrom pathlib import Path\ns=Path('../GOAL.md').read_text()\nrequired=['Executable step boundary and self-heal ladder','brave-search','gpt/fable','webgpt','Pipeline step failures are expected states','Pydantic error data first','triage-error code/cause/next']\nmissing=[x for x in required if x not in s]\nprint('missing', missing)\nraise SystemExit(1 if missing else 0)\nPY2"
+        "python3 - <<'PY2'\nfrom pathlib import Path\ns=Path('../GOAL.md').read_text()\nrequired=['Goal-helper closure contract','Primary proof:','human idea lineage','dynamic conversation transcript','Chatterbox render receipts','human-audible','project-agent emotional variation/quality evaluation','Forbidden drift:','Retry/stop rule:','Executable step boundary and self-heal ladder','brave-search','gpt/fable','webgpt','Pipeline step failures are expected states','Pydantic error data first','triage-error code/cause/next']\nmissing=[x for x in required if x not in s]\nprint('missing', missing)\nraise SystemExit(1 if missing else 0)\nPY2"
       ],
       "expected": {
         "exit_code": 0,

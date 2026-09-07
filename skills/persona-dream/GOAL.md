@@ -66,6 +66,39 @@ C0_STRUCTURED_REFLECTION: same memory, same answer capsule, no active conflict
 C1_DREAM_JOURNAL: same memory and answer capsule, one journaled conflict
 ```
 
+Goal-helper closure contract:
+
+```text
+Primary proof:
+- A sealed C0/C1 paired Horus/Embry run produces receipt-backed artifacts for
+  human idea lineage, dream packet, Embry journal/reflection, dynamic conversation transcript, Chatterbox render receipts, audible audio files,
+  answer-body invariance, protected-fact invariance, emotional lineage, and
+  project-agent emotional variation/quality evaluation.
+
+Completion criteria:
+- The C0 and C1 runs use the same memory and answer capsule.
+- C1 introduces exactly one bounded journaled conflict.
+- The dynamic conversation completes with Horus and Embry turns.
+- Chatterbox audio exists for the compared turns and is human-audible.
+- A project-agent evaluator reports whether intensity/tempo/native-tag delivery
+  changed meaningfully, with hashes bound to the rendered audio.
+- Identity, factual correctness, answer body, provenance, and synthetic-boundary
+  checks pass or the disposition records a null/negative result.
+
+Allowed scope:
+- Persona Dream lineage, paired-run orchestration, typed receipts, Chatterbox
+  handoff/readback, dynamic-conversation evidence, and retained evals.
+
+Forbidden drift:
+- Do not count provider videos, dashboard/status work, generic research claims,
+  reviewer opinion, or untyped prose receipts as goal completion.
+
+Retry/stop rule:
+- If the same proof blocker survives two focused repair attempts, stop with a
+  typed triage-error code, exact failed command, artifact paths, and one next
+  command.
+```
+
 Executable step boundary and self-heal ladder:
 
 ```text
