@@ -9,7 +9,9 @@ an artifact, not only process output.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
+import importlib.util
 import json
 import os
 import random
@@ -2251,6 +2253,216 @@ def probe_review_broadcast_required_evidence(summary_path: Path) -> int:
     )
 
 
+def _lineage_report_module() -> Any:
+    module_path = BATTLE_DIR / "scripts" / "render_provider_tau_lineage_report.py"
+    spec = importlib.util.spec_from_file_location("battle_provider_tau_lineage_report", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"unable to load lineage report module from {module_path}")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _render_commentary_provenance_base(root: Path) -> dict[str, Any]:
+    selected = {
+        "generation_1_fitness_receipt_sha256": "g1-fitness",
+        "generation_2_fitness_receipt_sha256": "g2-fitness",
+        "retention_decision": "GENERATION_2_SELECTED",
+        "selected_generation": 2,
+        "tie_break_reason": None,
+    }
+    campaign = root / "source" / "campaign-receipt.json"
+    broadcast_root = root / "broadcast"
+    _selection_reporting_campaign(campaign, run_id="commentary-provenance", teams={"red": selected, "blue": selected})
+    proc = _run(
+        [
+            sys.executable,
+            str(BATTLE_DIR / "scripts" / "render_provider_tau_lineage_report.py"),
+            "--campaign-receipt",
+            str(campaign),
+            "--out",
+            str(broadcast_root),
+        ],
+        timeout=120,
+    )
+    (root / "renderer.stdout.txt").write_text(proc.stdout, encoding="utf-8")
+    (root / "renderer.stderr.txt").write_text(proc.stderr, encoding="utf-8")
+    if proc.returncode != 0:
+        raise AssertionError(f"commentary provenance renderer failed: {proc.stdout}{proc.stderr}")
+    broadcast = _read_json(broadcast_root / "provider-tau-lineage-broadcast-receipt.json")
+    if broadcast.get("status") != "PASS":
+        raise AssertionError(f"baseline commentary provenance broadcast did not pass: {broadcast}")
+    return {
+        "campaign": str(campaign),
+        "broadcast_receipt": str(broadcast_root / "provider-tau-lineage-broadcast-receipt.json"),
+        "arena_receipt": broadcast["arena_receipt"],
+        "red_team_activity_receipt": broadcast["red_team_activity_receipt"],
+        "blue_team_activity_receipt": broadcast["blue_team_activity_receipt"],
+        "commentary_receipt": broadcast["sports_play_by_play_commentary_receipt"],
+    }
+
+
+def _commentary_validation_errors(mod: Any, commentary_payload: dict[str, Any]) -> list[str]:
+    try:
+        commentary = mod.PlayByPlayCommentaryReceipt.model_validate(commentary_payload)
+    except Exception as exc:
+        return [str(exc)]
+    red = mod.TeamActivityReceipt.model_validate(_read_json(Path(commentary.red_team_activity_receipt)))
+    blue = mod.TeamActivityReceipt.model_validate(_read_json(Path(commentary.blue_team_activity_receipt)))
+    return list(mod.commentary_provenance_errors(commentary, red, blue))
+
+
+def _commentary_case(
+    *,
+    mod: Any,
+    base_payload: dict[str, Any],
+    root: Path,
+    name: str,
+    mutate: Any,
+    expected_failure: bool,
+    expected_fragment: str | None = None,
+) -> dict[str, Any]:
+    payload = copy.deepcopy(base_payload)
+    mutate(payload)
+    case_path = root / f"{name}.commentary.json"
+    _write_json(case_path, payload)
+    errors = _commentary_validation_errors(mod, payload)
+    failed_closed = bool(errors)
+    if expected_failure and not failed_closed:
+        raise AssertionError(f"{name} unexpectedly passed commentary provenance validation")
+    if not expected_failure and failed_closed:
+        raise AssertionError(f"{name} unexpectedly failed commentary provenance validation: {errors}")
+    if expected_fragment and not any(expected_fragment in error for error in errors):
+        raise AssertionError(f"{name} errors did not include {expected_fragment!r}: {errors}")
+    return {
+        "name": name,
+        "status": "PASS",
+        "commentary_receipt": str(case_path),
+        "expected_failure": expected_failure,
+        "failed_closed": failed_closed,
+        "errors": errors,
+    }
+
+
+def probe_review_commentary_provenance(summary_path: Path) -> int:
+    suite = "review-commentary-provenance"
+    out_root = summary_path.parent / suite
+    if out_root.exists():
+        shutil.rmtree(out_root)
+    out_root.mkdir(parents=True)
+    mod = _lineage_report_module()
+    artifacts = _render_commentary_provenance_base(out_root)
+    base_payload = _read_json(Path(artifacts["commentary_receipt"]))
+    red_activity = _read_json(Path(artifacts["red_team_activity_receipt"]))
+    red_count = len(red_activity.get("activities") or [])
+
+    def arena_line(payload: dict[str, Any]) -> dict[str, Any]:
+        return payload["commentary_lines"][0]
+
+    def red_line(payload: dict[str, Any]) -> dict[str, Any]:
+        return next(line for line in payload["commentary_lines"] if line.get("source_activity_indices", {}).get("red"))
+
+    cases = [
+        _commentary_case(
+            mod=mod,
+            base_payload=base_payload,
+            root=out_root,
+            name="valid-exact-arena-and-team-references",
+            mutate=lambda payload: None,
+            expected_failure=False,
+        ),
+        _commentary_case(
+            mod=mod,
+            base_payload=base_payload,
+            root=out_root,
+            name="empty-activity-index-list",
+            mutate=lambda payload: red_line(payload).update(
+                {
+                    "source_receipts": [payload["red_team_activity_receipt"]],
+                    "source_activity_indices": {"red": []},
+                }
+            ),
+            expected_failure=True,
+            expected_fragment="activity index list",
+        ),
+        _commentary_case(
+            mod=mod,
+            base_payload=base_payload,
+            root=out_root,
+            name="basename-only-arena-receipt",
+            mutate=lambda payload: arena_line(payload).update(
+                {"source_receipts": [str(out_root / "unrelated" / "arena-receipt.json")]}
+            ),
+            expected_failure=True,
+            expected_fragment="exact",
+        ),
+        _commentary_case(
+            mod=mod,
+            base_payload=base_payload,
+            root=out_root,
+            name="wrong-team-activity-reference",
+            mutate=lambda payload: red_line(payload).update(
+                {
+                    "source_receipts": [payload["red_team_activity_receipt"]],
+                    "source_activity_indices": {"blue": [0]},
+                }
+            ),
+            expected_failure=True,
+            expected_fragment="blue activity indices",
+        ),
+        _commentary_case(
+            mod=mod,
+            base_payload=base_payload,
+            root=out_root,
+            name="out-of-range-activity-index",
+            mutate=lambda payload: red_line(payload).update(
+                {
+                    "source_receipts": [payload["red_team_activity_receipt"]],
+                    "source_activity_indices": {"red": [red_count]},
+                }
+            ),
+            expected_failure=True,
+            expected_fragment="invalid index",
+        ),
+        _commentary_case(
+            mod=mod,
+            base_payload=base_payload,
+            root=out_root,
+            name="boolean-activity-index",
+            mutate=lambda payload: red_line(payload).update(
+                {
+                    "source_receipts": [payload["red_team_activity_receipt"]],
+                    "source_activity_indices": {"red": [True]},
+                }
+            ),
+            expected_failure=True,
+            expected_fragment="integer indexes",
+        ),
+    ]
+    return _emit(
+        summary_path,
+        _summary(
+            suite=suite,
+            live="provider_tau_broadcast_commentary_receipt_adversarial_readback",
+            checks=cases,
+            artifacts={
+                **artifacts,
+                "commentary_provenance_root": str(out_root),
+            },
+            claims_proves=[
+                "Every commentary line must cite the exact bound arena receipt or a nonempty valid team activity index from the exact bound team receipt.",
+                "Empty activity-index lists, basename-only arena receipt references, wrong-team references, out-of-range indices, and boolean indices fail closed.",
+            ],
+            claims_does_not_prove=[
+                "fresh paid-provider campaign regeneration",
+                "durable memory write promotion",
+                "arbitrary target exploitability",
+            ],
+        ),
+    )
+
+
 def probe_provider_tau_memory_promotion(summary_path: Path, *, proof_root: str | None) -> int:
     suite = "provider-tau-memory-promotion"
     out_root = Path(proof_root) if proof_root else Path(
@@ -2543,6 +2755,8 @@ def main() -> int:
             return probe_review_selection_reporting(args.summary)
         if args.suite == "review-broadcast-required-evidence":
             return probe_review_broadcast_required_evidence(args.summary)
+        if args.suite == "review-commentary-provenance":
+            return probe_review_commentary_provenance(args.summary)
         if args.suite == "provider-tau-memory-promotion":
             return probe_provider_tau_memory_promotion(args.summary, proof_root=args.proof_root)
         if args.suite == "current-status-adaptive-lineage-receipt":

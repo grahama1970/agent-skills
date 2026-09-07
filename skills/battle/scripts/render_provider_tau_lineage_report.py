@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 
 SCHEMA = "battle.provider_tau_lineage_broadcast.v1"
@@ -83,6 +83,23 @@ class CommentaryLine(BaseModel):
     source_receipts: list[str] = Field(min_length=1)
     source_activity_indices: dict[Literal["red", "blue"], list[int]] = Field(default_factory=dict)
 
+    @field_validator("source_activity_indices", mode="before")
+    @classmethod
+    def activity_indices_are_exact_ints(cls, value: Any) -> Any:
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise ValueError("source_activity_indices must be an object")
+        for team, indices in value.items():
+            if team not in {"red", "blue"}:
+                raise ValueError(f"unknown team activity source {team!r}")
+            if not isinstance(indices, list):
+                raise ValueError(f"{team}: source activity indices must be a list")
+            for index in indices:
+                if not isinstance(index, int) or isinstance(index, bool):
+                    raise ValueError(f"{team}: source activity indices must be integer indexes")
+        return value
+
 
 class PlayByPlayCommentaryReceipt(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -97,15 +114,34 @@ class PlayByPlayCommentaryReceipt(BaseModel):
     blue_team_activity_receipt_sha256: str
     commentary_lines: list[CommentaryLine] = Field(min_length=1)
 
-    @field_validator("commentary_lines")
-    @classmethod
-    def every_line_has_activity_or_arena(cls, value: list[CommentaryLine]) -> list[CommentaryLine]:
-        for line in value:
-            if not line.source_activity_indices and not any(
-                receipt.endswith("arena-receipt.json") for receipt in line.source_receipts
-            ):
-                raise ValueError("commentary line lacks arena or team activity source")
-        return value
+    @model_validator(mode="after")
+    def every_line_has_exact_arena_or_team_reference(self) -> "PlayByPlayCommentaryReceipt":
+        bound_team_receipts = {
+            "red": self.red_team_activity_receipt,
+            "blue": self.blue_team_activity_receipt,
+        }
+        allowed_receipts = {self.arena_receipt, *bound_team_receipts.values()}
+        errors: list[str] = []
+        for line_number, line in enumerate(self.commentary_lines):
+            line_prefix = f"commentary_lines[{line_number}]"
+            for source_receipt in line.source_receipts:
+                if source_receipt not in allowed_receipts:
+                    errors.append(f"{line_prefix}: source receipt is not one of the exact bound receipts")
+            has_exact_arena = self.arena_receipt in line.source_receipts
+            has_exact_team_activity = False
+            for team, indices in line.source_activity_indices.items():
+                if not indices:
+                    errors.append(f"{line_prefix}: {team} activity index list must be nonempty")
+                    continue
+                if bound_team_receipts[team] not in line.source_receipts:
+                    errors.append(f"{line_prefix}: {team} activity indices do not cite the exact bound team receipt")
+                    continue
+                has_exact_team_activity = True
+            if not has_exact_arena and not has_exact_team_activity:
+                errors.append(f"{line_prefix}: lacks exact arena receipt or exact team activity reference")
+        if errors:
+            raise ValueError("; ".join(errors))
+        return self
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -458,13 +494,64 @@ def build_commentary_receipt(
     )
 
 
-def commentary_is_grounded(commentary: PlayByPlayCommentaryReceipt, red: TeamActivityReceipt, blue: TeamActivityReceipt) -> bool:
+def _bound_receipt_hash_errors(commentary: PlayByPlayCommentaryReceipt) -> list[str]:
+    errors: list[str] = []
+    for label, raw_path, expected_sha256 in [
+        ("arena", commentary.arena_receipt, commentary.arena_receipt_sha256),
+        ("red", commentary.red_team_activity_receipt, commentary.red_team_activity_receipt_sha256),
+        ("blue", commentary.blue_team_activity_receipt, commentary.blue_team_activity_receipt_sha256),
+    ]:
+        path = Path(raw_path)
+        if not path.is_file():
+            errors.append(f"{label}: bound receipt path is missing")
+            continue
+        actual_sha256 = sha256_file(path)
+        if actual_sha256 != expected_sha256:
+            errors.append(f"{label}: bound receipt sha256 mismatch")
+    return errors
+
+
+def commentary_provenance_errors(
+    commentary: PlayByPlayCommentaryReceipt,
+    red: TeamActivityReceipt,
+    blue: TeamActivityReceipt,
+) -> list[str]:
+    errors = _bound_receipt_hash_errors(commentary)
     counts = {"red": len(red.activities), "blue": len(blue.activities)}
+    team_receipts = {
+        "red": commentary.red_team_activity_receipt,
+        "blue": commentary.blue_team_activity_receipt,
+    }
+    allowed_receipts = {commentary.arena_receipt, *team_receipts.values()}
     for line in commentary.commentary_lines:
+        has_exact_arena = commentary.arena_receipt in line.source_receipts
+        has_valid_team_activity = False
+        for source_receipt in line.source_receipts:
+            if source_receipt not in allowed_receipts:
+                errors.append(f"{line.period}: unbound source receipt {source_receipt}")
         for team, indices in line.source_activity_indices.items():
-            if any(index < 0 or index >= counts[team] for index in indices):
-                return False
-    return True
+            if not indices:
+                errors.append(f"{line.period}: {team} activity index list is empty")
+                continue
+            if team_receipts[team] not in line.source_receipts:
+                errors.append(f"{line.period}: {team} activity indices lack exact bound team receipt")
+                continue
+            valid_indices = [
+                index
+                for index in indices
+                if isinstance(index, int) and not isinstance(index, bool) and 0 <= index < counts[team]
+            ]
+            if len(valid_indices) != len(indices):
+                errors.append(f"{line.period}: {team} activity indices include invalid index")
+                continue
+            has_valid_team_activity = True
+        if not has_exact_arena and not has_valid_team_activity:
+            errors.append(f"{line.period}: lacks exact hashed arena receipt or exact team activity index")
+    return errors
+
+
+def commentary_is_grounded(commentary: PlayByPlayCommentaryReceipt, red: TeamActivityReceipt, blue: TeamActivityReceipt) -> bool:
+    return not commentary_provenance_errors(commentary, red, blue)
 
 
 def _positive_int(value: Any) -> bool:
@@ -672,10 +759,12 @@ def render(campaign_receipt: Path, out_dir: Path, dogpile_seed: Path | None, mem
     commentary_path = write_model(out_dir / "sports-play-by-play-commentary-receipt.json", commentary)
 
     checks = status_checks(receipt, seed_items)
+    commentary_errors = commentary_provenance_errors(commentary, red, blue)
     checks.append(
         {
             "name": "pydantic_arena_team_commentary_receipts",
-            "status": "PASS" if commentary_is_grounded(commentary, red, blue) else "FAIL",
+            "status": "PASS" if not commentary_errors else "FAIL",
+            "errors": commentary_errors,
             "arena_receipt": str(arena_path),
             "red_team_activity_receipt": str(red_path),
             "blue_team_activity_receipt": str(blue_path),
