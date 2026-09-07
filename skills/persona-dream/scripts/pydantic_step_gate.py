@@ -300,7 +300,20 @@ def validate_artifact(path: Path) -> list[dict[str, Any]]:
         return [{"type": "artifact_unreadable", "loc": [str(path)], "msg": str(exc)}]
     if not isinstance(raw, dict):
         return [{"type": "artifact_not_object", "loc": [str(path)], "msg": "JSON object required"}]
-    model = REGISTRY.get(raw.get("schema", ""), ArtifactEnvelope)
+    # Model resolution mirrors _resolve_model: declared schema field -> registry;
+    # else filename stem -> generated model; else object-shape check only.
+    # An artifact whose contract never declared a `schema` field must not be
+    # failed for lacking one (observed live: storyboard_plan.json 2026-09-06).
+    if "schema" in raw:
+        declared = raw.get("schema", "")
+        model = (
+            _load_generated_registry().get(declared)
+            or REGISTRY.get(declared, ArtifactEnvelope)
+        )
+    else:
+        stem = path.name.removesuffix(".json").replace(".", "_").replace("-", "_") + "_schema"
+        _load_generated_registry()
+        model = _generated_by_stem.get(stem, GenericJsonObject)
     try:
         model.model_validate(raw)
     except ValidationError as exc:

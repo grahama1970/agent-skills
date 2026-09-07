@@ -747,7 +747,11 @@
         "BLOCKED_DREAM_DOCTOR"
       ],
       "command": [
-        "python3",
+        "uv",
+        "run",
+        "--project",
+        "..",
+        "python",
         "../scripts/eval_full_cycle.py"
       ],
       "evidence_class": "live_e2e",

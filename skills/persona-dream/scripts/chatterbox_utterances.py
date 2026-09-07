@@ -295,13 +295,29 @@ def compile_render_chunks(text: str, tone: str, *, max_chunk_chars: int = 180,
                 current = sentence
         if current:
             chunks.append(current)
+    merged_chunks: list[str] = []
+    for chunk in chunks:
+        speakable = " ".join(chunk.replace(_ELLIPSIS_PAUSE_MARKER, "").replace("...", "").split())
+        tagless = strip_inline_markup(speakable)
+        if not tagless and merged_chunks:
+            merged_chunks[-1] = f"{merged_chunks[-1]} {chunk}"
+        elif not tagless:
+            merged_chunks.append(chunk)
+        elif merged_chunks and not strip_inline_markup(" ".join(merged_chunks[-1].replace(_ELLIPSIS_PAUSE_MARKER, "").replace("...", "").split())):
+            merged_chunks[-1] = f"{merged_chunks[-1]} {chunk}"
+        else:
+            merged_chunks.append(chunk)
+    chunks = merged_chunks
+
     if (
         len(chunks) > 1
         and len(chunks[-1]) < min_final_chars
+        and len(chunks[-2]) >= int(max_chunk_chars * 0.85)
         and not _COLLECT_RE.search(chunks[-2])
-        and _ELLIPSIS_PAUSE_MARKER not in chunks[-2]
-        and not chunks[-2].rstrip().endswith("...")
     ):
+        # Chatterbox ASR is flaky on tiny final tails after a near-max chunk
+        # ("Kai stood" -> "Kais didn't"). Merge only that pathological tail;
+        # keep ordinary ellipsis pauses split for exact-silence tests.
         chunks[-2] = f"{chunks[-2]} {chunks[-1]}"
         chunks.pop()
     if not chunks:

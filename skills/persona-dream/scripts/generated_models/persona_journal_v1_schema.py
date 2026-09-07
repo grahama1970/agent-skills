@@ -41,7 +41,7 @@ class PersonaDreamPersonaJournalV1(BaseModel):
     persona_id: constr(min_length=1)
     cycle: constr(min_length=1)
     valence_emphasis: str | None = None
-    competing_affect: list[tuple[float, constr(min_length=1)]] | None = Field(
+    competing_affect: list[tuple[constr(min_length=1), float]] | None = Field(
         None,
         description='The affective tags pulling against each other, each an [emotional_tag, weight] pair.',
     )
