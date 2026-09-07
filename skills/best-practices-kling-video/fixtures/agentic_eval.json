@@ -1,0 +1,44 @@
+{
+  "schema": "agentic_eval.fixture.v1",
+  "skill": "best-practices-kling-video",
+  "trials": 3,
+  "cases": [
+    {
+      "id": "compile-condenses-and-binds",
+      "case_type": "positive",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assert": ["exit_code == 0", "stdout contains 'ALL SANITY PASS'"],
+      "notes": "Real persona-dream storyboard shape compiled to bounded reference-to-video packet with element bindings."
+    },
+    {
+      "id": "t2v-with-references-fails-closed",
+      "case_type": "negative-control",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assert": ["stdout contains 'PASS negative-control-t2v'"],
+      "notes": "Guards the 2026-09-07 bug class: references silently dropped by a no-image endpoint."
+    },
+    {
+      "id": "incomplete-element-fails-closed",
+      "case_type": "adversarial",
+      "real_world": true,
+      "command": "bash sanity.sh",
+      "assert": ["stdout contains 'PASS negative-control-element'"],
+      "notes": "Guards the live fal 422: frontal_image_url without reference_image_urls."
+    }
+  ],
+  "claims": {
+    "proves": [
+      "compile produces validated, budget-bounded packets from pipeline artifacts",
+      "validator rejects the three known live failure classes"
+    ],
+    "does_not_prove": [
+      "live Kling rendering fidelity (requires paid submit)",
+      "fal schema has not drifted since 2026-09-07"
+    ]
+  },
+  "proof_scope": "offline deterministic; submit path not exercised",
+  "mocked": false,
+  "live": false
+}
