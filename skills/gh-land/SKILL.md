@@ -1,5 +1,5 @@
 ---
-name: git-land
+name: gh-land
 description: >
   Commit and push ONLY the named files onto origin/main, from any dirty
   checkout, branch, or worktree. Use when asked to commit and push, land
@@ -16,6 +16,8 @@ triggers:
   - scoped commit
   - git commit push
   - gcp
+  - gh-land
+  - git-land
 allowed-tools: Bash
 metadata:
   short-description: Scoped commit+push of named paths onto origin/main
@@ -30,12 +32,12 @@ disciplines:
   - developer-tooling
 ---
 
-# git-land
+# gh-land
 
 One command. Land exactly the named paths onto `origin/main`:
 
 ```bash
-skills/git-land/run.sh -m "message" <path>...
+skills/gh-land/run.sh -m "message" <path>...
 ```
 
 Delegates to `skills/ops-worktrees/run.sh land` (plumbing:
