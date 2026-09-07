@@ -391,6 +391,25 @@
       ]
     },
     {
+      "code": "project_watchdog_closure_audit_artifact_unreadable",
+      "layer": "project-watchdog",
+      "match": [
+        "project_watchdog_closure_audit_artifact_unreadable",
+        "proof artifact not readable",
+        "NOT READABLE",
+        "closure_artifacts",
+        "No such file or directory"
+      ],
+      "cause": "Project-watchdog closure audit could not read a proof artifact named by the closure evidence, so the proof is unverifiable until the artifact path is repaired or the proof is rerun.",
+      "next_command": "Fix project-watchdog closure artifact collection or rerun the ticket proof so the closure comment cites readable artifacts; reopen without needs-human, keep agent-work, include authorized_agent_next_steps, then rerun the closure-audit regression eval and validate the tick receipt with pydantic.",
+      "recoverable": true,
+      "not_this": [
+        "human policy decision",
+        "closure FAIL showing the work is wrong",
+        "provider did not answer any verdict"
+      ]
+    },
+    {
       "code": "project_watchdog_closure_audit_nonzero_needs_attention",
       "layer": "project-watchdog",
       "match": [

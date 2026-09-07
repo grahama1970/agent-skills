@@ -29,6 +29,8 @@ from watchdog import (  # noqa: E402
     github,
     handlers,
     issue_fields,
+    native_ticket,
+    receipt_schema,
     registry,
     streaks,
 )
@@ -1682,8 +1684,54 @@ def test_nonzero_audit_with_needs_attention_verdict_reopens_for_human(tmp_path) 
     assert result["triage"]["code"] == handlers.CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE
     assert result["triage"]["secondary_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
     assert result["outcome"] == "reopened_unverified"
+    assert result["requires_human_input"] is True
     assert calls["reopened"] == [9]
     assert any(e.get("add") == [config.READY_LABEL, "needs-human"] for e in calls["edits"])
+
+
+def test_unreadable_closure_artifact_reopens_for_machine_repair(tmp_path) -> None:
+    result, calls = _run_audit(
+        tmp_path,
+        {"handler-a": "VERDICT: NEEDS_ATTENTION", "handler-b": "VERDICT: NEEDS_ATTENTION"},
+        comments=[_evidence_comment(str(tmp_path / "missing-proof.json"))],
+    )
+
+    assert result["verdict"] == "NEEDS_ATTENTION"
+    assert result["status"] == "NEEDS_ATTENTION"
+    assert result["failure_code"] == handlers.CLOSURE_AUDIT_ARTIFACT_UNREADABLE_CODE
+    assert result["triage"]["code"] == handlers.CLOSURE_AUDIT_ARTIFACT_UNREADABLE_CODE
+    assert result["requires_human_input"] is False
+    assert result["authorized_agent_next_steps"]
+    assert calls["reopened"] == [9]
+    assert any(
+        e.get("add") == [config.READY_LABEL] and "needs-human" in e.get("remove", [])
+        for e in calls["edits"]
+    )
+
+
+def test_artifact_unreadable_receipt_requires_authorized_agent_steps() -> None:
+    receipt = {
+        "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+        "run_id": "r",
+        "status": "NEEDS_ATTENTION",
+        "ok": False,
+        "handled_issues": [
+            {
+                "action": "closure_audit",
+                "issue_number": 1603,
+                "status": "NEEDS_ATTENTION",
+                "verdict": "NEEDS_ATTENTION",
+                "outcome": "reopened_unverified",
+                "failure_code": "project_watchdog_closure_audit_artifact_unreadable",
+                "requires_human_input": True,
+            }
+        ],
+    }
+
+    receipt_schema.validate_receipt(receipt)
+
+    assert receipt["schema_validation"]["valid"] is False
+    assert "machine-actionable" in receipt["schema_validation"]["error"]
 
 
 def test_nonzero_needs_attention_audit_cools_down_if_selected_again(tmp_path) -> None:
@@ -2099,6 +2147,35 @@ def test_markdown_receipt_paths_are_read_relative_to_the_project_worktree(tmp_pa
     assert "tau.ticket_closure_evidence.v1" in found[0]["content"]
 
 
+def test_local_state_receipt_paths_are_read_from_watchdog_state_root(tmp_path, monkeypatch) -> None:
+    state_root = tmp_path / "state"
+    artifact = state_root / "receipts/r/authored-commit.json"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text('{"status":"PASS","artifact":"readable"}\n')
+    monkeypatch.setenv("PROJECT_WATCHDOG_STATE_ROOT", str(state_root))
+    comment = {
+        "body": "Receipt: `local/state/project-watchdog/receipts/r/authored-commit.json`"
+    }
+
+    found = handlers.collect_closure_artifacts([comment], base_dir=tmp_path / "repo")
+
+    assert len(found) == 1
+    assert found[0]["tier"] == "comment"
+    assert "readable" in found[0]["content"]
+
+
+def test_proof_artifact_lines_are_collected_for_closure_audit(tmp_path) -> None:
+    artifact = tmp_path / "proof.json"
+    artifact.write_text('{"readiness":"READY"}\n')
+    found = handlers.collect_closure_artifacts(
+        [{"body": f"VERDICT: PASS\nPROOF_ARTIFACT: {artifact}\n"}]
+    )
+
+    assert len(found) == 1
+    assert found[0]["tier"] == "proof_artifact"
+    assert "READY" in found[0]["content"]
+
+
 def test_artifacts_are_capped_so_a_huge_log_cannot_crowd_out_the_ticket(tmp_path) -> None:
     art = tmp_path / "big.txt"
     art.write_text("x" * (handlers.ARTIFACT_EXCERPT_CHARS * 3))
@@ -2511,3 +2588,28 @@ def test_ui_snapshot_projects_issue_receipts_with_gate_and_tau_links(tmp_path: P
     assert item["tau_dag"]["graph"]["dag_id"] == "ask-tau-test"
     assert len(item["tau_dag"]["graph"]["nodes"]) == 2
     assert len(item["tau_dag"]["graph"]["edges"]) == 1
+
+
+def test_prepare_reusable_output_moves_fixed_battle_out_dir(tmp_path: Path) -> None:
+    out = tmp_path / "review-ticket-live-rerun"
+    out.mkdir()
+    (out / "old.json").write_text("{}", encoding="utf-8")
+
+    native_ticket._prepare_reusable_output(
+        "skills/battle/run.sh adaptive-red-blue-lineage-canary battle-004 "
+        f"--out {out} --run-id review-ticket-live-rerun"
+    )
+
+    assert not out.exists()
+    backups = list(tmp_path.glob("review-ticket-live-rerun.verify-prev-*"))
+    assert len(backups) == 1
+    assert (backups[0] / "old.json").read_text(encoding="utf-8") == "{}"
+
+
+def test_prepare_reusable_output_ignores_non_battle_commands(tmp_path: Path) -> None:
+    out = tmp_path / "result"
+    out.mkdir()
+
+    native_ticket._prepare_reusable_output(f"echo --out {out}")
+
+    assert out.exists()

@@ -35,7 +35,7 @@
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "20 passed",
+          "21 passed",
           "webgpt_attachment_bundle_rejected",
           "scillm_empty_response_200",
           "monitor_opportunities_linkedin_source_accounting_failed",

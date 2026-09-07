@@ -162,6 +162,18 @@ def test_project_watchdog_left_closed_unverified_has_actionable_code() -> None:
     assert "Reopen the issue" in r["next_command"]
 
 
+def test_project_watchdog_unreadable_closure_artifact_has_actionable_code() -> None:
+    r = t.classify(
+        "Closure audit: NEEDS_ATTENTION; proof artifact NOT READABLE: "
+        "No such file or directory: local/state/project-watchdog/receipts/r/authored-commit.json",
+        "project-watchdog",
+    )
+    assert r["code"] == "project_watchdog_closure_audit_artifact_unreadable"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "needs-human" in r["next_command"]
+
+
 def test_create_svg_variant_code_classifies_without_prose_regex() -> None:
     r = t.classify('{"code":"create_svg_variant_handler_count_mismatch"}', "create-svg")
     assert r["code"] == "create_svg_variant_handler_count_mismatch"

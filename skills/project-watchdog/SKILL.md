@@ -452,7 +452,8 @@ only when explicitly testing the browser path.
 
 - any FAIL → reopened, `agent-work` restored, the repair lane takes it again
 - every seat PASS → `closure-verified`, stays closed
-- any `VERDICT: NEEDS_ATTENTION` → reopened with `agent-work` + `needs-human`; unverified is not closed
+- any `VERDICT: NEEDS_ATTENTION` from unreadable proof artifacts → reopened with `agent-work`, `requires_human_input: false`, and `authorized_agent_next_steps`; unverified is not closed, but machine-actionable evidence repair stays routable
+- any other `VERDICT: NEEDS_ATTENTION` → reopened with `agent-work` + `needs-human`; unverified is not closed
 - a silent seat, or none → NEEDS_ATTENTION cooldown; no `closure-verified` label
 
 `NOT_PLANNED` closures are excluded: a duplicate or won't-fix is bookkeeping,

@@ -35,6 +35,7 @@ TRIAGE_RUN_SH = config.SKILL_DIR.parent / "triage-error" / "run.sh"
 MINTED_CODE_RE = re.compile(r"^[a-z0-9_]+_unclassified_[0-9a-f]{8}$")
 
 TRIAGE_CATALOG_PATH = config.SKILL_DIR.parent / "triage-error" / "failure_codes.json"
+CLOSURE_AUDIT_ARTIFACT_UNREADABLE_CODE = "project_watchdog_closure_audit_artifact_unreadable"
 
 RECEIPT_STATUSES = (
     "COMPLETED",
@@ -92,6 +93,8 @@ class HandledIssue(BaseModel):
     outcome: str | None = None
     triage: Triage | None = None
     failure_code: str | None = None
+    requires_human_input: bool | None = None
+    authorized_agent_next_steps: list[str] | None = None
 
     @field_validator("failure_code")
     @classmethod
@@ -115,6 +118,17 @@ class HandledIssue(BaseModel):
             raise ValueError(
                 "closure_audit VERDICT: NEEDS_ATTENTION cannot have status COMPLETED"
             )
+        if self.failure_code == CLOSURE_AUDIT_ARTIFACT_UNREADABLE_CODE:
+            if self.requires_human_input is not False:
+                raise ValueError(
+                    "closure_audit artifact-unreadable failures are machine-actionable; "
+                    "requires_human_input must be false"
+                )
+            if not self.authorized_agent_next_steps:
+                raise ValueError(
+                    "closure_audit artifact-unreadable failures must include "
+                    "authorized_agent_next_steps"
+                )
         return self
 
 

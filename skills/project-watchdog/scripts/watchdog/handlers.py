@@ -1162,6 +1162,9 @@ CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE = (
 CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE = (
     "project_watchdog_closure_audit_unverified_closed"
 )
+CLOSURE_AUDIT_ARTIFACT_UNREADABLE_CODE = (
+    "project_watchdog_closure_audit_artifact_unreadable"
+)
 
 #: Cap per artifact. The auditors read a prompt, not a filesystem; a 50MB log
 #: would crowd out the ticket itself.
@@ -1196,15 +1199,24 @@ def collect_closure_artifacts(
     found: list[dict[str, Any]] = []
     seen: set[str] = set()
 
+    def resolve_artifact_path(path: str) -> Path:
+        artifact_path = Path(path)
+        if artifact_path.is_absolute():
+            return artifact_path
+        parts = artifact_path.parts
+        if parts[:3] == ("local", "state", "project-watchdog"):
+            return config.state_root().joinpath(*parts[3:])
+        if base_dir is not None:
+            return base_dir / artifact_path
+        return artifact_path
+
     def add_artifact(path_value: str, *, tier: str, command: Any = None) -> None:
         path = path_value.strip().strip("`.,;)]")
         if not path or path in seen:
             return
         seen.add(path)
         record: dict[str, Any] = {"tier": tier, "path": path, "command": command}
-        artifact_path = Path(path)
-        if not artifact_path.is_absolute() and base_dir is not None:
-            artifact_path = base_dir / artifact_path
+        artifact_path = resolve_artifact_path(path)
         try:
             text = artifact_path.read_text(encoding="utf-8", errors="replace")
             record["content"] = text[:ARTIFACT_EXCERPT_CHARS]
@@ -1226,6 +1238,8 @@ def collect_closure_artifacts(
                 entry = payload.get(tier)
                 if isinstance(entry, dict):
                     add_artifact(str(entry.get("artifact") or ""), tier=tier, command=entry.get("command"))
+        for match in re.findall(r"(?m)^\s*PROOF_ARTIFACT:\s*`?([^`\s]+)`?", body):
+            add_artifact(match, tier="proof_artifact")
         for match in re.findall(r"`?((?:docs|local|artifacts)/[^`\s]+?\.json)`?", body):
             add_artifact(match, tier="comment")
     return found
@@ -1581,15 +1595,28 @@ def handle_closure_audit(
         return result
 
     if verdict == "NEEDS_ATTENTION":
+        artifact_gap = any("missing" in a for a in collected)
+        triage_code = (
+            CLOSURE_AUDIT_ARTIFACT_UNREADABLE_CODE
+            if artifact_gap else CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE
+        )
+        next_steps = [
+            f"Fix project-watchdog closure artifact collection for {repo}#{issue_number} or rerun the proof so the closure comment cites readable artifacts.",
+            "Rerun the project-watchdog closure-audit regression eval and verify the tick receipt with pydantic.",
+        ]
         audit_triage = {
-            "code": CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE,
+            "code": triage_code,
             "layer": "project-watchdog",
             "cause": (
+                "A closure-audit seat declared VERDICT: NEEDS_ATTENTION because proof artifacts "
+                "were not readable by the audit prompt. That is machine-actionable closure-evidence "
+                "repair, not a human decision."
+                if artifact_gap else
                 "A closure-audit seat declared VERDICT: NEEDS_ATTENTION, so the closure is not "
                 "verified. A $ticket must not remain closed as completed when the audit cannot "
                 "verify its proof."
             ),
-            "next_command": (
+            "next_command": " && ".join(next_steps) if artifact_gap else (
                 f"Reopen {repo}#{issue_number}, add {config.READY_LABEL!r} and 'needs-human', "
                 "then rerun the project-watchdog closure-audit regression eval."
             ),
@@ -1623,30 +1650,38 @@ def handle_closure_audit(
             )
         )
         result["commands"].append(github.issue_reopen(repo, issue_number))
+        edit_add = [config.READY_LABEL]
+        edit_remove = [config.CLOSURE_VERIFIED_LABEL, config.CLOSURE_UNVERIFIED_LABEL]
+        if artifact_gap:
+            edit_remove.append("needs-human")
+        else:
+            edit_add.append("needs-human")
         result["commands"].append(
             github.issue_edit(
                 repo,
                 issue_number,
-                add=[config.READY_LABEL, "needs-human"],
-                remove=[config.CLOSURE_VERIFIED_LABEL, config.CLOSURE_UNVERIFIED_LABEL],
+                add=edit_add,
+                remove=edit_remove,
             )
         )
-        result.update(
-            {
-                "ok": False,
-                "status": "NEEDS_ATTENTION",
-                "requires_human_input": True,
-                "failure_code": audit_triage["code"],
-                "outcome": "reopened_unverified",
-                "summary": (
-                    f"[{audit_triage['code']}] closure of {repo}#{issue_number} could not be "
-                    f"verified from the ticket thread; reopened and marked needs-human "
-                    f"(wrapper exit {audit.get('exit_code')}, seats {seat_verdicts}"
-                    + (f", failures {seat_failures}" if seat_failures else "")
-                    + ")"
-                ),
-            }
-        )
+        update: dict[str, Any] = {
+            "ok": False,
+            "status": "NEEDS_ATTENTION",
+            "requires_human_input": not artifact_gap,
+            "failure_code": audit_triage["code"],
+            "outcome": "reopened_unverified",
+            "summary": (
+                f"[{audit_triage['code']}] closure of {repo}#{issue_number} could not be "
+                f"verified from the ticket thread; reopened for "
+                f"{'machine repair' if artifact_gap else 'human review'} "
+                f"(wrapper exit {audit.get('exit_code')}, seats {seat_verdicts}"
+                + (f", failures {seat_failures}" if seat_failures else "")
+                + ")"
+            ),
+        }
+        if artifact_gap:
+            update["authorized_agent_next_steps"] = next_steps
+        result.update(update)
         log_event(run_id, "closure_audit_reopened_unverified", issue=issue_number)
         return result
 
