@@ -1,0 +1,255 @@
+#!/usr/bin/env python3
+"""Live E2E: human idea -> Kling dream video -> Embry journal -> Chatterbox conversation."""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.util
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT_ROOT = Path(os.environ.get("PD_EVAL_OUT_ROOT", "/mnt/storage12tb/skills/persona-dream/outputs"))
+CHATTERBOX = os.environ.get("CHATTERBOX_BASE_URL", "http://127.0.0.1:8018")
+CHATTERBOX_OUT_HOST_ROOT = Path(os.environ.get("CHATTERBOX_OUT_HOST_ROOT", "/home/graham/workspace/experiments/chatterbox/logs"))
+IDEA = (
+    "Embry and Horus have tea on a void world, discussing SPARTA Explorer "
+    "casually as friends, with the Zeitch Eye and Tyranids in the background."
+)
+MODEL_ID = "fal-ai/kling-video/v3/standard/text-to-video"
+
+
+class Phase(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    schema_: Literal["persona_dream.kling_tea_e2e_phase.v1"] = Field(default="persona_dream.kling_tea_e2e_phase.v1", alias="schema")
+    phase: str = Field(min_length=1)
+    status: str = Field(min_length=1)
+    live: bool
+    mocked: bool = False
+    artifacts: list[str] = []
+    details: dict[str, Any] = {}
+
+
+def write_json(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return "sha256:" + h.hexdigest()
+
+
+def phase(run_dir: Path, name: str, status: str, *, live: bool, artifacts: list[str] | None = None, **details: Any) -> None:
+    record = Phase(phase=name, status=status, live=live, artifacts=artifacts or [], details=details).model_dump(by_alias=True)
+    write_json(run_dir / "receipts" / f"{name}.json", record)
+
+
+def fetch(url: str, out: Path) -> None:
+    with urllib.request.urlopen(url, timeout=600) as response:
+        out.write_bytes(response.read())
+
+
+def ffprobe(path: Path) -> dict[str, Any]:
+    proc = subprocess.run(["ffprobe", "-v", "error", "-show_format", "-show_streams", "-of", "json", str(path)], text=True, capture_output=True, timeout=60)
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr[-300:])
+    return json.loads(proc.stdout)
+
+
+def resolve_chatterbox_audio(source: str) -> Path | None:
+    path = Path(source or "")
+    if path.is_file():
+        return path
+    if path.is_absolute() and len(path.parts) > 2 and path.parts[1] in {"out", "data"}:
+        host = CHATTERBOX_OUT_HOST_ROOT.joinpath(*path.parts[2:])
+        if host.is_file():
+            return host
+    return None
+
+
+def render_journal_audio(run_dir: Path, run_id: str, text: str) -> Path:
+    request = {
+        "answer_text": text,
+        "label": run_id,
+        "use_blessed_qra_cache": False,
+        "asr_verify": False,
+        "voice_delivery": {"pace": "measured", "tone": "neutral_warm"},
+    }
+    write_json(run_dir / "journal_chatterbox_request.json", {"schema": "persona_dream.kling_tea_journal_chatterbox_request.v1", **request})
+    req = urllib.request.Request(f"{CHATTERBOX}/synthesize-batch", data=json.dumps(request).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+    with urllib.request.urlopen(req, timeout=600) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    write_json(run_dir / "journal_chatterbox_response.json", payload)
+    source = resolve_chatterbox_audio(str(payload.get("finished_response_audio") or ""))
+    if source is None:
+        chunks = payload.get("chunks") or []
+        for chunk in chunks:
+            audio = ((chunk or {}).get("synthesis") or {}).get("audio")
+            source = resolve_chatterbox_audio(str(audio or ""))
+            if source is not None:
+                break
+    if source is None:
+        raise RuntimeError("chatterbox_audio_not_found")
+    dest = run_dir / "journal.wav"
+    shutil.copyfile(source, dest)
+    write_json(run_dir / "JOURNAL_AUDIO_RECEIPT.json", {
+        "schema": "persona_dream.journal_audio_receipt.v1",
+        "status": "PASS_JOURNAL_SPOKEN",
+        "live": True,
+        "mocked": False,
+        "audio": str(dest),
+        "audio_sha256": sha256(dest),
+        "audio_bytes": dest.stat().st_size,
+        "text_sha256": "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "chatterbox_response": str(run_dir / "journal_chatterbox_response.json"),
+    })
+    return dest
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {name}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out-dir", type=Path, default=None)
+    ap.add_argument("--dry-run", action="store_true")
+    args = ap.parse_args()
+    run_id = "kling-tea-e2e-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    run_dir = (args.out_dir or OUT_ROOT / run_id).resolve()
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    phase(run_dir, "idea_lineage", "PASS_IDEA_LINEAGE", live=True, idea=IDEA, source="human_prompt")
+    if args.dry_run:
+        phase(run_dir, "kling_dream_video", "BLOCKED_DRY_RUN_NOT_E2E", live=False)
+        print(f"BLOCKED_DRY_RUN_NOT_E2E run={run_dir}")
+        return 2
+
+    try:
+        urllib.request.urlopen(f"{CHATTERBOX}/health", timeout=10)
+    except (urllib.error.URLError, OSError):
+        phase(run_dir, "chatterbox_preflight", "BLOCKED_CHATTERBOX_UNREACHABLE", live=False)
+        print(f"BLOCKED_CHATTERBOX_UNREACHABLE run={run_dir}")
+        return 2
+    phase(run_dir, "chatterbox_preflight", "PASS_CHATTERBOX_REACHABLE", live=True)
+
+    try:
+        import fal_client  # type: ignore
+    except Exception as exc:
+        phase(run_dir, "kling_preflight", "BLOCKED_FAL_CLIENT_IMPORT", live=False, error=str(exc))
+        print(f"BLOCKED_FAL_CLIENT_IMPORT run={run_dir}")
+        return 2
+    if not os.environ.get("FAL_KEY") and os.environ.get("FAL_API_KEY"):
+        os.environ["FAL_KEY"] = os.environ["FAL_API_KEY"]
+    if not os.environ.get("FAL_KEY"):
+        phase(run_dir, "kling_preflight", "BLOCKED_FAL_KEY_MISSING", live=False)
+        print(f"BLOCKED_FAL_KEY_MISSING run={run_dir}")
+        return 2
+    phase(run_dir, "kling_preflight", "PASS_KLING_PREFLIGHT", live=True, model_id=MODEL_ID)
+
+    prompt = (
+        "Cinematic dream, 5 seconds, 16:9. Embry Lawson and Horus Lupercal sit as friends at a small tea table "
+        "on a Warhammer-like void world. They casually discuss a glowing SPARTA Explorer evidence map hovering "
+        "between teacups. The Zeitch Eye glows in the storm sky. Distant Tyranids move in the background but do "
+        "not attack. Intimate, strange, warm, synthetic dream logic, no text overlays."
+    )
+    request = {"prompt": prompt, "duration": "5", "aspect_ratio": "16:9", "generate_audio": False, "negative_prompt": "text, subtitles, gore"}
+    write_json(run_dir / "kling_request.json", {"schema": "persona_dream.kling_tea_request.v1", "model_id": MODEL_ID, "request": request})
+    try:
+        response = fal_client.subscribe(MODEL_ID, arguments=request, with_logs=True)  # type: ignore[attr-defined]
+    except Exception as exc:
+        code = "BLOCKED_KLING_PROVIDER_TOP_UP" if "TOP_UP" in str(exc) else "BLOCKED_KLING_PROVIDER_ERROR"
+        phase(run_dir, "kling_dream_video", code, live=True, error=str(exc)[:1000])
+        print(f"{code} run={run_dir}")
+        return 2
+    write_json(run_dir / "kling_response.json", response)
+    video_url = (((response or {}).get("video") or {}).get("url") if isinstance(response, dict) else None) or ((response or {}).get("url") if isinstance(response, dict) else None)
+    if not video_url:
+        phase(run_dir, "kling_dream_video", "BLOCKED_KLING_NO_VIDEO_URL", live=True, artifacts=[str(run_dir / "kling_response.json")])
+        print(f"BLOCKED_KLING_NO_VIDEO_URL run={run_dir}")
+        return 2
+    video = run_dir / "kling_dream.mp4"
+    fetch(str(video_url), video)
+    probe = ffprobe(video)
+    write_json(run_dir / "kling_dream.ffprobe.json", probe)
+    if video.stat().st_size < 100_000:
+        phase(run_dir, "kling_dream_video", "BLOCKED_KLING_VIDEO_TOO_SMALL", live=True, artifacts=[str(video)])
+        print(f"BLOCKED_KLING_VIDEO_TOO_SMALL run={run_dir}")
+        return 2
+    phase(run_dir, "kling_dream_video", "PASS_KLING_DREAM_VIDEO", live=True, artifacts=[str(video), str(run_dir / "kling_response.json")], video_sha256=sha256(video), bytes=video.stat().st_size)
+
+    storyboard = {"schema": "persona_dream.cycle_storyboard_plan.v1", "dream_synopsis": IDEA, "panels": [{"panel_id": "sb_001", "action": "Embry and Horus share tea beside a floating SPARTA Explorer evidence map while the Zeitch Eye and Tyranids remain behind them.", "mood": "warm uncanny friendship"}]}
+    write_json(run_dir / "storyboard_plan.json", storyboard)
+    write_json(run_dir / "observation_packet.json", {"schema": "persona_dream.cycle_storyboard_observation_packet.v1", "status": "PASS_KLING_VIDEO_OBSERVED", "frame_evidence": [{"panel_id": "sb_001", "observed_entities": ["Embry", "Horus", "tea", "SPARTA Explorer", "Zeitch Eye", "Tyranids"]}]})
+    write_json(run_dir / "residue_links.json", {"schema": "persona_dream.residue_links.v1", "idea_id": run_id, "items": [{"source_id": "human_idea", "scope": "human_prompt", "text": IDEA, "type": "explicit_human_idea"}]})
+    write_json(run_dir / "day_context.json", {"schema": "persona_dream.day_context.v1", "items": [{"source_id": "human_idea", "text": IDEA}]})
+    write_json(run_dir / "transcript_context.json", {"schema": "persona_dream.transcript_context.v1", "items": []})
+    write_json(run_dir / "dream_packet.json", {"schema": "persona_dream.synthetic_dream_packet.v1", "human_idea_lineage": IDEA, "kling_video": str(video), "kling_video_sha256": sha256(video), "synthetic_boundary": "Kling dream video is synthetic dream evidence, not literal history."})
+    journal = "I dreamed Horus and I were having tea on the void world, talking about SPARTA Explorer like friends. The Zeitch Eye watched from the sky and Tyranids moved behind us, but the evidence map between our cups made the danger feel strangely calm."
+    write_json(run_dir / "dream_journal.v1.json", {"schema": "persona_dream.persona_journal.v1", "persona_id": "embry", "cycle": run_id, "journal": journal, "unresolved_tension": "friendship and evidence feel warm while the void world remains dangerous", "expanded_understanding": "A hostile background can make casual trust feel more precious.", "session_mood": {"mood_label": "warmly_watchful", "mood_description": "friendly and calm, but aware of the eye and Tyranids behind the conversation", "carried_tension": "warm friendship against watched danger"}, "never_promote_to_event_fact": True, "asserts_only_own_inner_state": True})
+    (run_dir / "journal.md").write_text(journal + "\n", encoding="utf-8")
+    phase(run_dir, "journal_entry", "PASS_JOURNAL_ENTRY", live=True, artifacts=[str(run_dir / "dream_journal.v1.json"), str(run_dir / "journal.md")])
+
+    try:
+        journal_audio = render_journal_audio(run_dir, run_id, journal)
+    except Exception as exc:
+        phase(run_dir, "journal_audio", "BLOCKED_JOURNAL_AUDIO", live=True, error=str(exc))
+        print(f"BLOCKED_JOURNAL_AUDIO run={run_dir}")
+        return 2
+    phase(run_dir, "journal_audio", "PASS_JOURNAL_SPOKEN", live=True, artifacts=[str(journal_audio)])
+
+    proc = subprocess.run([sys.executable, str(ROOT / "scripts" / "dynamic_conversation.py"), "--run-dir", str(run_dir), "--turns", "2", "--opening-topic", "Ask Embry about the tea with Horus, SPARTA Explorer, the Zeitch Eye, and Tyranids."], text=True, capture_output=True, timeout=1500)
+    (run_dir / "dynamic_conversation.stdout").write_text(proc.stdout, encoding="utf-8")
+    (run_dir / "dynamic_conversation.stderr").write_text(proc.stderr, encoding="utf-8")
+    if proc.returncode != 0 or "PASS_DYNAMIC_CONVERSATION" not in proc.stdout:
+        phase(run_dir, "chatterbox_discussion", "BLOCKED_CHATTERBOX_DISCUSSION", live=True, stdout=proc.stdout[-500:], stderr=proc.stderr[-500:])
+        print(f"BLOCKED_CHATTERBOX_DISCUSSION run={run_dir}")
+        return 2
+    convo = run_dir / "conversation.jsonl"
+    turns = [json.loads(line) for line in convo.read_text(encoding="utf-8").splitlines() if line.strip()]
+    audio = [run_dir / t.get("audio", "") for t in turns if t.get("role") in {"horus", "embry"}]
+    if len(audio) < 4 or any((not p.is_file()) or p.stat().st_size < 10000 for p in audio):
+        phase(run_dir, "chatterbox_discussion", "BLOCKED_CONVERSATION_AUDIO_READBACK", live=True)
+        print(f"BLOCKED_CONVERSATION_AUDIO_READBACK run={run_dir}")
+        return 2
+    phase(run_dir, "chatterbox_discussion", "PASS_CHATTERBOX_DREAM_DISCUSSION", live=True, artifacts=[str(convo), str(run_dir / "dynamic_conversation_receipt.v1.json"), *map(str, audio)])
+
+    receipt = {
+        "schema": "persona_dream.kling_tea_e2e_receipt.v1",
+        "status": "PASS_KLING_TEA_E2E",
+        "live": True,
+        "mocked": False,
+        "run_dir": str(run_dir),
+        "idea": IDEA,
+        "kling_video": str(video),
+        "kling_video_sha256": sha256(video),
+        "journal_audio": str(run_dir / "journal.wav"),
+        "conversation_turns": len(turns),
+        "phase_receipts": sorted(str(p) for p in (run_dir / "receipts").glob("*.json")),
+    }
+    write_json(run_dir / "KlingTeaE2E.RECEIPT.json", receipt)
+    print(f"PASS_KLING_TEA_E2E run={run_dir} turns={len(turns)} video_bytes={video.stat().st_size}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,17 @@
+{
+  "agentic_eval_report": "skills/persona-dream/local/proofs/kling-tea-e2e-best-effort-20260907T150100Z/agentic_eval_report.json",
+  "agentic_eval_status": "USABLE_WITH_GAPS",
+  "live_manual_pass_before_provider_lock": true,
+  "manual_pass_receipt": "/mnt/storage12tb/skills/persona-dream/outputs/kling-tea-e2e-manual-20260907Tfix1/KlingTeaE2E.RECEIPT.json",
+  "manual_pass_receipt_sha256": "sha256:201c5d9cd62a3cdccd4abc3ae5064106102085d713bbeb0db8efed6a1bec131a",
+  "next_command": "Top up or unlock the Fal/Kling account, then rerun skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.kling_tea_e2e.json --output /tmp/persona-dream-kling-tea-e2e-agentic-report.json.",
+  "schema": "persona_dream.kling_tea_e2e_best_effort_summary.v1",
+  "status": "BLOCKED_EXTERNAL",
+  "triage": "skills/persona-dream/local/proofs/kling-tea-e2e-best-effort-20260907T150100Z/triage.json",
+  "triage_code": "persona_dream_kling_provider_top_up_required",
+  "verified_results": [
+    "manual script run: PASS_KLING_TEA_E2E run=/mnt/storage12tb/skills/persona-dream/outputs/kling-tea-e2e-manual-20260907Tfix1 turns=4 video_bytes=4095474",
+    "agentic eval report: readiness USABLE_WITH_GAPS; PASS=1 FAIL=0 BLOCKED=1 NOT_TESTED=0; persona_dream.kling_tea_e2e BLOCKED_EXTERNAL",
+    "triage-error classify: persona_dream_kling_provider_top_up_required"
+  ]
+}

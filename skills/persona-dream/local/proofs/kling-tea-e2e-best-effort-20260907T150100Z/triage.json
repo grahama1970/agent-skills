@@ -1,0 +1,18 @@
+{
+  "code": "persona_dream_kling_provider_top_up_required",
+  "layer": "persona-dream",
+  "cause": "The live Kling/Fal provider account is locked until a top-up, so Persona Dream cannot complete a fresh paid Kling generation step.",
+  "next_command": "Top up or unlock the Fal/Kling account, then rerun skills/agentic-evals/run.sh run skills/persona-dream/fixtures/agentic_eval.kling_tea_e2e.json --output /tmp/persona-dream-kling-tea-e2e-agentic-report.json.",
+  "recoverable": true,
+  "not_this": [
+    "Chatterbox synthesis failure",
+    "Pydantic step boundary failure",
+    "dry-run provider gate"
+  ],
+  "ambiguous": false,
+  "matched_tokens": [
+    "blocked_kling_provider_top_up",
+    "user is locked. reason: top_up",
+    "fal/kling provider returned user is locked"
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "schema": "agentic_evals.report.v2",
+  "source": "skills/persona-dream/fixtures/agentic_eval.kling_tea_e2e.json",
+  "run_id": "a2c54d3c7cab",
+  "fixture_sha256": "sha256:db074d4e02dcd44b0ebb0b025031c1ff78675e7cebdb214cd7a29f7d5c7666bf",
+  "repo": {
+    "sha": "5b870c7c921a8e7b36a0308f57c0b701b6e188e5",
+    "ref": "main"
+  },
+  "mocked": false,
+  "fixture_backed": true,
+  "live": true,
+  "proof_scope": "live end-to-end human idea to Kling dream video, Embry journal, and Chatterbox Horus/Embry discussion; uses paid/live provider credentials when available",
+  "claims": {
+    "proves": "The specified human idea can execute through a live Kling text-to-video dream, journal artifact creation, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation with read-back artifacts.",
+    "does_not_prove": "Production reliability, human preference, or that every historical Persona Dream media lane is complete."
+  },
+  "what_was_exercised": "local commands declared in the fixture manifest",
+  "what_remains_unverified": "semantic correctness, live services, LLM judge behavior, and release readiness",
+  "readiness": "USABLE_WITH_GAPS",
+  "case_readiness": "USABLE_WITH_GAPS",
+  "capability_readiness": {
+    "aggregate_readiness": "USABLE_WITH_GAPS",
+    "critical_claim_count": 1,
+    "critical_claims_proven": 0,
+    "claims": [
+      {
+        "id": "persona_dream.kling_tea_e2e",
+        "description": "Human idea -> Kling dream video -> Embry journal -> Chatterbox Horus/Embry dream discussion completes with typed phase receipts and read-back artifacts.",
+        "criticality": "critical",
+        "required_evidence": [
+          "adversarial_live_e2e",
+          "live_e2e"
+        ],
+        "verdict": "BLOCKED_EXTERNAL",
+        "per_class": {
+          "adversarial_live_e2e": {
+            "status": "PROVEN",
+            "cases": [
+              "kling-tea-e2e-dry-run-cannot-pass"
+            ]
+          },
+          "live_e2e": {
+            "status": "BLOCKED",
+            "cases": [
+              "kling-tea-e2e-live"
+            ]
+          }
+        },
+        "missing_evidence": [],
+        "blocked_evidence": [
+          "live_e2e"
+        ],
+        "exempt_evidence": [],
+        "exemptions": [],
+        "unqualified_live_cases": [],
+        "supporting_cases": [
+          "kling-tea-e2e-live",
+          "kling-tea-e2e-dry-run-cannot-pass"
+        ]
+      }
+    ]
+  },
+  "claims_coverage": "manifest-spanning",
+  "focused_cases": [],
+  "generated_at": "2026-09-07T15:00:14.069173+00:00",
+  "case_count": 2,
+  "required_case_count": 2,
+  "outcome_counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "BLOCKED": 1,
+    "NOT_TESTED": 0
+  },
+  "trial_count": 4,
+  "cases": [
+    {
+      "infra_blocked_trials": 2,
+      "flaky": false,
+      "name": "kling-tea-e2e-live",
+      "type": "positive",
+      "case_id": "a2c54d3c7cab-c000",
+      "required": true,
+      "outcome": "BLOCKED",
+      "problems": [
+        "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json: missing",
+        "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json: missing",
+        "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav: missing",
+        "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4: missing",
+        "exit_code 2 != 0",
+        "external blocker: saw 'BLOCKED_KLING_PROVIDER_ERROR'",
+        "external blocker: saw 'BLOCKED_KLING_PROVIDER_TOP_UP'",
+        "stdout missing 'PASS_KLING_TEA_E2E'"
+      ],
+      "argv": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-live\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\""
+      ],
+      "declared_evidence_class": "live_e2e",
+      "effective_evidence_class": "live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.kling_tea_e2e"
+      ],
+      "seams": [],
+      "passed_trials": 0,
+      "total_trials": 2,
+      "pass_rate": 0.0,
+      "avg_latency_ms": 625.943,
+      "trials": [
+        {
+          "exit_code": 2,
+          "stdout": "BLOCKED_KLING_PROVIDER_TOP_UP run=/tmp/persona-dream-kling-tea-e2e-agentic-live\n",
+          "stderr": "",
+          "duration_ms": 631.764,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "a2c54d3c7cab-c000-t00",
+          "outcome": "INFRA_BLOCKED",
+          "problems": [
+            "external blocker: saw 'BLOCKED_KLING_PROVIDER_TOP_UP'",
+            "exit_code 2 != 0",
+            "stdout missing 'PASS_KLING_TEA_E2E'",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json: missing"
+          ]
+        },
+        {
+          "exit_code": 2,
+          "stdout": "BLOCKED_KLING_PROVIDER_ERROR run=/tmp/persona-dream-kling-tea-e2e-agentic-live\n",
+          "stderr": "",
+          "duration_ms": 620.122,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "a2c54d3c7cab-c000-t01",
+          "outcome": "INFRA_BLOCKED",
+          "problems": [
+            "external blocker: saw 'BLOCKED_KLING_PROVIDER_ERROR'",
+            "exit_code 2 != 0",
+            "stdout missing 'PASS_KLING_TEA_E2E'",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav: missing",
+            "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json: missing"
+          ]
+        }
+      ]
+    },
+    {
+      "infra_blocked_trials": 0,
+      "flaky": false,
+      "name": "kling-tea-e2e-dry-run-cannot-pass",
+      "type": "adversarial",
+      "case_id": "a2c54d3c7cab-c001",
+      "required": true,
+      "outcome": "PASS",
+      "problems": [],
+      "argv": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --dry-run"
+      ],
+      "declared_evidence_class": "adversarial_live_e2e",
+      "effective_evidence_class": "adversarial_live_e2e",
+      "live_qualified": true,
+      "evidence_disqualifiers": [],
+      "supports_claims": [
+        "persona_dream.kling_tea_e2e"
+      ],
+      "seams": [],
+      "passed_trials": 2,
+      "total_trials": 2,
+      "pass_rate": 1.0,
+      "avg_latency_ms": 167.41,
+      "trials": [
+        {
+          "exit_code": 2,
+          "stdout": "BLOCKED_DRY_RUN_NOT_E2E run=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\n",
+          "stderr": "",
+          "duration_ms": 167.859,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "a2c54d3c7cab-c001-t00",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-e2e-agentic-dry-run/receipts/kling_dream_video.json": "sha256:0a909d5a52204b643a44d5fe69842f8c439198223972d3292d2751e22e5de859"
+          },
+          "outcome": "PASS",
+          "problems": []
+        },
+        {
+          "exit_code": 2,
+          "stdout": "BLOCKED_DRY_RUN_NOT_E2E run=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\n",
+          "stderr": "",
+          "duration_ms": 166.961,
+          "timed_out": false,
+          "orphan_pids_after_teardown": [],
+          "trial_id": "a2c54d3c7cab-c001-t01",
+          "artifact_hashes": {
+            "/tmp/persona-dream-kling-tea-e2e-agentic-dry-run/receipts/kling_dream_video.json": "sha256:0a909d5a52204b643a44d5fe69842f8c439198223972d3292d2751e22e5de859"
+          },
+          "outcome": "PASS",
+          "problems": []
+        }
+      ]
+    }
+  ]
+}

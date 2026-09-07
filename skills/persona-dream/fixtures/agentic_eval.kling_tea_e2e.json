@@ -1,0 +1,68 @@
+{
+  "version": 2,
+  "skill": "persona-dream",
+  "trials": 2,
+  "proof_scope": "live end-to-end human idea to Kling dream video, Embry journal, and Chatterbox Horus/Embry discussion; uses paid/live provider credentials when available",
+  "claims": {
+    "proves": "The specified human idea can execute through a live Kling text-to-video dream, journal artifact creation, Chatterbox journal audio, and a dynamic voiced Horus/Embry conversation with read-back artifacts.",
+    "does_not_prove": "Production reliability, human preference, or that every historical Persona Dream media lane is complete."
+  },
+  "capability_claims": [
+    {
+      "id": "persona_dream.kling_tea_e2e",
+      "description": "Human idea -> Kling dream video -> Embry journal -> Chatterbox Horus/Embry dream discussion completes with typed phase receipts and read-back artifacts.",
+      "criticality": "critical",
+      "evidence_required": {
+        "live_e2e": true,
+        "adversarial_live_e2e": true
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "kling-tea-e2e-live",
+      "type": "positive",
+      "evidence_class": "live_e2e",
+      "real_world": true,
+      "supports_claims": ["persona_dream.kling_tea_e2e"],
+      "timeout_seconds": 3600,
+      "infra_blocked_when": ["BLOCKED_KLING_PROVIDER_TOP_UP", "BLOCKED_KLING_PROVIDER_ERROR", "BLOCKED_FAL_KEY_MISSING", "BLOCKED_FAL_CLIENT_IMPORT"],
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-live\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\""
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": ["PASS_KLING_TEA_E2E"],
+        "artifacts": [
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/status", "equals": "PASS_KLING_TEA_E2E"},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/live", "equals": true},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/KlingTeaE2E.RECEIPT.json", "json_pointer": "/mocked", "equals": false},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/kling_dream.mp4", "min_bytes": 100000},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/journal.wav", "min_bytes": 10000},
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-live/dynamic_conversation_receipt.v1.json", "json_pointer": "/status", "equals": "PASS_DYNAMIC_CONVERSATION"}
+        ]
+      }
+    },
+    {
+      "name": "kling-tea-e2e-dry-run-cannot-pass",
+      "type": "adversarial",
+      "evidence_class": "adversarial_live_e2e",
+      "real_world": true,
+      "supports_claims": ["persona_dream.kling_tea_e2e"],
+      "command": [
+        "bash",
+        "-c",
+        "set -euo pipefail\nOUT=/tmp/persona-dream-kling-tea-e2e-agentic-dry-run\nrm -rf \"$OUT\"\nuv run --project .. python ../scripts/eval_kling_tea_e2e.py --out-dir \"$OUT\" --dry-run"
+      ],
+      "expected": {
+        "exit_code": 2,
+        "stdout_contains": ["BLOCKED_DRY_RUN_NOT_E2E"],
+        "artifacts": [
+          {"path": "/tmp/persona-dream-kling-tea-e2e-agentic-dry-run/receipts/kling_dream_video.json", "json_pointer": "/status", "equals": "BLOCKED_DRY_RUN_NOT_E2E"}
+        ]
+      }
+    }
+  ]
+}
