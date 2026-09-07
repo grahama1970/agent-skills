@@ -380,6 +380,24 @@ def record_note_cmd(
         _abort(exc)
 
 
+@app.command(name="ingest-package")
+def ingest_package_cmd(
+    package: Annotated[Path, typer.Option(exists=True, dir_okay=False)],
+    output_dir: Annotated[Path, typer.Option()],
+    execute: Annotated[bool, typer.Option(help="Import into a new directory after validation")] = False,
+) -> None:
+    """Check a canonical deck ZIP; --execute imports without overwriting anything."""
+    from zipfile import BadZipFile
+    from .package_intake import ingest_package
+    try:
+        result = ingest_package(package, output_dir, execute=execute)
+    except (ValueError, OSError, BadZipFile) as exc:
+        typer.echo(json.dumps({'schema': 'pitchdeck.package_intake.v1', 'status': 'FAIL',
+                               'applied': False, 'error': str(exc)}))
+        raise typer.Exit(1)
+    typer.echo(json.dumps(result, indent=2))
+
+
 @app.command(name="compile-document")
 def compile_document_cmd(
     bundle_dir: Annotated[Path, typer.Option(help="Directory containing the standard bundle manifests.")],

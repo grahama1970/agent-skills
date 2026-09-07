@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "skill": "pitchdeck",
+  "trials": 2,
+  "proof_scope": "Real intake and existing emit-document-ui CLI against the independently produced ZIP selected by PITCHDECK_INTAKE_PACKAGE. Imports only into new storage directories; no browser windows or working deck changes.",
+  "claims": {
+    "proves": "Validation-only leaves no destination; imported canonical JSON, resources and mapping bytes survive exactly; existing browser-payload emission retains notes, slide IDs, animation targets and assets; existing destinations and seeded package faults are refused without destination writes.",
+    "does_not_prove": "Visual approval, asset sanitization, claim/publication authorization, font installation, debugger workspace execution, browser or native Office animation playback, or authoring-view conversion."
+  },
+  "cases": [
+    {"name":"producer-package-intake-and-emission", "type":"positive", "real_world":true,
+     "command":["python3","../scripts/eval_package_intake.py","--out","/mnt/storage12tb/skills/pitchdeck/outputs/package-intake/live.json"], "timeout_seconds":300,
+     "expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/package-intake/live.json","json_pointer":"/status","equals":"PASS"}]}},
+    {"name":"package-faults-write-nothing", "type":"adversarial", "real_world":true,
+     "command":["python3","../scripts/eval_package_intake.py","--negative","--out","/mnt/storage12tb/skills/pitchdeck/outputs/package-intake/negative.json"], "timeout_seconds":300,
+     "expected":{"exit_code":0,"artifacts":[{"path":"/mnt/storage12tb/skills/pitchdeck/outputs/package-intake/negative.json","json_pointer":"/status","equals":"PASS"}]}}
+  ]
+}

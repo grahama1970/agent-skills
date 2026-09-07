@@ -74,6 +74,19 @@ Slides and refined by a project agent or human designer.
 must retain source references, visibility, claim state, and required qualifiers.
 Public decks fail closed if they reference private sources or claims.
 
+## Ingest a complete canonical ZIP
+
+`./run.sh ingest-package --package handoff.zip --output-dir /path/to/NEW-bundle`
+validates without creating the destination. Add `--execute` to import unchanged
+bytes into a new directory; existing destinations are refused. The root
+`deck.document.json` is authoritative, with relative assets/source snapshots and
+optional debugger/slide-map companions. Include the complete `deck.theme_tokens`
+snapshot; an optional plain `theme.json` must agree. The expanded
+`deck.authoring.json` is review material only, never merged as an editing input.
+See `docs/PACKAGE_INTAKE.md` and `fixtures/package_intake.json` for the producer
+contract, command, resource limits and proof boundary. Intake is not publication
+approval or browser/native playback verification.
+
 ## Workflow
 
 1. **Scaffold** a generic or project-specific bundle.
