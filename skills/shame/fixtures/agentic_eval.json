@@ -151,6 +151,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.ticket_close_final_zero_retry",
+      "description": "A typed ticket closure receipt can authorize a final shame done status while raw GitHub issue JSON cannot.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -673,6 +681,36 @@
           "retry packet is typed and self-contained",
           "format-only retry allows no tools",
           "retry packet is byte-bounded"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "ticket-close-final-zero-retry",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.ticket_close_final_zero_retry"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-ticket-close-final.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.ticket_close_final_eval.v1",
+          "typed ticket closure receipt authorizes final done status",
+          "raw issue JSON does not authorize done status"
         ],
         "stdout_excludes": [
           "Traceback",

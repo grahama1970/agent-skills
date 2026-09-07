@@ -54,6 +54,7 @@ python3 skills/shame/scripts/eval-done-receipt-binding.py
 python3 skills/shame/scripts/eval-status-preflight.py
 python3 skills/shame/scripts/eval-recovery-routing.py
 python3 skills/shame/scripts/eval-retry-packet.py
+python3 skills/shame/scripts/eval-ticket-close-final.py
 python3 skills/shame/scripts/eval-escalation-ladder.py
 skills/shame/sanity.sh --output /tmp/shame-agentic-eval.json
 ```
