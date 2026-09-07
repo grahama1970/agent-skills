@@ -130,6 +130,14 @@ variants:
   --receipt /mnt/storage12tb/skills/create-svg/outputs/tau-variants/plan.json
 ```
 
+## Neutral evidence comparisons
+
+Use `comparison-panels` for two or three equal-width panels without implied flow
+or good/bad icons. Geometry follows the theme canvas, including wide slide slots.
+Static by default; optional motion targets whole `panel-N` groups. Text budgets
+and estimated containment fail closed. See `references/schema.md` and the retained
+`fixtures/comparison_panels.json` render/readback and rejection checks.
+
 ## Decision map
 
 | Need | Command | Read next |

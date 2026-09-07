@@ -14,6 +14,7 @@ from lxml import etree
 
 from .io import load_scene, load_theme
 from .models import (
+    ComparisonPanelsScene,
     FanoutAnatomyScene,
     PositiveNegativeScene,
     Scene,
@@ -536,9 +537,47 @@ def _render_fanout(
     )
 
 
+def _render_comparison_panels(root, scene, theme, compiled) -> None:
+    """One neutral comparison, on a canvas-relative grid with intact panel groups."""
+    width, height = theme.canvas.width, theme.canvas.height
+    margin, gap = width * 0.025, width * 0.02
+    panel_width = (width - 2 * margin - gap * (len(scene.columns) - 1)) / len(scene.columns)
+    top, panel_height = height * 0.07, height * 0.75
+    count = max(len(column.items) for column in scene.columns)
+    row_gap = panel_height * 0.65 / max(count, 1)
+    for index, column in enumerate(scene.columns):
+        x = margin + index * (panel_width + gap)
+        color = getattr(theme.palette, column.accent)
+        group = _element(root, "g", id=f"panel-{index}", data_component=f"panel-{index}")
+        _target(group, compiled, f"panel-{index}")
+        _element(group, "rect", x=x, y=top, width=panel_width, height=panel_height,
+                 rx=theme.radii.small, fill=theme.palette.deep_panel, stroke=color,
+                 **{"stroke-width": theme.strokes.normal})
+        labels = [(column.heading, top + panel_height * 0.16, theme.typography.heading_size, color, 700)]
+        labels += [(item, top + panel_height * 0.32 + row_gap * (i + 0.5),
+                    theme.typography.body_size, theme.palette.white, 400)
+                   for i, item in enumerate(column.items)]
+        for text, y, size, fill, weight in labels:
+            if len(text) * size * 0.62 > panel_width * 0.88:
+                raise ValueError(f"comparison label exceeds panel width: {text!r}; shorten it")
+            _add_text(group, text, x + panel_width / 2, y, css_class="rsa-sans",
+                      size=size, fill=fill, weight=weight, anchor="middle")
+    _add_text(root, scene.caption, width / 2, height * 0.92, css_class="rsa-sans",
+              size=theme.typography.caption_size, fill=theme.palette.white, anchor="middle")
+
+
 def render_scene(scene: Scene, theme: Theme) -> str:
     """Render one validated scene to deterministic UTF-8 SVG text."""
 
+    if isinstance(scene, ComparisonPanelsScene):
+        compiled = (compile_timeline(scene.timeline, theme.animation) if scene.timeline
+                    else CompiledTimeline(css="", classes_by_target={}))
+        allowed = {f"panel-{i}" for i in range(len(scene.columns))}
+        if set(compiled.classes_by_target) - allowed:
+            raise ValueError("comparison-panels timeline target must name an existing panel")
+        root = _make_root(scene, theme, compiled)
+        _render_comparison_panels(root, scene, theme, compiled)
+        return etree.tostring(root, encoding="unicode", pretty_print=True)
     if isinstance(scene, PositiveNegativeScene):
         timeline = scene.timeline or _default_positive_timeline(theme)
     elif isinstance(scene, FanoutAnatomyScene):

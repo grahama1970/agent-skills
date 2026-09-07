@@ -9,10 +9,20 @@ Every scene includes:
 
 - `schema_version: 1`
 - `theme`: bundled theme name or a theme YAML path
-- `template`: `positive-negative` or `fanout-anatomy`
+- `template`: `positive-negative`, `fanout-anatomy`, or `comparison-panels`
 - `metadata.title` and `metadata.description`
 - template-specific semantic content
 - optional `timeline`
+
+## Neutral comparison panels
+
+`comparison-panels` accepts two or three `columns`, each with `heading`, `accent`,
+and `items`, plus `caption`. It uses the theme canvas dimensions to compute equal
+panel widths and gaps; no arrows or good/bad icons imply an unsupported relation.
+It defaults to static, complete content. Optional timeline targets are `panel-0`,
+`panel-1`, and (when present) `panel-2`. The compiler refuses more than twelve text
+elements, labels over four words, captions over eight words, or estimated label
+width exceeding the panel. Use short labels rather than shrinking text.
 
 ## Timeline
 

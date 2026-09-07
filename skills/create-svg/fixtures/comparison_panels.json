@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "skill": "create-svg",
+  "trials": 2,
+  "proof_scope": "Real CLI render and independent XML readback, plus over-budget scene rejection. Not human visual approval or browser animation proof.",
+  "cases": [
+    {
+      "name": "neutral-panels-render-readback",
+      "type": "positive",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && export ARTIFACT_DIR=$(mktemp -d /mnt/storage12tb/skills/create-svg/oai-proof-drafts/eval.XXXXXX) && ./run.sh render assets/templates/comparison-panels.yml \"$ARTIFACT_DIR/panels.svg\" && python3 -c 'import os,xml.etree.ElementTree as E; r=E.parse(os.environ[\"ARTIFACT_DIR\"]+\"/panels.svg\").getroot(); ns={\"s\":\"http://www.w3.org/2000/svg\"}; g=r.findall(\"s:g\",ns); assert len(g)==2; assert [x.attrib[\"data-component\"] for x in g]==[\"panel-0\",\"panel-1\"]; boxes=[x.find(\"s:rect\",ns).attrib for x in g]; assert boxes[0][\"width\"]==boxes[1][\"width\"]; assert not r.findall(\".//s:path\",ns); assert len(r.findall(\".//s:text\",ns))==7; print(\"PANEL_READBACK_PASS\")'"],
+      "expected": {"exit_code": 0, "stdout_contains": ["PANEL_READBACK_PASS"]},
+      "timeout_seconds": 45
+    },
+    {
+      "name": "over-budget-label-refused",
+      "type": "adversarial",
+      "real_world": true,
+      "command": ["bash", "-c", "cd .. && export ARTIFACT_DIR=$(mktemp -d /mnt/storage12tb/skills/create-svg/oai-proof-drafts/eval.XXXXXX) && python3 -c 'import os,yaml; from pathlib import Path; d=yaml.safe_load(Path(\"assets/templates/comparison-panels.yml\").read_text()); d[\"columns\"][0][\"heading\"]=\"this label has too many words\"; Path(os.environ[\"ARTIFACT_DIR\"]+\"/bad.yml\").write_text(yaml.safe_dump(d))' && ./run.sh render \"$ARTIFACT_DIR/bad.yml\" \"$ARTIFACT_DIR/bad.svg\""],
+      "expected": {"exit_code": 1, "stderr_contains": ["labels allow four words"]},
+      "timeout_seconds": 45
+    }
+  ]
+}

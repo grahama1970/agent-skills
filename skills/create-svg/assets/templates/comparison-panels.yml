@@ -1,0 +1,14 @@
+schema_version: 1
+theme: fixing-opus-neon-v1
+template: comparison-panels
+metadata:
+  title: Evidence boundaries
+  description: Neutral side-by-side comparison; no implied execution flow or pass/fail judgment.
+columns:
+  - heading: Observed
+    accent: cyan
+    items: [Recorded behavior, Read-back artifacts]
+  - heading: Proposed
+    accent: amber
+    items: [Design assumptions, Unmeasured behavior]
+caption: Different evidence supports different claims.

@@ -197,6 +197,23 @@ class PositiveNegativeScene(SceneBase):
     caption: str = Field(min_length=1, max_length=120)
 
 
+class ComparisonPanelsScene(SceneBase):
+    """Neutral, equal-width evidence panels; no implied flow or pass/fail icons."""
+
+    template: Literal["comparison-panels"]
+    columns: tuple[ComparisonColumn, ...] = Field(min_length=2, max_length=3)
+    caption: str = Field(min_length=1, max_length=120)
+
+    @model_validator(mode="after")
+    def bounded_labels(self) -> "ComparisonPanelsScene":
+        labels = [label for column in self.columns for label in (column.heading, *column.items)]
+        if len(labels) + 1 > 12:
+            raise ValueError("comparison-panels allows at most 12 text elements including caption")
+        if any(len(label.split()) > 4 for label in labels) or len(self.caption.split()) > 8:
+            raise ValueError("labels allow four words; caption allows eight")
+        return self
+
+
 class FanoutAnatomyScene(SceneBase):
     template: Literal["fanout-anatomy"]
     source: SourceCard
@@ -205,7 +222,7 @@ class FanoutAnatomyScene(SceneBase):
 
 
 Scene = Annotated[
-    Union[PositiveNegativeScene, FanoutAnatomyScene],
+    Union[PositiveNegativeScene, FanoutAnatomyScene, ComparisonPanelsScene],
     Field(discriminator="template"),
 ]
 SCENE_ADAPTER = TypeAdapter(Scene)
