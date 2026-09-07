@@ -26,7 +26,7 @@ from typing import Any, Literal
 
 import subprocess
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from . import config
 
@@ -86,7 +86,10 @@ class Triage(BaseModel):
 class HandledIssue(BaseModel):
     model_config = ConfigDict(extra="allow")
     issue_number: int | None = None
+    action: str | None = None
     status: str | None = None
+    verdict: str | None = None
+    outcome: str | None = None
     triage: Triage | None = None
     failure_code: str | None = None
 
@@ -98,6 +101,21 @@ class HandledIssue(BaseModel):
                 f"failure_code {value!r} is not a catalog or minted code"
             )
         return value
+
+    @model_validator(mode="after")
+    def closure_audit_needs_attention_must_not_look_complete(self) -> "HandledIssue":
+        if self.action != "closure_audit":
+            return self
+        if self.outcome == "left_closed_unverified":
+            raise ValueError(
+                "closure_audit outcome left_closed_unverified is forbidden; "
+                "NEEDS_ATTENTION audits must reopen/block the ticket instead of leaving it closed"
+            )
+        if self.verdict == "NEEDS_ATTENTION" and self.status == "COMPLETED":
+            raise ValueError(
+                "closure_audit VERDICT: NEEDS_ATTENTION cannot have status COMPLETED"
+            )
+        return self
 
 
 #: Every receipt family finish() emits. An unknown schema string is a defect,

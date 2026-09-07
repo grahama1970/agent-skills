@@ -604,7 +604,7 @@ cmd_ensure_labels() {
         # Without these the closure audit cannot durably mark PASS or
         # NEEDS_ATTENTION outcomes, so the same closure is re-audited forever.
         "closure-verified|0e8a16|Closure was reviewed by the audit panel and upheld"
-        "closure-unverified|b60205|Closure audit was inconclusive; left closed pending human review"
+        "closure-unverified|b60205|Closure audit was inconclusive; reopen or block pending human review"
         "route:backend_python_or_skill_runtime|1d76db|Maintainer route: backend Python or skill runtime"
         "route:design_or_ux|1d76db|Maintainer route: design or UX"
         "route:frontend_code|1d76db|Maintainer route: frontend code"

@@ -21,9 +21,10 @@ Two seats of different model families judge each `COMPLETED` closure against the
 ticket's own acceptance criterion and required proof, reading the proof
 artifacts the closure cited.
 
-    any FAIL      → reopened, agent-work restored, back to the repair lane
-    all PASS      → closure-verified, stays closed
-    no verdict    → left closed and unverified
+    any FAIL             → reopened, agent-work restored, back to the repair lane
+    all PASS             → closure-verified, stays closed
+    NEEDS_ATTENTION      → reopened with needs-human; unverified is not closed
+    no verdict           → NEEDS_ATTENTION cooldown; no closure-verified label
 
 ## 3. Completion attestation — an empty queue is not proof
 

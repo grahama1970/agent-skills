@@ -99,6 +99,18 @@ def test_project_watchdog_nonzero_needs_attention_has_actionable_code() -> None:
     assert "closure-audit-nonzero-needs-attention" in r["next_command"]
 
 
+def test_project_watchdog_left_closed_unverified_has_actionable_code() -> None:
+    r = t.classify(
+        "Project Watchdog: Closure audit: NEEDS_ATTENTION outcome left_closed_unverified "
+        "after ticket closed as completed",
+        "project-watchdog",
+    )
+    assert r["code"] == "project_watchdog_closure_audit_unverified_closed"
+    assert r["ambiguous"] is False
+    assert r["recoverable"] is True
+    assert "Reopen the issue" in r["next_command"]
+
+
 def test_create_svg_variant_code_classifies_without_prose_regex() -> None:
     r = t.classify('{"code":"create_svg_variant_handler_count_mismatch"}', "create-svg")
     assert r["code"] == "create_svg_variant_handler_count_mismatch"

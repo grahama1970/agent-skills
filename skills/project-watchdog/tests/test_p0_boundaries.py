@@ -8,6 +8,31 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from watchdog import alerts, receipt_schema  # noqa: E402
 
 
+def test_receipt_schema_rejects_left_closed_unverified_closure_audit():
+    receipt = {
+        "schema": "agent_skills.project_watchdog.tick_receipt.v1",
+        "run_id": "r",
+        "status": "COMPLETED",
+        "ok": True,
+        "handled_issues": [
+            {
+                "action": "closure_audit",
+                "issue_number": 1603,
+                "status": "COMPLETED",
+                "verdict": "NEEDS_ATTENTION",
+                "outcome": "left_closed_unverified",
+            }
+        ],
+    }
+
+    receipt_schema.validate_receipt(receipt)
+
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert receipt["ok"] is False
+    assert receipt["schema_validation"]["valid"] is False
+    assert "left_closed_unverified" in receipt["schema_validation"]["error"]
+
+
 def test_minted_triage_code_from_watchdog_layer_passes_receipt_validator():
     # triage-error mints from the layer; the code it produces for
     # 'project-watchdog' must satisfy the receipt validator, not be rejected.

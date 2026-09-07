@@ -1670,7 +1670,7 @@ def test_a_failed_reviewer_run_is_not_treated_as_a_pass(tmp_path) -> None:
     assert not any(e.get("add") == [config.CLOSURE_VERIFIED_LABEL] for e in calls["edits"])
 
 
-def test_nonzero_audit_with_needs_attention_verdict_is_made_durable(tmp_path) -> None:
+def test_nonzero_audit_with_needs_attention_verdict_reopens_for_human(tmp_path) -> None:
     result, calls = _run_audit(
         tmp_path,
         {"handler-a": "VERDICT: NEEDS_ATTENTION", "handler-b": "VERDICT: NEEDS_ATTENTION"},
@@ -1678,10 +1678,12 @@ def test_nonzero_audit_with_needs_attention_verdict_is_made_durable(tmp_path) ->
     )
     assert result["verdict"] == "NEEDS_ATTENTION"
     assert result["status"] == "NEEDS_ATTENTION"
-    assert result["failure_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
-    assert result["triage"]["code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
-    assert calls["reopened"] == []
-    assert any(e.get("add") == [config.CLOSURE_UNVERIFIED_LABEL] for e in calls["edits"])
+    assert result["failure_code"] == handlers.CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE
+    assert result["triage"]["code"] == handlers.CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE
+    assert result["triage"]["secondary_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert result["outcome"] == "reopened_unverified"
+    assert calls["reopened"] == [9]
+    assert any(e.get("add") == [config.READY_LABEL, "needs-human"] for e in calls["edits"])
 
 
 def test_nonzero_needs_attention_audit_cools_down_if_selected_again(tmp_path) -> None:
@@ -1727,7 +1729,7 @@ def test_nonzero_needs_attention_audit_cools_down_if_selected_again(tmp_path) ->
         )
 
     assert first is not None and first["verdict"] == "NEEDS_ATTENTION"
-    assert first["failure_code"] == handlers.CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+    assert first["failure_code"] == handlers.CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE
     assert second is None, "the cooldown must suppress the duplicate audit on the next tick"
     assert calls["run_cmd"] == 1
     assert state["closure_audit_attempts"][f"{TAU_REPO}#9"] > 0

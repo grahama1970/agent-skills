@@ -139,17 +139,18 @@
         "--project",
         "..",
         "pytest",
-        "../tests/test_project_watchdog.py::test_nonzero_audit_with_needs_attention_verdict_is_made_durable",
+        "../tests/test_project_watchdog.py::test_nonzero_audit_with_needs_attention_verdict_reopens_for_human",
         "../tests/test_project_watchdog.py::test_nonzero_needs_attention_audit_cools_down_if_selected_again",
+        "../tests/test_p0_boundaries.py::test_receipt_schema_rejects_left_closed_unverified_closure_audit",
         "-q"
       ],
       "expected": {
         "exit_code": 0,
         "stdout_contains": [
-          "2 passed"
+          "3 passed"
         ]
       },
-      "proves": "A closure audit whose Ask/Tau wrapper exits nonzero but whose seats declare VERDICT: NEEDS_ATTENTION is not sent down the no-verdict path; it attempts durable closure-unverified handling and records cooldown state so the next tick does not re-launch the duplicate audit.",
+      "proves": "A closure audit whose Ask/Tau wrapper exits nonzero but whose seats declare VERDICT: NEEDS_ATTENTION is not sent down the no-verdict path; it reopens the unverified ticket for human review, rejects left-closed handled-issue receipts in Pydantic, and records cooldown state so the next tick does not re-launch the duplicate audit.",
       "does_not_prove": "A live browser/provider closure audit succeeds; this is a fault-injected regression over the watchdog's own handler and cooldown path."
     },
     {

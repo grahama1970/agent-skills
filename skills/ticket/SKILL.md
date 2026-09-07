@@ -275,6 +275,7 @@ context on every dispatch.
   current state and the focused re-audit command as required proof.
 - Use `fleet --dry-run` review before `fleet --apply`.
 - Do not close without a non-empty proof file and a leased issue.
+- If a project-watchdog closure audit returns `VERDICT: NEEDS_ATTENTION`, the ticket is not verified; reopen or block it for human review rather than leaving it closed as completed.
 - Default to local deterministic proof; do not run GitHub Actions unless the
   ticket acceptance criteria, changed CI/workflow files, remote-only behavior,
   or explicit human instruction require it.

@@ -1159,6 +1159,9 @@ CLOSURE_EVIDENCE_SCHEMA = "agent_skills.ticket_closure_evidence.v1"
 CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE = (
     "project_watchdog_closure_audit_nonzero_needs_attention"
 )
+CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE = (
+    "project_watchdog_closure_audit_unverified_closed"
+)
 
 #: Cap per artifact. The auditors read a prompt, not a filesystem; a 50MB log
 #: would crowd out the ticket itself.
@@ -1578,25 +1581,22 @@ def handle_closure_audit(
         return result
 
     if verdict == "NEEDS_ATTENTION":
-        # "I cannot tell from what is here" is not a finding that the work is
-        # wrong. Reopening on it would churn every ticket whose proof lives in
-        # an artifact the auditor cannot read. Say so and leave it closed.
-        audit_triage = None
+        audit_triage = {
+            "code": CLOSURE_AUDIT_UNVERIFIED_CLOSED_CODE,
+            "layer": "project-watchdog",
+            "cause": (
+                "A closure-audit seat declared VERDICT: NEEDS_ATTENTION, so the closure is not "
+                "verified. A $ticket must not remain closed as completed when the audit cannot "
+                "verify its proof."
+            ),
+            "next_command": (
+                f"Reopen {repo}#{issue_number}, add {config.READY_LABEL!r} and 'needs-human', "
+                "then rerun the project-watchdog closure-audit regression eval."
+            ),
+        }
         if audit.get("exit_code") != 0:
-            audit_triage = {
-                "code": CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE,
-                "layer": "project-watchdog",
-                "cause": (
-                    "Ask/Tau exited nonzero while closure-audit seats declared "
-                    "VERDICT: NEEDS_ATTENTION. The semantic verdict is usable; "
-                    "the watchdog must make it durable with closure-unverified or cooldown."
-                ),
-                "next_command": (
-                    f"Ensure {config.CLOSURE_UNVERIFIED_LABEL!r} exists for {repo}, "
-                    "then re-run the project-watchdog closure-audit regression eval."
-                ),
-            }
-            result["triage"] = audit_triage
+            audit_triage["secondary_code"] = CLOSURE_AUDIT_NONZERO_NEEDS_ATTENTION_CODE
+        result["triage"] = audit_triage
         result["commands"].append(
             github.issue_comment(
                 repo,
@@ -1616,55 +1616,38 @@ def handle_closure_audit(
                         "wrapper_exit_code": audit.get("exit_code"),
                         "wrapper_stderr_excerpt": str(audit.get("stderr", ""))[:1000],
                         "triage": audit_triage,
-                        "outcome": "left_closed_unverified",
+                        "outcome": "reopened_unverified",
                         "reviewer_excerpt": response.strip()[:2000],
                     },
                 ),
             )
         )
-        # Same durability rule as closure-verified for the current cooldown:
-        # without a label/readable state the scan selects this closure again next
-        # tick and the panel re-answers the identical question every minute
-        # (observed as a window-flash loop). The persisted retry timestamp, not
-        # this label, decides when a later tick may try again.
-        mark = github.issue_edit(repo, issue_number, add=[config.CLOSURE_UNVERIFIED_LABEL])
-        result["commands"].append(mark)
-        if mark.get("exit_code") != 0:
-            result.update(
-                {
-                    "ok": False,
-                    "status": "NEEDS_ATTENTION",
-                    "failure_code": (
-                        audit_triage["code"] if audit_triage else "closure_unverified_label_failed"
-                    ),
-                    "summary": (
-                        (f"[{audit_triage['code']}] " if audit_triage else "")
-                        + f"closure of {repo}#{issue_number} was left unverified but "
-                        f"{config.CLOSURE_UNVERIFIED_LABEL!r} could not be applied: "
-                        f"{str(mark.get('stderr'))[:160]}. Without it the same closure is "
-                        f"re-audited every tick. Run: skills/ticket/run.sh ensure-labels "
-                        f"--repo {repo}"
-                    ),
-                }
+        result["commands"].append(github.issue_reopen(repo, issue_number))
+        result["commands"].append(
+            github.issue_edit(
+                repo,
+                issue_number,
+                add=[config.READY_LABEL, "needs-human"],
+                remove=[config.CLOSURE_VERIFIED_LABEL, config.CLOSURE_UNVERIFIED_LABEL],
             )
-            log_event(run_id, "closure_unverified_label_failed", issue=issue_number)
-            return result
+        )
         result.update(
             {
-                "ok": True,
+                "ok": False,
                 "status": "NEEDS_ATTENTION",
-                "failure_code": audit_triage["code"] if audit_triage else None,
+                "requires_human_input": True,
+                "failure_code": audit_triage["code"],
+                "outcome": "reopened_unverified",
                 "summary": (
-                    (f"[{audit_triage['code']}] " if audit_triage else "")
-                    + f"closure of {repo}#{issue_number} could not be judged from the ticket "
-                    f"thread; left closed and unverified rather than reopened "
+                    f"[{audit_triage['code']}] closure of {repo}#{issue_number} could not be "
+                    f"verified from the ticket thread; reopened and marked needs-human "
                     f"(wrapper exit {audit.get('exit_code')}, seats {seat_verdicts}"
                     + (f", failures {seat_failures}" if seat_failures else "")
                     + ")"
                 ),
             }
         )
-        log_event(run_id, "closure_audit_inconclusive", issue=issue_number)
+        log_event(run_id, "closure_audit_reopened_unverified", issue=issue_number)
         return result
 
     # FAIL: a seat showed the closure does not hold.
