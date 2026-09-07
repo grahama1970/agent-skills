@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 
 class ArtifactEnvelope(BaseModel):
@@ -47,6 +47,16 @@ class NodeReceipt(ArtifactEnvelope):
     status: Literal["PASS", "BLOCKED"]
     verdict: Literal["PASS", "BLOCKED"]
     errors: list[str]
+    pydantic_errors: list[dict[str, Any]]
+    triage_errors: list[dict[str, Any]]
+
+    @model_validator(mode="after")
+    def blocked_receipts_need_typed_error_data(self) -> "NodeReceipt":
+        if self.status == "BLOCKED" and not (self.pydantic_errors or self.triage_errors):
+            raise ValueError("BLOCKED receipt requires pydantic_errors[] or triage_errors[]")
+        if self.errors and not self.triage_errors:
+            raise ValueError("receipt errors[] require triage_errors[]")
+        return self
 
 
 # schema field value -> strict model. Envelope applies to everything else.

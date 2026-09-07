@@ -4,7 +4,7 @@
   "trials": 3,
   "proof_scope": "fault-injected deterministic step-boundary validation only; not live dream quality or human perception proof",
   "claims": {
-    "proves": "corrupt step JSON is blocked before execution with pydantic_errors[] and triage_errors[] carrying persona_dream_pydantic_step_gate_failed; valid schema envelope passes with no triage errors",
+    "proves": "corrupt input cannot execute, corrupt output is blocked with pydantic_errors[] and triage_errors[], prose-only BLOCKED receipts are rejected, and valid schema envelopes pass with no triage errors",
     "does_not_prove": "full pipeline readiness, semantic dream quality, Chatterbox perceptual quality, or human-audible acceptance"
   },
   "capability_claims": [
@@ -106,6 +106,75 @@
         "exit_code": 0,
         "stdout_contains": [
           "missing []"
+        ]
+      }
+    },
+    {
+      "name": "pydantic-input-gate-does-not-execute-step",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/input.json\"; uv run --project .. python ../scripts/dag_step.py --node-id no-execute --command help --receipt \"$T/receipt.json\" --run-dir \"$T\" --consumes input.json --produces '' >/dev/null; ec=$?; python3 -c \"import json; r=json.load(open('$T/receipt.json')); print('dag_exit', $ec); print('command_exit', r['commands_run'][0]['exit_code']); print('triage', r['triage_errors'][0]['code'])\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "dag_exit 1",
+          "command_exit None",
+          "triage persona_dream_pydantic_step_gate_failed"
+        ]
+      }
+    },
+    {
+      "name": "pydantic-output-gate-triages-corrupt-produced-artifact",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); echo '{\"not_schema\":1}' > \"$T/output.json\"; uv run --project .. python ../scripts/dag_step.py --node-id bad-output --command help --receipt \"$T/receipt.json\" --run-dir \"$T\" --produces output.json >/dev/null; ec=$?; python3 -c \"import json; r=json.load(open('$T/receipt.json')); print('dag_exit', $ec); print('status', r['status']); print('pydantic_types', [e['type'] for e in r['pydantic_errors']]); print('triage', r['triage_errors'][0]['code'])\"; exit $((ec==1 ? 0 : 1))"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "dag_exit 1",
+          "status BLOCKED",
+          "missing",
+          "triage persona_dream_pydantic_step_gate_failed"
+        ]
+      }
+    },
+    {
+      "name": "node-receipt-rejects-prose-only-blocked",
+      "type": "adversarial",
+      "real_world": true,
+      "required": true,
+      "evidence_class": "fault_injected_deterministic",
+      "supports_claims": [
+        "persona_dream.pydantic_triage_step_boundary"
+      ],
+      "command": [
+        "bash",
+        "-c",
+        "T=$(mktemp -d); cat > \"$T/receipt.json\" <<'JSON'\n{\"schema\":\"tau.generic_dag_node_receipt.v1\",\"node_id\":\"bad\",\"status\":\"BLOCKED\",\"verdict\":\"BLOCKED\",\"errors\":[\"something went wrong\"],\"pydantic_errors\":[],\"triage_errors\":[]}\nJSON\nPYTHONPATH=../scripts uv run --project .. python - <<PY2\nfrom pathlib import Path\nfrom pydantic_step_gate import validate_artifact\nerrs=validate_artifact(Path('$T/receipt.json'), require_schema=True)\nprint('error_count', len(errs))\nprint('messages', [e.get('msg','') for e in errs])\nraise SystemExit(0 if errs else 1)\nPY2"
+      ],
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "error_count 1",
+          "BLOCKED receipt requires pydantic_errors[] or triage_errors[]"
         ]
       }
     }
