@@ -3506,6 +3506,27 @@ def probe_review_current_status_proof_chain(summary_path: Path) -> int:
     )
     _assert_check_failed_with(missing_memory_check, "source_receipt_file_missing:provider_tau_memory_promotion")
 
+    stale_claim_status = copy.deepcopy(status)
+    stale_campaign = out_root / "stale-claim" / "source-run" / "campaign-receipt.json"
+    stale_broadcast = out_root / "stale-claim" / "broadcast" / "provider-tau-lineage-broadcast-receipt.json"
+    stale_memory = out_root / "stale-claim" / "memory-promotion-eval" / "memory-promotion-live-receipt.json"
+    for claim in stale_claim_status.get("proven") or []:
+        if claim.get("id") == "provider_tau_seeded_lineage_spawn":
+            claim["receipt"] = str(stale_campaign)
+            evidence = claim.setdefault("evidence", {})
+            evidence["root"] = str(out_root / "stale-claim")
+            evidence["campaign_receipt"] = str(stale_campaign)
+            evidence["broadcast_receipt"] = str(stale_broadcast)
+        if claim.get("id") == "provider_tau_memory_promotion":
+            claim["receipt"] = str(stale_memory)
+            claim.setdefault("evidence", {})["path"] = str(stale_memory)
+    stale_claim_check = _run_current_status_check(
+        _write_status_variant(out_root / "stale-claim-status.json", stale_claim_status),
+        out_root,
+        "stale-claim-check",
+    )
+    _assert_check_failed_with(stale_claim_check, "provider_claim_receipt_path_mismatch")
+
     checks = [
         {
             "name": "generated_current_status_revalidates_live_chain",
@@ -3527,6 +3548,11 @@ def probe_review_current_status_proof_chain(summary_path: Path) -> int:
             "status": "PASS",
             "status_variant": str(out_root / "missing-memory-status.json"),
         },
+        {
+            "name": "stale_cached_provider_claim_evidence_rejected",
+            "status": "PASS",
+            "status_variant": str(out_root / "stale-claim-status.json"),
+        },
     ]
     return _emit(
         summary_path,
@@ -3540,11 +3566,13 @@ def probe_review_current_status_proof_chain(summary_path: Path) -> int:
                 "mutated_manifest_status": str(out_root / "mutated-manifest-status.json"),
                 "substituted_broadcast_status": str(out_root / "substituted-broadcast-status.json"),
                 "missing_memory_status": str(out_root / "missing-memory-status.json"),
+                "stale_claim_status": str(out_root / "stale-claim-status.json"),
             },
             claims_proves=[
                 "current-status check rereads the selected proof manifest and rejects mutated source-run bindings",
                 "current-status check rejects provider/Tau broadcast receipts outside the selected campaign root",
                 "current-status check rejects missing Memory promotion receipts despite cached primary proof booleans",
+                "current-status check rejects stale cached proven-claim paths and evidence that no longer match selected source receipts",
             ],
             claims_does_not_prove=[
                 "fresh paid-provider campaign regeneration",

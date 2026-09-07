@@ -42,7 +42,7 @@
           "type:bug"
         ],
         "number": 1613,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: bind CLI authorization to executed target",
         "url": "https://github.com/grahama1970/agent-skills/issues/1613"
       },
@@ -52,12 +52,13 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
+          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1612,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: bind Memory promotion to selected evidence",
         "url": "https://github.com/grahama1970/agent-skills/issues/1612"
       },
@@ -67,12 +68,13 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
+          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1611,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: separate selection reporting from child-promotion assertions",
         "url": "https://github.com/grahama1970/agent-skills/issues/1611"
       },
@@ -82,12 +84,13 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
+          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1610,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: enforce exact commentary-to-event references",
         "url": "https://github.com/grahama1970/agent-skills/issues/1610"
       },
@@ -113,12 +116,13 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
+          "needs-human",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
         ],
         "number": 1608,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: reject vacuous broadcast evidence checks",
         "url": "https://github.com/grahama1970/agent-skills/issues/1608"
       },
@@ -133,7 +137,7 @@
           "type:bug"
         ],
         "number": 1607,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: hash finalized Judge receipt bytes",
         "url": "https://github.com/grahama1970/agent-skills/issues/1607"
       },
@@ -183,14 +187,14 @@
           "agent-work",
           "agent:frontend-coder",
           "battle",
-          "closure-unverified",
           "lane:fe",
+          "needs-human",
           "route:frontend_code",
           "skill-bug",
           "type:bug"
         ],
         "number": 1501,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: fix adaptive replay first-viewport pause_after_round failure state",
         "url": "https://github.com/grahama1970/agent-skills/issues/1501"
       },
@@ -199,13 +203,13 @@
           "agent-work",
           "agent:frontend-coder",
           "battle",
-          "closure-unverified",
           "lane:fe",
+          "needs-human",
           "route:frontend_code",
           "type:feature"
         ],
         "number": 1500,
-        "state": "CLOSED",
+        "state": "OPEN",
         "title": "Battle: bind Pixi replay proof to durable adaptive-lineage receipt",
         "url": "https://github.com/grahama1970/agent-skills/issues/1500"
       },
@@ -714,8 +718,71 @@
       "1144": "CLOSED",
       "1150": "CLOSED"
     },
-    "open_battle_label_count": 2,
+    "open_battle_label_count": 10,
     "open_battle_label_issues": [
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1613,
+        "state": "OPEN",
+        "title": "Battle: bind CLI authorization to executed target",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1613"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1612,
+        "state": "OPEN",
+        "title": "Battle: bind Memory promotion to selected evidence",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1612"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1611,
+        "state": "OPEN",
+        "title": "Battle: separate selection reporting from child-promotion assertions",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1611"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1610,
+        "state": "OPEN",
+        "title": "Battle: enforce exact commentary-to-event references",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1610"
+      },
       {
         "labels": [
           "agent-work",
@@ -738,6 +805,37 @@
           "agent:agent-skill-maintainer",
           "battle",
           "lane:be",
+          "needs-human",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1608,
+        "state": "OPEN",
+        "title": "Battle: reject vacuous broadcast evidence checks",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1608"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
+          "route:backend_python_or_skill_runtime",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1607,
+        "state": "OPEN",
+        "title": "Battle: hash finalized Judge receipt bytes",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1607"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:agent-skill-maintainer",
+          "battle",
+          "lane:be",
           "route:backend_python_or_skill_runtime",
           "skill-bug",
           "type:bug"
@@ -746,6 +844,37 @@
         "state": "OPEN",
         "title": "Battle: remove synthetic verdicts from live Judge authority",
         "url": "https://github.com/grahama1970/agent-skills/issues/1606"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "lane:fe",
+          "needs-human",
+          "route:frontend_code",
+          "skill-bug",
+          "type:bug"
+        ],
+        "number": 1501,
+        "state": "OPEN",
+        "title": "Battle: fix adaptive replay first-viewport pause_after_round failure state",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1501"
+      },
+      {
+        "labels": [
+          "agent-work",
+          "agent:frontend-coder",
+          "battle",
+          "lane:fe",
+          "needs-human",
+          "route:frontend_code",
+          "type:feature"
+        ],
+        "number": 1500,
+        "state": "OPEN",
+        "title": "Battle: bind Pixi replay proof to durable adaptive-lineage receipt",
+        "url": "https://github.com/grahama1970/agent-skills/issues/1500"
       }
     ]
   },
@@ -862,10 +991,10 @@
         "arbitrary target exploitability beyond the authorized battle-004 proof."
       ],
       "evidence": {
-        "arena_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/arena-receipt.json",
-        "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/blue-team-activity-receipt.json",
-        "broadcast_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/provider-tau-lineage-broadcast-receipt.json",
-        "campaign_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+        "arena_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/arena-receipt.json",
+        "blue_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/blue-team-activity-receipt.json",
+        "broadcast_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/provider-tau-lineage-broadcast-receipt.json",
+        "campaign_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/campaign-receipt.json",
         "checks": {
           "broadcast_passed": true,
           "campaign_passed": true,
@@ -876,16 +1005,16 @@
         },
         "checks_ok": true,
         "commentary_line_count": 7,
-        "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/red-team-activity-receipt.json",
-        "root": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z",
+        "red_team_activity_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/red-team-activity-receipt.json",
+        "root": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun",
         "seed_count": 2,
-        "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/sports-play-by-play-commentary-receipt.json",
+        "sports_play_by_play_commentary_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/sports-play-by-play-commentary-receipt.json",
         "status": "PASS",
-        "visibility_receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/generation-2/visibility-validation.json"
+        "visibility_receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/generation-2/visibility-validation.json"
       },
       "id": "provider_tau_seeded_lineage_spawn",
       "issue_refs": [],
-      "receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+      "receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/campaign-receipt.json",
       "status": "PASS"
     },
     {
@@ -901,12 +1030,12 @@
           "two_teams": true
         },
         "checks_ok": true,
-        "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-eval/memory-promotion-live-receipt.json",
+        "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/memory-promotion-live-receipt.json",
         "status": "PASS"
       },
       "id": "provider_tau_memory_promotion",
       "issue_refs": [],
-      "receipt": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-eval/memory-promotion-live-receipt.json",
+      "receipt": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/memory-promotion-live-receipt.json",
       "status": "PASS"
     },
     {
@@ -1027,7 +1156,7 @@
   "schema": "battle.current_status.v1",
   "source": {
     "battle_tree": "128e92f99f2aaeda3e956a3101d72e24c120822c",
-    "commit": "29f401023cce5a5797fd9bce8d54ea61a47b268c",
+    "commit": "5b870c7c921a8e7b36a0308f57c0b701b6e188e5",
     "repository": "grahama1970/agent-skills"
   },
   "source_context": {
@@ -1195,27 +1324,27 @@
       "exists": true,
       "live": null,
       "mocked": null,
-      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/memory-promotion-eval/memory-promotion-live-receipt.json",
+      "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/memory-promotion-eval/memory-promotion-live-receipt.json",
       "schema": "battle.memory_promotion_live_receipt.v1",
-      "sha256": "d1913d45aca56113ab5a13d6174d5429ee2a208234044c74c4cc85aa07ce5b4f",
+      "sha256": "2cb5398ca04c2acdb1c7e3c7c4f6302b97fafc80820a3e83da9a04f01e8a234c",
       "status": "PASS"
     },
     "provider_tau_seeded_broadcast": {
       "exists": true,
       "live": null,
       "mocked": null,
-      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/broadcast/provider-tau-lineage-broadcast-receipt.json",
+      "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/broadcast/provider-tau-lineage-broadcast-receipt.json",
       "schema": "battle.provider_tau_lineage_broadcast.v1",
-      "sha256": "2a7fe41224d729dbd1740c33fceafcf895f0d474a97cfd825139a4be65494da3",
+      "sha256": "ab39f901f6bea23f6b0b89306fa445acba224bcee84724afe29b3cabee4b4bbd",
       "status": "PASS"
     },
     "provider_tau_seeded_campaign": {
       "exists": true,
       "live": true,
       "mocked": false,
-      "path": "/mnt/storage12tb/skills/battle/provider-tau-seeded-20260906T130635Z/source-run/campaign-receipt.json",
+      "path": "/mnt/storage12tb/skills/battle/review-ticket-live-rerun/campaign-receipt.json",
       "schema": "battle.adaptive_red_blue_lineage_canary.v1",
-      "sha256": "e441c6030b29ffa8fa64ba714a2e3f2d9fcf6a5f63e5cb8f4f4cf914326d75f4",
+      "sha256": "f749f00033b7dbb6f31514172dd15aff25a239fc3584596f4db4c549f64d33d6",
       "status": "PASS"
     },
     "same_run_qualification": {
@@ -1259,5 +1388,5 @@
       "status": "UNSUPPORTED"
     }
   ],
-  "updated_at": "2026-09-07T03:55:22Z"
+  "updated_at": "2026-09-07T14:50:50Z"
 }

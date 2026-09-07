@@ -434,11 +434,12 @@ def _validate_provider_tau_chain(status: dict[str, Any], errors: list[str]) -> b
     memory_path = _record_path(status, "provider_tau_memory_promotion", errors)
     if campaign_path is None or broadcast_path is None or memory_path is None:
         return False
-    provider_root = campaign_path.parents[1]
-    source_root = provider_root / "source-run"
+    provider_root = _provider_root_for_campaign(campaign_path)
+    source_root = campaign_path.parent
     broadcast_root = provider_root / "broadcast"
-    if not _same_path(campaign_path.parent, source_root):
-        errors.append(f"provider_campaign_path_not_source_run:{campaign_path}")
+    if provider_root is None:
+        errors.append(f"provider_campaign_path_not_supported_layout:{campaign_path}")
+        provider_root = campaign_path.parent
     if not _inside(broadcast_path, broadcast_root):
         errors.append(f"provider_broadcast_path_not_broadcast_root:{broadcast_path}")
     if not _inside(memory_path, provider_root / "memory-promotion-eval"):
@@ -577,6 +578,87 @@ def _validate_provider_tau_chain(status: dict[str, Any], errors: list[str]) -> b
     if {item.get("team") for item in memory.get("promotions") or []} != {"red", "blue"}:
         errors.append("provider_memory_promotions_not_red_and_blue")
     return len(errors) == ok_before
+
+
+def _proven_claim(status: dict[str, Any], claim_id: str, errors: list[str]) -> dict[str, Any]:
+    claim = next((item for item in status.get("proven", []) if item.get("id") == claim_id), None)
+    if not isinstance(claim, dict):
+        errors.append(f"proven_claim_missing:{claim_id}")
+        return {}
+    return claim
+
+
+def _require_claim_path(
+    label: str,
+    claim: dict[str, Any],
+    key: str,
+    expected: Path,
+    errors: list[str],
+) -> None:
+    raw = claim.get(key)
+    if not raw:
+        errors.append(f"{label}_{key}_missing")
+        return
+    if not _same_path(Path(str(raw)), expected):
+        errors.append(f"{label}_{key}_path_mismatch:{raw}!={expected}")
+
+
+def _validate_current_status_claim_bindings(status: dict[str, Any], errors: list[str]) -> None:
+    adaptive_path = _record_path(status, "adaptive_lineage_qualification", errors)
+    pixi_binding_path = _record_path(status, "adaptive_lineage_pixi_binding", errors)
+    pixi_gameplay_path = _record_path(status, "adaptive_lineage_pixi_gameplay", errors)
+    surf_screenshot_path = _record_path(status, "adaptive_lineage_surf_screenshot", errors)
+    provider_campaign_path = _record_path(status, "provider_tau_seeded_campaign", errors)
+    provider_broadcast_path = _record_path(status, "provider_tau_seeded_broadcast", errors)
+    provider_memory_path = _record_path(status, "provider_tau_memory_promotion", errors)
+
+    adaptive_claim = _proven_claim(status, "p0_adaptive_lineage_fresh_qualification", errors)
+    if adaptive_path is not None:
+        _require_claim_path("adaptive_claim", adaptive_claim, "receipt", adaptive_path, errors)
+
+    pixi_claim = _proven_claim(status, "adaptive_lineage_pixi_receipt_replay", errors)
+    pixi_evidence = pixi_claim.get("evidence") or {}
+    if pixi_gameplay_path is not None:
+        _require_claim_path("pixi_claim", pixi_claim, "receipt", pixi_gameplay_path, errors)
+        gameplay_receipt = pixi_evidence.get("gameplay_receipt") or {}
+        if not _same_path(Path(str(gameplay_receipt.get("path") or "")), pixi_gameplay_path):
+            errors.append("pixi_claim_gameplay_evidence_path_mismatch")
+    if pixi_binding_path is not None:
+        binding_receipt = pixi_evidence.get("binding_receipt") or {}
+        if not _same_path(Path(str(binding_receipt.get("path") or "")), pixi_binding_path):
+            errors.append("pixi_claim_binding_evidence_path_mismatch")
+    if surf_screenshot_path is not None:
+        screenshot = pixi_evidence.get("surf_screenshot") or {}
+        if not _same_path(Path(str(screenshot.get("path") or "")), surf_screenshot_path):
+            errors.append("pixi_claim_surf_screenshot_path_mismatch")
+
+    provider_claim = _proven_claim(status, "provider_tau_seeded_lineage_spawn", errors)
+    provider_evidence = provider_claim.get("evidence") or {}
+    if provider_campaign_path is not None:
+        _require_claim_path("provider_claim", provider_claim, "receipt", provider_campaign_path, errors)
+        if not _same_path(Path(str(provider_evidence.get("campaign_receipt") or "")), provider_campaign_path):
+            errors.append("provider_claim_campaign_evidence_path_mismatch")
+        expected_root = _provider_root_for_campaign(provider_campaign_path)
+        if expected_root is None:
+            errors.append(f"provider_claim_campaign_path_not_supported_layout:{provider_campaign_path}")
+            expected_root = provider_campaign_path.parent
+        if not _same_path(Path(str(provider_evidence.get("root") or "")), expected_root):
+            errors.append("provider_claim_root_evidence_path_mismatch")
+        expected_visibility = provider_campaign_path.parent / "generation-2" / "visibility-validation.json"
+        if not _same_path(Path(str(provider_evidence.get("visibility_receipt") or "")), expected_visibility):
+            errors.append("provider_claim_visibility_evidence_path_mismatch")
+    if provider_broadcast_path is not None and not _same_path(
+        Path(str(provider_evidence.get("broadcast_receipt") or "")),
+        provider_broadcast_path,
+    ):
+        errors.append("provider_claim_broadcast_evidence_path_mismatch")
+
+    memory_claim = _proven_claim(status, "provider_tau_memory_promotion", errors)
+    memory_evidence = memory_claim.get("evidence") or {}
+    if provider_memory_path is not None:
+        _require_claim_path("memory_claim", memory_claim, "receipt", provider_memory_path, errors)
+        if not _same_path(Path(str(memory_evidence.get("path") or "")), provider_memory_path):
+            errors.append("memory_claim_evidence_path_mismatch")
 
 
 def _gh_issue_list(state: str) -> list[dict[str, Any]]:
@@ -731,24 +813,52 @@ def _adaptive_lineage_qualification_evidence(path: Path | None) -> dict[str, Any
 
 def _latest_provider_tau_seeded_root() -> Path | None:
     roots = []
+    env_path = os.environ.get("BATTLE_PROVIDER_TAU_SEEDED_ROOT")
+    if env_path:
+        roots.append(Path(env_path))
+    review_root = Path("/mnt/storage12tb/skills/battle/review-ticket-live-rerun")
+    if review_root.exists():
+        roots.append(review_root)
     for receipt_path in Path("/mnt/storage12tb/skills/battle").glob(
         "provider-tau-seeded-*/source-run/campaign-receipt.json"
     ):
         root = receipt_path.parents[1]
+        roots.append(root)
+    valid = [
+        root
+        for root in roots
         if (
-            (root / "broadcast" / "provider-tau-lineage-broadcast-receipt.json").is_file()
+            _provider_campaign_path(root) is not None
+            and (root / "broadcast" / "provider-tau-lineage-broadcast-receipt.json").is_file()
             and (root / "memory-promotion-eval" / "memory-promotion-live-receipt.json").is_file()
-        ):
-            roots.append(root)
-    return max(roots, key=lambda path: path.stat().st_mtime) if roots else None
+        )
+    ]
+    return max(valid, key=lambda path: path.stat().st_mtime) if valid else None
+
+
+def _provider_campaign_path(root: Path) -> Path | None:
+    for candidate in (root / "campaign-receipt.json", root / "source-run" / "campaign-receipt.json"):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _provider_root_for_campaign(campaign_path: Path) -> Path | None:
+    if campaign_path.name != "campaign-receipt.json":
+        return None
+    if campaign_path.parent.name == "source-run":
+        return campaign_path.parents[1]
+    return campaign_path.parent
 
 
 def _provider_tau_seeded_evidence(root: Path | None) -> dict[str, Any]:
     if root is None:
         return {"status": None, "checks_ok": False}
-    campaign_path = root / "source-run" / "campaign-receipt.json"
+    campaign_path = _provider_campaign_path(root)
     broadcast_path = root / "broadcast" / "provider-tau-lineage-broadcast-receipt.json"
-    visibility_path = root / "source-run" / "generation-2" / "visibility-validation.json"
+    if campaign_path is None:
+        return {"status": None, "checks_ok": False, "root": str(root)}
+    visibility_path = campaign_path.parent / "generation-2" / "visibility-validation.json"
     if not all(path.is_file() for path in [campaign_path, broadcast_path, visibility_path]):
         return {"status": None, "checks_ok": False, "root": str(root)}
     campaign = _read_json(campaign_path)
@@ -975,8 +1085,8 @@ def generate(out: Path) -> int:
     receipts["adaptive_lineage_surf_text"] = _artifact(surf_text_path)
     receipts["adaptive_lineage_surf_screenshot"] = _artifact(surf_screenshot_path)
     receipts["provider_tau_seeded_campaign"] = _receipt(
-        provider_tau_root / "source-run" / "campaign-receipt.json"
-        if provider_tau_root
+        _provider_campaign_path(provider_tau_root)
+        if provider_tau_root and _provider_campaign_path(provider_tau_root) is not None
         else Path("/mnt/storage12tb/skills/battle/MISSING/provider-tau/campaign-receipt.json")
     )
     receipts["provider_tau_seeded_broadcast"] = _receipt(
@@ -1294,6 +1404,7 @@ def check(path: Path) -> int:
     if pixi_gameplay_receipt.get("status") != "PASS":
         errors.append("adaptive_lineage_pixi_gameplay_not_pass")
     if status.get("immutable_goal_status") == "MET":
+        _validate_current_status_claim_bindings(status, errors)
         primary_proof = status.get("primary_proof") or {}
         adaptive_path = _record_path(status, "adaptive_lineage_qualification", errors)
         adaptive_payload = (
