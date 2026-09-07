@@ -270,19 +270,41 @@ persona or roundtable request.
 ## Team Orchestration (`team-plan`)
 
 `/ask` is the natural-language front end to the Tau agent harness: you
-describe the project and pick a team; Tau runs the agents. The DAG is always
-shown before anything executes.
+describe the project and pick a team; Tau runs the agents. The frozen DAG is
+always shown for confirmation before anything executes.
+
+Native Tau agents are read-only. The current native CLI exposes exactly four
+tools — `read`, `ls`, `grep`, and `find` — and a path alone grants no tools:
+each workstream must explicitly declare `allowed_tools`, `allowed_paths`,
+and a working directory (`cwd` or the plan's `target.workspace`). `write`,
+`edit`, and `bash` are not supported by native `team-plan`; changing source
+belongs to an authoring harness, not this read-only route.
 
 ```bash
 # Preview (default): renders the plan and the frozen Tau DAG, runs nothing
 ./run.sh team-plan "build a settings dashboard with a Python API, React UI, docs, and tests" \
   --team fullstack-premium
 
-# Execute through Tau (explicit double opt-in)
-./run.sh team-plan "write a one-line project status API summary with tests" \
-  --team fullstack-premium --out ./team-run --execute --live
+# Execute an edited read-only plan through Tau (explicit double opt-in)
+./run.sh team-plan "Independently read and verify a nonce through two native Tau agents." \
+  --plan-file plan.json \
+  --out ./team-run --execute --live --watch
 ```
 
+- Complete plan inputs are validated with strict Pydantic `ask.project_plan.v1`
+  models. A malformed or wrongly typed field returns `INVALID_PLAN` (exit 2)
+  with `validation_errors` naming each bad location and writes nothing. A
+  request whose workstreams genuinely cannot be inferred returns
+  `NEEDS_INTERVIEW` (exit 2) with the missing fields named, instead of a
+  model guessing.
+- `--plan-file` loads an edited plan whose `goal` must exactly match the
+  request argument; a mismatch is rejected as invalid. `--execute` without
+  `--live` refuses with exit 2; with both, Tau's canonical scheduler
+  executes the nodes and `execution-summary.json` + per-run receipts land in
+  `--out`. Add `--watch` to serve the live Tau DAG viewer and print its URL
+  so operator state can be observed during the run.
+- A workstream that requires tool effects but omits `allowed_tools` fails
+  closed with `EXECUTION_BLOCKED` before Tau/provider launch.
 - Roles (coordinator, backend, frontend, documentation, testing,
   independent reviewer) map to SciLLM transport profiles via team presets.
   `fullstack-premium` puts Claude Fable 5 in the coordinator seat with
@@ -290,12 +312,11 @@ shown before anything executes.
   with `team.role_profiles` in the rendered plan.
 - The preview lists every agent, its `profile:` transport, and the delegation
   edges (coordinator → workers → reviewer), plus a frozen `spec_sha256`.
-- A request whose workstreams cannot be inferred fails closed to
-  `NEEDS_INTERVIEW` (exit 2) instead of a model guessing.
-- `--execute` without `--live` refuses with exit 2; with both, Tau's
-  canonical scheduler executes the nodes and `execution-summary.json` +
-  per-run receipts land in `--out`. Live proof:
-  `reports/ask/team-exec-live-20260805/`.
+- Retained read-only proof is `fixtures/agentic_eval_native_plan_cli.json`:
+  typed plan-boundary rejection, undeclared-tool refusal, preserved native
+  evidence, and two heterogeneous read-only native agents under live runs.
+  It proves the native read-only plan integration slice only — not source
+  authoring or watchdog canary closure.
 
 Internally every `/ask` model call is migrating behind the same seam
 (`ask.tau_harness`); `src/ask/route_inventory.py` tracks the remaining
