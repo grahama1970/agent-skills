@@ -697,6 +697,32 @@ ${JSON.stringify({
 \`\`\``;
 }
 
+function retryEvidenceSnapshot(candidate: Candidate, check: CheckResult): Array<Record<string, unknown>> {
+  let status: any = check.features?.status;
+  if (!status) {
+    const start = candidate.assistant_text.lastIndexOf("```json");
+    const end = start >= 0 ? candidate.assistant_text.indexOf("```", start + 7) : -1;
+    if (start >= 0 && end > start) {
+      try { status = JSON.parse(candidate.assistant_text.slice(start + 7, end)); } catch { status = null; }
+    }
+  }
+  const proofs = Array.isArray(status?.proof) ? status.proof.map(String) : [];
+  const errors = Array.isArray((check.features?.validation_result as any)?.errors) ? (check.features?.validation_result as any).errors : [];
+  return proofs.slice(0, 8).map((proof: string) => {
+    const matched = errors.filter((error: any) => error?.ctx?.proof === proof).map((error: any) => String(error.type || "invalid_proof"));
+    const item: Record<string, unknown> = { proof, validation: matched.length ? "rejected" : "admitted", reason_codes: matched };
+    if (existsSync(proof)) {
+      try {
+        const raw = readFileSync(proof);
+        item.digest = sha256(raw.toString("utf8"));
+        const parsed = JSON.parse(raw.toString("utf8"));
+        if (parsed?.schema) item.schema = String(parsed.schema);
+      } catch { item.validation = "unreadable"; }
+    }
+    return item;
+  });
+}
+
 function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath: string, decision: Record<string, unknown>, taskBudget?: object): string {
   const packet = {
     schema: "lazy_report_shame.retry_request.v1",
@@ -711,6 +737,7 @@ function retryPrompt(candidate: Candidate, check: CheckResult, reviewPacketPath:
     review_packet: reviewPacketPath,
     validation_result: validationResult(check),
     recovery_decision: decision,
+    evidence_snapshot: retryEvidenceSnapshot(candidate, check),
     next: rejectionAction(decision),
   };
   return `UNLAZY_FORCED_RETRY

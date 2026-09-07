@@ -28,6 +28,7 @@ explicitly synthetic label on a real captured turn, not a human quality judgment
 | done-receipt-binding | unrelated text, malformed JSON, unknown receipt schemas, failed receipts, and non-closed ticket receipts cannot authorize `state=done`; `ticket.closure_receipt.v1` can |
 | status-preflight-parity | `run.sh preflight` uses the same stop-boundary checker and matches pass/reject reason codes before terminal retry is consumed |
 | typed-recovery-routing | report rejection recovery separates format repair, existing-proof substitution, missing evidence, validator failure, unresolved work, accepted-task repair, and exhausted retry cases |
+| self-contained-proof-repair | retry packets are typed, byte-bounded, tool-free for format repair, and include proof schema/digest evidence snapshots |
 | escalation-ladder-data-contract | escalation is pydantic-gated: Brave parent evidence before cross-family Ask, and Brave+Ask typed parents before WebGPT |
 | task-scope-and-acceptance | injected out-of-scope tool calls denied; task still finishes |
 | feedback-and-session-isolation | independent sessions, capture CLI, Memory store/recall |

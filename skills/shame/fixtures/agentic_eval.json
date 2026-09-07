@@ -143,6 +143,14 @@
       "evidence_required": {
         "deterministic": true
       }
+    },
+    {
+      "id": "shame.self_contained_proof_repair",
+      "description": "Shame retry packets are typed, byte-bounded, tool-free for format repair, and carry an admitted evidence snapshot with proof schema and digest.",
+      "criticality": "critical",
+      "evidence_required": {
+        "deterministic": true
+      }
     }
   ],
   "cases": [
@@ -634,6 +642,37 @@
           "missing evidence continues execution instead of format repair",
           "accepted task does not reopen execution",
           "validator failure is explicit infrastructure recovery"
+        ],
+        "stdout_excludes": [
+          "Traceback",
+          "AssertionError"
+        ]
+      }
+    },
+    {
+      "name": "self-contained-proof-repair",
+      "type": "adversarial",
+      "real_world": true,
+      "evidence_class": "deterministic",
+      "supports_claims": [
+        "shame.self_contained_proof_repair"
+      ],
+      "command": [
+        "uv",
+        "run",
+        "--with",
+        "pydantic",
+        "python3",
+        "/home/graham/workspace/experiments/agent-skills/skills/shame/scripts/eval-retry-packet.py"
+      ],
+      "timeout_seconds": 30,
+      "expected": {
+        "exit_code": 0,
+        "stdout_contains": [
+          "lazy_report_shame.retry_packet_eval.v1",
+          "retry packet is typed and self-contained",
+          "format-only retry allows no tools",
+          "retry packet is byte-bounded"
         ],
         "stdout_excludes": [
           "Traceback",
