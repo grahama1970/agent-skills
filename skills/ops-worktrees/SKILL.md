@@ -112,7 +112,6 @@ cleanup nobody's job but the cron's.
 ## Commands
 
 ```bash
-skills/ops-worktrees/run.sh land -m "msg" <path>...   # scoped landing on origin/main
 skills/ops-worktrees/run.sh unmerged            # what work never reached origin/main
 skills/ops-worktrees/run.sh reap                # preview: remove / archive / keep
 skills/ops-worktrees/run.sh reap --apply        # act on it
@@ -120,20 +119,6 @@ skills/ops-worktrees/run.sh archive <path>      # archive one worktree
 skills/ops-worktrees/run.sh backlog             # classify pre-lease worktrees
 skills/ops-worktrees/run.sh register <path> --purpose <why>
 ```
-
-## Scoped landing: `land`
-
-`run.sh land -m "message" <paths...>` is the ONLY sanctioned way for an agent
-to commit-and-push. It lands exactly the named paths onto `origin/main` by
-plumbing (`read-tree origin/main` -> scoped `add` -> `write-tree` ->
-`commit-tree -p origin/main` -> `push <sha>:main`), from any dirty checkout,
-worktree, or branch, without switching branches, stashing, or staging anything
-else. It refuses repo-wide pathspecs (`.`, `-A`, `*`), retries push races, and
-verifies the commit is an ancestor of `origin/main` before reporting success.
-
-After landing from a worktree, do NOT merge or delete the worktree yourself —
-the hourly reaper classifies it as landed and removes it. There is no separate
-"git commit push" skill; this command plus the reaper is the whole contract.
 
 ## Three dispositions, never two
 

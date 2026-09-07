@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -29,16 +31,44 @@ from classifier import classify, load_catalog, _normalize, _mint_code, _first_er
 app = typer.Typer(add_completion=False, help="Classify ambiguous pipeline errors into unambiguous codes.")
 
 HERE = Path(__file__).resolve().parent
-CATALOG_PATH = HERE / "failure_codes.json"
+CATALOG_PATH = Path(os.environ.get("TRIAGE_ERROR_CATALOG_PATH", HERE / "failure_codes.json"))
 SKILLS_ROOT = HERE.parent
 TICKET_RUN = SKILLS_ROOT / "ticket" / "run.sh"
 EVALS_RUN = SKILLS_ROOT / "agentic-evals" / "run.sh"
 MEMORY_RUN = SKILLS_ROOT / "memory" / "run.sh"
 
 
+def _catalog_match_tokens(signal: str, code: str) -> list[str]:
+    first = _first_error_line(signal)
+    tokens = [code]
+    if first:
+        tokens.append(first[:180])
+    return tokens
 
 
-
+def _upsert_catalog_entry(report: dict[str, Any], signal: str, catalog_path: Path = CATALOG_PATH) -> dict[str, Any]:
+    data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    codes = data.setdefault("codes", [])
+    for entry in codes:
+        if entry.get("code") == report["code"]:
+            return {"ok": True, "updated": False, "code": report["code"]}
+    entry = {
+        "code": report["code"],
+        "layer": report.get("layer") or "unknown",
+        "match": _catalog_match_tokens(signal, report["code"]),
+        "cause": report.get("cause") or f"Unclassified error signal assigned {report['code']}.",
+        "next_command": report.get("next_command")
+        or "Read the original receipt, replace this provisional catalog entry with the root-cause classification, and add a regression case to skills/triage-error/tests/test_classify.py.",
+        "recoverable": report.get("recoverable") if report.get("recoverable") is not None else True,
+        "not_this": report.get("not_this", []),
+    }
+    codes.append(entry)
+    rendered = json.dumps(data, indent=2) + "\n"
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=str(catalog_path.parent), delete=False) as tmp:
+        tmp.write(rendered)
+        tmp_name = tmp.name
+    os.replace(tmp_name, catalog_path)
+    return {"ok": True, "updated": True, "code": report["code"], "path": str(catalog_path)}
 
 
 def _read_signal(text: str | None, receipt: Path | None) -> str:
@@ -111,10 +141,12 @@ def triage(
     layer: str = typer.Option("", "--layer"),
     target: str = typer.Option("skills/ask", "--target", help="Ticket target when ambiguous."),
     file_ticket: bool = typer.Option(False, "--file", help="PUBLISH a GitHub ticket (default: draft only)."),
+    ticket: bool = typer.Option(True, "--ticket/--no-ticket", help="Draft/file a ticket for ambiguous signals."),
     scaffold_eval: bool = typer.Option(False, "--scaffold-eval", help="Scaffold an agentic-eval repro fixture."),
     learn: bool = typer.Option(True, "--learn/--no-learn", help="Store the code to /memory."),
+    update_catalog: bool = typer.Option(True, "--update-catalog/--no-update-catalog", help="Append a provisional catalog entry for a newly minted ambiguous code."),
 ) -> None:
-    """Classify; when ambiguous, draft/file a ticket, optionally scaffold an eval, and learn."""
+    """Classify; when ambiguous, draft/file a ticket, optionally scaffold an eval, learn, and update the catalog."""
     signal = _read_signal(text, receipt)
     if not signal.strip():
         typer.echo(json.dumps({"error": "no --text or --receipt content"}))
@@ -122,7 +154,10 @@ def triage(
     report = classify(signal, layer or None)
     actions: dict[str, Any] = {}
     if report["ambiguous"]:
-        actions["ticket"] = _draft_or_file_ticket(report, target, str(receipt or "<inline>"), file_ticket)
+        if update_catalog:
+            actions["catalog"] = _upsert_catalog_entry(report, signal)
+        if ticket:
+            actions["ticket"] = _draft_or_file_ticket(report, target, str(receipt or "<inline>"), file_ticket)
         if scaffold_eval and EVALS_RUN.exists():
             proc = _run([str(EVALS_RUN), "scaffold-fixture", str(SKILLS_ROOT / Path(target).name)])
             actions["scaffold_eval"] = {"ok": proc.returncode == 0, "stderr": proc.stderr[-300:]}

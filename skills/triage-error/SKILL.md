@@ -57,12 +57,14 @@ down (ticket + agentic-eval + memory).
 ```bash
 ./run.sh classify --receipt <lane.meta.json> [--layer surf]      # signal -> code (JSON)
 ./run.sh classify --text "zip contains 9 files; maximum is 5"    # inline signal
-./run.sh triage   --receipt <receipt> --layer surf               # classify + (if ambiguous) act
+./run.sh triage   --receipt <receipt> --layer surf               # classify + (if ambiguous) act + update catalog
+./run.sh triage   --text "new signal" --no-update-catalog        # classify + act without self-update
 ./run.sh catalog                                                 # list canonical codes
 ```
 
 `triage`, when the signal is **ambiguous** (no catalog match), mints a
-deterministic code and composes:
+deterministic code, appends a provisional `failure_codes.json` entry by default,
+and composes:
 
 - **/ticket** — drafts a bug ticket by default; publishes only with `--file`
   (filing a GitHub issue is a publish action, so it is gated).
@@ -76,7 +78,10 @@ deterministic code and composes:
 
 `failure_codes.json` is the source of truth: each entry maps `match` tokens from
 any layer to one `{code, layer, cause, next_command, recoverable, not_this}`.
-Grow it by adding an entry whenever a minted `*_unclassified_*` code recurs.
+`triage` self-updates this file for newly minted `*_unclassified_*` codes with a
+provisional entry so the signal is durable. When a provisional code recurs or is
+understood, replace that entry with the canonical root-cause code and add a
+regression test.
 
 ## How other skills use it (best-practices-skills mandate)
 
