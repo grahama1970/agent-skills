@@ -91,10 +91,15 @@ def acquire(record: Operation, result: dict[str, Any], checkpoint) -> None:
     # The unique native --agent marker is stronger than actor/time alone.
     owned_comment = any(f"\nagent: {agent}\n" in (c.get("body") or "")
                         for c in comments(record.repo, record.issue_number))
-    if (NATIVE_LABEL not in labels(now) or event is None or event == before or
-            event.event != "labeled" or event.actor != actor_result["stdout"].strip() or not owned_comment):
+    event_owned = (
+        event is not None
+        and event != before
+        and event.event == "labeled"
+        and event.actor == actor_result["stdout"].strip()
+    )
+    if NATIVE_LABEL not in labels(now) or not owned_comment or (not event_owned and event != before):
         raise ContentConflict("native lease mutation is ambiguous; exact acquisition must be reconciled")
-    checkpoint("leased", lease_event=event.model_dump())
+    checkpoint("leased", lease_event=event.model_dump() if event else None)
 
 
 def owns(record: Operation) -> bool:

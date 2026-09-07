@@ -966,6 +966,8 @@ def test_remote_reviewer_prompt_defers_local_readback_to_watchdog() -> None:
     assert "remote provider without local filesystem access" in handlers.REMOTE_REVIEWER_PROMPT
     assert "watchdog independently checks" in handlers.REMOTE_REVIEWER_PROMPT
     assert "truncated" in handlers.REMOTE_REVIEWER_PROMPT
+    assert "VERIFY_PLAN would independently prove it" in handlers.REMOTE_REVIEWER_PROMPT
+    assert "local artifact bytes " in handlers.REMOTE_REVIEWER_PROMPT and "not readable" in handlers.REMOTE_REVIEWER_PROMPT
 
 
 def _passing_repair_run_cmd(command, **_kwargs):  # noqa: ANN001, ANN003

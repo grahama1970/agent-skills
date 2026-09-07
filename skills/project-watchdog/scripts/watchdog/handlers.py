@@ -238,8 +238,11 @@ REMOTE_REVIEWER_PROMPT = (
     "receipt excerpts, and proof claims, then emit a verification plan. Do not fail solely because "
     "the workspace diff/status is truncated, contains unrelated cron noise, or local artifact bytes "
     "are not readable from your seat; the watchdog independently checks scope, the reviewed commit, "
-    "on-disk target bytes, and reruns the plan before any closure. Fail only when the creator's "
-    "reported change/proof does not cover the ticket or is internally inconsistent."
+    "on-disk target bytes, and reruns the plan before any closure. VERDICT: PASS means the reported "
+    "change/proof is coherent, covers the ticket, and the VERIFY_PLAN would independently prove it "
+    "when watchdog executes it. Fail only when the creator's reported change/proof does not cover "
+    "the ticket or is internally inconsistent. Use NEEDS_ATTENTION only when you cannot supply a "
+    "complete verification plan or cannot judge the reported evidence even under this delegation."
 )
 
 
@@ -1106,7 +1109,8 @@ def _handle_ticket_repair_primary(run_id: str, receipt_dir: Path, project: dict[
              "(map from EVERY exact required clause below to the real command/artifact that proves it). "
              "Do not put model output, fabricated result JSON, fixture inputs, abbreviated comparisons, "
              "or a still-running background proof in place of an experiment. The watchdog reruns verification "
-             "through ticket verify before native close. Report any inability as NEEDS_ATTENTION, not PASS.\n"
+             "through ticket verify before native close. Do not answer NEEDS_ATTENTION only because local "
+             "artifact bytes are unreadable from a remote seat; encode that readback in VERIFY_PLAN instead.\n"
              f"Required coverage keys: {json.dumps(clauses)}\n")
     task += legacy_route_task(project, issue, receipt_dir)
     (receipt_dir / "repair-task.md").write_text(task)
@@ -2080,14 +2084,22 @@ def finish_primary_operation(record) -> dict[str, Any]:
             raise primary.Refusal("review must bind exactly one full content-commit SHA")
     plans = verify_plan_lines(text)
     plan_source = "reviewer"
+    creator_plans = verify_plan_lines(creator_text)
     if len(plans) != 1:
-        creator_plans = verify_plan_lines(creator_text)
         if declared_verdict(text) == "PASS" and len(creator_plans) == 1:
             plans = creator_plans
             plan_source = "creator"
         else:
             raise primary.Refusal("review must supply exactly one native verification plan")
-    plan = VerificationPlan.model_validate(json.loads(plans[0]))
+    try:
+        plan = VerificationPlan.model_validate(json.loads(plans[0]))
+    except (json.JSONDecodeError, ValueError) as exc:
+        if plan_source == "reviewer" and declared_verdict(text) == "PASS" and len(creator_plans) == 1:
+            plan = VerificationPlan.model_validate(json.loads(creator_plans[0]))
+            plan_source = "creator"
+            commit_binding_warnings.append(f"reviewer VERIFY_PLAN was malformed; used creator verification plan after reviewer PASS: {exc}")
+        else:
+            raise primary.Refusal(f"review supplied an invalid native verification plan: {exc}") from exc
     clauses = required_proof_clauses(str(issue.get("body") or ""))
     if not clauses and record.action == "ticket_repair":
         raise primary.Refusal("ordinary ticket has no explicit required proof; do not invent acceptance")
